@@ -1,0 +1,26 @@
+file format : IDRISI Raster A.1
+file Title  : 
+data type   : real
+file type   : binary
+columns     : 237
+rows        : 188
+ref.System  : plane
+ref.units   : metres
+unit dist.  : 1.0000000
+min. X      : 664737.0507251581
+max. X      : 686063.139196986
+min. Y      : 4878858.5400943495
+max. Y      : 4895782.5891085025
+pos'n error : unknown
+resolution  : 90.0025164855227
+min. value  : -32768.0
+max. value  : 1233.0966796875
+display min : 212.22877502441406
+display max : 1233.0966796875
+Value units : not specified
+Value Error : unknown
+flag Value  : none
+flag def'n  : none
+legend cats : 0
+lineage     : This file was created using Whitebox GIS
+lineage     : 
