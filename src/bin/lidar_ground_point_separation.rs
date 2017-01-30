@@ -210,7 +210,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
 
     let mut progress: i32;
     let mut old_progress: i32 = -1;
-    let mut zn: f64;
+    let mut z_n: f64;
     let mut index_n: usize;
     let mut neighbourhood_min = vec![f64::INFINITY; n_points];
     let mut neighbourhood_max_min = vec![f64::NEG_INFINITY; n_points];
@@ -236,16 +236,16 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
             }
         }
 
+        let (mut p, mut p_n) : (PointData, PointData);
         for i in 0..n_points {
             // if !is_off_terrain[i] {
-                let p: PointData = input.get_point_info(i);
+                p = input[i];
                 let ret = frs.search(p.x, p.y);
                 for j in 0..ret.len() {
                     index_n = ret[j].0;
-                    let pn: PointData = input.get_point_info(index_n);
-                    zn = pn.z;
-                    if zn < neighbourhood_min[i] {
-                        neighbourhood_min[i] = zn;
+                    p_n = input[index_n];
+                    if p_n.z < neighbourhood_min[i] {
+                        neighbourhood_min[i] = p_n.z;
                     }
                 }
             // }
@@ -260,7 +260,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
 
         for i in 0..n_points {
             // if !is_off_terrain[i] {
-                let p: PointData = input.get_point_info(i);
+                p = input[i];
                 let ret = frs.search(p.x, p.y);
                 for j in 0..ret.len() {
                     index_n = ret[j].0;
@@ -284,7 +284,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
 
         let mut elev_diff: f64;
         let mut z: f64;
-        let mut zn: f64;
+        // let mut z_n: f64;
         let (mut higher_z, mut lower_z, mut higher_index): (f64, f64, usize);
         let mut index_n: usize;
         let mut dist: f64;
@@ -303,13 +303,13 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
                             dist = ret[j].1;
                             if dist > 0.0 {
                                 index_n = ret[j].0;
-                                zn = residuals[index_n];
-                                if zn < z {
+                                z_n = residuals[index_n];
+                                if z_n < z {
                                     higher_z = z;
-                                    lower_z = zn;
+                                    lower_z = z_n;
                                     higher_index = i;
                                 } else {
-                                    higher_z = zn;
+                                    higher_z = z_n;
                                     lower_z = z;
                                     higher_index = index_n;
                                 }
@@ -409,9 +409,9 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
                 for j in 0..ret.len() {
                     index_n = *ret[j].1;
                     let pn: PointData = input.get_point_info(index_n);
-                    zn = pn.z;
-                    if zn < neighbourhood_min[i] {
-                        neighbourhood_min[i] = zn;
+                    z_n = pn.z;
+                    if z_n < neighbourhood_min[i] {
+                        neighbourhood_min[i] = z_n;
                     }
                 }
             }

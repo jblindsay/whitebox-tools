@@ -133,6 +133,33 @@ try:
     #     '-v' # verbose mode; progress will be updated to output stream
     # ]
 
+    ################################
+    # Run lidar_flightline_overlap #
+    ################################
+    # Note: if this argslist doesn't include a -dist parameter it is running with a variable search
+    # distance for the region growing operation that is determined by the -num_points parameter.
+    cmd = "." + os.path.sep + "lidar_flightline_overlap"
+    argslist = [
+        cmd,
+        '-wd', # working directory
+        '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/',
+        # '/Users/johnlindsay/Documents/data/JayStateForest/',
+        # "/Users/johnlindsay/Documents/data/Rondeau/",
+        # "/Users/johnlindsay/Documents/teaching/GEOG3420/W17/Labs/Lab2/NewLab/data/",
+        '-i', # input file
+        'StudyData.las',
+        # 'out3.las',
+        # 'points-2.las',
+        # "428_4692.las",
+        # "out1.las",
+        # "out5.las",
+        '-o', # output file
+        'tmp2.dep',
+        '-resolution=6.0',
+        '-palette=light_quant.pal',
+        '-v' # verbose mode; progress will be updated to output stream
+    ]
+
 
     # #####################################
     # # Run lidar_ground_point_separation #
@@ -271,35 +298,35 @@ try:
     #     '-v' # verbose mode; progress will be updated to output stream
     # ]
 
-    ##########################
-    # Run lidar_segmentation #
-    ##########################
-    # Note: if this argslist doesn't include a -dist parameter it is running with a variable search
-    # distance for the region growing operation that is determined by the -num_points parameter.
-    cmd = "." + os.path.sep + "lidar_segmentation"
-    argslist = [
-        cmd,
-        '-wd', # working directory
-        # '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/',
-        # '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/Rondeau/',
-        # '/Users/johnlindsay/Documents/data/JayStateForest/',
-        # "/Users/johnlindsay/Documents/data/Rondeau/",
-        "/Users/johnlindsay/Documents/teaching/GEOG3420/W17/Labs/Lab2/NewLab/data/",
-        '-i', # input file
-        # 'out3.las',
-        # 'points-2.las',
-        # "428_4692.las",
-        # "out1.las",
-        "out5.las",
-        '-o', # output file
-        'out2.las',
-        '-dist=15.0',
-        '-max_norm_angle=10.0', # maximum difference in normal vectors allowable for two neighbouring points within a region
-        '-maxzdiff=0.15', # maximum difference in elevation used during region growing operation
-        '-detrend=25.0',
-        '--classify_ground',
-        '-v' # verbose mode; progress will be updated to output stream
-    ]
+    # ##########################
+    # # Run lidar_segmentation #
+    # ##########################
+    # # Note: if this argslist doesn't include a -dist parameter it is running with a variable search
+    # # distance for the region growing operation that is determined by the -num_points parameter.
+    # cmd = "." + os.path.sep + "lidar_segmentation"
+    # argslist = [
+    #     cmd,
+    #     '-wd', # working directory
+    #     # '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/',
+    #     # '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/Rondeau/',
+    #     # '/Users/johnlindsay/Documents/data/JayStateForest/',
+    #     # "/Users/johnlindsay/Documents/data/Rondeau/",
+    #     "/Users/johnlindsay/Documents/teaching/GEOG3420/W17/Labs/Lab2/NewLab/data/",
+    #     '-i', # input file
+    #     # 'out3.las',
+    #     # 'points-2.las',
+    #     # "428_4692.las",
+    #     # "out1.las",
+    #     "out5.las",
+    #     '-o', # output file
+    #     'out2.las',
+    #     '-dist=15.0',
+    #     '-max_norm_angle=10.0', # maximum difference in normal vectors allowable for two neighbouring points within a region
+    #     '-maxzdiff=0.15', # maximum difference in elevation used during region growing operation
+    #     '-detrend=25.0',
+    #     '--classify_ground',
+    #     '-v' # verbose mode; progress will be updated to output stream
+    # ]
 
     #######################################
     # Run lidar_segmentation_based_filter #

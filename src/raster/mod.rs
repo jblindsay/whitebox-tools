@@ -130,6 +130,16 @@ impl Raster {
         Err(Error::new(ErrorKind::Other, "Error creating raster"))
     }
 
+    pub fn initialize_using_config<'a>(file_name: &'a str, configs: &'a RasterConfigs) -> Raster {
+        let mut output = Raster { file_name: file_name.to_string(), configs: configs.clone(), ..Default::default() };
+        output.file_mode = "w".to_string();
+        output.raster_type = get_raster_type_from_file(file_name.to_string(), "w".to_string());
+
+        output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
+
+        output
+    }
+
     pub fn initialize_using_file<'a>(file_name: &'a str, input: &'a Raster) -> Raster {
         let mut output = Raster { file_name: file_name.to_string(), ..Default::default() };
         output.file_mode = "w".to_string();
@@ -332,7 +342,7 @@ impl Default for RasterConfigs {
             endian: Endianness::LittleEndian,
             photometric_interp: PhotometricInterpretation::Unknown,
             data_type: DataType::Unknown,
-            palette_nonlinearity: -1.0,
+            palette_nonlinearity: 1.0,
             z_units: "not specified".to_string(),
             xy_units: "not specified".to_string(),
             reflect_at_edges: false,

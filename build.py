@@ -4,8 +4,8 @@ import sys
 from subprocess import call
 
 try:
-    updateCargo = True
-    cleanCode = True
+    updateCargo = False
+    cleanCode = False
     buildCode = True
     mode = 'release'
 
