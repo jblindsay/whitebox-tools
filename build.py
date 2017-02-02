@@ -5,8 +5,8 @@ from subprocess import call
 
 try:
     updateCargo = False
-    cleanCode = True
-    buildCode = False
+    cleanCode = False
+    buildCode = True
     mode = 'release'
 
     # Change the current directory
