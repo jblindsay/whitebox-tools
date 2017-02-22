@@ -15,8 +15,8 @@ use std::fs;
 use std::mem;
 use raster::*;
 use raster::geotiff::geokeys::*;
-use io::byte_order_reader::ByteOrderReader;
-use io::byte_order_reader::Endianness;
+use io_utils::byte_order_reader::ByteOrderReader;
+use io_utils::byte_order_reader::Endianness;
 
 pub fn read_geotiff<'a>(file_name: &'a String, configs: &'a mut RasterConfigs, data: &'a mut Vec<f64>) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;

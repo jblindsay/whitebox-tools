@@ -1,19 +1,43 @@
-#![allow(dead_code, unused_assignments)]
-
 use std;
+use std::io::{Error, ErrorKind};
 use std::u16;
-use std::path;
 use lidar::las;
 use lidar::point_data::*;
 
-pub fn run(args: Vec<String>) {
-    let sep: String = path::MAIN_SEPARATOR.to_string();
+pub fn get_tool_name() -> String {
+    return "lidar_info".to_string();
+}
+
+pub fn get_tool_description() -> String {
+    let s = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency,
+and classification data and information about the variable length records (VLRs) and geokeys.";
+
+    return s.to_string();
+}
+
+pub fn get_tool_parameters() -> String {
+    let s = "-i, input        Input LAS file.
+--vlr            Flag indicates whether to print variable length records (VLRs).
+--geokeys        Flag indicates whether to print the geokeys.";
+
+    return s.to_string();
+}
+
+pub fn get_example_usage() -> Option<String> {
+    let s = "./whitebox-tools -r=lidar_info --wd=\"/dir/to/data\" --args=\"-i=file.las --vlr --geokeys\"
+./whitebox-tools -r=lidar_info --wd=\"/dir/to/data\" --args=\"-i=file.las\"";
+    return Some(s.to_string());
+}
+
+pub fn run<'a>(args: Vec<String>, working_directory: &'a str) -> Result<(), Error> {
     let mut input_file: String = "".to_string();
-    let mut working_directory: String = "".to_string();
+    // let mut working_directory: String = "".to_string();
     let mut show_vlrs = false;
-    let mut keyval = false;
-    //let args: Vec<String> = env::args().collect();
-    if args.len() <= 1 { panic!("Tool run with no paramters. Please see help (-h) for parameter descriptions."); }
+    let mut show_geokeys = false;
+    let mut keyval: bool;
+    if args.len() == 0 {
+        return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+    }
     for i in 0..args.len() {
         let mut arg = args[i].replace("\"", "");
         arg = arg.replace("\'", "");
@@ -21,58 +45,41 @@ pub fn run(args: Vec<String>) {
         let vec = cmd.collect::<Vec<&str>>();
         keyval = false;
         if vec.len() > 1 { keyval = true; }
-        if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--i" {
+        if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
             if keyval {
                 input_file = vec[1].to_string();
             } else {
                 input_file = args[i+1].to_string();
             }
-        } else if vec[0].to_lowercase() == "-wd" || vec[0].to_lowercase() == "--wd" {
-            if keyval {
-                working_directory = vec[1].to_string();
-            } else {
-                working_directory = args[i+1].to_string();
-            }
-        } else if vec[0].to_lowercase() == "-vlr" || vec[0].to_lowercase() == "--vlr" ||
-                vec[0].to_lowercase() == "-vlrs" || vec[0].to_lowercase() == "--vlrs" {
+        // } else if vec[0].to_lowercase() == "-wd" || vec[0].to_lowercase() == "--wd" {
+        //     if keyval {
+        //         working_directory = vec[1].to_string();
+        //     } else {
+        //         working_directory = args[i+1].to_string();
+        //     }
+        } else if vec[0].to_lowercase() == "-vlr" || vec[0].to_lowercase() == "--vlr" {
             show_vlrs = true;
-        } else if vec[0].to_lowercase() == "-h" || vec[0].to_lowercase() == "--help" ||
-            vec[0].to_lowercase() == "--h" {
-            let mut s: String = "Help:\n".to_owned();
-                     s.push_str("-i       Input LAS file.\n");
-                     s.push_str("-vlr     Flag indicates whether to print variable length records (VLRs).\n");
-                     s.push_str("-wd      Optional working directory. If specified, filenames parameters need not include a full path.\n");
-                     s.push_str("-version Prints the tool version number.\n");
-                     s.push_str("-h       Prints help information.\n\n");
-                     s.push_str("Example usage:\n\n");
-                     s.push_str(&">> .*lidar_info -wd *path*to*data* -i input.las -vlr\n".replace("*", &sep));
-                     s.push_str(&">> .*lidar_info -i *path*to*data*input.las -vlr\n".replace("*", &sep));
-            println!("{}", s);
-            return;
-        } else if vec[0].to_lowercase() == "-version" || vec[0].to_lowercase() == "--version" {
-            const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-            println!("lidar_segmentation v{}", VERSION.unwrap_or("unknown"));
-            return;
+        } else if vec[0].to_lowercase() == "-geokeys" || vec[0].to_lowercase() == "--geokeys" {
+            show_geokeys = true;
         }
     }
 
-    println!("*************************");
-    println!("* Welcome to lidar_info *");
-    println!("*************************");
+    println!("**************");
+    println!("* {} *", get_tool_name());
+    println!("**************");
 
     let sep = std::path::MAIN_SEPARATOR;
-    if !working_directory.ends_with(sep) {
-        working_directory.push_str(&(sep.to_string()));
-    }
+    // if !working_directory.ends_with(sep) {
+    //     working_directory.push_str(&(sep.to_string()));
+    // }
 
     if !input_file.contains(sep) {
         input_file = format!("{}{}", working_directory, input_file);
     }
 
-    //let input = las::LasFile::new(&input_file, "r");
     let input: las::LasFile = match las::LasFile::new(&input_file, "r") {
         Ok(lf) => lf,
-        Err(err) => panic!("Error: {}", err),
+        Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
     };
     println!("{}", input);
 
@@ -137,11 +144,15 @@ pub fn run(args: Vec<String>) {
 
     }
 
-    println!("\n\n{}", input.geokeys.interpret_geokeys());
-
     if show_vlrs {
         for i in 0..(input.header.number_of_vlrs as usize) {
             println!("\nVLR {}:\n{}", i, input.vlr_data[i].clone());
         }
     }
+
+    if show_geokeys {
+        println!("\n\n{}", input.geokeys.interpret_geokeys());
+    }
+
+    Ok(())
 }

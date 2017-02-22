@@ -1,26 +1,47 @@
-extern crate whitebox_tools;
 extern crate time;
 
-use std::env;
 use std::f64;
-use std::io;
+use std::io::{Error, ErrorKind};
 use std::path;
-use whitebox_tools::lidar::las;
-use whitebox_tools::raster::*;
-use whitebox_tools::structures::fixed_radius_search::FixedRadiusSearch;
+use lidar::las;
+use raster::*;
+use structures::fixed_radius_search::FixedRadiusSearch;
 
-fn main() {
-    let sep: String = path::MAIN_SEPARATOR.to_string();
+pub fn get_tool_name() -> String {
+    return "lidar_flightline_overlap".to_string();
+}
+
+pub fn get_tool_description() -> String {
+    let s = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping
+flight lines in each grid cell.";
+
+    return s.to_string();
+}
+
+pub fn get_tool_parameters() -> String {
+    let s = "-i, --input        Input LAS file.
+-o, --output       Output raster file.
+--resolution       Output raster's grid resolution.
+--palette          Optional palette name (for use with Whitebox raster files).";
+    return s.to_string();
+}
+
+pub fn get_example_usage() -> Option<String> {
+    let s = "./whitebox-tools -r=lidar_flightline_overlap --wd=\"/dir/to/data\" --args=\"-i=file.las -o=outfile.dep --resolution=2.0\"
+./whitebox-tools -r=lidar_flightline_overlap --wd=\"/dir/to/data\" --args=\"-i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt\"";
+    return Some(s.to_string());
+}
+
+pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
     let mut input_file: String = "".to_string();
     let mut output_file: String = "".to_string();
-    let mut working_directory: String = "".to_string();
     let mut grid_res: f64 = 1.0;
     let mut palette = "default".to_string();
-    let mut verbose: bool = false;
 
     // read the arguments
-    let args: Vec<String> = env::args().collect();
-    if args.len() <= 1 { panic!("Tool run with no paramters. Please see help (-h) for parameter descriptions."); }
+    if args.len() == 0 {
+        return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+    }
     for i in 0..args.len() {
         let mut arg = args[i].replace("\"", "");
         arg = arg.replace("\'", "");
@@ -28,23 +49,17 @@ fn main() {
         let vec = cmd.collect::<Vec<&str>>();
         let mut keyval = false;
         if vec.len() > 1 { keyval = true; }
-        if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--i" {
+        if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
             if keyval {
                 input_file = vec[1].to_string();
             } else {
                 input_file = args[i+1].to_string();
             }
-        } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--o" {
+        } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
             if keyval {
                 output_file = vec[1].to_string();
             } else {
                 output_file = args[i+1].to_string();
-            }
-        } else if vec[0].to_lowercase() == "-wd" || vec[0].to_lowercase() == "--wd" {
-            if keyval {
-                working_directory = vec[1].to_string();
-            } else {
-                working_directory = args[i+1].to_string();
             }
         } else if vec[0].to_lowercase() == "-resolution" || vec[0].to_lowercase() == "--resolution" {
             if keyval {
@@ -58,48 +73,16 @@ fn main() {
             } else {
                 palette = args[i+1].to_string();
             }
-        } else if vec[0].to_lowercase() == "-v" || vec[0].to_lowercase() == "--verbose" {
-            verbose = true;
-        } else if vec[0].to_lowercase() == "-h" || vec[0].to_lowercase() == "--help" ||
-          vec[0].to_lowercase() == "--h" {
-            let mut s: String = "Help:\n".to_owned();
-            s.push_str("-i               Input LAS file.\n");
-            s.push_str("-o               Output LAS file.\n");
-            s.push_str("-wd              Optional working directory. If specified, input and output filenames need not include a full path.\n");
-            s.push_str("-resolution      Resolution of output grid, related to search distance in xy units; default is 1.0.\n");
-            s.push_str("-v               Optional verbose mode. Tool will report progress if this flag is provided.\n");
-            s.push_str("-version         Prints the tool version number.\n");
-            s.push_str("-h               Prints help information.\n\n");
-            s.push_str("Example usage:\n\n");
-            s.push_str(&">> .*lidar_flightline_overlap -wd *path*to*data* -i input.las -o output.las -resolution 1.5 -v\n".replace("*", &sep));
-            println!("{}", s);
-            return;
-        } else if vec[0].to_lowercase() == "-version" || vec[0].to_lowercase() == "--version" {
-            const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-            println!("lidar_flightline_overlap v{}", VERSION.unwrap_or("unknown"));
-            return;
         }
     }
 
-    let sep = std::path::MAIN_SEPARATOR;
-    if !working_directory.ends_with(sep) {
-        working_directory.push_str(&(sep.to_string()));
-    }
-
-    if !input_file.contains(sep) {
+    if !input_file.contains(path::MAIN_SEPARATOR) {
         input_file = format!("{}{}", working_directory, input_file);
     }
-    if !output_file.contains(sep) {
+    if !output_file.contains(path::MAIN_SEPARATOR) {
         output_file = format!("{}{}", working_directory, output_file);
     }
 
-    match run(input_file, output_file, grid_res, palette, verbose) {
-        Ok(()) => println!("Complete!"),
-        Err(err) => panic!("{}", err),
-    }
-}
-
-fn run(input_file: String, output_file: String, grid_res: f64, palette: String, verbose: bool) -> Result<(), io::Error> {
     if verbose {
         println!("***************************************");
         println!("* Welcome to lidar_flightline_overlap *");
@@ -111,7 +94,7 @@ fn run(input_file: String, output_file: String, grid_res: f64, palette: String, 
     if verbose { println!("Reading input LAS file..."); }
     let input = match las::LasFile::new(&input_file, "r") {
         Ok(lf) => lf,
-        Err(err) => panic!("Error reading file {}: {}", input_file, err),
+        Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
     };
 
     // Make sure that the input LAS file have GPS time data?

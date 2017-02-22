@@ -28,7 +28,7 @@ use raster::saga_raster::*;
 use raster::surfer7_raster::*;
 use raster::surfer_ascii_raster::*;
 use raster::whitebox_raster::*;
-use io::byte_order_reader::*;
+use io_utils::byte_order_reader::*;
 use std::ops::{Index, IndexMut};
 
 #[derive(Default, Clone)]

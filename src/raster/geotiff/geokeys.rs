@@ -3,7 +3,7 @@ use std::fmt;
 use std::mem;
 use std::mem::transmute;
 use raster::geotiff::IfdDirectory;
-use io::byte_order_reader::Endianness;
+use io_utils::byte_order_reader::Endianness;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{

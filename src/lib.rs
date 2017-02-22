@@ -1,7 +1,7 @@
 // extern crate libc;
 extern crate byteorder;
 
-pub mod io;
+pub mod io_utils;
 pub mod lidar;
 pub mod raster;
 pub mod tools;

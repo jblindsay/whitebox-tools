@@ -7,7 +7,7 @@ use std::f64;
 use std::fs::File;
 use std::mem;
 use raster::*;
-use io::byte_order_reader::Endianness;
+use io_utils::byte_order_reader::Endianness;
 
 pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
     // read the header file

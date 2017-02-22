@@ -19,7 +19,7 @@ try:
         if retcode < 0:
             print >>sys.stderr, "Child was terminated by signal", -retcode
         else:
-            print >>sys.stderr, "Process successfully exeicuted"
+            print >>sys.stderr, "Update successful"
 
     if cleanCode:
         # Clean #
@@ -27,7 +27,7 @@ try:
         if retcode < 0:
             print >>sys.stderr, "Child was terminated by signal", -retcode
         else:
-            print >>sys.stderr, "Process successfully exeicuted"
+            print >>sys.stderr, "Clean successful"
 
     if buildCode:
         # Build #
@@ -39,7 +39,7 @@ try:
         if retcode < 0:
             print >>sys.stderr, "Child was terminated by signal", -retcode
         else:
-            print >>sys.stderr, "Process executed successfully"
+            print >>sys.stderr, "Build executed successfully"
 
 except OSError as e:
     print >>sys.stderr, "Execution failed:", e

@@ -1,26 +1,45 @@
-extern crate whitebox_tools;
 extern crate time;
 
-use std::io;
-use std::env;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::f64;
 use std::collections::VecDeque;
-use whitebox_tools::raster::*;
-use whitebox_tools::structures::fixed_radius_search::FixedRadiusSearch;
-use whitebox_tools::structures::array2d::Array2D;
+use raster::*;
+use structures::fixed_radius_search::FixedRadiusSearch;
+use structures::array2d::Array2D;
 
-fn main() {
-    let sep: String = path::MAIN_SEPARATOR.to_string();
+pub fn get_tool_name() -> String {
+    return "remove_off_terrain_objects".to_string();
+}
+
+pub fn get_tool_description() -> String {
+    let s = "Removes off-terrain objects from a raster digital elevation model (DEM).";
+
+    return s.to_string();
+}
+
+pub fn get_tool_parameters() -> String {
+    let s = "-i, --input        Input raster file.
+-o, --output       Output raster file.
+--filter           Filter size (cells); default is 11.
+--slope            Slope threshold; default is 15.0.";
+    return s.to_string();
+}
+
+pub fn get_example_usage() -> Option<String> {
+    let s = "./whitebox-tools -r=remove_off_terrain_objects --wd=\"/dir/to/data\" --args=\"-i=DEM.dep -o=bare_earth_DEM.dep --filter=25 --slope=10.0\"";
+    return Some(s.to_string());
+}
+
+pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
     let mut input_file = String::new();
     let mut output_file = String::new();
-    let mut working_directory: String = "".to_string();
     let mut filter_size = 11usize;
     let mut slope_threshold = 15f64;
-    let mut verbose: bool = false;
     let mut keyval: bool;
-    let args: Vec<String> = env::args().collect();
-    if args.len() <= 1 { panic!("Tool run with no paramters. Please see help (-h) for parameter descriptions."); }
+    if args.len() == 0 {
+        return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+    }
     for i in 0..args.len() {
         let mut arg = args[i].replace("\"", "");
         arg = arg.replace("\'", "");
@@ -40,12 +59,6 @@ fn main() {
             } else {
                 output_file = args[i+1].to_string();
             }
-        } else if vec[0].to_lowercase() == "-wd" || vec[0].to_lowercase() == "--wd" {
-            if keyval {
-                working_directory = vec[1].to_string();
-            } else {
-                working_directory = args[i+1].to_string();
-            }
         } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
             if keyval {
                 filter_size = vec[1].to_string().parse::<usize>().unwrap();
@@ -58,39 +71,8 @@ fn main() {
             } else {
                 slope_threshold = args[i+1].to_string().parse::<f64>().unwrap();
             }
-        } else if vec[0].to_lowercase() == "-v" || vec[0].to_lowercase() == "--verbose" {
-            verbose = true;
-        } else if vec[0].to_lowercase() == "-h" || vec[0].to_lowercase() == "--help" ||
-            vec[0].to_lowercase() == "--h"{
-            let mut s: String = "Help:\n".to_owned();
-                     s.push_str("-i       Input LAS file (classification).\n");
-                     s.push_str("-o       Output HTML file.\n");
-                     s.push_str("-wd      Optional working directory. If specified, filenames parameters need not include a full path.\n");
-                     s.push_str("-filter  Size of the filter kernel (default is 11).\n");
-                     s.push_str("-slope   Maximum slope threshold (default is 15.0).\n");
-                     s.push_str("-version Prints the tool version number.\n");
-                     s.push_str("-h       Prints help information.\n\n");
-                     s.push_str("Example usage:\n\n");
-                     s.push_str(&">> .*remove_off_terrain_objects -wd *path*to*data* -i input.dep -o NoOTOs.dep -filter 25 -slope 15.0\n".replace("*", &sep));
-            println!("{}", s);
-            return;
-        } else if vec[0].to_lowercase() == "-version" || vec[0].to_lowercase() == "--version" {
-            const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-            println!("slope v{}", VERSION.unwrap_or("unknown"));
-            return;
         }
     }
-
-    match run(input_file, output_file, working_directory,
-        filter_size, slope_threshold, verbose) {
-        Ok(()) => println!("Complete!"),
-        Err(err) => panic!("{}", err),
-    }
-}
-
-fn run(mut input_file: String, mut output_file: String, mut working_directory: String,
-    mut filter_size: usize, slope_threshold: f64, verbose: bool) -> Result<(), io::Error> {
-
     if verbose {
         println!("*****************************************");
         println!("* Welcome to remove_off_terrain_objects *");
@@ -99,7 +81,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
 
     let sep: String = path::MAIN_SEPARATOR.to_string();
 
-	// The filter dimensions must be odd numbers such that there is a middle pixel
+    // The filter dimensions must be odd numbers such that there is a middle pixel
     if (filter_size as f64 / 2f64).floor() == (filter_size as f64 / 2f64) {
         filter_size += 1;
     }
@@ -110,10 +92,6 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     let midpoint = (filter_size as f64 / 2f64).floor() as isize;
     let mut progress: usize;
     let mut old_progress: usize = 1;
-
-    if !working_directory.ends_with(&sep) {
-        working_directory.push_str(&(sep.to_string()));
-    }
 
     if !input_file.contains(&sep) {
         input_file = format!("{}{}", working_directory, input_file);
@@ -257,7 +235,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     let mut out: Array2D<f64> = Array2D::new(rows, columns, initial_value, nodata)?;
     let mut stack: Vec<GridCell> = vec![];
     let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-	let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+    let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
     for row in 0..rows {
         for col in 0..columns {
             out[(row, col)] = initial_value;
@@ -485,7 +463,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     // let mut num_solved_cells = 0usize;
     // let num_cells = rows * columns;
     // let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-	// let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+    // let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
     // for row in 0..rows as isize {
     //     for col in 0..columns as isize {
     //         output.set_value(row, col, initial_value);
@@ -622,9 +600,9 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct GridCell {
-    // priority: isize,
-    row: isize,
-    column: isize,
+// priority: isize,
+row: isize,
+column: isize,
 }
 
 // The priority queue depends on `Ord`.
