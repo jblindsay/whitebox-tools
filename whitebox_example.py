@@ -5,18 +5,18 @@ import whitebox_tools as wbt
 
 def main():
     try:
-        # Set the executable directory
+        # Set the whitebox-tools executable directory
         wb_dir = os.path.dirname(os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
 
         # Prints the whitebox-tools help...a listing of available commands
-        # print(wbt.help())
+        print(wbt.help())
 
         # Prints the whitebox-tools license
-        # print(wbt.license())
+        print(wbt.license())
 
         # Prints the whitebox-tools version
-        # print("Version Info: {}".format(wbt.version()))
+        print("Version Info: {}".format(wbt.version()))
 
         # List all available tools in whitebox-tools
         print(wbt.list_tools())
@@ -35,7 +35,7 @@ def main():
         # need to specify complete file names (with paths) to tools that you run.
         wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
 
-        # Run the lidar_info tool, specifying the arguments.
+        # Run the remove_off_terrain_objects tool, specifying the arguments.
         name = "remove_off_terrain_objects"
         args = [
             "--input=\"small DEM.dep\"",
@@ -45,47 +45,8 @@ def main():
         ]
 
         # Run the tool and check the return value
-        if wbt.run_tool(name, args) != 0:
+        if wbt.run_tool(name, args, callback) != 0:
             print("ERROR running {}".format(name))
-
-        # # Run the lidar_info tool, specifying the arguments.
-        # name = "lidar_flightline_overlap"
-        # args = [
-        #     "--input=\"1km183270487302008GROUPEALTA.las\"",
-        #     "--output=\"tmp1.dep\"",
-        #     "--resolution=2.5",
-        #     "--palette=\"light_quant.plt\""
-        # ]
-        #
-        # # Run the tool and check the return value
-        # if wbt.run_tool(name, args) != 0:
-        #     print("ERROR running {}".format(name))
-
-
-        # # Run the lidar_info tool, specifying the arguments.
-        # name = "lidar_info"
-        # args = [
-        #     "--input=\"points-2.las\"",
-        #     "--vlr",
-        #     "--geokeys"
-        # ]
-        #
-        # # Run the tool and check the return value
-        # if wbt.run_tool(name, args, callback) != 0:
-        #     print("ERROR running {}".format(name))
-        #
-        # wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
-        #
-        # # Run the lidar_info tool, specifying the arguments.
-        # name = "lidar_join"
-        # args = [
-        #     "-i=\"1km183270487302008GROUPEALTA.las, 1km183280487302008GROUPEALTA.las, 1km183270487402008GROUPEALTA.las, 1km183280487402008GROUPEALTA.las\"",
-        #     "-o=\"tmp1.las\""
-        # ]
-        #
-        # # Run the tool and check the return value
-        # if wbt.run_tool(name, args, callback) != 0:
-        #     print("ERROR running {}".format(name))
 
     except:
         print("Unexpected error:", sys.exc_info()[0])

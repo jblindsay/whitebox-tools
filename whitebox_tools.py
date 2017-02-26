@@ -65,10 +65,9 @@ def run_tool(tool_name, args, callback = default_callback):
                 break
 
         return 0
-    except Exception, e:
+    except Exception as e:
+        print(e)
         return 1
-        print e
-
 
 def help():
     try:
@@ -87,7 +86,7 @@ def help():
                 break
 
         return ret
-    except Exception, e:
+    except Exception as e:
         return e
 
 def license():
@@ -107,7 +106,7 @@ def license():
                 break
 
         return ret
-    except Exception, e:
+    except Exception as e:
         return e
 
 def version():
@@ -127,7 +126,7 @@ def version():
                 break
 
         return ret
-    except Exception, e:
+    except Exception as e:
         return e
 
 def tool_help(tool_name):
@@ -147,7 +146,7 @@ def tool_help(tool_name):
                 break
 
         return ret
-    except Exception, e:
+    except Exception as e:
         return e
 
 def list_tools():
@@ -167,5 +166,5 @@ def list_tools():
                 break
 
         return ret
-    except Exception, e:
+    except Exception as e:
         return e
