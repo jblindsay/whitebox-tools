@@ -17,9 +17,9 @@ def main():
         # Run the tool, specifying the arguments.
         name = "remove_off_terrain_objects"
         args = [
-            # "--input=\"StudyData_Rondeau2_NN_filled.dep\"",
-            "--input=\"tmp10.dep\"",
-            "--output=\"tmp12.dep\"",
+            "--input=\"StudyData_Rondeau2_NN_filled.dep\"",
+            # "--input=\"tmp10.dep\"",
+            "--output=\"tmp13.dep\"",
             "--filter=25",
             "--slope=15.0"
         ]
