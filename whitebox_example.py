@@ -16,12 +16,13 @@ def main():
         print(wbt.license())
 
         # Prints the whitebox-tools version
-        print("Version Info: {}".format(wbt.version()))
+        print("Version information: {}".format(wbt.version()))
 
         # List all available tools in whitebox-tools
         print(wbt.list_tools())
 
         # Print the help documentation (description, input parameters, example usage) for various tools
+        print(wbt.tool_help("lidar_elevation_slice"))
         print(wbt.tool_help("lidar_flightline_overlap"))
         print(wbt.tool_help("lidar_info"))
         print(wbt.tool_help("lidar_join"))
@@ -33,16 +34,57 @@ def main():
 
         # Sets the working directory. If the working dir is set, you don't
         # need to specify complete file names (with paths) to tools that you run.
-        wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
+        # wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
+        wbt.set_working_dir("/Users/johnlindsay/Documents/data/JayStateForest/")
 
         # Run the remove_off_terrain_objects tool, specifying the arguments.
-        name = "remove_off_terrain_objects"
+        # name = "remove_off_terrain_objects"
+        # args = [
+        #     "--input=\"small DEM.dep\"",
+        #     "--output=\"tmp2.dep\"",
+        #     "--filter=49",
+        #     "--slope=15.0"
+        # ]
+
+        name = "lidar_elevation_slice"
+        # args = [
+        #     "--input=\"1km183270487302008GROUPEALTA.las\"",
+        #     "--output=\"deleteme.las\"",
+        #     "--minz=90.0",
+        #     "--maxz=120.0",
+        #     "--inclassval=1",
+        #     "--outclassval=0"
+        # ]
+
         args = [
-            "--input=\"small DEM.dep\"",
-            "--output=\"tmp2.dep\"",
-            "--filter=49",
-            "--slope=15.0"
+            "--input=\"points-2.las\"",
+            "--output=\"out1.las\"",
+            "--minz=500.0",
+            "--maxz=800.0"
         ]
+
+        # cmd = "." + os.path.sep  + "lidar_elevation_slice"
+        # argslist = [
+        #     cmd,
+        #     '-wd', # working directory
+        #     # '/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/',
+        #     # "/Users/johnlindsay/Documents/data/Rondeau/",
+        #     # "/Users/johnlindsay/Documents/data/GullyCreek/LiDAR/1_LiDAR_OMAFRA_PointCloud/LAS_tiles_25m/",
+        #     "/Users/johnlindsay/Documents/teaching/GEOG3420/W17/Labs/Lab2/NewLab/data/",
+        #     '-i', # input file
+        #     # 'StudyData_EAG.las',
+        #     # "448000_4827000.las",
+        #     # "447000_4828000.las",
+        #     # "446000_4829000.las",
+        #     "1km183270487302008GROUPEALTA.las",
+        #     '-o', # output file,
+        #     'test_tile4.las',
+        #     '-minz', # minimum elevation
+        #     '75.0',
+        #     '-maxz', # maximum elevaiton
+        #     '155.0',
+        #     '-v' # verbose mode; progress will be updated to output stream
+        # ]
 
         # Run the tool and check the return value
         if wbt.run_tool(name, args, callback) != 0:

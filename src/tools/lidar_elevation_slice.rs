@@ -1,42 +1,47 @@
 extern crate time;
 
 use std::f64;
-use std::io::{Error, ErrorKind};
 use std::path;
+use std::io::{Error, ErrorKind};
 use lidar::las;
-use raster::*;
-use structures::fixed_radius_search::FixedRadiusSearch;
 
 pub fn get_tool_name() -> String {
     return "lidar_elevation_slice".to_string();
 }
 
 pub fn get_tool_description() -> String {
-    let s = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping
-flight lines in each grid cell.";
+    let s = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified
+elevation range.";
 
     return s.to_string();
 }
 
 pub fn get_tool_parameters() -> String {
     let s = "-i, --input        Input LAS file.
--o, --output       Output raster file.
---resolution       Output raster's grid resolution.
---palette          Optional palette name (for use with Whitebox raster files).";
+-o, --output       Output LAS file.
+--maxz             Maximum elevation value.
+--minz             Minimum elevation value.
+--class            Optional boolean flag indicating whether points outside the range should be retained in output but reclassified.
+--inclassval       Optional parameter specifying the class value assigned to points within the slice; default is 2.
+--outclassval      Optional parameter specifying the class value assigned to points outside the slice; default is 1.";
     return s.to_string();
 }
 
 pub fn get_example_usage() -> Option<String> {
-    let s = "./whitebox-tools -r=lidar_flightline_overlap --wd=\"/dir/to/data\" --args=\"-i=file.las -o=outfile.dep --resolution=2.0\"
-./whitebox-tools -r=lidar_flightline_overlap --wd=\"/dir/to/data\" --args=\"-i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt\"";
+    let s = "./whitebox-tools -v --wd=\"/dir/to/data\" --args=\"-i=\"input.las\" -o=\"output.las\" --minz=100.0 --maxz=250.0\"
+./whitebox-tools -v --args=\"-i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --class\"
+./whitebox-tools -v --args=\"-i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0\"";
     return Some(s.to_string());
 }
 
 pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
     let mut input_file: String = "".to_string();
     let mut output_file: String = "".to_string();
-    let mut grid_res: f64 = 1.0;
-    let mut palette = "default".to_string();
+    let mut minz = -f64::INFINITY;
+    let mut maxz = f64::INFINITY;
+    let mut filter = true;
+    let mut in_class_value = 2u8;
+    let mut out_class_value = 1u8;
 
     // read the arguments
     if args.len() == 0 {
@@ -61,17 +66,33 @@ pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> 
             } else {
                 output_file = args[i+1].to_string();
             }
-        } else if vec[0].to_lowercase() == "-resolution" || vec[0].to_lowercase() == "--resolution" {
+        } else if vec[0].to_lowercase() == "-maxz" || vec[0].to_lowercase() == "--maxz" {
             if keyval {
-                grid_res = vec[1].to_string().parse::<f64>().unwrap();
+                maxz = vec[1].to_string().parse::<f64>().unwrap();
             } else {
-                grid_res = args[i+1].to_string().parse::<f64>().unwrap();
+                maxz = args[i+1].to_string().parse::<f64>().unwrap();
             }
-        } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
+        } else if vec[0].to_lowercase() == "-minz" || vec[0].to_lowercase() == "--minz" {
             if keyval {
-                palette = vec[1].to_string();
+                minz = vec[1].to_string().parse::<f64>().unwrap();
             } else {
-                palette = args[i+1].to_string();
+                minz = args[i+1].to_string().parse::<f64>().unwrap();
+            }
+        } else if vec[0].to_lowercase() == "-class" || vec[0].to_lowercase() == "--class" {
+            filter = false;
+        } else if vec[0].to_lowercase() == "-inclassval" || vec[0].to_lowercase() == "--inclassval" {
+            filter = false;
+            if keyval {
+                in_class_value = vec[1].to_string().parse::<u8>().unwrap();
+            } else {
+                in_class_value = args[i+1].to_string().parse::<u8>().unwrap();
+            }
+        } else if vec[0].to_lowercase() == "-outclassval" || vec[0].to_lowercase() == "--outclassval" {
+            filter = false;
+            if keyval {
+                out_class_value = vec[1].to_string().parse::<u8>().unwrap();
+            } else {
+                out_class_value = args[i+1].to_string().parse::<u8>().unwrap();
             }
         }
     }
@@ -84,146 +105,104 @@ pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> 
     }
 
     if verbose {
-        println!("***************************************");
-        println!("* Welcome to lidar_flightline_overlap *");
-        println!("***************************************");
+        println!("***********************************");
+        println!("* Welcome to lidar_elevation_slice *");
+        println!("************************************");
     }
 
-    let start = time::now();
+    if in_class_value > 31 || out_class_value > 31 {
+        return Err(Error::new(ErrorKind::InvalidInput, "Error: Either the in-slice or out-of-slice class values are larger than 31."));
+    }
+
+    let sep = path::MAIN_SEPARATOR;
+    if !input_file.contains(sep) {
+        input_file = format!("{}{}", working_directory, input_file);
+    }
+    if !output_file.contains(sep) {
+        output_file = format!("{}{}", working_directory, output_file);
+    }
 
     if verbose { println!("Reading input LAS file..."); }
-    let input = match las::LasFile::new(&input_file, "r") {
+    //let input = las::LasFile::new(&input_file, "r");
+    let input: las::LasFile = match las::LasFile::new(&input_file, "r") {
         Ok(lf) => lf,
         Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
     };
-
-    // Make sure that the input LAS file have GPS time data?
-    if input.header.point_format == 0u8 || input.header.point_format == 2u8 {
-        panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
-    }
-
-    let n_points = input.header.number_of_points as usize;
-    let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+    let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+    output.header.system_id = "EXTRACTION".to_string();
 
     if verbose { println!("Performing analysis..."); }
-    // let search_dist = grid_res / 2.0;
-    let mut frs: FixedRadiusSearch<usize> = FixedRadiusSearch::new(grid_res);
-    let mut gps_times = vec![-1f64; n_points];
-    let (mut x, mut y, mut gps_time) : (f64, f64, f64);
-    let mut progress: usize;
-    let mut old_progress: usize = 1;
-    for i in 0..n_points {
-        match input.get_record(i) {
-            las::LidarPointRecord::PointRecord1 { point_data, gps_data } => {
-                x = point_data.x;
-                y = point_data.y;
-                gps_time = gps_data;
-            },
-            las::LidarPointRecord::PointRecord3 { point_data, gps_data, rgb_data } => {
-                x = point_data.x;
-                y = point_data.y;
-                gps_time = gps_data;
-                let _ = rgb_data; // just to kill the 'unused variable' warning
-            },
-            _ => {
-                panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
+    let mut z: f64;
+    let mut progress: i32;
+    let mut old_progress: i32 = -1;
+    let mut num_points_filtered: i64 = 0;
+    let num_points: f64 = (input.header.number_of_points - 1) as f64;
+
+    if filter {
+        for i in 0..input.header.number_of_points as usize {
+            z = input.get_point_info(i).z;
+            if z >= minz && z <= maxz {
+                output.add_point_record(input.get_record(i));
+                num_points_filtered += 1;
             }
+            if verbose {
+                progress = (100.0_f64 * i as f64 / num_points) as i32;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+    } else {
+        for i in 0..input.header.number_of_points as usize {
+            let mut class_val = out_class_value; // outside elevation slice
+            z = input.get_point_info(i).z;
+            if z >= minz && z <= maxz {
+                class_val = in_class_value; // inside elevation slice
+            }
+            let pr = input.get_record(i);
+            let pr2: las::LidarPointRecord;
+            match pr {
+                las::LidarPointRecord::PointRecord0 { mut point_data }  => {
+                    point_data.set_classification(class_val);
+                    pr2 = las::LidarPointRecord::PointRecord0 { point_data: point_data };
+
+                },
+                las::LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                    point_data.set_classification(class_val);
+                    pr2 = las::LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
+                },
+                las::LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
+                    point_data.set_classification(class_val);
+                    pr2 = las::LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
+                },
+                las::LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
+                    point_data.set_classification(class_val);
+                    pr2 = las::LidarPointRecord::PointRecord3 { point_data: point_data,
+                        gps_data: gps_data, rgb_data: rgb_data};
+                },
+            }
+            output.add_point_record(pr2);
+            if verbose {
+                progress = (100.0_f64 * i as f64 / num_points) as i32;
+                if progress != old_progress {
+                    println!("Saving data: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+        num_points_filtered = 1;
+    }
+
+    if num_points_filtered > 0 {
+        if verbose { println!("Writing output LAS file..."); }
+        let _ = match output.write() {
+            Ok(_) => println!("Complete!"),
+            Err(e) => println!("error while writing: {:?}", e),
         };
-        frs.insert(x, y, i);
-        gps_times[i] = gps_time;
-        if verbose {
-            progress = (100.0_f64 * i as f64 / num_points) as usize;
-            if progress != old_progress {
-                println!("Binning points: {}%", progress);
-                old_progress = progress;
-            }
-        }
+    } else {
+        println!("No points were contained in the elevation slice.");
     }
-
-    let west: f64 = input.header.min_x; // - 0.5 * grid_res;
-	let north: f64 = input.header.max_y; // + 0.5 * grid_res;
-	let rows: usize = (((north - input.header.min_y) / grid_res).ceil()) as usize;
-	let columns: usize = (((input.header.max_x - west) / grid_res).ceil()) as usize;
-	let south: f64 = north - rows as f64 * grid_res;
-	let east = west + columns as f64 * grid_res;
-    let nodata = -32768.0f64;
-
-    let mut configs = RasterConfigs{..Default::default()};
-    configs.rows = rows;
-    configs.columns = columns;
-    configs.north = north;
-    configs.south = south;
-    configs.east = east;
-    configs.west = west;
-    configs.resolution_x = grid_res;
-    configs.resolution_y = grid_res;
-    configs.nodata = nodata;
-    configs.data_type = DataType::F64;
-    configs.photometric_interp = PhotometricInterpretation::Continuous;
-    configs.palette = palette;
-    // configs.projection = input.configs.projection.clone();
-    // configs.xy_units = input.configs.xy_units.clone();
-    // configs.z_units = input.configs.z_units.clone();
-    // configs.endian = input.configs.endian.clone();
-    // configs.epsg_code = input.configs.epsg_code;
-    // configs.coordinate_ref_system_wkt = input.configs.coordinate_ref_system_wkt.clone();
-    let mut output = Raster::initialize_using_config(&output_file, &configs);
-    let time_threshold = 15f64;
-    let (mut x_n, mut y_n): (f64, f64);
-    let mut index_n: usize;
-    let half_res_sqrd = grid_res / 2.0 * grid_res / 2.0;
-    for row in 0..rows as isize {
-        for col in 0..columns as isize {
-            x = west + col as f64 * grid_res + 0.5;
-            y = north - row as f64 * grid_res - 0.5;
-            let ret = frs.search(x, y);
-            if ret.len() > 0 {
-                let mut times = vec![];
-                for j in 0..ret.len() {
-                    index_n = ret[j].0;
-                    let p = input[index_n];
-                    x_n = p.x;
-                    y_n = p.y;
-                    if (x_n - x) * (x_n - x) <= half_res_sqrd && (y_n - y) * (y_n - y) <= half_res_sqrd { // it falls within the grid cell
-                        times.push(gps_times[ret[j].0]);
-                    }
-                }
-                if times.len() > 0 {
-                    times.sort_by(|a, b| a.partial_cmp(&b).unwrap());
-                    let mut num_flightlines = 1.0;
-                    for j in 1..times.len() {
-                        if times[j] - times[j-1] > time_threshold {
-                            num_flightlines += 1.0;
-                        }
-                    }
-                    output.set_value(row, col, num_flightlines);
-                } else {
-                    output.set_value(row, col, nodata);
-                }
-            } else {
-                output.set_value(row, col, nodata);
-            }
-        }
-        if verbose {
-            progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-            if progress != old_progress {
-                println!("Progress: {}%", progress);
-                old_progress = progress;
-            }
-        }
-    }
-
-    let end = time::now();
-    let elapsed_time = end - start;
-    output.add_metadata_entry("Created by whitebox_tools\' lidar_flightline_overlap tool".to_owned());
-    output.add_metadata_entry(format!("Input file: {}", input_file));
-    output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
-    if verbose { println!("Saving data...") };
-    let _ = match output.write() {
-        Ok(_) => if verbose { println!("Output file written") },
-        Err(e) => return Err(e),
-    };
 
     Ok(())
 }

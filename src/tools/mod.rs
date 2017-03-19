@@ -1,3 +1,4 @@
+pub mod lidar_elevation_slice;
 pub mod lidar_flightline_overlap;
 pub mod lidar_info;
 pub mod lidar_join;
@@ -23,6 +24,9 @@ impl ToolManager {
         //     tool_args_vec.insert(0, format!("--wd={}", working_dir));
         // }
         match tool_name.to_lowercase().as_ref() {
+            "lidar_elevation_slice" => {
+                return tools::lidar_elevation_slice::run(args, &self.working_dir, self.verbose);
+            }
             "lidar_flightline_overlap" => {
                 return tools::lidar_flightline_overlap::run(args, &self.working_dir, self.verbose);
             },
@@ -44,6 +48,14 @@ impl ToolManager {
         let mut parameters = "".to_string();
         let mut example = "".to_string();
         let ret: Result<(), Error> = match tool_name.to_lowercase().as_ref() {
+        "lidar_elevation_slice" => {
+            description = tools::lidar_elevation_slice::get_tool_description();
+            parameters = tools::lidar_elevation_slice::get_tool_parameters();
+            if tools::lidar_elevation_slice::get_example_usage().is_some() {
+                example = tools::lidar_elevation_slice::get_example_usage().unwrap();
+            }
+            Ok(())
+        },
         "lidar_flightline_overlap" => {
             description = tools::lidar_flightline_overlap::get_tool_description();
             parameters = tools::lidar_flightline_overlap::get_tool_parameters();
@@ -104,6 +116,8 @@ Example usage:
     pub fn list_tools(&self) {
         let mut tool_names = Vec::new();
         let mut tool_descriptions = Vec::new();
+        tool_names.push(tools::lidar_elevation_slice::get_tool_name());
+        tool_descriptions.push(tools::lidar_elevation_slice::get_tool_description());
         tool_names.push(tools::lidar_flightline_overlap::get_tool_name());
         tool_descriptions.push(tools::lidar_flightline_overlap::get_tool_description());
         tool_names.push(tools::lidar_info::get_tool_name());
