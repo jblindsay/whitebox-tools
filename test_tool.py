@@ -12,9 +12,19 @@ def main():
         # Sets the working directory. If the working dir is set, you don't
         # need to specify complete file names (with paths) to tools that you run.
         # wbt.set_working_dir("/Users/johnlindsay/Documents/data/Rondeau/")
-        wbt.set_working_dir("/Users/johnlindsay/Documents/data/Rondeau/")
+        # wbt.set_working_dir("/Users/johnlindsay/Documents/data/Rondeau/")
+        wbt.set_working_dir("/Users/johnlindsay/Documents/data/GarveyGlenWatershed/RGB_6_529_150502_1733__0_282528_2912.las")
 
         # Run the tool, specifying the arguments.
+        # name = "remove_off_terrain_objects"
+        # args = [
+        #     "--input=\"StudyData_Rondeau2_NN_filled.dep\"",
+        #     # "--input=\"tmp10.dep\"",
+        #     "--output=\"tmp13.dep\"",
+        #     "--filter=25",
+        #     "--slope=15.0"
+        # ]
+
         name = "remove_off_terrain_objects"
         args = [
             "--input=\"StudyData_Rondeau2_NN_filled.dep\"",
