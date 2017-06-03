@@ -199,6 +199,19 @@ impl Raster {
         }
     }
 
+    pub fn set_row_data(&mut self, row: isize, values: Vec<f64>) {
+        for column in 0..values.len() {
+            if row >= 0 {
+                let c: usize = column as usize;
+                let r: usize = row as usize;
+                if c < self.configs.columns && r < self.configs.rows {
+                    let idx = r * self.configs.columns + c;
+                    self.data[idx] = values[c];
+                }
+            }
+        }
+    }
+
     pub fn write(&mut self) -> Result<(), Error> {
         match self.raster_type {
             RasterType::ArcAscii => {

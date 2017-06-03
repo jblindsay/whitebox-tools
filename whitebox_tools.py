@@ -54,7 +54,7 @@ def run_tool(tool_name, args, callback = default_callback):
         if verbose:
             a.append("-v")
 
-        # print a
+        print a
         ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
 
         while True:

@@ -34,9 +34,9 @@ def main():
 
         # Sets the working directory. If the working dir is set, you don't
         # need to specify complete file names (with paths) to tools that you run.
-        # wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
-        wbt.set_working_dir("/Users/johnlindsay/Documents/data/JayStateForest/")
-
+        wbt.set_working_dir("/Users/johnlindsay/Documents/research/OTOpaper/Take3/data/PEC/Picton data/")
+        # wbt.set_working_dir("/Users/johnlindsay/Documents/data/GarveyGlenWatershed/")
+        # name = "lidar_ground_point_separation"
         # Run the remove_off_terrain_objects tool, specifying the arguments.
         # name = "remove_off_terrain_objects"
         # args = [
@@ -47,21 +47,22 @@ def main():
         # ]
 
         name = "lidar_elevation_slice"
-        # args = [
-        #     "--input=\"1km183270487302008GROUPEALTA.las\"",
-        #     "--output=\"deleteme.las\"",
-        #     "--minz=90.0",
-        #     "--maxz=120.0",
-        #     "--inclassval=1",
-        #     "--outclassval=0"
-        # ]
-
         args = [
-            "--input=\"points-2.las\"",
-            "--output=\"out1.las\"",
-            "--minz=500.0",
-            "--maxz=800.0"
+            "--input=\"1km183270487302008GROUPEALTA.las\"",
+            "--output=\"deleteme.las\"",
+            "--minz=90.0",
+            "--maxz=120.0",
+            "--inclassval=1",
+            "--outclassval=0"
         ]
+
+        # args = [
+        #     "-i=\"RGB_5_529_150502_1754__0_282400_2848.las\"",
+        #     "-o=\"out3.las\"",
+        #     "-dist=5.0",
+        #     "-slope=12.0",
+        #     "-minz=0.0"
+        # ]
 
         # cmd = "." + os.path.sep  + "lidar_elevation_slice"
         # argslist = [

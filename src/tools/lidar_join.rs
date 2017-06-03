@@ -57,9 +57,9 @@ pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> 
     }
 
     if verbose {
-        println!("*************************");
-        println!("* Welcome to lidar_join *");
-        println!("*************************");
+        println!("***************{}", "*".repeat(get_tool_name().len()));
+        println!("* Welcome to {} *", get_tool_name());
+        println!("***************{}", "*".repeat(get_tool_name().len()));
     }
 
     let sep = std::path::MAIN_SEPARATOR;

@@ -7,7 +7,7 @@ try:
     updateCargo = False
     cleanCode = False
     buildCode = True
-    mode = 'check' # 'check', 'debug', or 'release'
+    mode = 'release' # 'check', 'debug', or 'release'
 
     # Change the current directory
     dir_path = os.path.dirname(os.path.realpath(__file__))

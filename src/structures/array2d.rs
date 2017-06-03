@@ -35,7 +35,18 @@ impl<T: Copy> Array2D<T> {
         }
     }
 
-    pub fn get_value(&mut self, row: isize, column: isize) -> T {
+    pub fn set_row_data(&mut self, row: isize, values: Vec<T>) {
+        for column in 0..values.len() as isize  {
+            if row >= 0 {
+                if column < self.columns && row < self.rows {
+                    let idx = row * self.columns + column;
+                    self.data[idx as usize] = values[column as usize];
+                }
+            }
+        }
+    }
+
+    pub fn get_value(&self, row: isize, column: isize) -> T {
         if column < 0 { return self.nodata; }
         if row < 0 { return self.nodata; }
         if column >= self.columns { return self.nodata; }

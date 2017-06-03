@@ -226,13 +226,13 @@ impl LasFile {
         // // See if the file exists. If not, raise error.
         // fs::metadata(&self.file_name)
 
-        let mut f = try!(File::open(&self.file_name));
-        let metadata = try!(fs::metadata(&self.file_name));
+        let mut f = File::open(&self.file_name)?;
+        let metadata = fs::metadata(&self.file_name)?;
         let file_size: usize = metadata.len() as usize;
         let mut buffer = vec![0; file_size];
 
         // read the file's bytes into a buffer
-        try!(f.read(&mut buffer));
+        f.read(&mut buffer)?;
 
         self.header.project_id_used = true;
         self.header.version_major = buffer[24];
