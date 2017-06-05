@@ -7,6 +7,7 @@ import whitebox_tools as wbt
 def main():
     try:
         # Set the whitebox-tools executable directory
+        # (change this to point to where you have the whitebox-tools.exe file)
         wb_dir = os.path.dirname(
             os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
@@ -29,9 +30,7 @@ def main():
         # progress) when verbose mode is False. The default is True
         # wbt.set_verbose_mode(False)
 
-        wbt.set_working_dir(
-            "/Users/johnlindsay/Documents/data/JayStateForest/")
-        # need to specify complete file names (with paths) to tools that you run.
+        # needed to specify complete file names (with paths) to tools that you run.
         wbt.set_working_dir(
             "/Users/johnlindsay/Documents/data/JayStateForest/")
 
