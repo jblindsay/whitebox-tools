@@ -52,7 +52,6 @@ def main():
 # If a callback is not provided, it will simply print the output stream.
 # A provided callback allows for custom processing of the output stream.
 
-
 def callback(s):
     try:
         if "%" in s:

@@ -1,7 +1,7 @@
 # whitebox-tools
 
-This is a library, developed using the Rust programming language, for analyzing geospatial data. Although it intended to
-serve as a source of plugin tools for the *Whitebox GAT* open-source GIS project, the tools contained in this library are
+This is a library, developed using the Rust programming language, for analyzing geospatial data. Although it is intended to
+serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in this library are
 stand-alone and can be run outside of the larger Whitebox GAT project.
 
 ## Installation
@@ -44,4 +44,4 @@ and classification data and information about the variable length records (VLRs)
 - [jblindsay](https://github.com/jblindsay) John Lindsay - creator, maintainer
 
 ## License
-MIT
+[MIT](LICENSE)

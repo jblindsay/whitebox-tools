@@ -13,7 +13,7 @@ use tools::ToolManager;
 
 fn main() {
     match run() {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(err) => panic!("{}", err),
     }
 }
@@ -27,16 +27,21 @@ fn run() -> Result<(), Error> {
     let mut list_tools = false;
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
-    let args: Vec<String> = env::args().collect();
+        let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+        return Err(Error::new(ErrorKind::InvalidInput,
+                              "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
     }
     for arg in args {
         if arg.starts_with("-h") || arg.starts_with("--help") {
             help();
             return Ok(());
         } else if arg.starts_with("-cd") || arg.starts_with("--cd") || arg.starts_with("--wd") {
-            let mut v = arg.replace("--cd", "").replace("--wd", "").replace("-cd", "").replace("\"", "").replace("\'", "");
+            let mut v = arg.replace("--cd", "")
+                .replace("--wd", "")
+                .replace("-cd", "")
+                .replace("\"", "")
+                .replace("\'", "");
             if v.starts_with("=") {
                 v = v[1..v.len()].to_string();
             }
@@ -46,14 +51,21 @@ fn run() -> Result<(), Error> {
             // working_dir = format!("\"{}\"", v);
             working_dir = v.to_string();
         } else if arg.starts_with("-run") || arg.starts_with("--run") || arg.starts_with("-r") {
-            let mut v = arg.replace("--run", "").replace("-run", "").replace("-r", "").replace("\"", "").replace("\'", "");
+            let mut v = arg.replace("--run", "")
+                .replace("-run", "")
+                .replace("-r", "")
+                .replace("\"", "")
+                .replace("\'", "");
             if v.starts_with("=") {
                 v = v[1..v.len()].to_string();
             }
             tool_name = v;
             run_tool = true;
         } else if arg.starts_with("-toolhelp") || arg.starts_with("--toolhelp") {
-            let mut v = arg.replace("--toolhelp", "").replace("-toolhelp", "").replace("\"", "").replace("\'", "");
+            let mut v = arg.replace("--toolhelp", "")
+                .replace("-toolhelp", "")
+                .replace("\"", "")
+                .replace("\'", "");
             if v.starts_with("=") {
                 v = v[1..v.len()].to_string();
             }
@@ -62,7 +74,8 @@ fn run() -> Result<(), Error> {
         } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
             list_tools = true;
         } else if arg.starts_with("-license") || arg.starts_with("-licence") ||
-          arg.starts_with("--license") || arg.starts_with("--licence") || arg.starts_with("-l") {
+                  arg.starts_with("--license") ||
+                  arg.starts_with("--licence") || arg.starts_with("-l") {
             license();
             return Ok(());
         } else if arg.starts_with("-version") || arg.starts_with("--version") {
@@ -70,7 +83,8 @@ fn run() -> Result<(), Error> {
             return Ok(());
         } else if arg.starts_with("-v") {
             verbose = true;
-        } else if arg.starts_with("-") { // it's an arg to be fed to the tool 
+        } else if arg.starts_with("-") {
+            // it's an arg to be fed to the tool
             // println!("arg: {}", arg); //temp
             tool_args_vec.push(arg.trim().to_string().clone());
         }
@@ -112,7 +126,9 @@ The following commands are recognized:
 
 Example Usage:
 >> .*EXE_NAME -r=lidar_info --cd=\"*path*to*data*\" -i=input.las --vlr --geokeys
-".replace("*", &sep).replace("EXE_NAME", exe_name);
+"
+            .replace("*", &sep)
+            .replace("EXE_NAME", exe_name);
     println!("{}", s);
 }
 
