@@ -7,7 +7,7 @@ try:
     updateCargo = False
     cleanCode = False
     buildCode = True
-    mode = 'release' # 'check', 'debug', or 'release'
+    mode = 'release'  # 'check', 'debug', or 'release'
 
     # Change the current directory
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -37,7 +37,7 @@ try:
             retcode = call(['cargo', 'check'], shell=False)
         else:
             retcode = call(['cargo', 'debug'], shell=False)
-        #retcode = call(['cargo', 'build'], shell=False)
+
         if retcode < 0:
             print >>sys.stderr, "Child was terminated by signal", -retcode
         else:

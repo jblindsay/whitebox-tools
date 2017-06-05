@@ -25,7 +25,6 @@ fn run() -> Result<(), Error> {
     let mut run_tool = false;
     let mut tool_help = false;
     let mut list_tools = false;
-    let mut tool_args: String; // = String::new();
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
     let args: Vec<String> = env::args().collect();
@@ -46,7 +45,6 @@ fn run() -> Result<(), Error> {
             }
             // working_dir = format!("\"{}\"", v);
             working_dir = v.to_string();
-            //println!("working_dir: {}", working_dir);
         } else if arg.starts_with("-run") || arg.starts_with("--run") || arg.starts_with("-r") {
             let mut v = arg.replace("--run", "").replace("-run", "").replace("-r", "").replace("\"", "").replace("\'", "");
             if v.starts_with("=") {
@@ -54,39 +52,6 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             run_tool = true;
-            //println!("running: {}", tool_name);
-        } else if arg.starts_with("-args") || arg.starts_with("--args") || arg.starts_with("-a") {
-            tool_args = arg.replace("--args", "").replace("-args", "").replace("-a", "");
-            if tool_args.starts_with("=") {
-                tool_args = tool_args[1..tool_args.len()].to_string();
-            }
-            if tool_args.starts_with("\"") {
-                tool_args = tool_args[1..tool_args.len()].to_string();
-            }
-            if tool_args.starts_with("\'") {
-                tool_args = tool_args[1..tool_args.len()].to_string();
-            }
-            if tool_args.ends_with("\"") {
-                tool_args = tool_args[0..tool_args.len()-1].to_string();
-            }
-            if tool_args.ends_with("\'") {
-                tool_args = tool_args[0..tool_args.len()-1].to_string();
-            }
-
-            let mut previous_char: char = ' ';
-            let mut a = "-".to_string();
-            let b = tool_args.as_bytes();
-            for i in 0..tool_args.len() {
-                let c: char = b[i] as char;
-                if c == '-' && previous_char == ' ' {
-                    if a.len() > 1 { tool_args_vec.push(a.trim().to_string().clone()); }
-                    a = "-".to_string();
-                } else {
-                    a.push(c);
-                }
-                previous_char = c;
-            }
-            tool_args_vec.push(a.trim().to_string().clone());
         } else if arg.starts_with("-toolhelp") || arg.starts_with("--toolhelp") {
             let mut v = arg.replace("--toolhelp", "").replace("-toolhelp", "").replace("\"", "").replace("\'", "");
             if v.starts_with("=") {
@@ -94,7 +59,6 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             tool_help = true;
-            //println!("running: {}", tool_name);
         } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
             list_tools = true;
         } else if arg.starts_with("-license") || arg.starts_with("-licence") ||
@@ -106,6 +70,9 @@ fn run() -> Result<(), Error> {
             return Ok(());
         } else if arg.starts_with("-v") {
             verbose = true;
+        } else if arg.starts_with("-") { // it's an arg to be fed to the tool 
+            // println!("arg: {}", arg); //temp
+            tool_args_vec.push(arg.trim().to_string().clone());
         }
     }
 
@@ -115,10 +82,6 @@ fn run() -> Result<(), Error> {
     }
     let tm = ToolManager::new(&working_dir, &verbose)?;
     if run_tool {
-        // if !working_dir.is_empty() {
-        //     tool_args_vec.insert(0, format!("--wd={}", working_dir));
-        // }
-        // println!("{:?}", tool_args_vec);
         return tm.run_tool(tool_name, tool_args_vec);
     } else if tool_help {
         return tm.tool_help(tool_name);
@@ -140,7 +103,6 @@ fn help() {
     let s = "whitebox-tools Help
 
 The following commands are recognized:
--a, --args       Sets the arguments for running tools; --args=\"-i=file.las -o=newfile.las\".
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools.
@@ -149,7 +111,7 @@ The following commands are recognized:
 -h, --help       Prints help information.
 
 Example Usage:
->> .*EXE_NAME -r=lidar_info --cd=\"*path*to*data*\" --args=\"-i=input.las --vlr --geokeys\"
+>> .*EXE_NAME -r=lidar_info --cd=\"*path*to*data*\" -i=input.las --vlr --geokeys
 ".replace("*", &sep).replace("EXE_NAME", exe_name);
     println!("{}", s);
 }

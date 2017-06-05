@@ -1,38 +1,62 @@
-extern crate whitebox_tools;
 extern crate time;
 extern crate num_cpus;
 
-use std::io;
-use std::env;
 use std::path;
 use std::f64;
 use std::i64;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use whitebox_tools::raster::*;
-use whitebox_tools::structures::array2d::Array2D;
+use raster::*;
+use structures::array2d::Array2D;
+use std::io::{Error, ErrorKind};
 
-const TOOL_NAME: &str = "elev_percentile";
+pub fn get_tool_name() -> String {
+    return "elev_percentile".to_string();
+}
 
-fn main() {
+pub fn get_tool_description() -> String {
+    let s = "Calculates the elevation percentile raster from a DEM.";
+
+    return s.to_string();
+}
+
+pub fn get_tool_parameters() -> String {
+    let mut s = "-i, --input   Input raster DEM file.".to_owned();
+    s.push_str("-o, --output  Output raster file.\n");
+    s.push_str("--filter      Size of the filter kernel (default is 11).\n");
+    s.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
+    s.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
+    return s.to_string();
+}
+
+pub fn get_example_usage() -> Option<String> {
     let sep: String = path::MAIN_SEPARATOR.to_string();
+    let s = &format!(">> .*{} -wd *path*to*data* -i=input.dep -o=output.dep --filter=25\n",
+                     get_tool_name())
+                     .replace("*", &sep);
+    return Some(s.to_string());
+}
+
+pub fn run<'a>(args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
     let mut input_file = String::new();
     let mut output_file = String::new();
-    let mut working_directory: String = "".to_string();
     let mut filter_size_x = 11usize;
     let mut filter_size_y = 11usize;
-    let mut verbose: bool = false;
-    let mut keyval: bool;
-    let args: Vec<String> = env::args().collect();
-    if args.len() <= 1 { panic!("Tool run with no paramters. Please see help (-h) for parameter descriptions."); }
+    let mut num_sig_digits = 2i32;
+    if args.len() == 0 {
+        return Err(Error::new(ErrorKind::InvalidInput,
+                              "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+    }
     for i in 0..args.len() {
         let mut arg = args[i].replace("\"", "");
         arg = arg.replace("\'", "");
         let cmd = arg.split("="); // in case an equals sign was used
         let vec = cmd.collect::<Vec<&str>>();
-        keyval = false;
-        if vec.len() > 1 { keyval = true; }
+        let mut keyval = false;
+        if vec.len() > 1 {
+            keyval = true;
+        }
         if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
             if keyval {
                 input_file = vec[1].to_string();
@@ -44,12 +68,6 @@ fn main() {
                 output_file = vec[1].to_string();
             } else {
                 output_file = args[i+1].to_string();
-            }
-        } else if vec[0].to_lowercase() == "-wd" || vec[0].to_lowercase() == "--wd" {
-            if keyval {
-                working_directory = vec[1].to_string();
-            } else {
-                working_directory = args[i+1].to_string();
             }
         } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
             if keyval {
@@ -70,44 +88,19 @@ fn main() {
             } else {
                 filter_size_y = args[i+1].to_string().parse::<usize>().unwrap();
             }
-        } else if vec[0].to_lowercase() == "-v" || vec[0].to_lowercase() == "--verbose" {
-            verbose = true;
-        } else if vec[0].to_lowercase() == "-h" || vec[0].to_lowercase() == "--help" ||
-            vec[0].to_lowercase() == "--h"{
-            let mut s: String = "Help:\n".to_owned();
-                     s.push_str("-i, --input   Input raster DEM file.\n");
-                     s.push_str("-o, --output  Output raster file.\n");
-                     s.push_str("-wd, --wd     Optional working directory. If specified, filenames parameters need not include a full path.\n");
-                     s.push_str("--filter      Size of the filter kernel (default is 11).\n");
-                     s.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-                     s.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
-                     s.push_str("-version      Prints the tool version number.\n");
-                     s.push_str("-h            Prints help information.\n\n");
-                     s.push_str("Example usage:\n\n");
-                     s.push_str(&format!(">> .*{} -wd *path*to*data* -i=input.dep -o=output.dep --filter=25\n", TOOL_NAME).replace("*", &sep));
-            println!("{}", s);
-            return;
-        } else if vec[0].to_lowercase() == "-version" || vec[0].to_lowercase() == "--version" {
-            const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-            println!("{} v{}", TOOL_NAME, VERSION.unwrap_or("unknown"));
-            return;
+        } else if vec[0].to_lowercase() == "-numdigits" || vec[0].to_lowercase() == "--numdigits" {
+            if keyval {
+                num_sig_digits = vec[1].to_string().parse::<i32>().unwrap();
+            } else {
+                num_sig_digits = args[i+1].to_string().parse::<i32>().unwrap();
+            }
         }
     }
 
-    match run(input_file, output_file, working_directory,
-        filter_size_x, filter_size_y, verbose) {
-        Ok(()) => println!("Complete!"),
-        Err(err) => panic!("{}", err),
-    }
-}
-
-fn run(mut input_file: String, mut output_file: String, mut working_directory: String,
-    mut filter_size_x: usize, mut filter_size_y: usize, verbose: bool) -> Result<(), io::Error> {
-
     if verbose {
-        println!("***************{}", "*".repeat(TOOL_NAME.len()));
-        println!("* Welcome to {} *", TOOL_NAME);
-        println!("***************{}", "*".repeat(TOOL_NAME.len()));
+        println!("***************{}", "*".repeat(get_tool_name().len()));
+        println!("* Welcome to {} *", get_tool_name());
+        println!("***************{}", "*".repeat(get_tool_name().len()));
     }
 
     let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -129,10 +122,6 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     let mut progress: usize;
     let mut old_progress: usize = 1;
 
-    if !working_directory.ends_with(&sep) {
-        working_directory.push_str(&(sep.to_string()));
-    }
-
     if !input_file.contains(&sep) {
         input_file = format!("{}{}", working_directory, input_file);
     }
@@ -150,7 +139,6 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     // first bin the data
     let rows = input.configs.rows as isize;
     let columns = input.configs.columns as isize;
-    let num_sig_digits = 2;
     let multiplier = 10f64.powi(num_sig_digits);
     let min_val = input.configs.minimum;
     let max_val = input.configs.maximum;
@@ -334,7 +322,7 @@ fn run(mut input_file: String, mut output_file: String, mut working_directory: S
     output.configs.display_min = 0.0;
     output.configs.display_max = 100.0;
     output.configs.palette = "blue_white_red.plt".to_string();
-    output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", TOOL_NAME));
+    output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", get_tool_name()));
     output.add_metadata_entry(format!("Input file: {}", input_file));
     output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
     output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));

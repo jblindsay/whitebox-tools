@@ -46,15 +46,16 @@ def run_tool(tool_name, args, callback = default_callback):
 
         args_str = ""
         for s in args:
-            args_str += s.replace("\"", "") + " "
+            # args_str += s.replace("\"", "") + " "
+            a.append(s)
 
-        args_str = args_str[:-1]
-        a.append("--args=\"{}\"".format(args_str))
+        # args_str = args_str[:-1]
+        # a.append("--args=\"{}\"".format(args_str))
 
         if verbose:
             a.append("-v")
 
-        print a
+        # print a
         ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
 
         while True:

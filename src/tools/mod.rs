@@ -1,21 +1,29 @@
+pub mod dev_from_mean_elev;
+pub mod elev_percentile;
 pub mod lidar_elevation_slice;
 pub mod lidar_flightline_overlap;
 pub mod lidar_info;
 pub mod lidar_join;
+pub mod percent_elev_range;
+pub mod relative_topographic_position;
 pub mod remove_off_terrain_objects;
 
 use tools;
 use std::io::{Error, ErrorKind};
+// use tools::dev_from_mean_elev::DevFromMeanElev;
 
 #[derive(Default)]
 pub struct ToolManager {
     pub working_dir: String,
     pub verbose: bool,
-}
+} 
 
 impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
-        let tm = ToolManager { working_dir: working_directory.to_string(), verbose: *verbose_mode };
+        let tm = ToolManager {
+            working_dir: working_directory.to_string(),
+            verbose: *verbose_mode,
+        };
         Ok(tm)
     }
 
@@ -24,22 +32,39 @@ impl ToolManager {
         //     tool_args_vec.insert(0, format!("--wd={}", working_dir));
         // }
         match tool_name.to_lowercase().as_ref() {
+            "dev_from_mean_elev" => {
+                return tools::dev_from_mean_elev::run(args, &self.working_dir, self.verbose);
+            }
+            "elev_percentile" => {
+                return tools::elev_percentile::run(args, &self.working_dir, self.verbose);
+            }
             "lidar_elevation_slice" => {
                 return tools::lidar_elevation_slice::run(args, &self.working_dir, self.verbose);
             }
             "lidar_flightline_overlap" => {
                 return tools::lidar_flightline_overlap::run(args, &self.working_dir, self.verbose);
-            },
+            }
             "lidar_info" => {
-            return tools::lidar_info::run(args, &self.working_dir);
-            },
+                return tools::lidar_info::run(args, &self.working_dir);
+            }
             "lidar_join" => {
                 return tools::lidar_join::run(args, &self.working_dir, self.verbose);
-            },
+            }
+            "percent_elev_range" => {
+                return tools::percent_elev_range::run(args, &self.working_dir, self.verbose);
+            }
+            "relative_topographic_position" => {
+                return tools::relative_topographic_position::run(args, &self.working_dir, self.verbose);
+            }
             "remove_off_terrain_objects" => {
-                return tools::remove_off_terrain_objects::run(args, &self.working_dir, self.verbose);
-            },
-            _ => Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
+                return tools::remove_off_terrain_objects::run(args,
+                                                              &self.working_dir,
+                                                              self.verbose);
+            }
+            _ => {
+                Err(Error::new(ErrorKind::NotFound,
+                               format!("Unrecognized tool name {}.", tool_name)))
+            }
         }
     }
 
@@ -48,54 +73,92 @@ impl ToolManager {
         let mut parameters = "".to_string();
         let mut example = "".to_string();
         let ret: Result<(), Error> = match tool_name.to_lowercase().as_ref() {
-        "lidar_elevation_slice" => {
-            description = tools::lidar_elevation_slice::get_tool_description();
-            parameters = tools::lidar_elevation_slice::get_tool_parameters();
-            if tools::lidar_elevation_slice::get_example_usage().is_some() {
-                example = tools::lidar_elevation_slice::get_example_usage().unwrap();
+            "dev_from_mean_elev" => {
+                description = tools::dev_from_mean_elev::get_tool_description();
+                parameters = tools::dev_from_mean_elev::get_tool_parameters();
+                if tools::dev_from_mean_elev::get_example_usage().is_some() {
+                    example = tools::dev_from_mean_elev::get_example_usage().unwrap();
+                }
+                Ok(())
             }
-            Ok(())
-        },
-        "lidar_flightline_overlap" => {
-            description = tools::lidar_flightline_overlap::get_tool_description();
-            parameters = tools::lidar_flightline_overlap::get_tool_parameters();
-            if tools::lidar_flightline_overlap::get_example_usage().is_some() {
-                example = tools::lidar_flightline_overlap::get_example_usage().unwrap();
+            "elev_percentile" => {
+                description = tools::elev_percentile::get_tool_description();
+                parameters = tools::elev_percentile::get_tool_parameters();
+                if tools::elev_percentile::get_example_usage().is_some() {
+                    example = tools::elev_percentile::get_example_usage().unwrap();
+                }
+                Ok(())
             }
-            Ok(())
-        },
-        "lidar_info" => {
-            description = tools::lidar_info::get_tool_description();
-            parameters = tools::lidar_info::get_tool_parameters();
-            if tools::lidar_info::get_example_usage().is_some() {
-                example = tools::lidar_info::get_example_usage().unwrap();
+            "lidar_elevation_slice" => {
+                description = tools::lidar_elevation_slice::get_tool_description();
+                parameters = tools::lidar_elevation_slice::get_tool_parameters();
+                if tools::lidar_elevation_slice::get_example_usage().is_some() {
+                    example = tools::lidar_elevation_slice::get_example_usage().unwrap();
+                }
+                Ok(())
             }
-            Ok(())
-        },
-        "lidar_join" => {
-            description = tools::lidar_join::get_tool_description();
-            parameters = tools::lidar_join::get_tool_parameters();
-            if tools::lidar_join::get_example_usage().is_some() {
-                example = tools::lidar_join::get_example_usage().unwrap();
+            "lidar_flightline_overlap" => {
+                description = tools::lidar_flightline_overlap::get_tool_description();
+                parameters = tools::lidar_flightline_overlap::get_tool_parameters();
+                if tools::lidar_flightline_overlap::get_example_usage().is_some() {
+                    example = tools::lidar_flightline_overlap::get_example_usage().unwrap();
+                }
+                Ok(())
             }
-            Ok(())
-        },
-        "remove_off_terrain_objects" => {
-            description = tools::remove_off_terrain_objects::get_tool_description();
-            parameters = tools::remove_off_terrain_objects::get_tool_parameters();
-            if tools::remove_off_terrain_objects::get_example_usage().is_some() {
-                example = tools::remove_off_terrain_objects::get_example_usage().unwrap();
+            "lidar_info" => {
+                description = tools::lidar_info::get_tool_description();
+                parameters = tools::lidar_info::get_tool_parameters();
+                if tools::lidar_info::get_example_usage().is_some() {
+                    example = tools::lidar_info::get_example_usage().unwrap();
+                }
+                Ok(())
             }
-            Ok(())
-        },
-        _ => Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
+            "lidar_join" => {
+                description = tools::lidar_join::get_tool_description();
+                parameters = tools::lidar_join::get_tool_parameters();
+                if tools::lidar_join::get_example_usage().is_some() {
+                    example = tools::lidar_join::get_example_usage().unwrap();
+                }
+                Ok(())
+            }
+            "percent_elev_range" => {
+                description = tools::percent_elev_range::get_tool_description();
+                parameters = tools::percent_elev_range::get_tool_parameters();
+                if tools::percent_elev_range::get_example_usage().is_some() {
+                    example = tools::percent_elev_range::get_example_usage().unwrap();
+                }
+                Ok(())
+            }
+            "relative_topographic_position" => {
+                description = tools::relative_topographic_position::get_tool_description();
+                parameters = tools::relative_topographic_position::get_tool_parameters();
+                if tools::relative_topographic_position::get_example_usage().is_some() {
+                    example = tools::relative_topographic_position::get_example_usage().unwrap();
+                }
+                Ok(())
+            }
+            "remove_off_terrain_objects" => {
+                description = tools::remove_off_terrain_objects::get_tool_description();
+                parameters = tools::remove_off_terrain_objects::get_tool_parameters();
+                if tools::remove_off_terrain_objects::get_example_usage().is_some() {
+                    example = tools::remove_off_terrain_objects::get_example_usage().unwrap();
+                }
+                Ok(())
+            }
+            _ => {
+                Err(Error::new(ErrorKind::NotFound,
+                               format!("Unrecognized tool name {}.", tool_name)))
+            }
         };
         if example.len() <= 1 {
             let s = format!("{} Help
 Description: {}
 
 Input parameters:
-{} \n\nNo example provided", tool_name, description, parameters);
+{} \n\nNo example provided",
+                            tool_name,
+                            description,
+                            parameters);
 
             println!("{}", s);
         } else {
@@ -106,7 +169,11 @@ Input parameters:
 {}
 
 Example usage:
-{}", tool_name, description, parameters, example);
+{}",
+                            tool_name,
+                            description,
+                            parameters,
+                            example);
 
             println!("{}", s);
         }
@@ -116,14 +183,31 @@ Example usage:
     pub fn list_tools(&self) {
         let mut tool_names = Vec::new();
         let mut tool_descriptions = Vec::new();
+        
+        tool_names.push(tools::dev_from_mean_elev::get_tool_name());
+        tool_descriptions.push(tools::dev_from_mean_elev::get_tool_description());
+
+        tool_names.push(tools::elev_percentile::get_tool_name());
+        tool_descriptions.push(tools::elev_percentile::get_tool_description());
+        
         tool_names.push(tools::lidar_elevation_slice::get_tool_name());
         tool_descriptions.push(tools::lidar_elevation_slice::get_tool_description());
+        
         tool_names.push(tools::lidar_flightline_overlap::get_tool_name());
         tool_descriptions.push(tools::lidar_flightline_overlap::get_tool_description());
+        
         tool_names.push(tools::lidar_info::get_tool_name());
         tool_descriptions.push(tools::lidar_info::get_tool_description());
+        
         tool_names.push(tools::lidar_join::get_tool_name());
         tool_descriptions.push(tools::lidar_join::get_tool_description());
+        
+        tool_names.push(tools::percent_elev_range::get_tool_name());
+        tool_descriptions.push(tools::percent_elev_range::get_tool_description());
+        
+        tool_names.push(tools::relative_topographic_position::get_tool_name());
+        tool_descriptions.push(tools::relative_topographic_position::get_tool_description());
+        
         tool_names.push(tools::remove_off_terrain_objects::get_tool_name());
         tool_descriptions.push(tools::remove_off_terrain_objects::get_tool_description());
 
@@ -135,3 +219,8 @@ Example usage:
         println!("{}", ret);
     }
 }
+
+// pub trait WhiteboxTool {
+//     fn get_tool_name(&self) -> String;
+//     fn get_tool_description(&self) -> String;
+// }
