@@ -13,8 +13,7 @@ def main():
     try:
         # Set the whitebox-tools executable directory
         # (change this to point to where you have the whitebox-tools.exe file)
-        wb_dir = os.path.dirname(
-            os.path.abspath(__file__)) + "/target/release/"
+        wb_dir = os.path.dirname(os.path.abspath(__file__))
         wbt.set_whitebox_dir(wb_dir)
 
         # Prints the whitebox-tools help...a listing of available commands
@@ -36,13 +35,12 @@ def main():
         # wbt.set_verbose_mode(False)
 
         # needed to specify complete file names (with paths) to tools that you run.
-        wbt.set_working_dir(
-            "/Users/johnlindsay/Documents/data/JayStateForest/")
+        wbt.set_working_dir(os.path.dirname(os.path.abspath(__file__)) + "/SampleData/")
 
         name = "dev_from_mean_elev"
-        args = ["--input=\"DEM no OTOs.dep\"",
-                "--output=\"tmp30.dep\"",
-                "--filtery=101"]
+        args = ["--input=\"DEM.dep\"",
+                "--output=\"DEV_101.dep\"",
+                "--filter=101"]
 
         # Run the tool and check the return value
         if wbt.run_tool(name, args, callback) != 0:
@@ -60,15 +58,20 @@ def callback(out_str):
     '''
     try:
         if "%" in out_str:
+            # print("I'm here")
             str_array = out_str.split(" ")
             progress = int(
                 str_array[len(str_array) - 1].replace("%", "").strip())
-            print("Progress: {}%".format(progress))
+            label = out_str.replace(str_array[len(str_array)-1], "")
+            print("{1} {2}".format(label, progress))
+        elif "error" in out_str.lower():
+            print("ERROR: {}".format(out_str))
+        elif "elapsed time (excluding i/o):" in out_str.lower():
+            elapsed_time = ''.join(ele for ele in out_str if ele.isdigit() or ele == '.')
+            units = out_str.lower().replace("elapsed time (excluding i/o):", "").replace(elapsed_time, "").strip()
+            print("Elapsed time: {0}{1}".format(elapsed_time, units))
         else:
-            if "error" in out_str.lower():
-                print("ERROR: {}".format(out_str))
-            else:
-                print("{}".format(out_str))
+            print("{}".format(out_str))
     except:
         print(out_str)
 
