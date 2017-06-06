@@ -1,0 +1,30 @@
+Min:	-2.896785262014355
+Max:	3.1710588365845074
+North:	4895782.5891085025
+South:	4878858.5400943495
+East:	686063.139196986
+West:	664737.0507251581
+Cols:	237
+Rows:	188
+Stacks:	1
+Data Type:	FLOAT
+Z Units:	not specified
+XY Units:	metres
+Projection:	not specified
+Data Scale:	continuous
+Display Min:	-2
+Display Max:	2
+Preferred Palette:	blue_white_red.plt
+NoData:	-32768
+Byte Order:	LITTLE_ENDIAN
+Palette Nonlinearity:	1
+Metadata Entry:	Created by whitebox_tools' -i, --input   Input raster DEM file.-o, --output  Output raster file.
+-wd, --wd     Optional working directory. If specified, filenames parameters need not include a full path.
+--filter      Size of the filter kernel (default is 11).
+--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).
+--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).
+ tool
+Metadata Entry:	Input file; /Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/testdata/DEM.dep
+Metadata Entry:	Filter size x; 101
+Metadata Entry:	Filter size y; 101
+Metadata Entry:	Elapsed Time (excluding I/O); 0.004354S

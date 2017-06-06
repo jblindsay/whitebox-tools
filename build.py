@@ -11,7 +11,7 @@ def main():
     '''
     try:
         update_cargo = False
-        clean_code = True
+        clean_code = False
         build_code = True
         mode = 'release'  # 'check', 'debug', or 'release'
 
