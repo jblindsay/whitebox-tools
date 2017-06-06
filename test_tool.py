@@ -1,10 +1,16 @@
 #!/usr/bin/env python
+''' This script is used to test individual tools in the whitebox-tools library.
+'''
+
+from __future__ import print_function
 import os
 import sys
 import whitebox_tools as wbt
 
 
 def main():
+    """ main function
+    """
     try:
         # Tool name and arguments
         #name = "dev_from_mean_elev"
