@@ -1,168 +1,125 @@
-pub mod dev_from_mean_elev;
-pub mod elev_percentile;
-pub mod lidar_elevation_slice;
-pub mod lidar_flightline_overlap;
-pub mod lidar_info;
-pub mod lidar_join;
-pub mod percent_elev_range;
-pub mod relative_topographic_position;
-pub mod remove_off_terrain_objects;
+// pub mod dev_from_mean_elev;
+// pub mod elev_percentile;
+pub mod lidar_analysis;
+// pub mod percent_elev_range;
+// pub mod relative_topographic_position;
+// pub mod remove_off_terrain_objects;
+pub mod terrain_analysis;
 
 use tools;
 use std::io::{Error, ErrorKind};
-// use tools::dev_from_mean_elev::DevFromMeanElev;
 
 #[derive(Default)]
 pub struct ToolManager {
     pub working_dir: String,
     pub verbose: bool,
+    tool_names: Vec<String>,
 } 
 
 impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
+        let mut tool_names = vec![];
+        // lidar
+        tool_names.push("FlightlineOverlap".to_string());
+        tool_names.push("LidarElevationSlice".to_string());
+        tool_names.push("LidarInfo".to_string());
+        tool_names.push("LidarJoin".to_string());
+
+        // terrain analysis
+        tool_names.push("DevFromMeanElev".to_string());
+        tool_names.push("ElevPercentile".to_string());
+        tool_names.push("PercentElevRange".to_string());
+        tool_names.push("RelativeTopographicPosition".to_string());
+        tool_names.push("RemoveOffTerrainObjects".to_string());
+        
         let tm = ToolManager {
             working_dir: working_directory.to_string(),
             verbose: *verbose_mode,
+            tool_names: tool_names,
         };
         Ok(tm)
+    }
+
+    fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
+        match tool_name.to_lowercase().replace("_", "").as_ref() {
+            // lidar
+            "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
+            "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
+            "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
+            "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
+
+            // terrain analysis
+            "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
+            "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
+            "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
+            "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
+            "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
+
+            _ => None,
+        }
     }
 
     pub fn run_tool(&self, tool_name: String, args: Vec<String>) -> Result<(), Error> {
         // if !working_dir.is_empty() {
         //     tool_args_vec.insert(0, format!("--wd={}", working_dir));
         // }
-        match tool_name.to_lowercase().as_ref() {
-            "dev_from_mean_elev" => {
-                return tools::dev_from_mean_elev::run(args, &self.working_dir, self.verbose);
-            }
-            "elev_percentile" => {
-                return tools::elev_percentile::run(args, &self.working_dir, self.verbose);
-            }
-            "lidar_elevation_slice" => {
-                return tools::lidar_elevation_slice::run(args, &self.working_dir, self.verbose);
-            }
-            "lidar_flightline_overlap" => {
-                return tools::lidar_flightline_overlap::run(args, &self.working_dir, self.verbose);
-            }
-            "lidar_info" => {
-                return tools::lidar_info::run(args, &self.working_dir);
-            }
-            "lidar_join" => {
-                return tools::lidar_join::run(args, &self.working_dir, self.verbose);
-            }
-            "percent_elev_range" => {
-                return tools::percent_elev_range::run(args, &self.working_dir, self.verbose);
-            }
-            "relative_topographic_position" => {
-                return tools::relative_topographic_position::run(args, &self.working_dir, self.verbose);
-            }
-            "remove_off_terrain_objects" => {
-                return tools::remove_off_terrain_objects::run(args,
-                                                              &self.working_dir,
-                                                              self.verbose);
-            }
-            _ => {
-                Err(Error::new(ErrorKind::NotFound,
-                               format!("Unrecognized tool name {}.", tool_name)))
-            }
+
+        match self.get_tool(tool_name.as_ref()) {
+            Some(tool) => return tool.run(args, &self.working_dir, self.verbose),
+            None => return Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
         }
     }
 
     pub fn tool_help(&self, tool_name: String) -> Result<(), Error> {
-        let mut description = "".to_string();
-        let mut parameters = "".to_string();
-        let mut example = "".to_string();
-        let ret: Result<(), Error> = match tool_name.to_lowercase().as_ref() {
-            "dev_from_mean_elev" => {
-                description = tools::dev_from_mean_elev::get_tool_description();
-                parameters = tools::dev_from_mean_elev::get_tool_parameters();
-                if tools::dev_from_mean_elev::get_example_usage().is_some() {
-                    example = tools::dev_from_mean_elev::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "elev_percentile" => {
-                description = tools::elev_percentile::get_tool_description();
-                parameters = tools::elev_percentile::get_tool_parameters();
-                if tools::elev_percentile::get_example_usage().is_some() {
-                    example = tools::elev_percentile::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "lidar_elevation_slice" => {
-                description = tools::lidar_elevation_slice::get_tool_description();
-                parameters = tools::lidar_elevation_slice::get_tool_parameters();
-                if tools::lidar_elevation_slice::get_example_usage().is_some() {
-                    example = tools::lidar_elevation_slice::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "lidar_flightline_overlap" => {
-                description = tools::lidar_flightline_overlap::get_tool_description();
-                parameters = tools::lidar_flightline_overlap::get_tool_parameters();
-                if tools::lidar_flightline_overlap::get_example_usage().is_some() {
-                    example = tools::lidar_flightline_overlap::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "lidar_info" => {
-                description = tools::lidar_info::get_tool_description();
-                parameters = tools::lidar_info::get_tool_parameters();
-                if tools::lidar_info::get_example_usage().is_some() {
-                    example = tools::lidar_info::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "lidar_join" => {
-                description = tools::lidar_join::get_tool_description();
-                parameters = tools::lidar_join::get_tool_parameters();
-                if tools::lidar_join::get_example_usage().is_some() {
-                    example = tools::lidar_join::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "percent_elev_range" => {
-                description = tools::percent_elev_range::get_tool_description();
-                parameters = tools::percent_elev_range::get_tool_parameters();
-                if tools::percent_elev_range::get_example_usage().is_some() {
-                    example = tools::percent_elev_range::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "relative_topographic_position" => {
-                description = tools::relative_topographic_position::get_tool_description();
-                parameters = tools::relative_topographic_position::get_tool_parameters();
-                if tools::relative_topographic_position::get_example_usage().is_some() {
-                    example = tools::relative_topographic_position::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            "remove_off_terrain_objects" => {
-                description = tools::remove_off_terrain_objects::get_tool_description();
-                parameters = tools::remove_off_terrain_objects::get_tool_parameters();
-                if tools::remove_off_terrain_objects::get_example_usage().is_some() {
-                    example = tools::remove_off_terrain_objects::get_example_usage().unwrap();
-                }
-                Ok(())
-            }
-            _ => {
-                Err(Error::new(ErrorKind::NotFound,
-                               format!("Unrecognized tool name {}.", tool_name)))
-            }
-        };
-        if example.len() <= 1 {
-            let s = format!("{} Help
+        match self.get_tool(tool_name.as_ref()) {
+            Some(tool) => println!("{}", get_help(tool)),
+            None => return Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
+        }
+        Ok(())
+    }
+
+    pub fn list_tools(&self) {
+        let mut tool_details: Vec<(String, String)> = Vec::new();
+        
+        for val in &self.tool_names {
+            let tool = self.get_tool(&val).unwrap();
+            tool_details.push(get_name_and_description(tool));
+        }
+
+        let mut ret = format!("All {} Available Tools:\n", tool_details.len());
+        for i in 0..tool_details.len() {
+            ret.push_str(&format!("{}: {}\n\n", tool_details[i].0, tool_details[i].1));
+        }
+
+        println!("{}", ret);
+    }
+}
+
+pub trait WhiteboxTool {
+    fn get_tool_name(&self) -> String;
+    fn get_tool_description(&self) -> String;
+    fn get_tool_parameters(&self) -> String;
+    fn get_example_usage(&self) -> String;
+    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error>;
+}
+
+fn get_help<'a>(wt: Box<WhiteboxTool + 'a>) -> String {
+    let tool_name = wt.get_tool_name();
+    let description = wt.get_tool_description();
+    let parameters = wt.get_tool_parameters();
+    let example = wt.get_example_usage();
+    let s: String;
+    if example.len() <= 1 {
+        s = format!("{} Help
 Description: {}
 
 Input parameters:
 {} \n\nNo example provided",
-                            tool_name,
-                            description,
-                            parameters);
-
-            println!("{}", s);
-        } else {
-            let s = format!("{} Help
+        tool_name,
+        description,
+        parameters);
+    } else {
+        s = format!("{} Help
 Description: {}
 
 Input parameters:
@@ -170,57 +127,14 @@ Input parameters:
 
 Example usage:
 {}",
-                            tool_name,
-                            description,
-                            parameters,
-                            example);
-
-            println!("{}", s);
-        }
-        ret
+        tool_name,
+        description,
+        parameters,
+        example);
     }
-
-    pub fn list_tools(&self) {
-        let mut tool_names = Vec::new();
-        let mut tool_descriptions = Vec::new();
-        
-        tool_names.push(tools::dev_from_mean_elev::get_tool_name());
-        tool_descriptions.push(tools::dev_from_mean_elev::get_tool_description());
-
-        tool_names.push(tools::elev_percentile::get_tool_name());
-        tool_descriptions.push(tools::elev_percentile::get_tool_description());
-        
-        tool_names.push(tools::lidar_elevation_slice::get_tool_name());
-        tool_descriptions.push(tools::lidar_elevation_slice::get_tool_description());
-        
-        tool_names.push(tools::lidar_flightline_overlap::get_tool_name());
-        tool_descriptions.push(tools::lidar_flightline_overlap::get_tool_description());
-        
-        tool_names.push(tools::lidar_info::get_tool_name());
-        tool_descriptions.push(tools::lidar_info::get_tool_description());
-        
-        tool_names.push(tools::lidar_join::get_tool_name());
-        tool_descriptions.push(tools::lidar_join::get_tool_description());
-        
-        tool_names.push(tools::percent_elev_range::get_tool_name());
-        tool_descriptions.push(tools::percent_elev_range::get_tool_description());
-        
-        tool_names.push(tools::relative_topographic_position::get_tool_name());
-        tool_descriptions.push(tools::relative_topographic_position::get_tool_description());
-        
-        tool_names.push(tools::remove_off_terrain_objects::get_tool_name());
-        tool_descriptions.push(tools::remove_off_terrain_objects::get_tool_description());
-
-        let mut ret = format!("All {} Available Tools:\n", tool_names.len());
-        for i in 0..tool_names.len() {
-            ret.push_str(&format!("{}: {}\n\n", tool_names[i], tool_descriptions[i]));
-        }
-
-        println!("{}", ret);
-    }
+    s
 }
 
-// pub trait WhiteboxTool {
-//     fn get_tool_name(&self) -> String;
-//     fn get_tool_description(&self) -> String;
-// }
+fn get_name_and_description<'a>(wt: Box<WhiteboxTool + 'a>) -> (String, String) {
+    (wt.get_tool_name(), wt.get_tool_description())
+}
