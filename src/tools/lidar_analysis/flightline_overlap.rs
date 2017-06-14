@@ -6,7 +6,7 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use lidar::las;
 use raster::*;
-use structures::fixed_radius_search::FixedRadiusSearch;
+use structures::fixed_radius_search::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
 
 pub struct FlightlineOverlap {
@@ -134,7 +134,7 @@ impl WhiteboxTool for FlightlineOverlap {
 
         if verbose { println!("Performing analysis..."); }
         // let search_dist = grid_res / 2.0;
-        let mut frs: FixedRadiusSearch<usize> = FixedRadiusSearch::new(grid_res);
+        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(grid_res);
         let mut gps_times = vec![-1f64; n_points];
         let (mut x, mut y, mut gps_time) : (f64, f64, f64);
         let mut progress: usize;

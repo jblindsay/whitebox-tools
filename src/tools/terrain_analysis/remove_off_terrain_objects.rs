@@ -6,7 +6,7 @@ use std::path;
 use std::f64;
 use std::collections::VecDeque;
 use raster::*;
-use structures::fixed_radius_search::FixedRadiusSearch;
+use structures::fixed_radius_search::FixedRadiusSearch2D;
 use structures::array2d::Array2D;
 use tools::WhiteboxTool;
 
@@ -304,7 +304,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
 
         // Interpolate the data holes. Start by locating all the edge cells.
         if verbose { println!("Interpolating data holes...") };
-        let mut frs: FixedRadiusSearch<f64> = FixedRadiusSearch::new(filter_size as f64 / 1.5f64);
+        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(filter_size as f64 / 1.5f64);
         for row in 0..rows {
             for col in 0..columns {
                 if tophat[(row, col)] != nodata && out[(row, col)] != initial_value {

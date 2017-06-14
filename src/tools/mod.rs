@@ -1,9 +1,4 @@
-// pub mod dev_from_mean_elev;
-// pub mod elev_percentile;
 pub mod lidar_analysis;
-// pub mod percent_elev_range;
-// pub mod relative_topographic_position;
-// pub mod remove_off_terrain_objects;
 pub mod terrain_analysis;
 
 use tools;
@@ -22,8 +17,11 @@ impl ToolManager {
         // lidar
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LidarElevationSlice".to_string());
+        tool_names.push("LidarGroundPointFilter".to_string());
+        tool_names.push("LidarHillshade".to_string());
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
+        tool_names.push("LidarTophatTransform".to_string());
 
         // terrain analysis
         tool_names.push("DevFromMeanElev".to_string());
@@ -45,8 +43,11 @@ impl ToolManager {
             // lidar
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
             "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
+            "lidargroundpointfilter" => Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new())),
+            "lidarhillshade" => Some(Box::new(tools::lidar_analysis::LidarHillshade::new())),
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
+            "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
 
             // terrain analysis
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),

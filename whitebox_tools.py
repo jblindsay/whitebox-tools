@@ -1,171 +1,213 @@
 #!/usr/bin/env python
-
-# This file is intended to be a helper for running whitebox-tools plugins from a Python script.
-# See whitebox_example.py for an example of how to use it.
+''' This file is intended to be a helper for running whitebox-tools plugins from a Python script.
+See whitebox_example.py for an example of how to use it.
+'''
+from __future__ import print_function
 import os
+from os import path
 import sys
-import subprocess
 from sys import platform
-
-exe_path = os.path.dirname(os.path.abspath(__file__))
-wd = ""
-verbose = True
-
-if platform == 'win32':
-    ext = '.exe'
-else:
-    ext = ''
-
-exe_name = "whitebox-tools{}".format(ext)
+from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
 
-def set_whitebox_dir(path):
-    global exe_path
-    exe_path = path
+def default_callback(value):
+    ''' A simple default callback that outputs using the print function.
+    '''
+    print(value)
 
-def set_working_dir(path):
-    global wd
-    wd = path
 
-def set_verbose_mode(val = True):
-    global verbose
-    verbose = val
+class WhiteboxTools(object):
+    ''' An object for interfacing with the whitebox - tools executable.
+    '''
+    # exe_path = path.dirname(path.abspath(__file__))
+    # wd = ""
+    # verbose = True
 
-def default_callback(str):
-    print(str)
+    def __init__(self):
+        self.exe_path = path.dirname(path.abspath(__file__))
+        self.wkdir = ""
+        self.verbose = True
+        self.cancel_op = False
 
-def run_tool(tool_name, args, callback = default_callback):
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("--run=\"{}\"".format(tool_name))
+    if platform == 'win32':
+        ext = '.exe'
+    else:
+        ext = ''
 
-        if len(wd) > 0:
-            a.append("--wd=\"{}\"".format(wd))
+    exe_name = "whitebox-tools{}".format(ext)
 
-        args_str = ""
-        for s in args:
-            # args_str += s.replace("\"", "") + " "
-            a.append(s)
+    def set_whitebox_dir(self, path_str):
+        ''' Sets the directory to the whitebox - tools executable file.
+        '''
+        self.exe_path = path_str
 
-        # args_str = args_str[:-1]
-        # a.append("--args=\"{}\"".format(args_str))
+    def set_working_dir(self, path_str):
+        ''' Sets the working directory.
+        '''
+        self.wkdir = path_str
 
-        if verbose:
-            a.append("-v")
+    def set_verbose_mode(self, val=True):
+        ''' Sets verbose mode(i.e. whether a running tool outputs).
+        '''
+        self.verbose = val
 
-        # print a
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
+    def run_tool(self, tool_name, args, callback=default_callback):
+        ''' Runs a tool and specifies tool arguments.
+        Returns 0 if completes without error.
+        Returns 1 if error encountered (details are sent to callback).
+        Returns 2 if process is cancelled by user.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args2 = []
+            args2.append("." + path.sep + self.exe_name)
+            args2.append("--run=\"{}\"".format(tool_name))
 
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                callback(line.strip())
-            else:
-                break
+            if self.wkdir.strip() != "":
+                args2.append("--wd=\"{}\"".format(self.wkdir))
 
-        return 0
-    except Exception as e:
-        print(e)
-        return 1
+            for arg in args:
+                args2.append(arg)
 
-def help():
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("-h")
+            # args_str = args_str[:-1]
+            # a.append("--args=\"{}\"".format(args_str))
 
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
-        ret = ""
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                ret += line
-            else:
-                break
+            if self.verbose:
+                args2.append("-v")
 
-        return ret
-    except Exception as e:
-        return e
+            proc = Popen(args2, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
 
-def license():
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("--license")
+            while True:
+                line = proc.stdout.readline()
+                sys.stdout.flush()
+                if line != '':
+                    if not self.cancel_op:
+                        callback(line.strip())
+                    else:
+                        self.cancel_op = False
+                        proc.terminate()
+                        return 2
 
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
-        ret = ""
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                ret += line
-            else:
-                break
+                else:
+                    break
 
-        return ret
-    except Exception as e:
-        return e
+            return 0
+        except (OSError, ValueError, CalledProcessError) as err:
+            callback(str(err))
+            return 1
 
-def version():
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("--version")
+    def help(self):
+        ''' Retrieve the help description for whitebox - tools.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("-h")
 
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
-        ret = ""
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                ret += line
-            else:
-                break
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
 
-        return ret
-    except Exception as e:
-        return e
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
 
-def tool_help(tool_name):
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("--toolhelp={}".format(tool_name))
+    def license(self):
+        ''' Retrieves the license information for whitebox - tools.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--license")
 
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
-        ret = ""
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                ret += line
-            else:
-                break
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
 
-        return ret
-    except Exception as e:
-        return e
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
 
-def list_tools():
-    try:
-        os.chdir(exe_path)
-        a = []
-        a.append("." + os.path.sep + exe_name)
-        a.append("--listtools")
+    def version(self):
+        ''' Retrieves the version information for whitebox - tools.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--version")
 
-        ps = subprocess.Popen(a, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=True)
-        ret = ""
-        while True:
-            line = ps.stdout.readline()
-            if line != '':
-                ret += line
-            else:
-                break
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
 
-        return ret
-    except Exception as e:
-        return e
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
+
+    def tool_help(self, tool_name):
+        ''' Retrieve the help description for a specific tool.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--toolhelp={}".format(tool_name))
+
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
+
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
+
+    def list_tools(self):
+        ''' Lists all available tools in whitebox - tools.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--listtools")
+
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
+
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
