@@ -24,6 +24,7 @@ impl ToolManager {
         tool_names.push("LidarTophatTransform".to_string());
 
         // terrain analysis
+        tool_names.push("Aspect".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("FillMissingData".to_string());
@@ -55,6 +56,7 @@ impl ToolManager {
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
 
             // terrain analysis
+            "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),

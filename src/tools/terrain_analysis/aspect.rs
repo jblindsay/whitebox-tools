@@ -11,18 +11,18 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Slope {
+pub struct Aspect {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Slope {
-    pub fn new() -> Slope { // public constructor
-        let name = "Slope".to_string();
+impl Aspect {
+    pub fn new() -> Aspect { // public constructor
+        let name = "Aspect".to_string();
         
-        let description = "Calculates a slope raster from an input DEM.".to_string();
+        let description = "Calculates an aspect raster from an input DEM.".to_string();
         
         let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -37,11 +37,11 @@ impl Slope {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
     
-        Slope { name: name, description: description, parameters: parameters, example_usage: usage }
+        Aspect { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Slope {
+impl WhiteboxTool for Aspect {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -176,7 +176,11 @@ impl WhiteboxTool for Slope {
                             // calculate slope
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            data[col as usize] = (fx * fx + fy * fy).sqrt().atan().to_degrees();
+                            if fx != 0f64 {
+                                data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs());
+                            } else {
+                                data[col as usize] = -1f64;
+                            }
                         } else {
                             data[col as usize] = nodata;
                         }
@@ -201,7 +205,8 @@ impl WhiteboxTool for Slope {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "spectrum_soft.plt".to_string();
+        // output.configs.palette = "circular_bw.plt".to_string();
+        output.configs.palette = "pointer.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
