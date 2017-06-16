@@ -34,9 +34,13 @@ impl ToolManager {
         tool_names.push("FillMissingData".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("PercentElevRange".to_string());
+        tool_names.push("PlanCurvature".to_string());
+        tool_names.push("ProfileCurvature".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("Slope".to_string());
+        tool_names.push("TangentialCurvature".to_string());
+        tool_names.push("TotalCurvature".to_string());
 
         tool_names.sort();
         
@@ -69,9 +73,13 @@ impl ToolManager {
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
+            "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
+            "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
             "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
+            "tangentialcurvature" => Some(Box::new(tools::terrain_analysis::TangentialCurvature::new())),
+            "totalcurvature" => Some(Box::new(tools::terrain_analysis::TotalCurvature::new())),
 
             _ => None,
         }

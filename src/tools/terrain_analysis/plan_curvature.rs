@@ -11,22 +11,22 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct D8Pointer {
+pub struct PlanCurvature {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl D8Pointer {
-    pub fn new() -> D8Pointer { // public constructor
-        let name = "D8Pointer".to_string();
+impl PlanCurvature {
+    pub fn new() -> PlanCurvature { // public constructor
+        let name = "PlanCurvature".to_string();
         
-        let description = "Calculates a D8 flow pointer raster from an input DEM.".to_string();
+        let description = "Calculates a plan (contour) curvature raster from an input DEM.".to_string();
         
         let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--esri_style  Uses the ESRI style D8 pointer output (default is false).\n");
+        parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -37,11 +37,11 @@ impl D8Pointer {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        D8Pointer { name: name, description: description, parameters: parameters, example_usage: usage }
+        PlanCurvature { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for D8Pointer {
+impl WhiteboxTool for PlanCurvature {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -61,8 +61,8 @@ impl WhiteboxTool for D8Pointer {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut esri_style = false;
-        
+        let mut z_factor = 1f64;
+
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -88,8 +88,12 @@ impl WhiteboxTool for D8Pointer {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_style" || vec[0].to_lowercase() == "--esri_style" {
-                esri_style = true;
+            } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
+                if keyval {
+                    z_factor = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    z_factor = args[i+1].to_string().parse::<f64>().unwrap();
+                }
             }
         }
 
@@ -116,9 +120,21 @@ impl WhiteboxTool for D8Pointer {
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
         let start = time::now();
-        let cell_size_x = input.configs.resolution_x;
-        let cell_size_y = input.configs.resolution_y;
-        let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
+
+        let cell_size = input.configs.resolution_x;
+        let cell_size_times2 = cell_size * 2.0f64;
+        let cell_size_sqrd = cell_size * cell_size;
+        let four_times_cell_size_sqrd = cell_size_sqrd * 4.0f64;
+            
+
+        if input.configs.xy_units.contains("deg") {
+            // calculate a new z-conversion factor
+            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            if mid_lat <= 90.0 && mid_lat >= -90.0 {
+                mid_lat = mid_lat.to_radians();
+                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+            }
+        }
         
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
@@ -132,6 +148,7 @@ impl WhiteboxTool for D8Pointer {
         while ending_row < rows {
             let input = input.clone();
             let rows = rows.clone();
+            // let z_factor = z_factor.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -144,33 +161,37 @@ impl WhiteboxTool for D8Pointer {
                 let columns = input.configs.columns as isize;
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
                 let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
-                let out_vals = match esri_style {
-                    true => [ 128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64 ],
-                    false => [ 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64 ],
-                };
-                let (mut z, mut z_n, mut slope): (f64, f64, f64);
+                let mut n: [f64; 8] = [0.0; 8];
+                let mut z: f64;
+                let (mut zx, mut zy, mut zxx, mut zyy, mut zxy, mut zx2, mut zy2): (f64, f64, f64, f64, f64, f64, f64);
+                let mut p: f64;
                 for row in starting_row..ending_row {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            let mut dir = 0;
-							let mut max_slope = f64::MIN;
-							for i in 0..8 {
-                                z_n = input[(row + d_y[i], col + d_x[i])];
-                                if z_n != nodata {
-                                    slope = (z - z_n) / grid_lengths[i];
-                                    if slope > max_slope && slope > 0f64 {
-                                        max_slope = slope;
-                                        dir = i;
-                                    }
+                            z = z * z_factor;
+                            for c in 0..8 {
+                                n[c] = input[(row + d_y[c], col + d_x[c])];
+                                if n[c] != nodata {
+                                    n[c] = n[c] * z_factor;
+                                } else {
+                                    n[c] = z;
                                 }
                             }
-                            if max_slope >= 0f64 {
-                                data[col as usize] = out_vals[dir]; //(1 << dir) as f64;
+                            // calculate curvature
+                            zx = (n[1] - n[5]) / cell_size_times2;
+                            zy = (n[7] - n[3]) / cell_size_times2;
+                            zxx = (n[1] - 2.0f64 * z + n[5]) / cell_size_sqrd;
+                            zyy = (n[7] - 2.0f64 * z + n[3]) / cell_size_sqrd;
+                            zxy = (-n[6] + n[0] + n[4] - n[2]) / four_times_cell_size_sqrd;
+                            zx2 = zx * zx;
+                            zy2 = zy * zy;
+                            p = zx2 + zy2;
+                            if p > 0.0f64 {
+                                data[col as usize] = ((zxx * zy2 - 2.0f64 * zxy * zx * zy + zyy * zx2) / p.powf(1.5f64)).to_degrees() * 100f64;
                             } else {
-                                data[col as usize] = 0f64;
+                                data[col as usize] = nodata;
                             }
                         } else {
                             data[col as usize] = nodata;
@@ -196,15 +217,12 @@ impl WhiteboxTool for D8Pointer {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output.configs.palette = "blue_white_red.plt".to_string();
+        output.configs.display_min = -1000.0f64;
+        output.configs.display_max = 1000.0f64;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        if esri_style {
-            output.add_metadata_entry("ESRI-style output: true".to_string());
-        } else {
-            output.add_metadata_entry("ESRI-style output: false".to_string());
-        }
+        output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };
