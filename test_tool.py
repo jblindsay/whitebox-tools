@@ -125,19 +125,12 @@ def main():
             os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
 
-        # needed to specify complete file names (with paths) to tools that you run.
-        # wbt.set_working_dir(
-        #     "/Users/johnlindsay/Documents/data/JayStateForest/")
-        # wbt.set_working_dir(
-        #     "/Users/johnlindsay/Documents/data/")
-        # wbt.set_working_dir(
-        #     '/Users/johnlindsay/Documents/data/GullyCreek/LiDAR/1_LiDAR_OMAFRA_PointCloud/LAS_tiles_25m/')
-        wbt.set_working_dir(
-            "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/")
+        wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        wbt.set_working_dir(wkdir)
 
         # Tool name and arguments
         # name = "DevFromMeanElev"
-        # name = "ElevPercentile"
+        # name = "ElevsPercentile"
         # name = "RelativeTopographicPosition"
 
         # filter_size = 101
@@ -179,16 +172,6 @@ def main():
         #         "--output=\"filtered12m_RGB_5_529_150502_1754__0_270112_2848.las\"",
         #         "--radius=12.0"]
 
-        name = "LidarGroundPointFilter"
-        args = ["--input=\"RGB_5_529_150502_1754__0_270112_2848.las\"",
-                "--output=\"filtered8m_RGB_5_529_150502_1754__0_270112_2848.las\"",
-                "--radius=8.0",
-                "--otoheight=0.25"]
-
-        # Print the tool's help
-        # print(wbt.tool_help(name))
-
-        # Run the tool and check the return value
         def custom_callback(value):
             ''' A custom callback for dealing with tool output.
             '''
@@ -214,6 +197,44 @@ def main():
 
             custom_callback.prev_line_len = len(value)
 
+        # file_names = ["RGB_3_529_150514_1353__0_294688_2784.las",
+        #               "RGB_3_529_150514_1353__0_276256_2784.las"]
+
+        # filter_size = 18.0
+
+        # for file_name in file_names:
+        #     name = "LidarGroundPointFilter"
+        #     args = ["--input=\"{0}\"".format(file_name),
+        #             "--output=\"filtered{0}m_{1}\"".format(
+        #                 str(filter_size).replace(".", "_"), file_name),
+        #             "--radius={0}".format(filter_size),
+        #             "--otoheight=0.75"]
+
+        #     # Run the tool and check the return value
+        #     ret = wbt.run_tool(name, args, custom_callback)
+        #     if ret == 1:
+        #         print("ERROR running {}".format(name))
+        #     elif ret == 2:
+        #         print("Operation cancelled while running {}".format(name))
+
+        # name = "FillMissingData"
+        # args = ["--input=\"mosaic_FR.dep\"",
+        #         "--output=\"tmp1.dep\"",
+        #         "--filter=41"]
+
+        # name = "RemoveOffTerrainObjects"
+        # args = ["--input=\"tmp1_clipped.dep\"",
+        #         "--output=\"mosaic_FR no OTOs4.dep\"",
+        #         "--filter=251",
+        #         "--slope=10.0"]
+
+        name = "Hillshade"
+        args = ["--input=\"tmp10.dep\"",
+                "--output=\"tmp11.dep\"",
+                "--azimuth=315.0",
+                "--altitude=20.0"]
+
+        # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)
         if ret == 1:
             print("ERROR running {}".format(name))

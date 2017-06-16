@@ -6,7 +6,7 @@ pub mod raster;
 pub mod tools;
 pub mod structures;
 
-use std::io::{Error, ErrorKind};
+use std::io::Error; //{Error, ErrorKind};
 use std::env;
 use std::path;
 use tools::ToolManager;
@@ -29,8 +29,10 @@ fn run() -> Result<(), Error> {
     let mut verbose = false;
         let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        return Err(Error::new(ErrorKind::InvalidInput,
-                              "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+        // return Err(Error::new(ErrorKind::InvalidInput,
+        //                       "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+        help();
+        return Ok(());
     }
     for arg in args {
         if arg.starts_with("-h") || arg.starts_with("--help") {

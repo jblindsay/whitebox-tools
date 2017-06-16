@@ -10,24 +10,24 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
-use structures::fixed_radius_search::FixedRadiusSearch2D;
 
-pub struct FillMissingData {
+pub struct Hillshade {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl FillMissingData {
-    pub fn new() -> FillMissingData { // public constructor
-        let name = "FillMissingData".to_string();
+impl Hillshade {
+    pub fn new() -> Hillshade { // public constructor
+        let name = "Hillshade".to_string();
         
-        let description = "Fills nodata holes in a DEM.".to_string();
+        let description = "Calculates a hillshade raster from an input DEM.".to_string();
         
         let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
+        parameters.push_str("--azimuth     Illumination source azimuth.\n");
+        parameters.push_str("--altitude    Illumination source altitude.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -36,13 +36,13 @@ impl FillMissingData {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
     
-        FillMissingData { name: name, description: description, parameters: parameters, example_usage: usage }
+        Hillshade { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for FillMissingData {
+impl WhiteboxTool for Hillshade {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,7 +62,10 @@ impl WhiteboxTool for FillMissingData {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut filter_size = 11usize;
+        let mut azimuth = 315.0f64;
+        let mut altitude = 30.0f64;
+        let mut z_factor = 1f64;
+
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -88,11 +91,23 @@ impl WhiteboxTool for FillMissingData {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if vec[0].to_lowercase() == "-azimuth" || vec[0].to_lowercase() == "--azimuth" {
                 if keyval {
-                    filter_size = vec[1].to_string().parse::<usize>().unwrap();
+                    azimuth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    filter_size = args[i+1].to_string().parse::<usize>().unwrap();
+                    azimuth = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-altitude" || vec[0].to_lowercase() == "--altitude" {
+                if keyval {
+                    altitude = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    altitude = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
+                if keyval {
+                    z_factor = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    z_factor = args[i+1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -105,13 +120,6 @@ impl WhiteboxTool for FillMissingData {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        // The filter dimensions must be odd numbers such that there is a middle pixel
-        if (filter_size as f64 / 2f64).floor() == (filter_size as f64 / 2f64) {
-            filter_size += 1;
-        }
-
-        // let mut z: f64;
-        let (mut row_n, mut col_n): (isize, isize);
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
@@ -124,78 +132,27 @@ impl WhiteboxTool for FillMissingData {
 
         if verbose { println!("Reading data...") };
 
-        let input = Raster::new(&input_file, "r")?;
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let input = Arc::new(Raster::new(&input_file, "r")?);
 
         let start = time::now();
 
-        let nodata = input.configs.nodata;
-        let columns = input.configs.columns as isize;
-        let rows = input.configs.rows as isize;
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        azimuth = (azimuth - 90f64).to_radians();
+        altitude = altitude.to_radians();
+        let sin_theta = altitude.sin();
+        let cos_theta = altitude.cos();
+        let eight_grid_res = input.configs.resolution_x * 8.0;
 
-        // Interpolate the data holes. Start by locating all the edge cells.
-        if verbose { println!("Interpolating data holes...") };
-        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(filter_size as f64);
-        for row in 0..rows {
-            for col in 0..columns {
-                if input[(row, col)] != nodata {
-                    for i in 0..8 {
-                        row_n = row + d_y[i];
-                        col_n = col + d_x[i];
-                        if input[(row_n, col_n)] == nodata {
-                            frs.insert(col as f64, row as f64, input[(row, col)]);
-                            break;
-                        }
-                    }
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Finding OTO edge cells: {}%", progress);
-                    old_progress = progress;
-                }
+        if input.configs.xy_units.contains("deg") {
+            // calculate a new z-conversion factor
+            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            if mid_lat <= 90.0 && mid_lat >= -90.0 {
+                mid_lat = mid_lat.to_radians();
+                z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-
-        // let mut sum_weights: f64;
-        // let mut dist: f64;
-        // for row in 0..rows {
-        //     for col in 0..columns {
-        //         if input[(row, col)] == nodata {
-        //             sum_weights = 0f64;
-        //             let ret = frs.search(col as f64, row as f64);
-        //             for j in 0..ret.len() {
-        //                 dist = ret[j].1;
-        //                 if dist > 0.0 {
-        //                     sum_weights += 1.0 / (dist * dist);
-        //                 }
-        //             }
-        //             z = 0.0;
-        //             for j in 0..ret.len() {
-        //                 dist = ret[j].1;
-        //                 if dist > 0.0 {
-        //                     z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
-        //                 }
-        //             }
-        //             output[(row, col)] = z;
-        //         } else {
-        //             output[(row, col)] = input[(row, col)];
-        //         }
-        //     }
-        //     if verbose {
-        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-        //         if progress != old_progress {
-        //             println!("Interpolating data holes: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
-
-        let input = Arc::new(input);
-        let frs = Arc::new(frs);
+        
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let rows = input.configs.rows as isize;
 
         let mut starting_row;
         let mut ending_row = 0;
@@ -205,8 +162,8 @@ impl WhiteboxTool for FillMissingData {
         let mut id = 0;
         while ending_row < rows {
             let input = input.clone();
-            let frs = frs.clone();
             let rows = rows.clone();
+            // let z_factor = z_factor.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -217,31 +174,48 @@ impl WhiteboxTool for FillMissingData {
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
+                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
-                let mut sum_weights: f64;
-                let mut dist: f64;
+                let (mut term1, mut term2, mut term3): (f64, f64, f64);
+                let (mut fx, mut fy): (f64, f64);
+                let mut tan_slope: f64;
+                let mut aspect: f64;
                 for row in starting_row..ending_row {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        if input[(row, col)] == nodata {
-                            sum_weights = 0f64;
-                            let ret = frs.search(col as f64, row as f64);
-                            for j in 0..ret.len() {
-                                dist = ret[j].1;
-                                if dist > 0.0 {
-                                    sum_weights += 1.0 / (dist * dist);
+                        z = input[(row, col)];
+                        if z != nodata {
+                            z = z * z_factor;
+                            for c in 0..8 {
+                                n[c] = input[(row + d_y[c], col + d_x[c])];
+                                if n[c] != nodata {
+                                    n[c] = n[c] * z_factor;
+                                } else {
+                                    n[c] = z;
                                 }
                             }
-                            z = 0.0;
-                            for j in 0..ret.len() {
-                                dist = ret[j].1;
-                                if dist > 0.0 {
-                                    z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
-                                }
+                            // calculate slope and aspect
+                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
+                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
+                            if fx != 0f64 {
+                                tan_slope = (fx * fx + fy * fy).sqrt();
+                                aspect = (180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs())).to_radians();
+                                term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                                term2 = sin_theta / tan_slope;
+                                term3 = cos_theta * (azimuth - aspect).sin();
+                                z = term1 * (term2 - term3);
+                            } else {
+                                z = 0.5;
+                            }
+                            z = z * 255.0;
+                            if z < 0.0 {
+                                z = 0.0;
                             }
                             data[col as usize] = z;
                         } else {
-                            data[col as usize] = input[(row, col)];
+                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -249,9 +223,21 @@ impl WhiteboxTool for FillMissingData {
             });
         }
 
+        let mut histo: [f64; 256] = [0.0; 256];
+        let nodata = input.configs.nodata;
+        let mut num_cells = 0.0;
         for row in 0..rows {
             let data = rx.recv().unwrap();
+            let mut bin: usize;
+            for col in 0..data.1.len() {
+                if data.1[col] != nodata {
+                    bin = data.1[col].round() as usize;
+                    histo[bin] += 1.0;
+                    num_cells += 1.0;
+                }
+            }
             output.set_row_data(data.0, data.1);
+            
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -261,22 +247,50 @@ impl WhiteboxTool for FillMissingData {
             }
         }
 
+        let mut new_min = 0;
+        let mut new_max = 0;
+        let clip_percent = 0.01;
+        let target_cell_num = num_cells * clip_percent;
+        let mut sum = 0.0;
+        for c in 0..256 {
+            sum += histo[c];
+            if sum >= target_cell_num {
+                new_min = c;
+                break;
+            }
+        }
+
+        sum = 0.0;
+        for c in (0..256).rev() {
+            sum += histo[c];
+            if sum >= target_cell_num {
+                new_max = c;
+                break;
+            }
+        }
+
+        if new_max > new_min {
+            output.configs.display_min = new_min as f64;
+            output.configs.display_max = new_max as f64;
+        }
+
         let end = time::now();
         let elapsed_time = end - start;
-
+        output.configs.palette = "grey.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Filter size x: {}", filter_size));
+        output.add_metadata_entry(format!("Azimuth: {}", azimuth));
+        output.add_metadata_entry(format!("Altitude: {}", altitude));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-        
+
         if verbose { println!("Saving data...") };
         let _ = match output.write() {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
-        
+
         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-        
+
         Ok(())
     }
 }

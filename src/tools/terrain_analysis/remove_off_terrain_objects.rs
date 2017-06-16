@@ -395,7 +395,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             Err(e) => return Err(e),
         };
 
-
+         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
 
 

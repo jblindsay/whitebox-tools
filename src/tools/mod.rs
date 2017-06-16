@@ -26,9 +26,13 @@ impl ToolManager {
         // terrain analysis
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("ElevPercentile".to_string());
+        tool_names.push("FillMissingData".to_string());
+        tool_names.push("Hillshade".to_string());
         tool_names.push("PercentElevRange".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
+
+        tool_names.sort();
         
         let tm = ToolManager {
             working_dir: working_directory.to_string(),
@@ -52,6 +56,8 @@ impl ToolManager {
             // terrain analysis
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
+            "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
+            "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),

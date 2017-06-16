@@ -65,7 +65,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let mut output_file: String = "".to_string();
         let mut search_radius: f64 = -1.0;
         let mut otoheight: f64 = 1.0;
-        let mut otoslope: f64 = 10.0;
+        // let mut otoslope: f64 = 10.0;
         
         // read the arguments
         if args.len() == 0 {
@@ -102,12 +102,12 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 } else {
                     otoheight = args[i+1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-otoslope" || vec[0].to_lowercase() == "--otoslope" {
-                if keyval {
-                    otoslope = vec[1].to_string().parse::<f64>().unwrap();
-                } else {
-                    otoslope = args[i+1].to_string().parse::<f64>().unwrap();
-                }
+            // } else if vec[0].to_lowercase() == "-otoslope" || vec[0].to_lowercase() == "--otoslope" {
+            //     if keyval {
+            //         otoslope = vec[1].to_string().parse::<f64>().unwrap();
+            //     } else {
+            //         otoslope = args[i+1].to_string().parse::<f64>().unwrap();
+            //     }
             }
         }
 
@@ -156,7 +156,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
 
         let mut neighbourhood_min = vec![f64::MAX; n_points];
         let mut residuals = vec![f64::MIN; n_points];
-        let mut off_terrain = vec![false; n_points];
+        // let mut off_terrain = vec![false; n_points];
         
         /////////////
         // Erosion //
