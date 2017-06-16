@@ -215,8 +215,6 @@ impl WhiteboxTool for Hillshade {
                                 z = 0.0;
                             }
                             data[col as usize] = z;
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();

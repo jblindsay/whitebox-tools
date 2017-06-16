@@ -234,7 +234,7 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "TotalCurvature"
+        name = "RuggednessIndex"
         args = ["--input=\"DEM final.dep\"",
                 "--output=\"tmp13.dep\""]
 

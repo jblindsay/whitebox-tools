@@ -181,8 +181,6 @@ impl WhiteboxTool for Aspect {
                             } else {
                                 data[col as usize] = -1f64;
                             }
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();

@@ -11,18 +11,18 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct PlanCurvature {
+pub struct RuggednessIndex {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl PlanCurvature {
-    pub fn new() -> PlanCurvature { // public constructor
-        let name = "PlanCurvature".to_string();
+impl RuggednessIndex {
+    pub fn new() -> RuggednessIndex { // public constructor
+        let name = "RuggednessIndex".to_string();
         
-        let description = "Calculates a plan (contour) curvature raster from an input DEM.".to_string();
+        let description = "Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.".to_string();
         
         let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -37,11 +37,11 @@ impl PlanCurvature {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        PlanCurvature { name: name, description: description, parameters: parameters, example_usage: usage }
+        RuggednessIndex { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for PlanCurvature {
+impl WhiteboxTool for RuggednessIndex {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -119,13 +119,7 @@ impl WhiteboxTool for PlanCurvature {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
-
-        let cell_size = input.configs.resolution_x;
-        let cell_size_times2 = cell_size * 2.0f64;
-        let cell_size_sqrd = cell_size * cell_size;
-        let four_times_cell_size_sqrd = cell_size_sqrd * 4.0f64;
-            
+        let start = time::now();    
 
         if input.configs.xy_units.contains("deg") {
             // calculate a new z-conversion factor
@@ -155,45 +149,37 @@ impl WhiteboxTool for PlanCurvature {
                 ending_row = rows;
             }
             id += 1;
-            let tx1 = tx.clone();
+            let tx = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
                 let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let mut n: [f64; 8] = [0.0; 8];
-                let mut z: f64;
-                let (mut zx, mut zy, mut zxx, mut zyy, mut zxy, mut zx2, mut zy2): (f64, f64, f64, f64, f64, f64, f64);
-                let mut p: f64;
+                let mut n: f64;
+                let (mut z, mut z_n): (f64, f64);
+                let mut ss: f64;
                 for row in starting_row..ending_row {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
                             z = z * z_factor;
+                            n = 0.0;
+                            ss = 0.0;
                             for c in 0..8 {
-                                n[c] = input[(row + d_y[c], col + d_x[c])];
-                                if n[c] != nodata {
-                                    n[c] = n[c] * z_factor;
-                                } else {
-                                    n[c] = z;
+                                z_n = input[(row + d_y[c], col + d_x[c])];
+                                if z_n != nodata {
+                                    z_n = z_n * z_factor;
+                                    ss += (z_n - z) * (z_n - z);
+                                    n += 1.0;
                                 }
                             }
-                            // calculate curvature
-                            zx = (n[1] - n[5]) / cell_size_times2;
-                            zy = (n[7] - n[3]) / cell_size_times2;
-                            zxx = (n[1] - 2.0f64 * z + n[5]) / cell_size_sqrd;
-                            zyy = (n[7] - 2.0f64 * z + n[3]) / cell_size_sqrd;
-                            zxy = (-n[6] + n[0] + n[4] - n[2]) / four_times_cell_size_sqrd;
-                            zx2 = zx * zx;
-                            zy2 = zy * zy;
-                            p = zx2 + zy2;
-                            if p > 0.0f64 {
-                                data[col as usize] = ((zxx * zy2 - 2.0f64 * zxy * zx * zy + zyy * zx2) / p.powf(1.5f64)).to_degrees() * 100f64;
+                            if n > 0.0 {
+                                data[col as usize] = (ss / n).sqrt();
                             }
                         }
                     }
-                    tx1.send((row, data)).unwrap();
+                    tx.send((row, data)).unwrap();
                 }
             });
         }
@@ -213,9 +199,9 @@ impl WhiteboxTool for PlanCurvature {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "blue_white_red.plt".to_string();
-        output.configs.display_min = -1000.0f64;
-        output.configs.display_max = 1000.0f64;
+        output.configs.palette = "spectrum_soft.plt".to_string();
+        output.configs.display_min = 0.0f64;
+        output.configs.display_max = 1.0f64;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));

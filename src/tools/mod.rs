@@ -38,6 +38,7 @@ impl ToolManager {
         tool_names.push("ProfileCurvature".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
+        tool_names.push("RuggednessIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("TangentialCurvature".to_string());
         tool_names.push("TotalCurvature".to_string());
@@ -77,6 +78,7 @@ impl ToolManager {
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
+            "ruggednessindex" => Some(Box::new(tools::terrain_analysis::RuggednessIndex::new())),
             "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
             "tangentialcurvature" => Some(Box::new(tools::terrain_analysis::TangentialCurvature::new())),
             "totalcurvature" => Some(Box::new(tools::terrain_analysis::TotalCurvature::new())),

@@ -191,11 +191,7 @@ impl WhiteboxTool for ProfileCurvature {
                             q = p + 1.0f64;
                             if p > 0.0f64 {
                                 data[col as usize] = ((zxx * zx2 + 2.0f64 * zxy * zx * zy + zyy * zy2) / ( p * q.powf(1.5f64))).to_degrees() * 100f64;
-                            } else {
-                                data[col as usize] = nodata;
                             }
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();

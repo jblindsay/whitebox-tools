@@ -182,8 +182,6 @@ impl WhiteboxTool for TotalCurvature {
                             zyy = (n[7] - 2.0f64 * z + n[3]) / cell_size_sqrd;
                             zxy = (-n[6] + n[0] + n[4] - n[2]) / four_times_cell_size_sqrd;
                             data[col as usize] = (zxx * zxx + 2.0f64 * zxy * zxy + zyy * zyy).to_degrees() * 100f64;
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx.send((row, data)).unwrap();
