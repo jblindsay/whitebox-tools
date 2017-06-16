@@ -228,11 +228,15 @@ def main():
         #         "--filter=251",
         #         "--slope=10.0"]
 
-        name = "Hillshade"
-        args = ["--input=\"tmp10.dep\"",
-                "--output=\"tmp11.dep\"",
-                "--azimuth=315.0",
-                "--altitude=20.0"]
+        # name = "Hillshade"
+        # args = ["--input=\"tmp10.dep\"",
+        #         "--output=\"tmp11.dep\"",
+        #         "--azimuth=315.0",
+        #         "--altitude=20.0"]
+
+        name = "Slope"
+        args = ["--input=\"DEM final.dep\"",
+                "--output=\"tmp13.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

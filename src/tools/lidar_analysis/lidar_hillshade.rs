@@ -26,8 +26,7 @@ impl LidarHillshade {
     pub fn new() -> LidarHillshade { // public constructor
         let name = "LidarHillshade".to_string();
         
-        let description = "Calculates a hillshade value for points within a LAS file and stores these 
-data in the RGB field.".to_string();
+        let description = "Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.".to_string();
         
         let parameters = "-i, --input        Input LAS file.
 -o, --output       Output LAS file.

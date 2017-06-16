@@ -18,8 +18,7 @@ impl LidarElevationSlice {
     pub fn new() -> LidarElevationSlice { // public constructor
         let name = "LidarElevationSlice".to_string();
         
-        let description = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified
-elevation range.".to_string();
+        let description = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.".to_string();
         
         let parameters = "-i, --input        Input LAS file.
 -o, --output       Output LAS file.

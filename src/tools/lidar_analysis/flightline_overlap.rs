@@ -20,8 +20,7 @@ impl FlightlineOverlap {
     pub fn new() -> FlightlineOverlap { // public constructor
         let name = "FlightlineOverlap".to_string();
         
-        let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping
-flight lines in each grid cell.".to_string();
+        let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
         
         let parameters = "-i, --input        Input LAS file.
 -o, --output       Output raster file.

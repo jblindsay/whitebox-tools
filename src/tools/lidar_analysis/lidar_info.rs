@@ -18,8 +18,7 @@ impl LidarInfo {
     pub fn new() -> LidarInfo { // public constructor
         let name = "LidarInfo".to_string();
         
-        let description = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency,
-and classification data and information about the variable length records (VLRs) and geokeys.".to_string();
+        let description = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.".to_string();
         
         let parameters = "-i, input        Input LAS file.
 --vlr            Flag indicates whether to print variable length records (VLRs).

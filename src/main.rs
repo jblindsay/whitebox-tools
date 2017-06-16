@@ -6,7 +6,7 @@ pub mod raster;
 pub mod tools;
 pub mod structures;
 
-use std::io::Error; //{Error, ErrorKind};
+use std::io::Error;
 use std::env;
 use std::path;
 use tools::ToolManager;
@@ -31,7 +31,12 @@ fn run() -> Result<(), Error> {
     if args.len() <= 1 {
         // return Err(Error::new(ErrorKind::InvalidInput,
         //                       "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+        // print help
         help();
+        // list tools
+        let tm = ToolManager::new(&working_dir, &verbose)?;
+        tm.list_tools();
+        
         return Ok(());
     }
     for arg in args {

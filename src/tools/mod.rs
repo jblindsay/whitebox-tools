@@ -31,6 +31,7 @@ impl ToolManager {
         tool_names.push("PercentElevRange".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
+        tool_names.push("Slope".to_string());
 
         tool_names.sort();
         
@@ -61,6 +62,7 @@ impl ToolManager {
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
+            "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
 
             _ => None,
         }

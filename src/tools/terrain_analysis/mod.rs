@@ -6,6 +6,7 @@ mod hillshade;
 mod percent_elev_range;
 mod relative_topographic_position;
 mod remove_off_terrain_objects;
+mod slope;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::dev_from_mean_elev::DevFromMeanElev;
@@ -15,3 +16,4 @@ pub use self::hillshade::Hillshade;
 pub use self::percent_elev_range::PercentElevRange;
 pub use self::relative_topographic_position::RelativeTopographicPosition;
 pub use self::remove_off_terrain_objects::RemoveOffTerrainObjects;
+pub use self::slope::Slope;
