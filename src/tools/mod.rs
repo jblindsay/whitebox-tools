@@ -1,3 +1,4 @@
+pub mod hydro_analysis;
 pub mod lidar_analysis;
 pub mod terrain_analysis;
 
@@ -14,7 +15,10 @@ pub struct ToolManager {
 impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
-        // lidar
+        // hydro_analysis
+        tool_names.push("D8Pointer".to_string());
+
+        // lidar_analysis
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
@@ -23,7 +27,7 @@ impl ToolManager {
         tool_names.push("LidarJoin".to_string());
         tool_names.push("LidarTophatTransform".to_string());
 
-        // terrain analysis
+        // terrain_analysis
         tool_names.push("Aspect".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("ElevPercentile".to_string());
@@ -46,7 +50,10 @@ impl ToolManager {
 
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
-            // lidar
+            // hydro_analysis
+            "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
+
+            // lidar_analysis
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
             "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
             "lidargroundpointfilter" => Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new())),
@@ -55,7 +62,7 @@ impl ToolManager {
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
 
-            // terrain analysis
+            // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),

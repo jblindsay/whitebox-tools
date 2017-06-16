@@ -234,7 +234,7 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "Aspect"
+        name = "D8Pointer"
         args = ["--input=\"DEM final.dep\"",
                 "--output=\"tmp13.dep\""]
 

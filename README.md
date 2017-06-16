@@ -23,6 +23,7 @@ For examples of how to call functions and run tools from *whitebox-tools*, see t
 The library currently contains the following tools:
 
 - ***Aspect***: Calculates an aspect raster from an input DEM.
+- ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
 - ***FillMissingData***: Fills nodata holes in a DEM.
