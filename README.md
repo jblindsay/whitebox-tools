@@ -36,10 +36,13 @@ The library currently contains the following tools:
 - ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
 - ***LidarTophatTransform***: Performs a tophat transform on a Lidar dataset.
 - ***PercentElevRange***: Calculates percent of elevation range from a DEM.
+- ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
+- ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
 - ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
 - ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).
 - ***Slope***: Calculates a slope raster from an input DEM.
-
+- ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
+- ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
 
 ## Contributing
 
