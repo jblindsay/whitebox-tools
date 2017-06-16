@@ -13,16 +13,35 @@ For examples of how to call functions and run tools from *whitebox-tools*, see t
 
 The library currently contains the following tools:
 
-- ***dev_from_mean_elev***: Calculates deviation from mean elevation.
-- ***elev_percentile***: Calculates the elevation percentile raster from a DEM.
-- ***lidar_elevation_slice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
-- ***lidar_flightline_overlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping
-- flight lines in each grid cell.
-- ***lidar_info***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
-- ***lidar_join***: Joins multiple LiDAR (LAS) files into a single LAS file.
-- ***percent_elev_range***: Calculates percent of elevation range from a DEM.
-- ***relative_topographic_position***: Calculates the relative topographic position index from a DEM.
-- ***remove_off_terrain_objects***: Removes off-terrain objects from a raster digital elevation model (DEM).
+- ***DevFromMeanElev***: Calculates deviation from mean elevation.
+
+- ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
+
+- ***FillMissingData***: Fills nodata holes in a DEM.
+
+- ***FlightlineOverlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
+
+- ***Hillshade***: Calculates a hillshade raster from an input DEM.
+
+- ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
+
+- ***LidarGroundPointFilter***: Identifies ground points within LiDAR dataset.
+
+- ***LidarHillshade***: Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
+
+- ***LidarInfo***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
+
+- ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
+
+- ***LidarTophatTransform***: Performs a tophat transform on a Lidar dataset.
+
+- ***PercentElevRange***: Calculates percent of elevation range from a DEM.
+
+- ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
+
+- ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).
+
+- ***Slope***: Calculates a slope raster from an input DEM.
 
 
 ## Contributing
