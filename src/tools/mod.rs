@@ -36,6 +36,7 @@ impl ToolManager {
         tool_names.push("PercentElevRange".to_string());
         tool_names.push("PlanCurvature".to_string());
         tool_names.push("ProfileCurvature".to_string());
+        tool_names.push("RelativeAspect".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
@@ -76,6 +77,7 @@ impl ToolManager {
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
+            "relativeaspect" => Some(Box::new(tools::terrain_analysis::RelativeAspect::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
             "ruggednessindex" => Some(Box::new(tools::terrain_analysis::RuggednessIndex::new())),

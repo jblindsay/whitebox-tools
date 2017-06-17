@@ -38,6 +38,7 @@ The library currently contains the following tools:
 - ***PercentElevRange***: Calculates percent of elevation range from a DEM.
 - ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
 - ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
+- ***RelativeAspect***: Calculates relative aspect (relative to a user-specified direction) from an input DEM.
 - ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
 - ***RuggednessIndex***: Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 - ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).

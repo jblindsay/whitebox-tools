@@ -1,5 +1,5 @@
 [package]
-name = "whitebox-tools"
+name = "whitebox_tools"
 version = "0.1.1"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 description = "Library for analyzing geospatial data."
@@ -12,16 +12,21 @@ license = "MIT"
 # [lib]
 # name = "whitebox_tools"
 # crate-type = ["dylib"]
-# crate-type = ["rdylib"]
-# crate-type = ["rlib"]
-# crate-type = ["staticlib"]
+# # crate-type = ["rdylib"]
+# # crate-type = ["rlib"]
+# # crate-type = ["staticlib"]
+# path = "src/lib.rs"
+
+# [[bin]]
+# name = "whitebox_tools"
+# path = "src/main.rs"
 
 [dependencies]
-# libc = "^0.2.19"
+# libc = "^0.2.20"
 time = "^0.1.35"
 kdtree = "^0.3.1"
 nalgebra = "^0.10.1"
-rand = ">=0.3.15"
+rand = "^0.3.15"
 byteorder = "^1.0.0"
 num_cpus = "^1.2.1"
 # rayon = "^0.6.0"

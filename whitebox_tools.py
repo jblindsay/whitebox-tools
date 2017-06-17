@@ -34,7 +34,7 @@ class WhiteboxTools(object):
     else:
         ext = ''
 
-    exe_name = "whitebox-tools{}".format(ext)
+    exe_name = "whitebox_tools{}".format(ext)
 
     def set_whitebox_dir(self, path_str):
         ''' Sets the directory to the whitebox - tools executable file.

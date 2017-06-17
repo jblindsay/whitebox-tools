@@ -234,9 +234,10 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "RuggednessIndex"
+        name = "relativeaspect"
         args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp13.dep\""]
+                "--output=\"tmp13.dep\"",
+                "--azimuth=90.0"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)
