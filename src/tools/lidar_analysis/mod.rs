@@ -6,6 +6,7 @@ mod lidar_hillshade;
 mod lidar_info;
 mod lidar_join;
 mod lidar_tophat_transform;
+mod normal_vectors;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::flightline_overlap::FlightlineOverlap;
@@ -15,3 +16,4 @@ pub use self::lidar_hillshade::LidarHillshade;
 pub use self::lidar_info::LidarInfo;
 pub use self::lidar_join::LidarJoin;
 pub use self::lidar_tophat_transform::LidarTophatTransform;
+pub use self::normal_vectors::NormalVectors;

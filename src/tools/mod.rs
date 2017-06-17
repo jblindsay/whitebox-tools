@@ -26,6 +26,7 @@ impl ToolManager {
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
         tool_names.push("LidarTophatTransform".to_string());
+        tool_names.push("NormalVectors".to_string());
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
@@ -67,6 +68,7 @@ impl ToolManager {
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
+            "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),

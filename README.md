@@ -38,6 +38,7 @@ The library currently contains the following tools:
 - ***LidarInfo***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 - ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
 - ***LidarTophatTransform***: Performs a tophat transform on a Lidar dataset.
+- ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
 **Terrain Analysis**
 - ***Aspect***: Calculates an aspect raster from an input DEM.
