@@ -25,12 +25,13 @@ For examples of how to call functions and run tools from *WhiteboxTools*, see th
 
 ## Available Tools
 
-The library currently contains the following tools:
+Eventually most of *Whitebox GAT'* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following tools:
 
 **GIS Analysis**
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
+- ***Quantiles***: Tranforms raster values into quantiles.
 
 **Hydrological Analysis**
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.

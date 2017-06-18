@@ -235,11 +235,10 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "BufferRaster"
-        args = ["--input=\"tmp15.dep\"",
-                "--output=\"tmp14.dep\"",
-                "--size=580.0",
-                "--gridcells"]
+        name = "Quantiles"
+        args = ["--input=\"DEM final.dep\"",
+                "--output=\"tmp10.dep\"",
+                "--num_quantiles=15"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)
