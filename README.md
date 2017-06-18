@@ -28,6 +28,7 @@ For examples of how to call functions and run tools from *WhiteboxTools*, see th
 The library currently contains the following tools:
 
 **GIS Analysis**
+- ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
 

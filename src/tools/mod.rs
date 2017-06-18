@@ -17,6 +17,7 @@ impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
         // gis_analysis
+        tool_names.push("BufferRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
 
@@ -63,6 +64,7 @@ impl ToolManager {
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // gis_analysis
+            "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
 
