@@ -6,8 +6,8 @@ use std::path;
 use std::f64;
 use std::collections::VecDeque;
 use raster::*;
-use structures::fixed_radius_search::FixedRadiusSearch2D;
-use structures::array2d::Array2D;
+use structures::FixedRadiusSearch2D;
+use structures::Array2D;
 use tools::WhiteboxTool;
 
 pub struct RemoveOffTerrainObjects {

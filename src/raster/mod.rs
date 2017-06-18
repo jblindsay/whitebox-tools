@@ -212,6 +212,10 @@ impl Raster {
         }
     }
 
+    pub fn reinitialize_values(&mut self, value: f64) {
+        self.data = vec![value; self.configs.rows * self.configs.columns];
+    }
+
     pub fn write(&mut self) -> Result<(), Error> {
         match self.raster_type {
             RasterType::ArcAscii => {

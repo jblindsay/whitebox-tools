@@ -126,6 +126,7 @@ def main():
         wbt.set_whitebox_dir(wb_dir)
 
         wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        # wkdir = "/Users/johnlindsay/Desktop/WhiteboxGAT-mac/resources/samples/Vermont DEM/"
         wbt.set_working_dir(wkdir)
 
         # Tool name and arguments
@@ -234,10 +235,9 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "normalvectors"
-        args = ["--input=\"RGB_3_529_150514_1353__0_294688_2784.las\"",
-                "--output=\"out2.las\"",
-                "--radius=2.5"]
+        name = "EuclideanAllocation"
+        args = ["--input=\"tmp15.dep\"",
+                "--output=\"tmp14.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

@@ -27,6 +27,10 @@ For examples of how to call functions and run tools from *WhiteboxTools*, see th
 
 The library currently contains the following tools:
 
+**GIS Analysis**
+- ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
+- ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
+
 **Hydrological Analysis**
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 

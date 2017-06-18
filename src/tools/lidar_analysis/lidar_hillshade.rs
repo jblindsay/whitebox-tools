@@ -13,7 +13,7 @@ use lidar::las;
 use lidar::point_data::*;
 use tools::WhiteboxTool;
 use self::na::Vector3;
-use structures::fixed_radius_search::FixedRadiusSearch3D;
+use structures::FixedRadiusSearch3D;
 
 pub struct LidarHillshade {
     name: String,

@@ -10,7 +10,7 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
-use structures::fixed_radius_search::FixedRadiusSearch2D;
+use structures::FixedRadiusSearch2D;
 
 pub struct FillMissingData {
     name: String,

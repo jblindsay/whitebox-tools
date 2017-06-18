@@ -11,7 +11,7 @@ use std::thread;
 use lidar::las;
 use lidar::point_data::*;
 use tools::WhiteboxTool;
-use structures::fixed_radius_search::FixedRadiusSearch2D;
+use structures::FixedRadiusSearch2D;
 
 pub struct LidarTophatTransform {
     name: String,

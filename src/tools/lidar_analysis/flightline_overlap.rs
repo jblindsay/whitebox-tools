@@ -6,7 +6,7 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use lidar::las;
 use raster::*;
-use structures::fixed_radius_search::FixedRadiusSearch2D;
+use structures::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
 
 pub struct FlightlineOverlap {

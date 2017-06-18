@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use structures::array2d::Array2D;
+use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 

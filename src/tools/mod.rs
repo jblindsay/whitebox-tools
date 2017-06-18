@@ -1,3 +1,4 @@
+pub mod gis_analysis;
 pub mod hydro_analysis;
 pub mod lidar_analysis;
 pub mod terrain_analysis;
@@ -15,6 +16,10 @@ pub struct ToolManager {
 impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
+        // gis_analysis
+        tool_names.push("EuclideanAllocation".to_string());
+        tool_names.push("EuclideanDistance".to_string());
+
         // hydro_analysis
         tool_names.push("D8Pointer".to_string());
 
@@ -57,6 +62,10 @@ impl ToolManager {
 
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
+            // gis_analysis
+            "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
+            "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
+
             // hydro_analysis
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
 
