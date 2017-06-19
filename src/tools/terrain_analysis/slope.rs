@@ -123,7 +123,7 @@ impl WhiteboxTool for Slope {
 
         let eight_grid_res = input.configs.resolution_x * 8.0;
 
-        if input.configs.xy_units.contains("deg") {
+        if input.is_in_geographic_coordinates() {
             // calculate a new z-conversion factor
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {

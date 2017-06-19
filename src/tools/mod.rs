@@ -23,6 +23,7 @@ impl ToolManager {
         tool_names.push("Quantiles".to_string());
 
         // hydro_analysis
+        tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
 
         // lidar_analysis
@@ -71,6 +72,7 @@ impl ToolManager {
             "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
 
             // hydro_analysis
+            "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
 
             // lidar_analysis

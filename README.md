@@ -11,7 +11,7 @@
 
 ## Description
 
-**WhiteboxTools** is an experimental library, developed using the Rust programming language, for analyzing geospatial data. Although it is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in this library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
+**WhiteboxTools** is an experimental library, developed using the Rust programming language, for advanced analysis of geospatial data. Although it is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in this library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
 
 The *WhiteboxTools* project is related to the [**GoSpatial**](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. Both projects are currently considered to be experimental.
 
@@ -25,7 +25,7 @@ For examples of how to call functions and run tools from *WhiteboxTools*, see th
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT'* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following tools:
 
 **GIS Analysis**
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -34,6 +34,7 @@ Eventually most of *Whitebox GAT'* approximately 450 tools will be ported to *Wh
 - ***Quantiles***: Tranforms raster values into quantiles.
 
 **Hydrological Analysis**
+- ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 
 **LiDAR Analysis**
@@ -83,3 +84,4 @@ The whitebox-tools library is distributed under the [MIT](LICENSE) license.
 
 - Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
 - There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format.
+- Compressed LAS files (LAZ) are not supported.

@@ -235,10 +235,11 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "Quantiles"
+        name = "D8FlowAccumulation"
         args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp10.dep\"",
-                "--num_quantiles=15"]
+                "--output=\"tmp11.dep\"",
+                "--out_type=\"sca\"",
+                "--log"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

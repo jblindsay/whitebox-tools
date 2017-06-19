@@ -3,16 +3,16 @@
 /////////////////////////////////////////////
 use std::io::Error;
 use std::io::ErrorKind;
-use std::ops::{Index, IndexMut};
+use std::ops::{AddAssign, SubAssign, Index, IndexMut};
 
-pub struct Array2D<T: Copy> {
+pub struct Array2D<T: Copy + AddAssign + SubAssign> {
     columns: isize,
     rows: isize,
     data: Vec<T>,
     nodata: T,
 }
 
-impl<T: Copy> Array2D<T> {
+impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
     pub fn new(rows: isize, columns: isize, initial_value: T, nodata: T) -> Result<Array2D<T>, Error> {
         if rows < 0 || columns < 0 {
             return Err(Error::new(ErrorKind::InvalidData, "Only non-negative rows and columns values accepted."));
@@ -34,6 +34,42 @@ impl<T: Copy> Array2D<T> {
             }
         }
     }
+
+    pub fn increment(&mut self, row: isize, column: isize, value: T) {
+        if column >= 0 && row >= 0 {
+            if column < self.columns && row < self.rows {
+                let idx = row * self.columns + column;
+                self.data[idx as usize] -= value;
+            }
+        }
+    }
+
+    pub fn decrement(&mut self, row: isize, column: isize, value: T) {
+        if column >= 0 && row >= 0 {
+            if column < self.columns && row < self.rows {
+                let idx = row * self.columns + column;
+                self.data[idx as usize] -= value;
+            }
+        }
+    }
+
+    // pub fn increment_value((&mut self, row: isize, column: isize, value: T) {
+    //     if column >= 0 && row >= 0 {
+    //         if column < self.columns && row < self.rows {
+    //             let idx = row * self.columns + column;
+    //             self.data[idx as usize] += value;
+    //         }
+    //     }
+    // }
+
+    // pub fn decrement_value((&mut self, row: isize, column: isize, value: T) {
+    //     if column >= 0 && row >= 0 {
+    //         if column < self.columns && row < self.rows {
+    //             let idx = row * self.columns + column;
+    //             self.data[idx as usize] -= value;
+    //         }
+    //     }
+    // }
 
     pub fn set_row_data(&mut self, row: isize, values: Vec<T>) {
         for column in 0..values.len() as isize  {
@@ -60,7 +96,7 @@ impl<T: Copy> Array2D<T> {
     pub fn nodata(&self) -> T { self.nodata }
 }
 
-impl<T: Copy> Index<(isize, isize)> for Array2D<T> {
+impl<T: Copy> Index<(isize, isize)> for Array2D<T> where T: Copy + AddAssign + SubAssign {
     type Output = T;
 
     fn index<'a>(&'a self, index: (isize, isize)) -> &'a T {
@@ -75,7 +111,7 @@ impl<T: Copy> Index<(isize, isize)> for Array2D<T> {
     }
 }
 
-impl<T: Copy> IndexMut<(isize, isize)> for Array2D<T> {
+impl<T: Copy> IndexMut<(isize, isize)> for Array2D<T> where T: Copy + AddAssign + SubAssign {
     fn index_mut<'a>(&'a mut self, index: (isize, isize)) -> &'a mut T {
         let row = index.0;
         let column = index.1;

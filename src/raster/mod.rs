@@ -10,6 +10,7 @@ pub mod surfer7_raster;
 pub mod surfer_ascii_raster;
 pub mod whitebox_raster;
 
+use std::cmp::Ordering::Equal;
 use std::io::Error;
 use std::io::prelude::*;
 use std::io::ErrorKind;
@@ -199,6 +200,17 @@ impl Raster {
         }
     }
 
+    pub fn increment(&mut self, row: isize, column: isize, value: f64) {
+        if column >= 0 && row >= 0 {
+            let c: usize = column as usize;
+            let r: usize = row as usize;
+            if c < self.configs.columns && r < self.configs.rows {
+                let idx = r * self.configs.columns + c;
+                self.data[idx] += value;
+            }
+        }
+    }
+
     pub fn set_row_data(&mut self, row: isize, values: Vec<f64>) {
         for column in 0..values.len() {
             if row >= 0 {
@@ -214,6 +226,103 @@ impl Raster {
 
     pub fn reinitialize_values(&mut self, value: f64) {
         self.data = vec![value; self.configs.rows * self.configs.columns];
+    }
+
+
+    pub fn clip_display_min_max(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        for i in 0..d.len() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    self.configs.display_min = d[i];
+                    break;
+                }
+            }
+        }
+
+        sum = 0;
+        for i in (0..d.len()).rev() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    self.configs.display_max = d[i];
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn clip_display_min(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        for i in 0..d.len() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    self.configs.display_min = d[i];
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn clip_display_max(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        for i in (0..d.len()).rev() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    self.configs.display_max = d[i];
+                    break;
+                }
+            }
+        }
+        // for value in &self.data {
+        //     if *value < self.configs.minimum && *value != self.configs.nodata {
+        //         self.configs.minimum = *value;
+        //     }
+        //     if *value > self.configs.maximum && *value != self.configs.nodata {
+        //         self.configs.maximum = *value;
+        //     }
+        // }
+        // let mut histo: [usize; 1025] = [0; 1025];
+        // let mut bin: isize;
+        // for value in &self.data {
+        //     if *value != self.configs.nodata {
+        //         bin = ((*value - self.configs.minimum) / 1025.0).floor() as isize;
+        //         if bin > 1024 {
+        //             bin = 1024;
+        //         }
+        //         if bin < 0 {
+        //             bin = 0;
+        //         }
+        //         histo[bin as usize] += 1;
+        //     }
+        // }
+
+        // let bin_size = (self.configs.maximum - self.configs.minimum) / 1025.0;
+        // let mut sum = 0;
+        // for i in (0..1025).rev() {
+        //     sum += histo[i];
+        //     if sum == t {
+        //         self.configs.display_max = bin_size * i as f64 + self.configs.minimum;
+        //         break;
+        //     } else if sum > t {
+        //         self.configs.display_max = bin_size * (i + 1) as f64 + self.configs.minimum;
+        //         println!("i = {}; disp max = {}", i, self.configs.display_max);
+        //         break;
+        //     }
+        // }
+
     }
 
     pub fn write(&mut self) -> Result<(), Error> {

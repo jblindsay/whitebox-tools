@@ -127,7 +127,7 @@ impl WhiteboxTool for ProfileCurvature {
         let four_times_cell_size_sqrd = cell_size_sqrd * 4.0f64;
             
 
-        if input.configs.xy_units.contains("deg") {
+        if input.is_in_geographic_coordinates() {
             // calculate a new z-conversion factor
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
