@@ -36,6 +36,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 **Hydrological Analysis**
 - ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
+- ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
 
 **LiDAR Analysis**

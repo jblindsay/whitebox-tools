@@ -41,7 +41,7 @@ impl FD8FlowAccumulation {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
-        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --log --clip", short_exe, name).replace("*", &sep);
+        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
         FD8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -152,7 +152,6 @@ impl WhiteboxTool for FD8FlowAccumulation {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        // calculate the flow direction
         let start = time::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -200,9 +199,9 @@ impl WhiteboxTool for FD8FlowAccumulation {
                             if count == 8 {
                                 interior_pit_found = true;
                             }
-                        } else {
-                            data[col as usize] = -1i8;
-                        }
+                        }// else {
+                        //     data[col as usize] = -1i8;
+                        // }
                     }
                     tx.send((row, data, interior_pit_found)).unwrap();
                 }
@@ -314,8 +313,8 @@ impl WhiteboxTool for FD8FlowAccumulation {
             }
         }
 
-        let mut cell_area = input.configs.resolution_x * input.configs.resolution_y;
-        let mut avg_cell_size = (input.configs.resolution_x + input.configs.resolution_y) / 2.0;
+        let mut cell_area = cell_size_x * cell_size_y;
+        let mut avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
         if out_type == "cells" {
             cell_area = 1.0;
             avg_cell_size = 1.0;

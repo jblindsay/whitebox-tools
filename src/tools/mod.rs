@@ -25,6 +25,7 @@ impl ToolManager {
         // hydro_analysis
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
+        tool_names.push("DInfFlowAccumulation".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
 
         // lidar_analysis
@@ -75,6 +76,7 @@ impl ToolManager {
             // hydro_analysis
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
+            "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
 
             // lidar_analysis

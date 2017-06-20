@@ -235,11 +235,10 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "FD8FlowAccumulation"
+        name = "DInfFlowAccumulation"
         args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp12.dep\"",
+                "--output=\"tmp13.dep\"",
                 "--out_type=\"cells\"",
-                "--exponent=1.0",
                 "--threshold=10000",
                 "--log"]
 
