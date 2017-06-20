@@ -127,8 +127,8 @@ The following commands are recognized:
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools.
--r, --run        Runs a tool; used in conjuction with --args and --cd flags; -r=\"lidar_info\".
---toolhelp       Prints the help associated with a tool; --toolhelp=\"lidar_info\".
+-r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
+--toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
 -h, --help       Prints help information.
 
 Example Usage:

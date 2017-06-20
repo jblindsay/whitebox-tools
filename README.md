@@ -12,7 +12,7 @@
 
 ## Description
 
-**WhiteboxTools** is a modern and scalable engine for advanced analysis of geospatial data. The library has been developed using the [Rust](https://www.rust-lang.org/en-US/) programming language, a very performant and safe systems language often viewed as a modern replacement for C/C++. Although **WhiteboxTools** is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
+**WhiteboxTools** is a modern and scalable engine for advanced analysis of geospatial data. The library has been developed using the [Rust](https://www.rust-lang.org/en-US/) programming language, a very performant and safe systems language often viewed as a modern replacement for C/C++. Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
 
 The *WhiteboxTools* project is related to the [**GoSpatial**](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. Both projects are currently considered to be experimental.
 
@@ -22,19 +22,20 @@ To install the latest development version of *WhiteboxTools* Ensure that the lat
 
 ## Usage
 
-For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
-
-WhiteboxTools is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized:
+*WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized:
 
 | Command        | Description                                                                  |
 | -------------- | ---------------------------------------------------------------------------- |
 | --cd, --wd     | Changes the working directory; used in conjunction with --run flag.          |
 | -l, --license  | Prints the whitebox-tools license.                                           |
 | --listtools    | Lists all available tools.                                                   |
-| -r, --run      | Runs a tool; used in conjuction with --args and --cd flags; -r="lidar_info". |
-| --toolhelp     | Prints the help associated with a tool; --toolhelp="lidar_info".             |
+| -r, --run      | Runs a tool; used in conjuction with --cd flag; -r="LidarInfo".              |
+| --toolhelp     | Prints the help associated with a tool; --toolhelp="LidarInfo".              |
 | -h, --help     | Prints help information.                                                     |
 
+Generally, the convention is that single-letter arguments (options) use a single dash (e.e. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --listtools=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
+
+For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
 **Example Python script**
 
