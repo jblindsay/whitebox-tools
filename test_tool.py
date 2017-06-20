@@ -235,10 +235,12 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "D8FlowAccumulation"
+        name = "FD8FlowAccumulation"
         args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp11.dep\"",
-                "--out_type=\"sca\"",
+                "--output=\"tmp12.dep\"",
+                "--out_type=\"cells\"",
+                "--exponent=1.0",
+                "--threshold=10000",
                 "--log"]
 
         # Run the tool and check the return value

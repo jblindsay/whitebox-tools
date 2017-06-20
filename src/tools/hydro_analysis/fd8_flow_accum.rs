@@ -12,22 +12,24 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct D8FlowAccumulation {
+pub struct FD8FlowAccumulation {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl D8FlowAccumulation {
-    pub fn new() -> D8FlowAccumulation { // public constructor
-        let name = "D8FlowAccumulation".to_string();
+impl FD8FlowAccumulation {
+    pub fn new() -> FD8FlowAccumulation { // public constructor
+        let name = "FD8FlowAccumulation".to_string();
         
-        let description = "Calculates a D8 flow accumulation raster from an input DEM.".to_string();
+        let description = "Calculates an FD8 flow accumulation raster from an input DEM.".to_string();
         
         let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca', and 'ca'.\n");
+        parameters.push_str("--exponent      Optional exponent parameter; default is 1.1.\n");
+        parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
         parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
          
@@ -38,14 +40,14 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep -out_type=sca
-        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
+        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --log --clip", short_exe, name).replace("*", &sep);
     
-        D8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
+        FD8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for D8FlowAccumulation {
+impl WhiteboxTool for FD8FlowAccumulation {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -66,6 +68,8 @@ impl WhiteboxTool for D8FlowAccumulation {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut out_type = String::from("sca");
+        let mut exponent = 1.1;
+        let mut convergence_threshold = f64::INFINITY;
         let mut log_transform = false;
         let mut clip_max = false;
         
@@ -107,6 +111,18 @@ impl WhiteboxTool for D8FlowAccumulation {
                 } else {
                     out_type = String::from("ca");
                 }
+            } else if vec[0].to_lowercase() == "-exponent" || vec[0].to_lowercase() == "--exponent" {
+                if keyval {
+                    exponent = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    exponent = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-threshold" || vec[0].to_lowercase() == "--threshold" {
+                if keyval {
+                    convergence_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    convergence_threshold = args[i+1].to_string().parse::<f64>().unwrap();
+                }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
                 log_transform = true;
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
@@ -146,8 +162,8 @@ impl WhiteboxTool for D8FlowAccumulation {
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         
-        let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-
+        // calculate the number of inflowing cells
+        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let mut starting_row;
         let mut ending_row = 0;
         let num_procs = num_cpus::get() as isize;
@@ -156,7 +172,6 @@ impl WhiteboxTool for D8FlowAccumulation {
         let mut id = 0;
         while ending_row < rows {
             let input = input.clone();
-            let rows = rows.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -165,42 +180,25 @@ impl WhiteboxTool for D8FlowAccumulation {
             id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
                 let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
-                let (mut z, mut z_n): (f64, f64);
-                let (mut max_slope, mut slope): (f64, f64);
-                let mut dir: i8;
-                let mut neighbouring_nodata: bool;
+                let mut z: f64;
+                let mut count: i8;
                 let mut interior_pit_found = false;
                 for row in starting_row..ending_row {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            dir = 0i8;
-							max_slope = f64::MIN;
-                            neighbouring_nodata = false;
+                            count = 0i8;
 							for i in 0..8 {
-                                z_n = input[(row + d_y[i], col + d_x[i])];
-                                if z_n != nodata {
-                                    slope = (z - z_n) / grid_lengths[i];
-                                    if slope > max_slope && slope > 0f64 {
-                                        max_slope = slope;
-                                        dir = i as i8;
-                                    }
-                                } else {
-                                    neighbouring_nodata = true;
+                                if input[(row + d_y[i], col + d_x[i])] > z {
+                                    count += 1;
                                 }
                             }
-                            if max_slope >= 0f64 {
-                                data[col as usize] = dir;
-                            } else {
-                                data[col as usize] = -1i8;
-                                if !neighbouring_nodata {
-                                    interior_pit_found = true;
-                                }
+                            data[col as usize] = count;
+                            if count == 8 {
+                                interior_pit_found = true;
                             }
                         } else {
                             data[col as usize] = -1i8;
@@ -211,71 +209,15 @@ impl WhiteboxTool for D8FlowAccumulation {
             });
         }
 
-        let mut interior_pit_found = false;
-        for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
-            flow_dir.set_row_data(row, data); //(data.0, data.1);
-            if pit { interior_pit_found = true; }
-            if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Flow directions: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        // calculate the number of inflowing cells
-        let flow_dir = Arc::new(flow_dir);
-        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        
-        id = 0;
-        ending_row = 0;
-        let (tx, rx) = mpsc::channel();
-        while ending_row < rows {
-            let input = input.clone();
-            let flow_dir = flow_dir.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
-                let mut z: f64;
-                let mut count: i8;
-                for row in starting_row..ending_row {
-                    let mut data: Vec<i8> = vec![-1i8; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            count = 0i8;
-							for i in 0..8 {
-                                if flow_dir[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
-                                    count += 1;
-                                }
-                            }
-                            data[col as usize] = count;
-                        } else {
-                            data[col as usize] = -1i8;
-                        }
-                    }
-                    tx.send((row, data)).unwrap();
-                }
-            });
-        }
-
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
+        let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().unwrap();
             num_inflowing.set_row_data(row, data);
+            if pit { interior_pit_found = true; }
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
                     stack.push((row, col));
@@ -297,23 +239,68 @@ impl WhiteboxTool for D8FlowAccumulation {
         let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
-        let mut dir: i8;
+        let (mut z, mut z_n): (f64, f64);
         let mut fa: f64;
+        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let (mut max_slope, mut slope): (f64, f64);
+        let mut dir: i8;
+        
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
             col = cell.1;
+            z = input[(row, col)];
             fa = output[(row, col)];
-            num_inflowing.decrement(row, col, 1i8);
-            dir = flow_dir[(row, col)];
-            if dir >= 0 {
-                row_n = row + d_y[dir as usize];
-                col_n = col + d_x[dir as usize];
-                output.increment(row_n, col_n, fa);
-                num_inflowing.decrement(row_n, col_n, 1i8);
-                if num_inflowing[(row_n, col_n)] == 0i8 {
-                    stack.push((row_n, col_n));
+            num_inflowing[(row, col)] = -1i8;
+
+            let mut total_weights = 0.0;
+			let mut weights: [f64; 8] = [0.0; 8];
+			let mut downslope: [bool; 8] = [false; 8];
+            if fa < convergence_threshold {
+                for i in 0..8 {
+                    row_n = row + d_y[i];
+                    col_n = col + d_x[i];
+                    z_n = input[(row_n, col_n)];
+                    if z_n < z && z_n != nodata {
+                        weights[i] = (z - z_n).powf(exponent);
+                        total_weights += weights[i];
+                        downslope[i] = true;
+                    }
+                }
+            } else {
+                // find the steepest downslope neighbour and give it all to them
+                dir = 0i8;
+                max_slope = f64::MIN;
+                for i in 0..8 {
+                    z_n = input[(row + d_y[i], col + d_x[i])];
+                    if z_n != nodata {
+                        slope = (z - z_n) / grid_lengths[i];
+                        if slope > 0f64 {
+                            downslope[i] = true;
+                            if slope > max_slope {
+                                max_slope = slope;
+                                dir = i as i8;
+                            }
+                        }
+                    }
+                }
+                if max_slope >= 0f64 {
+                    weights[dir as usize] = 1.0;
+                    total_weights = 1.0;
+                }
+            }
+
+            if total_weights > 0.0 {
+                for i in 0..8 {
+                    if downslope[i] {
+                        row_n = row + d_y[i];
+                        col_n = col + d_x[i];
+                        output.increment(row_n, col_n, fa * (weights[i] / total_weights));
+                        num_inflowing.decrement(row_n, col_n, 1i8);
+                        if num_inflowing[(row_n, col_n)] == 0i8 {
+                            stack.push((row_n, col_n));
+                        }
+                    }
                 }
             }
 
@@ -327,14 +314,13 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let mut cell_area = cell_size_x * cell_size_y;
-        //let diag = (input.configs.resolution_x + input.configs.resolution_y).sqrt();
-        let mut flow_widths = [diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x];
+        let mut cell_area = input.configs.resolution_x * input.configs.resolution_y;
+        let mut avg_cell_size = (input.configs.resolution_x + input.configs.resolution_y) / 2.0;
         if out_type == "cells" {
             cell_area = 1.0;
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            avg_cell_size = 1.0;
         } else if out_type == "ca" {
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            avg_cell_size = 1.0;
         }
 
         if log_transform {
@@ -343,12 +329,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                     if input[(row, col)] == nodata {
                         output[(row, col)] = nodata;
                     } else {
-                        let dir = flow_dir[(row, col)];
-                        if dir >= 0 {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[dir as usize]).ln();
-                        } else {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[3]).ln();
-                        }
+                        output[(row, col)] = (output[(row, col)] * cell_area / avg_cell_size).ln();
                     }
                 }
                 
@@ -366,12 +347,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                     if input[(row, col)] == nodata {
                         output[(row, col)] = nodata;
                     } else {
-                        let dir = flow_dir[(row, col)];
-                        if dir >= 0 {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[dir as usize];
-                        } else {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[3];
-                        }
+                        output[(row, col)] = output[(row, col)] * cell_area / avg_cell_size;
                     }
                 }
                 

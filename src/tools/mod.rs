@@ -25,6 +25,7 @@ impl ToolManager {
         // hydro_analysis
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
+        tool_names.push("FD8FlowAccumulation".to_string());
 
         // lidar_analysis
         tool_names.push("FlightlineOverlap".to_string());
@@ -74,6 +75,7 @@ impl ToolManager {
             // hydro_analysis
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
+            "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
 
             // lidar_analysis
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
