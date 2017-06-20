@@ -24,7 +24,19 @@ To install the latest development version of *WhiteboxTools* Ensure that the lat
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
-**Example python script**
+WhiteboxTools is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized:
+
+| Command        | Description                                                                  |
+| -------------- | ---------------------------------------------------------------------------- |
+| --cd, --wd     | Changes the working directory; used in conjunction with --run flag.          |
+| -l, --license  | Prints the whitebox-tools license.                                           |
+| --listtools    | Lists all available tools.                                                   |
+| -r, --run      | Runs a tool; used in conjuction with --args and --cd flags; -r="lidar_info". |
+| --toolhelp     | Prints the help associated with a tool; --toolhelp="lidar_info".             |
+| -h, --help     | Prints help information.                                                     |
+
+
+**Example Python script**
 
 ```Python
 import os
