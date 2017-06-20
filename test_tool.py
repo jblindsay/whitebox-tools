@@ -235,12 +235,33 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        name = "DInfFlowAccumulation"
-        args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp13.dep\"",
-                "--out_type=\"cells\"",
-                "--threshold=10000",
-                "--log"]
+        # name = "DInfFlowAccumulation"
+        # args = ["--input=\"DEM final.dep\"",
+        #         "--output=\"tmp13.dep\"",
+        #         "--out_type=\"cells\"",
+        #         "--threshold=10000",
+        #         "--log"]
+
+        # name = "BufferRaster"
+        # args = ["--input=\"tmp11.dep\"",
+        #         "--output=\"tmp12.dep\"",
+        #         "--size=450",
+        #         "--gridcells"]
+
+        # name = "Quantiles"
+        # args = ["--input=\"DEM final.dep\"",
+        #         "--output=\"tmp10.dep\"",
+        #         "--num_quantiles=15"]
+
+        # name = "Clump"
+        # args = ["--input=\"tmp10.dep\"",
+        #         "--output=\"tmp15.dep\""]
+
+        name = "Clump"
+        args = ["--input=\"tmp12.dep\"",
+                "--output=\"tmp16.dep\"",
+                "--diag",
+                "--zero_back"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

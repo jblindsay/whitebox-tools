@@ -12,7 +12,7 @@
 
 ## Description
 
-**WhiteboxTools** is an experimental library, developed using the Rust programming language, for advanced analysis of geospatial data. Although it is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in this library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
+**WhiteboxTools** is a modern and scalable engine for advanced analysis of geospatial data. The library has been developed using the [Rust](https://www.rust-lang.org/en-US/) programming language, a very performant and safe systems language often viewed as a modern replacement for C/C++. Although **WhiteboxTools** is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
 
 The *WhiteboxTools* project is related to the [**GoSpatial**](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. Both projects are currently considered to be experimental.
 
@@ -30,6 +30,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 
 **GIS Analysis**
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
+- ***Clump***: Groups cells that form physically discrete areas, assigning them unique identifiers.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
 - ***Quantiles***: Tranforms raster values into quantiles.
@@ -68,7 +69,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
 
 ## Supported Data Formats
-The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (*.flt & *.hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. Zipped LAS formats (LAZ) and ESRI LiDAR formats are not currently supported. At present, there is no ability to read or write vector geospatial data. Shapefile support will eventually be added to the library.
+The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (*.flt & *.hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. Zipped LAS formats (LAZ) and ESRI LiDAR formats are not currently supported. At present, there is no ability to read or write vector geospatial data. Shapefile support will eventually be added to the library.
 
 ## Contributing
 
@@ -77,6 +78,9 @@ The **WhiteboxTools** library can currently support read/writing raster data in 
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)
 5. Create a new Pull Request
+
+**TODO**
+Describe the process of integrating a new tool into the library.
 
 ## Contributors
 

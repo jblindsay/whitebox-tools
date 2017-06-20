@@ -18,6 +18,7 @@ impl ToolManager {
         let mut tool_names = vec![];
         // gis_analysis
         tool_names.push("BufferRaster".to_string());
+        tool_names.push("Clump".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("Quantiles".to_string());
@@ -69,6 +70,7 @@ impl ToolManager {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // gis_analysis
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
+            "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
             "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
             "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
