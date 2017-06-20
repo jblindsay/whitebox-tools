@@ -24,6 +24,51 @@ To install the latest development version of *WhiteboxTools* Ensure that the lat
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
+**Example python script**
+
+```Python
+import os
+import sys
+from whitebox_tools import WhiteboxTools
+
+# Set the WhiteboxTools executable directory
+# Change this to point to where you have the whitebox_tools.exe file!
+wb_dir = os.path.dirname(os.path.abspath(__file__)) + "/target/release/"
+wbt = WhiteboxTools()
+wbt.set_whitebox_dir(wb_dir)
+
+# Prints the WhiteboxTools help...a listing of available commands
+print(wbt.help())
+
+# Prints the WhiteboxTools license
+print(wbt.license())
+
+# Prints the WhiteboxTools version
+print("Version information: {}".format(wbt.version()))
+
+# List all available tools in WhiteboxTools
+print(wbt.list_tools())
+
+print(wbt.tool_help("ElevPercentile"))
+
+# Sets verbose mode (True or False). Most tools will suppress output (e.g. updating
+# progress) when verbose mode is False. The default is True
+# wbt.set_verbose_mode(False) # uncomment me to suppress tool output
+
+# Set the working directory; needed to specify complete file names (with paths) to tools that you run.
+wbt.set_working_dir(os.path.dirname(os.path.abspath(__file__)) + "/testdata/")
+
+tool_name = "ElevPercentile"
+args = ["--input=\"DEM.dep\"",
+        "--output=\"DEV_101.dep\"",
+        "--filter=101"]
+
+# Run the tool and check the return value
+if wbt.run_tool(tool_name, args, callback) != 0:
+    print("ERROR running {}".format(name))
+
+```
+
 ## Available Tools
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following tools:
