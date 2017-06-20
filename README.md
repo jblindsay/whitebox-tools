@@ -4,6 +4,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Available Tools](#available-tools)
+- [Supported Data Formats](#supported-data-formats)
 - [Contributing](#contributing)
 - [Contributors](#contributors)
 - [License](#license)
@@ -66,6 +67,9 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
 - ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
 
+## Supported Data Formats
+The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (*.flt & *.hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. Zipped LAS formats (LAZ) and ESRI LiDAR formats are not currently supported. At present, there is no ability to read or write vector geospatial data. Shapefile support will eventually be added to the library.
+
 ## Contributing
 
 1. Fork the larger Whitebox project (in which whitebox-tools exists) ( https://github.com/jblindsay/whitebox-geospatial-analysis-tools )
@@ -80,7 +84,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 
 ## License
 
-The whitebox-tools library is distributed under the [MIT](LICENSE) license.
+The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
 
 ## Known Issues
 
