@@ -257,11 +257,15 @@ def main():
         # args = ["--input=\"tmp10.dep\"",
         #         "--output=\"tmp15.dep\""]
 
-        name = "Clump"
-        args = ["--input=\"tmp12.dep\"",
-                "--output=\"tmp16.dep\"",
-                "--diag",
-                "--zero_back"]
+        # name = "Clump"
+        # args = ["--input=\"tmp12.dep\"",
+        #         "--output=\"tmp16.dep\"",
+        #         "--diag",
+        #         "--zero_back"]
+
+        name = "NumInflowingNeighbours"
+        args = ["--input=\"DEM final.dep\"",
+                "--output=\"tmp8.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)
