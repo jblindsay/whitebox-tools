@@ -325,6 +325,23 @@ impl Raster {
 
     }
 
+    pub fn update_min_max(&mut self) {
+        for val in &self.data {
+            let v = *val;
+            if v != self.configs.nodata {
+                if v < self.configs.minimum { self.configs.minimum = v; }
+                if v > self.configs.maximum { self.configs.maximum = v; }
+            }
+        }
+
+        if self.configs.display_min == f64::INFINITY {
+            self.configs.display_min = self.configs.minimum;
+        }
+        if self.configs.display_max == f64::NEG_INFINITY {
+            self.configs.display_max = self.configs.maximum;
+        }
+    }
+
     pub fn write(&mut self) -> Result<(), Error> {
         match self.raster_type {
             RasterType::ArcAscii => {

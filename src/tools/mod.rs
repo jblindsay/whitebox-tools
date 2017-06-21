@@ -43,6 +43,7 @@ impl ToolManager {
         // terrain_analysis
         tool_names.push("Aspect".to_string());
         tool_names.push("DevFromMeanElev".to_string());
+        tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("Hillshade".to_string());
@@ -96,6 +97,7 @@ impl ToolManager {
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
+            "difffrommeanelev" => Some(Box::new(tools::terrain_analysis::DiffFromMeanElev::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),

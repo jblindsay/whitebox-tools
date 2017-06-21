@@ -263,9 +263,10 @@ def main():
         #         "--diag",
         #         "--zero_back"]
 
-        name = "NumInflowingNeighbours"
+        name = "DiffFromMeanElev"
         args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp8.dep\""]
+                "--output=\"tmp7.dep\"",
+                "--filter=250"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

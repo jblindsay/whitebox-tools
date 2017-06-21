@@ -33,7 +33,7 @@ To install the latest development version of *WhiteboxTools* Ensure that the lat
 | --toolhelp     | Prints the help associated with a tool; --toolhelp="LidarInfo".              |
 | -h, --help     | Prints help information.                                                     |
 
-Generally, the convention is that single-letter arguments (options) use a single dash (e.e. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --listtools=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
+Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.e. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --listtools=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
@@ -84,7 +84,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 34 tools:
 
 **GIS Analysis**
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -113,6 +113,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 **Terrain Analysis**
 - ***Aspect***: Calculates an aspect raster from an input DEM.
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
+- ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.

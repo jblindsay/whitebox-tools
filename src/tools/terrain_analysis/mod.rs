@@ -1,6 +1,7 @@
 // private sub-module defined in other files
 mod aspect;
 mod dev_from_mean_elev; 
+mod diff_from_mean_elev;
 mod elev_percentile;
 mod fill_missing_data;
 mod hillshade;
@@ -18,6 +19,7 @@ mod total_curvature;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::aspect::Aspect;
 pub use self::dev_from_mean_elev::DevFromMeanElev;
+pub use self::diff_from_mean_elev::DiffFromMeanElev;
 pub use self::elev_percentile::ElevPercentile;
 pub use self::fill_missing_data::FillMissingData;
 pub use self::hillshade::Hillshade;
