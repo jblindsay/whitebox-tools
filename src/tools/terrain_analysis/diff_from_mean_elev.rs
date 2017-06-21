@@ -13,14 +13,14 @@ use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct DiffFromMean {
+pub struct DiffFromMeanElev {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl DiffFromMean {
+impl DiffFromMeanElev {
     pub fn new() -> DiffFromMeanElev { // public constructor
         let name = "DiffFromMeanElev".to_string();
         

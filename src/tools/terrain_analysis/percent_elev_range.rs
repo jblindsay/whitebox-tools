@@ -176,6 +176,7 @@ impl WhiteboxTool for PercentElevRange {
                 let (mut z_n, mut z) : (f64, f64);
                 let (mut min_val, mut max_val): (f64, f64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
+                let mut range: f64;
                 for row in starting_row..ending_row {
                     let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
@@ -223,8 +224,13 @@ impl WhiteboxTool for PercentElevRange {
                                 if filter_min_vals[i] < min_val { min_val = filter_min_vals[i]; }
                                 if filter_max_vals[i] > max_val { max_val = filter_max_vals[i]; }
                             }
-                            if min_val < f64::INFINITY && max_val > f64::NEG_INFINITY {
-                                data[col as usize] = (z - min_val) / (max_val - min_val) * 100.0;
+                            if min_val < f64::INFINITY && max_val > f64::NEG_INFINITY  {
+                                range = max_val - min_val;
+                                if range > 0.0 {
+                                    data[col as usize] = (z - min_val) / range * 100.0;
+                                } else {
+                                    data[col as usize] = 0.0;
+                                }
                             }
                         }
                     }

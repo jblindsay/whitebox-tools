@@ -249,8 +249,10 @@ impl WhiteboxTool for RelativeTopographicPosition {
                                 mean = total / n;
                                 if z < mean {
                                     data[col as usize] = (z - mean) / (mean - min_val);
-                                } else {
+                                } else if max_val > mean {
                                     data[col as usize] = (z - mean) / (max_val - mean);
+                                } else { // this will occur when max_val = mean, because there is no variation within the window
+                                    data[col as usize] = 0.0;
                                 }
                             }
                         }

@@ -125,7 +125,8 @@ def main():
             os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
 
-        wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        # wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        wkdir = "/Users/johnlindsay/Documents/data/DanData/"
         # wkdir = "/Users/johnlindsay/Desktop/WhiteboxGAT-mac/resources/samples/Vermont DEM/"
         wbt.set_working_dir(wkdir)
 
@@ -263,10 +264,9 @@ def main():
         #         "--diag",
         #         "--zero_back"]
 
-        name = "DiffFromMeanElev"
-        args = ["--input=\"DEM final.dep\"",
-                "--output=\"tmp7.dep\"",
-                "--filter=250"]
+        name = "NumUpslopeNeighbours"
+        args = ["--input=\"Rel_Low.dep\"",
+                "--output=\"tmp1.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)
