@@ -125,8 +125,8 @@ def main():
             os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
 
-        # wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
-        wkdir = "/Users/johnlindsay/Documents/data/DanData/"
+        wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        # wkdir = "/Users/johnlindsay/Documents/data/DanData/"
         # wkdir = "/Users/johnlindsay/Desktop/WhiteboxGAT-mac/resources/samples/Vermont DEM/"
         wbt.set_working_dir(wkdir)
 
@@ -236,11 +236,10 @@ def main():
         #         "--azimuth=315.0",
         #         "--altitude=20.0"]
 
-        # name = "DInfFlowAccumulation"
+        # name = "D8FlowAccumulation"
         # args = ["--input=\"DEM final.dep\"",
         #         "--output=\"tmp13.dep\"",
         #         "--out_type=\"cells\"",
-        #         "--threshold=10000",
         #         "--log"]
 
         # name = "BufferRaster"
@@ -264,9 +263,15 @@ def main():
         #         "--diag",
         #         "--zero_back"]
 
-        name = "ZScores"
-        args = ["--input=\"Rel_Low.dep\"",
-                "--output=\"tmp2.dep\""]
+        # name = "DevFromMeanElev"
+        # args = ["--input=\"Rel_Low_Denoised.dep\"",
+        #         "--output=\"tmp6.dep\"",
+        #         "--filter=411"]
+
+        name = "Watershed"
+        args = ["--d8_pntr=\"tmp14.dep\"",
+                "--pour_pts=\"pour_pts.dep\"",
+                "--output=\"tmp15.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

@@ -30,6 +30,7 @@ impl ToolManager {
         tool_names.push("DInfFlowAccumulation".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
+        tool_names.push("Watershed".to_string());
 
         // lidar_analysis
         tool_names.push("FlightlineOverlap".to_string());
@@ -89,6 +90,7 @@ impl ToolManager {
             "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
             "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
+            "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // lidar_analysis
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),

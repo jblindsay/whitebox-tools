@@ -26,7 +26,7 @@ impl DevFromMeanElev {
         
         let description = "Calculates deviation from mean elevation.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input   Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");

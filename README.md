@@ -99,6 +99,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
+- ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 **LiDAR Analysis**
 - ***FlightlineOverlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
@@ -160,3 +161,4 @@ The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
 - Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
 - There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format.
 - Compressed LAS files (LAZ) are not supported.
+- File directories cannot contain apostrophes (') as they will be interpreted in the arguments array as single quoted strings.
