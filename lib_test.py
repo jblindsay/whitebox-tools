@@ -1,4 +1,4 @@
-''' This script is intended to experiemnt with the use of a whitebox_tools shared library (DLL).
+''' This script is intended to experiment with the use of a whitebox_tools shared library (DLL).
 It is experimental and is not intended for widespread use.
 '''
 import os

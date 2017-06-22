@@ -84,7 +84,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 36 tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 37 tools:
 
 **GIS Analysis**
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -109,6 +109,9 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
 - ***LidarTophatTransform***: Performs a tophat transform on a Lidar dataset.
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
+
+**Statistical Analysis**
+- ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
 **Terrain Analysis**
 - ***Aspect***: Calculates an aspect raster from an input DEM.

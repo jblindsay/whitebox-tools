@@ -264,9 +264,9 @@ def main():
         #         "--diag",
         #         "--zero_back"]
 
-        name = "NumUpslopeNeighbours"
+        name = "ZScores"
         args = ["--input=\"Rel_Low.dep\"",
-                "--output=\"tmp1.dep\""]
+                "--output=\"tmp2.dep\""]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

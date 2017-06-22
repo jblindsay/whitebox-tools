@@ -11,18 +11,18 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct NumUpslopeNeighbours {
+pub struct ZScores {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl NumUpslopeNeighbours {
-    pub fn new() -> NumUpslopeNeighbours { // public constructor
-        let name = "NumUpslopeNeighbours".to_string();
+impl ZScores {
+    pub fn new() -> ZScores { // public constructor
+        let name = "ZScores".to_string();
         
-        let description = "Calculates the number of upslope neighbours to each grid cell in a DEM.".to_string();
+        let description = "Standardizes the values in an input raster by converting to z-scores.".to_string();
         
         let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
@@ -36,11 +36,11 @@ impl NumUpslopeNeighbours {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        NumUpslopeNeighbours { name: name, description: description, parameters: parameters, example_usage: usage }
+        ZScores { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for NumUpslopeNeighbours {
+impl WhiteboxTool for ZScores {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -115,6 +115,10 @@ impl WhiteboxTool for NumUpslopeNeighbours {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+
+        if verbose { println!("Calculating image mean and standard deviation...") };
+        //let mean = input.calculate_mean();
+        let (mean, stdev) = input.calculate_mean_and_stdev();
         
         // calculate the number of downslope cells
         let mut starting_row;
@@ -133,22 +137,13 @@ impl WhiteboxTool for NumUpslopeNeighbours {
             id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
                 let mut z: f64;
-                let mut count: f64;
                 for row in starting_row..ending_row {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            count = 0.0;
-							for i in 0..8 {
-                                if input[(row + d_y[i], col + d_x[i])] > z {
-                                    count += 1.0;
-                                }
-                            }
-                            data[col as usize] = count;
+                            data[col as usize] = (z - mean) / stdev;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -172,7 +167,6 @@ impl WhiteboxTool for NumUpslopeNeighbours {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "spectrum_soft.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));

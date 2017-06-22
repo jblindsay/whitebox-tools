@@ -1,4 +1,5 @@
 // extern crate byteorder;
+extern crate num_cpus;
 
 pub mod arcascii_raster;
 pub mod arcbinary_raster;
@@ -15,11 +16,13 @@ use std::io::Error;
 use std::io::prelude::*;
 use std::io::ErrorKind;
 use std::io::BufReader;
-// use std::io::BufRead;
 use std::default::Default;
 use std::fs::File;
 use std::path::Path;
 use std::f64;
+use std::sync::Arc;
+use std::sync::mpsc;
+use std::thread;
 use raster::arcascii_raster::*;
 use raster::arcbinary_raster::*;
 use raster::geotiff::*;
@@ -340,6 +343,104 @@ impl Raster {
         if self.configs.display_max == f64::NEG_INFINITY {
             self.configs.display_max = self.configs.maximum;
         }
+    }
+
+    pub fn num_cells(&self) -> usize {
+        self.configs.rows * self.configs.columns
+    }
+
+    pub fn calculate_mean(&self) -> f64 {
+        if self.data.len() == 0 {
+            return 0.0;
+        }
+        let nodata = self.configs.nodata;
+        let values = Arc::new(self.data.clone());
+        let mut starting_idx;
+        let mut ending_idx = 0;
+        let num_procs = num_cpus::get();
+        let num_cells = self.num_cells();
+        let block_size = num_cells / num_procs;
+        let (tx, rx) = mpsc::channel();
+        let mut id = 0;
+        while ending_idx < num_cells {
+            let values = values.clone();
+            starting_idx = id * block_size;
+            ending_idx = starting_idx + block_size;
+            if ending_idx > num_cells {
+                ending_idx = num_cells;
+            }
+            id += 1;
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut sum = 0.0f64;
+                let mut count = 0.0f64;
+                for i in starting_idx..ending_idx {
+                    if values[i] != nodata {
+                        sum += values[i];
+                        count += 1.0;
+                    }
+                    tx.send((sum, count)).unwrap();
+                }
+            });
+        }
+
+        let mut sum = 0.0f64;
+        let mut count = 0.0f64;
+        for _ in 0..num_cells {
+            let (s, c) = rx.recv().unwrap();
+            sum += s;
+            count += c;
+        }
+
+        sum / count
+    }
+
+    pub fn calculate_mean_and_stdev(&self) -> (f64, f64) {
+        if self.data.len() == 0 {
+            return (0.0, 0.0);
+        }
+
+        let mean = self.calculate_mean();
+        let nodata = self.configs.nodata;
+        let values = Arc::new(self.data.clone());
+        let mut starting_idx;
+        let mut ending_idx = 0;
+        let num_procs = num_cpus::get();
+        let num_cells = self.num_cells();
+        let block_size = num_cells / num_procs;
+        let (tx, rx) = mpsc::channel();
+        let mut id = 0;
+        while ending_idx < num_cells {
+            let values = values.clone();
+            starting_idx = id * block_size;
+            ending_idx = starting_idx + block_size;
+            if ending_idx > num_cells {
+                ending_idx = num_cells;
+            }
+            id += 1;
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut sq_diff_sum = 0.0f64;
+                let mut count = 0.0f64;
+                for i in starting_idx..ending_idx {
+                    if values[i] != nodata {
+                        sq_diff_sum += (values[i] - mean) * (values[i] - mean);
+                        count += 1.0;
+                    }
+                    tx.send((sq_diff_sum, count)).unwrap();
+                }
+            });
+        }
+
+        let mut sq_diff_sum = 0.0f64;
+        let mut count = 0.0f64;
+        for _ in 0..num_cells {
+            let (s, c) = rx.recv().unwrap();
+            sq_diff_sum += s;
+            count += c;
+        }
+
+        (mean, (sq_diff_sum / count).sqrt())
     }
 
     pub fn write(&mut self) -> Result<(), Error> {

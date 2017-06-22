@@ -1,6 +1,7 @@
 pub mod gis_analysis;
 pub mod hydro_analysis;
 pub mod lidar_analysis;
+pub mod statistical_analysis;
 pub mod terrain_analysis;
 
 use tools;
@@ -39,6 +40,9 @@ impl ToolManager {
         tool_names.push("LidarJoin".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
+
+        // statistical_analysis
+        tool_names.push("ZScores".to_string());
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
@@ -95,6 +99,9 @@ impl ToolManager {
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
+
+            // statistical_analysis
+            "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
