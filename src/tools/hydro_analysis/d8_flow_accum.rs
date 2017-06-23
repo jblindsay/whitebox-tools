@@ -25,7 +25,7 @@ impl D8FlowAccumulation {
         
         let description = "Calculates a D8 flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input     Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca', and 'ca'.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");

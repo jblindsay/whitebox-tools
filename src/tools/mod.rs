@@ -2,6 +2,7 @@ pub mod gis_analysis;
 pub mod hydro_analysis;
 pub mod lidar_analysis;
 pub mod statistical_analysis;
+pub mod stream_network_analysis;
 pub mod terrain_analysis;
 
 use tools;
@@ -53,6 +54,9 @@ impl ToolManager {
 
         // statistical_analysis
         tool_names.push("ZScores".to_string());
+
+        // stream_network_analysis
+        tool_names.push("StreamOrder".to_string());
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
@@ -122,6 +126,9 @@ impl ToolManager {
 
             // statistical_analysis
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
+
+            // stream_network_analysis
+            "streamorder" => Some(Box::new(tools::stream_network_analysis::StreamOrder::new())),
 
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),

@@ -85,7 +85,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 46 tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 48 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -123,6 +123,9 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 
 **Statistical Analysis**
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
+
+**Stream Network Analysis**
+- ***StreamOrder***: Assigns the Horton-Strahler stream order to each link in a stream network.
 
 **Terrain Analysis**
 - ***Aspect***: Calculates an aspect raster from an input DEM.
