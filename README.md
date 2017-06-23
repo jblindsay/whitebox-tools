@@ -85,7 +85,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 45 tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 46 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -99,6 +99,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***MaxOverlay***: Evaluates the maximum value for each grid cell from a stack of input rasters.
 - ***MinAbsoluteOverlay***: Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
+- ***PickFromList***: Outputs the value from a raster stack specified by a position raster.
 - ***Quantiles***: Tranforms raster values into quantiles.
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 
@@ -143,7 +144,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
 - ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
 
-To retrieve detailed information about a tool's input arguments and example usage, either use *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
+To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
 ## Supported Data Formats
 The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (*.flt & *.hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. Zipped LAS formats (LAZ) and ESRI LiDAR formats are not currently supported. At present, there is no ability to read or write vector geospatial data. Shapefile support will eventually be added to the library.

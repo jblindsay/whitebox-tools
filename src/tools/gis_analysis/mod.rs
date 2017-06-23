@@ -10,6 +10,7 @@ mod max_abs_overlay;
 mod max_overlay;
 mod min_abs_overlay;
 mod min_overlay;
+mod pick_from_list;
 mod quantiles;
 mod weighted_sum;
 
@@ -25,5 +26,6 @@ pub use self::max_abs_overlay::MaxAbsoluteOverlay;
 pub use self::max_overlay::MaxOverlay;
 pub use self::min_abs_overlay::MinAbsoluteOverlay;
 pub use self::min_overlay::MinOverlay;
+pub use self::pick_from_list::PickFromList;
 pub use self::quantiles::Quantiles;
 pub use self::weighted_sum::WeightedSum;
