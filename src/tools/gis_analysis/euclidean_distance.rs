@@ -22,7 +22,7 @@ impl EuclideanDistance {
         
         let description = "Calculates the Shih and Wu (2004) Euclidean distance transform.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input   Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -118,7 +118,6 @@ impl WhiteboxTool for EuclideanDistance {
         let start = time::now();
         
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        //output.reinitialize_values(0.0);
 
         let mut h: f64;
         let mut which_cell: usize;

@@ -11,6 +11,7 @@ mod max_overlay;
 mod min_abs_overlay;
 mod min_overlay;
 mod quantiles;
+mod weighted_sum;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::average_overlay::AverageOverlay;
@@ -25,3 +26,4 @@ pub use self::max_overlay::MaxOverlay;
 pub use self::min_abs_overlay::MinAbsoluteOverlay;
 pub use self::min_overlay::MinOverlay;
 pub use self::quantiles::Quantiles;
+pub use self::weighted_sum::WeightedSum;

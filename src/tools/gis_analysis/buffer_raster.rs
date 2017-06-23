@@ -22,7 +22,7 @@ impl BufferRaster {
         
         let description = "Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input   Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--size        Buffer size.\n");
         parameters.push_str("--gridcells   Optional flag to indicate that the 'size' threshold should be measured in grid cells instead of the default.\n");

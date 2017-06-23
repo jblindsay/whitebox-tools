@@ -30,6 +30,7 @@ impl ToolManager {
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
         tool_names.push("D8FlowAccumulation".to_string());
@@ -97,6 +98,7 @@ impl ToolManager {
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
             "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
+            "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
             // hydro_analysis
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
