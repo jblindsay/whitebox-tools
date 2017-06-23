@@ -23,6 +23,8 @@ impl ToolManager {
         tool_names.push("Clump".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
+        tool_names.push("HighestPosition".to_string());
+        tool_names.push("LowestPosition".to_string());
         tool_names.push("Quantiles".to_string());
 
         // hydro_analysis
@@ -84,6 +86,8 @@ impl ToolManager {
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
             "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
+            "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
+            "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
 
             // hydro_analysis
