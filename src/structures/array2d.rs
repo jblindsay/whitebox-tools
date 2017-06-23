@@ -39,7 +39,7 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
         if column >= 0 && row >= 0 {
             if column < self.columns && row < self.rows {
                 let idx = row * self.columns + column;
-                self.data[idx as usize] -= value;
+                self.data[idx as usize] += value;
             }
         }
     }
@@ -52,24 +52,6 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
             }
         }
     }
-
-    // pub fn increment_value((&mut self, row: isize, column: isize, value: T) {
-    //     if column >= 0 && row >= 0 {
-    //         if column < self.columns && row < self.rows {
-    //             let idx = row * self.columns + column;
-    //             self.data[idx as usize] += value;
-    //         }
-    //     }
-    // }
-
-    // pub fn decrement_value((&mut self, row: isize, column: isize, value: T) {
-    //     if column >= 0 && row >= 0 {
-    //         if column < self.columns && row < self.rows {
-    //             let idx = row * self.columns + column;
-    //             self.data[idx as usize] -= value;
-    //         }
-    //     }
-    // }
 
     pub fn set_row_data(&mut self, row: isize, values: Vec<T>) {
         for column in 0..values.len() as isize  {

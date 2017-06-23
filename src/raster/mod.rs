@@ -129,9 +129,9 @@ impl Raster {
                 RasterType::Unknown => { return Err(Error::new(ErrorKind::Other, "Unrecognized raster type")); },
             }
         } else { // write
-
+            return Ok(r);
         }
-        Err(Error::new(ErrorKind::Other, "Error creating raster"))
+        // Err(Error::new(ErrorKind::Other, "Error creating raster"))
     }
 
     pub fn initialize_using_config<'a>(file_name: &'a str, configs: &'a RasterConfigs) -> Raster {
@@ -199,6 +199,17 @@ impl Raster {
             if c < self.configs.columns && r < self.configs.rows {
                 let idx = r * self.configs.columns + c;
                 self.data[idx] = value;
+            }
+        }
+    }
+
+    pub fn decrement(&mut self, row: isize, column: isize, value: f64) {
+        if column >= 0 && row >= 0 {
+            let c: usize = column as usize;
+            let r: usize = row as usize;
+            if c < self.configs.columns && r < self.configs.rows {
+                let idx = r * self.configs.columns + c;
+                self.data[idx] -= value;
             }
         }
     }

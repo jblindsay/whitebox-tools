@@ -21,7 +21,7 @@ impl Quantiles {
         
         let description = "Tranforms raster values into quantiles.".to_string();
         
-        let mut parameters = "-i, --input      Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input      Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output     Output raster file.\n");
         parameters.push_str("--num_quantiles  Number of quantiles (default 4)");
         let sep: String = path::MAIN_SEPARATOR.to_string();
