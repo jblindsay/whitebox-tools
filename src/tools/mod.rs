@@ -25,6 +25,10 @@ impl ToolManager {
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("HighestPosition".to_string());
         tool_names.push("LowestPosition".to_string());
+        tool_names.push("MaxAbsoluteOverlay".to_string());
+        tool_names.push("MaxOverlay".to_string());
+        tool_names.push("MinAbsoluteOverlay".to_string());
+        tool_names.push("MinOverlay".to_string());
         tool_names.push("Quantiles".to_string());
 
         // hydro_analysis
@@ -88,6 +92,10 @@ impl ToolManager {
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
+            "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
+            "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
+            "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
+            "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
             "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
 
             // hydro_analysis
