@@ -27,7 +27,7 @@ impl D8FlowAccumulation {
         
         let mut parameters = "-i, --input     Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca', and 'ca'.\n");
+        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
         parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
          

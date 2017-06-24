@@ -25,7 +25,8 @@ impl ShreveStreamMagnitude {
         let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams       Input streams raster file.\n");
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--esri_pntr     D8 pointer uses the ESRI style scheme (default is false).\n");
+        parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -34,7 +35,8 @@ impl ShreveStreamMagnitude {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
+>>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
         ShreveStreamMagnitude { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -62,6 +64,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
+        let mut background_val = f64::NEG_INFINITY;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -96,6 +99,8 @@ impl WhiteboxTool for ShreveStreamMagnitude {
                 }
             } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
                 esri_style = true;
+            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" || vec[0].to_lowercase() == "--esri_style" {
+                background_val = 0f64;
             }
         }
 
@@ -131,6 +136,11 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         let columns = pntr.configs.columns as isize;
         let num_cells = pntr.num_cells();
         let nodata = streams.configs.nodata;
+        let pntr_nodata = pntr.configs.nodata;
+
+        if background_val == f64::NEG_INFINITY {
+            background_val = nodata;
+        }
         
         // make sure the input files have the same size
         if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
@@ -170,6 +180,11 @@ impl WhiteboxTool for ShreveStreamMagnitude {
                         output[(row, col)] = 1.0;
                     }
                 } else {
+                    if pntr[(row, col)] != pntr_nodata {
+                        output[(row, col)] = background_val;
+                    } else {
+                        output[(row, col)] = nodata;
+                    }
                     num_solved_cells += 1;
                 }
             }
@@ -254,106 +269,13 @@ impl WhiteboxTool for ShreveStreamMagnitude {
             }
         }
 
-        // let mut num_neighbouring_stream_cells: i8;
-        // let mut current_value: f64;
-        // let mut current_order: f64;
-        // let mut max_stream_order = streams_nodata;
-        // let mut flag: bool;
-        // let (mut x, mut y): (isize, isize);
-        // let (mut x2, mut y2): (isize, isize);
-        // let mut dir: usize;
-        // for row in 0..rows {
-        //     for col in 0..columns {
-        //         if streams[(row, col)] > 0.0 {
-        //             // see if it is a headwater location
-        //             num_neighbouring_stream_cells = 0i8;
-        //             for c in 0..8 {
-        //                 x = col + d_x[c];
-        //                 y = row + d_y[c];
-        //                 if streams[(y, x)] > 0.0 && pntr[(y, x)] == inflowing_vals[c] { 
-        //                     num_neighbouring_stream_cells += 1; 
-        //                 }
-        //             }
-        //             if num_neighbouring_stream_cells == 0i8 {
-        //                 // it's a headwater location so start a downstream flowpath
-        //                 x = col;
-        //                 y = row;
-        //                 current_order = 1f64;
-        //                 output[(y, x)] = current_order;
-        //                 flag = true;
-        //                 while flag {
-        //                     // find the downslope neighbour
-        //                     if pntr[(y, x)] > 0.0 {
-        //                         dir = pntr[(y, x)] as usize;
-        //                         if dir > 128 || pntr_matches[dir] == 999 {
-        //                             return Err(Error::new(ErrorKind::InvalidInput,
-        //                                 "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
-        //                         }
-
-        //                         x += d_x[pntr_matches[dir]];
-        //                         y += d_y[pntr_matches[dir]];
-
-        //                         if streams[(y, x)] <= 0.0 { //it's not a stream cell
-        //                             flag = false;
-        //                         } else {
-        //                             current_value = output[(y, x)];
-        //                             if current_value > current_order {
-        //                                 //flag = false; // run into a larger stream, end the downstream search
-        //                                 break;
-        //                             }
-        //                             if current_value == current_order {
-        //                                 num_neighbouring_stream_cells = 0;
-        //                                 for d in 0..8 {
-        //                                     x2 = x + d_x[d];
-        //                                     y2 = y + d_y[d];
-        //                                     if streams[(y2, x2)] > 0.0 &&
-        //                                             pntr[(y2, x2)] == inflowing_vals[d] &&
-        //                                             output[(y2, x2)] == current_order {
-        //                                         num_neighbouring_stream_cells += 1;
-        //                                     }
-        //                                 }
-        //                                 if num_neighbouring_stream_cells >= 2 {
-        //                                     current_order += 1.0;
-        //                                     if current_order > max_stream_order {
-        //                                         max_stream_order = current_order;
-        //                                     }
-        //                                 } else {
-        //                                     //flag = false;
-        //                                     break;
-        //                                 }
-        //                             }
-        //                             if current_value < current_order {
-        //                                 output[(y, x)] = current_order;
-        //                             }
-        //                         }
-
-        //                     } else {
-        //                         if streams[(y, x)] > 0.0 { //it is a valid stream cell and probably just has no downslope neighbour (e.g. at the edge of the grid)
-        //                             output.increment(y, x, 1.0); 
-        //                         }
-        //                         flag = false;
-        //                     }
-        //                 }
-        //             }
-        //         } else {
-        //             output[(row, col)] = streams_nodata;
-        //         }
-        //     }
-            
-        //     if verbose {
-        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-        //         if progress != old_progress {
-        //             println!("Progress: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
-
-        // println!("Max stream order: {}", max_stream_order);
-
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "spectrum.plt".to_string();
+        if background_val == 0.0f64 {
+            output.configs.palette = "spectrum_black_background.plt".to_string();
+        } else {
+            output.configs.palette = "spectrum.plt".to_string();
+        }
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));

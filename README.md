@@ -85,7 +85,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 49 tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 50 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -125,6 +125,8 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
 **Stream Network Analysis**
+- ***ShreveStreamMagnitude***: Assigns the Shreve stream magnitude to each link in a stream network.
+- ***StreamLinkIdentifier***: Assigns a unique identifier to each link in a stream network.
 - ***StreamOrder***: Assigns the Horton-Strahler stream order to each link in a stream network.
 
 **Terrain Analysis**
@@ -170,6 +172,10 @@ Describe the process of integrating a new tool into the library.
 ## License
 
 The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
+
+## Why is *WhiteboxTools* Programmed in Rust?
+
+I spent a very long time evaluating potential programming language for future development efforts for the Whitebox GAT project. My most important criteria for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many of Whitebox's users. The language should be fast (Java is already quite a fast language, but if I am going to change development languages, I would like a further perfmance boost) and offer productivity. Furthermore, given that many (though not all) of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offerred easy and safe concurrent programming. Although many would probably consider C/C++ options for this work, I was looking for a modern and safe language. Fortunately we seem to be living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two or so years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. Each language has its advantages of disadvantages, so why Rust? It's a combination of factors that made it a compelling option for this project. Compared with many on the list, Rust is a mature language with a vibrant user community. Like C/C++, it's a high-performance and low-level language that allows for complete control of the system. However, Rust is also one of the safest languages, meaning that I can be confident that **WhiteboxTools** will not contain common bugs, such as memory use-after-release, memory leaks and race conditions within concurrent code. Importantly, and quite uniquely, this safty is achieved in the Rust language without the use of a garbage collector (automatic memory management). Garbage collectors can be great, but they do generally come with a certain efficiency trade-off that Rust does not have. The other main advantage of Rust's approach to memory management is that it allows for  a level of interaction with scripting languages (e.g. Python) that is quite difficult to do in garbage collected languages. Although **WhiteboxTools** is currently set up to use an automation approach to interacting with Python code that calls it, I like the fact that I have the option to create a **WhiteboxTools** shared library. Not everything with Rust is perfect however. It is still a very young language and there are many pieces still mising from its ecosystem. Futhermore, it is not the easiest language to learn, particularly for people who are inexperienced with programming. This may limit my ability to attract other programers to the Whitebox project, which would be unfortunate. However, overall, Rust was the best option for this particular application.
 
 ## Known Issues
 

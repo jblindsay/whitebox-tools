@@ -6,25 +6,26 @@ use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
+use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct StreamOrder {
+pub struct StreamLinkIdentifier {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl StreamOrder {
-    pub fn new() -> StreamOrder { // public constructor
-        let name = "StreamOrder".to_string();
+impl StreamLinkIdentifier {
+    pub fn new() -> StreamLinkIdentifier { // public constructor
+        let name = "StreamLinkIdentifier".to_string();
         
-        let description = "Assigns the Horton-Strahler stream order to each link in a stream network.".to_string();
+        let description = "Assigns a unique identifier to each link in a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams       Input streams raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--esri_pntr     D8 pointer uses the ESRI style scheme (default is false).\n");
+        let mut parameters = "--d8_pntr        Input D8 pointer raster file.\n".to_owned();
+        parameters.push_str("--streams          Input streams raster file.\n");
+        parameters.push_str("-o, --output       Output raster file.\n");
+        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
         parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
        
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -37,11 +38,11 @@ impl StreamOrder {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        StreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
+        StreamLinkIdentifier { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for StreamOrder {
+impl WhiteboxTool for StreamLinkIdentifier {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -126,6 +127,7 @@ impl WhiteboxTool for StreamOrder {
 
         if verbose { println!("Reading pointer data...") };
         let pntr = Raster::new(&d8_file, "r")?;
+        let pntr_nodata = pntr.configs.nodata;
         if verbose { println!("Reading streams data...") };
         let streams = Raster::new(&streams_file, "r")?;
         
@@ -133,10 +135,10 @@ impl WhiteboxTool for StreamOrder {
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
-        let pntr_nodata = pntr.configs.nodata;
-        let streams_nodata = streams.configs.nodata;
+        let num_cells = pntr.num_cells();
+        let nodata = streams.configs.nodata;
         if background_val == f64::NEG_INFINITY {
-            background_val = streams_nodata;
+            background_val = nodata;
         }
         
         // make sure the input files have the same size
@@ -145,19 +147,60 @@ impl WhiteboxTool for StreamOrder {
                                 "The input files must have the same number of rows and columns and spatial extent."));
         }
 
+        let mut output = Raster::initialize_using_file(&output_file, &streams);
+        let mut stack = Vec::with_capacity((rows * columns) as usize);
+
+        // calculate the number of inflowing cells
+        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-
-        let mut output = Raster::initialize_using_file(&output_file, &streams);
-        output.reinitialize_values(0.0);
+        let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
+        if esri_style {
+            inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
+        }
+        let mut num_solved_cells = 0;
+        let mut count: i8;
+        let mut current_id = 1f64;
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0.0 {
+                    count = 0i8;
+                    for i in 0..8 {
+                        if streams[(row + d_y[i], col + d_x[i])] > 0.0 &&
+                            pntr[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
+                            count += 1;
+                        }
+                    }
+                    num_inflowing[(row, col)] = count;
+                    if count == 0 {
+                        // It's a headwater; add it to the stack
+                        stack.push((row, col));
+                        output[(row, col)] = current_id;
+                        current_id += 1f64;
+                    }
+                } else {
+                    if pntr[(row, col)] != pntr_nodata {
+                        output[(row, col)] = background_val;
+                    } else {
+                        output[(row, col)] = nodata;
+                    }
+                    num_solved_cells += 1;
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
         // but the mapping method is far faster than calculating z.ln() / ln(2.0).
         // It's also a good way of allowing for different point styles.
         let mut pntr_matches: [usize; 129] = [999usize; 129];
-        let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
-        
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
             // onto the cell offsets in d_x and d_y.
@@ -180,102 +223,46 @@ impl WhiteboxTool for StreamOrder {
             pntr_matches[32] = 6usize;
             pntr_matches[64] = 7usize;
             pntr_matches[128] = 0usize;
-
-            inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
         }
 
-        let mut num_neighbouring_stream_cells: i8;
-        let mut current_value: f64;
-        let mut current_order: f64;
-        let mut max_stream_order = streams_nodata;
-        let mut flag: bool;
-        let (mut x, mut y): (isize, isize);
-        let (mut x2, mut y2): (isize, isize);
+        let (mut row, mut col): (isize, isize);
+        let (mut row_n, mut col_n): (isize, isize);
+        // let mut cell: (isize, isize);
         let mut dir: usize;
-        for row in 0..rows {
-            for col in 0..columns {
-                if streams[(row, col)] > 0.0 {
-                    // see if it is a headwater location
-                    num_neighbouring_stream_cells = 0i8;
-                    for c in 0..8 {
-                        x = col + d_x[c];
-                        y = row + d_y[c];
-                        if streams[(y, x)] > 0.0 && pntr[(y, x)] == inflowing_vals[c] { 
-                            num_neighbouring_stream_cells += 1; 
-                        }
-                    }
-                    if num_neighbouring_stream_cells == 0i8 {
-                        // it's a headwater location so start a downstream flowpath
-                        x = col;
-                        y = row;
-                        current_order = 1f64;
-                        output[(y, x)] = current_order;
-                        flag = true;
-                        while flag {
-                            // find the downslope neighbour
-                            if pntr[(y, x)] > 0.0 {
-                                dir = pntr[(y, x)] as usize;
-                                if dir > 128 || pntr_matches[dir] == 999 {
-                                    return Err(Error::new(ErrorKind::InvalidInput,
-                                        "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
-                                }
+        let mut val: f64;
+        let mut c: usize;
+        while !stack.is_empty() {
+            let cell = stack.pop().unwrap();
+            row = cell.0;
+            col = cell.1;
 
-                                x += d_x[pntr_matches[dir]];
-                                y += d_y[pntr_matches[dir]];
+            val = output[(row, col)];
 
-                                if streams[(y, x)] <= 0.0 { //it's not a stream cell
-                                    flag = false;
-                                } else {
-                                    current_value = output[(y, x)];
-                                    if current_value > current_order {
-                                        //flag = false; // run into a larger stream, end the downstream search
-                                        break;
-                                    }
-                                    if current_value == current_order {
-                                        num_neighbouring_stream_cells = 0;
-                                        for d in 0..8 {
-                                            x2 = x + d_x[d];
-                                            y2 = y + d_y[d];
-                                            if streams[(y2, x2)] > 0.0 &&
-                                                    pntr[(y2, x2)] == inflowing_vals[d] &&
-                                                    output[(y2, x2)] == current_order {
-                                                num_neighbouring_stream_cells += 1;
-                                            }
-                                        }
-                                        if num_neighbouring_stream_cells >= 2 {
-                                            current_order += 1.0;
-                                            if current_order > max_stream_order {
-                                                max_stream_order = current_order;
-                                            }
-                                        } else {
-                                            //flag = false;
-                                            break;
-                                        }
-                                    }
-                                    if current_value < current_order {
-                                        output[(y, x)] = current_order;
-                                    }
-                                }
+            // find the downstream cell
+            dir = pntr[(row, col)] as usize;
+            if dir > 0 {
+                if dir > 128 || pntr_matches[dir] == 999 {
+                    return Err(Error::new(ErrorKind::InvalidInput,
+                        "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
+                }
+                c = pntr_matches[dir];
+                row_n = row + d_y[c];
+                col_n = col + d_x[c];
+                if num_inflowing[(row_n, col_n)] > 1 {
+                    current_id += 1f64;
+                    output[(row_n, col_n)] = current_id;
+                } else if output[(row_n, col_n)] == nodata {
+                    output[(row_n, col_n)] = val;
+                }
 
-                            } else {
-                                if streams[(y, x)] > 0.0 { //it is a valid stream cell and probably just has no downslope neighbour (e.g. at the edge of the grid)
-                                    output.increment(y, x, 1.0); 
-                                }
-                                flag = false;
-                            }
-                        }
-                    }
-                } else {
-                    if pntr[(row, col)] != pntr_nodata {
-                        output[(row, col)] = background_val;
-                    } else {
-                        output[(row, col)] = streams_nodata;
-                    }
+                num_inflowing.decrement(row_n, col_n, 1);
+                if num_inflowing[(row_n, col_n)] == 0 {
+                    stack.push((row_n, col_n));
                 }
             }
-            
+
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -283,16 +270,10 @@ impl WhiteboxTool for StreamOrder {
             }
         }
 
-        println!("Max stream order: {}", max_stream_order);
-
         let end = time::now();
         let elapsed_time = end - start;
-        if background_val == 0.0f64 {
-            output.configs.palette = "spectrum_black_background.plt".to_string();
-        } else {
-            output.configs.palette = "spectrum.plt".to_string();
-        }
-        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        output.configs.palette = "qual.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
