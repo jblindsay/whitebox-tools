@@ -56,6 +56,7 @@ impl ToolManager {
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
+        tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StreamOrder".to_string());
 
         // terrain_analysis
@@ -128,6 +129,7 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // stream_network_analysis
+            "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
             "streamorder" => Some(Box::new(tools::stream_network_analysis::StreamOrder::new())),
 
             // terrain_analysis
