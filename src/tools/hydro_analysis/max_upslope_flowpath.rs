@@ -12,24 +12,21 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct D8FlowAccumulation {
+pub struct MaxUpslopeFlowpathLength {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl D8FlowAccumulation {
-    pub fn new() -> D8FlowAccumulation { // public constructor
-        let name = "D8FlowAccumulation".to_string();
+impl MaxUpslopeFlowpathLength {
+    pub fn new() -> MaxUpslopeFlowpathLength { // public constructor
+        let name = "MaxUpslopeFlowpathLength".to_string();
         
-        let description = "Calculates a D8 flow accumulation raster from an input DEM.".to_string();
+        let description = "Measures the maximum length of all upslope flowpaths draining each grid cell.".to_string();
         
         let mut parameters = "-i, --input     Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -38,14 +35,14 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
+>>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --log --clip", short_exe, name).replace("*", &sep);
     
-        D8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
+        MaxUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for D8FlowAccumulation {
+impl WhiteboxTool for MaxUpslopeFlowpathLength {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -65,9 +62,6 @@ impl WhiteboxTool for D8FlowAccumulation {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut out_type = String::from("sca");
-        let mut log_transform = false;
-        let mut clip_max = false;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -94,23 +88,6 @@ impl WhiteboxTool for D8FlowAccumulation {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type" {
-                if keyval {
-                    out_type = vec[1].to_lowercase();
-                } else {
-                    out_type = args[i+1].to_lowercase();
-                }
-                if out_type.contains("specific") || out_type.contains("sca") {
-                    out_type = String::from("sca");
-                } else if out_type.contains("cells") {
-                    out_type = String::from("cells");
-                } else {
-                    out_type = String::from("ca");
-                }
-            } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                log_transform = true;
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                clip_max = true;
             }
         }
 
@@ -269,7 +246,7 @@ impl WhiteboxTool for D8FlowAccumulation {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.reinitialize_values(1.0);
+        //output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
@@ -278,6 +255,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
                     stack.push((row, col));
+                    output[(row, col)] = 0.0;
                 } else if num_inflowing[(row, col)] == -1i8 {
                     num_solved_cells += 1;
                 }
@@ -294,22 +272,34 @@ impl WhiteboxTool for D8FlowAccumulation {
 
         let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         // let mut cell: (isize, isize);
         let mut dir: i8;
-        let mut fa: f64;
+        let mut length: f64;
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
             col = cell.1;
-            fa = output[(row, col)];
             num_inflowing.decrement(row, col, 1i8);
             dir = flow_dir[(row, col)];
             if dir >= 0 {
+                length = output[(row, col)] + grid_lengths[dir as usize];
+                // if output[(row, col)] != nodata {
+                //     output.increment(row, col, length);
+                // } else {
+                //     output[(row, col)] = 0.0; //grid_lengths[dir as usize];
+                // }
+                
                 row_n = row + d_y[dir as usize];
                 col_n = col + d_x[dir as usize];
-                output.increment(row_n, col_n, fa);
+
+                //length = output[(row, col)];
+                if output[(row_n, col_n)] < length { //} && output[(row_n, col_n)] != nodata {
+                    output[(row_n, col_n)] = length;
+                }
+                
                 num_inflowing.decrement(row_n, col_n, 1i8);
                 if num_inflowing[(row_n, col_n)] == 0i8 {
                     stack.push((row_n, col_n));
@@ -320,74 +310,14 @@ impl WhiteboxTool for D8FlowAccumulation {
                 num_solved_cells += 1;
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Flow accumulation: {}%", progress);
+                    println!("Flowpath tracing: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let mut cell_area = cell_size_x * cell_size_y;
-        //let diag = (input.configs.resolution_x + input.configs.resolution_y).sqrt();
-        let mut flow_widths = [diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x];
-        if out_type == "cells" {
-            cell_area = 1.0;
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        } else if out_type == "ca" {
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        }
-
-        if log_transform {
-            for row in 0..rows {
-                for col in 0..columns {
-                    if input[(row, col)] == nodata {
-                        output[(row, col)] = nodata;
-                    } else {
-                        let dir = flow_dir[(row, col)];
-                        if dir >= 0 {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[dir as usize]).ln();
-                        } else {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[3]).ln();
-                        }
-                    }
-                }
-                
-                if verbose {
-                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                    if progress != old_progress {
-                        println!("Correcting values: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-        } else {
-            for row in 0..rows {
-                for col in 0..columns {
-                    if input[(row, col)] == nodata {
-                        output[(row, col)] = nodata;
-                    } else {
-                        let dir = flow_dir[(row, col)];
-                        if dir >= 0 {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[dir as usize];
-                        } else {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[3];
-                        }
-                    }
-                }
-                
-                if verbose {
-                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                    if progress != old_progress {
-                        println!("Correcting values: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-        }
-
         output.configs.palette = "blueyellow.plt".to_string();
-        if clip_max { 
-            output.clip_display_max(1.0); 
-        }
+        output.configs.palette_nonlinearity = 0.3f64;
         let end = time::now();
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));

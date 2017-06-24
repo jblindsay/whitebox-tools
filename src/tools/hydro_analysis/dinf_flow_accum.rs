@@ -28,7 +28,7 @@ impl DInfFlowAccumulation {
         
         let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca', and 'ca'.\n");
+        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
         parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
@@ -41,7 +41,7 @@ impl DInfFlowAccumulation {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
-        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
+>>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
         DInfFlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }

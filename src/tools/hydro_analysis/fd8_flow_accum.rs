@@ -27,7 +27,7 @@ impl FD8FlowAccumulation {
         
         let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca', and 'ca'.\n");
+        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--exponent      Optional exponent parameter; default is 1.1.\n");
         parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
@@ -41,7 +41,7 @@ impl FD8FlowAccumulation {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
-        >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
+>>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
         FD8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
