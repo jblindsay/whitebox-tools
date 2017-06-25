@@ -35,6 +35,7 @@ impl ToolManager {
         tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
+        tool_names.push("AverageUpslopeFlowpathLength".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
@@ -57,9 +58,10 @@ impl ToolManager {
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
+        tool_names.push("HortonStreamOrder".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
+        tool_names.push("StrahlerStreamOrder".to_string());
         tool_names.push("StreamLinkIdentifier".to_string());
-        tool_names.push("StreamOrder".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
         // terrain_analysis
@@ -111,6 +113,7 @@ impl ToolManager {
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
             // hydro_analysis
+            "averageupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new())),
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
             "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
@@ -133,9 +136,10 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // stream_network_analysis
+            "hortonstreamorder" => Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new())),
             "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
+            "strahlerstreamorder" => Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new())),
             "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),
-            "streamorder" => Some(Box::new(tools::stream_network_analysis::StreamOrder::new())),
             "tributaryidentifier" => Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new())),
 
             // terrain_analysis

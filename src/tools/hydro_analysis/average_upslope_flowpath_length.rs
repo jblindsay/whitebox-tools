@@ -5,6 +5,7 @@ Created: June 25, 2017
 Last Modified: June 25, 2017
 License: MIT
 */
+
 extern crate time;
 extern crate num_cpus;
 
@@ -19,18 +20,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct MaxUpslopeFlowpathLength {
+pub struct AverageUpslopeFlowpathLength {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl MaxUpslopeFlowpathLength {
-    pub fn new() -> MaxUpslopeFlowpathLength { // public constructor
-        let name = "MaxUpslopeFlowpathLength".to_string();
+impl AverageUpslopeFlowpathLength {
+    pub fn new() -> AverageUpslopeFlowpathLength { // public constructor
+        let name = "AverageUpslopeFlowpathLength".to_string();
         
-        let description = "Measures the maximum length of all upslope flowpaths draining each grid cell.".to_string();
+        let description = "Measures the average length of all upslope flowpaths draining each grid cell.".to_string();
         
         let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
@@ -45,11 +46,11 @@ impl MaxUpslopeFlowpathLength {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --log --clip", short_exe, name).replace("*", &sep);
     
-        MaxUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
+        AverageUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for MaxUpslopeFlowpathLength {
+impl WhiteboxTool for AverageUpslopeFlowpathLength {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,6 +132,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
+        let mut num_flowpaths: Array2D<i64> = Array2D::new(rows, columns, 0, 0)?;
 
         let mut starting_row;
         let mut ending_row = 0;
@@ -263,6 +265,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
                 if num_inflowing[(row, col)] == 0i8 {
                     stack.push((row, col));
                     output[(row, col)] = 0.0;
+                    num_flowpaths[(row, col)] = 1;
                 } else if num_inflowing[(row, col)] == -1i8 {
                     num_solved_cells += 1;
                 }
@@ -282,7 +285,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
         let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
+        let mut val: i64;
         let mut dir: i8;
         let mut length: f64;
         while !stack.is_empty() {
@@ -292,20 +295,24 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
             num_inflowing.decrement(row, col, 1i8);
             dir = flow_dir[(row, col)];
             if dir >= 0 {
-                length = output[(row, col)] + grid_lengths[dir as usize];
-                
                 row_n = row + d_y[dir as usize];
                 col_n = col + d_x[dir as usize];
-
-                if output[(row_n, col_n)] < length {
+                length = output[(row, col)] + grid_lengths[dir as usize];
+                if output[(row_n, col_n)] == nodata {
                     output[(row_n, col_n)] = length;
+                } else {
+                    output.increment(row_n, col_n, length);
                 }
-                
+                val = num_flowpaths[(row, col)];
+                num_flowpaths.increment(row_n, col_n, val);
+
                 num_inflowing.decrement(row_n, col_n, 1i8);
                 if num_inflowing[(row_n, col_n)] == 0i8 {
                     stack.push((row_n, col_n));
                 }
             }
+
+            output[(row, col)] = output[(row, col)] / num_flowpaths[(row, col)] as f64;
 
             if verbose {
                 num_solved_cells += 1;

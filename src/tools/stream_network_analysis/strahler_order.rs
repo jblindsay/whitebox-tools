@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 25, 2017
+Last Modified: June 25, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -8,18 +15,18 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct StreamOrder {
+pub struct StrahlerStreamOrder {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl StreamOrder {
-    pub fn new() -> StreamOrder { // public constructor
-        let name = "StreamOrder".to_string();
+impl StrahlerStreamOrder {
+    pub fn new() -> StrahlerStreamOrder { // public constructor
+        let name = "StrahlerStreamOrder".to_string();
         
-        let description = "Assigns the Horton-Strahler stream order to each link in a stream network.".to_string();
+        let description = "Assigns the Strahler stream order to each link in a stream network.".to_string();
         
         let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams       Input streams raster file.\n");
@@ -37,11 +44,11 @@ impl StreamOrder {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        StreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
+        StrahlerStreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for StreamOrder {
+impl WhiteboxTool for StrahlerStreamOrder {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }

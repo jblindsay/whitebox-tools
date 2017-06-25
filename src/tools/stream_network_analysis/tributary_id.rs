@@ -270,12 +270,6 @@ impl WhiteboxTool for TributaryIdentifier {
                     output[(row_n, col_n)] = val;
                 }
 
-                // if num_inflowing[(row_n, col_n)] > 1 {
-                //     output[(row_n, col_n)] = current_id;
-                // } else if output[(row_n, col_n)] == nodata {
-                //     output[(row_n, col_n)] = val;
-                // }
-
                 num_inflowing.decrement(row_n, col_n, 1);
                 if num_inflowing[(row_n, col_n)] == 0 {
                     stack.push((row_n, col_n));

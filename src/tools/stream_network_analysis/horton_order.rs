@@ -16,18 +16,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct StreamLinkIdentifier {
+pub struct HortonStreamOrder {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl StreamLinkIdentifier {
-    pub fn new() -> StreamLinkIdentifier { // public constructor
-        let name = "StreamLinkIdentifier".to_string();
+impl HortonStreamOrder {
+    pub fn new() -> HortonStreamOrder { // public constructor
+        let name = "HortonStreamOrder".to_string();
         
-        let description = "Assigns a unique identifier to each link in a stream network.".to_string();
+        let description = "Assigns the Horton stream order to each tributary in a stream network.".to_string();
         
         let mut parameters = "--d8_pntr        Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams          Input streams raster file.\n");
@@ -45,11 +45,11 @@ impl StreamLinkIdentifier {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        StreamLinkIdentifier { name: name, description: description, parameters: parameters, example_usage: usage }
+        HortonStreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for StreamLinkIdentifier {
+impl WhiteboxTool for HortonStreamOrder {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -147,6 +147,9 @@ impl WhiteboxTool for StreamLinkIdentifier {
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
+        let cell_size_x = streams.configs.resolution_x;
+        let cell_size_y = streams.configs.resolution_y;
+        let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         
         // make sure the input files have the same size
         if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
@@ -156,18 +159,24 @@ impl WhiteboxTool for StreamLinkIdentifier {
 
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
+        let mut channel_heads = vec![];
+        let mut max_order = vec![];
 
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
+        let mut trib_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
+        let mut trib_id: Array2D<i32> = Array2D::new(rows, columns, -1, -1)?;
+
         let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
         let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
         if esri_style {
             inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
         }
         let mut num_solved_cells = 0;
         let mut count: i8;
-        let mut current_id = 1f64;
+        let mut current_id = 1i32;
         for row in 0..rows {
             for col in 0..columns {
                 if streams[(row, col)] > 0.0 {
@@ -182,8 +191,13 @@ impl WhiteboxTool for StreamLinkIdentifier {
                     if count == 0 {
                         // It's a headwater; add it to the stack
                         stack.push((row, col));
-                        output[(row, col)] = current_id;
-                        current_id += 1f64;
+                        // output[(row, col)] = current_id;
+                        trib_id[(row, col)] = current_id;
+                        current_id += 1;
+                        channel_heads.push((row, col));
+                        max_order.push(1f64);
+                        output[(row, col)] = 1f64;
+                        trib_length[(row, col)] = 0f64;
                     }
                 } else {
                     if pntr[(row, col)] != pntr_nodata {
@@ -234,16 +248,19 @@ impl WhiteboxTool for StreamLinkIdentifier {
 
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
         let mut dir: usize;
-        let mut val: f64;
+        let mut length: f64;
+        let mut trib: i32;
+        let mut order_val: f64;
+        let mut order_val_n: f64;
         let mut c: usize;
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
             col = cell.1;
 
-            val = output[(row, col)];
+            trib = trib_id[(row, col)];
+            order_val = output[(row, col)];
 
             // find the downstream cell
             dir = pntr[(row, col)] as usize;
@@ -252,20 +269,54 @@ impl WhiteboxTool for StreamLinkIdentifier {
                     return Err(Error::new(ErrorKind::InvalidInput,
                         "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
                 }
+
                 c = pntr_matches[dir];
                 row_n = row + d_y[c];
                 col_n = col + d_x[c];
-                if num_inflowing[(row_n, col_n)] > 1 {
-                    current_id += 1f64;
-                    output[(row_n, col_n)] = current_id;
-                } else if output[(row_n, col_n)] == nodata {
-                    output[(row_n, col_n)] = val;
+
+                length = trib_length[(row, col)] + grid_lengths[c];
+                if trib_length[(row_n, col_n)] < length || trib_length[(row_n, col_n)] == nodata {
+                    trib_length[(row_n, col_n)] = length;
+                    trib_id[(row_n, col_n)] = trib;
+                }
+
+                order_val_n = output[(row_n, col_n)];
+                if order_val == order_val_n {
+                    output[(row_n, col_n)] = order_val + 1.0;
+                } else if order_val > order_val_n {
+                    output[(row_n, col_n)] = order_val
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1);
                 if num_inflowing[(row_n, col_n)] == 0 {
                     stack.push((row_n, col_n));
                 }
+
+                // see if a tributary needs updating
+                trib = trib_id[(row_n, col_n)];
+                order_val = output[(row_n, col_n)];
+                if max_order[(trib - 1) as usize] < order_val {
+                    max_order[(trib - 1) as usize] = order_val;
+                    let cell = channel_heads[(trib - 1) as usize];
+                    let mut y = cell.0;
+                    let mut x = cell.1;
+                    while output[(y, x)] != nodata {
+                        output[(y, x)] = order_val;
+                        dir = pntr[(y, x)] as usize;
+                        if dir > 0 {
+                            if dir > 128 || pntr_matches[dir] == 999 {
+                                return Err(Error::new(ErrorKind::InvalidInput,
+                                    "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
+                            }
+
+                            c = pntr_matches[dir];
+                            y += d_y[c];
+                            x += d_x[c];
+                        } else {
+                            break;
+                        }
+                    }
+                } 
             }
 
             if verbose {
