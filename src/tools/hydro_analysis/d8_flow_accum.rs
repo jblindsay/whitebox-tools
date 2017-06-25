@@ -25,7 +25,7 @@ impl D8FlowAccumulation {
         
         let description = "Calculates a D8 flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.\n".to_owned();
+        let mut parameters = "--dem       Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
@@ -38,8 +38,8 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep --out_type=sca
+>>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
     
         D8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -82,7 +82,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

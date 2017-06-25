@@ -25,7 +25,7 @@ impl NumInflowingNeighbours {
         
         let description = "Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
+        let mut parameters = "--dem           Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -75,7 +75,7 @@ impl WhiteboxTool for NumInflowingNeighbours {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

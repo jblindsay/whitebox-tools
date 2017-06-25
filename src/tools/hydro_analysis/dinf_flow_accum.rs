@@ -26,7 +26,7 @@ impl DInfFlowAccumulation {
         
         let description = "Calculates an D-infinity flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
+        let mut parameters = "-dem            Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
@@ -85,7 +85,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

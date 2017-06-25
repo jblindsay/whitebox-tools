@@ -24,7 +24,7 @@ impl D8Pointer {
         
         let description = "Calculates a D8 flow pointer raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "--dem         Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--esri_style  Uses the ESRI style D8 pointer output (default is false).\n");
         
@@ -76,7 +76,7 @@ impl WhiteboxTool for D8Pointer {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

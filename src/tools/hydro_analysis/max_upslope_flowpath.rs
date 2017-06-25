@@ -25,7 +25,7 @@ impl MaxUpslopeFlowpathLength {
         
         let description = "Measures the maximum length of all upslope flowpaths draining each grid cell.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.\n".to_owned();
+        let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -36,7 +36,7 @@ impl MaxUpslopeFlowpathLength {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --log --clip", short_exe, name).replace("*", &sep);
+>>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --log --clip", short_exe, name).replace("*", &sep);
     
         MaxUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -76,7 +76,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -286,17 +286,11 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
             dir = flow_dir[(row, col)];
             if dir >= 0 {
                 length = output[(row, col)] + grid_lengths[dir as usize];
-                // if output[(row, col)] != nodata {
-                //     output.increment(row, col, length);
-                // } else {
-                //     output[(row, col)] = 0.0; //grid_lengths[dir as usize];
-                // }
                 
                 row_n = row + d_y[dir as usize];
                 col_n = col + d_x[dir as usize];
 
-                //length = output[(row, col)];
-                if output[(row_n, col_n)] < length { //} && output[(row_n, col_n)] != nodata {
+                if output[(row_n, col_n)] < length {
                     output[(row_n, col_n)] = length;
                 }
                 

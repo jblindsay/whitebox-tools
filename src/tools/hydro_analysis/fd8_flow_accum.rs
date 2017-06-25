@@ -25,7 +25,7 @@ impl FD8FlowAccumulation {
         
         let description = "Calculates an FD8 flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
+        let mut parameters = "--dem           Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--exponent      Optional exponent parameter; default is 1.1.\n");
