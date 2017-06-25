@@ -10,8 +10,8 @@
 - [License](#license)
 - [Known Issues](#known-issues)
 - [Frequently Asked Questions](#frequently-asked-questions)
--- [Why is WhiteboxTools Programmed in Rust?](#why-is-whiteboxtools-programmed-in-rust)
--- [Why are there so many tools?](#why-are-there-so-many-tools)
+    - [Why is WhiteboxTools Programmed in Rust?](#why-is-whiteboxtools-programmed-in-rust)
+    - [Why are there so many tools?](#why-are-there-so-many-tools)
 
 ## Description
 
