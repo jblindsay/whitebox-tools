@@ -8,8 +8,10 @@
 - [Contributing](#contributing)
 - [Contributors](#contributors)
 - [License](#license)
-- [Why is WhiteboxTools Programmed in Rust?](#why-is-whiteboxtools-programmed-in-rust)
 - [Known Issues](#known-issues)
+- [Frequently Asked Questions](#frequently-asked-questions)
+    1. [Why is WhiteboxTools Programmed in Rust?](#why-is-whiteboxtools-programmed-in-rust)
+    2. [Why are there so many tools?](#why-are-there-so-many-tools)
 
 ## Description
 
@@ -86,7 +88,9 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library will need to be added to port any of the tools involving vector spatial data. Opportunities to parallelize existing tools will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. The library currently contains the following 54 tools:
+Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
+
+The library currently contains the following 55 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -128,6 +132,7 @@ Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *W
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
 **Stream Network Analysis**
+- ***HackStreamOrder***: Assigns the Hack stream order to each link in a stream network.
 - ***HortonStreamOrder***: Assigns the Horton stream order to each link in a stream network.
 - ***ShreveStreamMagnitude***: Assigns the Shreve stream magnitude to each link in a stream network.
 - ***StrahlerStreamOrder***: Assigns the Strahler stream order to each link in a stream network.
@@ -178,7 +183,16 @@ Describe the process of integrating a new tool into the library.
 
 The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
 
-## Why is WhiteboxTools Programmed in Rust?
+## Known Issues
+
+- Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
+- There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format.
+- Compressed LAS files (LAZ) are not supported.
+- File directories cannot contain apostrophes (') as they will be interpreted in the arguments array as single quoted strings.
+
+## Frequently Asked Questions
+
+### 1. Why is WhiteboxTools programmed in Rust?
 
 I spent a very long time evaluating potential programming language for future development efforts for the *Whitebox GAT* project. My most important criteria for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many Whitebox users. The language should be fast and productive--Java is already quite fast, but if I am going to change development languages, I would like a performance boost. Furthermore, given that many, though not all, of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offerred easy and safe concurrent programming. Although many would consider C/C++ for this work, I was looking for a modern and safe language. Fortunately, we are living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. [See [*GoSpatial*](https://github.com/jblindsay/go-spatial) and [*lidario*](https://github.com/jblindsay/lidario).]
 
@@ -186,9 +200,8 @@ Each of the languages I examined has its own advantages of disadvantages, so why
 
 Not everything with Rust is perfect however. It is still a very young language and there are many pieces still mising from its ecosystem. Futhermore, it is not the easiest language to learn, particularly for people who are inexperienced with programming. This may limit my ability to attract other programers to the Whitebox project, which would be unfortunate. However, overall, Rust was the best option for this particular application.
 
-## Known Issues
+### 2. Why are there so many tools?
 
-- Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
-- There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format.
-- Compressed LAS files (LAZ) are not supported.
-- File directories cannot contain apostrophes (') as they will be interpreted in the arguments array as single quoted strings.
+*Whitebox GAT* is frequently praised for its consistent design and ease of use. Like *Whitebox GAT*, *WhiteboxTools* follows the convention of *one tool for one function*. For example, in *WhiteboxTools* assigning the links in a stream channel network their Horton, Strahler, Shreve, or Hack stream ordering numbers requires running separate tools (i.e. *HortonStreamOrder*, *StrahlerStreamOrder*, *ShreveStreamMagnitude*, and *HackStreamOrder*). By contrast, in GRASS GIS^1^ and ArcGIS single tools (i.e. the *r.stream.order* and *Stream Order* tools respectively) can be configured to output different channel ordering schemes. The *WhiteboxTools* design is intended to simplify the user experience and to make it easier to find the right tool for a task. With more specific tool names that are reflective of their specific purposes, users are not as reliant on reading help documentation to identify the tool for the task at hand. Similarly, it is not uncommon for tools in other GIS to have multiple outputs. For example, in GRASS GIS the *r.slope.aspect* tool can be configured to output slope, aspect, profile curvature, plan curvature, and several other common terrain surface derivatives. Based on the *one tool for one function* design approach of *WhiteboxTools*, multiple outputs are indicative that a tool should be split into different, more specific tools. Are you likely to go to a tool named *r.slope.aspect* when you want to create a tangential curvature raster from a DEM? If you're new to the software and are unfamilar with it, probably not. The *WhiteboxTools* design approach also has the added benefit of simplifying the documentation for tools. The one downside to this design approach, however, is that it results (or will result) in a large number of tools, often with signifcant overlap in function. 
+
+^1^ NOTE: It's not my intent above to pick on GRASS GIS, as I deeply respect the work that the GRASS developers have contributed. Rather, I am contrasting the consequences of *WhiteboxTools'* design philosophy to other GIS.

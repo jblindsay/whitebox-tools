@@ -58,6 +58,7 @@ impl ToolManager {
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
+        tool_names.push("HackStreamOrder".to_string());
         tool_names.push("HortonStreamOrder".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
@@ -136,6 +137,7 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // stream_network_analysis
+            "hackstreamorder" => Some(Box::new(tools::stream_network_analysis::HackStreamOrder::new())),
             "hortonstreamorder" => Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new())),
             "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
             "strahlerstreamorder" => Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new())),
