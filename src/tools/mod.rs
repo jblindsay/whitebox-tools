@@ -1,5 +1,6 @@
 pub mod gis_analysis;
 pub mod hydro_analysis;
+pub mod image_analysis;
 pub mod lidar_analysis;
 pub mod statistical_analysis;
 pub mod stream_network_analysis;
@@ -31,7 +32,6 @@ impl ToolManager {
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PickFromList".to_string());
-        tool_names.push("Quantiles".to_string());
         tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
@@ -44,6 +44,10 @@ impl ToolManager {
         tool_names.push("NumInflowingNeighbours".to_string());
         tool_names.push("Watershed".to_string());
 
+        // image_analysis
+        tool_names.push("MeanFilter".to_string());
+        tool_names.push("TotalFilter".to_string());
+
         // lidar_analysis
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LidarElevationSlice".to_string());
@@ -55,6 +59,7 @@ impl ToolManager {
         tool_names.push("NormalVectors".to_string());
 
         // statistical_analysis
+        tool_names.push("Quantiles".to_string());
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
@@ -110,7 +115,6 @@ impl ToolManager {
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
-            "quantiles" => Some(Box::new(tools::gis_analysis::Quantiles::new())),
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
             // hydro_analysis
@@ -123,6 +127,10 @@ impl ToolManager {
             "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
+            // image_analysis
+            "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
+            "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
+
             // lidar_analysis
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
             "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
@@ -134,6 +142,7 @@ impl ToolManager {
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // statistical_analysis
+            "quantiles" => Some(Box::new(tools::statistical_analysis::Quantiles::new())),
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // stream_network_analysis

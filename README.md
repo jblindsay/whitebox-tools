@@ -90,7 +90,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 55 tools:
+The library currently contains the following 57 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -105,7 +105,6 @@ The library currently contains the following 55 tools:
 - ***MinAbsoluteOverlay***: Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
 - ***PickFromList***: Outputs the value from a raster stack specified by a position raster.
-- ***Quantiles***: Tranforms raster values into quantiles.
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 
 **Hydrological Analysis**
@@ -118,6 +117,10 @@ The library currently contains the following 55 tools:
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 - ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 
+**Image Analysis**
+- ***MeanFilter**: Performs a mean filter (low-pass filter) on an input image.
+- ***TotalFilter**: Performs a total filter on an input image.
+
 **LiDAR Analysis**
 - ***FlightlineOverlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
@@ -129,6 +132,7 @@ The library currently contains the following 55 tools:
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
 **Statistical Analysis**
+- ***Quantiles***: Tranforms raster values into quantiles.
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
 **Stream Network Analysis**
