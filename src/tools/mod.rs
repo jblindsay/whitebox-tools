@@ -51,6 +51,7 @@ impl ToolManager {
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("IntegralImage".to_string());
+        tool_names.push("LaplacianOfGaussianFilter".to_string());
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
@@ -144,6 +145,7 @@ impl ToolManager {
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
+            "laplacianofgaussianfilter" => Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new())),
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
