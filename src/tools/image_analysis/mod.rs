@@ -1,4 +1,5 @@
 // private sub-module defined in other files
+mod conservative_smoothing_filter;
 mod dog_filter;
 mod gaussian_filter;
 mod highpass_filter;
@@ -11,6 +12,7 @@ mod stdev_filter;
 mod total_filter;
 
 // exports identifiers from private sub-modules in the current module namespace
+pub use self::conservative_smoothing_filter::ConservativeSmoothingFilter;
 pub use self::dog_filter::DiffOfGaussianFilter;
 pub use self::gaussian_filter::GaussianFilter;
 pub use self::highpass_filter::HighPassFilter;
