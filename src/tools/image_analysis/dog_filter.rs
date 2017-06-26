@@ -19,22 +19,23 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct GaussianFilter {
+pub struct DiffOfGaussianFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl GaussianFilter {
-    pub fn new() -> GaussianFilter { // public constructor
-        let name = "GaussianFilter".to_string();
+impl DiffOfGaussianFilter {
+    pub fn new() -> DiffOfGaussianFilter { // public constructor
+        let name = "DiffOfGaussianFilter".to_string();
         
-        let description = "Performs a Gaussian filter on an image.".to_string();
+        let description = "Performs a Difference of Gaussian (DoG) filter on an image.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--sigma       Standard deviation distance in pixels.\n");
+        parameters.push_str("--sigma1      Standard deviation distance in pixels.\n");
+        parameters.push_str("--sigma2      Standard deviation distance in pixels.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -43,13 +44,13 @@ impl GaussianFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma=2.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma1=2.0 --sigma2=4.0", short_exe, name).replace("*", &sep);
     
-        GaussianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        DiffOfGaussianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for GaussianFilter {
+impl WhiteboxTool for DiffOfGaussianFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -69,8 +70,10 @@ impl WhiteboxTool for GaussianFilter {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut filter_size = 0usize;
-        let mut sigma_d = 0.75;
+        let mut filter_size1 = 0usize;
+        let mut filter_size2 = 0usize;
+        let mut sigma1 = 2.0;
+        let mut sigma2 = 4.0;
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -96,11 +99,17 @@ impl WhiteboxTool for GaussianFilter {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-sigma" || vec[0].to_lowercase() == "--sigma" {
+            } else if vec[0].to_lowercase() == "-sigma1" || vec[0].to_lowercase() == "--sigma1" {
                 if keyval {
-                    sigma_d = vec[1].to_string().parse::<f64>().unwrap();
+                    sigma1 = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    sigma_d = args[i + 1].to_string().parse::<f64>().unwrap();
+                    sigma1 = args[i + 1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-sigma2" || vec[0].to_lowercase() == "--sigma2" {
+                if keyval {
+                    sigma2 = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    sigma2 = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -120,67 +129,118 @@ impl WhiteboxTool for GaussianFilter {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if sigma_d < 0.5 {
-            sigma_d = 0.5;
-        } else if sigma_d > 20.0 {
-            sigma_d = 20.0;
+        if sigma1 < 0.5 {
+            sigma1 = 0.5;
+        } else if sigma1 > 20.0 {
+            sigma1 = 20.0;
         }
 
-        let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * PI).sqrt() * sigma_d);
-        let two_sigma_sqr_d = 2.0 * sigma_d * sigma_d;
+        if sigma2 < 0.5 {
+            sigma2 = 0.5;
+        } else if sigma2 > 20.0 {
+            sigma2 = 20.0;
+        }
+
+        if sigma1 == sigma2 {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The two input sigma values should not be equal."));
+        }
+
+        let recip_root_2_pi_times_sigma1 = 1.0 / ((2.0 * PI).sqrt() * sigma1);
+        let two_sigma_sqr1 = 2.0 * sigma1 * sigma1;
+
+        let recip_root_2_pi_times_sigma2 = 1.0 / ((2.0 * PI).sqrt() * sigma2);
+        let two_sigma_sqr2 = 2.0 * sigma2 * sigma2;
 
         // figure out the size of the filter
         let mut weight: f64;
         for i in 0..250 {
-            weight = recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+            weight = recip_root_2_pi_times_sigma1 * (-1.0 * ((i * i) as f64) / two_sigma_sqr1).exp();
             if weight <= 0.001 {
-                filter_size = i * 2 + 1;
+                filter_size1 = i * 2 + 1;
                 break;
             }
         }
         
         // the filter dimensions must be odd numbers such that there is a middle pixel
-        if filter_size % 2 == 0 {
-            filter_size += 1;
+        if filter_size1 % 2 == 0 {
+            filter_size1 += 1;
         }
 
-        if filter_size < 3 { filter_size = 3; }
+        if filter_size1 < 3 { filter_size1 = 3; }
 
-        let num_pixels_in_filter = filter_size * filter_size;
-        let mut d_x = vec![0isize; num_pixels_in_filter];
-        let mut d_y = vec![0isize; num_pixels_in_filter];
-        let mut weights = vec![0.0; num_pixels_in_filter];
+        let num_pixels_in_filter1 = filter_size1 * filter_size1;
+        let mut d_x1 = vec![0isize; num_pixels_in_filter1];
+        let mut d_y1 = vec![0isize; num_pixels_in_filter1];
+        let mut weights1 = vec![0.0; num_pixels_in_filter1];
         
         // fill the filter d_x and d_y values and the distance-weights
-        let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize + 1;
+        let midpoint1: isize = (filter_size1 as f64 / 2f64).floor() as isize + 1;
         let mut a = 0;
         let (mut x, mut y): (isize, isize);
-        for row in 0..filter_size {
-            for col in 0..filter_size {
-                x = col as isize - midpoint;
-                y = row as isize - midpoint;
-                d_x[a] = x;
-                d_y[a] = y;
-                weight = recip_root_2_pi_times_sigma_d * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr_d).exp();
-                weights[a] = weight;
+        for row in 0..filter_size1 {
+            for col in 0..filter_size1 {
+                x = col as isize - midpoint1;
+                y = row as isize - midpoint1;
+                d_x1[a] = x;
+                d_y1[a] = y;
+                weight = recip_root_2_pi_times_sigma1 * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr1).exp();
+                weights1[a] = weight;
                 a += 1;
             }
         }
 
-        // let midpoint = (filter_size as f64 / 2f64).floor() as isize;
+
+        // figure out the size of the filter
+        for i in 0..250 {
+            weight = recip_root_2_pi_times_sigma2 * (-1.0 * ((i * i) as f64) / two_sigma_sqr2).exp();
+            if weight <= 0.001 {
+                filter_size2 = i * 2 + 1;
+                break;
+            }
+        }
+        
+        // the filter dimensions must be odd numbers such that there is a middle pixel
+        if filter_size2 % 2 == 0 {
+            filter_size2 += 1;
+        }
+
+        if filter_size2 < 3 { filter_size2 = 3; }
+
+        let num_pixels_in_filter2 = filter_size2 * filter_size2;
+        let mut d_x2 = vec![0isize; num_pixels_in_filter2];
+        let mut d_y2 = vec![0isize; num_pixels_in_filter2];
+        let mut weights2 = vec![0.0; num_pixels_in_filter2];
+        
+        // fill the filter d_x and d_y values and the distance-weights
+        let midpoint2: isize = (filter_size2 as f64 / 2f64).floor() as isize + 1;
+        a = 0;
+        for row in 0..filter_size2 {
+            for col in 0..filter_size2 {
+                x = col as isize - midpoint2;
+                y = row as isize - midpoint2;
+                d_x2[a] = x;
+                d_y2[a] = y;
+                weight = recip_root_2_pi_times_sigma2 * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr2).exp();
+                weights2[a] = weight;
+                a += 1;
+            }
+        }
+
         let mut progress: usize;
         let mut old_progress: usize = 1;
-
-        
 
         if verbose {
             println!("Reading data...")
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let d_x = Arc::new(d_x);
-        let d_y = Arc::new(d_y);
-        let weights = Arc::new(weights);
+        let d_x1 = Arc::new(d_x1);
+        let d_y1 = Arc::new(d_y1);
+        let weights1 = Arc::new(weights1);
+        let d_x2 = Arc::new(d_x2);
+        let d_y2 = Arc::new(d_y2);
+        let weights2 = Arc::new(weights2);
 
         let start = time::now();
 
@@ -198,9 +258,12 @@ impl WhiteboxTool for GaussianFilter {
         let mut id = 0;
         while ending_row < rows {
             let input_data = input.clone();
-            let d_x = d_x.clone();
-            let d_y = d_y.clone();
-            let weights = weights.clone();
+            let d_x1 = d_x1.clone();
+            let d_y1 = d_y1.clone();
+            let weights1 = weights1.clone();
+            let d_x2 = d_x2.clone();
+            let d_y2 = d_y2.clone();
+            let weights2 = weights2.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -209,7 +272,7 @@ impl WhiteboxTool for GaussianFilter {
             id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let (mut sum, mut z_final): (f64, f64);
+                let (mut sum, mut z_final1, mut z_final2): (f64, f64, f64);
                 let mut z: f64;
                 let mut zn: f64;
                 let (mut x, mut y): (isize, isize);
@@ -219,17 +282,32 @@ impl WhiteboxTool for GaussianFilter {
                         z = input_data[(row, col)];
                         if z != nodata {
                             sum = 0.0;
-                            z_final = 0.0;
-                            for a in 0..num_pixels_in_filter {
-                                x = col + d_x[a];
-                                y = row + d_y[a];
+                            z_final1 = 0.0;
+                            for a in 0..num_pixels_in_filter1 {
+                                x = col + d_x1[a];
+                                y = row + d_y1[a];
                                 zn = input_data[(y, x)];
                                 if zn != nodata {
-                                    sum += weights[a];
-                                    z_final += weights[a] * zn;
+                                    sum += weights1[a];
+                                    z_final1 += weights1[a] * zn;
                                 }
                             }
-                            data[col as usize] = z_final / sum;
+                            z_final1 = z_final1 / sum;
+
+                            sum = 0.0;
+                            z_final2 = 0.0;
+                            for a in 0..num_pixels_in_filter2 {
+                                x = col + d_x2[a];
+                                y = row + d_y2[a];
+                                zn = input_data[(y, x)];
+                                if zn != nodata {
+                                    sum += weights2[a];
+                                    z_final2 += weights2[a] * zn;
+                                }
+                            }
+                            z_final2 = z_final2 / sum;
+
+                            data[col as usize] = z_final1 - z_final2;
                         }
                     }
 
@@ -254,7 +332,8 @@ impl WhiteboxTool for GaussianFilter {
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Sigma: {}", sigma_d));
+        output.add_metadata_entry(format!("Sigma1: {}", sigma1));
+        output.add_metadata_entry(format!("Sigma2: {}", sigma2));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose {

@@ -39,14 +39,17 @@ impl ToolManager {
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
+        tool_names.push("DInfPointer".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
         tool_names.push("Watershed".to_string());
 
         // image_analysis
+        tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
+        tool_names.push("IntegralImage".to_string());
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
@@ -128,14 +131,17 @@ impl ToolManager {
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
             "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
+            "dinfpointer" => Some(Box::new(tools::hydro_analysis::DInfPointer::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
             "maxupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::MaxUpslopeFlowpathLength::new())),
             "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // image_analysis
+            "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
+            "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),

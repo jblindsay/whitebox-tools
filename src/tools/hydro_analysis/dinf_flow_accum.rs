@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 24, 2017
+Last Modified: June 24, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -24,7 +31,7 @@ impl DInfFlowAccumulation {
     pub fn new() -> DInfFlowAccumulation { // public constructor
         let name = "DInfFlowAccumulation".to_string();
         
-        let description = "Calculates an D-infinity flow accumulation raster from an input DEM.".to_string();
+        let description = "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
         
         let mut parameters = "-dem            Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
