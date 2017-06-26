@@ -45,7 +45,9 @@ impl ToolManager {
         tool_names.push("Watershed".to_string());
 
         // image_analysis
+        tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
+        tool_names.push("MinimumFilter".to_string());
         tool_names.push("TotalFilter".to_string());
 
         // lidar_analysis
@@ -128,7 +130,9 @@ impl ToolManager {
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // image_analysis
+            "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
+            "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
 
             // lidar_analysis

@@ -1,7 +1,7 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
+Created: June 26, 2017
 Last Modified: June 25, 2017
 License: MIT
 */
@@ -19,20 +19,20 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct PercentElevRange {
+pub struct MaximumFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl PercentElevRange {
-    pub fn new() -> PercentElevRange { // public constructor
-        let name = "PercentElevRange".to_string();
+impl MaximumFilter {
+    pub fn new() -> MaximumFilter { // public constructor
+        let name = "MaximumFilter".to_string();
         
-        let description = "Calculates percent of elevation range from a DEM.".to_string();
+        let description = "Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
@@ -47,11 +47,11 @@ impl PercentElevRange {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        PercentElevRange { name: name, description: description, parameters: parameters, example_usage: usage }
+        MaximumFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for PercentElevRange {
+impl WhiteboxTool for MaximumFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -181,63 +181,49 @@ impl WhiteboxTool for PercentElevRange {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
                 let (mut z_n, mut z) : (f64, f64);
-                let (mut min_val, mut max_val): (f64, f64);
+                let mut max_val: f64;
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                let mut range: f64;
                 for row in starting_row..ending_row {
-                    let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     start_row = row - midpoint_y;
                     end_row = row + midpoint_y;
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         if col > 0 {
-                            filter_min_vals.pop_front();
                             filter_max_vals.pop_front();
-                            min_val = f64::INFINITY;
                             max_val = f64::NEG_INFINITY;
                             for row2 in start_row..end_row+1 {
                                 z_n = input.get_value(row2, col + midpoint_x);
                                 if z_n != nodata {
-                                    if z_n < min_val { min_val = z_n; }
                                     if z_n > max_val { max_val = z_n; }
                                 }
                             }
-                            filter_min_vals.push_back(min_val);
                             filter_max_vals.push_back(max_val);
                         } else {
                             // initialize the filter_vals
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
                             for col2 in start_col..end_col+1 {
-                                min_val = f64::INFINITY;
                                 max_val = f64::NEG_INFINITY;
                                 for row2 in start_row..end_row+1 {
                                     z_n = input.get_value(row2, col2);
                                     if z_n != nodata {
-                                        if z_n < min_val { min_val = z_n; }
                                         if z_n > max_val { max_val = z_n; }
                                     }
                                 }
-                                filter_min_vals.push_back(min_val);
                                 filter_max_vals.push_back(max_val);
                             }
                         }
                         z = input.get_value(row, col);
                         if z != nodata {
-                            min_val = f64::INFINITY;
                             max_val = f64::NEG_INFINITY;
                             for i in 0..filter_size_x {
-                                if filter_min_vals[i] < min_val { min_val = filter_min_vals[i]; }
                                 if filter_max_vals[i] > max_val { max_val = filter_max_vals[i]; }
                             }
-                            if min_val < f64::INFINITY && max_val > f64::NEG_INFINITY  {
-                                range = max_val - min_val;
-                                if range > 0.0 {
-                                    data[col as usize] = (z - min_val) / range * 100.0;
-                                } else {
-                                    data[col as usize] = 0.0;
-                                }
+                            if max_val > f64::NEG_INFINITY  {
+                                data[col as usize] = max_val;
+                            } else {
+                                data[col as usize] = nodata;
                             }
                         }
                     }
@@ -260,9 +246,6 @@ impl WhiteboxTool for PercentElevRange {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.display_min = 0.0;
-        output.configs.display_max = 100.0;
-        output.configs.palette = "blue_white_red.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
