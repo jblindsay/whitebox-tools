@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
-Last Modified: June 25, 2017
+Created: June 26, 2017
+Last Modified: June 26, 2017
 License: MIT
 */
 extern crate time;
@@ -20,18 +20,18 @@ use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct MeanFilter {
+pub struct HighPassFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl MeanFilter {
-    pub fn new() -> MeanFilter { // public constructor
-        let name = "MeanFilter".to_string();
+impl HighPassFilter {
+    pub fn new() -> HighPassFilter { // public constructor
+        let name = "HighPassFilter".to_string();
         
-        let description = "Performs a mean filter (low-pass filter) on an input image.".to_string();
+        let description = "Performs a high-pass filter on an input image.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -48,11 +48,11 @@ impl MeanFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        MeanFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        HighPassFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for MeanFilter {
+impl WhiteboxTool for HighPassFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -277,7 +277,7 @@ impl WhiteboxTool for MeanFilter {
                             if n > 0 {
                                 sum = i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)];
                                 mean = sum / n as f64 + min_val;
-                                data[col as usize] = mean;
+                                data[col as usize] = z - mean;
                             } else {
                                 data[col as usize] = 0f64;
                             }
