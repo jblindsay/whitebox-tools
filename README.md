@@ -90,7 +90,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 61 tools:
+The library currently contains the following 62 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -118,6 +118,7 @@ The library currently contains the following 61 tools:
 - ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 **Image Analysis**
+- ***GaussianFilter***: Performs a Gaussian filter on an image.
 - ***MaximumFilter***: Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 - ***MeanFilter***: Performs a mean filter (low-pass filter) on an input image.
 - ***MinimumFilter***: Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
