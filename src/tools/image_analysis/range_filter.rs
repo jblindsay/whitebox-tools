@@ -19,18 +19,18 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct MinimumFilter {
+pub struct RangeFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl MinimumFilter {
-    pub fn new() -> MinimumFilter { // public constructor
-        let name = "MinimumFilter".to_string();
+impl RangeFilter {
+    pub fn new() -> RangeFilter { // public constructor
+        let name = "RangeFilter".to_string();
         
-        let description = "Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.".to_string();
+        let description = "Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -47,11 +47,11 @@ impl MinimumFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        MinimumFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        RangeFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for MinimumFilter {
+impl WhiteboxTool for RangeFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -139,6 +139,7 @@ impl WhiteboxTool for MinimumFilter {
             filter_size_y += 1;
         }
 
+        // let (mut z, mut z_n): (f64, f64);
         let midpoint_x = (filter_size_x as f64 / 2f64).floor() as isize;
         let midpoint_y = (filter_size_y as f64 / 2f64).floor() as isize;
         let mut progress: usize;
@@ -180,47 +181,57 @@ impl WhiteboxTool for MinimumFilter {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
                 let (mut z_n, mut z) : (f64, f64);
-                let mut min_val: f64;
+                let (mut min_val, mut max_val): (f64, f64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
                 for row in starting_row..ending_row {
                     let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
+                    let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     start_row = row - midpoint_y;
                     end_row = row + midpoint_y;
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         if col > 0 {
                             filter_min_vals.pop_front();
+                            filter_max_vals.pop_front();
                             min_val = f64::INFINITY;
+                            max_val = f64::NEG_INFINITY;
                             for row2 in start_row..end_row+1 {
                                 z_n = input.get_value(row2, col + midpoint_x);
                                 if z_n != nodata {
                                     if z_n < min_val { min_val = z_n; }
+                                    if z_n > max_val { max_val = z_n; }
                                 }
                             }
                             filter_min_vals.push_back(min_val);
+                            filter_max_vals.push_back(max_val);
                         } else {
                             // initialize the filter_vals
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
                             for col2 in start_col..end_col+1 {
                                 min_val = f64::INFINITY;
+                                max_val = f64::NEG_INFINITY;
                                 for row2 in start_row..end_row+1 {
                                     z_n = input.get_value(row2, col2);
                                     if z_n != nodata {
                                         if z_n < min_val { min_val = z_n; }
+                                        if z_n > max_val { max_val = z_n; }
                                     }
                                 }
                                 filter_min_vals.push_back(min_val);
+                                filter_max_vals.push_back(max_val);
                             }
                         }
                         z = input.get_value(row, col);
                         if z != nodata {
                             min_val = f64::INFINITY;
+                            max_val = f64::NEG_INFINITY;
                             for i in 0..filter_size_x {
                                 if filter_min_vals[i] < min_val { min_val = filter_min_vals[i]; }
+                                if filter_max_vals[i] > max_val { max_val = filter_max_vals[i]; }
                             }
-                            if min_val < f64::INFINITY {
-                                data[col as usize] = min_val;
+                            if min_val < f64::INFINITY && max_val > f64::NEG_INFINITY  {
+                                data[col as usize] = max_val - min_val;
                             }
                         }
                     }
@@ -243,6 +254,7 @@ impl WhiteboxTool for MinimumFilter {
 
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.palette = "spectrum_soft.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));

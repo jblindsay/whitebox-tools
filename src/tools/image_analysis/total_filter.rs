@@ -32,7 +32,7 @@ impl TotalFilter {
         
         let description = "Performs a total filter on an input image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.\n".to_owned();
+        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
@@ -45,7 +45,7 @@ impl TotalFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
         TotalFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }

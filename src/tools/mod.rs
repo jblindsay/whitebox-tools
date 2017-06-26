@@ -48,6 +48,8 @@ impl ToolManager {
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
+        tool_names.push("RangeFilter".to_string());
+        tool_names.push("StandardDeviationFilter".to_string());
         tool_names.push("TotalFilter".to_string());
 
         // lidar_analysis
@@ -133,6 +135,8 @@ impl ToolManager {
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
+            "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
+            "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
 
             // lidar_analysis

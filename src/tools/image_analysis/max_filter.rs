@@ -45,7 +45,7 @@ impl MaximumFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
         MaximumFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -222,8 +222,6 @@ impl WhiteboxTool for MaximumFilter {
                             }
                             if max_val > f64::NEG_INFINITY  {
                                 data[col as usize] = max_val;
-                            } else {
-                                data[col as usize] = nodata;
                             }
                         }
                     }
@@ -238,7 +236,7 @@ impl WhiteboxTool for MaximumFilter {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
