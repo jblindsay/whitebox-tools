@@ -5,6 +5,7 @@ mod lidar_ground_point_filter;
 mod lidar_hillshade;
 mod lidar_info;
 mod lidar_join;
+mod lidar_tile;
 mod lidar_tophat_transform;
 mod normal_vectors;
 
@@ -15,5 +16,6 @@ pub use self::lidar_ground_point_filter::LidarGroundPointFilter;
 pub use self::lidar_hillshade::LidarHillshade;
 pub use self::lidar_info::LidarInfo;
 pub use self::lidar_join::LidarJoin;
+pub use self::lidar_tile::LidarTile;
 pub use self::lidar_tophat_transform::LidarTophatTransform;
 pub use self::normal_vectors::NormalVectors;

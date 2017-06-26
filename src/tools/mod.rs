@@ -55,6 +55,7 @@ impl ToolManager {
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
+        tool_names.push("OlympicFilter".to_string());
         tool_names.push("RangeFilter".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
         tool_names.push("TotalFilter".to_string());
@@ -66,6 +67,7 @@ impl ToolManager {
         tool_names.push("LidarHillshade".to_string());
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
+        tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
 
@@ -149,6 +151,7 @@ impl ToolManager {
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
+            "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
             "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
@@ -160,6 +163,7 @@ impl ToolManager {
             "lidarhillshade" => Some(Box::new(tools::lidar_analysis::LidarHillshade::new())),
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
+            "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 

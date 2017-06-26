@@ -256,6 +256,9 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
 
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.palette = "grey.plt".to_string();
+        output.update_min_max();
+        output.clip_display_min_max(1.0);
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Sigma: {}", sigma));
