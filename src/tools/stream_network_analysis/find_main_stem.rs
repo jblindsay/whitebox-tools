@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
-Last Modified: June 25, 2017
+Created: June 27, 2017
+Last Modified: June 27, 2017
 License: MIT
 */
 extern crate time;
@@ -16,18 +16,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct HackStreamOrder {
+pub struct FindMainStem {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl HackStreamOrder {
-    pub fn new() -> HackStreamOrder { // public constructor
-        let name = "HackStreamOrder".to_string();
+impl FindMainStem {
+    pub fn new() -> FindMainStem { // public constructor
+        let name = "FindMainStem".to_string();
         
-        let description = "Assigns the Hack stream order to each tributary in a stream network.".to_string();
+        let description = "Finds the main stem, based on stream lengths, of each stream network.".to_string();
         
         let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams       Input streams raster file.\n");
@@ -45,11 +45,11 @@ impl HackStreamOrder {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        HackStreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
+        FindMainStem { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for HackStreamOrder {
+impl WhiteboxTool for FindMainStem {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -161,9 +161,6 @@ impl WhiteboxTool for HackStreamOrder {
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
-        let mut upstream_stack = vec![];
-        let mut hack_order = vec![];
-
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let mut trib_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
@@ -194,7 +191,6 @@ impl WhiteboxTool for HackStreamOrder {
                         output[(row, col)] = current_id;
                         current_id += 1f64;
                         trib_length[(row, col)] = 0f64;
-                        hack_order.push(0f64);
                     }
                 } else {
                     if pntr[(row, col)] != pntr_nodata {
@@ -208,11 +204,14 @@ impl WhiteboxTool for HackStreamOrder {
             if verbose {
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 1 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
+
+        // There are current_id channel heads
+        let mut trib_is_main = vec![false; current_id as usize + 1];
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
@@ -279,53 +278,42 @@ impl WhiteboxTool for HackStreamOrder {
                     stack.push((row_n, col_n));
                 }
             } else {
-                upstream_stack.push((row, col));
+                trib_is_main[val as usize] = true;
             }
 
             if verbose {
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 1 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let mut trib_val: f64;
-        let mut trib_val_n: f64;
-        let mut ho: f64;
-        while !upstream_stack.is_empty() {
-            let cell = upstream_stack.pop().unwrap();
-            row = cell.0;
-            col = cell.1;
-
-            trib_val = output[(row, col)];
-            ho = hack_order[(trib_val - 1.0) as usize];
-            if ho == 0.0 {
-                ho = 1.0;
-                output[(row, col)] = 1.0;
-            } else {
-                output[(row, col)] = ho;
-            }
-
-            // find any inflowing stream cells
-            for i in 0..8 {
-                row_n = row + d_y[i];
-                col_n = col + d_x[i];
-                if streams[(row_n, col_n)] > 0.0 && pntr[(row_n, col_n)] == inflowing_vals[i] {
-                    trib_val_n = output[(row_n, col_n)];
-                    if trib_val_n != trib_val {
-                        hack_order[(trib_val_n - 1.0) as usize] = ho + 1.0;
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0.0 && streams[(row, col)] != nodata {
+                    val = output[(row, col)];
+                    if trib_is_main[val as usize] {
+                        output[(row, col)] = streams[(row, col)];
+                    } else {
+                        output[(row, col)] = background_val;
                     }
-                    upstream_stack.push((row_n, col_n));
+                } else {
+                    output[(row, col)] = background_val;
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 2 of 2): {}%", progress);
+                    old_progress = progress;
                 }
             }
         }
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
