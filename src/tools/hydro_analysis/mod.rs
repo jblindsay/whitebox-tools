@@ -5,8 +5,10 @@ mod d8_pointer;
 mod dinf_flow_accum;
 mod dinf_pointer;
 mod fd8_flow_accum;
+mod jenson_snap_pour_points;
 mod max_upslope_flowpath;
 mod num_inflowing_neighbours;
+mod snap_pour_points;
 mod watershed;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -16,6 +18,8 @@ pub use self::d8_pointer::D8Pointer;
 pub use self::dinf_flow_accum::DInfFlowAccumulation;
 pub use self::dinf_pointer::DInfPointer;
 pub use self::fd8_flow_accum::FD8FlowAccumulation;
+pub use self:: jenson_snap_pour_points::JensonSnapPourPoints;
 pub use self::max_upslope_flowpath::MaxUpslopeFlowpathLength;
 pub use self::num_inflowing_neighbours::NumInflowingNeighbours;
+pub use self::snap_pour_points::SnapPourPoints;
 pub use self::watershed::Watershed;
