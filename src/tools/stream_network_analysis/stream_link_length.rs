@@ -1,31 +1,38 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 27, 2017
+Last Modified: June 27, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
+use std::cmp::Ordering::Equal;
 use std::env;
 use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct ShreveStreamMagnitude {
+pub struct StreamLinkLength {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ShreveStreamMagnitude {
-    pub fn new() -> ShreveStreamMagnitude { // public constructor
-        let name = "ShreveStreamMagnitude".to_string();
+impl StreamLinkLength {
+    pub fn new() -> StreamLinkLength { // public constructor
+        let name = "StreamLinkLength".to_string();
         
-        let description = "Assigns the Shreve stream magnitude to each link in a stream network.".to_string();
+        let description = "Estimates the length of each link (or tributary) in a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams       Input streams raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        let mut parameters = "--d8_pntr        Input D8 pointer raster file.\n".to_owned();
+        parameters.push_str("--linkid           Input streams link ID (or tributary ID) raster file.\n");
+        parameters.push_str("-o, --output       Output raster file.\n");
+        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
         parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
        
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -35,14 +42,14 @@ impl ShreveStreamMagnitude {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --linkid=streamsID.dep --dem=dem.dep -o=output.dep
+>>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        ShreveStreamMagnitude { name: name, description: description, parameters: parameters, example_usage: usage }
+        StreamLinkLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for ShreveStreamMagnitude {
+impl WhiteboxTool for StreamLinkLength {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -85,7 +92,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
                 } else {
                     d8_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
+            } else if vec[0].to_lowercase() == "-linkid" || vec[0].to_lowercase() == "--linkid" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
@@ -127,81 +134,35 @@ impl WhiteboxTool for ShreveStreamMagnitude {
 
         if verbose { println!("Reading pointer data...") };
         let pntr = Raster::new(&d8_file, "r")?;
-        if verbose { println!("Reading streams data...") };
+        let pntr_nodata = pntr.configs.nodata;
+        if verbose { println!("Reading link ID data...") };
         let streams = Raster::new(&streams_file, "r")?;
         
         let start = time::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
-        let num_cells = pntr.num_cells();
         let nodata = streams.configs.nodata;
-        let pntr_nodata = pntr.configs.nodata;
-
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
+        let cell_size_x = streams.configs.resolution_x;
+        let cell_size_y = streams.configs.resolution_y;
+        let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
+        
         
         // make sure the input files have the same size
         if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "The input files must have the same number of rows and columns and spatial extent."));
         }
+        
+        let max_id = streams.configs.maximum as usize + 1;
+        let mut link_length = vec![0.0; max_id];
 
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         output.configs.data_type = DataType::F32;
-        // output.reinitialize_values(0.0);
 
-        let mut stack = Vec::with_capacity((rows * columns) as usize);
-
-        // calculate the number of inflowing cells
-        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
-        if esri_style {
-            inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
-        }
-        let mut num_solved_cells = 0;
-        let mut count: i8;
-        for row in 0..rows {
-            for col in 0..columns {
-                if streams[(row, col)] > 0.0 {
-                    count = 0i8;
-                    for i in 0..8 {
-                        if streams[(row + d_y[i], col + d_x[i])] > 0.0 &&
-                            pntr[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
-                            count += 1;
-                        }
-                    }
-                    num_inflowing[(row, col)] = count;
-                    if count == 0 {
-                        // It's a headwater; add it to the stack
-                        stack.push((row, col));
-                        output[(row, col)] = 1.0;
-                    }
-                } else {
-                    if pntr[(row, col)] != pntr_nodata {
-                        output[(row, col)] = background_val;
-                    } else {
-                        output[(row, col)] = nodata;
-                    }
-                    num_solved_cells += 1;
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Progress: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        // Create a mapping from the pointer values to cells offsets.
-        // This may seem wasteful, using only 8 of 129 values in the array,
-        // but the mapping method is far faster than calculating z.ln() / ln(2.0).
-        // It's also a good way of allowing for different point styles.
         let mut pntr_matches: [usize; 129] = [999usize; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
@@ -227,44 +188,46 @@ impl WhiteboxTool for ShreveStreamMagnitude {
             pntr_matches[128] = 0usize;
         }
 
-        let (mut row, mut col): (isize, isize);
-        let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
+        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let mut current_id: usize;
         let mut dir: usize;
-        let mut val: f64;
-        let mut c: usize;
-        while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
-            row = cell.0;
-            col = cell.1;
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0.0 && streams[(row, col)] != nodata {
+                    current_id = streams[(row, col)] as usize;
+                    dir = pntr[(row, col)] as usize;
+                    if dir > 0 && pntr[(row, col)] != pntr_nodata {
+                        if dir > 128 || pntr_matches[dir] == 999 {
+                            return Err(Error::new(ErrorKind::InvalidInput,
+                                "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
+                        }
 
-            val = output[(row, col)];
-
-            // find the downstream cell
-            dir = pntr[(row, col)] as usize;
-            if dir > 0 {
-                if dir > 128 || pntr_matches[dir] == 999 {
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                        "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
-                }
-                c = pntr_matches[dir];
-                row_n = row + d_y[c];
-                col_n = col + d_x[c];
-                if output[(row_n, col_n)] == nodata {
-                    output[(row_n, col_n)] = val;
-                } else {
-                    output.increment(row_n, col_n, val);
-                }
-                num_inflowing.decrement(row_n, col_n, 1);
-                if num_inflowing[(row_n, col_n)] == 0 {
-                    stack.push((row_n, col_n));
+                        link_length[current_id] += grid_lengths[pntr_matches[dir]];
+                    }
                 }
             }
-
             if verbose {
-                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 1 of 2): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0.0 && streams[(row, col)] != nodata {
+                    current_id = streams[(row, col)] as usize;
+                    output[(row, col)] = link_length[current_id];
+                } else {
+                    output[(row, col)] = background_val;
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 2 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -278,9 +241,14 @@ impl WhiteboxTool for ShreveStreamMagnitude {
             output.configs.palette = "spectrum.plt".to_string();
         }
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+
+        // sort max_elev
+        link_length.sort_by(|a, b| b.partial_cmp(a).unwrap_or(Equal));
+        let t = (link_length.len() as f64 * 0.01) as usize;
+        output.configs.display_max = link_length[t];
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
-        output.add_metadata_entry(format!("Input streams file: {}", streams_file));
+        output.add_metadata_entry(format!("Input streams ID file: {}", streams_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };

@@ -91,6 +91,8 @@ impl ToolManager {
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
         tool_names.push("StreamLinkIdentifier".to_string());
+        tool_names.push("StreamLinkLength".to_string());
+        tool_names.push("StreamLinkSlope".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
         // terrain_analysis
@@ -197,6 +199,8 @@ impl ToolManager {
             "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
             "strahlerstreamorder" => Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new())),
             "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),
+            "streamlinklength" => Some(Box::new(tools::stream_network_analysis::StreamLinkLength::new())),
+            "streamlinkslope" => Some(Box::new(tools::stream_network_analysis::StreamLinkSlope::new())),
             "tributaryidentifier" => Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new())),
 
             // terrain_analysis
