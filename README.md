@@ -1,6 +1,6 @@
 # WhiteboxTools
 
-*Bringing the power to Whitebox GAT to the world at large*
+*Bringing the power of Whitebox GAT to the world at large*
 
 - [Desciption](#description)
 - [Installation](#installation)
