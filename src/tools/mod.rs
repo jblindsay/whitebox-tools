@@ -59,6 +59,7 @@ impl ToolManager {
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
+        tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("PrewittFilter".to_string());
         tool_names.push("RobertsCrossFilter".to_string());
@@ -163,6 +164,7 @@ impl ToolManager {
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
+            "normalizeddifferencevegetationindex" => Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new())),
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
             "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
