@@ -18,22 +18,21 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct SobelFilter {
+pub struct RobertsCrossFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl SobelFilter {
-    pub fn new() -> SobelFilter { // public constructor
-        let name = "SobelFilter".to_string();
+impl RobertsCrossFilter {
+    pub fn new() -> RobertsCrossFilter { // public constructor
+        let name = "RobertsCrossFilter".to_string();
         
-        let description = "Performs a Sobel edge-detection filter on an image.".to_string();
+        let description = "Performs a Robert's cross edge-detection filter on an image.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--variant     Optional variant value. Options include 3x3 and 5x5 (default is 3x3).\n");
         parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -43,13 +42,13 @@ impl SobelFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --variant=5x5 --clip=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --clip=1.0", short_exe, name).replace("*", &sep);
     
-        SobelFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        RobertsCrossFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for SobelFilter {
+impl WhiteboxTool for RobertsCrossFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -74,7 +73,6 @@ impl WhiteboxTool for SobelFilter {
         
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut variant = "3x3".to_string();
         let mut clip_amount = 0.0;
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -96,17 +94,6 @@ impl WhiteboxTool for SobelFilter {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-variant" || vec[0].to_lowercase() == "--variant" {
-                if keyval {
-                    variant = vec[1].to_string();
-                } else {
-                    variant = args[i + 1].to_string();
-                }
-                if variant.contains("5") {
-                    variant = "5x5".to_string();
-                } else {
-                    variant = "3x3".to_string();
                 }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 if keyval {
@@ -158,7 +145,6 @@ impl WhiteboxTool for SobelFilter {
         let mut id = 0;
         while ending_row < rows {
             let input = input.clone();
-            let variant = variant.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -167,64 +153,23 @@ impl WhiteboxTool for SobelFilter {
             id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let (mut slope_x, mut slope_y): (f64, f64);
-                let mut z: f64;
-                let mut zn: f64;
-
-                if variant.contains("3x3") {
-                    let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                    let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                    let mask_x = [ 1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0 ];
-                    let mask_y = [ 1.0, 0.0, -1.0, -2.0, -1.0, 0.0, 1.0, 2.0 ];
-                    let num_pixels_in_filter = dx.len();
-
-                    for row in starting_row..ending_row {
-                        let mut data = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            z = input[(row, col)];
-                            if z != nodata {
-                                slope_x = 0.0;
-                                slope_y = 0.0;
-                                for i in 0..num_pixels_in_filter {
-                                    zn = input[(row + dy[i], col + dx[i])];
-                                    if zn == nodata {
-                                        zn = z; // replace it with z
-                                    }
-                                    slope_x += zn * mask_x[i];
-                                    slope_y += zn * mask_y[i];
-                                }
-                                data[col as usize] = (slope_x * slope_x + slope_y * slope_y).sqrt();
-                            }
+                let (mut z1, mut z2, mut z3, mut z4): (f64, f64, f64, f64);
+                for row in starting_row..ending_row {
+                    let mut data = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z1 = input[(row, col)];
+                        if z1 != nodata {
+                            z2 = input[(row, col + 1)];
+                            if z2 == nodata { z2 = z1; }
+                            z3 = input[(row + 1, col)];
+                            if z3 == nodata { z3 = z1; }
+                            z4 = input[(row + 1, col + 1)];
+                            if z4 == nodata { z4 = z1; }
+                            
+                            data[col as usize] = (z1 - z4).abs() + (z2 - z3).abs();
                         }
-                        tx1.send((row, data)).unwrap();
                     }
-                } else { // 5x5
-                    let dx = [ -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2 ];
-                    let dy = [ -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2 ];
-                    let mask_x = [ 2.0, 1.0, 0.0, -1.0, -2.0, 3.0, 2.0, 0.0, -2.0, -3.0, 4.0, 3.0, 0.0, -3.0, -4.0, 3.0, 2.0, 0.0, -2.0, -3.0, 2.0, 1.0, 0.0, -1.0, -2.0 ];
-                    let mask_y = [ 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -2.0, -3.0, -2.0, -1.0, -2.0, -3.0, -4.0, -3.0, -2.0 ];
-                    let num_pixels_in_filter = dx.len();
-
-                    for row in starting_row..ending_row {
-                        let mut data = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            z = input[(row, col)];
-                            if z != nodata {
-                                slope_x = 0.0;
-                                slope_y = 0.0;
-                                for i in 0..num_pixels_in_filter {
-                                    zn = input[(row + dy[i], col + dx[i])];
-                                    if zn == nodata {
-                                        zn = z; // replace it with z
-                                    }
-                                    slope_x += zn * mask_x[i];
-                                    slope_y += zn * mask_y[i];
-                                }
-                                data[col as usize] = (slope_x * slope_x + slope_y * slope_y).sqrt();
-                            }
-                        }
-                        tx1.send((row, data)).unwrap();
-                    }
+                    tx1.send((row, data)).unwrap();
                 }
             });
         }
@@ -243,25 +188,6 @@ impl WhiteboxTool for SobelFilter {
 
         if clip_amount > 0.0 {
             println!("Clipping output...");
-            // let (mean, stdev) = output.calculate_mean_and_stdev();
-            // let mut z: f64;
-            // for row in 0..rows {
-            //     for col in 0..columns {
-            //         z = output[(row, col)];
-            //         if z != nodata {
-            //             output[(row, col)] = (z - mean) / stdev;
-            //         }
-            //     }
-            //     if verbose {
-            //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-            //         if progress != old_progress {
-            //             println!("Normalizing output: {}%", progress);
-            //             old_progress = progress;
-            //         }
-            //     }
-            // }
-            // output.configs.display_min = -2.0;
-            // output.configs.display_max = 2.0;
             output.clip_min_and_max_by_percent(clip_amount);
         }
 
@@ -270,7 +196,6 @@ impl WhiteboxTool for SobelFilter {
         output.configs.palette = "grey.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Variant: {}", variant));
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 

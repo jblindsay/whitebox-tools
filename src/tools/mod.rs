@@ -57,7 +57,10 @@ impl ToolManager {
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("OlympicFilter".to_string());
+        tool_names.push("PrewittFilter".to_string());
+        tool_names.push("RobertsCrossFilter".to_string());
         tool_names.push("RangeFilter".to_string());
+        tool_names.push("ScharrFilter".to_string());
         tool_names.push("SobelFilter".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
         tool_names.push("TotalFilter".to_string());
@@ -155,7 +158,10 @@ impl ToolManager {
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
+            "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
+            "robertscrossfilter" => Some(Box::new(tools::image_analysis::RobertsCrossFilter::new())),
+            "scharrfilter" => Some(Box::new(tools::image_analysis::ScharrFilter::new())),
             "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
             "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),

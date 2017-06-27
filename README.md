@@ -93,7 +93,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 72 tools:
+The library currently contains the following 75 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -133,7 +133,10 @@ The library currently contains the following 72 tools:
 - ***MeanFilter***: Performs a mean filter (low-pass filter) on an input image.
 - ***MinimumFilter***: Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
 - ***OlympicFilter***: Performs an olympic smoothing filter on an image.
+- ***PrewittFilter***: Performs a Prewitt edge-detection filter on an image.
 - ***RangeFilter***: Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
+- ***RobertsCrossFilter***: Performs a Robert's cross edge-detection filter on an image.
+- ***ScharrFilter***: Performs a Scharr edge-detection filter on an image.
 - ***SobelFilter***: Performs a Sobel edge-detection filter on an image.
 - ***StandardDeviationFilter***: Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 - ***TotalFilter***: Performs a total filter on an input image.
