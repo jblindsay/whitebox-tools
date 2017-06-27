@@ -58,6 +58,7 @@ impl ToolManager {
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("RangeFilter".to_string());
+        tool_names.push("SobelFilter".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
         tool_names.push("TotalFilter".to_string());
 
@@ -155,6 +156,7 @@ impl ToolManager {
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
+            "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
             "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
 

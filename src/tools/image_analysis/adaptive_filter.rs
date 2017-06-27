@@ -197,9 +197,10 @@ impl WhiteboxTool for AdaptiveFilter {
                 if val == nodata {
                     val = 0f64;
                 } else {
+                    val -= min_val;
                     sum_n += 1;
                 }
-                sum += val - min_val;
+                sum += val;
                 sum_sqr += val * val;
                 if row > 0 {
                     i_prev = integral[(row - 1, col)];
@@ -302,7 +303,11 @@ impl WhiteboxTool for AdaptiveFilter {
                                     } else {
                                         data[col as usize] = z;
                                     }
+                                } else {
+                                    data[col as usize] = z;
                                 }
+                            } else {
+                                data[col as usize] = z;
                             }
                         }
                     }
@@ -318,7 +323,7 @@ impl WhiteboxTool for AdaptiveFilter {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }

@@ -339,6 +339,102 @@ impl Raster {
 
     }
 
+    pub fn clip_min_by_percent(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        let mut val = 0.0;
+        for i in 0..self.num_cells() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    val = d[i];
+                    break;
+                }
+            }
+        }
+
+        for i in 0..self.data.len() {
+            if self.data[i] != self.configs.nodata {
+                if self.data[i] < val {
+                    self.data[i] = val;
+                }
+            }
+        }
+
+        self.configs.display_min = val;
+    }
+
+    pub fn clip_max_by_percent(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        let mut val = 0.0;
+        for i in (0..self.num_cells()).rev() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    val = d[i];
+                    break;
+                }
+            }
+        }
+
+        for i in 0..self.data.len() {
+            if self.data[i] != self.configs.nodata {
+                if self.data[i] > val {
+                    self.data[i] = val;
+                }
+            }
+        }
+
+        self.configs.display_max = val;
+    }
+
+    pub fn clip_min_and_max_by_percent(&mut self, percent: f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        let mut lower_val = 0.0;
+        for i in 0..self.num_cells() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    lower_val = d[i];
+                    break;
+                }
+            }
+        }
+
+        let mut upper_val = 0.0;
+        let mut sum = 0;
+        for i in (0..self.num_cells()).rev() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    upper_val = d[i];
+                    break;
+                }
+            }
+        }
+
+        for i in 0..self.data.len() {
+            if self.data[i] != self.configs.nodata {
+                if self.data[i] < lower_val {
+                    self.data[i] = lower_val;
+                } else if self.data[i] > upper_val {
+                    self.data[i] = upper_val;
+                }
+            }
+        }
+
+        self.configs.display_min = lower_val;
+        self.configs.display_max = upper_val;
+    }
+
     pub fn update_min_max(&mut self) {
         for val in &self.data {
             let v = *val;
