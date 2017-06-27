@@ -1,5 +1,6 @@
 // private sub-module defined in other files
 mod adaptive_filter;
+mod bilateral_filter;
 mod conservative_smoothing_filter;
 mod dog_filter;
 mod gaussian_filter;
@@ -20,6 +21,7 @@ mod total_filter;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::adaptive_filter::AdaptiveFilter;
+pub use self::bilateral_filter::BilateralFilter;
 pub use self::conservative_smoothing_filter::ConservativeSmoothingFilter;
 pub use self::dog_filter::DiffOfGaussianFilter;
 pub use self::gaussian_filter::GaussianFilter;

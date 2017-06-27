@@ -47,6 +47,7 @@ impl ToolManager {
 
         // image_analysis
         tool_names.push("AdaptiveFilter".to_string());
+        tool_names.push("BilateralFilter".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("GaussianFilter".to_string());
@@ -148,6 +149,7 @@ impl ToolManager {
 
             // image_analysis
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
+            "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "conservativesmoothingfilter" => Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new())),
             "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),

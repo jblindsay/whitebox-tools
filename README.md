@@ -93,7 +93,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 75 tools:
+The library currently contains the following 76 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -123,6 +123,7 @@ The library currently contains the following 75 tools:
 
 **Image Analysis**
 - ***AdaptiveFilter***: Performs an adaptive filter on an image.
+- ***BilateralFilter***: A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
 - ***ConservativeSmoothingFilter***: Performs a conservative smoothing filter on an image.
 - ***DiffOfGaussianFilter***: Performs a Difference of Gaussian (DoG) filter on an image.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
