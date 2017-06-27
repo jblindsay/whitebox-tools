@@ -257,8 +257,13 @@ impl WhiteboxTool for OlympicFilter {
                                 sum += totals[i];
                                 n += n_vals[i];
                             }
-                            mean = (sum - max_val - min_val) / (n - 2) as f64; // this is a special mean that removes the highest and lowest values.
-                            data[col as usize] = mean;
+                            if n > 2 {
+                                mean = (sum - max_val - min_val) / (n - 2) as f64; // this is a special mean that removes the highest and lowest values.
+                                data[col as usize] = mean;
+                            } else {
+                                // This should only rarely occur
+                                data[col as usize] = sum / n as f64;
+                            }
                         }
                     }
                     tx1.send((row, data)).unwrap();

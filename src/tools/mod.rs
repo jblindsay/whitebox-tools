@@ -46,6 +46,7 @@ impl ToolManager {
         tool_names.push("Watershed".to_string());
 
         // image_analysis
+        tool_names.push("AdaptiveFilter".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("GaussianFilter".to_string());
@@ -142,6 +143,7 @@ impl ToolManager {
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // image_analysis
+            "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
             "conservativesmoothingfilter" => Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new())),
             "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
