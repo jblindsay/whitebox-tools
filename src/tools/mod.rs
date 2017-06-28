@@ -50,6 +50,7 @@ impl ToolManager {
         // image_analysis
         tool_names.push("AdaptiveFilter".to_string());
         tool_names.push("BilateralFilter".to_string());
+        tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("GaussianFilter".to_string());
@@ -62,6 +63,7 @@ impl ToolManager {
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
+        tool_names.push("Opening".to_string());
         tool_names.push("PercentileFilter".to_string());
         tool_names.push("PrewittFilter".to_string());
         tool_names.push("RobertsCrossFilter".to_string());
@@ -163,6 +165,7 @@ impl ToolManager {
             // image_analysis
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
+            "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
             "conservativesmoothingfilter" => Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new())),
             "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
@@ -175,6 +178,7 @@ impl ToolManager {
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "normalizeddifferencevegetationindex" => Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new())),
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
+            "opening" => Some(Box::new(tools::image_analysis::Opening::new())),
             "percentilefilter" => Some(Box::new(tools::image_analysis::PercentileFilter::new())),
             "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),

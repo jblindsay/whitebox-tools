@@ -95,7 +95,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 87 tools:
+The library currently contains the following 89 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -128,6 +128,7 @@ The library currently contains the following 87 tools:
 **Image Analysis**
 - ***AdaptiveFilter***: Performs an adaptive filter on an image.
 - ***BilateralFilter***: A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
+- ***Closing***: An closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 - ***ConservativeSmoothingFilter***: Performs a conservative smoothing filter on an image.
 - ***DiffOfGaussianFilter***: Performs a Difference of Gaussian (DoG) filter on an image.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
@@ -139,6 +140,7 @@ The library currently contains the following 87 tools:
 - ***MeanFilter***: Performs a mean filter (low-pass filter) on an input image.
 - ***MinimumFilter***: Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
 - ***OlympicFilter***: Performs an olympic smoothing filter on an image.
+- ***Opening***: An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 - ***NormalizedDifferenceVegetationIndex***: Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 - ***PercentileFilter***: Performs a percentile filter on an input image.
 - ***PrewittFilter***: Performs a Prewitt edge-detection filter on an image.

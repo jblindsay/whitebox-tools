@@ -1,6 +1,7 @@
 // private sub-module defined in other files
 mod adaptive_filter;
 mod bilateral_filter;
+mod closing;
 mod conservative_smoothing_filter;
 mod dog_filter;
 mod gaussian_filter;
@@ -13,6 +14,7 @@ mod mean_filter;
 mod min_filter;
 mod ndvi;
 mod olympic_filter;
+mod opening;
 mod percentile_filter;
 mod prewitt_filter;
 mod range_filter;
@@ -25,6 +27,7 @@ mod total_filter;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::adaptive_filter::AdaptiveFilter;
 pub use self::bilateral_filter::BilateralFilter;
+pub use self::closing::Closing;
 pub use self::conservative_smoothing_filter::ConservativeSmoothingFilter;
 pub use self::dog_filter::DiffOfGaussianFilter;
 pub use self::gaussian_filter::GaussianFilter;
@@ -33,6 +36,7 @@ pub use self::integral_image::IntegralImage;
 pub use self::laplacian_filter::LaplacianFilter;
 pub use self::log_filter::LaplacianOfGaussianFilter;
 pub use self::olympic_filter::OlympicFilter;
+pub use self::opening::Opening;
 pub use self::max_filter::MaximumFilter;
 pub use self::mean_filter::MeanFilter;
 pub use self::min_filter::MinimumFilter;
