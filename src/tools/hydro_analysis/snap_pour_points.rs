@@ -27,7 +27,7 @@ impl SnapPourPoints {
     pub fn new() -> SnapPourPoints { // public constructor
         let name = "SnapPourPoints".to_string();
         
-        let description = "Moves outlet points used to specify points of interest in a watershedding operation onto the stream network.".to_string();
+        let description = "Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.".to_string();
         
         let mut parameters = "--pour_pts    Input pour points (outlet) raster file.\n".to_owned();
         parameters.push_str("--flow_accum  Input D8 flow accumulation raster file.\n");

@@ -87,9 +87,11 @@ impl ToolManager {
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
+        tool_names.push("ExtractStreams".to_string());
         tool_names.push("FindMainStem".to_string());
         tool_names.push("HackStreamOrder".to_string());
         tool_names.push("HortonStreamOrder".to_string());
+        tool_names.push("RemoveShortStreams".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
         tool_names.push("StreamLinkIdentifier".to_string());
@@ -198,9 +200,11 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
 
             // stream_network_analysis
+            "extractstreams" => Some(Box::new(tools::stream_network_analysis::ExtractStreams::new())),
             "findmainstem" => Some(Box::new(tools::stream_network_analysis::FindMainStem::new())),
             "hackstreamorder" => Some(Box::new(tools::stream_network_analysis::HackStreamOrder::new())),
             "hortonstreamorder" => Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new())),
+            "removeshortstreams" => Some(Box::new(tools::stream_network_analysis::RemoveShortStreams::new())),
             "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
             "strahlerstreamorder" => Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new())),
             "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),

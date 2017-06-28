@@ -16,25 +16,25 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct HackStreamOrder {
+pub struct RemoveShortStreams {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl HackStreamOrder {
-    pub fn new() -> HackStreamOrder { // public constructor
-        let name = "HackStreamOrder".to_string();
+impl RemoveShortStreams {
+    pub fn new() -> RemoveShortStreams { // public constructor
+        let name = "RemoveShortStreams".to_string();
         
-        let description = "Assigns the Hack stream order to each tributary in a stream network.".to_string();
+        let description = "Removes short first-order streams from a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams          Input streams raster file.\n");
-        parameters.push_str("-o, --output       Output raster file.\n");
-        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-       
+        let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
+        parameters.push_str("--streams       Input streams raster file.\n");
+        parameters.push_str("-o, --output    Output raster file.\n");
+        parameters.push_str("--min_length    Minimum tributary length (in map units) used for network prunning.\n");
+        parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -42,14 +42,13 @@ impl HackStreamOrder {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        HackStreamOrder { name: name, description: description, parameters: parameters, example_usage: usage }
+        RemoveShortStreams { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for HackStreamOrder {
+impl WhiteboxTool for RemoveShortStreams {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -71,7 +70,7 @@ impl WhiteboxTool for HackStreamOrder {
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        let mut background_val = f64::NEG_INFINITY;
+        let mut min_length = 0.0;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -104,10 +103,14 @@ impl WhiteboxTool for HackStreamOrder {
                 } else {
                     output_file = args[i+1].to_string();
                 }
+            } else if vec[0].to_lowercase() == "-min_length" || vec[0].to_lowercase() == "--min_length" {
+                if keyval {
+                    min_length = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    min_length = args[i+1].to_string().parse::<f64>().unwrap();
+                }
             } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" || vec[0].to_lowercase() == "--esri_style" {
-                background_val = 0f64;
             }
         }
 
@@ -134,7 +137,6 @@ impl WhiteboxTool for HackStreamOrder {
 
         if verbose { println!("Reading pointer data...") };
         let pntr = Raster::new(&d8_file, "r")?;
-        let pntr_nodata = pntr.configs.nodata;
         if verbose { println!("Reading streams data...") };
         let streams = Raster::new(&streams_file, "r")?;
         
@@ -144,9 +146,6 @@ impl WhiteboxTool for HackStreamOrder {
         let columns = pntr.configs.columns as isize;
         let num_cells = pntr.num_cells();
         let nodata = streams.configs.nodata;
-        if background_val == f64::NEG_INFINITY {
-            background_val = nodata;
-        }
         let cell_size_x = streams.configs.resolution_x;
         let cell_size_y = streams.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
@@ -161,9 +160,6 @@ impl WhiteboxTool for HackStreamOrder {
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
-        let mut upstream_stack = vec![];
-        let mut hack_order = vec![];
-
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let mut trib_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
@@ -174,6 +170,8 @@ impl WhiteboxTool for HackStreamOrder {
         if esri_style {
             inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
         }
+        let mut background_val = nodata;
+        let mut contains_zeros = false;
         let mut num_solved_cells = 0;
         let mut count: i8;
         let mut current_id = 1f64;
@@ -194,14 +192,10 @@ impl WhiteboxTool for HackStreamOrder {
                         output[(row, col)] = current_id;
                         current_id += 1f64;
                         trib_length[(row, col)] = 0f64;
-                        hack_order.push(0f64);
                     }
                 } else {
-                    if pntr[(row, col)] != pntr_nodata {
-                        output[(row, col)] = background_val;
-                    } else {
-                        output[(row, col)] = nodata;
-                    }
+                    output[(row, col)] = streams[(row, col)];
+                    if streams[(row, col)] == 0.0 { contains_zeros = true; }
                     num_solved_cells += 1;
                 }
             }
@@ -213,6 +207,8 @@ impl WhiteboxTool for HackStreamOrder {
                 }
             }
         }
+
+        if contains_zeros { background_val = 0.0; }
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
@@ -243,6 +239,7 @@ impl WhiteboxTool for HackStreamOrder {
             pntr_matches[128] = 0usize;
         }
 
+        let mut stream_lengths = vec![0.0; current_id as usize + 1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         let mut dir: usize;
@@ -269,6 +266,8 @@ impl WhiteboxTool for HackStreamOrder {
                 col_n = col + d_x[c];
 
                 length = trib_length[(row, col)] + grid_lengths[c];
+                stream_lengths[val as usize] = length;
+
                 if trib_length[(row_n, col_n)] < length || trib_length[(row_n, col_n)] == nodata {
                     trib_length[(row_n, col_n)] = length;
                     output[(row_n, col_n)] = val;
@@ -278,8 +277,6 @@ impl WhiteboxTool for HackStreamOrder {
                 if num_inflowing[(row_n, col_n)] == 0 {
                     stack.push((row_n, col_n));
                 }
-            } else {
-                upstream_stack.push((row, col));
             }
 
             if verbose {
@@ -291,41 +288,28 @@ impl WhiteboxTool for HackStreamOrder {
             }
         }
 
-        let mut trib_val: f64;
-        let mut trib_val_n: f64;
-        let mut ho: f64;
-        while !upstream_stack.is_empty() {
-            let cell = upstream_stack.pop().unwrap();
-            row = cell.0;
-            col = cell.1;
-
-            trib_val = output[(row, col)];
-            ho = hack_order[(trib_val - 1.0) as usize];
-            if ho == 0.0 {
-                ho = 1.0;
-                output[(row, col)] = 1.0;
-            } else {
-                output[(row, col)] = ho;
-            }
-
-            // find any inflowing stream cells
-            for i in 0..8 {
-                row_n = row + d_y[i];
-                col_n = col + d_x[i];
-                if streams[(row_n, col_n)] > 0.0 && pntr[(row_n, col_n)] == inflowing_vals[i] {
-                    trib_val_n = output[(row_n, col_n)];
-                    if trib_val_n != trib_val {
-                        hack_order[(trib_val_n - 1.0) as usize] = ho + 1.0;
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0.0 {
+                    current_id = output[(row, col)];
+                    if stream_lengths[current_id as usize] > min_length {
+                        output[(row, col)] = streams[(row, col)];
+                    } else {
+                        output[(row, col)] = background_val;
                     }
-                    upstream_stack.push((row_n, col_n));
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Prunning the network: {}%", progress);
+                    old_progress = progress;
                 }
             }
         }
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
