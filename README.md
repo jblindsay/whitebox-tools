@@ -95,7 +95,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 450 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 84 tools:
+The library currently contains the following 85 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -173,6 +173,7 @@ The library currently contains the following 84 tools:
 - ***StreamLinkIdentifier***: Assigns a unique identifier to each link in a stream network.
 - ***StreamLinkLength***: Estimates the length of each link (or tributary) in a stream network.
 - ***StreamLinkSlope***: Estimates the average slope of each link (or tributary) in a stream network.
+- ***TopologicalStreamOrder***: Assigns each link in a stream network its topological order.
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
 **Terrain Analysis**

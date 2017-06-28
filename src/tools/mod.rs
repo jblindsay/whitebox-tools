@@ -95,6 +95,7 @@ impl ToolManager {
         tool_names.push("StreamLinkIdentifier".to_string());
         tool_names.push("StreamLinkLength".to_string());
         tool_names.push("StreamLinkSlope".to_string());
+        tool_names.push("TopologicalStreamOrder".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
         // terrain_analysis
@@ -205,6 +206,7 @@ impl ToolManager {
             "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),
             "streamlinklength" => Some(Box::new(tools::stream_network_analysis::StreamLinkLength::new())),
             "streamlinkslope" => Some(Box::new(tools::stream_network_analysis::StreamLinkSlope::new())),
+            "topologicalstreamorder" => Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new())),
             "tributaryidentifier" => Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new())),
 
             // terrain_analysis

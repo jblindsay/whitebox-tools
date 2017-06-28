@@ -7,6 +7,7 @@ mod strahler_order;
 mod stream_link_id;
 mod stream_link_length;
 mod stream_link_slope;
+mod topological_stream_order;
 mod tributary_id;
 
 
@@ -19,4 +20,5 @@ pub use self::strahler_order::StrahlerStreamOrder;
 pub use self::stream_link_id::StreamLinkIdentifier;
 pub use self::stream_link_length::StreamLinkLength;
 pub use self::stream_link_slope::StreamLinkSlope;
+pub use self::topological_stream_order::TopologicalStreamOrder;
 pub use self::tributary_id::TributaryIdentifier;
