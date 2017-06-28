@@ -71,6 +71,7 @@ impl ToolManager {
         tool_names.push("ScharrFilter".to_string());
         tool_names.push("SobelFilter".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
+        tool_names.push("TophatTransform".to_string());
         tool_names.push("TotalFilter".to_string());
 
         // lidar_analysis
@@ -186,6 +187,7 @@ impl ToolManager {
             "scharrfilter" => Some(Box::new(tools::image_analysis::ScharrFilter::new())),
             "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
             "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
+            "tophattransform" => Some(Box::new(tools::image_analysis::TophatTransform::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
 
             // lidar_analysis

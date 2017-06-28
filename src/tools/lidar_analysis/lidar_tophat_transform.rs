@@ -24,7 +24,7 @@ impl LidarTophatTransform {
     pub fn new() -> LidarTophatTransform { // public constructor
         let name = "LidarTophatTransform".to_string();
         
-        let description = "Performs a tophat transform on a Lidar dataset.".to_string();
+        let description = "Performs a white top-hat transform on a Lidar dataset.".to_string();
         
         let parameters = "-i, --input        Input LAS file.
 -o, --output       Output LAS file.

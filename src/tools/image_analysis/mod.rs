@@ -22,6 +22,7 @@ mod roberts_filter;
 mod scharr_filter;
 mod sobel_filter;
 mod stdev_filter;
+mod tophat;
 mod total_filter;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -48,4 +49,5 @@ pub use self::roberts_filter::RobertsCrossFilter;
 pub use self::scharr_filter::ScharrFilter;
 pub use self::sobel_filter::SobelFilter;
 pub use self::stdev_filter::StandardDeviationFilter;
+pub use self::tophat::TophatTransform;
 pub use self::total_filter::TotalFilter;
