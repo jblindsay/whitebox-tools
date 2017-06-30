@@ -45,7 +45,15 @@ Generally, the Unix convention is that single-letter arguments (options) use a s
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
-**Example Python script**
+**Example command prompt:**
+
+```
+>>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' --run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
+```
+
+Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions.
+
+**Example Python script:**
 
 ```Python
 import os
@@ -95,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 91 tools:
+The library currently contains the following 92 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -114,12 +122,13 @@ The library currently contains the following 91 tools:
 
 **Hydrological Analysis**
 - ***AverageUpslopeFlowpathLength***: Measures the average length of all upslope flowpaths draining each grid cell.
+- ***BreachDepressions***: This tool breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.
 - ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 - ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
 - ***DInfPointer***: Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
-- ***FillDepressions***: This tool fills all of the depressions in a DEM.
+- ***FillDepressions***: This tool fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 - ***JensonSnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 - ***MaxUpslopeFlowpathLength***: Measures the maximum length of all upslope flowpaths draining each grid cell.
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.

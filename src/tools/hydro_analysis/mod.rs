@@ -1,5 +1,6 @@
 // private sub-module defined in other files
 mod average_upslope_flowpath_length;
+mod breach_depressions;
 mod d8_flow_accum;
 mod d8_pointer;
 mod dinf_flow_accum;
@@ -14,6 +15,7 @@ mod watershed;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::average_upslope_flowpath_length::AverageUpslopeFlowpathLength;
+pub use self::breach_depressions::BreachDepressions;
 pub use self::d8_flow_accum::D8FlowAccumulation;
 pub use self::d8_pointer::D8Pointer;
 pub use self::dinf_flow_accum::DInfFlowAccumulation;

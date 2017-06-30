@@ -23,7 +23,7 @@ impl FillDepressions {
     pub fn new() -> FillDepressions { // public constructor
         let name = "FillDepressions".to_string();
         
-        let description = "This tool fills all of the depressions in a DEM.".to_string();
+        let description = "This tool fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.".to_string();
         
         let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
@@ -36,7 +36,7 @@ impl FillDepressions {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep --fix_flats", short_exe, name).replace("*", &sep);
     
         FillDepressions { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -340,6 +340,8 @@ impl WhiteboxTool for FillDepressions {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
+
+        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         Ok(())
     }
