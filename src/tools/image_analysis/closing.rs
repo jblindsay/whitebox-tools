@@ -31,7 +31,7 @@ impl Closing {
     pub fn new() -> Closing { // public constructor
         let name = "Closing".to_string();
         
-        let description = "An closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.".to_string();
+        let description = "A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
