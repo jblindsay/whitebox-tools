@@ -11,6 +11,7 @@ mod fill_depressions;
 mod jenson_snap_pour_points;
 mod max_upslope_flowpath;
 mod num_inflowing_neighbours;
+mod sink;
 mod snap_pour_points;
 mod watershed;
 
@@ -27,5 +28,6 @@ pub use self::fill_depressions::FillDepressions;
 pub use self::jenson_snap_pour_points::JensonSnapPourPoints;
 pub use self::max_upslope_flowpath::MaxUpslopeFlowpathLength;
 pub use self::num_inflowing_neighbours::NumInflowingNeighbours;
+pub use self::sink::Sink;
 pub use self::snap_pour_points::SnapPourPoints;
 pub use self::watershed::Watershed;

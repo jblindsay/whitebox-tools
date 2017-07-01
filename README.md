@@ -103,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 93 tools:
+The library currently contains the following 94 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -123,16 +123,17 @@ The library currently contains the following 93 tools:
 **Hydrological Analysis**
 - ***AverageUpslopeFlowpathLength***: Measures the average length of all upslope flowpaths draining each grid cell.
 - ***Basins***: Identifies drainage basins that drain to the DEM edge.
-- ***BreachDepressions***: This tool breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.
+- ***BreachDepressions***: Breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.
 - ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 - ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
 - ***DInfPointer***: Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
-- ***FillDepressions***: This tool fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
+- ***FillDepressions***: Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 - ***JensonSnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 - ***MaxUpslopeFlowpathLength***: Measures the maximum length of all upslope flowpaths draining each grid cell.
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
+- ***Sink***: Identifies the depressions in a DEM, giving each feature a unique identifier.
 - ***SnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
 - ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 

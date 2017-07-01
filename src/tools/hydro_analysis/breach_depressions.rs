@@ -24,7 +24,7 @@ impl BreachDepressions {
     pub fn new() -> BreachDepressions { // public constructor
         let name = "BreachDepressions".to_string();
         
-        let description = "This tool breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.".to_string();
+        let description = "Breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.".to_string();
         
         let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
@@ -38,7 +38,7 @@ impl BreachDepressions {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
         BreachDepressions { name: name, description: description, parameters: parameters, example_usage: usage }
     }

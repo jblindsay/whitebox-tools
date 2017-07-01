@@ -47,6 +47,7 @@ impl ToolManager {
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
+        tool_names.push("Sink".to_string());
         tool_names.push("SnapPourPoints".to_string());
         tool_names.push("Watershed".to_string());
 
@@ -166,6 +167,7 @@ impl ToolManager {
             "jensonsnappourpoints" => Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new())),
             "maxupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::MaxUpslopeFlowpathLength::new())),
             "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
+            "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
