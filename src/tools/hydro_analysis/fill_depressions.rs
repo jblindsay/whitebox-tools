@@ -144,7 +144,6 @@ impl WhiteboxTool for FillDepressions {
         for nodata values along the raster's edges.
         */
 
-        //let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
         for row in 0..rows {
             /*
@@ -206,6 +205,11 @@ impl WhiteboxTool for FillDepressions {
             }
         }
 
+        /* 
+        The following code follows the scenario of a priority-flood method without the extra
+        complication of an embedded region-growing operation for in-depression sites.
+        */
+
         // Perform the priority flood operation.
         while !minheap.is_empty() {
             let cell = minheap.pop().unwrap();
@@ -219,58 +223,9 @@ impl WhiteboxTool for FillDepressions {
                 if zout_n == background_val {
                     zin_n = input[(row_n, col_n)];
                     if zin_n != nodata {
-                        if zin_n < (zout + small_num) {
-                            // We're in a depression. Raise the elevation.
-                            zout_n = zout + small_num;
-                            output[(row_n, col_n)] = zout_n;
-                            /*
-                            Cells that are in the depression don't need to be discovered by
-                            the more expensive priority-flood operation. Instead, perform
-                            an efficient region-growing operation to find cells connected 
-                            to this cell that have elevations in the input DEM that are 
-                            less than the adjusted zout_n.
-                            */
-                            queue.push_back((row_n, col_n));
-                            while !queue.is_empty() {
-                                let cell = queue.pop_front().unwrap();
-                                row = cell.0;
-                                col = cell.1;
-                                zout = output[(row, col)];
-                                for n2 in 0..8 {
-                                    row_n = row + dy[n2];
-                                    col_n = col + dx[n2];
-                                    zout_n = output[(row_n, col_n)];
-                                    if zout_n == background_val {
-                                        zin_n = input[(row_n, col_n)];
-                                        if zin_n != nodata {
-                                            if zin_n < (zout + small_num) { 
-                                                zout_n = zout + small_num;
-                                                output[(row_n, col_n)] = zout_n;
-                                                queue.push_back((row_n, col_n));
-                                            } else {
-                                                minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
-                                                output[(row_n, col_n)] = zin_n;
-                                            }
-                                        } else {
-                                            // Interior nodata cells are still treated as nodata and are not filled.
-                                            output[(row_n, col_n)] = nodata;
-                                            num_solved_cells += 1;
-                                        }
-                                    }
-                                }
-                                if verbose {
-                                    num_solved_cells += 1;
-                                    progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
-                                    if progress != old_progress {
-                                        println!("Progress: {}%", progress);
-                                        old_progress = progress;
-                                    }
-                                }
-                            }
-                        } else {
-                            minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
-                            output[(row_n, col_n)] = zin_n;
-                        }
+                        if zin_n < (zout + small_num) { zin_n = zout + small_num; } // We're in a depression. Raise the elevation.
+                        output[(row_n, col_n)] = zin_n;
+                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
                     } else {
                         // Interior nodata cells are still treated as nodata and are not filled.
                         output[(row_n, col_n)] = nodata;
@@ -289,13 +244,15 @@ impl WhiteboxTool for FillDepressions {
             }
         }
 
-        /* 
-        The following code follows the scenario of a priority-flood method without the extra
-        complication of an embedded region-growing operation for in-depression sites. It was
-        created for comparison purposes and is not currently used.
+        /*
+        This code uses a slightly more complex priority flood approach that uses an embedded
+        region-growing operation for cells within depressions. It offers a slight speed up
+        over the traditional approach, but I have noticed that sometimes it doesn't work
+        as expected. I'm not sure why and it would require some effort to track down the bug. 
+        Given that most DEMs have relatively few cells within depressions, the speed up of 
+        this approach is perhaps not worthwhile and it is certainly more complex.
         */
-
-        // Perform the priority flood operation.
+        // // Perform the priority flood operation.
         // while !minheap.is_empty() {
         //     let cell = minheap.pop().unwrap();
         //     row = cell.row;
@@ -308,9 +265,58 @@ impl WhiteboxTool for FillDepressions {
         //         if zout_n == background_val {
         //             zin_n = input[(row_n, col_n)];
         //             if zin_n != nodata {
-        //                 if zin_n < (zout + small_num) { zin_n = zout + small_num; } // We're in a depression. Raise the elevation.
-        //                 output[(row_n, col_n)] = zin_n;
-        //                 minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+        //                 if zin_n < (zout + small_num) {
+        //                     // We're in a depression. Raise the elevation.
+        //                     zout_n = zout + small_num;
+        //                     output[(row_n, col_n)] = zout_n;
+        //                     /*
+        //                     Cells that are in the depression don't need to be discovered by
+        //                     the more expensive priority-flood operation. Instead, perform
+        //                     an efficient region-growing operation to find cells connected 
+        //                     to this cell that have elevations in the input DEM that are 
+        //                     less than the adjusted zout_n.
+        //                     */
+        //                     queue.push_back((row_n, col_n));
+        //                     while !queue.is_empty() {
+        //                         let cell = queue.pop_front().unwrap();
+        //                         row = cell.0;
+        //                         col = cell.1;
+        //                         zout = output[(row, col)];
+        //                         for n2 in 0..8 {
+        //                             row_n = row + dy[n2];
+        //                             col_n = col + dx[n2];
+        //                             zout_n = output[(row_n, col_n)];
+        //                             if zout_n == background_val {
+        //                                 zin_n = input[(row_n, col_n)];
+        //                                 if zin_n != nodata {
+        //                                     if zin_n < (zout + small_num) { 
+        //                                         zout_n = zout + small_num;
+        //                                         output[(row_n, col_n)] = zout_n;
+        //                                         queue.push_back((row_n, col_n));
+        //                                     } else {
+        //                                         minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+        //                                         output[(row_n, col_n)] = zin_n;
+        //                                     }
+        //                                 } else {
+        //                                     // Interior nodata cells are still treated as nodata and are not filled.
+        //                                     output[(row_n, col_n)] = nodata;
+        //                                     num_solved_cells += 1;
+        //                                 }
+        //                             }
+        //                         }
+        //                         if verbose {
+        //                             num_solved_cells += 1;
+        //                             progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+        //                             if progress != old_progress {
+        //                                 println!("Progress: {}%", progress);
+        //                                 old_progress = progress;
+        //                             }
+        //                         }
+        //                     }
+        //                 } else {
+        //                     minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+        //                     output[(row_n, col_n)] = zin_n;
+        //                 }
         //             } else {
         //                 // Interior nodata cells are still treated as nodata and are not filled.
         //                 output[(row_n, col_n)] = nodata;
@@ -328,11 +334,144 @@ impl WhiteboxTool for FillDepressions {
         //         }
         //     }
         // }
+
+
+        /* This was an experiement with an approach that reduced the reliance on the priority queue.
+        It works well but is slightly less efficient that the traditional approach. */
+
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
+        // let background_val = (i32::max_value() - 1) as f64;
+        // output.reinitialize_values(background_val);
+
+        // /*
+        // Find the data edges. This is complicated by the fact that DEMs frequently
+        // have nodata edges, whereby the DEM does not occupy the full extent of 
+        // the raster. One approach to doing this would be simply to scan the
+        // raster, looking for cells that neighbour nodata values. However, this
+        // assumes that there are no interior nodata holes in the dataset. Instead,
+        // the approach used here is to perform a region-growing operation, looking
+        // for nodata values along the raster's edges.
+        // */
+
+        // //let mut stack = Vec::with_capacity((rows * columns) as usize);
+        // let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+        // for row in 0..rows {
+        //     /*
+        //     Note that this is only possible because Whitebox rasters
+        //     allow you to address cells beyond the raster extent but
+        //     return the nodata value for these regions.
+        //     */
+        //     queue.push_back((row, -1));
+        //     queue.push_back((row, columns));
+        // }
+
+        // for col in 0..columns {
+        //     queue.push_back((-1, col));
+        //     queue.push_back((rows, col));
+        // }
+
+        // /* 
+        // minheap is the priority queue. Note that I've tested using integer-based
+        // priority values, by multiplying the elevations, but this didn't result
+        // in a significant performance gain over the use of f64s.
+        // */
+        // let mut minheap = BinaryHeap::with_capacity((rows * columns) as usize);
+        // let mut num_solved_cells = 0;
+        // let mut zin_n: f64; // value of neighbour of row, col in input raster
+        // let mut zout: f64; // value of row, col in output raster
+        // let mut zout_n: f64; // value of neighbour of row, col in output raster
+        // let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+        // let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        // let (mut row, mut col): (isize, isize);
+        // let (mut row_n, mut col_n): (isize, isize);
+        // while !queue.is_empty() {
+        //     let cell = queue.pop_front().unwrap();
+        //     row = cell.0;
+        //     col = cell.1;
+        //     for n in 0..8 {
+        //         row_n = row + dy[n];
+        //         col_n = col + dx[n];
+        //         zin_n = input[(row_n, col_n)];
+        //         zout_n = output[(row_n, col_n)];
+        //         if zout_n == background_val {
+        //             if zin_n == nodata {
+        //                 output[(row_n, col_n)] = nodata;
+        //                 queue.push_back((row_n, col_n));
+        //             } else {
+        //                 output[(row_n, col_n)] = zin_n;
+        //                 // Push it onto the priority queue for the priority flood operation
+        //                 minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+        //             }
+        //             num_solved_cells += 1;
+        //         }
+        //     }
+
+        //     if verbose {
+        //         progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("progress: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
+
+        // // Perform the priority flood operation.
+        // // let initial_heap_size = minheap.len();
+        // // num_solved_cells = 0;
+        // while !minheap.is_empty() {
+        //     let cell = minheap.pop().unwrap();
+        //     queue.push_back((cell.row, cell.column));
+        //     while !queue.is_empty() {
+        //         let cell = queue.pop_front().unwrap();
+        //         row = cell.0;
+        //         col = cell.1;
+        //         zout = output[(row, col)];
+        //         for n in 0..8 {
+        //             row_n = row + dy[n];
+        //             col_n = col + dx[n];
+        //             zout_n = output[(row_n, col_n)];
+        //             zin_n = input[(row_n, col_n)];
+        //             if zout_n > zin_n {
+        //                 if zin_n != nodata {
+        //                     if zin_n > zout + small_num {
+        //                         output[(row_n, col_n)] = zin_n;
+        //                         queue.push_back((row_n, col_n));
+        //                         num_solved_cells += 1;
+        //                     } else if zout + small_num < zout_n {
+        //                         output[(row_n, col_n)] = zout + small_num;
+        //                         queue.push_back((row_n, col_n));
+        //                     }
+        //                 } else {
+        //                     output[(row_n, col_n)] = nodata;
+        //                     queue.push_back((row_n, col_n));
+        //                     num_solved_cells += 1;
+        //                 }
+        //             }
+        //         }
+
+        //         if verbose {
+        //             progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+        //             if progress != old_progress {
+        //                 println!("Progress: {}%", progress);
+        //                 old_progress = progress;
+        //             }
+        //         }
+        //     }
+        // }
+
+        // if verbose { println!("Progress: 100%"); }
+
         
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.display_min = input.configs.display_min;
+        output.configs.display_max = input.configs.display_max;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Fix flats: {}", fix_flats));
+        if fix_flats {
+            output.add_metadata_entry(format!("Flat increment value: {}", small_num));
+        }
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };

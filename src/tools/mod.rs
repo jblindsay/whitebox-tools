@@ -36,6 +36,7 @@ impl ToolManager {
 
         // hydro_analysis
         tool_names.push("AverageUpslopeFlowpathLength".to_string());
+        tool_names.push("Basins".to_string());
         tool_names.push("BreachDepressions".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
@@ -154,6 +155,7 @@ impl ToolManager {
 
             // hydro_analysis
             "averageupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new())),
+            "basins" => Some(Box::new(tools::hydro_analysis::Basins::new())),
             "breachdepressions" => Some(Box::new(tools::hydro_analysis::BreachDepressions::new())),
             "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),

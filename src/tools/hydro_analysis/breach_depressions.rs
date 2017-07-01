@@ -397,6 +397,8 @@ impl WhiteboxTool for BreachDepressions {
         
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.display_min = input.configs.display_min;
+        output.configs.display_max = input.configs.display_max;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
