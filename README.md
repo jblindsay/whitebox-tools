@@ -103,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 94 tools:
+The library currently contains the following 95 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -135,6 +135,7 @@ The library currently contains the following 94 tools:
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 - ***Sink***: Identifies the depressions in a DEM, giving each feature a unique identifier.
 - ***SnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
+- ***Subbasins***: Identifies the catchments, or sub-basin, draining to each link in a stream network.
 - ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 **Image Analysis**

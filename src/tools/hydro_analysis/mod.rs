@@ -13,6 +13,7 @@ mod max_upslope_flowpath;
 mod num_inflowing_neighbours;
 mod sink;
 mod snap_pour_points;
+mod subbasins;
 mod watershed;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -30,4 +31,5 @@ pub use self::max_upslope_flowpath::MaxUpslopeFlowpathLength;
 pub use self::num_inflowing_neighbours::NumInflowingNeighbours;
 pub use self::sink::Sink;
 pub use self::snap_pour_points::SnapPourPoints;
+pub use self::subbasins::Subbasins;
 pub use self::watershed::Watershed;

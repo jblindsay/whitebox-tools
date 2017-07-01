@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 28, 2017
+Last Modified: June 28, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
