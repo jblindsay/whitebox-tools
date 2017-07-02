@@ -2,7 +2,7 @@ pub mod gis_analysis;
 pub mod hydro_analysis;
 pub mod image_analysis;
 pub mod lidar_analysis;
-pub mod statistical_analysis;
+pub mod math_stat_analysis;
 pub mod stream_network_analysis;
 pub mod terrain_analysis;
 
@@ -91,6 +91,10 @@ impl ToolManager {
         tool_names.push("NormalVectors".to_string());
 
         // statistical_analysis
+        tool_names.push("EqualTo".to_string());
+        tool_names.push("GreaterThan".to_string());
+        tool_names.push("LessThan".to_string());
+        tool_names.push("NotEqualTo".to_string());
         tool_names.push("Quantiles".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -212,8 +216,12 @@ impl ToolManager {
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // statistical_analysis
-            "quantiles" => Some(Box::new(tools::statistical_analysis::Quantiles::new())),
-            "zscores" => Some(Box::new(tools::statistical_analysis::ZScores::new())),
+            "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
+            "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
+            "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
+            "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
+            "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 
             // stream_network_analysis
             "extractstreams" => Some(Box::new(tools::stream_network_analysis::ExtractStreams::new())),

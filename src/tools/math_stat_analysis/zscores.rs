@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: July 1, 2017
+Last Modified: July 1, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -24,7 +31,7 @@ impl ZScores {
         
         let description = "Standardizes the values in an input raster by converting to z-scores.".to_string();
         
-        let mut parameters = "-i, --input     Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --input     Input raster file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();

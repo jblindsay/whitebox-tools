@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: July 1, 2017
+Last Modified: July 1, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -21,7 +28,7 @@ impl Quantiles {
         
         let description = "Tranforms raster values into quantiles.".to_string();
         
-        let mut parameters = "-i, --input      Input raster DEM file.\n".to_owned();
+        let mut parameters = "-i, --input      Input raster file.\n".to_owned();
         parameters.push_str("-o, --output     Output raster file.\n");
         parameters.push_str("--num_quantiles  Number of quantiles (default 4)");
         let sep: String = path::MAIN_SEPARATOR.to_string();
