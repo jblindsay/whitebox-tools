@@ -103,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 103 tools:
+The library currently contains the following 106 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -215,12 +215,15 @@ The library currently contains the following 103 tools:
 - ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
 - ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
 - ***RelativeAspect***: Calculates relative aspect (relative to a user-specified direction) from an input DEM.
+- ***RelativeStreamPowerIndex***: Calculates the relative stream power index.
 - ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
 - ***RuggednessIndex***: Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 - ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).
+- ***SedimentTransportIndex***: Calculates the sediment transport index.
 - ***Slope***: Calculates a slope raster from an input DEM.
 - ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
 - ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
+- ***WetnessIndex***: Calculates the topographic wetness index, Ln(A / tan(Beta)).
 
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
@@ -257,11 +260,11 @@ The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
 
 ### Do I need Whitebox GAT to use WhiteboxTools?
 
-No you do not. You can call the tools contained within *WhiteboxTools* without the *Whitebox GAT* user interface at all. In fact, you can interact with the tools using Python scripting if so desired. See [Usage](#usage) for further details.
+No you do not. You can call the tools contained within *WhiteboxTools* completely independent from the *Whitebox GAT* user interface. In fact, you can interact with the tools using Python scripting or directly, using a terminal application (command prompt). See [Usage](#usage) for further details.
 
 ### Why is WhiteboxTools programmed in Rust?
 
-I spent a very long time evaluating potential programming language for future development efforts for the *Whitebox GAT* project. My most important criteria for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many Whitebox users. The language should be fast and productive--Java is already quite fast, but if I am going to change development languages, I would like a performance boost. Furthermore, given that many, though not all, of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offerred easy and safe concurrent programming. Although many would consider C/C++ for this work, I was looking for a modern and safe language. Fortunately, we are living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. [See [*GoSpatial*](https://github.com/jblindsay/go-spatial) and [*lidario*](https://github.com/jblindsay/lidario).]
+I spent a long time evaluating potential programming language for future development efforts for the *Whitebox GAT* project. My most important criteria for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many Whitebox users. The language should be fast and productive--Java is already quite fast, but if I am going to change development languages, I would like a performance boost. Furthermore, given that many, though not all, of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offerred easy and safe concurrent programming. Although many would consider C/C++ for this work, I was looking for a modern and safe language. Fortunately, we are living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. [See [*GoSpatial*](https://github.com/jblindsay/go-spatial) and [*lidario*](https://github.com/jblindsay/lidario).]
 
 Each of the languages I examined has its own advantages of disadvantages, so why Rust? It's a combination of factors that made it a compelling option for this project. Compared with many on the list, Rust is a mature language with a vibrant user community. Like C/C++, it's a high-performance and low-level language that allows for complete control of the system. However, Rust is also one of the safest languages, meaning that I can be confident that *WhiteboxTools* will not contain common bugs, such as memory use-after-release, memory leaks and race conditions within concurrent code. Importantly, and quite uniquely, this safty is achieved in the Rust language without the use of a garbage collector (automatic memory management). Garbage collectors can be great, but they do generally come with a certain efficiency trade-off that Rust does not have. The other main advantage of Rust's approach to memory management is that it allows for  a level of interaction with scripting languages (e.g. Python) that is quite difficult to do in garbage collected languages. Although **WhiteboxTools** is currently set up to use an automation approach to interacting with Python code that calls it, I like the fact that I have the option to create a *WhiteboxTools* shared library. 
 

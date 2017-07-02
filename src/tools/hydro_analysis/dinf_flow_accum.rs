@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 24, 2017
-Last Modified: June 24, 2017
+Last Modified: July 2, 2017
 License: MIT
 */
 extern crate time;
@@ -33,7 +33,7 @@ impl DInfFlowAccumulation {
         
         let description = "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "-dem            Input raster DEM file.".to_owned();
+        let mut parameters = "--dem           Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
         parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
@@ -47,8 +47,8 @@ impl DInfFlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
+>>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
         DInfFlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }

@@ -129,12 +129,15 @@ impl ToolManager {
         tool_names.push("PlanCurvature".to_string());
         tool_names.push("ProfileCurvature".to_string());
         tool_names.push("RelativeAspect".to_string());
+        tool_names.push("RelativeStreamPowerIndex".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
+        tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("TangentialCurvature".to_string());
         tool_names.push("TotalCurvature".to_string());
+        tool_names.push("WetnessIndex".to_string());
 
         tool_names.sort();
         
@@ -258,12 +261,15 @@ impl ToolManager {
             "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
             "relativeaspect" => Some(Box::new(tools::terrain_analysis::RelativeAspect::new())),
+            "relativestreampowerindex" => Some(Box::new(tools::terrain_analysis::RelativeStreamPowerIndex::new())),
             "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
             "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
-            "ruggednessindex" => Some(Box::new(tools::terrain_analysis::RuggednessIndex::new())),
+            "ruggednessindex" => Some(Box::new(tools::terrain_analysis::RuggednessIndex::new())),  
+            "sedimenttransportindex" => Some(Box::new(tools::terrain_analysis::SedimentTransportIndex::new())),
             "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
             "tangentialcurvature" => Some(Box::new(tools::terrain_analysis::TangentialCurvature::new())),
             "totalcurvature" => Some(Box::new(tools::terrain_analysis::TotalCurvature::new())),
+            "wetnessindex" => Some(Box::new(tools::terrain_analysis::WetnessIndex::new())),
 
             _ => None,
         }

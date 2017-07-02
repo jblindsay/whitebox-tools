@@ -18,22 +18,24 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Or {
+pub struct SedimentTransportIndex {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Or {
-    pub fn new() -> Or { // public constructor
-        let name = "Or".to_string();
+impl SedimentTransportIndex {
+    pub fn new() -> SedimentTransportIndex { // public constructor
+        let name = "SedimentTransportIndex".to_string();
         
-        let description = "Performs a logical OR operator on two Boolean raster images.".to_string();
+        let description = "Calculates the sediment transport index.".to_string();
         
-        let mut parameters = "--input1       Input raster file.".to_owned();
-        parameters.push_str("--input2       Input raster file.\n");
-        parameters.push_str("-o, --output   Output raster file.\n");
+        let mut parameters = "--sca             Input specific contributing area (SCA) raster file.".to_owned();
+        parameters.push_str("--slope           Input slope raster file.\n");
+        parameters.push_str("-o, --output      Output raster file.\n");
+        parameters.push_str("--sca_exponent    SCA exponent value (default is 0.4).\n");
+        parameters.push_str("--slope_exponent  Slope exponent value (default is 1.3).\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -42,13 +44,13 @@ impl Or {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 --slope_exponent=1.0", short_exe, name).replace("*", &sep);
     
-        Or { name: name, description: description, parameters: parameters, example_usage: usage }
+        SedimentTransportIndex { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Or {
+impl WhiteboxTool for SedimentTransportIndex {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -66,9 +68,11 @@ impl WhiteboxTool for Or {
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
-        let mut input1 = String::new();
-        let mut input2 = String::new();
+        let mut sca_file = String::new();
+        let mut slope_file = String::new();
         let mut output_file = String::new();
+        let mut sca_exponent = 0.4;
+        let mut slope_exponent = 1.3;
          
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -83,23 +87,35 @@ impl WhiteboxTool for Or {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i1" || vec[0].to_lowercase() == "--input1" {
+            if vec[0].to_lowercase() == "-sca" || vec[0].to_lowercase() == "--sca" {
                 if keyval {
-                    input1 = vec[1].to_string();
+                    sca_file = vec[1].to_string();
                 } else {
-                    input1 = args[i+1].to_string();
+                    sca_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--input2" {
+            } else if vec[0].to_lowercase() == "-slope" || vec[0].to_lowercase() == "--slope" {
                 if keyval {
-                    input2 = vec[1].to_string();
+                    slope_file = vec[1].to_string();
                 } else {
-                    input2 = args[i+1].to_string();
+                    slope_file = args[i+1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i+1].to_string();
+                }
+            } else if vec[0].to_lowercase() == "-sca_exponent" || vec[0].to_lowercase() == "--sca_exponent" {
+                if keyval {
+                    sca_exponent = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    sca_exponent = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-slope_exponent" || vec[0].to_lowercase() == "--slope_exponent" {
+                if keyval {
+                    slope_exponent = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    slope_exponent = args[i+1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -118,26 +134,26 @@ impl WhiteboxTool for Or {
         if !output_file.contains(&sep) {
             output_file = format!("{}{}", working_directory, output_file);
         }
-        if !input1.contains(&sep) {
-            input1 = format!("{}{}", working_directory, input1);
+        if !sca_file.contains(&sep) {
+            sca_file = format!("{}{}", working_directory, sca_file);
         }
-        if !input2.contains(&sep) {
-            input2 = format!("{}{}", working_directory, input2);
+        if !slope_file.contains(&sep) {
+            slope_file = format!("{}{}", working_directory, slope_file);
         }
 
 
         if verbose { println!("Reading data...") };
-        let in1 = Arc::new(Raster::new(&input1, "r")?);
-        let in2 = Arc::new(Raster::new(&input2, "r")?);
+        let sca = Arc::new(Raster::new(&sca_file, "r")?);
+        let slope = Arc::new(Raster::new(&slope_file, "r")?);
 
         let start = time::now();
-        let rows = in1.configs.rows as isize;
-        let columns = in1.configs.columns as isize;
-        let nodata1 = in1.configs.nodata;
-        let nodata2 = in2.configs.nodata;
+        let rows = sca.configs.rows as isize;
+        let columns = sca.configs.columns as isize;
+        let sca_nodata = sca.configs.nodata;
+        let slope_nodata = slope.configs.nodata;
 
         // make sure the input files have the same size
-        if in1.configs.rows != in2.configs.rows || in1.configs.columns != in2.configs.columns {
+        if sca.configs.rows != slope.configs.rows || sca.configs.columns != slope.configs.columns {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "The input files must have the same number of rows and columns and spatial extent."));
         }
@@ -150,8 +166,8 @@ impl WhiteboxTool for Or {
         let (tx, rx) = mpsc::channel();
         let mut id = 0;
         while ending_row < rows {
-            let in1 = in1.clone();
-            let in2 = in2.clone();
+            let sca = sca.clone();
+            let slope = slope.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {
@@ -160,19 +176,16 @@ impl WhiteboxTool for Or {
             id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
-                let mut z1: f64;
-                let mut z2: f64;
+                let mut sca_val: f64;
+                let mut slope_val: f64;
                 for row in starting_row..ending_row {
-                    let mut data: Vec<f64> = vec![nodata1; columns as usize];
+                    let mut data: Vec<f64> = vec![sca_nodata; columns as usize];
                     for col in 0..columns {
-                        z1 = in1[(row, col)];
-                        z2 = in2[(row, col)];
-                        if z1 != nodata1 && z2 != nodata2 {
-                            if z1 != 0f64 || z2 != 0f64 {
-                                data[col as usize] = 1f64;
-                            } else {
-                                data[col as usize] = 0f64;
-                            }
+                        sca_val = sca[(row, col)];
+                        slope_val = slope[(row, col)];
+                        if sca_val != sca_nodata && slope_val != slope_nodata {
+                            data[col as usize] = (sca_exponent + 1f64) * (sca_val / 22.13).powf(sca_exponent) 
+                                * (((slope_val.to_radians()) / 0.0896).sin()).powf(slope_exponent);
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -180,7 +193,7 @@ impl WhiteboxTool for Or {
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &in1);
+        let mut output = Raster::initialize_using_file(&output_file, &sca);
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
@@ -197,11 +210,13 @@ impl WhiteboxTool for Or {
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.data_type = DataType::F32;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output.configs.palette = "grey.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        output.clip_display_min_max(1.0);
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-        output.add_metadata_entry(format!("Input1: {}", input1));
-        output.add_metadata_entry(format!("Input2: {}", input2));
+        output.add_metadata_entry(format!("SCA raster: {}", sca_file));
+        output.add_metadata_entry(format!("Slope raster: {}", slope_file));
+        output.add_metadata_entry(format!("SCA exponent: {}", sca_exponent));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };
@@ -209,6 +224,11 @@ impl WhiteboxTool for Or {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
+
+        if sca.configs.maximum < 100.0 {
+            println!("WARNING: The input SCA data layer contained only low values. It is likely that it has been
+            log-transformed. This tool requires non-transformed SCA as an input.")
+        }
 
         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         

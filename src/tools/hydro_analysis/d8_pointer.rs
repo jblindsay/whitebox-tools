@@ -35,7 +35,7 @@ impl D8Pointer {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
         D8Pointer { name: name, description: description, parameters: parameters, example_usage: usage }
     }

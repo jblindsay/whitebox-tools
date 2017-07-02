@@ -25,7 +25,7 @@ impl RelativeTopographicPosition {
         
         let description = "Calculates the relative topographic position index from a DEM.".to_string();
         
-        let mut parameters = "-i, --input   Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --dem     Input raster DEM file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
@@ -38,7 +38,7 @@ impl RelativeTopographicPosition {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
         RelativeTopographicPosition { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -79,7 +79,7 @@ impl WhiteboxTool for RelativeTopographicPosition {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

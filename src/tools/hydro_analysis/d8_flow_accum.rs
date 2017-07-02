@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 26, 2017
+Last Modified: July 2, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -38,8 +45,8 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" -dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
+>>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
     
         D8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
