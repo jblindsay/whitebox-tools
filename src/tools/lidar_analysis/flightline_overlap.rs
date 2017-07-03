@@ -1,3 +1,12 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 19, 2017
+Last Modified: July 2, 2017
+License: MIT
+
+NOTES: This tool needs to be parallelized.
+*/
 extern crate time;
 
 use std::env;

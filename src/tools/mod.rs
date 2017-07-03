@@ -87,6 +87,7 @@ impl ToolManager {
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
         tool_names.push("LidarHillshade".to_string());
+        tool_names.push("LidarIdwInterpolation".to_string());
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
         tool_names.push("LidarTile".to_string());
@@ -222,6 +223,7 @@ impl ToolManager {
             "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
             "lidargroundpointfilter" => Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new())),
             "lidarhillshade" => Some(Box::new(tools::lidar_analysis::LidarHillshade::new())),
+            "lidaridwinterpolation" => Some(Box::new(tools::lidar_analysis::LidarIdwInterpolation::new())),
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),

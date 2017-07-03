@@ -193,17 +193,34 @@ impl PointData {
         self.bit_field.number_of_returns()
     }
 
+    /// Returns 'true' if the the point is the only return.
+    pub fn is_only_return(&self) -> bool {
+        self.number_of_returns() == 1
+    }
+
+    /// Returns 'true' if the the point is one of multiple returns.
+    pub fn is_multiple_return(&self) -> bool {
+        self.number_of_returns() > 1
+    }
+
+    /// Returns 'true' if the the point is either a first return or the only return.
+    pub fn is_early_return(&self) -> bool {
+        (self.return_number() == 1) | self.is_only_return()
+    }
+    
     /// Returns 'true' if the the point is either a last return or the only return.
     pub fn is_late_return(&self) -> bool {
         self.return_number() == self.number_of_returns()
     }
 
+    /// Returns 'true' if the the point is a last return of multiple returns.
+    pub fn is_last_return(&self) -> bool {
+        (self.return_number() == self.number_of_returns()) & self.is_multiple_return()
+    }
+
     /// Returns 'true' if the the point is a first return (i.e. 1 of multple returns).
     pub fn is_first_return(&self) -> bool {
-        if self.return_number() == 1 && self.number_of_returns() > 1 {
-            return true;
-        }
-        false
+        (self.return_number() == 1) & self.is_multiple_return()
     }
 
     /// Returns 'true' if the the point is an intermediate return (i.e. neither first nor last returns).

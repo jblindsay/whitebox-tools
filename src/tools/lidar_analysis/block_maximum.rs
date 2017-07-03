@@ -33,10 +33,10 @@ impl BlockMaximum {
         
         let description = "Creates a block-maximum raster from an input LAS file.".to_string();
         
-        let mut parameters = "-i, --input    Input LAS file.".to_owned();
-        parameters.push_str("-o, --output   Output raster file.");
-        parameters.push_str("--resolution   Output raster's grid resolution.");
-        parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files)");
+        let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
+        parameters.push_str("-o, --output   Output raster file.\n");
+        parameters.push_str("--resolution   Output raster's grid resolution.\n");
+        parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -133,11 +133,6 @@ impl WhiteboxTool for BlockMaximum {
             Ok(lf) => lf,
             Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
         };
-
-        // Make sure that the input LAS file have GPS time data?
-        if input.header.point_format == 0u8 || input.header.point_format == 2u8 {
-            panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
-        }
 
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
