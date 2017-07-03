@@ -81,6 +81,8 @@ impl ToolManager {
         tool_names.push("TotalFilter".to_string());
 
         // lidar_analysis
+        tool_names.push("BlockMaximum".to_string());
+        tool_names.push("BlockMinimum".to_string());
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
@@ -214,6 +216,8 @@ impl ToolManager {
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
 
             // lidar_analysis
+            "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),
+            "blockminimum" => Some(Box::new(tools::lidar_analysis::BlockMinimum::new())),
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
             "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
             "lidargroundpointfilter" => Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new())),
