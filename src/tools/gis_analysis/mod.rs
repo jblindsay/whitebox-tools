@@ -2,6 +2,8 @@
 mod average_overlay;
 mod buffer_raster;
 mod clump;
+mod cost_distance;
+mod cost_pathway;
 mod euclidean_allocation;
 mod euclidean_distance;
 mod highest_pos;
@@ -17,6 +19,8 @@ mod weighted_sum;
 pub use self::average_overlay::AverageOverlay;
 pub use self::buffer_raster::BufferRaster;
 pub use self::clump::Clump;
+pub use self::cost_distance::CostDistance;
+pub use self::cost_pathway::CostPathway;
 pub use self::euclidean_allocation::EuclideanAllocation;
 pub use self::euclidean_distance::EuclideanDistance;
 pub use self::highest_pos::HighestPosition;

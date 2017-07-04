@@ -23,6 +23,8 @@ impl ToolManager {
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
         tool_names.push("Clump".to_string());
+        tool_names.push("CostDistance".to_string());
+        tool_names.push("CostPathway".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("HighestPosition".to_string());
@@ -159,6 +161,8 @@ impl ToolManager {
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
+            "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
+            "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
             "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),

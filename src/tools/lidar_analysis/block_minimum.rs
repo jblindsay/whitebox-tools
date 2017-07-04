@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: July 2, 2017
+Last Modified: July 4, 2017
 License: MIT
 */
 extern crate time;
@@ -203,11 +203,6 @@ impl WhiteboxTool for BlockMinimum {
             row = data.0;
             col = data.1;
             z = data.2;
-            // if output.get_value(row, col) == nodata {
-            //     output.set_value(row, col, z);
-            // } else if output.get_value(row, col) > z {
-            //     output.set_value(row, col, z);
-            // }
             if output[(row, col)] == nodata || z < output[(row, col)] {
                 output.set_value(row, col, z);
             }
@@ -220,8 +215,6 @@ impl WhiteboxTool for BlockMinimum {
             }
         }
 
-        output.configs.nodata = nodata;
-        
         let end = time::now();
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));

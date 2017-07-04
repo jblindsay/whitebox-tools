@@ -406,8 +406,14 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                 index_n = ret[j].0;
                                 zn = interp_vals[index_n]; //input[index_n].z;
                                 dist = ret[j].1;
-                                val += zn / dist.powf(weight);
-                                sum_weights += 1.0 / dist.powf(weight);
+                                if dist > 0.0 {
+                                    val += zn / dist.powf(weight);
+                                    sum_weights += 1.0 / dist.powf(weight);
+                                } else {
+                                    data[col as usize] = zn;
+                                    sum_weights = 0.0;
+                                    break;
+                                }
                             }
                             if sum_weights > 0.0 {
                                 data[col as usize] = val / sum_weights;
