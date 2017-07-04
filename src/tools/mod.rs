@@ -23,6 +23,7 @@ impl ToolManager {
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
         tool_names.push("Clump".to_string());
+        tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
         tool_names.push("CostPathway".to_string());
         tool_names.push("EuclideanAllocation".to_string());
@@ -52,6 +53,7 @@ impl ToolManager {
         tool_names.push("Sink".to_string());
         tool_names.push("SnapPourPoints".to_string());
         tool_names.push("Subbasins".to_string());
+        tool_names.push("TraceDownslopeFlowpaths".to_string());
         tool_names.push("Watershed".to_string());
 
         // image_analysis
@@ -161,6 +163,7 @@ impl ToolManager {
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
+            "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
             "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
@@ -190,6 +193,7 @@ impl ToolManager {
             "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
             "subbasins" => Some(Box::new(tools::hydro_analysis::Subbasins::new())),
+            "tracedownslopeflowpaths" => Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new())),
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // image_analysis

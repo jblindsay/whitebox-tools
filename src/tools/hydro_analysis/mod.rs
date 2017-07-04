@@ -14,6 +14,7 @@ mod num_inflowing_neighbours;
 mod sink;
 mod snap_pour_points;
 mod subbasins;
+mod trace_downslope_flowpaths;
 mod watershed;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -32,4 +33,5 @@ pub use self::num_inflowing_neighbours::NumInflowingNeighbours;
 pub use self::sink::Sink;
 pub use self::snap_pour_points::SnapPourPoints;
 pub use self::subbasins::Subbasins;
+pub use self::trace_downslope_flowpaths::TraceDownslopeFlowpaths;
 pub use self::watershed::Watershed;

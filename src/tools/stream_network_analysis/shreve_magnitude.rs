@@ -22,11 +22,11 @@ impl ShreveStreamMagnitude {
         
         let description = "Assigns the Shreve stream magnitude to each link in a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams       Input streams raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
+        let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
+        parameters.push_str("--streams          Input streams raster file.\n");
+        parameters.push_str("-o, --output       Output raster file.\n");
+        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        parameters.push_str("--zero_background  Optional flag indicating whether the background value of zero should be used.\n");
        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
