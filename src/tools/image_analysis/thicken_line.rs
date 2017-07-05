@@ -1,12 +1,19 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: July 4, 2017
+Last Modified: July 4, 2017
+License: MIT
+
+NOTE: This algorithm can't easily be parallelized because the output raster must be read 
+and written to during the same loop.
+*/
 extern crate time;
 extern crate num_cpus;
 
 use std::env;
 use std::path;
 use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
@@ -109,7 +116,7 @@ impl WhiteboxTool for ThickenRasterLine {
 
         if verbose { println!("Reading data...") };
 
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+        let input = Raster::new(&input_file, "r")?;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -117,55 +124,39 @@ impl WhiteboxTool for ThickenRasterLine {
         let start = time::now();
         
         let mut output = Raster::initialize_using_file(&output_file, &input);
-
-        let mut starting_row;
-        let mut ending_row = 0;
-        let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
-        let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
-            let input = input.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
-            let tx1 = tx.clone();
-            thread::spawn(move || {
-                let dx = [ 1, 1, -1, -1 ];
-                let dy = [ -1, 1, 1, -1 ];
-                let mut z: f64;
-                for row in starting_row..ending_row {
-                    let mut data = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z == nodata || z == 0.0 {
-                            for n in 0..4 {
-                                z = input[(row + dy[n], col + dx[n])];
-                                if z > 0.0 {
-                                    data[col as usize] = z;
-                                    break;
-                                }
-                            }
-                        } else {
-                            data[col as usize] = z;
-                        }
-                    }
-                    tx1.send((row, data)).unwrap();
-                }
-            });
+        println!("Initializing the output raster...");
+        match output.set_data_from_raster(&input) {
+            Ok(_) => (), // do nothings
+            Err(err) => return Err(err),
         }
 
+        let n1x = [ 0, 1, 0, -1 ];
+        let n1y = [ -1, 0, 1, 0 ];
+        let n2x = [ 1, 1, -1, -1 ];
+        let n2y = [ -1, 1, 1, -1 ];
+        let n3x = [ 1, 0, -1, 0 ];
+        let n3y = [ 0, 1, 0, -1 ];
+        let mut z: f64;
+        let (mut zn1, mut zn2, mut zn3): (f64, f64, f64);
         for row in 0..rows {
-            let data = rx.recv().unwrap();
-            output.set_row_data(data.0, data.1);
-            
+            for col in 0..columns {
+                z = input[(row, col)];
+                if z == nodata || z == 0.0 {
+                    for i in 0..4 {
+                        zn1 = output[(row + n1y[i], col + n1x[i])];
+                        zn2 = output[(row + n2y[i], col + n2x[i])];
+                        zn3 = output[(row + n3y[i], col + n3x[i])];
+                        if (zn1 > 0.0 && zn3 > 0.0) && (zn2 == nodata || zn2 == 0.0) {
+                            output[(row, col)] = zn1;
+                            break;
+                        }
+                    }
+                }
+            }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -173,7 +164,6 @@ impl WhiteboxTool for ThickenRasterLine {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "pointer.plt".to_string();
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));

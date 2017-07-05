@@ -13,6 +13,9 @@ mod max_abs_overlay;
 mod max_overlay;
 mod min_abs_overlay;
 mod min_overlay;
+mod percent_equal_to;
+mod percent_greater_than;
+mod percent_less_than;
 mod pick_from_list;
 mod weighted_sum;
 
@@ -31,5 +34,8 @@ pub use self::max_abs_overlay::MaxAbsoluteOverlay;
 pub use self::max_overlay::MaxOverlay;
 pub use self::min_abs_overlay::MinAbsoluteOverlay;
 pub use self::min_overlay::MinOverlay;
+pub use self::percent_equal_to::PercentEqualTo;
+pub use self::percent_greater_than::PercentGreaterThan;
+pub use self::percent_less_than::PercentLessThan;
 pub use self::pick_from_list::PickFromList;
 pub use self::weighted_sum::WeightedSum;

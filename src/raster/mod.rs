@@ -238,6 +238,26 @@ impl Raster {
         }
     }
 
+    pub fn get_row_data(&self, row: isize) -> Vec<f64> {
+        let mut values: Vec<f64> = vec![self.configs.nodata; self.configs.columns];
+        if row >= 0 && row < self.configs.rows as isize {
+            for column in 0..values.len() {
+                values[column] = self.data[row as usize * self.configs.columns + column];
+            }
+        }
+        values
+    }
+
+    pub fn set_data_from_raster(&mut self, other: &Raster)  -> Result<(), Error> {
+        if self.configs.rows != other.configs.rows || self.configs.columns != self.configs.columns {
+            return Err(Error::new(ErrorKind::Other, "Rasters must have the same dimensions and extent."));
+        }
+        for row in 0..self.configs.rows as isize {
+            self.set_row_data(row, other.get_row_data(row));
+        }
+        Ok(())
+    }
+
     pub fn reinitialize_values(&mut self, value: f64) {
         self.data = vec![value; self.configs.rows * self.configs.columns];
     }

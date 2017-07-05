@@ -34,6 +34,9 @@ impl ToolManager {
         tool_names.push("MaxOverlay".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinOverlay".to_string());
+        tool_names.push("PercentEqualTo".to_string());
+        tool_names.push("PercentGreaterThan".to_string());
+        tool_names.push("PercentLessThan".to_string());
         tool_names.push("PickFromList".to_string());
         tool_names.push("WeightedSum".to_string());
 
@@ -175,6 +178,9 @@ impl ToolManager {
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
+            "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
+            "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
+            "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 

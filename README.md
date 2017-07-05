@@ -103,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 115 tools:
+The library currently contains the following 118 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -120,6 +120,9 @@ The library currently contains the following 115 tools:
 - ***MaxOverlay***: Evaluates the maximum value for each grid cell from a stack of input rasters.
 - ***MinAbsoluteOverlay***: Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
+- ***PercentEqualTo***: Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
+- ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
+- ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 - ***PickFromList***: Outputs the value from a raster stack specified by a position raster.
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 

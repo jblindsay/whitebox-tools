@@ -185,8 +185,8 @@ impl WhiteboxTool for CostDistance {
         let cell_size_y = source.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         let dist = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [ 1, 1, 0, -1, -1, -1, 0, 1 ];
+        let dy = [ 0, 1, 1, 1, 0, -1, -1, -1 ];
         let backlink_dir = [ 32.0, 64.0, 128.0, 1.0, 2.0, 4.0, 8.0, 16.0 ];
         let mut did_something = true;
         let mut loop_num = 0;
