@@ -107,10 +107,14 @@ impl ToolManager {
         tool_names.push("NormalVectors".to_string());
 
         // mathematical and statistical_analysis
+        tool_names.push("AbsoluteValue".to_string());
         tool_names.push("Add".to_string());
         tool_names.push("And".to_string());
+        tool_names.push("Ceil".to_string());
         tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
+        tool_names.push("Exp".to_string());
+        tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
         tool_names.push("LessThan".to_string());
         tool_names.push("Multiply".to_string());
@@ -259,10 +263,14 @@ impl ToolManager {
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // mathematical and statistical_analysis
+            "absolutevalue" => Some(Box::new(tools::math_stat_analysis::AbsoluteValue::new())),
             "add" => Some(Box::new(tools::math_stat_analysis::Add::new())),
             "and" => Some(Box::new(tools::math_stat_analysis::And::new())),
+            "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
+            "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
+            "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),

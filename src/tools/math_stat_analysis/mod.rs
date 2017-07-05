@@ -1,8 +1,12 @@
 // private sub-module defined in other files
+mod abs;
 mod add;
 mod and;
+mod ceil;
 mod divide;
 mod equal_to;
+mod exp;
+mod floor;
 mod greater_than;
 mod less_than;
 mod multiply;
@@ -16,10 +20,14 @@ mod zscores;
 
 
 // exports identifiers from private sub-modules in the current module namespace
+pub use self::abs::AbsoluteValue;
 pub use self::add::Add;
 pub use self::and::And;
+pub use self::ceil::Ceil;
 pub use self::divide::Divide;
 pub use self::equal_to::EqualTo;
+pub use self::exp::Exp;
+pub use self::floor::Floor;
 pub use self::greater_than::GreaterThan;
 pub use self::less_than::LessThan;
 pub use self::multiply::Multiply;
