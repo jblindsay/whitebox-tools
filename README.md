@@ -151,6 +151,7 @@ The library currently contains the following 118 tools:
 - ***Closing***: A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 - ***ConservativeSmoothingFilter***: Performs a conservative smoothing filter on an image.
 - ***DiffOfGaussianFilter***: Performs a Difference of Gaussian (DoG) filter on an image.
+- ***DiversityFilter***: Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 - ***EmbossFilter***: Performs an emboss filter on an image, similar to a hillshade operation.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
 - ***HighPassFilter***: Performs a high-pass filter on an input image.

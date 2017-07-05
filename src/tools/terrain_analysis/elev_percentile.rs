@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: July 2, 2017
+Last Modified: July 5, 2017
 License: MIT
 */
 extern crate time;
@@ -38,6 +38,7 @@ impl ElevPercentile {
         parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
         parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
+        parameters.push_str("--sig_digits  Optional number of significant digits (default is 2).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -119,7 +120,7 @@ impl WhiteboxTool for ElevPercentile {
                 } else {
                     filter_size_y = args[i+1].to_string().parse::<usize>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-numdigits" || vec[0].to_lowercase() == "--numdigits" {
+            } else if vec[0].to_lowercase() == "-sig_digits" || vec[0].to_lowercase() == "--sig_digits" {
                 if keyval {
                     num_sig_digits = vec[1].to_string().parse::<i32>().unwrap();
                 } else {

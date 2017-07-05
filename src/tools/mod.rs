@@ -64,6 +64,7 @@ impl ToolManager {
         tool_names.push("BilateralFilter".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
+        tool_names.push("DiversityFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
         tool_names.push("GaussianFilter".to_string());
@@ -208,6 +209,7 @@ impl ToolManager {
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
             "conservativesmoothingfilter" => Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new())),
+            "diversityfilter" => Some(Box::new(tools::image_analysis::DiversityFilter::new())),
             "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
