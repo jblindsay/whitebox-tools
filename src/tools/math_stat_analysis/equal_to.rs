@@ -162,7 +162,6 @@ impl WhiteboxTool for EqualTo {
             let columns = in2.configs.columns as isize;
             let nodata2 = in2.configs.nodata;
 
-            // calculate the number of downslope cells
             let mut starting_row;
             let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;
@@ -233,7 +232,6 @@ impl WhiteboxTool for EqualTo {
             let columns = in1.configs.columns as isize;
             let nodata1 = in1.configs.nodata;
             
-            // calculate the number of downslope cells
             let mut starting_row;
             let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;
@@ -312,7 +310,6 @@ impl WhiteboxTool for EqualTo {
                                     "The input files must have the same number of rows and columns and spatial extent."));
             }
             
-            // calculate the number of downslope cells
             let mut starting_row;
             let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;

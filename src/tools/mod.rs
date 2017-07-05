@@ -105,14 +105,18 @@ impl ToolManager {
         tool_names.push("NormalVectors".to_string());
 
         // mathematical and statistical_analysis
+        tool_names.push("Add".to_string());
         tool_names.push("And".to_string());
+        tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
         tool_names.push("GreaterThan".to_string());
         tool_names.push("LessThan".to_string());
+        tool_names.push("Multiply".to_string());
         tool_names.push("Not".to_string());
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("Subtract".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -251,14 +255,18 @@ impl ToolManager {
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // mathematical and statistical_analysis
+            "add" => Some(Box::new(tools::math_stat_analysis::Add::new())),
             "and" => Some(Box::new(tools::math_stat_analysis::And::new())),
+            "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
+            "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 

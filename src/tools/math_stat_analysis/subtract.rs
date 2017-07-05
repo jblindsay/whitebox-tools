@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
-Last Modified: July 1, 2017
+Created: July 5, 2017
+Last Modified: July 5, 2017
 License: MIT
 */
 extern crate time;
@@ -18,23 +18,23 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct LessThan {
+pub struct Subtract {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl LessThan {
-    pub fn new() -> LessThan { // public constructor
-        let name = "LessThan".to_string();
+impl Subtract {
+    /// public constructor
+    pub fn new() -> Subtract { 
+        let name = "Subtract".to_string();
         
-        let description = "Performs a less-than comparison operation on two rasters or a raster and a constant value.".to_string();
+        let description = "Performs a differencing operation on two rasters or a raster and a constant value.".to_string();
         
         let mut parameters = "--input1       Input raster file or constant value.".to_owned();
         parameters.push_str("--input2       Input raster file or constant value.\n");
         parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("--incl_equals  Perform a less-than-or-equal-to operation.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -43,13 +43,13 @@ impl LessThan {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep' -o=output.dep --incl_equals", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        LessThan { name: name, description: description, parameters: parameters, example_usage: usage }
+        Subtract { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for LessThan {
+impl WhiteboxTool for Subtract {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -70,7 +70,6 @@ impl WhiteboxTool for LessThan {
         let mut input1 = String::new();
         let mut input2 = String::new();
         let mut output_file = String::new();
-        let mut equal_to = false;
          
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -103,8 +102,6 @@ impl WhiteboxTool for LessThan {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-incl_equals" || vec[0].to_lowercase() == "--incl_equals" {
-                equal_to = true;
             }
         }
 
@@ -155,7 +152,7 @@ impl WhiteboxTool for LessThan {
         if input1_is_constant && input2_is_constant {
             // return Err(Error::new(ErrorKind::InvalidInput,
             //                     "At least one of the inputs must be a raster."));
-            println!("{}", less_than(input1_constant, input2_constant, equal_to));
+            println!("{}", input1_constant - input2_constant);
             return Ok(());
         } else if input1_is_constant && !input2_is_constant {
             if verbose { println!("Reading data...") };
@@ -188,7 +185,7 @@ impl WhiteboxTool for LessThan {
                         for col in 0..columns {
                             z2 = in2[(row, col)];
                             if z2 != nodata2 {
-                                data[col as usize] = less_than(input1_constant, z2, equal_to);
+                                data[col as usize] = input1_constant - z2;
                             } else {
                                 data[col as usize] = nodata2;
                             }
@@ -258,7 +255,7 @@ impl WhiteboxTool for LessThan {
                         for col in 0..columns {
                             z1 = in1[(row, col)];
                             if z1 != nodata1 {
-                                data[col as usize] = less_than(z1, input2_constant, equal_to);
+                                data[col as usize] = z1 - input2_constant;
                             } else {
                                 data[col as usize] = nodata1;
                             }
@@ -339,7 +336,7 @@ impl WhiteboxTool for LessThan {
                             z1 = in1[(row, col)];
                             z2 = in2[(row, col)];
                             if z1 != nodata1 && z2 != nodata2 {
-                                data[col as usize] = less_than(z1, z2, equal_to);
+                                data[col as usize] = z1 - z2;
                             } else {
                                 data[col as usize] = nodata1;
                             }
@@ -383,17 +380,4 @@ impl WhiteboxTool for LessThan {
         
         Ok(())
     }
-}
-
-fn less_than(val1: f64, val2: f64, equal_to: bool) -> f64 {
-    if !equal_to {
-        if val1 < val2 {
-            return 1.0;
-        }
-        return 0.0;
-    }
-    if val1 <= val2 {
-        return 1.0;
-    }
-    0.0
 }
