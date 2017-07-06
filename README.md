@@ -103,7 +103,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 133 tools:
+The library currently contains the following 136 tools:
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
@@ -196,6 +196,9 @@ The library currently contains the following 133 tools:
 - ***AbsoluteValue***: Calculates the absolute value of every cell in a raster.
 - ***Add***: Performs an addition operation on two rasters or a raster and a constant value.
 - ***And***: Performs a logical AND operator on two Boolean raster images.
+- ***ArcCos***: Returns the inverse cosine (arccos) of each values in a raster.
+- ***ArcSin***: Returns the inverse sine (arcsin) of each values in a raster.
+- ***ArcTan***: Returns the inverse tangent (arctan) of each values in a raster.
 - ***Ceil***: Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 - ***Cos***: Returns the cosine (cos) of each values in a raster.
 - ***Divide***: Performs a division operation on two rasters or a raster and a constant value.

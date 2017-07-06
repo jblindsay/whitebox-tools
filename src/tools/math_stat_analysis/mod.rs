@@ -1,5 +1,8 @@
 // private sub-module defined in other files
 mod abs;
+mod arccos;
+mod arcsin;
+mod arctan;
 mod add;
 mod and;
 mod ceil;
@@ -26,6 +29,9 @@ mod zscores;
 pub use self::abs::AbsoluteValue;
 pub use self::add::Add;
 pub use self::and::And;
+pub use self::arccos::ArcCos;
+pub use self::arcsin::ArcSin;
+pub use self::arctan::ArcTan;
 pub use self::ceil::Ceil;
 pub use self::cos::Cos;
 pub use self::divide::Divide;

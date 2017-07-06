@@ -108,6 +108,9 @@ impl ToolManager {
 
         // mathematical and statistical_analysis
         tool_names.push("AbsoluteValue".to_string());
+        tool_names.push("ArcCos".to_string());
+        tool_names.push("ArcSin".to_string());
+        tool_names.push("ArcTan".to_string());
         tool_names.push("Add".to_string());
         tool_names.push("And".to_string());
         tool_names.push("Ceil".to_string());
@@ -269,6 +272,9 @@ impl ToolManager {
             "absolutevalue" => Some(Box::new(tools::math_stat_analysis::AbsoluteValue::new())),
             "add" => Some(Box::new(tools::math_stat_analysis::Add::new())),
             "and" => Some(Box::new(tools::math_stat_analysis::And::new())),
+            "arccos" => Some(Box::new(tools::math_stat_analysis::ArcCos::new())),
+            "arcsin" => Some(Box::new(tools::math_stat_analysis::ArcSin::new())),
+            "arctan" => Some(Box::new(tools::math_stat_analysis::ArcTan::new())),
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
             "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
