@@ -18,22 +18,25 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct ToDegrees {
+pub struct ReclassEqualInterval {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ToDegrees {
+impl ReclassEqualInterval {
     /// public constructor
-    pub fn new() -> ToDegrees { 
-        let name = "ToDegrees".to_string();
+    pub fn new() -> ReclassEqualInterval { 
+        let name = "ReclassEqualInterval".to_string();
         
-        let description = "Converts a raster from radians to degrees.".to_string();
+        let description = "Reclassifies the values in a raster image based on equal-ranges.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
+        parameters.push_str("--interval    Class interval size (default is 10.0).\n");
+        parameters.push_str("--start_val   Optional starting value (default is input minimum value).\n");
+        parameters.push_str("--end_val     Optional ending value (default is input maximum value).\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -42,13 +45,13 @@ impl ToDegrees {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --interval=10.0 --start_val=0.0", short_exe, name).replace("*", &sep);
     
-        ToDegrees { name: name, description: description, parameters: parameters, example_usage: usage }
+        ReclassEqualInterval { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for ToDegrees {
+impl WhiteboxTool for ReclassEqualInterval {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,6 +71,9 @@ impl WhiteboxTool for ToDegrees {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
+        let mut interval_size = 10.0;
+        let mut start_val = f64::NEG_INFINITY;
+        let mut end_val = f64::INFINITY;
          
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -93,6 +99,24 @@ impl WhiteboxTool for ToDegrees {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i+1].to_string();
+                }
+            } else if vec[0].to_lowercase() == "-interval" || vec[0].to_lowercase() == "--interval" {
+                if keyval {
+                    interval_size = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    interval_size = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-start_val" || vec[0].to_lowercase() == "--start_val" {
+                if keyval {
+                    start_val = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    start_val = args[i+1].to_string().parse::<f64>().unwrap();
+                }
+            } else if vec[0].to_lowercase() == "-end_val" || vec[0].to_lowercase() == "--end_val" {
+                if keyval {
+                    end_val = vec[1].to_string().parse::<f64>().unwrap();
+                } else {
+                    end_val = args[i+1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -122,6 +146,12 @@ impl WhiteboxTool for ToDegrees {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+        if start_val == f64::NEG_INFINITY {
+            start_val = input.configs.minimum;
+        }
+        if end_val == f64::INFINITY {
+            end_val = input.configs.maximum;
+        }
 
         let mut starting_row;
         let mut ending_row = 0;
@@ -145,7 +175,10 @@ impl WhiteboxTool for ToDegrees {
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            data[col as usize] = z.to_degrees();
+                            if z >= start_val && z <= end_val {
+                                z = (z / interval_size).floor() * interval_size;
+                            }
+                            data[col as usize] = z;
                         }
                     }
                     tx.send((row, data)).unwrap();

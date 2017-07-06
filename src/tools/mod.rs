@@ -42,6 +42,7 @@ impl ToolManager {
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
         tool_names.push("PickFromList".to_string());
+        tool_names.push("ReclassEqualInterval".to_string());
         tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
@@ -129,11 +130,15 @@ impl ToolManager {
         tool_names.push("Log2".to_string());
         tool_names.push("Ln".to_string());
         tool_names.push("Multiply".to_string());
+        tool_names.push("Negate".to_string());
         tool_names.push("Not".to_string());
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("Round".to_string());
         tool_names.push("Sin".to_string());
+        tool_names.push("Square".to_string());
+        tool_names.push("SquareRoot".to_string());
         tool_names.push("Subtract".to_string());
         tool_names.push("Tan".to_string());
         tool_names.push("ToDegrees".to_string());
@@ -212,6 +217,7 @@ impl ToolManager {
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
+            "reclassequalinterval" => Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new())),
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
             // hydro_analysis
@@ -300,15 +306,19 @@ impl ToolManager {
             "log2" => Some(Box::new(tools::math_stat_analysis::Log2::new())),
             "ln" => Some(Box::new(tools::math_stat_analysis::Ln::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
+            "negate" => Some(Box::new(tools::math_stat_analysis::Negate::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "round" => Some(Box::new(tools::math_stat_analysis::Round::new())),
+            "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
+            "square" => Some(Box::new(tools::math_stat_analysis::Square::new())),
+            "squareroot" => Some(Box::new(tools::math_stat_analysis::SquareRoot::new())),
+            "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "tan" => Some(Box::new(tools::math_stat_analysis::Tan::new())),
             "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
             "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
-            "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
-            "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 

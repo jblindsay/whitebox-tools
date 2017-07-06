@@ -18,19 +18,19 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct ToDegrees {
+pub struct Round {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ToDegrees {
+impl Round {
     /// public constructor
-    pub fn new() -> ToDegrees { 
-        let name = "ToDegrees".to_string();
+    pub fn new() -> Round { 
+        let name = "Round".to_string();
         
-        let description = "Converts a raster from radians to degrees.".to_string();
+        let description = "Rounds the values in an input raster to the nearest integer value.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -44,11 +44,11 @@ impl ToDegrees {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ToDegrees { name: name, description: description, parameters: parameters, example_usage: usage }
+        Round { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for ToDegrees {
+impl WhiteboxTool for Round {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -145,7 +145,7 @@ impl WhiteboxTool for ToDegrees {
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            data[col as usize] = z.to_degrees();
+                            data[col as usize] = z.round();
                         }
                     }
                     tx.send((row, data)).unwrap();

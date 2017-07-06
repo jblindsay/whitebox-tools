@@ -17,6 +17,7 @@ mod percent_equal_to;
 mod percent_greater_than;
 mod percent_less_than;
 mod pick_from_list;
+mod reclass_equal_interval;
 mod weighted_sum;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -38,4 +39,5 @@ pub use self::percent_equal_to::PercentEqualTo;
 pub use self::percent_greater_than::PercentGreaterThan;
 pub use self::percent_less_than::PercentLessThan;
 pub use self::pick_from_list::PickFromList;
+pub use self::reclass_equal_interval::ReclassEqualInterval;
 pub use self::weighted_sum::WeightedSum;

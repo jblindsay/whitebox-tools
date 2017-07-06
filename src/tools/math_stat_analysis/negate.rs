@@ -4,6 +4,9 @@ Authors: Dr. John Lindsay
 Created: July 6, 2017
 Last Modified: July 6, 2017
 License: MIT
+
+NOTE: This tool differs from the Whitebox GAT equivalent in that in additional to changing the sign
+of continous data, it also handles Boolean data by reversing values (i.e. 0-1 to 1-0).
 */
 extern crate time;
 extern crate num_cpus;
@@ -18,19 +21,19 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct ToDegrees {
+pub struct Negate {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ToDegrees {
+impl Negate {
     /// public constructor
-    pub fn new() -> ToDegrees { 
-        let name = "ToDegrees".to_string();
+    pub fn new() -> Negate { 
+        let name = "Negate".to_string();
         
-        let description = "Converts a raster from radians to degrees.".to_string();
+        let description = "Changes the sign of values in a raster or the 0-1 values of a Boolean raster.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -44,11 +47,11 @@ impl ToDegrees {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ToDegrees { name: name, description: description, parameters: parameters, example_usage: usage }
+        Negate { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for ToDegrees {
+impl WhiteboxTool for Negate {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -140,15 +143,36 @@ impl WhiteboxTool for ToDegrees {
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut z: f64;
-                for row in starting_row..ending_row {
-                    let mut data: Vec<f64> = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            data[col as usize] = z.to_degrees();
+                if input.configs.photometric_interp == PhotometricInterpretation::Boolean {
+                    for row in starting_row..ending_row {
+                        let mut data: Vec<f64> = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z = input[(row, col)];
+                            if z != nodata {
+                                if z != 0.0 {
+                                    data[col as usize] = -z;
+                                } else {
+                                    data[col as usize] = 0.0;
+                                }
+                            }
                         }
+                        tx.send((row, data)).unwrap();
                     }
-                    tx.send((row, data)).unwrap();
+                } else {
+                    for row in starting_row..ending_row {
+                        let mut data: Vec<f64> = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z = input[(row, col)];
+                            if z != nodata {
+                                if z == 0.0 {
+                                    data[col as usize] = 1.0;
+                                } else {
+                                    data[col as usize] = 0.0;
+                                }
+                            }
+                        }
+                        tx.send((row, data)).unwrap();
+                    }
                 }
             });
         }

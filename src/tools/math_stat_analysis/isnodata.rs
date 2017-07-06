@@ -171,7 +171,7 @@ impl WhiteboxTool for IsNoData {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "black_whhite.plt".to_string();
+        output.configs.palette = "black_white.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
