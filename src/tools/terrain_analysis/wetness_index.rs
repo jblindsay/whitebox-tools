@@ -29,7 +29,7 @@ impl WetnessIndex {
     pub fn new() -> WetnessIndex { // public constructor
         let name = "WetnessIndex".to_string();
         
-        let description = "Calculates the topographic wetness index, Ln(A / tan(Beta)).".to_string();
+        let description = "Calculates the topographic wetness index, Ln(A / tan(slope)).".to_string();
         
         let mut parameters = "--sca          Input specific contributing area (SCA) raster file.".to_owned();
         parameters.push_str("--slope        Input slope raster file.\n");

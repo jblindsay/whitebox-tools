@@ -19,6 +19,9 @@
     * [How does WhiteboxTools' design philosophy differ?](#how-does-whiteboxtools-design-philosophy-differ)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
     * [Can WhiteboxTools be incorporated into other open-source GIS?](#can-whiteboxtools-be-incorporated-into-other-open-source-gis)
+    * [Do I need Rust installed on my computer to run WhiteboxTools?](#do-i-need-rust-installed-on-my-computer-to-run-whiteboxtools)
+    * [What platforms does WhiteboxTools support?](#what-platforms-does-whiteboxtools-support)
+    * [What are the recommended system requirements?](#what-are-the-recommended-system-requirements)
 
 ## Description
 
@@ -29,6 +32,8 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 ## Installation
 
 To install the latest development version of *WhiteboxTools* Ensure that the latest stable version of the [Rust programming language](https://www.rust-lang.org) compiler is installed on your machine. Fork the GitHub repository then run the build.py Python script. The whitebox-tools.exe executable file will be located within the /target/release/ folder. Pre-compiled binaries for *WhiteboxTools* will be distributed with releases of *Whitebox GAT* for each of the supported platforms.
+
+Be sure to follow the instructions for installing Rust carefully. In particular, if you ware installing on MS Windows, you must have a linker installed prior to installing Rust. The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** for installation.
 
 ## Usage
 
@@ -283,7 +288,7 @@ The library currently contains the following 162 tools:
 - ***Slope***: Calculates a slope raster from an input DEM.
 - ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
 - ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
-- ***WetnessIndex***: Calculates the topographic wetness index, Ln(A / tan(Beta)).
+- ***WetnessIndex***: Calculates the topographic wetness index, Ln(A / tan(slope)).
 
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
@@ -340,6 +345,18 @@ Not everything with Rust is perfect however. It is still a very young language a
 
 Eventually most of the tools in *Whitebox GAT* will be ported over to *WhiteboxTools* and all new tools will be added to this library as well. Naturally, this will take time. The order by which tools are ported is partly a function of ease of porting, existing infrastructure (i.e. raster and LiDAR tools will be ported first since their is currently no support in the library for vector I/O), and interest. If you are interested in making a tool a higher priority for porting, email [John Lindsay](http://www.uoguelph.ca/~hydrogeo/index.html).
 
-### Can WhiteboxTools be incorporated into other open-source GIS?
+### Can WhiteboxTools be incorporated into other software and open-source GIS projects?
 
-*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other open-source GIS projects cannot use *WhiteboxTools* as well. In fact, this is one of the motivating factors for creating the library in the first place!
+*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other software and GIS projects cannot use *WhiteboxTools* as well. In fact, this is one of the motivating factors for creating the library in the first place! Feel free to use *WhiteboxTools* as the geospatial analysis engine in your open-source software project.
+
+### Do I need Rust installed on my computer to run WhiteboxTools?
+
+No, you would only need Rust installed if you were compiling the WhiteboxTools codebase from source files. Eventually I will distribute compiled versions of the tools for various supported platforms. For now, however, you will need to compile the project yourself (see [Installation](#installation) for details). The compilation product (*whitebox_tools.exe* file) is a stand-alone executable that can be copied to and run on other computers that do not have Rust installed. Being natively compiled means that the executable file is system-dependent.
+
+### What platforms does WhiteboxTools support?
+
+**WhiteboxTools** is developed using the Rust programming language, which is supported on a [wide variety of platforms](https://forge.rust-lang.org/platform-support.html) including MS Windows, MacOS, and Linux operating systems and common chip architectures. Interestingly, Rust also supports mobile platforms, which *WhiteboxTools* should therefore be capable of targeting (although no testing has been completed in this regard to date). Nearly all development and testing of the software is currently carried out on MacOS and we cannot guarantee a bug-free performance on other platforms. In particularly, MS Windows is the most different from the other platforms and is therefore the most likely to encounter platform-specific bugs.
+
+### What are the recommended system requirements?
+
+The answer to this question depends strongly on the type of analysis and data that you intend to process. However, generally we find performance to be optimal with a minimum of 8-16GB of memory (RAM), a modern multi-core processor, and an solid-state-drive (SSD). It is likely that *WhiteboxTools* will have satisfactory performance on lower-spec systems if smaller datasets are being processed. Because *WhiteboxTools* reads entire raster datasets into system memory (for optimal performance, and in recognition that modern systems have increasingly larger amounts of fast RAM), this tends to be the limiting factor for the upper-end of data size successfully processed by the library. 64-bit operating systems are recommended and extensive testing has not been carried out on 32-bit OSs. See [**What are the recommended system requirements?**](#what-are-the-recommended-system-requirements) for further details on supported platforms.
