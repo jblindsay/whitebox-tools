@@ -744,53 +744,6 @@ impl Default for RasterType {
     fn default() -> RasterType { RasterType::Unknown }
 }
 
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum DataType {
-    F64, F32, I64, I32, I16, I8, U64, U32, U16, U8, RGB24, RGB48, RGBA32, Unknown
-}
-
-impl Default for DataType {
-    fn default() -> DataType { DataType::Unknown }
-}
-
-impl DataType {
-    pub fn get_data_size(&self) -> usize {
-        match *self {
-            DataType::F64 => 8usize,
-            DataType::F32 => 4usize,
-            DataType::I64 => 8usize,
-            DataType::I32 => 4usize,
-            DataType::I16 => 2usize,
-            DataType::I8 => 1usize,
-            DataType::U64 => 8usize,
-            DataType::U32 => 4usize,
-            DataType::U16 => 2usize,
-            DataType::U8 => 1usize,
-            DataType::RGB24 => 3usize,
-            DataType::RGB48 => 6usize,
-            DataType::RGBA32 => 4usize,
-            DataType::Unknown => 0usize,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum PhotometricInterpretation {
-    Continuous,
-    Categorical,
-    Boolean,
-    RGB,
-    Paletted,
-    // Rgb32,
-    // Rgb24,
-    Unknown
-}
-
-impl Default for PhotometricInterpretation {
-    fn default() -> PhotometricInterpretation { PhotometricInterpretation::Unknown }
-}
-
 fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType {
     // get the file extension
     let extension: String = match Path::new(&file_name).extension().unwrap().to_str() {
@@ -850,6 +803,53 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
     }
 
     RasterType::Unknown
+}
+
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum DataType {
+    F64, F32, I64, I32, I16, I8, U64, U32, U16, U8, RGB24, RGB48, RGBA32, Unknown
+}
+
+impl Default for DataType {
+    fn default() -> DataType { DataType::Unknown }
+}
+
+impl DataType {
+    pub fn get_data_size(&self) -> usize {
+        match *self {
+            DataType::F64 => 8usize,
+            DataType::F32 => 4usize,
+            DataType::I64 => 8usize,
+            DataType::I32 => 4usize,
+            DataType::I16 => 2usize,
+            DataType::I8 => 1usize,
+            DataType::U64 => 8usize,
+            DataType::U32 => 4usize,
+            DataType::U16 => 2usize,
+            DataType::U8 => 1usize,
+            DataType::RGB24 => 3usize,
+            DataType::RGB48 => 6usize,
+            DataType::RGBA32 => 4usize,
+            DataType::Unknown => 0usize,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PhotometricInterpretation {
+    Continuous,
+    Categorical,
+    Boolean,
+    RGB,
+    Paletted,
+    // Rgb32,
+    // Rgb24,
+    Unknown
+}
+
+impl Default for PhotometricInterpretation {
+    fn default() -> PhotometricInterpretation { PhotometricInterpretation::Unknown }
 }
 
 // #[derive(Debug, Copy, Clone, PartialEq)]

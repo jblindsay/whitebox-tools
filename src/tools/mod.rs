@@ -1,3 +1,4 @@
+pub mod data_tools;
 pub mod gis_analysis;
 pub mod hydro_analysis;
 pub mod image_analysis;
@@ -19,6 +20,9 @@ pub struct ToolManager {
 impl ToolManager {
     pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
+        // data_tools
+        tool_names.push("ConvertRasterFormat".to_string());
+
         // gis_analysis
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
@@ -181,6 +185,9 @@ impl ToolManager {
 
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
+            // data_tools
+            "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
+
             // gis_analysis
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
@@ -282,6 +289,7 @@ impl ToolManager {
             "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
             "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
+            "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),

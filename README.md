@@ -105,6 +105,9 @@ Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *W
 
 The library currently contains the following 136 tools:
 
+**Data Tools**
+- ***ConvertRasterFormat***: Converts raster data from one format to another.
+
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -206,6 +209,7 @@ The library currently contains the following 136 tools:
 - ***Exp***: Returns the exponential (base e) of values in a raster.
 - ***Floor***: Returns the largest (closest to positive infinity) value that is greater than or equal to the values in a raster.
 - ***GreaterThan***: Performs a greater-than comparison operation on two rasters or a raster and a constant value.
+- ***IsNoData***: Identifies NoData valued pixels in an image.
 - ***LessThan***: Performs a less-than comparison operation on two rasters or a raster and a constant value.
 - ***Multiply***: Performs a multiplication operation on two rasters or a raster and a constant value.
 - ***Not***: Performs a logical NOT operator on two Boolean raster images.
