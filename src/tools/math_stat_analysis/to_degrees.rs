@@ -4,37 +4,37 @@ Authors: Dr. John Lindsay
 Created: July 6, 2017
 Last Modified: July 6, 2017
 License: MIT
-
-NOTE: At the moment this tool determines input/output raster formats based on extensions, but due to file 
-extension naming collisions, it would be good to add user hints. For example, the extension 'grd' could
-belong to a SurferAscii or a Surfer7BinaryCollisions. This is more important for distinguishing output 
-files since input files can be read and distiguishing feasture idenfitied from the file structure.
 */
 extern crate time;
 extern crate num_cpus;
 
 use std::env;
 use std::path;
-use std::io::{Error, ErrorKind};
+use std::f64;
+use std::sync::Arc;
+use std::sync::mpsc;
+use std::thread;
 use raster::*;
+use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct ConvertRasterFormat {
+pub struct ToDegrees {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ConvertRasterFormat {
-    pub fn new() -> ConvertRasterFormat { // public constructor
-        let name = "ConvertRasterFormat".to_string();
+impl ToDegrees {
+    /// public constructor
+    pub fn new() -> ToDegrees { 
+        let name = "ToDegrees".to_string();
         
-        let description = "Converts raster data from one format to another.".to_string();
+        let description = "Converts a raster from radians to degrees.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        
+         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -42,13 +42,13 @@ impl ConvertRasterFormat {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ConvertRasterFormat { name: name, description: description, parameters: parameters, example_usage: usage }
+        ToDegrees { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for ConvertRasterFormat {
+impl WhiteboxTool for ToDegrees {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,7 +68,7 @@ impl WhiteboxTool for ConvertRasterFormat {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -82,7 +82,7 @@ impl WhiteboxTool for ConvertRasterFormat {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -105,6 +105,9 @@ impl WhiteboxTool for ConvertRasterFormat {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
+
         if !input_file.contains(&sep) {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -113,20 +116,61 @@ impl WhiteboxTool for ConvertRasterFormat {
         }
 
         if verbose { println!("Reading data...") };
+        let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let input = Raster::new(&input_file, "r")?;
-            
         let start = time::now();
-        
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+
+        let mut starting_row;
+        let mut ending_row = 0;
+        let num_procs = num_cpus::get() as isize;
+        let row_block_size = rows / num_procs;
+        let (tx, rx) = mpsc::channel();
+        let mut id = 0;
+        while ending_row < rows {
+            let input = input.clone();
+            starting_row = id * row_block_size;
+            ending_row = starting_row + row_block_size;
+            if ending_row > rows {
+                ending_row = rows;
+            }
+            id += 1;
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut z: f64;
+                for row in starting_row..ending_row {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z = input[(row, col)];
+                        if z != nodata {
+                            data[col as usize] = z.to_degrees();
+                        }
+                    }
+                    tx.send((row, data)).unwrap();
+                }
+            });
+        }
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        println!("Initializing the output raster...");
-        match output.set_data_from_raster(&input) {
-            Ok(_) => (), // do nothings
-            Err(err) => return Err(err),
+        for r in 0..rows {
+            let (row, data) = rx.recv().unwrap();
+            output.set_row_data(row, data);
+            
+            if verbose {
+                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
         }
 
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.palette = "black_whhite.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
@@ -138,7 +182,7 @@ impl WhiteboxTool for ConvertRasterFormat {
         };
 
         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
+        
         Ok(())
     }
 }

@@ -125,14 +125,19 @@ impl ToolManager {
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
         tool_names.push("LessThan".to_string());
+        tool_names.push("Log10".to_string());
+        tool_names.push("Log2".to_string());
+        tool_names.push("Ln".to_string());
         tool_names.push("Multiply".to_string());
         tool_names.push("Not".to_string());
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Quantiles".to_string());
-        tool_names.push("Tan".to_string());
         tool_names.push("Sin".to_string());
         tool_names.push("Subtract".to_string());
+        tool_names.push("Tan".to_string());
+        tool_names.push("ToDegrees".to_string());
+        tool_names.push("ToRadians".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -291,12 +296,17 @@ impl ToolManager {
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
+            "log10" => Some(Box::new(tools::math_stat_analysis::Log10::new())),
+            "log2" => Some(Box::new(tools::math_stat_analysis::Log2::new())),
+            "ln" => Some(Box::new(tools::math_stat_analysis::Ln::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
             "tan" => Some(Box::new(tools::math_stat_analysis::Tan::new())),
+            "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
+            "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
             "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
             "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
