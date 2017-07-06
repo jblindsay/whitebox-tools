@@ -111,6 +111,7 @@ impl ToolManager {
         tool_names.push("Add".to_string());
         tool_names.push("And".to_string());
         tool_names.push("Ceil".to_string());
+        tool_names.push("Cos".to_string());
         tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
         tool_names.push("Exp".to_string());
@@ -122,6 +123,8 @@ impl ToolManager {
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("Tan".to_string());
+        tool_names.push("Sin".to_string());
         tool_names.push("Subtract".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
@@ -267,6 +270,7 @@ impl ToolManager {
             "add" => Some(Box::new(tools::math_stat_analysis::Add::new())),
             "and" => Some(Box::new(tools::math_stat_analysis::And::new())),
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
+            "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
@@ -278,6 +282,8 @@ impl ToolManager {
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "tan" => Some(Box::new(tools::math_stat_analysis::Tan::new())),
+            "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
             "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
