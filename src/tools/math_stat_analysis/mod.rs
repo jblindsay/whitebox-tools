@@ -42,6 +42,7 @@ mod tan;
 mod tanh;
 mod to_degrees;
 mod to_radians;
+mod truncate;
 mod xor;
 mod zscores;
 
@@ -90,5 +91,6 @@ pub use self::tan::Tan;
 pub use self::tanh::Tanh;
 pub use self::to_degrees::ToDegrees;
 pub use self::to_radians::ToRadians;
+pub use self::truncate::Truncate;
 pub use self::xor::Xor;
 pub use self::zscores::ZScores;

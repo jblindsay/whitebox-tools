@@ -156,6 +156,7 @@ impl ToolManager {
         tool_names.push("Tanh".to_string());
         tool_names.push("ToDegrees".to_string());
         tool_names.push("ToRadians".to_string());
+        tool_names.push("Truncate".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -170,6 +171,7 @@ impl ToolManager {
         tool_names.push("StreamLinkIdentifier".to_string());
         tool_names.push("StreamLinkLength".to_string());
         tool_names.push("StreamLinkSlope".to_string());
+        tool_names.push("StreamSlopeContinuous".to_string());
         tool_names.push("TopologicalStreamOrder".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
@@ -344,6 +346,7 @@ impl ToolManager {
             "tanh" => Some(Box::new(tools::math_stat_analysis::Tanh::new())),
             "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
             "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
+            "truncate" => Some(Box::new(tools::math_stat_analysis::Truncate::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 
@@ -358,6 +361,7 @@ impl ToolManager {
             "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),
             "streamlinklength" => Some(Box::new(tools::stream_network_analysis::StreamLinkLength::new())),
             "streamlinkslope" => Some(Box::new(tools::stream_network_analysis::StreamLinkSlope::new())),
+            "streamslopecontinuous" => Some(Box::new(tools::stream_network_analysis::StreamSlopeContinuous::new())),
             "topologicalstreamorder" => Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new())),
             "tributaryidentifier" => Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new())),
 

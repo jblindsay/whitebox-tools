@@ -43,7 +43,7 @@ To install the latest development version of *WhiteboxTools* Ensure that the lat
 | --toolhelp     | Prints the help associated with a tool; --toolhelp="LidarInfo".              |
 | -h, --help     | Prints help information.                                                     |
 
-Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.e. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --listtools=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
+Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.e. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
@@ -105,7 +105,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 160 tools:
+The library currently contains the following 162 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -243,6 +243,7 @@ The library currently contains the following 160 tools:
 - ***Tanh***: Returns the hyperbolic tangent (tanh) of each values in a raster.
 - ***ToDegrees***: Converts a raster from radians to degrees.
 - ***ToRadians***: Converts a raster from degrees to radians.
+- ***Truncate***: Truncates the values in a raster to the desired number of decimal places.
 - ***Xor***: Performs a logical XOR operator on two Boolean raster images.
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
@@ -257,6 +258,7 @@ The library currently contains the following 160 tools:
 - ***StreamLinkIdentifier***: Assigns a unique identifier to each link in a stream network.
 - ***StreamLinkLength***: Estimates the length of each link (or tributary) in a stream network.
 - ***StreamLinkSlope***: Estimates the average slope of each link (or tributary) in a stream network.
+- ***StreamSlopeContinuous***: Estimates the slope of each grid cell in a stream network.
 - ***TopologicalStreamOrder***: Assigns each link in a stream network its topological order.
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
