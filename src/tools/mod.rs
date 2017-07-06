@@ -135,6 +135,7 @@ impl ToolManager {
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("Reciprocal".to_string());
         tool_names.push("Round".to_string());
         tool_names.push("Sin".to_string());
         tool_names.push("Square".to_string());
@@ -311,6 +312,7 @@ impl ToolManager {
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),
             "round" => Some(Box::new(tools::math_stat_analysis::Round::new())),
             "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
             "square" => Some(Box::new(tools::math_stat_analysis::Square::new())),

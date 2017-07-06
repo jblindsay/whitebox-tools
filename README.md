@@ -1,4 +1,6 @@
-# WhiteboxTools
+![WhiteboxTools](./WhiteboxToolsLogo.png "")
+
+<!--# WhiteboxTools-->
 
 *Bringing the power to Whitebox GAT to the world at large*
 
@@ -103,7 +105,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 147 tools:
+The library currently contains the following 148 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -221,6 +223,7 @@ The library currently contains the following 147 tools:
 - ***NotEqualTo***: Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 - ***Or***: Performs a logical OR operator on two Boolean raster images.
 - ***Quantiles***: Tranforms raster values into quantiles.
+- ***Reciprocal***: Returns the reciprocal (i.e. 1 / z) of values in a raster.
 - ***Round***: Rounds the values in an input raster to the nearest integer value.
 - ***Sin***: Returns the sine (sin) of each values in a raster.
 - ***Square***: Squares the values in a raster.
