@@ -1,4 +1,4 @@
-![WhiteboxTools](./WhiteboxToolsLogo.png "")
+![WhiteboxTools](WhiteboxToolsLogo.png)
 
 <!--# WhiteboxTools-->
 
