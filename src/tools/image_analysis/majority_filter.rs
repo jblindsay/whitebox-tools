@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: July 5, 2017
+Created: July 6, 2017
+Last Modified: July 6, 2017
 License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
@@ -21,20 +21,20 @@ use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
-pub struct DiversityFilter {
+pub struct MajorityFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl DiversityFilter {
+impl MajorityFilter {
 
     /// Public constructor.
-    pub fn new() -> DiversityFilter {
-        let name = "DiversityFilter".to_string();
+    pub fn new() -> MajorityFilter {
+        let name = "MajorityFilter".to_string();
         
-        let description = "Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.".to_string();
+        let description = "Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -51,11 +51,11 @@ impl DiversityFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        DiversityFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        MajorityFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for DiversityFilter {
+impl WhiteboxTool for MajorityFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -143,7 +143,6 @@ impl WhiteboxTool for DiversityFilter {
             filter_size_y += 1;
         }
 
-        // let (mut z, mut z_n): (f64, f64);
         let midpoint_x = (filter_size_x as f64 / 2f64).floor() as isize;
         let midpoint_y = (filter_size_y as f64 / 2f64).floor() as isize;
         let mut progress: usize;
@@ -175,7 +174,7 @@ impl WhiteboxTool for DiversityFilter {
         let min_val = input.configs.minimum;
         let max_val = input.configs.maximum;
         if min_val.floor() != min_val || max_val.floor() != max_val {
-            multiplier = 10000.0;
+            multiplier = 1000.0;
         }
         let min_val_mult = min_val * multiplier;
         let num_bins = (max_val * multiplier - min_val_mult).ceil() as usize + 1;
@@ -203,7 +202,8 @@ impl WhiteboxTool for DiversityFilter {
                     end_row = row + midpoint_y;
                     let mut data = vec![nodata; columns as usize];
                     let mut histo = vec![0; num_bins];
-                    let mut diversity = 0;
+                    let mut mode_bin: usize;
+                    let mut mode_freq: usize;
                     let mut z: f64;
                     for col in 0..columns {
                         if col > 0 {
@@ -216,9 +216,6 @@ impl WhiteboxTool for DiversityFilter {
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] -= 1;
-                                    if histo[bin_val] == 0 {
-                                        diversity -= 1;
-                                    }
                                 }
                             }
                             
@@ -227,9 +224,6 @@ impl WhiteboxTool for DiversityFilter {
                                 z = input.get_value(row2, end_col);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
-                                    if histo[bin_val] == 0 {
-                                        diversity += 1;
-                                    }
                                     histo[bin_val] += 1;
                                 }
                             }
@@ -242,16 +236,21 @@ impl WhiteboxTool for DiversityFilter {
                                     z = input.get_value(row2, col2);
                                     if z != nodata {
                                         bin_val = (z * multiplier - min_val_mult).floor() as usize;
-                                        if histo[bin_val] == 0 {
-                                            diversity += 1;
-                                        }
                                         histo[bin_val] += 1;
                                     }
                                 }
                             }
                         }
                         if input.get_value(row, col) != nodata {
-                            data[col as usize] = diversity as f64;
+                            mode_bin = 0;
+                            mode_freq = 0;
+                            for i in 0..num_bins {
+                                if histo[i] > mode_freq {
+                                    mode_freq = histo[i];
+                                    mode_bin = i;
+                                }
+                            }
+                            data[col as usize] = (mode_bin as f64 + min_val_mult) / multiplier;
                         }
                     }
                     tx1.send((row, data)).unwrap();

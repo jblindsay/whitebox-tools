@@ -1,7 +1,7 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
+Created: July 6, 2017
 Last Modified: July 6, 2017
 License: MIT
 */
@@ -18,19 +18,19 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Subtract {
+pub struct Power {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Subtract {
+impl Power {
     /// public constructor
-    pub fn new() -> Subtract { 
-        let name = "Subtract".to_string();
+    pub fn new() -> Power { 
+        let name = "Power".to_string();
         
-        let description = "Performs a differencing operation on two rasters or a raster and a constant value.".to_string();
+        let description = "Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.".to_string();
         
         let mut parameters = "--input1       Input raster file or constant value.".to_owned();
         parameters.push_str("--input2       Input raster file or constant value.\n");
@@ -45,11 +45,11 @@ impl Subtract {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Subtract { name: name, description: description, parameters: parameters, example_usage: usage }
+        Power { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Subtract {
+impl WhiteboxTool for Power {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -152,7 +152,7 @@ impl WhiteboxTool for Subtract {
         if input1_is_constant && input2_is_constant {
             // return Err(Error::new(ErrorKind::InvalidInput,
             //                     "At least one of the inputs must be a raster."));
-            println!("{}", input1_constant - input2_constant);
+            println!("{}", input1_constant.powf(input2_constant));
             return Ok(());
         } else if input1_is_constant && !input2_is_constant {
             if verbose { println!("Reading data...") };
@@ -185,7 +185,7 @@ impl WhiteboxTool for Subtract {
                         for col in 0..columns {
                             z2 = in2[(row, col)];
                             if z2 != nodata2 {
-                                data[col as usize] = input1_constant - z2;
+                                data[col as usize] = input1_constant.powf(z2);
                             } else {
                                 data[col as usize] = nodata2;
                             }
@@ -252,7 +252,7 @@ impl WhiteboxTool for Subtract {
                         for col in 0..columns {
                             z1 = in1[(row, col)];
                             if z1 != nodata1 {
-                                data[col as usize] = z1 - input2_constant;
+                                data[col as usize] = z1.powf(input2_constant);
                             } else {
                                 data[col as usize] = nodata1;
                             }
@@ -330,7 +330,7 @@ impl WhiteboxTool for Subtract {
                             z1 = in1[(row, col)];
                             z2 = in2[(row, col)];
                             if z1 != nodata1 && z2 != nodata2 {
-                                data[col as usize] = z1 - z2;
+                                data[col as usize] = z1.powf(z2);
                             } else {
                                 data[col as usize] = nodata1;
                             }

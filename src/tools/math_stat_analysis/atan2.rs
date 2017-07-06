@@ -1,7 +1,7 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
+Created: July 6, 2017
 Last Modified: July 6, 2017
 License: MIT
 */
@@ -18,22 +18,21 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Subtract {
+pub struct Atan2 {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Subtract {
-    /// public constructor
-    pub fn new() -> Subtract { 
-        let name = "Subtract".to_string();
+impl Atan2 {
+    pub fn new() -> Atan2 { // public constructor
+        let name = "Atan2".to_string();
         
-        let description = "Performs a differencing operation on two rasters or a raster and a constant value.".to_string();
+        let description = "Returns the 2-argument inverse tangent (atan2).".to_string();
         
-        let mut parameters = "--input1       Input raster file or constant value.".to_owned();
-        parameters.push_str("--input2       Input raster file or constant value.\n");
+        let mut parameters = "--input_y      Input y raster file or constant value (rise).".to_owned();
+        parameters.push_str("--input_x      Input x raster file or constant value (run).\n");
         parameters.push_str("-o, --output   Output raster file.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -43,13 +42,13 @@ impl Subtract {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input_y='in1.dep' --input_x='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Subtract { name: name, description: description, parameters: parameters, example_usage: usage }
+        Atan2 { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Subtract {
+impl WhiteboxTool for Atan2 {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -84,13 +83,13 @@ impl WhiteboxTool for Subtract {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i1" || vec[0].to_lowercase() == "--input1" {
+            if vec[0].to_lowercase() == "-input_y" || vec[0].to_lowercase() == "--input_y" {
                 if keyval {
                     input1 = vec[1].to_string();
                 } else {
                     input1 = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--input2" {
+            } else if vec[0].to_lowercase() == "-input_x" || vec[0].to_lowercase() == "--input_x" {
                 if keyval {
                     input2 = vec[1].to_string();
                 } else {
@@ -152,7 +151,7 @@ impl WhiteboxTool for Subtract {
         if input1_is_constant && input2_is_constant {
             // return Err(Error::new(ErrorKind::InvalidInput,
             //                     "At least one of the inputs must be a raster."));
-            println!("{}", input1_constant - input2_constant);
+            println!("{}", input1_constant.atan2(input2_constant));
             return Ok(());
         } else if input1_is_constant && !input2_is_constant {
             if verbose { println!("Reading data...") };
@@ -185,7 +184,7 @@ impl WhiteboxTool for Subtract {
                         for col in 0..columns {
                             z2 = in2[(row, col)];
                             if z2 != nodata2 {
-                                data[col as usize] = input1_constant - z2;
+                                data[col as usize] = input1_constant.atan2(z2);
                             } else {
                                 data[col as usize] = nodata2;
                             }
@@ -252,7 +251,7 @@ impl WhiteboxTool for Subtract {
                         for col in 0..columns {
                             z1 = in1[(row, col)];
                             if z1 != nodata1 {
-                                data[col as usize] = z1 - input2_constant;
+                                data[col as usize] = z1.atan2(input2_constant);
                             } else {
                                 data[col as usize] = nodata1;
                             }
@@ -330,7 +329,7 @@ impl WhiteboxTool for Subtract {
                             z1 = in1[(row, col)];
                             z2 = in2[(row, col)];
                             if z1 != nodata1 && z2 != nodata2 {
-                                data[col as usize] = z1 - z2;
+                                data[col as usize] = z1.atan2(z2);
                             } else {
                                 data[col as usize] = nodata1;
                             }

@@ -219,9 +219,6 @@ impl WhiteboxTool for Divide {
 
             let end = time::now();
             let elapsed_time = end - start;
-            output.configs.data_type = DataType::F32;
-            output.configs.palette = "qual.plt".to_string();
-            output.configs.photometric_interp = PhotometricInterpretation::Categorical;
             output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
             output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
@@ -293,9 +290,6 @@ impl WhiteboxTool for Divide {
 
             let end = time::now();
             let elapsed_time = end - start;
-            output.configs.data_type = DataType::F32;
-            output.configs.palette = "qual.plt".to_string();
-            output.configs.photometric_interp = PhotometricInterpretation::Categorical;
             output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
             output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
@@ -378,9 +372,6 @@ impl WhiteboxTool for Divide {
 
             let end = time::now();
             let elapsed_time = end - start;
-            output.configs.data_type = DataType::F32;
-            output.configs.palette = "qual.plt".to_string();
-            output.configs.photometric_interp = PhotometricInterpretation::Categorical;
             output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
             output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 

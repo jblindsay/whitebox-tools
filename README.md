@@ -105,7 +105,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 148 tools:
+The library currently contains the following 156 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -165,6 +165,7 @@ The library currently contains the following 148 tools:
 - ***LaplacianFilter***: Performs a Laplacian filter on an image.
 - ***LaplacianOfGaussianFilter***: Performs a Laplacian-of-Gaussian (LoG) filter on an image.
 - ***LineThinning***: Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
+- ***MajorityFilter***: Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.
 - ***MaximumFilter***: Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 - ***MeanFilter***: Performs a mean filter (low-pass filter) on an input image.
 - ***MinimumFilter***: Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
@@ -205,8 +206,10 @@ The library currently contains the following 148 tools:
 - ***ArcCos***: Returns the inverse cosine (arccos) of each values in a raster.
 - ***ArcSin***: Returns the inverse sine (arcsin) of each values in a raster.
 - ***ArcTan***: Returns the inverse tangent (arctan) of each values in a raster.
+- ***Atan2***: Returns the 2-argument inverse tangent (atan2).
 - ***Ceil***: Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 - ***Cos***: Returns the cosine (cos) of each values in a raster.
+- ***Cosh***: Returns the hyperbolic cosine (cosh) of each values in a raster.
 - ***Divide***: Performs a division operation on two rasters or a raster and a constant value.
 - ***EqualTo***: Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 - ***Exp***: Returns the exponential (base e) of values in a raster.
@@ -217,19 +220,24 @@ The library currently contains the following 148 tools:
 - ***Log10***: Returns the base-10 logarithm of values in a raster.
 - ***Log2***: Returns the base-2 logarithm of values in a raster.
 - ***Ln***: Returns the natural logarithm of values in a raster.
+- ***Max***: Performs a MAX operation on two rasters or a raster and a constant value.
+- ***Min***: Performs a MIN operation on two rasters or a raster and a constant value.
 - ***Multiply***: Performs a multiplication operation on two rasters or a raster and a constant value.
 - ***Negate***: Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 - ***Not***: Performs a logical NOT operator on two Boolean raster images.
 - ***NotEqualTo***: Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 - ***Or***: Performs a logical OR operator on two Boolean raster images.
+- ***Power***: Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 - ***Quantiles***: Tranforms raster values into quantiles.
 - ***Reciprocal***: Returns the reciprocal (i.e. 1 / z) of values in a raster.
 - ***Round***: Rounds the values in an input raster to the nearest integer value.
 - ***Sin***: Returns the sine (sin) of each values in a raster.
+- ***Sinh***: Returns the hyperbolic sine (sinh) of each values in a raster.
 - ***Square***: Squares the values in a raster.
 - ***SquareRoot***: Returns the square root of the values in a raster.
 - ***Subtract***: Performs a subtraction operation on two rasters or a raster and a constant value.
 - ***Tan***: Returns the tangent (tan) of each values in a raster.
+- ***Tanh***: Returns the hyperbolic tangent (tanh) of each values in a raster.
 - ***ToDegrees***: Converts a raster from radians to degrees.
 - ***ToRadians***: Converts a raster from degrees to radians.
 - ***Xor***: Performs a logical XOR operator on two Boolean raster images.

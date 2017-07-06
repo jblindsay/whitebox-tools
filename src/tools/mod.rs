@@ -78,6 +78,7 @@ impl ToolManager {
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
         tool_names.push("LineThinning".to_string());
+        tool_names.push("MajorityFilter".to_string());
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
         tool_names.push("MinimumFilter".to_string());
@@ -116,10 +117,12 @@ impl ToolManager {
         tool_names.push("ArcCos".to_string());
         tool_names.push("ArcSin".to_string());
         tool_names.push("ArcTan".to_string());
+        tool_names.push("Atan2".to_string());
         tool_names.push("Add".to_string());
         tool_names.push("And".to_string());
         tool_names.push("Ceil".to_string());
         tool_names.push("Cos".to_string());
+        tool_names.push("Cosh".to_string());
         tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
         tool_names.push("Exp".to_string());
@@ -129,19 +132,24 @@ impl ToolManager {
         tool_names.push("Log10".to_string());
         tool_names.push("Log2".to_string());
         tool_names.push("Ln".to_string());
+        tool_names.push("Max".to_string());
+        tool_names.push("Min".to_string());
         tool_names.push("Multiply".to_string());
         tool_names.push("Negate".to_string());
         tool_names.push("Not".to_string());
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
+        tool_names.push("Power".to_string());
         tool_names.push("Quantiles".to_string());
         tool_names.push("Reciprocal".to_string());
         tool_names.push("Round".to_string());
         tool_names.push("Sin".to_string());
+        tool_names.push("Sinh".to_string());
         tool_names.push("Square".to_string());
         tool_names.push("SquareRoot".to_string());
         tool_names.push("Subtract".to_string());
         tool_names.push("Tan".to_string());
+        tool_names.push("Tanh".to_string());
         tool_names.push("ToDegrees".to_string());
         tool_names.push("ToRadians".to_string());
         tool_names.push("Xor".to_string());
@@ -254,6 +262,7 @@ impl ToolManager {
             "laplacianfilter" => Some(Box::new(tools::image_analysis::LaplacianFilter::new())),
             "laplacianofgaussianfilter" => Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new())),
             "linethinning" => Some(Box::new(tools::image_analysis::LineThinning::new())),
+            "majorityfilter" => Some(Box::new(tools::image_analysis::MajorityFilter::new())),
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
@@ -294,8 +303,10 @@ impl ToolManager {
             "arccos" => Some(Box::new(tools::math_stat_analysis::ArcCos::new())),
             "arcsin" => Some(Box::new(tools::math_stat_analysis::ArcSin::new())),
             "arctan" => Some(Box::new(tools::math_stat_analysis::ArcTan::new())),
+            "atan2" => Some(Box::new(tools::math_stat_analysis::Atan2::new())),
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
             "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
+            "cosh" => Some(Box::new(tools::math_stat_analysis::Cosh::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
@@ -306,19 +317,24 @@ impl ToolManager {
             "log10" => Some(Box::new(tools::math_stat_analysis::Log10::new())),
             "log2" => Some(Box::new(tools::math_stat_analysis::Log2::new())),
             "ln" => Some(Box::new(tools::math_stat_analysis::Ln::new())),
+            "max" => Some(Box::new(tools::math_stat_analysis::Max::new())),
+            "min" => Some(Box::new(tools::math_stat_analysis::Min::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
             "negate" => Some(Box::new(tools::math_stat_analysis::Negate::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
+            "power" => Some(Box::new(tools::math_stat_analysis::Power::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
             "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),
             "round" => Some(Box::new(tools::math_stat_analysis::Round::new())),
             "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
+            "sinh" => Some(Box::new(tools::math_stat_analysis::Sinh::new())),
             "square" => Some(Box::new(tools::math_stat_analysis::Square::new())),
             "squareroot" => Some(Box::new(tools::math_stat_analysis::SquareRoot::new())),
             "subtract" => Some(Box::new(tools::math_stat_analysis::Subtract::new())),
             "tan" => Some(Box::new(tools::math_stat_analysis::Tan::new())),
+            "tanh" => Some(Box::new(tools::math_stat_analysis::Tanh::new())),
             "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
             "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
