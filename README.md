@@ -18,14 +18,14 @@
     * [Why is WhiteboxTools Programmed in Rust?](#why-is-whiteboxtools-programmed-in-rust)
     * [How does WhiteboxTools' design philosophy differ?](#how-does-whiteboxtools-design-philosophy-differ)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
-    * [Can WhiteboxTools be incorporated into other open-source GIS?](#can-whiteboxtools-be-incorporated-into-other-open-source-gis)
+    * [Can WhiteboxTools be incorporated into other software and open-source GIS projects?](#can-whiteboxtools-be-incorporated-into-other-software-and-open-source-gis-projects)
     * [Do I need Rust installed on my computer to run WhiteboxTools?](#do-i-need-rust-installed-on-my-computer-to-run-whiteboxtools)
     * [What platforms does WhiteboxTools support?](#what-platforms-does-whiteboxtools-support)
-    * [What are the recommended system requirements?](#what-are-the-recommended-system-requirements)
+    * [What are the system requirements?](#what-are-the-system-requirements)
 
 ## Description
 
-**WhiteboxTools** is an advanced geospatial data analysis engine. The library has been developed using the [Rust](https://www.rust-lang.org/en-US/) programming language, a very performant and safe systems language often viewed as a modern replacement for C/C++. Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
+**WhiteboxTools** is an advanced geospatial data analysis engine. The library has been developed using the [Rust](https://www.rust-lang.org/en-US/) programming language, a very performant and safe systems language often viewed as a modern replacement for C/C++. Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 400 tools contained within *Whitebox GAT* will be ported to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because Rust is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications. 
 
 The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. Both projects are currently considered to be experimental.
 
@@ -297,6 +297,8 @@ The **WhiteboxTools** library can currently support read/writing raster data in 
 
 ## Contributing
 
+If you would like to contribute to the project as a developer, follow these instructions to get started:
+
 1. Fork the larger Whitebox project (in which whitebox-tools exists) ( https://github.com/jblindsay/whitebox-geospatial-analysis-tools )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
@@ -306,13 +308,15 @@ The **WhiteboxTools** library can currently support read/writing raster data in 
 **TODO**
 Describe the process of integrating a new tool into the library.
 
+If you would like to contribute financial support for the project, please contact [John Lindsay](#contributors). We also welcome contributions in the form of media exposure. If you have written an article or blog about *WhiteboxTools* please let us know about it.
+
 ## Contributors
 
 - [jblindsay](https://github.com/jblindsay) Dr. John Lindsay - creator, maintainer
 
 ## License
 
-The **WhiteboxTools** library is distributed under the [MIT](LICENSE) license.
+The **WhiteboxTools** library is distributed under the [MIT license](LICENSE), a permissive open-source (free software) license.
 
 ## Known Issues
 
@@ -347,7 +351,7 @@ Eventually most of the tools in *Whitebox GAT* will be ported over to *WhiteboxT
 
 ### Can WhiteboxTools be incorporated into other software and open-source GIS projects?
 
-*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other software and GIS projects cannot use *WhiteboxTools* as well. In fact, this is one of the motivating factors for creating the library in the first place! Feel free to use *WhiteboxTools* as the geospatial analysis engine in your open-source software project.
+*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other software and GIS projects cannot use *WhiteboxTools* as well. In fact, this was one of the motivating factors for creating the library in the first place! Feel free to use *WhiteboxTools* as the geospatial analysis engine in your open-source software project.
 
 ### Do I need Rust installed on my computer to run WhiteboxTools?
 
@@ -355,8 +359,8 @@ No, you would only need Rust installed if you were compiling the WhiteboxTools c
 
 ### What platforms does WhiteboxTools support?
 
-**WhiteboxTools** is developed using the Rust programming language, which is supported on a [wide variety of platforms](https://forge.rust-lang.org/platform-support.html) including MS Windows, MacOS, and Linux operating systems and common chip architectures. Interestingly, Rust also supports mobile platforms, which *WhiteboxTools* should therefore be capable of targeting (although no testing has been completed in this regard to date). Nearly all development and testing of the software is currently carried out on MacOS and we cannot guarantee a bug-free performance on other platforms. In particularly, MS Windows is the most different from the other platforms and is therefore the most likely to encounter platform-specific bugs.
+*WhiteboxTools* is developed using the Rust programming language, which is supported on a [wide variety of platforms](https://forge.rust-lang.org/platform-support.html) including MS Windows, MacOS, and Linux operating systems and common chip architectures. Interestingly, Rust also supports mobile platforms, which *WhiteboxTools* should therefore be capable of targeting (although no testing has been completed in this regard to date). Nearly all development and testing of the software is currently carried out on MacOS and we cannot guarantee a bug-free performance on other platforms. In particularly, MS Windows is the most different from the other platforms and is therefore the most likely to encounter platform-specific bugs.
 
-### What are the recommended system requirements?
+### What are the system requirements?
 
-The answer to this question depends strongly on the type of analysis and data that you intend to process. However, generally we find performance to be optimal with a minimum of 8-16GB of memory (RAM), a modern multi-core processor, and an solid-state-drive (SSD). It is likely that *WhiteboxTools* will have satisfactory performance on lower-spec systems if smaller datasets are being processed. Because *WhiteboxTools* reads entire raster datasets into system memory (for optimal performance, and in recognition that modern systems have increasingly larger amounts of fast RAM), this tends to be the limiting factor for the upper-end of data size successfully processed by the library. 64-bit operating systems are recommended and extensive testing has not been carried out on 32-bit OSs. See [**What are the recommended system requirements?**](#what-are-the-recommended-system-requirements) for further details on supported platforms.
+The answer to this question depends strongly on the type of analysis and data that you intend to process. However, generally we find performance to be optimal with a recommended minimum of 8-16GB of memory (RAM), a modern multi-core processor (e.g. 64-bit i5 or i7), and an solid-state-drive (SSD). It is likely that *WhiteboxTools* will have satisfactory performance on lower-spec systems if smaller datasets are being processed. Because *WhiteboxTools* reads entire raster datasets into system memory (for optimal performance, and in recognition that modern systems have increasingly larger amounts of fast RAM), this tends to be the limiting factor for the upper-end of data size successfully processed by the library. 64-bit operating systems are recommended and extensive testing has not been carried out on 32-bit OSs. See [**"What are the recommended system requirements?"**](#what-are-the-recommended-system-requirements) for further details on supported platforms.
