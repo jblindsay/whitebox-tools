@@ -126,14 +126,18 @@ impl ToolManager {
         tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
         tool_names.push("Exp".to_string());
+        tool_names.push("Exp2".to_string());
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
+        tool_names.push("IntegerDivision".to_string());
+        tool_names.push("IsNoData".to_string());
         tool_names.push("LessThan".to_string());
         tool_names.push("Log10".to_string());
         tool_names.push("Log2".to_string());
         tool_names.push("Ln".to_string());
         tool_names.push("Max".to_string());
         tool_names.push("Min".to_string());
+        tool_names.push("Modulo".to_string());
         tool_names.push("Multiply".to_string());
         tool_names.push("Negate".to_string());
         tool_names.push("Not".to_string());
@@ -310,8 +314,10 @@ impl ToolManager {
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
+            "exp2" => Some(Box::new(tools::math_stat_analysis::Exp2::new())),
             "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
+            "integerdivision" => Some(Box::new(tools::math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
             "log10" => Some(Box::new(tools::math_stat_analysis::Log10::new())),
@@ -319,6 +325,7 @@ impl ToolManager {
             "ln" => Some(Box::new(tools::math_stat_analysis::Ln::new())),
             "max" => Some(Box::new(tools::math_stat_analysis::Max::new())),
             "min" => Some(Box::new(tools::math_stat_analysis::Min::new())),
+            "modulo" => Some(Box::new(tools::math_stat_analysis::Modulo::new())),
             "multiply" => Some(Box::new(tools::math_stat_analysis::Multiply::new())),
             "negate" => Some(Box::new(tools::math_stat_analysis::Negate::new())),
             "not" => Some(Box::new(tools::math_stat_analysis::Not::new())),
