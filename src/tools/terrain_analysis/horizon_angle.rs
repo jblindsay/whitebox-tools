@@ -32,7 +32,7 @@ impl HorizonAngle {
     pub fn new() -> HorizonAngle { 
         let name = "HorizonAngle".to_string();
         
-        let description = "Calculates horizon angle (maximum upwind slope) for each grid cell in an input digital elevation model (DEM).".to_string();
+        let description = "Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.".to_string();
         
         let mut parameters = "-i, --dem      Input DEM raster file.".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
