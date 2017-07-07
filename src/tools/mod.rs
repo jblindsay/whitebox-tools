@@ -182,6 +182,7 @@ impl ToolManager {
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("Hillshade".to_string());
+        tool_names.push("HorizonAngle".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
         tool_names.push("NumUpslopeNeighbours".to_string());
         tool_names.push("PercentElevRange".to_string());
@@ -372,6 +373,7 @@ impl ToolManager {
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
+            "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
             "numdownslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new())),
             "numupslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumUpslopeNeighbours::new())),
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
