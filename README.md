@@ -40,7 +40,7 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 Compilation can take several minutes. The whitebox-tools.exe executable file will be located within the ```/target/release/``` folder. Once the project has reached the 1.0 milestone (stable), pre-compiled binaries for *WhiteboxTools* will be distributed with releases of *Whitebox GAT* GIS for each of the supported platforms. Until this time, you will need to compile the executable from source files.
 
-Be sure to follow the instructions for installing Rust carefully. In particular, if you ware installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler. Ultimately, you should not have to interact with Rust directly, but rather the build script will do this for you.
+Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler. Ultimately, you should not have to interact with Rust directly, but rather the build script will do this for you.
 
 ## Usage
 
@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 164 tools:
+The library currently contains the following 165 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -280,6 +280,7 @@ The library currently contains the following 164 tools:
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
 - ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
+- ***FetchAnalysis***: Performs an analysis of fetch or upwind distance to an obstacle.
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.
 - ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.

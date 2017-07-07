@@ -18,24 +18,24 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct DirectionalRelief {
+pub struct FetchAnalysis {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl DirectionalRelief {
+impl FetchAnalysis {
     /// public constructor
-    pub fn new() -> DirectionalRelief { 
-        let name = "DirectionalRelief".to_string();
+    pub fn new() -> FetchAnalysis { 
+        let name = "FetchAnalysis".to_string();
         
-        let description = "Calculates relief for cells in an input DEM for a specified direction.".to_string();
+        let description = "Performs an analysis of fetch or upwind distance to an obstacle.".to_string();
         
         let mut parameters = "-i, --dem      Input DEM raster file.".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
         parameters.push_str("--azimuth      Wind azimuth in degrees (default is 0.0).\n");
-        parameters.push_str("--max_dist     Optional maximum search distance (unspecified if none; in xy units).\n");
+        parameters.push_str("--hgt_inc      Height increment value (default is 0.05).\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -46,11 +46,11 @@ impl DirectionalRelief {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --azimuth=315.0", short_exe, name).replace("*", &sep);
     
-        DirectionalRelief { name: name, description: description, parameters: parameters, example_usage: usage }
+        FetchAnalysis { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for DirectionalRelief {
+impl WhiteboxTool for FetchAnalysis {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -71,7 +71,7 @@ impl WhiteboxTool for DirectionalRelief {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0;
-        let mut max_dist = f64::INFINITY;
+        let mut height_increment = 0.05;
          
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -104,11 +104,11 @@ impl WhiteboxTool for DirectionalRelief {
                 } else {
                     azimuth = args[i+1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-max_dist" || vec[0].to_lowercase() == "--max_dist" {
+            } else if vec[0].to_lowercase() == "-hgt_inc" || vec[0].to_lowercase() == "--hgt_inc" {
                 if keyval {
-                    max_dist = vec[1].to_string().parse::<f64>().unwrap();
+                    height_increment = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_dist = args[i+1].to_string().parse::<f64>().unwrap();
+                    height_increment = args[i+1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -194,34 +194,26 @@ impl WhiteboxTool for DirectionalRelief {
                 let mut current_val: f64;
                 let mut y_intercept: f64;
                 let mut flag: bool;
+                let mut max_val_dist: f64;
                 let (mut delta_x, mut delta_y): (f64, f64);
                 let (mut x, mut y): (f64, f64);
                 let (mut x1, mut y1): (isize, isize);
                 let (mut x2, mut y2): (isize, isize);
                 let (mut z1, mut z2): (f64, f64);
                 let mut dist: f64;
-                let mut total_elevation: f64;
-                let mut n_elevations: f64;
-                let use_max_dist: bool;
-                if max_dist == f64::INFINITY {
-                    use_max_dist = false;
-                } else {
-                    use_max_dist = true;
-                    max_dist = max_dist * max_dist;
-                }
+                let mut old_dist: f64;
                 for row in 0..rows {
                     if row % num_procs == tid {
                         let mut data: Vec<f64> = vec![nodata; columns as usize];
                         for col in 0..columns {
                             current_val = input[(row, col)];
                             if current_val != nodata {
-                                total_elevation = 0f64;
-                                n_elevations = 0f64;
-
                                 //calculate the y intercept of the line equation
                                 y_intercept = -row as f64 - line_slope * col as f64;
 
                                 //find all of the vertical intersections
+                                max_val_dist = 0f64;
+                                dist = 0f64;
                                 x = col as f64;
                                 
                                 flag = true;
@@ -229,35 +221,37 @@ impl WhiteboxTool for DirectionalRelief {
                                     x = x + x_step as f64;
                                     if x < 0.0 || x >= columns as f64 {
                                         flag = false;
+                                        // break;
                                     } else {
+
                                         //calculate the Y value
                                         y = (line_slope * x + y_intercept) * -1f64;
                                         if y < 0f64 || y >= rows as f64 {
                                             flag = false;
+                                            // break;
                                         } else {
+
+                                            //calculate the distance
+                                            delta_x = (x - col as f64) * cell_size;
+                                            delta_y = (y - row as f64) * cell_size;
+
+                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
                                             //estimate z
                                             y1 = y as isize;
                                             y2 = y1 + y_step * -1isize;
                                             z1 = input[(y1, x as isize)];
                                             z2 = input[(y2, x as isize)];
-                                            if z1 != nodata && z2 != nodata {
-                                                z = z1 + (y - y1 as f64) * (z2 - z1);
-                                                total_elevation += z;
-                                                n_elevations += 1f64;
-                                            }
-                                            if use_max_dist {
-                                                //calculate the distance
-                                                delta_x = (x - col as f64) * cell_size;
-                                                delta_y = (y - row as f64) * cell_size;
-
-                                                dist = delta_x * delta_x + delta_y * delta_y;
-                                                if dist >= max_dist {
-                                                    flag = false;
-                                                }
+                                            z = z1 + (y - y1 as f64) * (z2 - z1);
+                                            
+                                            if z >= current_val + dist * height_increment {
+                                                max_val_dist = dist;
+                                                flag = false;
                                             }
                                         }
                                     }
                                 }
+
+                                old_dist = dist;
                                 
                                 //find all of the horizontal intersections
                                 y = -row as f64;
@@ -266,44 +260,52 @@ impl WhiteboxTool for DirectionalRelief {
                                     y = y + y_step as f64;
                                     if -y < 0f64 || -y >= rows as f64 {
                                         flag = false;
+                                        // break;
                                     } else {
+
                                         //calculate the X value
                                         x = (y - y_intercept) / line_slope;
                                         if x < 0f64 || x >= columns as f64 {
                                             flag = false;
+                                            //break;
                                         } else {
+
+                                            //calculate the distance
+                                            delta_x = (x - col as f64) * cell_size;
+                                            delta_y = (-y - row as f64) * cell_size;
+                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
                                             //estimate z
                                             x1 = x as isize;
                                             x2 = x1 + x_step;
                                             if x2 < 0 || x2 >= columns {
                                                 flag = false;
+                                                // break;
                                             } else {
+
                                                 z1 = input[(-y as isize, x1)];
                                                 z2 = input[(y as isize, x2)];
-                                                if z1 != nodata && z2 != nodata {
-                                                    z = z1 + (x - x1 as f64) * (z2 - z1);
-                                                    total_elevation += z;
-                                                    n_elevations += 1f64;
-                                                }
-                                                if use_max_dist {
-                                                    //calculate the distance
-                                                    delta_x = (x - col as f64) * cell_size;
-                                                    delta_y = (-y - row as f64) * cell_size;
-                                                    dist = delta_x * delta_x + delta_y * delta_y;
-                                                    if dist >= max_dist {
-                                                        flag = false;
+                                                z = z1 + (x - x1 as f64) * (z2 - z1);
+                                                
+                                                if z >= current_val + dist * height_increment {
+                                                    if dist < max_val_dist || max_val_dist == 0f64 {
+                                                        max_val_dist = dist; 
                                                     }
+                                                    flag = false;
                                                 }
                                             }
                                         }
                                     }
                                 }
 
-                                if n_elevations > 0f64 {
-                                    data[col as usize] = total_elevation / n_elevations - current_val;
-                                } else {
-                                    data[col as usize] = nodata;
+                                if max_val_dist == 0f64 {
+                                    //find the larger of dist and olddist
+                                    if dist > old_dist {
+                                        max_val_dist = -dist;
+                                    } else {
+                                        max_val_dist = -old_dist;
+                                    }
                                 }
+                                data[col as usize] = max_val_dist;
                             }
                         }
                         tx.send((row, data)).unwrap();
@@ -332,7 +334,7 @@ impl WhiteboxTool for DirectionalRelief {
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
-        output.add_metadata_entry(format!("Max dist: {}", max_dist));
+        output.add_metadata_entry(format!("Height increment: {}", height_increment));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };

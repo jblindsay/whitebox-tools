@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
-Last Modified: July 6, 2017
+Created: July 7, 2017
+Last Modified: July 7, 2017
 License: MIT
 
 NOTES: The tool should have the option to output a distance raster as well.
