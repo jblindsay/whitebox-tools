@@ -4,8 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 6, 2017
 Last Modified: July 6, 2017
 License: MIT
-
-NOTES: The tool should have the option to output a distance raster as well.
 */
 extern crate time;
 extern crate num_cpus;
@@ -20,19 +18,19 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct HorizonAngle {
+pub struct DirectionalRelief {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl HorizonAngle {
+impl DirectionalRelief {
     /// public constructor
-    pub fn new() -> HorizonAngle { 
-        let name = "HorizonAngle".to_string();
+    pub fn new() -> DirectionalRelief { 
+        let name = "DirectionalRelief".to_string();
         
-        let description = "Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.".to_string();
+        let description = "Calculates relief for cells in an input DEM for a specified direction.".to_string();
         
         let mut parameters = "-i, --dem      Input DEM raster file.".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
@@ -48,11 +46,11 @@ impl HorizonAngle {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --azimuth=315.0", short_exe, name).replace("*", &sep);
     
-        HorizonAngle { name: name, description: description, parameters: parameters, example_usage: usage }
+        DirectionalRelief { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for HorizonAngle {
+impl WhiteboxTool for DirectionalRelief {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -195,29 +193,35 @@ impl WhiteboxTool for HorizonAngle {
                 let mut z: f64;
                 let mut current_val: f64;
                 let mut y_intercept: f64;
-                let mut current_max_val: f64;
-                let a_small_value = -9999999f64;
                 let mut flag: bool;
-                // let mut max_val_dist: f64;
                 let (mut delta_x, mut delta_y): (f64, f64);
                 let (mut x, mut y): (f64, f64);
                 let (mut x1, mut y1): (isize, isize);
                 let (mut x2, mut y2): (isize, isize);
                 let (mut z1, mut z2): (f64, f64);
                 let mut dist: f64;
-                let mut slope: f64;
+                let mut total_elevation: f64;
+                let mut n_elevations: f64;
+                let use_max_dist: bool;
+                if max_dist == f64::INFINITY {
+                    use_max_dist = false;
+                } else {
+                    use_max_dist = true;
+                    max_dist = max_dist * max_dist;
+                }
                 for row in 0..rows {
                     if row % num_procs == tid {
                         let mut data: Vec<f64> = vec![nodata; columns as usize];
                         for col in 0..columns {
                             current_val = input[(row, col)];
                             if current_val != nodata {
+                                total_elevation = 0f64;
+                                n_elevations = 0f64;
+
                                 //calculate the y intercept of the line equation
                                 y_intercept = -row as f64 - line_slope * col as f64;
 
                                 //find all of the vertical intersections
-                                current_max_val = a_small_value;
-                                // max_val_dist = a_small_value;
                                 x = col as f64;
                                 
                                 flag = true;
@@ -225,39 +229,30 @@ impl WhiteboxTool for HorizonAngle {
                                     x = x + x_step as f64;
                                     if x < 0.0 || x >= columns as f64 {
                                         flag = false;
-                                        // break;
                                     } else {
-
                                         //calculate the Y value
                                         y = (line_slope * x + y_intercept) * -1f64;
                                         if y < 0f64 || y >= rows as f64 {
                                             flag = false;
-                                            // break;
                                         } else {
-
-                                            //calculate the distance
-                                            delta_x = (x - col as f64) * cell_size;
-                                            delta_y = (y - row as f64) * cell_size;
-
-                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                            if dist > max_dist {
-                                                flag = false;
-                                                // break;
-                                            } else {
-
-                                                //estimate z
-                                                y1 = y as isize;
-                                                y2 = y1 + y_step * -1isize;
-                                                z1 = input[(y1, x as isize)];
-                                                z2 = input[(y2, x as isize)];
+                                            //estimate z
+                                            y1 = y as isize;
+                                            y2 = y1 + y_step * -1isize;
+                                            z1 = input[(y1, x as isize)];
+                                            z2 = input[(y2, x as isize)];
+                                            if z1 != nodata && z2 != nodata {
                                                 z = z1 + (y - y1 as f64) * (z2 - z1);
-                                                //calculate the slope
-                                                slope = (z - current_val) / dist;
-                                                if slope > current_max_val {
-                                                    current_max_val = slope;
-                                                    // max_val_dist = dist;
-                                                // } else if current_max_val < 0f64 {
-                                                    // max_val_dist = dist;
+                                                total_elevation += z;
+                                                n_elevations += 1f64;
+                                            }
+                                            if use_max_dist {
+                                                //calculate the distance
+                                                delta_x = (x - col as f64) * cell_size;
+                                                delta_y = (y - row as f64) * cell_size;
+
+                                                dist = delta_x * delta_x + delta_y * delta_y;
+                                                if dist >= max_dist {
+                                                    flag = false;
                                                 }
                                             }
                                         }
@@ -271,43 +266,32 @@ impl WhiteboxTool for HorizonAngle {
                                     y = y + y_step as f64;
                                     if -y < 0f64 || -y >= rows as f64 {
                                         flag = false;
-                                        // break;
                                     } else {
-
                                         //calculate the X value
                                         x = (y - y_intercept) / line_slope;
                                         if x < 0f64 || x >= columns as f64 {
                                             flag = false;
-                                            //break;
                                         } else {
-
-                                            //calculate the distance
-                                            delta_x = (x - col as f64) * cell_size;
-                                            delta_y = (-y - row as f64) * cell_size;
-                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                            if dist > max_dist {
+                                            //estimate z
+                                            x1 = x as isize;
+                                            x2 = x1 + x_step;
+                                            if x2 < 0 || x2 >= columns {
                                                 flag = false;
-                                                // break;
                                             } else {
-
-                                                //estimate z
-                                                x1 = x as isize;
-                                                x2 = x1 + x_step;
-                                                if x2 < 0 || x2 >= columns {
-                                                    flag = false;
-                                                    // break;
-                                                } else {
-
-                                                    z1 = input[(-y as isize, x1)];
-                                                    z2 = input[(y as isize, x2)];
+                                                z1 = input[(-y as isize, x1)];
+                                                z2 = input[(y as isize, x2)];
+                                                if z1 != nodata && z2 != nodata {
                                                     z = z1 + (x - x1 as f64) * (z2 - z1);
-                                                    //calculate the slope
-                                                    slope = (z - current_val) / dist;
-                                                    if slope > current_max_val {
-                                                        current_max_val = slope;
-                                                        // max_val_dist = dist;
-                                                    } else if current_max_val < 0f64 {
-                                                        // max_val_dist = dist;
+                                                    total_elevation += z;
+                                                    n_elevations += 1f64;
+                                                }
+                                                if use_max_dist {
+                                                    //calculate the distance
+                                                    delta_x = (x - col as f64) * cell_size;
+                                                    delta_y = (-y - row as f64) * cell_size;
+                                                    dist = delta_x * delta_x + delta_y * delta_y;
+                                                    if dist >= max_dist {
+                                                        flag = false;
                                                     }
                                                 }
                                             }
@@ -315,19 +299,10 @@ impl WhiteboxTool for HorizonAngle {
                                     }
                                 }
 
-                                z = current_max_val.atan().to_degrees();
-                                if z < -89f64 { z = 0f64; }
-                                if current_max_val != a_small_value {
-                                    data[col as usize] = z;
-                                    // if (saveDistance) {
-                                    //     if (z < 0) { max_val_dist = max_val_dist * -1; }
-                                    //     outputDist.setValue(row, col, max_val_dist);
-                                    // }
+                                if n_elevations > 0f64 {
+                                    data[col as usize] = total_elevation / n_elevations - current_val;
                                 } else {
                                     data[col as usize] = nodata;
-                                    // if (saveDistance) {
-                                    //     outputDist.setValue(row, col, noData);
-                                    // }
                                 }
                             }
                         }

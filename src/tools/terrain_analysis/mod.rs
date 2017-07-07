@@ -2,6 +2,7 @@
 mod aspect;
 mod dev_from_mean_elev; 
 mod diff_from_mean_elev;
+mod directional_relief;
 mod elev_percentile;
 mod fill_missing_data;
 mod hillshade;
@@ -26,6 +27,7 @@ mod wetness_index;
 pub use self::aspect::Aspect;
 pub use self::dev_from_mean_elev::DevFromMeanElev;
 pub use self::diff_from_mean_elev::DiffFromMeanElev;
+pub use self::directional_relief::DirectionalRelief;
 pub use self::elev_percentile::ElevPercentile;
 pub use self::fill_missing_data::FillMissingData;
 pub use self::hillshade::Hillshade;
