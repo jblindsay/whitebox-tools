@@ -6,10 +6,10 @@ use std::io::ErrorKind;
 use std::ops::{AddAssign, SubAssign, Index, IndexMut};
 
 pub struct Array2D<T: Copy + AddAssign + SubAssign> {
-    columns: isize,
-    rows: isize,
+    pub columns: isize,
+    pub rows: isize,
     data: Vec<T>,
-    nodata: T,
+    pub nodata: T,
 }
 
 impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {

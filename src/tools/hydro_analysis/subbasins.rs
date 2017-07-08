@@ -329,7 +329,7 @@ impl WhiteboxTool for Subbasins {
                     y = row;
                     output[(y, x)] = outlet_id;
                     while !flag {
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = pntr[(y, x)] as usize;
                         if dir > 0 {
                             c = pntr_matches[dir];

@@ -208,7 +208,7 @@ impl WhiteboxTool for CostAllocation {
                     y = row;
                     outlet_id = nodata;
                     while !flag {
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = flow_dir[(y, x)];
                         if dir >= 0 {
                             // move x and y accordingly
@@ -231,7 +231,7 @@ impl WhiteboxTool for CostAllocation {
                     y = row;
                     output[(y, x)] = outlet_id;
                     while !flag {
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = flow_dir[(y, x)];
                         if dir >= 0 {
                             // move x and y accordingly

@@ -29,7 +29,7 @@ impl StreamLinkSlope {
         
         let description = "Estimates the average slope of each link (or tributary) in a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr        Input D8 pointer raster file.\n".to_owned();
+        let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--linkid           Input streams link ID (or tributary ID) raster file.\n");
         parameters.push_str("--dem              Input digital elevation model (DEM) raster file.");
         parameters.push_str("-o, --output       Output raster file.\n");

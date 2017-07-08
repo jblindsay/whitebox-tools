@@ -1,3 +1,11 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 2, 2017
+Last Modified: July 7, 2017
+License: MIT
+*/
+
 // extern crate byteorder;
 extern crate num_cpus;
 
@@ -12,14 +20,15 @@ pub mod surfer_ascii_raster;
 pub mod whitebox_raster;
 
 use std::cmp::Ordering::Equal;
+use std::default::Default;
 use std::io::Error;
 use std::io::prelude::*;
 use std::io::ErrorKind;
 use std::io::BufReader;
-use std::default::Default;
 use std::fs::File;
-use std::path::Path;
 use std::f64;
+use std::path::Path;
+use std::ops::{Index, IndexMut};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
@@ -33,7 +42,7 @@ use raster::surfer7_raster::*;
 use raster::surfer_ascii_raster::*;
 use raster::whitebox_raster::*;
 use io_utils::byte_order_reader::*;
-use std::ops::{Index, IndexMut};
+use structures::Array2D;
 
 #[derive(Default, Clone)]
 pub struct Raster {
@@ -248,7 +257,7 @@ impl Raster {
         values
     }
 
-    pub fn set_data_from_raster(&mut self, other: &Raster)  -> Result<(), Error> {
+    pub fn set_data_from_raster(&mut self, other: &Raster) -> Result<(), Error> {
         if self.configs.rows != other.configs.rows || self.configs.columns != self.configs.columns {
             return Err(Error::new(ErrorKind::Other, "Rasters must have the same dimensions and extent."));
         }
@@ -256,6 +265,15 @@ impl Raster {
             self.set_row_data(row, other.get_row_data(row));
         }
         Ok(())
+    }
+
+    pub fn get_data_as_array2d(&self) -> Array2D<f64> {
+        let mut data: Array2D<f64> = Array2D::new(self.configs.rows as isize, 
+            self.configs.columns as isize, self.configs.nodata, self.configs.nodata).unwrap();
+        for row in 0..self.configs.rows as isize {
+            data.set_row_data(row, self.get_row_data(row));
+        }
+        data
     }
 
     pub fn reinitialize_values(&mut self, value: f64) {

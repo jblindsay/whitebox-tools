@@ -202,114 +202,112 @@ impl WhiteboxTool for FetchAnalysis {
                 let (mut z1, mut z2): (f64, f64);
                 let mut dist: f64;
                 let mut old_dist: f64;
-                for row in 0..rows {
-                    if row % num_procs == tid {
-                        let mut data: Vec<f64> = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            current_val = input[(row, col)];
-                            if current_val != nodata {
-                                //calculate the y intercept of the line equation
-                                y_intercept = -row as f64 - line_slope * col as f64;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        current_val = input[(row, col)];
+                        if current_val != nodata {
+                            //calculate the y intercept of the line equation
+                            y_intercept = -row as f64 - line_slope * col as f64;
 
-                                //find all of the vertical intersections
-                                max_val_dist = 0f64;
-                                dist = 0f64;
-                                x = col as f64;
-                                
-                                flag = true;
-                                while flag {
-                                    x = x + x_step as f64;
-                                    if x < 0.0 || x >= columns as f64 {
+                            //find all of the vertical intersections
+                            max_val_dist = 0f64;
+                            dist = 0f64;
+                            x = col as f64;
+                            
+                            flag = true;
+                            while flag {
+                                x = x + x_step as f64;
+                                if x < 0.0 || x >= columns as f64 {
+                                    flag = false;
+                                    // break;
+                                } else {
+
+                                    //calculate the Y value
+                                    y = (line_slope * x + y_intercept) * -1f64;
+                                    if y < 0f64 || y >= rows as f64 {
                                         flag = false;
                                         // break;
                                     } else {
 
-                                        //calculate the Y value
-                                        y = (line_slope * x + y_intercept) * -1f64;
-                                        if y < 0f64 || y >= rows as f64 {
+                                        //calculate the distance
+                                        delta_x = (x - col as f64) * cell_size;
+                                        delta_y = (y - row as f64) * cell_size;
+
+                                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                                        //estimate z
+                                        y1 = y as isize;
+                                        y2 = y1 + y_step * -1isize;
+                                        z1 = input[(y1, x as isize)];
+                                        z2 = input[(y2, x as isize)];
+                                        z = z1 + (y - y1 as f64) * (z2 - z1);
+                                        
+                                        if z >= current_val + dist * height_increment {
+                                            max_val_dist = dist;
+                                            flag = false;
+                                        }
+                                    }
+                                }
+                            }
+
+                            old_dist = dist;
+                            
+                            //find all of the horizontal intersections
+                            y = -row as f64;
+                            flag = true;
+                            while flag {
+                                y = y + y_step as f64;
+                                if -y < 0f64 || -y >= rows as f64 {
+                                    flag = false;
+                                    // break;
+                                } else {
+
+                                    //calculate the X value
+                                    x = (y - y_intercept) / line_slope;
+                                    if x < 0f64 || x >= columns as f64 {
+                                        flag = false;
+                                        //break;
+                                    } else {
+
+                                        //calculate the distance
+                                        delta_x = (x - col as f64) * cell_size;
+                                        delta_y = (-y - row as f64) * cell_size;
+                                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                                        //estimate z
+                                        x1 = x as isize;
+                                        x2 = x1 + x_step;
+                                        if x2 < 0 || x2 >= columns {
                                             flag = false;
                                             // break;
                                         } else {
 
-                                            //calculate the distance
-                                            delta_x = (x - col as f64) * cell_size;
-                                            delta_y = (y - row as f64) * cell_size;
-
-                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                            //estimate z
-                                            y1 = y as isize;
-                                            y2 = y1 + y_step * -1isize;
-                                            z1 = input[(y1, x as isize)];
-                                            z2 = input[(y2, x as isize)];
-                                            z = z1 + (y - y1 as f64) * (z2 - z1);
+                                            z1 = input[(-y as isize, x1)];
+                                            z2 = input[(y as isize, x2)];
+                                            z = z1 + (x - x1 as f64) * (z2 - z1);
                                             
                                             if z >= current_val + dist * height_increment {
-                                                max_val_dist = dist;
-                                                flag = false;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                old_dist = dist;
-                                
-                                //find all of the horizontal intersections
-                                y = -row as f64;
-                                flag = true;
-                                while flag {
-                                    y = y + y_step as f64;
-                                    if -y < 0f64 || -y >= rows as f64 {
-                                        flag = false;
-                                        // break;
-                                    } else {
-
-                                        //calculate the X value
-                                        x = (y - y_intercept) / line_slope;
-                                        if x < 0f64 || x >= columns as f64 {
-                                            flag = false;
-                                            //break;
-                                        } else {
-
-                                            //calculate the distance
-                                            delta_x = (x - col as f64) * cell_size;
-                                            delta_y = (-y - row as f64) * cell_size;
-                                            dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                            //estimate z
-                                            x1 = x as isize;
-                                            x2 = x1 + x_step;
-                                            if x2 < 0 || x2 >= columns {
-                                                flag = false;
-                                                // break;
-                                            } else {
-
-                                                z1 = input[(-y as isize, x1)];
-                                                z2 = input[(y as isize, x2)];
-                                                z = z1 + (x - x1 as f64) * (z2 - z1);
-                                                
-                                                if z >= current_val + dist * height_increment {
-                                                    if dist < max_val_dist || max_val_dist == 0f64 {
-                                                        max_val_dist = dist; 
-                                                    }
-                                                    flag = false;
+                                                if dist < max_val_dist || max_val_dist == 0f64 {
+                                                    max_val_dist = dist; 
                                                 }
+                                                flag = false;
                                             }
                                         }
                                     }
                                 }
-
-                                if max_val_dist == 0f64 {
-                                    //find the larger of dist and olddist
-                                    if dist > old_dist {
-                                        max_val_dist = -dist;
-                                    } else {
-                                        max_val_dist = -old_dist;
-                                    }
-                                }
-                                data[col as usize] = max_val_dist;
                             }
+
+                            if max_val_dist == 0f64 {
+                                //find the larger of dist and olddist
+                                if dist > old_dist {
+                                    max_val_dist = -dist;
+                                } else {
+                                    max_val_dist = -old_dist;
+                                }
+                            }
+                            data[col as usize] = max_val_dist;
                         }
-                        tx.send((row, data)).unwrap();
                     }
+                    tx.send((row, data)).unwrap();
                 }
             });
         }

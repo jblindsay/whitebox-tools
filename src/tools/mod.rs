@@ -53,6 +53,7 @@ impl ToolManager {
         tool_names.push("D8Pointer".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
         tool_names.push("DInfPointer".to_string());
+        tool_names.push("DownslopeFlowpathLength".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FillDepressions".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
@@ -246,6 +247,7 @@ impl ToolManager {
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
             "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
             "dinfpointer" => Some(Box::new(tools::hydro_analysis::DInfPointer::new())),
+            "downslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::DownslopeFlowpathLength::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "jensonsnappourpoints" => Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new())),

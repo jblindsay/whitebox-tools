@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: June 22, 2017
+Last Modified: July 8, 2017
 License: MIT
 */
 extern crate time;
@@ -145,8 +145,8 @@ impl WhiteboxTool for Watershed {
                                 "The input files must have the same number of rows and columns and spatial extent."));
         }
 
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
         let mut output = Raster::initialize_using_file(&output_file, &pourpts);
@@ -162,7 +162,7 @@ impl WhiteboxTool for Watershed {
         let mut pntr_matches: [i8; 129] = [0i8; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 0i8;
             pntr_matches[2] = 1i8;
             pntr_matches[4] = 2i8;
@@ -173,7 +173,7 @@ impl WhiteboxTool for Watershed {
             pntr_matches[128] = 7i8;
         } else {
             // This maps Esri-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 1i8;
             pntr_matches[2] = 2i8;
             pntr_matches[4] = 3i8;
@@ -217,18 +217,18 @@ impl WhiteboxTool for Watershed {
         let mut outlet_id: f64;
         for row in 0..rows {
             for col in 0..columns {
-                if output[(row, col)] == low_value { // && flow_dir[(row, col)] != -2i8 {
+                if output[(row, col)] == low_value {
                     flag = false;
                     x = col;
                     y = row;
                     outlet_id = nodata;
                     while !flag {
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = flow_dir[(y, x)];
                         if dir >= 0 {
                             // move x and y accordingly
-                            x += d_x[dir as usize];
-                            y += d_y[dir as usize];
+                            x += dx[dir as usize];
+                            y += dy[dir as usize];
 
                             // if the new cell already has a value in the output, use that as the outletID
                             z = output[(y, x)];
@@ -246,12 +246,12 @@ impl WhiteboxTool for Watershed {
                     y = row;
                     output[(y, x)] = outlet_id;
                     while !flag {
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = flow_dir[(y, x)];
                         if dir >= 0 {
                             // move x and y accordingly
-                            x += d_x[dir as usize];
-                            y += d_y[dir as usize];
+                            x += dx[dir as usize];
+                            y += dy[dir as usize];
 
                             // if the new cell already has a value in the output, use that as the outletID
                             if output[(y, x)] != low_value {

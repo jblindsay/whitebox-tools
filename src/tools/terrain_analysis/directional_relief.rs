@@ -209,47 +209,85 @@ impl WhiteboxTool for DirectionalRelief {
                     use_max_dist = true;
                     max_dist = max_dist * max_dist;
                 }
-                for row in 0..rows {
-                    if row % num_procs == tid {
-                        let mut data: Vec<f64> = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            current_val = input[(row, col)];
-                            if current_val != nodata {
-                                total_elevation = 0f64;
-                                n_elevations = 0f64;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        current_val = input[(row, col)];
+                        if current_val != nodata {
+                            total_elevation = 0f64;
+                            n_elevations = 0f64;
 
-                                //calculate the y intercept of the line equation
-                                y_intercept = -row as f64 - line_slope * col as f64;
+                            //calculate the y intercept of the line equation
+                            y_intercept = -row as f64 - line_slope * col as f64;
 
-                                //find all of the vertical intersections
-                                x = col as f64;
-                                
-                                flag = true;
-                                while flag {
-                                    x = x + x_step as f64;
-                                    if x < 0.0 || x >= columns as f64 {
+                            //find all of the vertical intersections
+                            x = col as f64;
+                            
+                            flag = true;
+                            while flag {
+                                x = x + x_step as f64;
+                                if x < 0.0 || x >= columns as f64 {
+                                    flag = false;
+                                } else {
+                                    //calculate the Y value
+                                    y = (line_slope * x + y_intercept) * -1f64;
+                                    if y < 0f64 || y >= rows as f64 {
                                         flag = false;
                                     } else {
-                                        //calculate the Y value
-                                        y = (line_slope * x + y_intercept) * -1f64;
-                                        if y < 0f64 || y >= rows as f64 {
+                                        //estimate z
+                                        y1 = y as isize;
+                                        y2 = y1 + y_step * -1isize;
+                                        z1 = input[(y1, x as isize)];
+                                        z2 = input[(y2, x as isize)];
+                                        if z1 != nodata && z2 != nodata {
+                                            z = z1 + (y - y1 as f64) * (z2 - z1);
+                                            total_elevation += z;
+                                            n_elevations += 1f64;
+                                        }
+                                        if use_max_dist {
+                                            //calculate the distance
+                                            delta_x = (x - col as f64) * cell_size;
+                                            delta_y = (y - row as f64) * cell_size;
+
+                                            dist = delta_x * delta_x + delta_y * delta_y;
+                                            if dist >= max_dist {
+                                                flag = false;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            //find all of the horizontal intersections
+                            y = -row as f64;
+                            flag = true;
+                            while flag {
+                                y = y + y_step as f64;
+                                if -y < 0f64 || -y >= rows as f64 {
+                                    flag = false;
+                                } else {
+                                    //calculate the X value
+                                    x = (y - y_intercept) / line_slope;
+                                    if x < 0f64 || x >= columns as f64 {
+                                        flag = false;
+                                    } else {
+                                        //estimate z
+                                        x1 = x as isize;
+                                        x2 = x1 + x_step;
+                                        if x2 < 0 || x2 >= columns {
                                             flag = false;
                                         } else {
-                                            //estimate z
-                                            y1 = y as isize;
-                                            y2 = y1 + y_step * -1isize;
-                                            z1 = input[(y1, x as isize)];
-                                            z2 = input[(y2, x as isize)];
+                                            z1 = input[(-y as isize, x1)];
+                                            z2 = input[(y as isize, x2)];
                                             if z1 != nodata && z2 != nodata {
-                                                z = z1 + (y - y1 as f64) * (z2 - z1);
+                                                z = z1 + (x - x1 as f64) * (z2 - z1);
                                                 total_elevation += z;
                                                 n_elevations += 1f64;
                                             }
                                             if use_max_dist {
                                                 //calculate the distance
                                                 delta_x = (x - col as f64) * cell_size;
-                                                delta_y = (y - row as f64) * cell_size;
-
+                                                delta_y = (-y - row as f64) * cell_size;
                                                 dist = delta_x * delta_x + delta_y * delta_y;
                                                 if dist >= max_dist {
                                                     flag = false;
@@ -258,56 +296,16 @@ impl WhiteboxTool for DirectionalRelief {
                                         }
                                     }
                                 }
-                                
-                                //find all of the horizontal intersections
-                                y = -row as f64;
-                                flag = true;
-                                while flag {
-                                    y = y + y_step as f64;
-                                    if -y < 0f64 || -y >= rows as f64 {
-                                        flag = false;
-                                    } else {
-                                        //calculate the X value
-                                        x = (y - y_intercept) / line_slope;
-                                        if x < 0f64 || x >= columns as f64 {
-                                            flag = false;
-                                        } else {
-                                            //estimate z
-                                            x1 = x as isize;
-                                            x2 = x1 + x_step;
-                                            if x2 < 0 || x2 >= columns {
-                                                flag = false;
-                                            } else {
-                                                z1 = input[(-y as isize, x1)];
-                                                z2 = input[(y as isize, x2)];
-                                                if z1 != nodata && z2 != nodata {
-                                                    z = z1 + (x - x1 as f64) * (z2 - z1);
-                                                    total_elevation += z;
-                                                    n_elevations += 1f64;
-                                                }
-                                                if use_max_dist {
-                                                    //calculate the distance
-                                                    delta_x = (x - col as f64) * cell_size;
-                                                    delta_y = (-y - row as f64) * cell_size;
-                                                    dist = delta_x * delta_x + delta_y * delta_y;
-                                                    if dist >= max_dist {
-                                                        flag = false;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            }
 
-                                if n_elevations > 0f64 {
-                                    data[col as usize] = total_elevation / n_elevations - current_val;
-                                } else {
-                                    data[col as usize] = nodata;
-                                }
+                            if n_elevations > 0f64 {
+                                data[col as usize] = total_elevation / n_elevations - current_val;
+                            } else {
+                                data[col as usize] = nodata;
                             }
                         }
-                        tx.send((row, data)).unwrap();
                     }
+                    tx.send((row, data)).unwrap();
                 }
             });
         }

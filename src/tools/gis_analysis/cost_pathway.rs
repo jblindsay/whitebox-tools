@@ -179,7 +179,7 @@ impl WhiteboxTool for CostPathway {
                         } else {
                             output.increment(y, x, 1.0);
                         }
-                        // find it's downslope neighbour
+                        // find its downslope neighbour
                         dir = backlink[(y, x)];
                         if dir != nodata && dir > 0.0 {
                             // move x and y accordingly
