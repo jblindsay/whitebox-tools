@@ -56,6 +56,7 @@ impl ToolManager {
         tool_names.push("DownslopeFlowpathLength".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FillDepressions".to_string());
+        tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
@@ -186,6 +187,7 @@ impl ToolManager {
         tool_names.push("FillMissingData".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
+        tool_names.push("MaxBranchLength".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
         tool_names.push("NumUpslopeNeighbours".to_string());
         tool_names.push("PercentElevRange".to_string());
@@ -250,6 +252,7 @@ impl ToolManager {
             "downslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::DownslopeFlowpathLength::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
+            "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
             "jensonsnappourpoints" => Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new())),
             "maxupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::MaxUpslopeFlowpathLength::new())),
             "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
@@ -380,6 +383,7 @@ impl ToolManager {
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
+            "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
             "numdownslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new())),
             "numupslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumUpslopeNeighbours::new())),
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),

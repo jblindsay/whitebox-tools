@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 2, 2017
-Last Modified: July 2, 2017
+Created: July 9, 2017
+Last Modified: July 9, 2017
 License: MIT
 */
 extern crate time;
@@ -19,22 +19,22 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct BranchLength {
+pub struct MaxBranchLength {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl BranchLength {
-    pub fn new() -> BranchLength { // public constructor
-        let name = "BranchLength".to_string();
+impl MaxBranchLength {
+    pub fn new() -> MaxBranchLength { // public constructor
+        let name = "MaxBranchLength".to_string();
         
-        let description = "Branch length is used to map drainage divides or ridge lines".to_string();
+        let description = "Branch length is used to map drainage divides or ridge lines.".to_string();
         
-        let mut parameters = "--dem       Input raster DEM file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
+        let mut parameters = "--dem          Input raster DEM file.\n".to_owned();
+        parameters.push_str("-o, --output   Output raster file.\n");
+        parameters.push_str("--log          Optional flag to request the output be log-transformed.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -45,11 +45,11 @@ impl BranchLength {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        BranchLength { name: name, description: description, parameters: parameters, example_usage: usage }
+        MaxBranchLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for BranchLength {
+impl WhiteboxTool for MaxBranchLength {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -127,7 +127,6 @@ impl WhiteboxTool for BranchLength {
         let start = time::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-        let num_cells = rows * columns;
         let nodata = input.configs.nodata;
         let cell_size_x = input.configs.resolution_x;
         let cell_size_y = input.configs.resolution_y;
@@ -200,63 +199,129 @@ impl WhiteboxTool for BranchLength {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+        output.reinitialize_values(0f64);
         let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
         let mut dir: i8;
-        let (mut dist1, mut dist2, mut dist3): (f64, f64, f64);
-        let (mut flag1, mut flag2): (bool, bool);
-        let (mut r1, mut c1, mut r2, mut c2, mut r3, mut c3): (isize, isize, isize, isize, isize, isize);
+        let (mut dist1, mut dist2): (f64, f64);
+        let mut flag1: bool;
+        let mut flag2: bool;
+        let (mut r1, mut c1): (isize, isize);
+        let (mut r2, mut c2): (isize, isize);
         let mut idx: isize;
-        let mut paths: Array2D<isize> = Array2D::new(rows, columns, isize::min_value(), isize::min_value())?;
-        let mut path_val: isize;
+        let mut paths: Array2D<isize> = Array2D::new(rows, columns, 0, 0)?;
+        let mut path_lengths: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         for row in 0..rows {
-            let mut data: Vec<i8> = vec![-1i8; columns as usize];
             for col in 0..columns {
                 if flow_dir[(row, col)] >= 0i8 {
-                    idx = row * rows as isize + col;
-                    r1 = row;
-                    c1 = col;
-                    paths.set_value(r1, c1, -idx);
-                    dist1 = 0f64;
-                    
+                    idx = row * rows as isize + col + 1;
+
                     // right cell
-                    r2 = row + dy[1];
-                    c2 = col + dx[1];
-                    flag1 = true;
-                    if flow_dir[(r2, c2)] != flow_nodata {
-                        paths.set_value(r2, c2, idx);
+                    r2 = row;
+                    c2 = col + 1;
+                    if flow_dir[(r2, c2)] >= 0i8 {
+                        r1 = row;
+                        c1 = col;
+                        dist1 = 0f64;
                         dist2 = 0f64;
-                    } else {
-                        flag1 = false
-                    }
-                    // lower cell
-                    r3 = row + dy[3];
-                    c3 = col + dx[3];
-                    flag2 = true;
-                    if flow_dir[(r3, c3)] != flow_nodata {
-                        paths.set_value(r3, c3, idx);
-                        dist3 = 0f64;
-                    } else {
-                        flag2 = false;
-                    }
-
-                    while flag1 || flag2 {
-                        dir = flow_dir[(r1, c1)];
-                        if dir > 0 {
-                            r1 += dy[dir as usize];
-                            c1 += dx[dir as usize];
-                            path_val = paths[(r1, c1)];
-                            dist1 += grid_lengths[dir];
-                            if path_val == idx {
-
+                        flag1 = true;
+                        flag2 = true;
+                        while flag1 || flag2 {
+                            if flag1 {
+                                if paths[(r1, c1)] == idx { // intersection
+                                    flag1 = false;
+                                    flag2 = false;
+                                    dist2 = path_lengths[(r1, c1)];
+                                }
+                                paths[(r1, c1)] = idx;
+                                path_lengths[(r1, c1)] = dist1;
+                                dir = flow_dir[(r1, c1)];
+                                if dir >= 0 {
+                                    r1 += dy[dir as usize];
+                                    c1 += dx[dir as usize];
+                                    dist1 += grid_lengths[dir as usize];
+                                } else {
+                                    flag1 = false;
+                                }
                             }
-                        } else {
-                            flag1 = false;
-                            flag2 = false
+
+                            if flag2 {
+                                if paths[(r2, c2)] == idx { // intersection
+                                    flag1 = false;
+                                    flag2 = false;
+                                    dist1 = path_lengths[(r2, c2)];
+                                }
+                                paths[(r2, c2)] = idx;
+                                path_lengths[(r2, c2)] = dist2;
+                                dir = flow_dir[(r2, c2)];
+                                if dir >= 0 {
+                                    r2 += dy[dir as usize];
+                                    c2 += dx[dir as usize];
+                                    dist2 += grid_lengths[dir as usize];
+                                } else {
+                                    flag2 = false;
+                                }
+                            }
                         }
+                        if dist1 > output[(row, col)] { output.set_value(row, col, dist1); }
+                        if dist2 > output[(row, col + 1)] { output.set_value(row, col + 1, dist2); }
                     }
+
+                    // lower cell
+                    r2 = row + 1;
+                    c2 = col;
+                    if flow_dir[(r2, c2)] >= 0i8 {
+                        idx = -idx;
+                        r1 = row;
+                        c1 = col;
+                        dist1 = 0f64;
+                        dist2 = 0f64;
+                        flag1 = true;
+                        flag2 = true;
+                        while flag1 || flag2 {
+                            if flag1 {
+                                if paths[(r1, c1)] == idx { // intersection
+                                    flag1 = false;
+                                    flag2 = false;
+                                    dist2 = path_lengths[(r1, c1)];
+                                }
+                                paths[(r1, c1)] = idx;
+                                path_lengths[(r1, c1)] = dist1;
+                                dir = flow_dir[(r1, c1)];
+                                if dir >= 0 {
+                                    r1 += dy[dir as usize];
+                                    c1 += dx[dir as usize];
+                                    dist1 += grid_lengths[dir as usize];
+                                } else {
+                                    flag1 = false;
+                                }
+                            }
+
+                            if flag2 {
+                                if paths[(r2, c2)] == idx { // intersection
+                                    flag1 = false;
+                                    flag2 = false;
+                                    dist1 = path_lengths[(r2, c2)];
+                                }
+                                paths[(r2, c2)] = idx;
+                                path_lengths[(r2, c2)] = dist2;
+                                dir = flow_dir[(r2, c2)];
+                                if dir >= 0 {
+                                    r2 += dy[dir as usize];
+                                    c2 += dx[dir as usize];
+                                    dist2 += grid_lengths[dir as usize];
+                                } else {
+                                    flag2 = false;
+                                }
+                            }
+                        }
+                        if dist1 > output[(row, col)] { output.set_value(row, col, dist1); }
+                        if dist2 > output[(row + 1, col)] { output.set_value(row + 1, col, dist2); }
+                    }
+
+                } else if input[(row, col)] == nodata {
+                    output[(row, col)] = nodata;
                 }
             }
             if verbose {
@@ -268,76 +333,25 @@ impl WhiteboxTool for BranchLength {
             }
         }
 
-
-
-
-
-        
-        
-        let mut stack = Vec::with_capacity((rows * columns) as usize);
-        let mut num_solved_cells = 0;
-        for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
-            num_inflowing.set_row_data(row, data);
-            for col in 0..columns {
-                if num_inflowing[(row, col)] == 0i8 {
-                    stack.push((row, col));
-                } else if num_inflowing[(row, col)] == -1i8 {
-                    num_solved_cells += 1;
+        if log_transform {
+            for row in 0..rows {
+                for col in 0..columns {
+                    if input[(row, col)] != nodata {
+                        if output[(row, col)] > 0f64 {
+                            output[(row, col)] = output[(row, col)].ln();
+                        } else {
+                            output[(row, col)] = nodata;
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
-            
-            if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Num. inflowing neighbours: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        let (mut row, mut col): (isize, isize);
-        let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
-        let mut dir: i8;
-        let mut fa: f64;
-        while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
-            row = cell.0;
-            col = cell.1;
-            fa = output[(row, col)];
-            num_inflowing.decrement(row, col, 1i8);
-            dir = flow_dir[(row, col)];
-            if dir >= 0 {
-                row_n = row + d_y[dir as usize];
-                col_n = col + d_x[dir as usize];
-                output.increment(row_n, col_n, fa);
-                num_inflowing.decrement(row_n, col_n, 1i8);
-                if num_inflowing[(row_n, col_n)] == 0i8 {
-                    stack.push((row_n, col_n));
-                }
-            }
-
-            if verbose {
-                num_solved_cells += 1;
-                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Flow accumulation: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        let mut cell_area = cell_size_x * cell_size_y;
-        //let diag = (input.configs.resolution_x + input.configs.resolution_y).sqrt();
-        let mut flow_widths = [diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x];
-        if out_type == "cells" {
-            cell_area = 1.0;
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        } else if out_type == "ca" {
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         }
 
         output.configs.palette = "grey.plt".to_string();

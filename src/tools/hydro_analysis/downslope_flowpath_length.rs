@@ -4,8 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 8, 2017
 Last Modified: July 8, 2017
 License: MIT
-
-NOTES: At the moment, this tool requires more memory than it should when a watersheds or weights raster are not used.
 */
 extern crate time;
 extern crate num_cpus;
@@ -33,9 +31,9 @@ impl DownslopeFlowpathLength {
         
         let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--watersheds       Optional input watershed raster file.\n");
-        parameters.push_str("--weights          Optional input weights raster file.");
+        parameters.push_str("--weights          Optional input weights raster file.\n");
         parameters.push_str("-o, --output       Output raster file.\n");
-        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -162,10 +160,11 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let cell_size_y = pntr.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         
+        if verbose { println!("Initializing watershed data...") };
         let watersheds: Array2D<f64> = match use_watersheds {
-            false => Array2D::new(rows, columns, 1f64, nodata)?,
+            false => Array2D::new(1, 1, 1f64, 1f64)?,
             true => {
-                if verbose { println!("Reading watershed data...") };
+                // if verbose { println!("Reading watershed data...") };
                 let r = Raster::new(&watersheds_file, "r")?;
                 if r.configs.rows != rows as usize || r.configs.columns != columns as usize {
                     return Err(Error::new(ErrorKind::InvalidInput,
@@ -176,10 +175,11 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         };
         // let watershed_nodata = watersheds.nodata;
 
+        if verbose { println!("Initializing weights data...") };
         let weights: Array2D<f64> = match use_weights {
-            false => Array2D::new(rows, columns, 1f64, nodata)?,
+            false => Array2D::new(1, 1, 1f64, 1f64)?,
             true => {
-                if verbose { println!("Reading weights data...") };
+                // if verbose { println!("Reading weights data...") };
                 let r = Raster::new(&weights_file, "r")?;
                 if r.configs.rows != rows as usize || r.configs.columns != columns as usize {
                     return Err(Error::new(ErrorKind::InvalidInput,
