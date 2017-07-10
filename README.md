@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 167 tools:
+The library currently contains the following 170 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -152,8 +152,11 @@ The library currently contains the following 167 tools:
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 - ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
 - ***DInfPointer***: Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
+- ***DownslopeDistanceToStream***: Measures distance to the nearest downslope stream cell.
 - ***DownslopeFlowpathLength***: Calculates the downslope flowpath length from each cell to basin outlet.
+- ***ElevationAboveStream***: Calculates the elevation of cells above the nearest downslope stream cell.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
+- ***FlowLengthDiff***: Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
 - ***FillDepressions***: Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 - ***JensonSnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 - ***MaxUpslopeFlowpathLength***: Measures the maximum length of all upslope flowpaths draining each grid cell.

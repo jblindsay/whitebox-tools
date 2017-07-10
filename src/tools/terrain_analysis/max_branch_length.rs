@@ -347,7 +347,7 @@ impl WhiteboxTool for MaxBranchLength {
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
-                        println!("Progress: {}%", progress);
+                        println!("Log transformation: {}%", progress);
                         old_progress = progress;
                     }
                 }

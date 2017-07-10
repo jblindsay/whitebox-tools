@@ -53,7 +53,9 @@ impl ToolManager {
         tool_names.push("D8Pointer".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
         tool_names.push("DInfPointer".to_string());
+        tool_names.push("DownslopeDistanceToStream".to_string());
         tool_names.push("DownslopeFlowpathLength".to_string());
+        tool_names.push("ElevationAboveStream".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FillDepressions".to_string());
         tool_names.push("FlowLengthDiff".to_string());
@@ -249,7 +251,9 @@ impl ToolManager {
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
             "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
             "dinfpointer" => Some(Box::new(tools::hydro_analysis::DInfPointer::new())),
+            "downslopedistancetostream" => Some(Box::new(tools::hydro_analysis::DownslopeDistanceToStream::new())),
             "downslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::DownslopeFlowpathLength::new())),
+            "elevationabovestream" => Some(Box::new(tools::hydro_analysis::ElevationAboveStream::new())),
             "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
