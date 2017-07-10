@@ -22,4 +22,4 @@ Metadata Entry:	Created by whitebox_tools' ElevPercentile tool
 Metadata Entry:	Input file; /Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/testdata/DEM.dep
 Metadata Entry:	Filter size x; 101
 Metadata Entry:	Filter size y; 101
-Metadata Entry:	Elapsed Time (excluding I/O); 0.033758S
+Metadata Entry:	Elapsed Time (excluding I/O); 0.047273S

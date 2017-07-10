@@ -280,6 +280,25 @@ impl Raster {
         self.data = vec![value; self.configs.rows * self.configs.columns];
     }
 
+    pub fn get_value_as_rgba(&self, row: isize, column: isize) -> (u8, u8, u8, u8) {
+        if column < 0 { return self.configs.nodata; }
+        if row < 0 { return self.configs.nodata; }
+
+        let c: usize = column as usize;
+        let r: usize = row as usize;
+
+        if c >= self.configs.columns { return self.configs.nodata; }
+        if r >= self.configs.rows { return self.configs.nodata; }
+        let idx: usize = r * self.configs.columns + c;
+        let z = self.data[idx];
+
+        let r = (z as u32 & 0xFF);
+        let g = ((z as u32 >> 8) & 0xFF);
+        let b = ((z as u32 >> 16) & 0xFF);
+        let a = ((z as u32 >> 24) & 0xFF);
+
+        (r, g, b, a)
+    }
 
     pub fn clip_display_min_max(&mut self, percent: f64) {
         let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;

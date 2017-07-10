@@ -1,0 +1,468 @@
+Last Update July 10th| 11:14 am
+Raster Tools|||
+Current Name|Name in whitebox_tools.exe?|Priority|Notes
+|---|---|---|---|
+Absolute Value|AbsoluteValue||
+Adaptive Filter||1|
+Add|Add||
+Aggregate||1|
+AND|And||
+ArcCos|ArcCos||
+ArcSin|ArcSin||
+ArcTan|ArcTan||
+Aspect|Aspect||
+Assign Row or Column Number to Cells||1|
+Average Flowpath Slope from Cell to Divide||1|
+Average Overlay|AverageOverlay||
+Average Uplslope Flowpath Length|AverageUpslopeFlowpathLength||
+Balance Contrast Enhancement||1|
+Branch Length|MaxBranchLength||
+Breach Depressions|BreachDepressions||
+Breach Depressions (Fast)||1|
+Breach Single Cell Pits||1|
+Buffer (Raster)|BufferRaster||
+Ceil|Ceil||
+Centroid (Raster)||1|
+Change Data Scale||1|
+Change Data Type||1|
+Change Vector Analysis||1|
+Closing|Closing||
+Clump Group|Clump||
+Compare Images for Difference||1|
+Conditional Evaluation||1|
+Conservative Smoothing Filter|ConservativeSmoothingFilter||
+Convert NoData to Zero||1|
+"Convert X|Y|Z Text File to Raster"||1|
+Cos|Cos||
+Cosh|Cosh||
+Cost Accumulation|Cost Distance|An anistropy option will be added later.|
+Cost Allocation|CostAllocation||This Tool is essentially the same as the watershed tool in functionality
+Cost Pathway|CostPathway||This tool is essentially the same as the TraceDownslopeFlowpaths tool in functionality.
+Create Blank Outlet Raster||1|
+Create Colour Composite||1|
+Create Multiscale Topographic Position Image||1|
+Create Plane||1|
+Crispness Index||1|
+Cross Tabulation||1|
+Cumulative Distribution Function||1|
+D-infinity Flow Accumulation|DInfFlowAccumulation||
+D-infinity Flow Pointer|DInfPointer||
+D-Infinity Mass Flux||1|
+D8 and Rho8 Flo-Accumulation||1|
+D8 Flow Accumulation|D8FlowAccumulation||
+D8 Flow Pointer|D8Pointer||
+D8 Mass Flux||1|
+D8 Pointer (Parallel)|D8Pointer||
+De-noise DEM||1|
+Decrement||1|
+Depth in Sink||1|
+Deviation from Mean Elevation|DevFromMeanElev||
+Difference from Mean Elevation|DiffFromMeanElev||
+Difference-of-Gaussian Filters|DiffOfGaussianFilter||
+Direct Decorrelation Stretch||1|
+Directional Relief|DirectionalRelief||
+Distance to Outlet||1|
+Distributions||1|
+Diversity Filter|DiversityFilter||The input image should contain integer values but floating point data will be handled using a multiplier.
+Divide|Divide||
+Downslope Distance to Stream|DownslopeDistanceToStream||
+Downslope Flowpath Length|DownslopeFlowPathLength||
+Downslope Index||1|
+Downslope Index (Radius)||1|
+Edge Proportion||1|
+Edge Preserving-Smoothing Filter|BilateralFilter||
+Elevation above Pit||1|
+Elevation above Stream|ElevationAboveStream||
+Elevation Percentile (Image Histogram)|ElevPercentile||
+Elevation Relative to Min and Max||1|
+Elevation Relative to Watershed Min and Max|||
+Emboss Filter|EmbossFilter||
+Equal To|EqualTo||
+Euclidean Allocation|EuclideanAllocation||
+Euclidean Distance|EuclideanDistance||
+Exp|Exp||
+Export ArcGIS ASCII Grid||1|
+Export ArcGIS Binary Grid (.flt)||1|
+Export GeoTiff||1|
+Export GRASS ASCII Grid||1|
+Export IDRISI Raster (.rst)||1|
+Export SAGA Grid||1|
+Export Surfer ASCII Grid||1|
+Exposure Towards a wind flux||1|
+Extract Statistics||1|
+Extract Streams|ExtractStreams||This tool should be updated to incorporate the option for an area-slope based threshold
+Extract Valleys (Johnson and Rosenfeld)||1|
+Extract Valleys (Lower Quartile)||1|
+Extract Valley (Peucker and Douglas)||1|
+"Extract Values at X|Y coordinates"||1|
+FD8 Flow Accumulation|FD8FlowAccumulation||
+FD8 Flow Accumulation 2||1|
+FD8 Flow Pointer||1|
+Feature Space Plot||1|
+Fetch Analysis|FetchAnalysis||
+Fill Depressions|FillDepressions||
+Fill Depressions (Planchon and Darboux)||1|
+Fill Missing Data Holes|FillMissingData||
+Fill Single-Cell Pits||1|
+Find Main Stem|FindMainStem||
+Find No-Flow Cells||1|
+Find Parallel Flow||1|
+Find Patch or Class Edge Cells||1|
+Find Ridges||1|
+Find Streamheads (MDInf)||1|
+Flip Image||1|
+Flood Order||1|
+Floor |Floor||
+Furtherest Upstream Channel Head Distance||1|
+Fuzzy Membership||1|
+Gaussian Contrast Stretch||1|
+Gaussian Filter|GaussianFilter||
+Greater Than|GreaterThan||
+Greater Than Equal To||1|
+Hack Stream Order|HackStreamOrder||
+High-Pass Filter|HighPassFilter||
+Highest Position|HighestPosition||
+Hillshade|Hillshade||
+Hillslopes||1|
+Histogram||1|
+Histogram Equalization||1|
+Histogram Matching||1|
+Histogram Matching (Two Images)||1|
+Horizon Angle|HorizonAngle||The tool should have the option to output a distance raster as well.
+Horton-Strahler Stream Order|HortonStreamOrder||
+IHS to RGB||1|
+Image Autocorrelation||1|
+Image Average||1|
+Image Correlation||1|
+Image De-Striping||1|
+Image Regression||1|
+Image Standard Deviation||1|
+Image Total||1|
+Impoundment Index||1|
+Increment||1|
+Integer Division|IntegerDivision||
+Integral Image|IntegralImage||
+Inverse Principle Component Analysis||1|
+IsNoData|IsNoData||
+IsoBasin||1|
+Isolate Raster features by Location||1|
+k-Means Classification||1|
+k-Nearest Mean Filter||1|
+Kappa Index of Agreement||1|
+KS Test for Normality||1|
+Laplacian Filter|LaplacianFilter||
+Laplacian-of-Gaussian Filter|LaplacianOfGaussianFilter||
+Lee (Sigma) Filter||1|
+Less Than|LessThan||
+Less Than Equal To||1|
+Line Thinning|LineThinning||This algorithm can't easily be parallelized because the output raster must be read and written to during the same loop. Doing so would involve using a mutex
+Line-Detection Filter||1|
+Ln (Natural Log)|Ln||
+Log base 10|Log10||
+Log base 2|Log2||
+Lowest Position|LowestPosition||
+Majority Filter (Modal)|MajorityFilter||The input image should contain integer values but floating point data will be handled using a multiplier.
+Map Gully Depth||1|
+Max|Max||
+Max Absolute Overlay|MaxAbsoluteOverlay||
+Max Overlay|MaxOverlay||
+Maximum Downslope Elevation Change||1|
+Maximum Elevation Deviation (Multiscale)||1|
+Maximum Filter|MaximumFilter||
+Maximum Upslope Flowpath Length|MaxUpslopefFlowpathLength||
+MDInf Flow Accumulation||1|
+Mean Filter|MeanFilter||
+Median Filter||1|
+Median Upstream Area||1|
+Min|Min||
+Min Overlay|MinOverlay||
+Min-Max Contrast Stretch||1|
+Minimum Downslope Elevation Change||1|
+Minimum Filter|MinimumFilter||
+modified k-means classification||1|
+Modulo|Modulo||
+Mosaic ||1|
+Mosaic with Feathering||1|
+Multiply|Multiply||
+Multiscale Elevation Residual Index||1|
+Nearest Neighbour Interpolation||1|
+Negate|Negate||"This tool differs from the Whitebox GAT equivalent in that in additional to changing the sign of continous data| it also handles Boolean data by reversing values (i.e. 0-1 to 1-0)"
+New Raster From Base||1|
+Normalized Difference Vegetation Index (NDVI)|NormalizedDifferenceVegetationIndex||
+NOT|Not||
+Not Equal To|NotEqualTo||
+Number of Downslope Neighbours|NumDownslopeNeighbours||
+Number of Grid Cells||1|
+Number of Inflowing Neighbours|NumInFlowingNeighbours||
+Number of Upslope Neighbours|NumUpslopeNeighbours||
+Olympic Filter|Olympic Filter||
+Opening|Opening||
+Optimised Soil-Adjusted Vegetation Index (OSAVI)|||
+OR|Or||
+Panchromatic Sharpening||1|
+Pennock's Landform Classification||1|
+Percent Elevation Range|PercentElevRange||
+Percent Equal To|PercentEqualTo||
+Percent Greater Than|PercentGreaterThan||
+Percent Less Than|PercentLessThan||
+Percentage Contrast  Stretch||1|
+Percentile Filter|PercentFilter||
+Pick From List|PickFromList||
+Plan Curvature|PlanCurvature||
+Point Density||1|
+Power|Power||
+Prewitt Filter|PrewittFilter||
+Principal Component Analysis||1|
+Profile Curvature|ProfileCurvature||
+Quantile|Quantiles||
+Radius of Gyration||1|
+Random Field||1|
+Random Sample||1|
+Range Filter|RangeFilter||
+Reciprocal|Reciprocal||
+Reclass||1|
+Reclass Equal Interval|ReclassEqualInterval||
+Reclass From File||1|
+Relative Aspect|RelativeAspect||
+Relative Stream Power Index|RelativeStreamPowerIndex||
+Remove Creek Sinks (Digging)||1|
+Remove Off-Terrain Objects|RemoveOffTerrainObjects||
+Remove Short Streams|RemoveShortStreams||
+Remove Spurs (pruning)|RemoveSpurs||This algorithm can't easily be parallelized because the output raster must be read and written to during the same loop. Doing so would involve using a mutex
+Resample||1|
+Rescale Image Value Range||1|
+Retrieve SRTM DEM Data||1|
+RGB to HIS||1|
+Rho8 Flow Pointer||1|
+Round|Round||
+Sediment Transport Index|SedimentTransportIndex||
+Set NoData Value||1|
+Shreve Stream Magnitude|ShreveStreamMagnitude||
+SIDE (MDInf)||1|
+Sigmoidal Contrast Stretch||1|
+Sin|Sin||
+Sinh|Sinh||
+Sink|Sink||
+Slope|Slope||
+Sobel Filter|SobelFilter||
+Split Colour Composite||1|
+Square |Square||
+Square Root|SquareRoot||
+Standard Deviation Filter|StandardDeviationFilter||
+Standard Deviation of Elevation||1|
+Stochastic Depression Analysis||1|
+Strahler-Order Basins||1|
+Stream Link Classification||1|
+Stream Link Identifier|StreamLinkIdentifier||
+Stream Link Length|StreamLinkLength||
+Stream Link Slope|StreamLinkSlope||
+Stream Slope (Continuous)|StreamSlopeContinuous|f|
+Sub-basins|Subbasins||
+Sutract|Subtract||
+Tan|Tan||
+Tangential Curvature|TangentialCurvature||
+Tanh|Tanh||
+Thicken Raster Line|ThickenRasterLine||This algorithm can't easily be parallelized because the output raster must be read and written to during the same loop
+Topographic Ruggedness Index|RuggednessIndex||
+Topological Stream Ordering|TopologicalStreamOrder||
+Total Curvature|TotalCurvature||
+Total Filter|TotalFilter||
+Total Length of Upstream Channels||1|
+Trend Surface|||
+Truncate|Truncate||
+Turning Bands Simulation||1|
+User-Define Weights filter||1|
+Visibility Index||1|
+Weighted Overaly||1|
+Weighted Sum|WeightedSum||
+Wetness Index|WetnessIndex||
+White Top-Hat Transform||1|
+Write Function Memory Insert||1|
+XOR|Xor||
+Z-Scores|Zscores||
+
+Vector Tools
+Current Name|Name in whitebox_tools.exe?|Priority|Notes
+|---|---|---|---
+Add Point Coordinates to Table||2|
+Append||2|
+Atrribute Histogram||2|
+Attribute Scattergram||2|
+Buffer (Vector)||2|
+Centroid (Vector)||2|
+Clip||2|
+Cluster Attributes||2|
+Construct TIN||2|
+Correlation For Attributes||2|
+Create New Shapefile||2|
+Delete Small Lakes and Extend Rivers||2|
+Difference||2|
+Dissolve||2|
+Eliminate Coincident Points||2|
+Estimate Heights from Parallax||2|
+Export Geography Markup Language||2|
+Export Table to CSV||2|
+Export Well-known-text (WKT)||2|
+Extend Vector Lines||2|
+Extract Nodes||2|
+Feature Selection||2|
+Find Polygon Chains||2|
+Find Straight Segments||2|
+Fuse||2|
+Hole Proportion||2|
+Interior Point||2|
+Intersect||2|
+Isolate Vector Features by Attribute||2|
+Isolate Vector Features by Location||2|
+Join Tables||2|
+Lines to Polygons||2|
+List Unique Values||2|
+Locate Principal Point||2|
+Long Axis||2|
+Mediod||2|
+Merge Shapefiles||2|
+Merge Table with CSV||2|
+Minimum Bounding Box||2|
+Minimum Convex Hull||2|
+Multi-parts to Single-parts||2|
+Nearest-Neighbour Analysis||2|
+Patch Orientation Vector Field||2|
+PCA For Attributes||2|
+Plot Variogram||2|
+Polygonize||2|
+Polygons to Lines||2|
+Reinitialize Attribute Table||2|
+Short Axis||2|
+Simplify Line or Polygon||2|
+Single-parts to Multi-parts||2|
+Smooth||2|
+Split Vector Lines||2|
+Symmetric Difference||2|
+Union||2|
+Vector Cleaning||2|
+Voronoi Diagram||2|
+
+Lidar Tools
+Current Name|Name in whitebox_tools.exe?|Priority|Notes
+|---|---|---|---
+Convert LAS to ASCII (LAS2ASCII)||1|
+Filter LAS Scan Angles||1|
+Find Flightline Edge Points||1|
+Get LAS File Summary||1|
+Ground Point Seperation (LiDAR)||1|
+IDW Interpolation (LiDAR)|LidarIdwInterpolation||Add the ability to: Exclude points based on max scan angle divation and Interpolate all LAS files within a directory (i.e. directory input rather than single file)
+Join (LiDAR)|LidarJoin||
+LiDAR Elevation Slice|LidarElevationSlice||
+LiDAR Histogram||1|
+LiDAR Segmentation||1|
+Maximum Interpolation (LiDAR)||1|
+Minimum Interpolation (LiDAR)||1|
+Nearest Neighbour Interpolation (LiDAR)||1|
+Point Density (LiDAR)||1|
+Tile LAS File|LidarTile||
+
+Mixed/Other Tools
+Current Name|Name in whitebox_tools.exe?|Priority|Notes
+|---|---|---|---
+Adaptive Minimum Interpolation(LiDAR)||2|
+Area||2|
+Bare-Earth DEM9(LiDAR)||2|
+Burn Streams||2|
+Burn Streams at Roads||2|
+Canopy Model (LiDAR)||2|
+Clip Raster to Polygon||2|
+Compactness Ratio||2|
+Contour||2|
+Convert LAS to MultipointZ Shapefile||2|
+Convert LAS to Shapefile (LAS2Shapefile)||2|
+Coordinate System Transformation||2|
+Copy File||2|
+Correct Vignetting||2|
+Create Hexagonal Vector Grid||2|
+Create Rectangular Vector Grid||2|
+Delete Files||2|
+Discrete Sibson (Nearest Neighbour) Interpolation||2|
+Discrete Sibson Interpolation (LiDAR)||2|
+Elongation Ratio||2|
+Erase Polygon from Raster||2|
+Extract Raster Values at Points||2|
+FillBurn||2|
+Find Lowest/Highest Locations||2|
+Find Saddle Points||2|
+Find Tie Points||2|
+Fractal Dimension||2|
+Hex-binning||2|
+Image Rectification||2|
+Image Stack Profile||2|
+Intersection Density||2|
+Inverse Distance Weighted (IDW) Interpolation||2|
+Isolate Ground Points (LiDAR)||2|
+Isolate Ground Points (Lindsays's Method)||2|
+Jenson Snap Pour Points|JensonSnapPourPoints||This tool should be updated to take vector pour points as inputs/outputs when vector support has been added
+Kriging Interpolation||2|
+LAS Footprint||2|
+Layer Footprint||2|
+Linearity Index||2|
+Local Topographic Position Scale signature||2|
+Long Profile||2|
+Long Profile from Point||2|
+Minimum Interpolation||2|
+Patch Orientation||2|
+Perimeter||2|
+Perimeter-Area Ratio||2|
+Profile||2|
+Prune Vector Stream Network||2|
+Raster Streams to Vector||2|
+Raster to Vector Lines||2|
+Raster to Vector Points||2|
+Raster to Vector Polygons||2|
+Rasterize Streams||2|
+Rasterize TIN||2|
+Related Circumscribing Circle||2|
+Remove Polygon Holes||2|
+Rename File||2|
+Roughness from Point Cloud Profiles (RFPCP)||2|
+Shape Complexity Index||2|
+Show GeoTiff Tags||2|
+Simple Region Grow||2|
+Snap Pour Points|SnapPourPoints||This tool should be updated to take vector pour points as inputs/outputs when vector support has been added
+Topological Breach-Burn (Stream Burning)||2|
+Trace Downslope Flowpaths|TraceDownslopeFlowpaths||Support for vector seed points will be added
+Trend Surface Vector Points||2|
+Unnest Basins||2|
+Vector Attribute Gridding||2|
+Vector Feature Density||2|
+Vector Lines to Raster||2|
+Vector Points to Raster||2|
+Vector Polygons to Raster||2|
+Vector Stream Analysis||2|
+Viewshed||2|
+Wall-in Watershed||2|
+Watershed|Watershed||
+
+Tools that are new in whitebox_tools.exe
+Tool Name|Notes|
+|---|---|
+ArcTan2||
+Basins||
+BlockMaximum||
+BlockMinimum||
+ConvertRasterFormat|An amalgamation of all previous import/export tools within Whitebox GAT.|
+Exp2||
+FlightLineOverlap||
+FlowLengthDiff||
+LidarGroundPointFilter||
+LidarHillshade||
+LidarInfo||
+LidarNearestNeighbourGridding|Add the ability to: Exclude points based on max scan angle divation and Interpolate all LAS files within a directory (i.e. directory input rather than single file)|
+LidarTophatTransform||
+MinAbsoluteOverlay||
+Negate|"This tool differs from the Whitebox GAT equivalent in that in additional to changing the sign +of continous data| it also handles Boolean data by reversing values (i.e. 0-1 to 1-0)."|
+NormalVectors||
+RelativeTopographicPosition||
+RobertsCrossFilter||
+ScharrFilter||
+StrahlerStreamOrder||
+ToDegrees||
+ToRadians||
+TributaryIdentifier||
