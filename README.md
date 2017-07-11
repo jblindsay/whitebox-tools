@@ -115,9 +115,9 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 ## Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
+Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 185 tools:
+The library currently contains the following 186 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -289,6 +289,7 @@ The library currently contains the following 185 tools:
 - ***StreamLinkSlope***: Estimates the average slope of each link (or tributary) in a stream network.
 - ***StreamSlopeContinuous***: Estimates the slope of each grid cell in a stream network.
 - ***TopologicalStreamOrder***: Assigns each link in a stream network its topological order.
+- ***TotalLengthOfUpstreamChannels***: Calculates the total length of channels upstream.
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
 **Terrain Analysis**

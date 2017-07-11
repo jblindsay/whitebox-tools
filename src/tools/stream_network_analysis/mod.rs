@@ -11,6 +11,7 @@ mod stream_link_length;
 mod stream_link_slope;
 mod stream_slope_continuous;
 mod topological_stream_order;
+mod total_length_channels;
 mod tributary_id;
 
 
@@ -27,4 +28,5 @@ pub use self::stream_link_length::StreamLinkLength;
 pub use self::stream_link_slope::StreamLinkSlope;
 pub use self::stream_slope_continuous::StreamSlopeContinuous;
 pub use self::topological_stream_order::TopologicalStreamOrder;
+pub use self::total_length_channels::TotalLengthOfUpstreamChannels;
 pub use self::tributary_id::TributaryIdentifier;

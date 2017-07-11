@@ -192,6 +192,7 @@ impl ToolManager {
         tool_names.push("StreamLinkSlope".to_string());
         tool_names.push("StreamSlopeContinuous".to_string());
         tool_names.push("TopologicalStreamOrder".to_string());
+        tool_names.push("TotalLengthOfUpstreamChannels".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
         // terrain_analysis
@@ -478,6 +479,9 @@ impl ToolManager {
             }
             "topologicalstreamorder" => {
                 Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new()))
+            }
+            "totallengthofupstreamchannels" => {
+                Some(Box::new(tools::stream_network_analysis::TotalLengthOfUpstreamChannels::new()))
             }
             "tributaryidentifier" => {
                 Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new()))
