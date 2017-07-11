@@ -62,6 +62,7 @@ impl ToolManager {
         tool_names.push("DownslopeFlowpathLength".to_string());
         tool_names.push("ElevationAboveStream".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
+        tool_names.push("FD8Pointer".to_string());
         tool_names.push("FillDepressions".to_string());
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
@@ -293,6 +294,7 @@ impl ToolManager {
             "fd8flowaccumulation" => {
                 Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new()))
             }
+            "fd8pointer" => Some(Box::new(tools::hydro_analysis::FD8Pointer::new())),
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),

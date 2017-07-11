@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 184 tools:
+The library currently contains the following 185 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -159,6 +159,7 @@ The library currently contains the following 184 tools:
 - ***DownslopeFlowpathLength***: Calculates the downslope flowpath length from each cell to basin outlet.
 - ***ElevationAboveStream***: Calculates the elevation of cells above the nearest downslope stream cell.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
+- ***FD8Pointer***: Calculates an FD8 flow pointer raster from an input DEM.
 - ***FlowLengthDiff***: Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
 - ***FillDepressions***: Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 - ***FillSingleCellPits***: Raises pit cells to the elevation of their lowest neighbour.
