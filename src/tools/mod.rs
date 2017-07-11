@@ -65,6 +65,7 @@ impl ToolManager {
         tool_names.push("FillDepressions".to_string());
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
+        tool_names.push("FindParallelFlow".to_string());
         tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
@@ -83,6 +84,7 @@ impl ToolManager {
         tool_names.push("DiversityFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
+        tool_names.push("FlipImage".to_string());
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("IntegralImage".to_string());
@@ -289,6 +291,7 @@ impl ToolManager {
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
+            "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
             "jensonsnappourpoints" => {
                 Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
@@ -320,6 +323,7 @@ impl ToolManager {
                 Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new()))
             }
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
+            "flipimage" => Some(Box::new(tools::image_analysis::FlipImage::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
