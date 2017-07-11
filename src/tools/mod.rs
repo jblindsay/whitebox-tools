@@ -63,6 +63,8 @@ impl ToolManager {
         tool_names.push("ElevationAboveStream".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FillDepressions".to_string());
+        tool_names.push("FillSingleCellPits".to_string());
+        tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
@@ -257,6 +259,7 @@ impl ToolManager {
             }
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
+
             // hydro_analysis
             "averageupslopeflowpathlength" => {
                 Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new()))
@@ -284,6 +287,8 @@ impl ToolManager {
                 Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new()))
             }
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
+            "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
+            "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
             "jensonsnappourpoints" => {
                 Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
@@ -301,6 +306,7 @@ impl ToolManager {
                 Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new()))
             }
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
+
 
             // image_analysis
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
