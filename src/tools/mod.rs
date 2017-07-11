@@ -138,12 +138,14 @@ impl ToolManager {
         tool_names.push("Ceil".to_string());
         tool_names.push("Cos".to_string());
         tool_names.push("Cosh".to_string());
+        tool_names.push("Decrement".to_string());
         tool_names.push("Divide".to_string());
         tool_names.push("EqualTo".to_string());
         tool_names.push("Exp".to_string());
         tool_names.push("Exp2".to_string());
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
+        tool_names.push("Increment".to_string());
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
         tool_names.push("LessThan".to_string());
@@ -400,12 +402,14 @@ impl ToolManager {
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
             "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
             "cosh" => Some(Box::new(tools::math_stat_analysis::Cosh::new())),
+            "decrement" => Some(Box::new(tools::math_stat_analysis::Decrement::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),
             "equalto" => Some(Box::new(tools::math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(tools::math_stat_analysis::Exp::new())),
             "exp2" => Some(Box::new(tools::math_stat_analysis::Exp2::new())),
             "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
+            "increment" => Some(Box::new(tools::math_stat_analysis::Increment::new())),
             "integerdivision" => Some(Box::new(tools::math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),

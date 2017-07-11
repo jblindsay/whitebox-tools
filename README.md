@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 182 tools:
+The library currently contains the following 184 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -235,12 +235,14 @@ The library currently contains the following 182 tools:
 - ***Ceil***: Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 - ***Cos***: Returns the cosine (cos) of each values in a raster.
 - ***Cosh***: Returns the hyperbolic cosine (cosh) of each values in a raster.
+- ***Decrement***: Decreases the values of each grid cell in an input raster by 1.0.
 - ***Divide***: Performs a division operation on two rasters or a raster and a constant value.
 - ***EqualTo***: Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 - ***Exp***: Returns the exponential (base e) of values in a raster.
 - ***Exp2***: Returns the exponential (base 2) of values in a raster.
 - ***Floor***: Returns the largest (closest to positive infinity) value that is greater than or equal to the values in a raster.
 - ***GreaterThan***: Performs a greater-than comparison operation on two rasters or a raster and a constant value.
+- ***Increment***: Increases the values of each grid cell in an input raster by 1.0.
 - ***IntegerDivision***: Performs an integer division operation on two rasters or a raster and a constant value.
 - ***IsNoData***: Identifies NoData valued pixels in an image.
 - ***LessThan***: Performs a less-than comparison operation on two rasters or a raster and a constant value.
