@@ -201,6 +201,8 @@ impl ToolManager {
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("MaxBranchLength".to_string());
+        tool_names.push("MaxDownslopeElevChange".to_string());
+        tool_names.push("MinDownslopeElevChange".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
         tool_names.push("NumUpslopeNeighbours".to_string());
         tool_names.push("PercentElevRange".to_string());
@@ -486,6 +488,8 @@ impl ToolManager {
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
+            "maxdownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MaxDownslopeElevChange::new())),
+            "mindownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MinDownslopeElevChange::new())),
             "numdownslopeneighbours" => {
                 Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new()))
             }
