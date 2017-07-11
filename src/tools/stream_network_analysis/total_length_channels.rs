@@ -1,5 +1,11 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: July 11, 2017
+Last Modified: July 11, 2017
+License: MIT
+*/
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;
@@ -9,16 +15,16 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct TotalLengthOfUpstreamChannels {
+pub struct LengthOfUpstreamChannels {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl TotalLengthOfUpstreamChannels {
-    pub fn new() -> TotalLengthOfUpstreamChannels { // public constructor
-        let name = "TotalLengthOfUpstreamChannels".to_string();
+impl LengthOfUpstreamChannels {
+    pub fn new() -> LengthOfUpstreamChannels { // public constructor
+        let name = "LengthOfUpstreamChannels".to_string();
         
         let description = "Calculates the total length of channels upstream.".to_string();
         
@@ -38,11 +44,11 @@ impl TotalLengthOfUpstreamChannels {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        TotalLengthOfUpstreamChannels { name: name, description: description, parameters: parameters, example_usage: usage }
+        LengthOfUpstreamChannels { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for TotalLengthOfUpstreamChannels {
+impl WhiteboxTool for LengthOfUpstreamChannels {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }

@@ -28,5 +28,5 @@ pub use self::stream_link_length::StreamLinkLength;
 pub use self::stream_link_slope::StreamLinkSlope;
 pub use self::stream_slope_continuous::StreamSlopeContinuous;
 pub use self::topological_stream_order::TopologicalStreamOrder;
-pub use self::total_length_channels::TotalLengthOfUpstreamChannels;
+pub use self::total_length_channels::LengthOfUpstreamChannels;
 pub use self::tributary_id::TributaryIdentifier;

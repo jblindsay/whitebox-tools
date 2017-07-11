@@ -56,6 +56,7 @@ impl ToolManager {
         tool_names.push("BreachDepressions".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8Pointer".to_string());
+        tool_names.push("DepthInSink".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
         tool_names.push("DInfPointer".to_string());
         tool_names.push("DownslopeDistanceToStream".to_string());
@@ -184,6 +185,7 @@ impl ToolManager {
         tool_names.push("FindMainStem".to_string());
         tool_names.push("HackStreamOrder".to_string());
         tool_names.push("HortonStreamOrder".to_string());
+        tool_names.push("LengthOfUpstreamChannels".to_string());
         tool_names.push("RemoveShortStreams".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
@@ -192,7 +194,6 @@ impl ToolManager {
         tool_names.push("StreamLinkSlope".to_string());
         tool_names.push("StreamSlopeContinuous".to_string());
         tool_names.push("TopologicalStreamOrder".to_string());
-        tool_names.push("TotalLengthOfUpstreamChannels".to_string());
         tool_names.push("TributaryIdentifier".to_string());
 
         // terrain_analysis
@@ -279,6 +280,7 @@ impl ToolManager {
                 Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new()))
             }
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
+            "depthinsink" => Some(Box::new(tools::hydro_analysis::DepthInSink::new())),
             "dinfflowaccumulation" => {
                 Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new()))
             }
@@ -456,6 +458,9 @@ impl ToolManager {
             "hortonstreamorder" => {
                 Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new()))
             }
+            "lengthofupstreamchannels" => {
+                Some(Box::new(tools::stream_network_analysis::LengthOfUpstreamChannels::new()))
+            }
             "removeshortstreams" => {
                 Some(Box::new(tools::stream_network_analysis::RemoveShortStreams::new()))
             }
@@ -479,9 +484,6 @@ impl ToolManager {
             }
             "topologicalstreamorder" => {
                 Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new()))
-            }
-            "totallengthofupstreamchannels" => {
-                Some(Box::new(tools::stream_network_analysis::TotalLengthOfUpstreamChannels::new()))
             }
             "tributaryidentifier" => {
                 Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new()))
