@@ -1,20 +1,15 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 3, 2017
-Last Modified: July 3, 2017
+Created: July 10, 2017
+Last Modified: July 10, 2017
 License: MIT
-
-NOTES: Add the ability to:
-Exclude points based on max scan angle divation
-Interpolate all LAS files within a directory (i.e. directory input rather than single file).
 */
 extern crate time;
 extern crate num_cpus;
 
 use std::env;
 use std::f64;
-// use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::Arc;
@@ -26,28 +21,26 @@ use raster::*;
 use structures::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
 
-pub struct LidarIdwInterpolation {
+pub struct LidarPointDensity {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl LidarIdwInterpolation {
-    pub fn new() -> LidarIdwInterpolation {
+impl LidarPointDensity {
+    pub fn new() -> LidarPointDensity {
         // public constructor
-        let name = "LidarIdwInterpolation".to_string();
+        let name = "LidarPointDensity".to_string();
 
-        let description = "Interpolates LAS files using an inverse-distance weighted (IDW) scheme."
+        let description = "Calculates the spatial pattern of point density fore a LiDAR data set."
             .to_string();
 
         //let mut parameters = "-i, --input    Optional input LAS file; if excluded, all LAS files in working directory will be processed.\n".to_owned();
         let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
         parameters.push_str("-o, --output   Output raster file (including extension).\n");
-        parameters.push_str("--parameter    Interapolation parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'user data'.\n");
         parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
         parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        parameters.push_str("--weight       IDW weight value (default is 1.0).\n");
         parameters.push_str("--radius       Search radius; default is 2.5.\n");
         parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
         parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
@@ -65,9 +58,9 @@ impl LidarIdwInterpolation {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
-        LidarIdwInterpolation {
+        LidarPointDensity {
             name: name,
             description: description,
             parameters: parameters,
@@ -76,7 +69,7 @@ impl LidarIdwInterpolation {
     }
 }
 
-impl WhiteboxTool for LidarIdwInterpolation {
+impl WhiteboxTool for LidarPointDensity {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -100,10 +93,8 @@ impl WhiteboxTool for LidarIdwInterpolation {
                -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut interp_parameter = "elevation".to_string();
         let mut return_type = "all".to_string();
         let mut grid_res: f64 = 1.0;
-        let mut weight = 1.0;
         let mut search_radius = 2.5;
         let mut include_class_vals = vec![true; 256];
         let mut palette = "default".to_string();
@@ -137,13 +128,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-parameter" ||
-                      vec[0].to_lowercase() == "--parameter" {
-                if keyval {
-                    interp_parameter = vec[1].to_string();
-                } else {
-                    interp_parameter = args[i + 1].to_string();
-                }
             } else if vec[0].to_lowercase() == "-returns" || vec[0].to_lowercase() == "--returns" {
                 if keyval {
                     return_type = vec[1].to_string();
@@ -156,12 +140,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     grid_res = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-weight" || vec[0].to_lowercase() == "--weight" {
-                if keyval {
-                    weight = vec[1].to_string().parse::<f64>().unwrap();
-                } else {
-                    weight = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
                 if keyval {
@@ -225,25 +203,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
             early_returns = false;
         }
 
-        // if input_file.is_empty() {
-        //     match fs::read_dir(working_directory) {
-        //         Err(why) => println!("! {:?}", why.kind()),
-        //         Ok(paths) => for path in paths {
-        //             let s = format!("> {:?}", path.unwrap().path());
-        //             if s.to_lowercase().ends_with(".las") {
-        //                 println!("> {:?}", s);
-        //             }
-        //         },
-        //     }
-        //     // for f in fs::walk_dir(&Path::new(working_directory)).unwrap() {
-        //     //     let p = f.unwrap().path();
-        //     //     if p.extension().unwrap_or("".as_ref()).to_lowercase() == "las" {
-        //     //         println!("{:?}", p);
-        //     //     }
-        //     // }
-        //     return Ok(());
-        // }
-
         if !input_file.contains(path::MAIN_SEPARATOR) {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -277,102 +236,27 @@ impl WhiteboxTool for LidarIdwInterpolation {
         let mut progress: i32;
         let mut old_progress: i32 = -1;
         let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius);
-        let mut interp_vals: Vec<f64> = Vec::with_capacity(n_points);
-        match &interp_parameter as &str {
-            "elevation" | "z" => {
-                for i in 0..n_points {
-                    let p: PointData = input[i];
-                    if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) ||
-                           (p.is_early_return() & early_returns) {
-                            if include_class_vals[p.classification() as usize] {
-                                if p.z >= min_z && p.z <= max_z {
-                                    frs.insert(p.x, p.y, i);
-                                }
-                            }
-                        }
-                    }
-                    interp_vals.push(p.z);
-                    if verbose {
-                        progress = (100.0_f64 * i as f64 / num_points) as i32;
-                        if progress != old_progress {
-                            println!("Binning points: {}%", progress);
-                            old_progress = progress;
+        for i in 0..n_points {
+            let p: PointData = input[i];
+            if !p.class_bit_field.withheld() {
+                if all_returns || (p.is_late_return() & late_returns) ||
+                   (p.is_early_return() & early_returns) {
+                    if include_class_vals[p.classification() as usize] {
+                        if p.z >= min_z && p.z <= max_z {
+                            frs.insert(p.x, p.y, i);
                         }
                     }
                 }
             }
-            "intensity" => {
-                for i in 0..n_points {
-                    let p: PointData = input[i];
-                    if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) ||
-                           (p.is_early_return() & early_returns) {
-                            if include_class_vals[p.classification() as usize] {
-                                if p.z >= min_z && p.z <= max_z {
-                                    frs.insert(p.x, p.y, i);
-                                }
-                            }
-                        }
-                    }
-                    interp_vals.push(p.intensity as f64);
-                    if verbose {
-                        progress = (100.0_f64 * i as f64 / num_points) as i32;
-                        if progress != old_progress {
-                            println!("Binning points: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-            }
-            "scan angle" => {
-                for i in 0..n_points {
-                    let p: PointData = input[i];
-                    if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) ||
-                           (p.is_early_return() & early_returns) {
-                            if include_class_vals[p.classification() as usize] {
-                                if p.z >= min_z && p.z <= max_z {
-                                    frs.insert(p.x, p.y, i);
-                                }
-                            }
-                        }
-                    }
-                    interp_vals.push(p.scan_angle as f64);
-                    if verbose {
-                        progress = (100.0_f64 * i as f64 / num_points) as i32;
-                        if progress != old_progress {
-                            println!("Binning points: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-            }
-            _ => {
-                // user data
-                for i in 0..n_points {
-                    let p: PointData = input[i];
-                    if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) ||
-                           (p.is_early_return() & early_returns) {
-                            if include_class_vals[p.classification() as usize] {
-                                if p.z >= min_z && p.z <= max_z {
-                                    frs.insert(p.x, p.y, i);
-                                }
-                            }
-                        }
-                    }
-                    interp_vals.push(p.user_data as f64);
-                    if verbose {
-                        progress = (100.0_f64 * i as f64 / num_points) as i32;
-                        if progress != old_progress {
-                            println!("Binning points: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
+            if verbose {
+                progress = (100.0_f64 * i as f64 / num_points) as i32;
+                if progress != old_progress {
+                    println!("Binning points: {}%", progress);
+                    old_progress = progress;
                 }
             }
         }
+
 
         let west: f64 = input.header.min_x;
         let north: f64 = input.header.max_y;
@@ -399,55 +283,22 @@ impl WhiteboxTool for LidarIdwInterpolation {
         let mut output = Raster::initialize_using_config(&output_file, &configs);
 
         let frs = Arc::new(frs); // wrap FRS in an Arc
-        let interp_vals = Arc::new(interp_vals); // wrap interp_vals in an Arc
+        let search_area = f64::consts::PI * search_radius * search_radius;
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut starting_row;
-        let mut ending_row = 0;
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let frs = frs.clone();
-            let interp_vals = interp_vals.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let mut index_n: usize;
                 let (mut x, mut y): (f64, f64);
-                let mut zn: f64;
-                let mut dist: f64;
-                let mut val: f64;
-                let mut sum_weights: f64;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         x = west + col as f64 * grid_res + 0.5;
                         y = north - row as f64 * grid_res - 0.5;
                         let ret = frs.search(x, y);
                         if ret.len() > 0 {
-                            sum_weights = 0.0;
-                            val = 0.0;
-                            for j in 0..ret.len() {
-                                index_n = ret[j].0;
-                                zn = interp_vals[index_n]; //input[index_n].z;
-                                dist = ret[j].1;
-                                if dist > 0.0 {
-                                    val += zn / dist.powf(weight);
-                                    sum_weights += 1.0 / dist.powf(weight);
-                                } else {
-                                    data[col as usize] = zn;
-                                    sum_weights = 0.0;
-                                    break;
-                                }
-                            }
-                            if sum_weights > 0.0 {
-                                data[col as usize] = val / sum_weights;
-                            }
+                            data[col as usize] = ret.len() as f64 / search_area;
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -474,8 +325,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
         output.add_metadata_entry(format!("Search radius: {}", search_radius));
-        output.add_metadata_entry(format!("Weight: {}", weight));
-        output.add_metadata_entry(format!("Interpolation parameter: {}", interp_parameter));
         output.add_metadata_entry(format!("Returns: {}", return_type));
         output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)

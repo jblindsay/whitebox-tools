@@ -26,27 +26,37 @@ pub struct FlightlineOverlap {
 }
 
 impl FlightlineOverlap {
-    pub fn new() -> FlightlineOverlap { // public constructor
+    pub fn new() -> FlightlineOverlap {
+        // public constructor
         let name = "FlightlineOverlap".to_string();
-        
+
         let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
-        
+
         let parameters = "-i, --input        Input LAS file.
 -o, --output       Output raster file.
 --resolution       Output raster's grid resolution.
---palette          Optional palette name (for use with Whitebox raster files)".to_owned();
-        
+--palette          Optional palette name (for use with Whitebox raster files)"
+                .to_owned();
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
-    
-        FlightlineOverlap { name: name, description: description, parameters: parameters, example_usage: usage }
+
+        FlightlineOverlap {
+            name: name,
+            description: description,
+            parameters: parameters,
+            example_usage: usage,
+        }
     }
 }
 
@@ -67,7 +77,11 @@ impl WhiteboxTool for FlightlineOverlap {
         self.example_usage.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(&self,
+               args: Vec<String>,
+               working_directory: &'a str,
+               verbose: bool)
+               -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
@@ -75,7 +89,8 @@ impl WhiteboxTool for FlightlineOverlap {
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+            return Err(Error::new(ErrorKind::InvalidInput,
+                                  "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -83,30 +98,33 @@ impl WhiteboxTool for FlightlineOverlap {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-resolution" || vec[0].to_lowercase() == "--resolution" {
+            } else if vec[0].to_lowercase() == "-resolution" ||
+                      vec[0].to_lowercase() == "--resolution" {
                 if keyval {
                     grid_res = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    grid_res = args[i+1].to_string().parse::<f64>().unwrap();
+                    grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
                 if keyval {
                     palette = vec[1].to_string();
                 } else {
-                    palette = args[i+1].to_string();
+                    palette = args[i + 1].to_string();
                 }
             }
         }
@@ -126,10 +144,15 @@ impl WhiteboxTool for FlightlineOverlap {
 
         let start = time::now();
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input = match las::LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
-            Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
+            Err(_) => {
+                return Err(Error::new(ErrorKind::NotFound,
+                                      format!("No such file or directory ({})", input_file)))
+            }
         };
 
         // Make sure that the input LAS file have GPS time data?
@@ -140,26 +163,35 @@ impl WhiteboxTool for FlightlineOverlap {
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
         // let search_dist = grid_res / 2.0;
         let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(grid_res);
         let mut gps_times = vec![-1f64; n_points];
-        let (mut x, mut y, mut gps_time) : (f64, f64, f64);
+        let (mut x, mut y, mut gps_time): (f64, f64, f64);
         let mut progress: usize;
         let mut old_progress: usize = 1;
         for i in 0..n_points {
             match input.get_record(i) {
-                las::LidarPointRecord::PointRecord1 { point_data, gps_data } => {
+                las::LidarPointRecord::PointRecord1 {
+                    point_data,
+                    gps_data,
+                } => {
                     x = point_data.x;
                     y = point_data.y;
                     gps_time = gps_data;
-                },
-                las::LidarPointRecord::PointRecord3 { point_data, gps_data, rgb_data } => {
+                }
+                las::LidarPointRecord::PointRecord3 {
+                    point_data,
+                    gps_data,
+                    rgb_data,
+                } => {
                     x = point_data.x;
                     y = point_data.y;
                     gps_time = gps_data;
                     let _ = rgb_data; // just to kill the 'unused variable' warning
-                },
+                }
                 _ => {
                     panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
                 }
@@ -183,7 +215,7 @@ impl WhiteboxTool for FlightlineOverlap {
         let east = west + columns as f64 * grid_res;
         let nodata = -32768.0f64;
 
-        let mut configs = RasterConfigs{..Default::default()};
+        let mut configs = RasterConfigs { ..Default::default() };
         configs.rows = rows;
         configs.columns = columns;
         configs.north = north;
@@ -219,7 +251,9 @@ impl WhiteboxTool for FlightlineOverlap {
                         let p = input[index_n];
                         x_n = p.x;
                         y_n = p.y;
-                        if (x_n - x) * (x_n - x) <= half_res_sqrd && (y_n - y) * (y_n - y) <= half_res_sqrd { // it falls within the grid cell
+                        if (x_n - x) * (x_n - x) <= half_res_sqrd &&
+                           (y_n - y) * (y_n - y) <= half_res_sqrd {
+                            // it falls within the grid cell
                             times.push(gps_times[ret[j].0]);
                         }
                     }
@@ -227,7 +261,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         times.sort_by(|a, b| a.partial_cmp(&b).unwrap());
                         let mut num_flightlines = 1.0;
                         for j in 1..times.len() {
-                            if times[j] - times[j-1] > time_threshold {
+                            if times[j] - times[j - 1] > time_threshold {
                                 num_flightlines += 1.0;
                             }
                         }
@@ -250,15 +284,26 @@ impl WhiteboxTool for FlightlineOverlap {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry("Created by whitebox_tools\' lidar_flightline_overlap tool".to_owned());
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
+                                          self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                                      .replace("PT", ""));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
+
+        println!("{}",
+                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         Ok(())
     }

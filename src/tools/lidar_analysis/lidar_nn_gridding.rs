@@ -34,11 +34,12 @@ pub struct LidarNearestNeighbourGridding {
 }
 
 impl LidarNearestNeighbourGridding {
-    pub fn new() -> LidarNearestNeighbourGridding { // public constructor
+    pub fn new() -> LidarNearestNeighbourGridding {
+        // public constructor
         let name = "LidarNearestNeighbourGridding".to_string();
-        
+
         let description = "Grids LAS files using nearest-neighbour scheme.".to_string();
-        
+
         //let mut parameters = "-i, --input    Optional input LAS file; if excluded, all LAS files in working directory will be processed.\n".to_owned();
         let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
         parameters.push_str("-o, --output   Output raster file (including extension).\n");
@@ -50,18 +51,26 @@ impl LidarNearestNeighbourGridding {
         parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
         parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
         parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
-    
-        LidarNearestNeighbourGridding { name: name, description: description, parameters: parameters, example_usage: usage }
+
+        LidarNearestNeighbourGridding {
+            name: name,
+            description: description,
+            parameters: parameters,
+            example_usage: usage,
+        }
     }
 }
 
@@ -82,7 +91,11 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         self.example_usage.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(&self,
+               args: Vec<String>,
+               working_directory: &'a str,
+               verbose: bool)
+               -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut interp_parameter = "elevation".to_string();
@@ -94,10 +107,11 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         let mut exclude_cls_str = String::new();
         let mut max_z = f64::INFINITY;
         let mut min_z = f64::NEG_INFINITY;
-                
+
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+            return Err(Error::new(ErrorKind::InvalidInput,
+                                  "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -105,54 +119,59 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-parameter" || vec[0].to_lowercase() == "--parameter" {
+            } else if vec[0].to_lowercase() == "-parameter" ||
+                      vec[0].to_lowercase() == "--parameter" {
                 if keyval {
                     interp_parameter = vec[1].to_string();
                 } else {
-                    interp_parameter = args[i+1].to_string();
+                    interp_parameter = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-returns" || vec[0].to_lowercase() == "--returns" {
                 if keyval {
                     return_type = vec[1].to_string();
                 } else {
-                    return_type = args[i+1].to_string();
+                    return_type = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-resolution" || vec[0].to_lowercase() == "--resolution" {
+            } else if vec[0].to_lowercase() == "-resolution" ||
+                      vec[0].to_lowercase() == "--resolution" {
                 if keyval {
                     grid_res = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    grid_res = args[i+1].to_string().parse::<f64>().unwrap();
+                    grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
                 if keyval {
                     search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    search_radius = args[i+1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
                 if keyval {
                     palette = vec[1].to_string();
                 } else {
-                    palette = args[i+1].to_string();
+                    palette = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-exclude_cls" || vec[0].to_lowercase() == "--exclude_cls" {
+            } else if vec[0].to_lowercase() == "-exclude_cls" ||
+                      vec[0].to_lowercase() == "--exclude_cls" {
                 if keyval {
                     exclude_cls_str = vec[1].to_string();
                 } else {
-                    exclude_cls_str = args[i+1].to_string();
+                    exclude_cls_str = args[i + 1].to_string();
                 }
                 let mut cmd = exclude_cls_str.split(",");
                 let mut vec = cmd.collect::<Vec<&str>>();
@@ -170,15 +189,15 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 if keyval {
                     min_z = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    min_z = args[i+1].to_string().parse::<f64>().unwrap();
+                    min_z = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-maxz" || vec[0].to_lowercase() == "--maxz" {
                 if keyval {
                     max_z = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_z = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_z = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } 
+            }
         }
 
         let (all_returns, late_returns, early_returns): (bool, bool, bool);
@@ -190,7 +209,8 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
             all_returns = false;
             late_returns = false;
             early_returns = true;
-        } else { // all
+        } else {
+            // all
             all_returns = true;
             late_returns = false;
             early_returns = false;
@@ -209,7 +229,9 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input = match las::LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
@@ -217,7 +239,9 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
 
         let start = time::now();
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
 
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
@@ -231,7 +255,8 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 for i in 0..n_points {
                     let p: PointData = input[i];
                     if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) || (p.is_early_return() & early_returns) {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
                             if include_class_vals[p.classification() as usize] {
                                 if p.z >= min_z && p.z <= max_z {
                                     frs.insert(p.x, p.y, i);
@@ -248,12 +273,13 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         }
                     }
                 }
-            },
+            }
             "intensity" => {
                 for i in 0..n_points {
                     let p: PointData = input[i];
                     if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) || (p.is_early_return() & early_returns) {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
                             if include_class_vals[p.classification() as usize] {
                                 if p.z >= min_z && p.z <= max_z {
                                     frs.insert(p.x, p.y, i);
@@ -270,12 +296,13 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         }
                     }
                 }
-            },
+            }
             "class" | "classification" => {
                 for i in 0..n_points {
                     let p: PointData = input[i];
                     if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) || (p.is_early_return() & early_returns) {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
                             if include_class_vals[p.classification() as usize] {
                                 if p.z >= min_z && p.z <= max_z {
                                     frs.insert(p.x, p.y, i);
@@ -292,12 +319,13 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         }
                     }
                 }
-            },
+            }
             "scan angle" => {
                 for i in 0..n_points {
                     let p: PointData = input[i];
                     if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) || (p.is_early_return() & early_returns) {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
                             if include_class_vals[p.classification() as usize] {
                                 if p.z >= min_z && p.z <= max_z {
                                     frs.insert(p.x, p.y, i);
@@ -314,12 +342,14 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         }
                     }
                 }
-            },
-            _ => { // user data
+            }
+            _ => {
+                // user data
                 for i in 0..n_points {
                     let p: PointData = input[i];
                     if !p.class_bit_field.withheld() {
-                        if all_returns || (p.is_late_return() & late_returns) || (p.is_early_return() & early_returns) {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
                             if include_class_vals[p.classification() as usize] {
                                 if p.z >= min_z && p.z <= max_z {
                                     frs.insert(p.x, p.y, i);
@@ -347,7 +377,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         let east = west + columns as f64 * grid_res;
         let nodata = -32768.0f64;
 
-        let mut configs = RasterConfigs{..Default::default()};
+        let mut configs = RasterConfigs { ..Default::default() };
         configs.rows = rows as usize;
         configs.columns = columns as usize;
         configs.north = north;
@@ -360,7 +390,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         configs.data_type = DataType::F64;
         configs.photometric_interp = PhotometricInterpretation::Continuous;
         configs.palette = palette;
-        
+
         let mut output = Raster::initialize_using_config(&output_file, &configs);
 
         let frs = Arc::new(frs); // wrap FRS in an Arc
@@ -428,20 +458,32 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry("Created by whitebox_tools\' lidar_flightline_overlap tool".to_owned());
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
+                                          self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
         output.add_metadata_entry(format!("Search radius: {}", search_radius));
         output.add_metadata_entry(format!("Interpolation parameter: {}", interp_parameter));
         output.add_metadata_entry(format!("Returns: {}", return_type));
         output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                                      .replace("PT", ""));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
+
+        println!("{}",
+                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+
 
         Ok(())
     }

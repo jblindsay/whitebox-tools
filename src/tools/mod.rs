@@ -112,6 +112,7 @@ impl ToolManager {
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
         tool_names.push("LidarNearestNeighbourGridding".to_string());
+        tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
@@ -310,6 +311,7 @@ impl ToolManager {
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
             "lidarnearestneighbourgridding" => Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new())),
+            "lidarpointdensity" => Some(Box::new(tools::lidar_analysis::LidarPointDensity::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
             "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),

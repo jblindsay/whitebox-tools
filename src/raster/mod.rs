@@ -321,28 +321,28 @@ impl Raster {
 
     pub fn get_value_as_rgba(&self, row: isize, column: isize) -> (u8, u8, u8, u8) {
         if column < 0 {
-            return self.configs.nodata;
+            return (0, 0, 0, 0); //self.configs.nodata;
         }
         if row < 0 {
-            return self.configs.nodata;
+            return (0, 0, 0, 0); //return self.configs.nodata;
         }
 
         let c: usize = column as usize;
         let r: usize = row as usize;
 
         if c >= self.configs.columns {
-            return self.configs.nodata;
+            return (0, 0, 0, 0);
         }
         if r >= self.configs.rows {
-            return self.configs.nodata;
+            return (0, 0, 0, 0);
         }
         let idx: usize = r * self.configs.columns + c;
         let z = self.data[idx];
 
-        let r = z as u32 & 0xFF as u8;
-        let g = (z as u32 >> 8) & 0xFF as u8;
-        let b = (z as u32 >> 16) & 0xFF as u8;
-        let a = (z as u32 >> 24) & 0xFF as u8;
+        let r = (z as u32 & 0xFF) as u8;
+        let g = ((z as u32 >> 8) & 0xFF) as u8;
+        let b = ((z as u32 >> 16) & 0xFF) as u8;
+        let a = ((z as u32 >> 24) & 0xFF) as u8;
 
         (r, g, b, a)
     }

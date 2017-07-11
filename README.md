@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 170 tools:
+The library currently contains the following 171 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -211,6 +211,7 @@ The library currently contains the following 170 tools:
 - ***LidarInfo***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 - ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
 - ***LidarNearestNeighbourGridding***: Grids LAS files using nearest-neighbour scheme.
+- ***LidarPointDensity***: Calculates the spatial pattern of point density fore a LiDAR data set.
 - ***LidarTile***: Tiles a LiDAR LAS file into multiple LAS files.
 - ***LidarTophatTransform***: Performs a white top-hat transform on a Lidar dataset.
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
