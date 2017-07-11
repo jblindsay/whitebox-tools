@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 171 tools:
+The library currently contains the following 172 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -180,6 +180,7 @@ The library currently contains the following 171 tools:
 - ***IntegralImage***: Transforms an input image (summed area table) into its integral image equivalent.
 - ***LaplacianFilter***: Performs a Laplacian filter on an image.
 - ***LaplacianOfGaussianFilter***: Performs a Laplacian-of-Gaussian (LoG) filter on an image.
+- ***LineDetectionFilter***: Performs a line-detection filter on an image.
 - ***LineThinning***: Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 - ***MajorityFilter***: Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.
 - ***MaximumFilter***: Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.

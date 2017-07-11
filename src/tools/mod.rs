@@ -15,10 +15,12 @@ pub struct ToolManager {
     pub working_dir: String,
     pub verbose: bool,
     tool_names: Vec<String>,
-} 
+}
 
 impl ToolManager {
-    pub fn new<'a>(working_directory: &'a str, verbose_mode: &'a bool) -> Result<ToolManager, Error> {
+    pub fn new<'a>(working_directory: &'a str,
+                   verbose_mode: &'a bool)
+                   -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
         // data_tools
         tool_names.push("ConvertRasterFormat".to_string());
@@ -81,6 +83,7 @@ impl ToolManager {
         tool_names.push("IntegralImage".to_string());
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
+        tool_names.push("LineDetectionFilter".to_string());
         tool_names.push("LineThinning".to_string());
         tool_names.push("MajorityFilter".to_string());
         tool_names.push("MaximumFilter".to_string());
@@ -208,7 +211,7 @@ impl ToolManager {
         tool_names.push("WetnessIndex".to_string());
 
         tool_names.sort();
-        
+
         let tm = ToolManager {
             working_dir: working_directory.to_string(),
             verbose: *verbose_mode,
@@ -217,7 +220,7 @@ impl ToolManager {
         Ok(tm)
     }
 
-    fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool+'static>> {
+    fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool + 'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // data_tools
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
@@ -229,7 +232,9 @@ impl ToolManager {
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
-            "euclideanallocation" => Some(Box::new(tools::gis_analysis::EuclideanAllocation::new())),
+            "euclideanallocation" => {
+                Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
+            }
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
@@ -241,61 +246,100 @@ impl ToolManager {
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
-            "reclassequalinterval" => Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new())),
+            "reclassequalinterval" => {
+                Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new()))
+            }
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
             // hydro_analysis
-            "averageupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new())),
+            "averageupslopeflowpathlength" => {
+                Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new()))
+            }
             "basins" => Some(Box::new(tools::hydro_analysis::Basins::new())),
             "breachdepressions" => Some(Box::new(tools::hydro_analysis::BreachDepressions::new())),
-            "d8flowaccumulation" => Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new())),
+            "d8flowaccumulation" => {
+                Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new()))
+            }
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
-            "dinfflowaccumulation" => Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new())),
+            "dinfflowaccumulation" => {
+                Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new()))
+            }
             "dinfpointer" => Some(Box::new(tools::hydro_analysis::DInfPointer::new())),
-            "downslopedistancetostream" => Some(Box::new(tools::hydro_analysis::DownslopeDistanceToStream::new())),
-            "downslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::DownslopeFlowpathLength::new())),
-            "elevationabovestream" => Some(Box::new(tools::hydro_analysis::ElevationAboveStream::new())),
-            "fd8flowaccumulation" => Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new())),
+            "downslopedistancetostream" => {
+                Some(Box::new(tools::hydro_analysis::DownslopeDistanceToStream::new()))
+            }
+            "downslopeflowpathlength" => {
+                Some(Box::new(tools::hydro_analysis::DownslopeFlowpathLength::new()))
+            }
+            "elevationabovestream" => {
+                Some(Box::new(tools::hydro_analysis::ElevationAboveStream::new()))
+            }
+            "fd8flowaccumulation" => {
+                Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new()))
+            }
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
-            "jensonsnappourpoints" => Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new())),
-            "maxupslopeflowpathlength" => Some(Box::new(tools::hydro_analysis::MaxUpslopeFlowpathLength::new())),
-            "numinflowingneighbours" => Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new())),
+            "jensonsnappourpoints" => {
+                Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
+            }
+            "maxupslopeflowpathlength" => {
+                Some(Box::new(tools::hydro_analysis::MaxUpslopeFlowpathLength::new()))
+            }
+            "numinflowingneighbours" => {
+                Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new()))
+            }
             "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
             "subbasins" => Some(Box::new(tools::hydro_analysis::Subbasins::new())),
-            "tracedownslopeflowpaths" => Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new())),
+            "tracedownslopeflowpaths" => {
+                Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new()))
+            }
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
             // image_analysis
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
-            "conservativesmoothingfilter" => Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new())),
+            "conservativesmoothingfilter" => {
+                Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new()))
+            }
             "diversityfilter" => Some(Box::new(tools::image_analysis::DiversityFilter::new())),
-            "diffofgaussianfilter" => Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new())),
+            "diffofgaussianfilter" => {
+                Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new()))
+            }
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
             "laplacianfilter" => Some(Box::new(tools::image_analysis::LaplacianFilter::new())),
-            "laplacianofgaussianfilter" => Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new())),
+            "laplacianofgaussianfilter" => {
+                Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new()))
+            }
+            "linedetectionfilter" => {
+                Some(Box::new(tools::image_analysis::LineDetectionFilter::new()))
+            }
             "linethinning" => Some(Box::new(tools::image_analysis::LineThinning::new())),
             "majorityfilter" => Some(Box::new(tools::image_analysis::MajorityFilter::new())),
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
-            "normalizeddifferencevegetationindex" => Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new())),
+            "normalizeddifferencevegetationindex" => {
+                Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new()))
+            }
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
             "opening" => Some(Box::new(tools::image_analysis::Opening::new())),
             "percentilefilter" => Some(Box::new(tools::image_analysis::PercentileFilter::new())),
             "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
             "removespurs" => Some(Box::new(tools::image_analysis::RemoveSpurs::new())),
-            "robertscrossfilter" => Some(Box::new(tools::image_analysis::RobertsCrossFilter::new())),
+            "robertscrossfilter" => {
+                Some(Box::new(tools::image_analysis::RobertsCrossFilter::new()))
+            }
             "scharrfilter" => Some(Box::new(tools::image_analysis::ScharrFilter::new())),
             "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
-            "standarddeviationfilter" => Some(Box::new(tools::image_analysis::StandardDeviationFilter::new())),
+            "standarddeviationfilter" => {
+                Some(Box::new(tools::image_analysis::StandardDeviationFilter::new()))
+            }
             "thickenrasterline" => Some(Box::new(tools::image_analysis::ThickenRasterLine::new())),
             "tophattransform" => Some(Box::new(tools::image_analysis::TophatTransform::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
@@ -304,16 +348,26 @@ impl ToolManager {
             "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),
             "blockminimum" => Some(Box::new(tools::lidar_analysis::BlockMinimum::new())),
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
-            "lidarelevationslice" => Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new())),
-            "lidargroundpointfilter" => Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new())),
+            "lidarelevationslice" => {
+                Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new()))
+            }
+            "lidargroundpointfilter" => {
+                Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new()))
+            }
             "lidarhillshade" => Some(Box::new(tools::lidar_analysis::LidarHillshade::new())),
-            "lidaridwinterpolation" => Some(Box::new(tools::lidar_analysis::LidarIdwInterpolation::new())),
+            "lidaridwinterpolation" => {
+                Some(Box::new(tools::lidar_analysis::LidarIdwInterpolation::new()))
+            }
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
-            "lidarnearestneighbourgridding" => Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new())),
+            "lidarnearestneighbourgridding" => {
+                Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new()))
+            }
             "lidarpointdensity" => Some(Box::new(tools::lidar_analysis::LidarPointDensity::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
-            "lidartophattransform" => Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new())),
+            "lidartophattransform" => {
+                Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
+            }
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
 
             // mathematical and statistical_analysis
@@ -365,44 +419,84 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 
             // stream_network_analysis
-            "extractstreams" => Some(Box::new(tools::stream_network_analysis::ExtractStreams::new())),
+            "extractstreams" => {
+                Some(Box::new(tools::stream_network_analysis::ExtractStreams::new()))
+            }
             "findmainstem" => Some(Box::new(tools::stream_network_analysis::FindMainStem::new())),
-            "hackstreamorder" => Some(Box::new(tools::stream_network_analysis::HackStreamOrder::new())),
-            "hortonstreamorder" => Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new())),
-            "removeshortstreams" => Some(Box::new(tools::stream_network_analysis::RemoveShortStreams::new())),
-            "shrevestreammagnitude" => Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new())),
-            "strahlerstreamorder" => Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new())),
-            "streamlinkidentifier" => Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new())),
-            "streamlinklength" => Some(Box::new(tools::stream_network_analysis::StreamLinkLength::new())),
-            "streamlinkslope" => Some(Box::new(tools::stream_network_analysis::StreamLinkSlope::new())),
-            "streamslopecontinuous" => Some(Box::new(tools::stream_network_analysis::StreamSlopeContinuous::new())),
-            "topologicalstreamorder" => Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new())),
-            "tributaryidentifier" => Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new())),
+            "hackstreamorder" => {
+                Some(Box::new(tools::stream_network_analysis::HackStreamOrder::new()))
+            }
+            "hortonstreamorder" => {
+                Some(Box::new(tools::stream_network_analysis::HortonStreamOrder::new()))
+            }
+            "removeshortstreams" => {
+                Some(Box::new(tools::stream_network_analysis::RemoveShortStreams::new()))
+            }
+            "shrevestreammagnitude" => {
+                Some(Box::new(tools::stream_network_analysis::ShreveStreamMagnitude::new()))
+            }
+            "strahlerstreamorder" => {
+                Some(Box::new(tools::stream_network_analysis::StrahlerStreamOrder::new()))
+            }
+            "streamlinkidentifier" => {
+                Some(Box::new(tools::stream_network_analysis::StreamLinkIdentifier::new()))
+            }
+            "streamlinklength" => {
+                Some(Box::new(tools::stream_network_analysis::StreamLinkLength::new()))
+            }
+            "streamlinkslope" => {
+                Some(Box::new(tools::stream_network_analysis::StreamLinkSlope::new()))
+            }
+            "streamslopecontinuous" => {
+                Some(Box::new(tools::stream_network_analysis::StreamSlopeContinuous::new()))
+            }
+            "topologicalstreamorder" => {
+                Some(Box::new(tools::stream_network_analysis::TopologicalStreamOrder::new()))
+            }
+            "tributaryidentifier" => {
+                Some(Box::new(tools::stream_network_analysis::TributaryIdentifier::new()))
+            }
 
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(tools::terrain_analysis::DiffFromMeanElev::new())),
-            "directionalrelief" => Some(Box::new(tools::terrain_analysis::DirectionalRelief::new())),
+            "directionalrelief" => {
+                Some(Box::new(tools::terrain_analysis::DirectionalRelief::new()))
+            }
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "fetchanalysis" => Some(Box::new(tools::terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
-            "numdownslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new())),
-            "numupslopeneighbours" => Some(Box::new(tools::terrain_analysis::NumUpslopeNeighbours::new())),
+            "numdownslopeneighbours" => {
+                Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new()))
+            }
+            "numupslopeneighbours" => {
+                Some(Box::new(tools::terrain_analysis::NumUpslopeNeighbours::new()))
+            }
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
             "relativeaspect" => Some(Box::new(tools::terrain_analysis::RelativeAspect::new())),
-            "relativestreampowerindex" => Some(Box::new(tools::terrain_analysis::RelativeStreamPowerIndex::new())),
-            "relativetopographicposition" => Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new())),
-            "removeoffterrainobjects" => Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new())),
+            "relativestreampowerindex" => {
+                Some(Box::new(tools::terrain_analysis::RelativeStreamPowerIndex::new()))
+            }
+            "relativetopographicposition" => {
+                Some(Box::new(tools::terrain_analysis::RelativeTopographicPosition::new()))
+            }
+            "removeoffterrainobjects" => {
+                Some(Box::new(tools::terrain_analysis::RemoveOffTerrainObjects::new()))
+            }
             "ruggednessindex" => Some(Box::new(tools::terrain_analysis::RuggednessIndex::new())),  
-            "sedimenttransportindex" => Some(Box::new(tools::terrain_analysis::SedimentTransportIndex::new())),
+            "sedimenttransportindex" => {
+                Some(Box::new(tools::terrain_analysis::SedimentTransportIndex::new()))
+            }
             "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
-            "tangentialcurvature" => Some(Box::new(tools::terrain_analysis::TangentialCurvature::new())),
+            "tangentialcurvature" => {
+                Some(Box::new(tools::terrain_analysis::TangentialCurvature::new()))
+            }
             "totalcurvature" => Some(Box::new(tools::terrain_analysis::TotalCurvature::new())),
             "wetnessindex" => Some(Box::new(tools::terrain_analysis::WetnessIndex::new())),
 
@@ -417,21 +511,27 @@ impl ToolManager {
 
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => return tool.run(args, &self.working_dir, self.verbose),
-            None => return Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
+            None => {
+                return Err(Error::new(ErrorKind::NotFound,
+                                      format!("Unrecognized tool name {}.", tool_name)))
+            }
         }
     }
 
     pub fn tool_help(&self, tool_name: String) -> Result<(), Error> {
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => println!("{}", get_help(tool)),
-            None => return Err(Error::new(ErrorKind::NotFound, format!("Unrecognized tool name {}.", tool_name))),
+            None => {
+                return Err(Error::new(ErrorKind::NotFound,
+                                      format!("Unrecognized tool name {}.", tool_name)))
+            }
         }
         Ok(())
     }
 
     pub fn list_tools(&self) {
         let mut tool_details: Vec<(String, String)> = Vec::new();
-        
+
         for val in &self.tool_names {
             let tool = self.get_tool(&val).unwrap();
             tool_details.push(get_name_and_description(tool));
@@ -451,7 +551,11 @@ pub trait WhiteboxTool {
     fn get_tool_description(&self) -> String;
     fn get_tool_parameters(&self) -> String;
     fn get_example_usage(&self) -> String;
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error>;
+    fn run<'a>(&self,
+               args: Vec<String>,
+               working_directory: &'a str,
+               verbose: bool)
+               -> Result<(), Error>;
 }
 
 fn get_help<'a>(wt: Box<WhiteboxTool + 'a>) -> String {
@@ -466,9 +570,9 @@ Description: {}
 
 Input parameters:
 {} \n\nNo example provided",
-        tool_name,
-        description,
-        parameters);
+                    tool_name,
+                    description,
+                    parameters);
     } else {
         s = format!("{} Help
 Description: {}
@@ -478,10 +582,10 @@ Input parameters:
 
 Example usage:
 {}",
-        tool_name,
-        description,
-        parameters,
-        example);
+                    tool_name,
+                    description,
+                    parameters,
+                    example);
     }
     s
 }
