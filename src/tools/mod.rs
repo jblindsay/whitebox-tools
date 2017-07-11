@@ -23,7 +23,9 @@ impl ToolManager {
                    -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
         // data_tools
+        tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
+        tool_names.push("NewRasterFromBase".to_string());
 
         // gis_analysis
         tool_names.push("AverageOverlay".to_string());
@@ -41,7 +43,6 @@ impl ToolManager {
         tool_names.push("MaxOverlay".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinOverlay".to_string());
-        tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PercentEqualTo".to_string());
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
@@ -225,7 +226,9 @@ impl ToolManager {
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool + 'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // data_tools
+            "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
+            "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
 
             // gis_analysis
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
@@ -245,7 +248,6 @@ impl ToolManager {
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
-            "newrasterfrombase" => Some(Box::new(tools::gis_analysis::NewRasterFromBase::new())),
             "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
