@@ -160,6 +160,7 @@ impl ToolManager {
         tool_names.push("Or".to_string());
         tool_names.push("Power".to_string());
         tool_names.push("Quantiles".to_string());
+        tool_names.push("RandomField".to_string());
         tool_names.push("Reciprocal".to_string());
         tool_names.push("Round".to_string());
         tool_names.push("Sin".to_string());
@@ -421,6 +422,7 @@ impl ToolManager {
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "power" => Some(Box::new(tools::math_stat_analysis::Power::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
+            "randomfield" => Some(Box::new(tools::math_stat_analysis::RandomField::new())),
             "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),
             "round" => Some(Box::new(tools::math_stat_analysis::Round::new())),
             "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
