@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools will be ported to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 172 tools:
+The library currently contains the following 174 tools:
 
 **Data Tools**
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
@@ -129,6 +129,7 @@ The library currently contains the following 172 tools:
 - ***CostAllocation***: Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
 - ***CostDistance***: Performs cost-distance accumulation on a cost surface and a group of source cells.
 - ***CostPathway***: Performs cost-distance pathway analysis using a series of destination grid cells.
+- ***CreatePlane***: Creates a raster image based on the equation for a simple plane.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
 - ***HighestPosition***: Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
@@ -137,6 +138,7 @@ The library currently contains the following 172 tools:
 - ***MaxOverlay***: Evaluates the maximum value for each grid cell from a stack of input rasters.
 - ***MinAbsoluteOverlay***: Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
+- ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PercentEqualTo***: Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 - ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 - ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.

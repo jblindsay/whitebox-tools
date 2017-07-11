@@ -32,6 +32,7 @@ impl ToolManager {
         tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
         tool_names.push("CostPathway".to_string());
+        tool_names.push("CreatePlane".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("HighestPosition".to_string());
@@ -40,6 +41,7 @@ impl ToolManager {
         tool_names.push("MaxOverlay".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinOverlay".to_string());
+        tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PercentEqualTo".to_string());
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
@@ -232,6 +234,7 @@ impl ToolManager {
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
+            "createplane" => Some(Box::new(tools::gis_analysis::CreatePlane::new())),
             "euclideanallocation" => {
                 Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
             }
@@ -242,6 +245,7 @@ impl ToolManager {
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
+            "newrasterfrombase" => Some(Box::new(tools::gis_analysis::NewRasterFromBase::new())),
             "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
