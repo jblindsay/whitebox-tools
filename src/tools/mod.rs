@@ -68,6 +68,7 @@ impl ToolManager {
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FindParallelFlow".to_string());
+        tool_names.push("FloodOrder".to_string());
         tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
@@ -303,6 +304,7 @@ impl ToolManager {
             "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
+            "floodorder" => Some(Box::new(tools::hydro_analysis::FloodOrder::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
             "jensonsnappourpoints" => {
                 Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
