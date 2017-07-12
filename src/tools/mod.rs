@@ -182,6 +182,7 @@ impl ToolManager {
 
         // stream_network_analysis
         tool_names.push("ExtractStreams".to_string());
+        tool_names.push("ExtractValleys".to_string());
         tool_names.push("FindMainStem".to_string());
         tool_names.push("HackStreamOrder".to_string());
         tool_names.push("HortonStreamOrder".to_string());
@@ -450,6 +451,9 @@ impl ToolManager {
             // stream_network_analysis
             "extractstreams" => {
                 Some(Box::new(tools::stream_network_analysis::ExtractStreams::new()))
+            }
+            "extractvalleys" => {
+                Some(Box::new(tools::stream_network_analysis::ExtractValleys::new()))
             }
             "findmainstem" => Some(Box::new(tools::stream_network_analysis::FindMainStem::new())),
             "hackstreamorder" => {
