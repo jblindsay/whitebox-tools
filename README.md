@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 189 tools:
+The library currently contains the following 190 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -281,6 +281,7 @@ The library currently contains the following 189 tools:
 **Stream Network Analysis**
 - ***ExtractStreams***: Extracts stream grid cells from a flow accumulation raster.
 - ***ExtractValleys***: Identifies potential valley bottom grid cells based on local topolography alone.
+- ***FarthestChannelHead***: Calculates the distance to the furthest upstream channel head for each stream cell.
 - ***FindMainStem***: Finds the main stem, based on stream lengths, of each stream network.
 - ***HackStreamOrder***: Assigns the Hack stream order to each link in a stream network.
 - ***HortonStreamOrder***: Assigns the Horton stream order to each link in a stream network.

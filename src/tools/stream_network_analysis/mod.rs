@@ -1,6 +1,7 @@
 // private sub-module defined in other files
 mod extract_streams;
 mod extract_valleys;
+mod farthest_channel_head;
 mod find_main_stem;
 mod hack_order;
 mod horton_order;
@@ -19,6 +20,7 @@ mod tributary_id;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::extract_streams::ExtractStreams;
 pub use self::extract_valleys::ExtractValleys;
+pub use self::farthest_channel_head::FarthestChannelHead;
 pub use self::find_main_stem::FindMainStem;
 pub use self::hack_order::HackStreamOrder;
 pub use self::horton_order::HortonStreamOrder;
