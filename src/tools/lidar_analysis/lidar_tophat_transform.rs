@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 22, 2017
+Last Modified: July 12, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -26,9 +33,9 @@ impl LidarTophatTransform {
         
         let description = "Performs a white top-hat transform on a Lidar dataset.".to_string();
         
-        let parameters = "-i, --input        Input LAS file.
--o, --output       Output LAS file.
---radius           Search radius; default is 1.0.".to_owned();
+        let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
+        parameters.push_str("-o, --output   Output LAS file.\n");
+        parameters.push_str("--radius       Search radius; default is 1.0.\n");
   
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());

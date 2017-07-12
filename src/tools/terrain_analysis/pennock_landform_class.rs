@@ -31,7 +31,7 @@ impl PennockLandformClass {
         
         let description = "Classifies hillslope zones based on slope, profile curvature, and plan curvature.".to_string();
         
-        let mut parameters = "-i, --dem      Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --dem      Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
         parameters.push_str("--zfactor      Optional multiplier for when the vertical and horizontal units are not the same.");
         parameters.push_str("--slope        Slope threshold value, in degrees (default is 3.0).");
@@ -218,7 +218,7 @@ impl WhiteboxTool for PennockLandformClass {
                                 fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                                 slope = (fx * fx + fy * fy).sqrt().atan().to_degrees();
                                 plan = -1f64 * ((zxx * zy2 - 2f64 * zxy * zx * zy + zyy * zx2) / p.powf(1.5f64)).to_degrees();
-                                prof = -1f64 * ((zxx * zy2 - 2f64 * zxy * zx * zy + zyy * zx2) / (p * q.powf(1.5f64))).to_degrees();
+                                prof = -1f64 * ((zxx * zx2 - 2f64 * zxy * zx * zy + zyy * zy2) / (p * q.powf(1.5f64))).to_degrees();
                                 
                                 if prof < -prof_threshold && plan <= -plan_threshold && slope > slope_threshold {
                                     //Convergent Footslope

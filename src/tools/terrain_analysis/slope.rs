@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: July 2, 2017
+Last Modified: July 12, 2017
 License: MIT
 */
 extern crate time;
@@ -31,9 +31,9 @@ impl Slope {
         
         let description = "Calculates a slope raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --dem     Input raster DEM file.".to_owned();
+        let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.");
+        parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());

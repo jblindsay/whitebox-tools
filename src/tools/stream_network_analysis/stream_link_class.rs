@@ -16,18 +16,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct FarthestChannelHead {
+pub struct StreamLinkClass {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl FarthestChannelHead {
-    pub fn new() -> FarthestChannelHead { // public constructor
-        let name = "FarthestChannelHead".to_string();
+impl StreamLinkClass {
+    pub fn new() -> StreamLinkClass { // public constructor
+        let name = "StreamLinkClass".to_string();
         
-        let description = "Calculates the distance to the furthest upstream channel head for each stream cell.".to_string();
+        let description = "Identifies the exterior/interior links and nodes in a stream network.".to_string();
         
         let mut parameters = "--d8_pntr       Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams       Input streams raster file.\n");
@@ -45,11 +45,11 @@ impl FarthestChannelHead {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        FarthestChannelHead { name: name, description: description, parameters: parameters, example_usage: usage }
+        StreamLinkClass { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for FarthestChannelHead {
+impl WhiteboxTool for StreamLinkClass {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -147,10 +147,6 @@ impl WhiteboxTool for FarthestChannelHead {
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
-        let cell_size_x = streams.configs.resolution_x;
-        let cell_size_y = streams.configs.resolution_y;
-        let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
         
         // make sure the input files have the same size
         if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
@@ -159,15 +155,12 @@ impl WhiteboxTool for FarthestChannelHead {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &streams);
-        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-        output.configs.data_type = DataType::F32;
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
         if esri_style {
             inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
@@ -179,8 +172,8 @@ impl WhiteboxTool for FarthestChannelHead {
                 if streams[(row, col)] > 0.0 {
                     count = 0i8;
                     for i in 0..8 {
-                        if streams[(row + d_y[i], col + d_x[i])] > 0.0 &&
-                            pntr[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
+                        if streams[(row + dy[i], col + dx[i])] > 0.0 &&
+                            pntr[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
                             count += 1;
                         }
                     }
@@ -188,7 +181,7 @@ impl WhiteboxTool for FarthestChannelHead {
                     if count == 0 {
                         // It's a headwater; add it to the stack
                         stack.push((row, col));
-                        output[(row, col)] = 0f64;
+                        output[(row, col)] = 3f64;
                     }
                 } else {
                     if pntr[(row, col)] != pntr_nodata {
@@ -215,7 +208,7 @@ impl WhiteboxTool for FarthestChannelHead {
         let mut pntr_matches: [usize; 129] = [999usize; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 0usize;
             pntr_matches[2] = 1usize;
             pntr_matches[4] = 2usize;
@@ -226,7 +219,7 @@ impl WhiteboxTool for FarthestChannelHead {
             pntr_matches[128] = 7usize;
         } else {
             // This maps Esri-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 1usize;
             pntr_matches[2] = 2usize;
             pntr_matches[4] = 3usize;
@@ -240,12 +233,13 @@ impl WhiteboxTool for FarthestChannelHead {
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         let mut dir: usize;
-        let mut length: f64;
         let mut c: usize;
+        let mut val: f64;
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
             col = cell.1;
+            val = output[(row, col)];
 
             // find the downstream cell
             dir = pntr[(row, col)] as usize;
@@ -256,18 +250,25 @@ impl WhiteboxTool for FarthestChannelHead {
                 }
 
                 c = pntr_matches[dir];
-                row_n = row + d_y[c];
-                col_n = col + d_x[c];
+                row_n = row + dy[c];
+                col_n = col + dx[c];
 
-                length = output[(row, col)] + grid_lengths[c];
-                if output[(row_n, col_n)] < length || output[(row_n, col_n)] == nodata {
-                    output[(row_n, col_n)] = length;
+                if num_inflowing[(row_n, col_n)] > 1 {
+                    output[(row_n, col_n)] = 4f64;
+                } else if output[(row_n, col_n)] == nodata { // i.e. it hasn't already been assigned a value like at a confluence
+                    if val == 3f64 || val == 1f64 {
+                        output[(row_n, col_n)] = 1f64;
+                    } else { //if val == 4f64 || val == 2f64 {
+                        output[(row_n, col_n)] = 2f64;
+                    }
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1);
                 if num_inflowing[(row_n, col_n)] == 0 {
                     stack.push((row_n, col_n));
                 }
+            } else {
+                output[(row, col)] = 5f64;
             }
 
             if verbose {
@@ -281,17 +282,34 @@ impl WhiteboxTool for FarthestChannelHead {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "spectrum.plt".to_string();
+        output.configs.palette = "qual.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output.configs.data_type = DataType::I16;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
+        output.add_metadata_entry(format!("CLASSIFICATION KEY"));
+        output.add_metadata_entry(format!("Value  Class"));
+        output.add_metadata_entry(format!("1      Exterior link"));
+        output.add_metadata_entry(format!("2      Interior link"));
+        output.add_metadata_entry(format!("3      Source node (headwater)"));
+        output.add_metadata_entry(format!("4      Link node (confluence)"));
+        output.add_metadata_entry(format!("5      Sink node (outlet)"));
+        
         if verbose { println!("Saving data...") };
         let _ = match output.write() {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
+
+        println!("CLASSIFICATION KEY");
+        println!("Value  Class");
+        println!("1      Exterior link");
+        println!("2      Interior link");
+        println!("3      Source node (headwater)");
+        println!("4      Link node (confluence)");
+        println!("5      Sink node (outlet)");
 
         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
