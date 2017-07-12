@@ -214,6 +214,7 @@ impl ToolManager {
         tool_names.push("MinDownslopeElevChange".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
         tool_names.push("NumUpslopeNeighbours".to_string());
+        tool_names.push("PennockLandformClass".to_string());
         tool_names.push("PercentElevRange".to_string());
         tool_names.push("PlanCurvature".to_string());
         tool_names.push("ProfileCurvature".to_string());
@@ -518,6 +519,7 @@ impl ToolManager {
             "numupslopeneighbours" => {
                 Some(Box::new(tools::terrain_analysis::NumUpslopeNeighbours::new()))
             }
+            "pennocklandformclass" => Some(Box::new(tools::terrain_analysis::PennockLandformClass::new())),
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
