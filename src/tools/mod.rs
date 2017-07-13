@@ -112,6 +112,7 @@ impl ToolManager {
         tool_names.push("RangeFilter".to_string());
         tool_names.push("RemoveSpurs".to_string());
         tool_names.push("ScharrFilter".to_string());
+        tool_names.push("SigmoidalContrastStretch".to_string());
         tool_names.push("SobelFilter".to_string());
         tool_names.push("StandardDeviationContrastStretch".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
@@ -382,6 +383,7 @@ impl ToolManager {
                 Some(Box::new(tools::image_analysis::RobertsCrossFilter::new()))
             }
             "scharrfilter" => Some(Box::new(tools::image_analysis::ScharrFilter::new())),
+            "sigmoidalcontraststretch" => Some(Box::new(tools::image_analysis::SigmoidalContrastStretch::new())),
             "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
             "standarddeviationcontraststretch" => Some(Box::new(tools::image_analysis::StandardDeviationContrastStretch::new())),
             "standarddeviationfilter" => {
