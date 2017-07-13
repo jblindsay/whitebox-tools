@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 201 tools:
+The library currently contains the following 202 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -210,6 +210,7 @@ The library currently contains the following 201 tools:
 - ***RobertsCrossFilter***: Performs a Robert's cross edge-detection filter on an image.
 - ***ScharrFilter***: Performs a Scharr edge-detection filter on an image.
 - ***SobelFilter***: Performs a Sobel edge-detection filter on an image.
+- ***StandardDeviationContrastStretch***: Performs a standard-deviation contrast stretch on input images.
 - ***StandardDeviationFilter***: Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 - ***ThickenRasterLine***: Thickens single-cell wide lines within a raster image.
 - ***TophatTransform***: Performs either a white or black top-hat transform on an input image
