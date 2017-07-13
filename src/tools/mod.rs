@@ -75,6 +75,7 @@ impl ToolManager {
         tool_names.push("NumInflowingNeighbours".to_string());
         tool_names.push("Sink".to_string());
         tool_names.push("SnapPourPoints".to_string());
+        tool_names.push("StrahlerOrderBasins".to_string());
         tool_names.push("Subbasins".to_string());
         tool_names.push("TraceDownslopeFlowpaths".to_string());
         tool_names.push("Watershed".to_string());
@@ -323,6 +324,7 @@ impl ToolManager {
             }
             "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
+            "strahlerorderbasins" => Some(Box::new(tools::hydro_analysis::StrahlerOrderBasins::new())),
             "subbasins" => Some(Box::new(tools::hydro_analysis::Subbasins::new())),
             "tracedownslopeflowpaths" => {
                 Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new()))
