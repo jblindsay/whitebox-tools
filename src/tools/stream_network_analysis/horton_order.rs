@@ -166,8 +166,8 @@ impl WhiteboxTool for HortonStreamOrder {
         let mut trib_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         let mut trib_id: Array2D<i32> = Array2D::new(rows, columns, -1, -1)?;
 
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
         let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
         if esri_style {
@@ -181,8 +181,8 @@ impl WhiteboxTool for HortonStreamOrder {
                 if streams[(row, col)] > 0.0 {
                     count = 0i8;
                     for i in 0..8 {
-                        if streams[(row + d_y[i], col + d_x[i])] > 0.0 &&
-                            pntr[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
+                        if streams[(row + dy[i], col + dx[i])] > 0.0 &&
+                            pntr[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
                             count += 1;
                         }
                     }
@@ -223,7 +223,7 @@ impl WhiteboxTool for HortonStreamOrder {
         let mut pntr_matches: [usize; 129] = [999usize; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 0usize;
             pntr_matches[2] = 1usize;
             pntr_matches[4] = 2usize;
@@ -234,7 +234,7 @@ impl WhiteboxTool for HortonStreamOrder {
             pntr_matches[128] = 7usize;
         } else {
             // This maps Esri-style D8 pointer values
-            // onto the cell offsets in d_x and d_y.
+            // onto the cell offsets in dx and dy.
             pntr_matches[1] = 1usize;
             pntr_matches[2] = 2usize;
             pntr_matches[4] = 3usize;
@@ -270,8 +270,8 @@ impl WhiteboxTool for HortonStreamOrder {
                 }
 
                 c = pntr_matches[dir];
-                row_n = row + d_y[c];
-                col_n = col + d_x[c];
+                row_n = row + dy[c];
+                col_n = col + dx[c];
 
                 length = trib_length[(row, col)] + grid_lengths[c];
                 if trib_length[(row_n, col_n)] < length || trib_length[(row_n, col_n)] == nodata {
@@ -309,8 +309,8 @@ impl WhiteboxTool for HortonStreamOrder {
                             }
 
                             c = pntr_matches[dir];
-                            y += d_y[c];
-                            x += d_x[c];
+                            y += dy[c];
+                            x += dx[c];
                         } else {
                             break;
                         }

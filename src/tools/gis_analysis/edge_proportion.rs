@@ -1,12 +1,9 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: July 13, 2017
 Last Modified: July 13, 2017
 License: MIT
-
-NOTE: This tool differs from the Whitebox GAT equivalent in that in additional to changing the sign
-of continous data, it also handles Boolean data by reversing values (i.e. 0-1 to 1-0).
 */
 extern crate time;
 extern crate num_cpus;
@@ -14,30 +11,30 @@ extern crate num_cpus;
 use std::env;
 use std::path;
 use std::f64;
+use raster::*;
+use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use raster::*;
-use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Negate {
+pub struct EdgeProportion {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Negate {
-    /// public constructor
-    pub fn new() -> Negate { 
-        let name = "Negate".to_string();
+impl EdgeProportion {
+    pub fn new() -> EdgeProportion { // public constructor
+        let name = "EdgeProportion".to_string();
         
-        let description = "Changes the sign of values in a raster or the 0-1 values of a Boolean raster.".to_string();
+        let description = "Calculate the proportion of cells in a raster polygon that are edge cells.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-         
+        let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        parameters.push_str("-o, --output    Output raster file.\n");
+        parameters.push_str("--output_text   Optional flag indicating whether a text report should also be output.\n");
+        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -45,13 +42,13 @@ impl Negate {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --output_text", short_exe, name).replace("*", &sep);
     
-        Negate { name: name, description: description, parameters: parameters, example_usage: usage }
+        EdgeProportion { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Negate {
+impl WhiteboxTool for EdgeProportion {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -71,7 +68,8 @@ impl WhiteboxTool for Negate {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-         
+        let mut output_text = false;
+        
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -97,6 +95,8 @@ impl WhiteboxTool for Negate {
                 } else {
                     output_file = args[i+1].to_string();
                 }
+            } else if vec[0].to_lowercase() == "-output_text" || vec[0].to_lowercase() == "--output_text" {
+                output_text = true;
             }
         }
 
@@ -118,74 +118,112 @@ impl WhiteboxTool for Negate {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose { println!("Reading input data...") };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-
-        let start = time::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-
-        let mut starting_row;
-        let mut ending_row = 0;
+        let max_val = input.configs.maximum.floor() as usize;
+        
+        let start = time::now();
+        
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut num_cells = vec![0usize; max_val + 1];
+                let mut num_edge_cells = vec![0usize; max_val + 1];
+                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let mut z: f64;
+                let mut zn: f64;
+                let mut is_edge: bool;
+                let mut bin: usize;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    for col in 0..columns {
+                        z = input[(row, col)];
+                        if z > 0f64 && z != nodata {
+                            bin = z.floor() as usize;
+                            num_cells[bin] += 1;
+                            is_edge = false;
+                            for n in 0..8 {
+                                zn = input[(row + dy[n], col + dx[n])];
+                                if zn != z {
+                                    is_edge = true;
+                                    break;
+                                }
+                            }
+                            if is_edge {
+                                num_edge_cells[bin] += 1;
+                            }
+                        }
+                    }
+                }
+                tx.send((num_cells, num_edge_cells)).unwrap();
+            });
+        }
+
+        let mut num_cells = vec![0usize; max_val + 1];
+        let mut num_edge_cells = vec![0usize; max_val + 1];
+        for tid in 0..num_procs {
+            let (vec1, vec2) = rx.recv().unwrap();
+            for bin in 0..max_val+1 {
+                num_cells[bin] += vec1[bin];
+                num_edge_cells[bin] += vec2[bin];
             }
-            id += 1;
+            if verbose {
+                progress = (100.0_f64 * tid as f64 / (num_procs - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 1 of 2): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let mut edge_props = vec![nodata; max_val + 1];
+        for bin in 0..max_val+1 {
+            if num_cells[bin] > 0 {
+                edge_props[bin] = num_edge_cells[bin] as f64 / num_cells[bin] as f64;
+            }
+        }
+        let edge_props = Arc::new(edge_props);
+
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let edge_props = edge_props.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut z: f64;
-                if input.configs.photometric_interp != PhotometricInterpretation::Boolean {
-                    for row in starting_row..ending_row {
-                        let mut data: Vec<f64> = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            z = input[(row, col)];
-                            if z != nodata {
-                                if z != 0.0 {
-                                    data[col as usize] = -z;
-                                } else {
-                                    data[col as usize] = 0.0;
-                                }
-                            }
+                let mut bin: usize;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z = input[(row, col)];
+                        if z > 0f64 && z != nodata {
+                            bin = z.floor() as usize;
+                            data[col as usize] = edge_props[bin];
                         }
-                        tx.send((row, data)).unwrap();
                     }
-                } else {
-                    for row in starting_row..ending_row {
-                        let mut data: Vec<f64> = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            z = input[(row, col)];
-                            if z != nodata {
-                                if z == 0.0 {
-                                    data[col as usize] = 1.0;
-                                } else {
-                                    data[col as usize] = 0.0;
-                                }
-                            }
-                        }
-                        tx.send((row, data)).unwrap();
-                    }
+                    tx.send((row, data)).unwrap();
                 }
             });
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
+        output.configs.palette = "spectrum.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 2 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -203,8 +241,17 @@ impl WhiteboxTool for Negate {
             Err(e) => return Err(e),
         };
 
+        if output_text {
+            println!("Edge Proportion\nPatch ID\tValue");
+            for bin in 0..max_val+1 {
+                if edge_props[bin] > 0f64 && edge_props[bin] != nodata {
+                    println!("{}\t{}", bin, edge_props[bin]);
+                }
+            }
+        }
+
         println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-        
+
         Ok(())
     }
 }

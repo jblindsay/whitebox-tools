@@ -35,6 +35,7 @@ impl ToolManager {
         tool_names.push("CostDistance".to_string());
         tool_names.push("CostPathway".to_string());
         tool_names.push("CreatePlane".to_string());
+        tool_names.push("EdgeProportion".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("HighestPosition".to_string());
@@ -262,6 +263,7 @@ impl ToolManager {
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
             "createplane" => Some(Box::new(tools::gis_analysis::CreatePlane::new())),
+            "edgeproportion" => Some(Box::new(tools::gis_analysis::EdgeProportion::new())),
             "euclideanallocation" => {
                 Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
             }
