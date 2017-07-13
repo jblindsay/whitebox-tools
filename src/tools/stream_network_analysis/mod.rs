@@ -1,4 +1,5 @@
 // private sub-module defined in other files
+mod dist_to_outlet;
 mod extract_streams;
 mod extract_valleys;
 mod farthest_channel_head;
@@ -19,6 +20,7 @@ mod tributary_id;
 
 
 // exports identifiers from private sub-modules in the current module namespace
+pub use self::dist_to_outlet::DistanceToOutlet;
 pub use self::extract_streams::ExtractStreams;
 pub use self::extract_valleys::ExtractValleys;
 pub use self::farthest_channel_head::FarthestChannelHead;

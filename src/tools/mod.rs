@@ -184,6 +184,7 @@ impl ToolManager {
         tool_names.push("ZScores".to_string());
 
         // stream_network_analysis
+        tool_names.push("DistanceToOutlet".to_string());
         tool_names.push("ExtractStreams".to_string());
         tool_names.push("ExtractValleys".to_string());
         tool_names.push("FarthestChannelHead".to_string());
@@ -460,6 +461,9 @@ impl ToolManager {
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 
             // stream_network_analysis
+            "distancetooutlet" => {
+                Some(Box::new(tools::stream_network_analysis::DistanceToOutlet::new()))
+            }
             "extractstreams" => {
                 Some(Box::new(tools::stream_network_analysis::ExtractStreams::new()))
             }
