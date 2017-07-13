@@ -90,6 +90,7 @@ impl ToolManager {
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
         tool_names.push("FlipImage".to_string());
+        tool_names.push("GammaCorrection".to_string());
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("IntegralImage".to_string());
@@ -353,6 +354,7 @@ impl ToolManager {
             }
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
             "flipimage" => Some(Box::new(tools::image_analysis::FlipImage::new())),
+            "gammacorrection" => Some(Box::new(tools::image_analysis::GammaCorrection::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),

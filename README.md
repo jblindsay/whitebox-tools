@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 203 tools:
+The library currently contains the following 204 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -187,6 +187,7 @@ The library currently contains the following 203 tools:
 - ***DiversityFilter***: Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 - ***EmbossFilter***: Performs an emboss filter on an image, similar to a hillshade operation.
 - ***FlipImage***: Reflects an image in the vertical or horizontal axis.
+- ***GammaCorrection***: Performs a sigmoidal contrast stretch on input images.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
 - ***HighPassFilter***: Performs a high-pass filter on an input image.
 - ***IntegralImage***: Transforms an input image (summed area table) into its integral image equivalent.
