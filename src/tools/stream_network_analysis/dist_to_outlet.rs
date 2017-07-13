@@ -6,7 +6,6 @@ Last Modified: July 13, 2017
 License: MIT
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;
@@ -28,7 +27,7 @@ impl DistanceToOutlet {
         
         let description = "Calculates the distance of stream grid cells to the channel network outlet cell.".to_string();
         
-        let mut parameters = "--d8_pntr     Input D8 or Rho8 pointer raster file.\n".to_owned();
+        let mut parameters = "--d8_pntr       Input D8 or Rho8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams       Input streams raster file.\n");
         parameters.push_str("-o, --output    Output raster file.\n");
         parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
