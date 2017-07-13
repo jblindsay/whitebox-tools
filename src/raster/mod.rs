@@ -658,6 +658,37 @@ impl Raster {
         (mean, (sq_diff_sum / count).sqrt())
     }
 
+    pub fn calculate_clip_values(&self, percent: f64) -> (f64, f64) {
+        let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
+        let mut lower_tail = f64::NEG_INFINITY;
+        let mut upper_tail = f64::NEG_INFINITY;
+        let mut d = self.data.clone();
+        d.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut sum = 0;
+        for i in 0..d.len() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    lower_tail = d[i];
+                    break;
+                }
+            }
+        }
+
+        sum = 0;
+        for i in (0..d.len()).rev() {
+            if d[i] != self.configs.nodata {
+                sum += 1;
+                if sum >= t {
+                    upper_tail = d[i];
+                    break;
+                }
+            }
+        }
+        
+        (lower_tail, upper_tail)
+    }
+
     pub fn write(&mut self) -> Result<(), Error> {
         match self.raster_type {
             RasterType::ArcAscii => {

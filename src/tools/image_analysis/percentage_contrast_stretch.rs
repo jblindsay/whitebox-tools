@@ -20,23 +20,23 @@ use std::sync::mpsc;
 use std::thread;
 use tools::WhiteboxTool;
 
-pub struct MinMaxContrastStretch {
+pub struct PercentageContrastStretch {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl MinMaxContrastStretch {
-    pub fn new() -> MinMaxContrastStretch { // public constructor
-        let name = "MinMaxContrastStretch".to_string();
+impl PercentageContrastStretch {
+    pub fn new() -> PercentageContrastStretch { // public constructor
+        let name = "PercentageContrastStretch".to_string();
         
-        let description = "Performs a min-max contrast stretch on an input greytone image.".to_string();
+        let description = "Performs a percentage linear contrast stretch on input images.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--min_val     Lower tail clip value.\n");
-        parameters.push_str("--max_val     Upper tail clip value.\n");
+        parameters.push_str("--clip        Clip size in percentage (default is 1.0).\n");
+        parameters.push_str("--tail        Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').\n");
         parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -46,13 +46,13 @@ impl MinMaxContrastStretch {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --min_val=45.0 --max_val=200.0 --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --clip=2.0 --tail='both' --num_tones=1024", short_exe, name).replace("*", &sep);
     
-        MinMaxContrastStretch { name: name, description: description, parameters: parameters, example_usage: usage }
+        PercentageContrastStretch { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for MinMaxContrastStretch {
+impl WhiteboxTool for PercentageContrastStretch {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -72,8 +72,8 @@ impl WhiteboxTool for MinMaxContrastStretch {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut min_val = f64::INFINITY;
-        let mut max_val = f64::NEG_INFINITY;
+        let mut tail = String::from("both");
+        let mut clip = f64::NEG_INFINITY;
         let mut num_tones = 256f64;
         
         if args.len() == 0 {
@@ -101,17 +101,24 @@ impl WhiteboxTool for MinMaxContrastStretch {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-min_val" || vec[0].to_lowercase() == "--min_val" {
+            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 if keyval {
-                    min_val = vec[1].to_string().parse::<f64>().unwrap();
+                    clip = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    min_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    clip = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-max_val" || vec[0].to_lowercase() == "--max_val" {
+            } else if vec[0].to_lowercase() == "-tail" || vec[0].to_lowercase() == "--tail" {
                 if keyval {
-                    max_val = vec[1].to_string().parse::<f64>().unwrap();
+                    tail = vec[1].to_string();
                 } else {
-                    max_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    tail = args[i+1].to_string();
+                }
+                if tail.to_lowercase().contains("u") {
+                    tail = String::from("upper");
+                } else if tail.to_lowercase().contains("l") {
+                    tail = String::from("lower");
+                } else {
+                    tail = String::from("both");
                 }
             } else if vec[0].to_lowercase() == "-num_tones" || vec[0].to_lowercase() == "--num_tones" {
                 if keyval {
@@ -140,6 +147,11 @@ impl WhiteboxTool for MinMaxContrastStretch {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        if clip < 0f64 || (tail == "both".to_string() && clip >= 50f64) || (tail != "both".to_string() && clip >= 100f64) {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                                "Incorrect clip value (correct range is 0.0 to 50.0."));
+        }
+
         if verbose { println!("Reading input data...") };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
@@ -156,14 +168,28 @@ impl WhiteboxTool for MinMaxContrastStretch {
         
         let start = time::now();
 
-        if min_val == f64::INFINITY && max_val == f64::NEG_INFINITY {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Error reading the input minimum and maximum clip values."));
+        if verbose { println!("Calculating clip values...") };
+        
+        let min_val: f64;
+        let max_val: f64;
+        if tail == "both".to_string() {
+            let (a, b) = input.calculate_clip_values(clip);
+            min_val = a;
+            max_val = b;
+        } else if tail == "upper".to_string() {
+            let (_, b) = input.calculate_clip_values(clip);
+            min_val = input.configs.display_min;
+            max_val = b;
+        } else { // tail == lower
+            let (a, _) = input.calculate_clip_values(clip);
+            min_val = a;
+            max_val = input.configs.display_max;
         }
+
         let value_range = max_val - min_val;
         if value_range < 0f64 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input minimum and maximum clip values are incorrect."));
+                                "The calculated clip values are incorrect."));
         }
         
         let num_procs = num_cpus::get() as isize;
@@ -207,8 +233,8 @@ impl WhiteboxTool for MinMaxContrastStretch {
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Minimum clip value: {}", min_val));
-        output.add_metadata_entry(format!("Maximum clip value: {}", max_val));
+        output.add_metadata_entry(format!("Percentage clip value: {}", clip));
+        output.add_metadata_entry(format!("Clipped tails: {}", tail));
         output.add_metadata_entry(format!("Number of tones: {}", num_tones));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 

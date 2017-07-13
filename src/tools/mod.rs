@@ -105,6 +105,7 @@ impl ToolManager {
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("Opening".to_string());
+        tool_names.push("PercentageContrastStretch".to_string());
         tool_names.push("PercentileFilter".to_string());
         tool_names.push("PrewittFilter".to_string());
         tool_names.push("RobertsCrossFilter".to_string());
@@ -371,6 +372,7 @@ impl ToolManager {
             }
             "olympicfilter" => Some(Box::new(tools::image_analysis::OlympicFilter::new())),
             "opening" => Some(Box::new(tools::image_analysis::Opening::new())),
+            "percentagecontraststretch" => Some(Box::new(tools::image_analysis::PercentageContrastStretch::new())),
             "percentilefilter" => Some(Box::new(tools::image_analysis::PercentileFilter::new())),
             "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
