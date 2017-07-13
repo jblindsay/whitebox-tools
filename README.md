@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 193 tools:
+The library currently contains the following 195 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -304,6 +304,8 @@ The library currently contains the following 193 tools:
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
 - ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
+- ***ElevRelativeToMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
+- ***ElevRelativeToWatershedMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
 - ***FetchAnalysis***: Performs an analysis of fetch or upwind distance to an obstacle.
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.

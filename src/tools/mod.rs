@@ -207,6 +207,8 @@ impl ToolManager {
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
         tool_names.push("ElevPercentile".to_string());
+        tool_names.push("ElevRelativeToMinMax".to_string());
+        tool_names.push("ElevRelativeToWatershedMinMax".to_string());
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("Hillshade".to_string());
@@ -512,6 +514,8 @@ impl ToolManager {
                 Some(Box::new(tools::terrain_analysis::DirectionalRelief::new()))
             }
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
+            "elevrelativetominmax" => Some(Box::new(tools::terrain_analysis::ElevRelativeToMinMax::new())),
+            "elevrelativetowatershedminmax" => Some(Box::new(tools::terrain_analysis::ElevRelativeToWatershedMinMax::new())),
             "fetchanalysis" => Some(Box::new(tools::terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
