@@ -99,6 +99,7 @@ impl ToolManager {
         tool_names.push("MajorityFilter".to_string());
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
+        tool_names.push("MinMaxContrastStretch".to_string());
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
@@ -360,6 +361,7 @@ impl ToolManager {
             "linethinning" => Some(Box::new(tools::image_analysis::LineThinning::new())),
             "majorityfilter" => Some(Box::new(tools::image_analysis::MajorityFilter::new())),
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
+            "minmaxcontraststretch" => Some(Box::new(tools::image_analysis::MinMaxContrastStretch::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "normalizeddifferencevegetationindex" => {
