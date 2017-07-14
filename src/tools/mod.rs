@@ -38,6 +38,7 @@ impl ToolManager {
         tool_names.push("EdgeProportion".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
+        tool_names.push("FindPatchOrClassEdgeCells".to_string());
         tool_names.push("HighestPosition".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
@@ -272,6 +273,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
             }
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
+            "findpatchorclassedgecells" => Some(Box::new(tools::gis_analysis::FindPatchOrClassEdgeCells::new())),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
