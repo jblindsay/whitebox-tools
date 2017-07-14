@@ -190,6 +190,8 @@ impl WhiteboxTool for TurningBandsSimulation {
 
             // filter the line
             let mut m: isize;
+            let mut sum = 0.0;
+            let mut sq_sum = 0.0;
             for j in 0..diagonal_size {
                 z = 0f64;
                 for k in 0..filter_size {
@@ -197,6 +199,15 @@ impl WhiteboxTool for TurningBandsSimulation {
                     z += m as f64 * t[(j as isize + filter_half_size as isize + m) as usize];
                 }
                 y[j] = w * z;
+                sum += y[j];
+                sq_sum += y[j] * y[j];
+            }
+
+            // Standardize the line
+            let mean = sum / diagonal_size as f64;
+            let stdev = (sq_sum / diagonal_size as f64 - mean * mean).sqrt();
+            for j in 0..diagonal_size {
+                y[j] = (y[j] - mean) / stdev;
             }
 
             // assign the spatially autocorrelated data line an equation of a transect of the grid
@@ -367,12 +378,11 @@ impl WhiteboxTool for TurningBandsSimulation {
 
         }
 
-        println!("Calculating the mean and standard deviation...");
-        let (mean, stdev) = output.calculate_mean_and_stdev();
-
+        let iterations_rooted = (iterations as f64).sqrt(); // * 3.5;
         for row in 0..rows {
             for col in 0..columns {
-                output[(row, col)] = (output[(row, col)] - mean) / stdev; // / iterations as f64;
+                // output[(row, col)] = (output[(row, col)] - mean) / stdev; // / iterations as f64;
+                output[(row, col)] = output[(row, col)] / iterations_rooted;
             }
 
             if verbose {
@@ -392,6 +402,8 @@ impl WhiteboxTool for TurningBandsSimulation {
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
                                           self.get_tool_name()));
         output.add_metadata_entry(format!("Input base raster file: {}", input_file));
+        output.add_metadata_entry(format!("Range: {}", range));
+        output.add_metadata_entry(format!("Iterations: {}", iterations));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
                                       .replace("PT", ""));
 
