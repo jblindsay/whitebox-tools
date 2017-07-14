@@ -47,6 +47,7 @@ mod tanh;
 mod to_degrees;
 mod to_radians;
 mod truncate;
+mod turning_bands;
 mod xor;
 mod zscores;
 
@@ -100,5 +101,6 @@ pub use self::tanh::Tanh;
 pub use self::to_degrees::ToDegrees;
 pub use self::to_radians::ToRadians;
 pub use self::truncate::Truncate;
+pub use self::turning_bands::TurningBandsSimulation;
 pub use self::xor::Xor;
 pub use self::zscores::ZScores;

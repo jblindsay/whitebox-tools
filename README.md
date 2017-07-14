@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 205 tools:
+The library currently contains the following 206 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -284,6 +284,7 @@ The library currently contains the following 205 tools:
 - ***ToDegrees***: Converts a raster from radians to degrees.
 - ***ToRadians***: Converts a raster from degrees to radians.
 - ***Truncate***: Truncates the values in a raster to the desired number of decimal places.
+- ***TurningBandsSimulation***: Creates an image containing random values based on a turning-bands simulation.
 - ***Xor***: Performs a logical XOR operator on two Boolean raster images.
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 

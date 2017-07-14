@@ -292,6 +292,32 @@ impl Raster {
         values
     }
 
+    pub fn increment_row_data(&mut self, row: isize, values: Vec<f64>) {
+        for column in 0..values.len() {
+            if row >= 0 {
+                let c: usize = column as usize;
+                let r: usize = row as usize;
+                if c < self.configs.columns && r < self.configs.rows {
+                    let idx = r * self.configs.columns + c;
+                    self.data[idx] += values[c];
+                }
+            }
+        }
+    }
+
+    pub fn decrement_row_data(&mut self, row: isize, values: Vec<f64>) {
+        for column in 0..values.len() {
+            if row >= 0 {
+                let c: usize = column as usize;
+                let r: usize = row as usize;
+                if c < self.configs.columns && r < self.configs.rows {
+                    let idx = r * self.configs.columns + c;
+                    self.data[idx] -= values[c];
+                }
+            }
+        }
+    }
+
     pub fn set_data_from_raster(&mut self, other: &Raster) -> Result<(), Error> {
         if self.configs.rows != other.configs.rows || self.configs.columns != self.configs.columns {
             return Err(Error::new(ErrorKind::Other,

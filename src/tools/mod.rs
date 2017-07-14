@@ -187,6 +187,7 @@ impl ToolManager {
         tool_names.push("ToDegrees".to_string());
         tool_names.push("ToRadians".to_string());
         tool_names.push("Truncate".to_string());
+        tool_names.push("TurningBandsSimulation".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -472,6 +473,7 @@ impl ToolManager {
             "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
             "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
             "truncate" => Some(Box::new(tools::math_stat_analysis::Truncate::new())),
+            "turningbandssimulation" => Some(Box::new(tools::math_stat_analysis::TurningBandsSimulation::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(tools::math_stat_analysis::ZScores::new())),
 
