@@ -1,9 +1,11 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
+Created: July 15, 2017
 Last Modified: July 15, 2017
 License: MIT
+
+NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
 */
 extern crate time;
 extern crate num_cpus;
@@ -21,20 +23,20 @@ use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
-pub struct PercentileFilter {
+pub struct MedianFilter {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl PercentileFilter {
+impl MedianFilter {
 
     /// Public constructor.
-    pub fn new() -> PercentileFilter {
-        let name = "PercentileFilter".to_string();
+    pub fn new() -> MedianFilter {
+        let name = "MedianFilter".to_string();
         
-        let description = "Performs a percentile filter on an input image.".to_string();
+        let description = "Performs a median filter on an input image.".to_string();
         
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
@@ -52,11 +54,11 @@ impl PercentileFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        PercentileFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        MedianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for PercentileFilter {
+impl WhiteboxTool for MedianFilter {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -140,6 +142,7 @@ impl WhiteboxTool for PercentileFilter {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
+        // a median filter of less than 3 x 3 doesn't make sense.
         if filter_size_x < 3 { filter_size_x = 3; }
         if filter_size_y < 3 { filter_size_y = 3; }
 
@@ -175,6 +178,8 @@ impl WhiteboxTool for PercentileFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+        let display_min = input.configs.display_min;
+        let display_max = input.configs.display_max;
         let multiplier = 10f64.powi(num_sig_digits);
         let min_val = input.configs.minimum;
         let max_val = input.configs.maximum;
@@ -224,29 +229,31 @@ impl WhiteboxTool for PercentileFilter {
             let binned_data = bd.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let (mut bin_val, mut bin_val_n, mut old_bin_val) : (i64, i64, i64);
+                let (mut bin_val, mut bin_val_n): (i64, i64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                let mut m : i64;
+                let mut median: i64;
+                let mut old_median: i64;
                 let (mut n, mut n_less_than): (f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     start_row = row - midpoint_y;
                     end_row = row + midpoint_y;
                     let mut histo : Vec<i64> = vec![];
-                    old_bin_val = bin_nodata;
+                    old_median = bin_nodata;
+                    median = bin_nodata;
                     n = 0.0;
                     n_less_than = 0.0;
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         bin_val = binned_data.get_value(row, col);
                         if bin_val != bin_nodata {
-                            if old_bin_val != bin_nodata {
+                            if old_median != bin_nodata {
                                 // remove the trailing column from the histo
                                 for row2 in start_row..end_row+1 {
                                     bin_val_n = binned_data.get_value(row2, col-midpoint_x-1);
                                     if bin_val_n != bin_nodata {
                                         histo[bin_val_n as usize] -= 1;
                                         n -= 1.0;
-                                        if bin_val_n < old_bin_val {
+                                        if bin_val_n < old_median {
                                             n_less_than -= 1.0;
                                         }
                                     }
@@ -258,29 +265,36 @@ impl WhiteboxTool for PercentileFilter {
                                     if bin_val_n != bin_nodata {
                                         histo[bin_val_n  as usize] += 1;
                                         n += 1.0;
-                                        if bin_val_n < old_bin_val {
+                                        if bin_val_n < old_median {
                                             n_less_than += 1.0;
                                         }
                                     }
                                 }
 
-                                // how many cells lie between the bins of binVal and oldBinVal?
-                                if old_bin_val < bin_val {
-                                    m = 0;
-                                    for v in old_bin_val..bin_val {
-                                        m += histo[v as usize];
+                                // adjust the median
+                                let target = (n / 2f64).floor();
+                                if n_less_than < target { // add bins
+                                    for v in old_median..num_bins {
+                                        if n_less_than + (histo[v as usize] as f64) >= target {
+                                            median = v as i64;
+                                            break;
+                                        } else {
+                                            n_less_than += histo[v as usize] as f64;
+                                        }
                                     }
-                                    n_less_than += m as f64;
-                                } else if old_bin_val > bin_val {
-                                    m = 0;
-                                    for v in bin_val..old_bin_val {
-                                        m += histo[v as usize];
+                                } else { //if n_less_than >= target { // remove bins
+                                    for v in (0..old_median).rev() {
+                                        if n_less_than - (histo[v as usize] as f64) >= target {
+                                            n_less_than -= histo[v as usize] as f64;
+                                        } else {
+                                            median = v + 1;
+                                            break;
+                                        }
                                     }
-                                    n_less_than -= m as f64;
                                 } // otherwise they are in the same bin and there is no need to update
 
                             } else {
-                                // initialize the histogram
+                                // This is the first cell in a row or after a nodata cell; initialize the histogram.
                                 histo = vec![0i64; num_bins as usize];
                                 n = 0.0;
                                 n_less_than = 0.0;
@@ -292,22 +306,33 @@ impl WhiteboxTool for PercentileFilter {
                                         if bin_val_n != bin_nodata {
                                             histo[bin_val_n as usize] += 1;
                                             n += 1f64;
-                                            if bin_val_n < bin_val {
-                                                n_less_than += 1f64;
-                                            }
                                         }
                                     }
                                 }
+                                // calcualate the median from the histogram
+                                let mut sum = 0f64;
+                                let target = (n / 2f64).floor();
+                                for i in 0..num_bins as usize {
+                                    sum += histo[i] as f64;
+                                    if sum >= target {
+                                        median = i as i64;
+                                        break;
+                                    } else {
+                                        n_less_than = sum;
+                                    }
+                                }
                             }
-                        }
 
-                        if n > 0f64 {
-                            data[col as usize] = n_less_than / n * 100.0;
+                            if n > 0f64 {
+                                data[col as usize] = (median + min_bin) as f64 / multiplier;
+                            } else {
+                                data[col as usize] = nodata;
+                            }
+
+                            old_median = median;
                         } else {
-                            data[col as usize] = nodata;
+                            old_median = bin_nodata;
                         }
-
-                        old_bin_val = bin_val;
                     }
                     tx.send((row, data)).unwrap();
                 }
@@ -328,9 +353,8 @@ impl WhiteboxTool for PercentileFilter {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.display_min = 0.0;
-        output.configs.display_max = 100.0;
-        output.configs.palette = "blue_white_red.plt".to_string();
+        output.configs.display_min = display_min;
+        output.configs.display_max = display_max;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));

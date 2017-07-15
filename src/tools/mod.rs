@@ -102,6 +102,7 @@ impl ToolManager {
         tool_names.push("MajorityFilter".to_string());
         tool_names.push("MaximumFilter".to_string());
         tool_names.push("MeanFilter".to_string());
+        tool_names.push("MedianFilter".to_string());
         tool_names.push("MinMaxContrastStretch".to_string());
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
@@ -373,6 +374,7 @@ impl ToolManager {
             "maximumfilter" => Some(Box::new(tools::image_analysis::MaximumFilter::new())),
             "minmaxcontraststretch" => Some(Box::new(tools::image_analysis::MinMaxContrastStretch::new())),
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
+            "medianfilter" => Some(Box::new(tools::image_analysis::MedianFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "normalizeddifferencevegetationindex" => {
                 Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new()))
