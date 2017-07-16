@@ -18,6 +18,7 @@ use raster::geotiff::geokeys::GeoKeys;
 use std::ops::Index;
 use std::io::Seek;
 use self::zip::result::ZipResult;
+use self::zip::CompressionMethod;
 // use self::zip::write::FileOptions;
 use self::zip::read::{ ZipArchive, ZipFile };
 
@@ -251,11 +252,18 @@ impl LasFile {
                 let file = File::open(&self.file_name)?;
                 let mut zip = (zip::ZipArchive::new(file))?;
                 let mut f = zip.by_index(0).unwrap();
+                match f.compression() {
+                    CompressionMethod::Stored | CompressionMethod::Deflated | CompressionMethod::Bzip2 => (),
+                    _ => return Err(Error::new(ErrorKind::InvalidData, "Either the file is formatted incorrectly or it is an unsupported compression type.")),
+                }
                 let file_size: usize = f.size() as usize;
                 let mut buffer = vec![0; file_size];
 
                 // read the file's bytes into a buffer
-                f.read(&mut buffer)?;
+                match f.read_exact(&mut buffer) {
+                    Err(e) => return Err(e),
+                    Ok(()) => (),
+                }
                 buffer
             },
         };
