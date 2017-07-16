@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_assignments)]
 extern crate time;
+extern crate zip;
 
 use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
@@ -15,6 +16,10 @@ use lidar::point_data::{ ClassificationBitField, PointBitField, PointData, RgbDa
 use lidar::vlr::Vlr;
 use raster::geotiff::geokeys::GeoKeys;
 use std::ops::Index;
+use std::io::Seek;
+use self::zip::result::ZipResult;
+// use self::zip::write::FileOptions;
+use self::zip::read::{ ZipArchive, ZipFile };
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -223,16 +228,37 @@ impl LasFile {
 
     pub fn read(&mut self) -> Result<(), Error> {
 
-        // // See if the file exists. If not, raise error.
-        // fs::metadata(&self.file_name)
+        // let mut f = File::open(&self.file_name)?;
+        // let metadata = fs::metadata(&self.file_name)?;
+        // let file_size: usize = metadata.len() as usize;
+        // let mut buffer = vec![0; file_size];
 
-        let mut f = File::open(&self.file_name)?;
-        let metadata = fs::metadata(&self.file_name)?;
-        let file_size: usize = metadata.len() as usize;
-        let mut buffer = vec![0; file_size];
+        // // read the file's bytes into a buffer
+        // f.read(&mut buffer)?;
 
-        // read the file's bytes into a buffer
-        f.read(&mut buffer)?;
+        let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
+            false => {
+                let mut f = File::open(&self.file_name)?;
+                let metadata = fs::metadata(&self.file_name)?;
+                let file_size: usize = metadata.len() as usize;
+                let mut buffer = vec![0; file_size];
+
+                // read the file's bytes into a buffer
+                f.read(&mut buffer)?;
+                buffer
+            },
+            true => {
+                let file = File::open(&self.file_name)?;
+                let mut zip = (zip::ZipArchive::new(file))?;
+                let mut f = zip.by_index(0).unwrap();
+                let file_size: usize = f.size() as usize;
+                let mut buffer = vec![0; file_size];
+
+                // read the file's bytes into a buffer
+                f.read(&mut buffer)?;
+                buffer
+            },
+        };
 
         self.header.project_id_used = true;
         self.header.version_major = buffer[24];
@@ -1052,4 +1078,11 @@ fn fixed_length_string(s: &str, len: usize) -> String {
         ret = s[0..len].to_string(); // could use 'truncate' method as well.
     }
     ret
+}
+
+fn browse_zip_archive<T, F, U>(buf: &mut T, browse_func: F) -> ZipResult<Vec<U>> where T: Read + Seek, F: Fn(&ZipFile) -> ZipResult<U> {
+    let mut archive = ZipArchive::new(buf)?;
+    (0..archive.len())
+        .map(|i| archive.by_index(i).and_then(|file| browse_func(&file)))
+        .collect()
 }
