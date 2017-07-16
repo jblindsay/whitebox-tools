@@ -73,6 +73,7 @@ impl ToolManager {
         tool_names.push("FindParallelFlow".to_string());
         tool_names.push("FloodOrder".to_string());
         tool_names.push("FlowLengthDiff".to_string());
+        tool_names.push("Hillslopes".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
@@ -329,6 +330,7 @@ impl ToolManager {
             "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
             "floodorder" => Some(Box::new(tools::hydro_analysis::FloodOrder::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
+            "hillslopes" => Some(Box::new(tools::hydro_analysis::Hillslopes::new())),
             "jensonsnappourpoints" => {
                 Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
             }

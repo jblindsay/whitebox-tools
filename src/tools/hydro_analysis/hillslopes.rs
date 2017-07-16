@@ -1,7 +1,7 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
+Created: July 16, 2017
 Last Modified: July 16, 2017
 License: MIT
 */
@@ -15,18 +15,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct Subbasins {
+pub struct Hillslopes {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Subbasins {
-    pub fn new() -> Subbasins { // public constructor
-        let name = "Subbasins".to_string();
+impl Hillslopes {
+    pub fn new() -> Hillslopes { // public constructor
+        let name = "Hillslopes".to_string();
         
-        let description = "Identifies the catchments, or sub-basin, draining to each link in a stream network.".to_string();
+        let description = "Identifies the individual hillslopes draining to each link in a stream network.".to_string();
         
         let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
         parameters.push_str("--streams     Input streams raster file.\n");
@@ -42,11 +42,11 @@ impl Subbasins {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --streams='streams.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
     
-        Subbasins { name: name, description: description, parameters: parameters, example_usage: usage }
+        Hillslopes { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Subbasins {
+impl WhiteboxTool for Hillslopes {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -148,6 +148,7 @@ impl WhiteboxTool for Subbasins {
         // First assign each stream link a unique identifier
         let mut pourpts: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         let mut stack = Vec::with_capacity((rows * columns) as usize);
+        let mut heads = vec![];
 
         // Calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
@@ -162,7 +163,7 @@ impl WhiteboxTool for Subbasins {
         let mut current_id = 1f64;
         for row in 0..rows {
             for col in 0..columns {
-                if streams[(row, col)] > 0.0 {
+                if streams[(row, col)] > 0.0 && streams[(row, col)] != nodata {
                     count = 0i8;
                     for i in 0..8 {
                         if streams[(row + dy[i], col + dx[i])] > 0.0 &&
@@ -174,6 +175,7 @@ impl WhiteboxTool for Subbasins {
                     if count == 0 {
                         // It's a headwater; add it to the stack
                         stack.push((row, col));
+                        heads.push((row, col));
                         pourpts[(row, col)] = current_id;
                         current_id += 1f64;
                     }
@@ -268,6 +270,15 @@ impl WhiteboxTool for Subbasins {
             }
         }
 
+        // Assign a new unique id to each channel head
+        while !heads.is_empty() {
+            let cell = heads.pop().unwrap();
+            row = cell.0;
+            col = cell.1;
+            current_id += 1f64;
+            pourpts[(row, col)] = current_id;
+        }
+
         // Now perform the watershedding operation
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         output.configs.data_type = DataType::F32;
@@ -351,6 +362,76 @@ impl WhiteboxTool for Subbasins {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Watershedding (Loop 2 of 2): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        // Replace all stream cells with 0's
+        for row in 0..rows {
+            for col in 0..columns {
+                if streams[(row, col)] > 0f64 && streams[(row, col)] != nodata {
+                    output[(row, col)] = 0f64;
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Watershedding (Loop 1 of 2): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        /////////////////////
+        // Clump the basins /
+        /////////////////////
+
+        let mut visited: Array2D<i8> = Array2D::new(rows, columns, 1, -1)?;
+        //re-order dx and dy so the cardinals are the first four places
+        let dx = [ 0, 1, 0, -1, 1, 1, -1, -1 ];
+        let dy = [ -1, 0, 1, 0, -1, 1, 1, -1 ];
+        let (mut row2, mut col2): (isize, isize);
+        current_id = 0f64;
+        let mut old_id: f64;
+        let mut num_neighbours: usize;
+        for row in 0..rows {
+            for col in 0..columns {
+                if visited[(row, col)] > 0 && pntr[(row, col)] != pntr_nodata && output[(row, col)] > 0f64 {
+                    current_id += 1f64;
+                    old_id = output[(row, col)];
+                    stack.push((row, col));
+                    while !stack.is_empty() {
+                        let cell = stack.pop().unwrap();
+                        row2 = cell.0;
+                        col2 = cell.1;
+                        output[(row2, col2)] = current_id;
+                        visited[(row2, col2)] = 0;
+                        // is there a stream cell in the neighbourhood?
+                        num_neighbours = 8;
+                        for n in 0..8 {
+                            y = row2 + dy[n];
+                            x = col2 + dx[n];
+                            if streams[(y, x)] > 0f64 && streams[(y, x)] != nodata {
+                                num_neighbours = 4;
+                                break;
+                            }
+                        }
+
+                        for n in 0..num_neighbours {
+                            y = row2 + dy[n];
+                            x = col2 + dx[n];
+                            if output[(y, x)] == old_id && visited[(y, x)] > 0 {
+                                stack.push((y, x));
+                            }
+                        }
+                    }
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Grouping hillslopes: {}%", progress);
                     old_progress = progress;
                 }
             }

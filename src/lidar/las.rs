@@ -229,14 +229,6 @@ impl LasFile {
 
     pub fn read(&mut self) -> Result<(), Error> {
 
-        // let mut f = File::open(&self.file_name)?;
-        // let metadata = fs::metadata(&self.file_name)?;
-        // let file_size: usize = metadata.len() as usize;
-        // let mut buffer = vec![0; file_size];
-
-        // // read the file's bytes into a buffer
-        // f.read(&mut buffer)?;
-
         let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
             false => {
                 let mut f = File::open(&self.file_name)?;
