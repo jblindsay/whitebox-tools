@@ -2,6 +2,7 @@
 mod average_upslope_flowpath_length;
 mod basins;
 mod breach_depressions;
+mod breach_pits;
 mod d8_flow_accum;
 mod d8_pointer;
 mod depth_in_sink;
@@ -33,6 +34,7 @@ mod watershed;
 pub use self::average_upslope_flowpath_length::AverageUpslopeFlowpathLength;
 pub use self::basins::Basins;
 pub use self::breach_depressions::BreachDepressions;
+pub use self::breach_pits::BreachSingleCellPits;
 pub use self::d8_flow_accum::D8FlowAccumulation;
 pub use self::d8_pointer::D8Pointer;
 pub use self::depth_in_sink::DepthInSink;
