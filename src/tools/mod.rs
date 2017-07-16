@@ -75,6 +75,7 @@ impl ToolManager {
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
+        tool_names.push("Rho8Pointer".to_string());
         tool_names.push("Sink".to_string());
         tool_names.push("SnapPourPoints".to_string());
         tool_names.push("StrahlerOrderBasins".to_string());
@@ -335,6 +336,7 @@ impl ToolManager {
             "numinflowingneighbours" => {
                 Some(Box::new(tools::hydro_analysis::NumInflowingNeighbours::new()))
             }
+            "rho8pointer" => Some(Box::new(tools::hydro_analysis::Rho8Pointer::new())),
             "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
             "strahlerorderbasins" => Some(Box::new(tools::hydro_analysis::StrahlerOrderBasins::new())),
