@@ -1,12 +1,15 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 21, 2017
+Created: July 16, 2017
 Last Modified: July 16, 2017
 License: MIT
 */
-extern crate nalgebra as na;
+extern crate time;
 
+use std::io::BufWriter;
+use std::fs::File;
+use std::io::prelude::*;
 use std;
 use std::env;
 use std::io::{Error, ErrorKind};
@@ -14,21 +17,20 @@ use std::path;
 use lidar::las;
 use tools::WhiteboxTool;
 
-pub struct LidarJoin {
+pub struct LasToAscii {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl LidarJoin {
-    pub fn new() -> LidarJoin { // public constructor
-        let name = "LidarJoin".to_string();
+impl LasToAscii {
+    pub fn new() -> LasToAscii { // public constructor
+        let name = "LasToAscii".to_string();
         
-        let description = "Joins multiple LiDAR (LAS) files into a single LAS file.".to_string();
+        let description = "Converts one or more LAS files into ASCII text files.".to_string();
         
-        let mut parameters = "-i, --inputs      Input LAS files, separated by commas.\n".to_owned();
-        parameters.push_str("-o, --output  Output LAS file.\n");
+        let parameters = "-i, --inputs      Input LAS files, separated by commas.\n".to_owned();
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -39,11 +41,11 @@ impl LidarJoin {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\"", short_exe, name).replace("*", &sep);
     
-        LidarJoin { name: name, description: description, parameters: parameters, example_usage: usage }
+        LasToAscii { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for LidarJoin {
+impl WhiteboxTool for LasToAscii {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,8 +64,7 @@ impl WhiteboxTool for LidarJoin {
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files: String = String::new();
-        let mut output_file = String::new();
-
+    
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -81,12 +82,6 @@ impl WhiteboxTool for LidarJoin {
                 } else {
                     input_files = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
-                } else {
-                    output_file = args[i+1].to_string();
-                }
             }
         }
 
@@ -97,15 +92,11 @@ impl WhiteboxTool for LidarJoin {
         }
 
         let sep = std::path::MAIN_SEPARATOR;
-        // if !working_directory.ends_with(sep) {
-        //     working_directory.push_str(&(sep.to_string()));
-        // }
+        
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
 
-        if !output_file.contains(sep) {
-            output_file = format!("{}{}", working_directory, output_file);
-        }
-
-        let mut output: las::LasFile = las::LasFile::new(&output_file, "w")?;
+        let start = time::now();
 
         let mut cmd = input_files.split(";");
         let mut vec = cmd.collect::<Vec<&str>>();
@@ -113,9 +104,8 @@ impl WhiteboxTool for LidarJoin {
             cmd = input_files.split(",");
             vec = cmd.collect::<Vec<&str>>();
         }
-        let mut i = 0;
+        let mut i = 1;
         let num_files = vec.len();
-        let mut file_format = -1i32;
         for value in vec {
             if !value.trim().is_empty() {
                 let mut input_file = value.trim().to_owned();
@@ -127,33 +117,48 @@ impl WhiteboxTool for LidarJoin {
                     Ok(lf) => lf,
                     Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
                 };
-
-                if file_format == -1 {
-                    file_format = input.header.point_format as i32;
+                
+                let output_file = if input_file.to_lowercase().ends_with(".las") {
+                    input_file.replace(".las", ".txt")
+                } else if input_file.to_lowercase().ends_with(".zip") {
+                    input_file.replace(".zip", ".txt")
                 } else {
-                    if input.header.point_format as i32 != file_format {
-                        return Err(Error::new(ErrorKind::InvalidData, "All input files must be of the same LAS Point Format."));
-                    }
-                }
+                    return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file)));
+                };
 
-                if i == 0 {
-                    output = las::LasFile::initialize_using_file(&output_file, &input);
-                }
+                let f = File::create(output_file)?;
+                let mut writer = BufWriter::new(f);
 
+                
                 let n_points = input.header.number_of_points as usize;
 
-                let mut pr: las::LidarPointRecord;
-                for i in 0..n_points {
-                    pr = input.get_record(i);
-                    output.add_point_record(pr);
+                writer.write_all("X Y Z Intensity Class Return Num_returns\n".as_bytes())?;
+                // let mut pd: las::PointData;
+                for k in 0..n_points {
+                    let pd = input[k];
+                    let s = format!("{} {} {} {} {} {} {}\n", pd.x, pd.y, pd.z, pd.intensity, pd.classification(), pd.return_number(), pd.number_of_returns());
+                    writer.write_all(s.as_bytes())?;
+
+                    if verbose {
+                        progress = (100.0_f64 * k as f64 / (n_points - 1) as f64) as usize;
+                        if progress != old_progress {
+                            if num_files > 1 {
+                                println!("Creating file: {} of {}: {}%", i, num_files, progress);
+                            } else {
+                                println!("Progress: {}%", progress);
+                            }
+                            old_progress = progress;
+                        }
+                    }
                 }
+                let _ = writer.flush();
             }
             i += 1;
-            if verbose { println!("Adding file: {} of {}", i, num_files); }
         }
 
-        if verbose { println!("Writing output LAS file..."); }
-        output.write()?;
+        let end = time::now();
+        let elapsed_time = end - start;
+        println!("{}", &format!("Elapsed Time: {}", elapsed_time).replace("PT", ""));
 
         Ok(())
     }

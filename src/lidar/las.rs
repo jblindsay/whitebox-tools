@@ -244,9 +244,14 @@ impl LasFile {
                 let file = File::open(&self.file_name)?;
                 let mut zip = (zip::ZipArchive::new(file))?;
                 let mut f = zip.by_index(0).unwrap();
+                if !f.name().to_lowercase().ends_with(".las") {
+                    return Err(Error::new(ErrorKind::InvalidData,
+                     "The data file contained within zipped archive does not have the proper 'las' extension."))
+                }
                 match f.compression() {
                     CompressionMethod::Stored | CompressionMethod::Deflated | CompressionMethod::Bzip2 => (),
-                    _ => return Err(Error::new(ErrorKind::InvalidData, "Either the file is formatted incorrectly or it is an unsupported compression type.")),
+                    _ => return Err(Error::new(ErrorKind::InvalidData, 
+                    "Either the file is formatted incorrectly or it is an unsupported compression type.")),
                 }
                 let file_size: usize = f.size() as usize;
                 let mut buffer = vec![0; file_size];

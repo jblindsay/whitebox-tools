@@ -40,7 +40,7 @@ impl Hillslopes {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --streams='streams.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --streams='streams.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
     
         Hillslopes { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -388,13 +388,16 @@ impl WhiteboxTool for Hillslopes {
         /////////////////////
 
         let mut visited: Array2D<i8> = Array2D::new(rows, columns, 1, -1)?;
-        //re-order dx and dy so the cardinals are the first four places
-        let dx = [ 0, 1, 0, -1, 1, 1, -1, -1 ];
-        let dy = [ -1, 0, 1, 0, -1, 1, 1, -1 ];
+        
+        // 6 7 0
+        // 5 x 1
+        // 4 3 2
+        let card1 = [ 0, 8, 1, 8, 2, 8, 3, 8 ]; // used to ensure that clumping doesn occur across stream lines at diagonals
+        let card2 = [ 7, 1, 3, 5 ];
+        let card3 = [ 1, 3, 5, 7 ];
         let (mut row2, mut col2): (isize, isize);
         current_id = 0f64;
         let mut old_id: f64;
-        let mut num_neighbours: usize;
         for row in 0..rows {
             for col in 0..columns {
                 if visited[(row, col)] > 0 && pntr[(row, col)] != pntr_nodata && output[(row, col)] > 0f64 {
@@ -407,22 +410,21 @@ impl WhiteboxTool for Hillslopes {
                         col2 = cell.1;
                         output[(row2, col2)] = current_id;
                         visited[(row2, col2)] = 0;
-                        // is there a stream cell in the neighbourhood?
-                        num_neighbours = 8;
+                        
                         for n in 0..8 {
                             y = row2 + dy[n];
                             x = col2 + dx[n];
-                            if streams[(y, x)] > 0f64 && streams[(y, x)] != nodata {
-                                num_neighbours = 4;
-                                break;
-                            }
-                        }
-
-                        for n in 0..num_neighbours {
-                            y = row2 + dy[n];
-                            x = col2 + dx[n];
                             if output[(y, x)] == old_id && visited[(y, x)] > 0 {
-                                stack.push((y, x));
+                                let diag = card1[n];
+                                if diag == 8 { // its a cardinal direction
+                                    stack.push((y, x));
+                                } else {
+                                    // clumping can't cross a stream via a diagonal
+                                    if streams[(row2 + dy[card2[diag]], col2 + dx[card2[diag]])] == 0f64 ||
+                                        streams[(row2 + dy[card3[diag]], col2 + dx[card3[diag]])] == 0f64 {
+                                        stack.push((y, x));
+                                    }
+                                }
                             }
                         }
                     }

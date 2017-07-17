@@ -2,6 +2,7 @@
 mod block_maximum;
 mod block_minimum;
 mod flightline_overlap;
+mod las_to_ascii;
 mod lidar_elevation_slice; 
 mod lidar_ground_point_filter;
 mod lidar_hillshade;
@@ -18,6 +19,7 @@ mod normal_vectors;
 pub use self::block_maximum::BlockMaximum;
 pub use self::block_minimum::BlockMinimum;
 pub use self::flightline_overlap::FlightlineOverlap;
+pub use self::las_to_ascii::LasToAscii;
 pub use self::lidar_elevation_slice::LidarElevationSlice;
 pub use self::lidar_ground_point_filter::LidarGroundPointFilter;
 pub use self::lidar_hillshade::LidarHillshade;

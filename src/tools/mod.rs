@@ -130,6 +130,7 @@ impl ToolManager {
         tool_names.push("BlockMaximum".to_string());
         tool_names.push("BlockMinimum".to_string());
         tool_names.push("FlightlineOverlap".to_string());
+        tool_names.push("LasToAscii".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
         tool_names.push("LidarHillshade".to_string());
@@ -410,6 +411,7 @@ impl ToolManager {
             "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),
             "blockminimum" => Some(Box::new(tools::lidar_analysis::BlockMinimum::new())),
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
+            "lastoascii" => Some(Box::new(tools::lidar_analysis::LasToAscii::new())),
             "lidarelevationslice" => {
                 Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new()))
             }
