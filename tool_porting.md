@@ -1,4 +1,4 @@
-(Updated 14-07-2017)
+(Updated 17-07-2017)
 
 The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **211 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **215 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 

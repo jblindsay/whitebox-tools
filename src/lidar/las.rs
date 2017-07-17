@@ -10,6 +10,7 @@ use std::io::BufWriter;
 use std::fs::File;
 use std::fs;
 use std::mem;
+use std::path::Path;
 use std::str;
 use lidar::header::LasHeader;
 use lidar::point_data::{ ClassificationBitField, PointBitField, PointData, RgbData, WaveformPacket };
@@ -19,8 +20,9 @@ use std::ops::Index;
 use std::io::Seek;
 use self::zip::result::ZipResult;
 use self::zip::CompressionMethod;
-// use self::zip::write::FileOptions;
 use self::zip::read::{ ZipArchive, ZipFile };
+use self::zip::write::{FileOptions, ZipWriter};
+
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -537,9 +539,34 @@ impl LasFile {
         dec = 1.0 / 10_f64.powi(8 - mantissa as i32);
         if self.header.z_scale_factor == 0_f64 { self.header.z_scale_factor = dec; }
 
-        let f = File::create(&self.file_name)?;
-        let mut writer = BufWriter::new(f);
+        if !self.file_name.to_lowercase().ends_with(".zip") {
+            let f = File::create(&self.file_name)?;
+            let mut writer = BufWriter::new(f);
 
+            self.write_data(&mut writer)?;
+        
+        } else {
+
+            let f = File::create(&self.file_name)?;
+            let mut writer = ZipWriter::new(f);
+            let lasfile_name = if self.file_name.to_lowercase().ends_with(".las.zip") {
+                let path = Path::new(&self.file_name);
+                path.file_stem().unwrap().to_str().unwrap().to_owned()
+            } else {
+                let path = Path::new(&self.file_name);
+                path.file_stem().unwrap().to_str().unwrap().to_owned() + ".las"
+            };
+            
+            let options = FileOptions::default().compression_method(CompressionMethod::Deflated);
+            writer.start_file(lasfile_name, options)?;
+
+            self.write_data(&mut writer)?;
+        }
+
+        Ok(())
+    }
+
+    fn write_data<W: Write>(&mut self, writer: &mut W) -> Result<(), Error> {
         /////////////////////////////////
         // Write the header to the file /
         /////////////////////////////////
@@ -548,60 +575,59 @@ impl LasFile {
         let mut u64_bytes: [u8; 8];
 
         self.header.file_signature = "LASF".to_string();
-        writer.write(self.header.file_signature.as_bytes())?;
-
+        writer.write_all(self.header.file_signature.as_bytes())?;
+        
         u16_bytes = unsafe {mem::transmute(self.header.file_source_id)};
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+        
         u16_bytes = unsafe { mem::transmute(self.header.global_encoding) };
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+        
         if self.header.project_id_used {
             u32_bytes = unsafe { mem::transmute(self.header.project_id1) };
-            writer.write(&u32_bytes)?;
-
+            writer.write_all(&u32_bytes)?;
+            
             u16_bytes = unsafe { mem::transmute(self.header.project_id2) };
-            writer.write(&u16_bytes)?;
-
+            writer.write_all(&u16_bytes)?;
+            
             u16_bytes = unsafe { mem::transmute(self.header.project_id3) };
-            writer.write(&u16_bytes)?;
-
+            writer.write_all(&u16_bytes)?;
+            
             u64_bytes = unsafe { mem::transmute(self.header.project_id4) };
-            writer.write(&u64_bytes)?;
+            writer.write_all(&u64_bytes)?;
         }
 
         self.header.version_major = 1u8;
         let mut u8_bytes: [u8; 1] = unsafe {mem::transmute(self.header.version_major)};
-        writer.write(&u8_bytes)?;
-
+        writer.write_all(&u8_bytes)?;
+        
         self.header.version_minor = 3u8;
         u8_bytes = unsafe {mem::transmute(self.header.version_minor)};
-        writer.write(&u8_bytes)?;
-
+        writer.write_all(&u8_bytes)?;
+        
         if self.header.system_id.len() == 0 {
             self.header.system_id = fixed_length_string("OTHER", 32);
         } else if !self.header.system_id.len() != 32 {
             self.header.system_id = fixed_length_string(&(self.header.system_id), 32);
         }
-        writer.write(self.header.system_id.as_bytes())?; //string_bytes));
-
+        writer.write_all(self.header.system_id.as_bytes())?; //string_bytes));
+        
         self.header.generating_software = fixed_length_string("whitebox_tools by John Lindsay", 32);
-        //string_bytes = unsafe { mem::transmute("libgeospatial by John Lindsay   ") };
-        writer.write(self.header.generating_software.as_bytes())?;
-
+        writer.write_all(self.header.generating_software.as_bytes())?;
+        
         let now = time::now();
         self.header.file_creation_day = now.tm_yday as u16;
         u16_bytes = unsafe { mem::transmute(self.header.file_creation_day) };
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+        
         self.header.file_creation_year = (now.tm_year + 1900) as u16;
         u16_bytes = unsafe { mem::transmute(self.header.file_creation_year) };
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+        
         self.header.header_size = 235;
         u16_bytes = unsafe { mem::transmute(self.header.header_size) };
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+    
         // figure out the offset to points
         let mut total_vlr_size = 54 * self.header.number_of_vlrs;
         for i in 0..(self.header.number_of_vlrs as usize) {
@@ -609,14 +635,14 @@ impl LasFile {
         }
         self.header.offset_to_points = 235 + total_vlr_size;
         u32_bytes = unsafe { mem::transmute(self.header.offset_to_points) };
-        writer.write(&u32_bytes)?;
-
+        writer.write_all(&u32_bytes)?;
+        
         u32_bytes = unsafe { mem::transmute(self.header.number_of_vlrs) };
-        writer.write(&u32_bytes)?;
-
+        writer.write_all(&u32_bytes)?;
+        
         u8_bytes = unsafe {mem::transmute(self.header.point_format)};
-        writer.write(&u8_bytes)?;
-
+        writer.write_all(&u8_bytes)?;
+        
         // Intensity and userdata are both optional. Figure out if they need to be read.
         // The only way to do this is to compare the point record length by point format
         let rec_lengths = [ [20_u16, 18_u16, 19_u16, 17_u16],
@@ -635,78 +661,78 @@ impl LasFile {
         }
 
         u16_bytes = unsafe { mem::transmute(self.header.point_record_length) };
-        writer.write(&u16_bytes)?;
-
+        writer.write_all(&u16_bytes)?;
+        
         u32_bytes = unsafe { mem::transmute(self.header.number_of_points) };
-        writer.write(&u32_bytes)?;
-
+        writer.write_all(&u32_bytes)?;
+        
         for i in 0..5 {
             u32_bytes = unsafe { mem::transmute(self.header.number_of_points_by_return[i]) };
-            writer.write(&u32_bytes)?;
+            writer.write_all(&u32_bytes)?;
         }
 
         u64_bytes = unsafe { mem::transmute(self.header.x_scale_factor) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.y_scale_factor) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.z_scale_factor) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.x_offset) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.y_offset) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.z_offset) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.max_x) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.min_x) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.max_y) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.min_y) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.max_z) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.min_z) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         u64_bytes = unsafe { mem::transmute(self.header.waveform_data_start) };
-        writer.write(&u64_bytes)?;
-
+        writer.write_all(&u64_bytes)?;
+        
         ///////////////////////////////
         // Write the VLRs to the file /
         ///////////////////////////////
         for i in 0..(self.header.number_of_vlrs as usize) {
             let vlr = self.vlr_data[i].clone();
             u16_bytes = unsafe { mem::transmute(vlr.reserved) };
-            writer.write(&u16_bytes)?;
+            writer.write_all(&u16_bytes)?;
 
             let user_id: &str = &vlr.user_id;
             //string_bytes = unsafe { mem::transmute(user_id) };
-            writer.write(user_id.as_bytes())?; //string_bytes));
-
+            writer.write_all(user_id.as_bytes())?; //string_bytes));
+            
             u16_bytes = unsafe { mem::transmute(vlr.record_id) };
-            writer.write(&u16_bytes)?;
-
+            writer.write_all(&u16_bytes)?;
+            
             u16_bytes = unsafe { mem::transmute(vlr.record_length_after_header) };
-            writer.write(&u16_bytes)?;
-
+            writer.write_all(&u16_bytes)?;
+            
             let description: &str = &vlr.description;
             //string_bytes = unsafe { mem::transmute(description) };
-            writer.write(description.as_bytes())?;
-
-            writer.write(&vlr.binary_data)?;
+            writer.write_all(description.as_bytes())?;
+            
+            writer.write_all(&vlr.binary_data)?;
         }
 
         ////////////////////////////////
@@ -718,172 +744,172 @@ impl LasFile {
                 for i in 0..self.header.number_of_points as usize {
                     val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].y - self.header.y_offset) / self.header.y_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].z - self.header.z_offset) / self.header.z_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     if self.use_point_intensity {
                         u16_bytes = unsafe { mem::transmute(self.point_data[i].intensity) };
-                        writer.write(&u16_bytes)?;
+                        writer.write_all(&u16_bytes)?;
                     }
 
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     if self.use_point_userdata {
                         u8_bytes = unsafe {mem::transmute(self.point_data[i].user_data)};
-                        writer.write(&u8_bytes)?;
+                        writer.write_all(&u8_bytes)?;
                     }
 
                     u16_bytes = unsafe { mem::transmute(self.point_data[i].point_source_id) };
-                    writer.write(&u16_bytes)?;
+                    writer.write_all(&u16_bytes)?;
                 }
             },
             1 => {
                 for i in 0..self.header.number_of_points as usize {
                     val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].y - self.header.y_offset) / self.header.y_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].z - self.header.z_offset) / self.header.z_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     if self.use_point_intensity {
                         u16_bytes = unsafe { mem::transmute(self.point_data[i].intensity) };
-                        writer.write(&u16_bytes)?;
+                        writer.write_all(&u16_bytes)?;
                     }
 
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     if self.use_point_userdata {
                         u8_bytes = unsafe {mem::transmute(self.point_data[i].user_data)};
-                        writer.write(&u8_bytes)?;
+                        writer.write_all(&u8_bytes)?;
                     }
 
                     u16_bytes = unsafe { mem::transmute(self.point_data[i].point_source_id) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u64_bytes = unsafe { mem::transmute(self.gps_data[i]) };
-                    writer.write(&u64_bytes)?;
+                    writer.write_all(&u64_bytes)?;
                 }
             },
             2 => {
                 for i in 0..self.header.number_of_points as usize {
                     val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].y - self.header.y_offset) / self.header.y_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].z - self.header.z_offset) / self.header.z_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     if self.use_point_intensity {
                         u16_bytes = unsafe { mem::transmute(self.point_data[i].intensity) };
-                        writer.write(&u16_bytes)?;
+                        writer.write_all(&u16_bytes)?;
                     }
 
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
-                    writer.write(&u8_bytes)?;
+                    writer.write_all(&u8_bytes)?;
 
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     if self.use_point_userdata {
                         u8_bytes = unsafe {mem::transmute(self.point_data[i].user_data)};
-                        writer.write(&u8_bytes)?;
+                        writer.write_all(&u8_bytes)?;
                     }
 
                     u16_bytes = unsafe { mem::transmute(self.point_data[i].point_source_id) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].red) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].green) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].blue) };
-                    writer.write(&u16_bytes)?;
+                    writer.write_all(&u16_bytes)?;
                 }
             },
             3 => {
                 for i in 0..self.header.number_of_points as usize {
                     val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].y - self.header.y_offset) / self.header.y_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     val = ((self.point_data[i].z - self.header.z_offset) / self.header.z_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
-                    writer.write(&u32_bytes)?;
-
+                    writer.write_all(&u32_bytes)?;
+                    
                     if self.use_point_intensity {
                         u16_bytes = unsafe { mem::transmute(self.point_data[i].intensity) };
-                        writer.write(&u16_bytes)?;
+                        writer.write_all(&u16_bytes)?;
                     }
 
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
-                    writer.write(&u8_bytes)?;
-
+                    writer.write_all(&u8_bytes)?;
+                    
                     if self.use_point_userdata {
                         u8_bytes = unsafe {mem::transmute(self.point_data[i].user_data)};
-                        writer.write(&u8_bytes)?;
+                        writer.write_all(&u8_bytes)?;
                     }
 
                     u16_bytes = unsafe { mem::transmute(self.point_data[i].point_source_id) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u64_bytes = unsafe { mem::transmute(self.gps_data[i]) };
-                    writer.write(&u64_bytes)?;
-
+                    writer.write_all(&u64_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].red) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].green) };
-                    writer.write(&u16_bytes)?;
-
+                    writer.write_all(&u16_bytes)?;
+                    
                     u16_bytes = unsafe { mem::transmute(self.rgb_data[i].blue) };
-                    writer.write(&u16_bytes)?;
+                    writer.write_all(&u16_bytes)?;
                 }
             },
             _ => {
@@ -893,6 +919,7 @@ impl LasFile {
 
         Ok(())
     }
+
 
     pub fn get_vlr_data_as_string(&self) -> String {
         let mut s = "".to_string();

@@ -349,7 +349,17 @@ The library currently contains the following 211 tools:
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
 ## Supported Data Formats
-The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (*.flt & *.hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. The compressed LAS format (LAZ) and ESRI LiDAR formats are not currently supported; however, zipped (.zip) LAS files can be read. At present, there is no ability to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will eventually be added to the library.
+The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. 
+
+At present, there is no ability in *WhiteboxTools* to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will be added to the library soon. 
+
+LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. *WhiteboxTools* can read and write LAS files that have been compressed (zipped with a .zip extension) using the common DEFLATE algorithm.  The compressed LiDAR format LAZ and ESRI LiDAR format are not currently supported by the library. The following is an example of running a LiDAR tool using zipped input/output files:
+
+```
+>>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las.zip" -o="output.las.zip" --radius=10.0
+```
+
+The extra work of decoding/encoding compressed files does add some additional processing time, although the Rust-based compression library that is used is highly efficient. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file datasets with massive data storage requirements.
 
 ## Contributing
 
