@@ -221,6 +221,7 @@ impl ToolManager {
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
+        tool_names.push("DownslopeIndex".to_string());
         tool_names.push("ElevAbovePit".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("ElevRelativeToMinMax".to_string());
@@ -546,6 +547,7 @@ impl ToolManager {
             "directionalrelief" => {
                 Some(Box::new(tools::terrain_analysis::DirectionalRelief::new()))
             }
+            "downslopeindex" => Some(Box::new(tools::terrain_analysis::DownslopeIndex::new())),
             "elevabovepit" => Some(Box::new(tools::terrain_analysis::ElevAbovePit::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "elevrelativetominmax" => Some(Box::new(tools::terrain_analysis::ElevRelativeToMinMax::new())),

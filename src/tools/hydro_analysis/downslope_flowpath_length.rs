@@ -6,7 +6,6 @@ Last Modified: July 8, 2017
 License: MIT
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;
@@ -42,8 +41,8 @@ impl DownslopeFlowpathLength {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=flowpath_len.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=pointer.flt --watersheds=basin.flt --weights=weights.flt -o=flowpath_len.flt --esri_pntr", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=flowpath_len.dep
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.flt --watersheds=basin.flt --weights=weights.flt -o=flowpath_len.flt --esri_pntr", short_exe, name).replace("*", &sep);
     
         DownslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
     }

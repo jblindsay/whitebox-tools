@@ -318,6 +318,7 @@ The library currently contains the following 211 tools:
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
 - ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
+- ***DownslopeIndex***: Calculates the Hjerdt et al. (2004) downslope index.
 - ***ElevAbovePit***: Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
 - ***ElevRelativeToMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
@@ -353,13 +354,13 @@ The **WhiteboxTools** library can currently support read/writing raster data in 
 
 At present, there is no ability in *WhiteboxTools* to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will be added to the library soon. 
 
-LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. *WhiteboxTools* can read and write LAS files that have been compressed (zipped with a .zip extension) using the common DEFLATE algorithm.  The compressed LiDAR format LAZ and ESRI LiDAR format are not currently supported by the library. The following is an example of running a LiDAR tool using zipped input/output files:
+LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. *WhiteboxTools* can read and write LAS files that have been compressed (zipped with a .zip extension) using the common DEFLATE algorithm. Note that only LAS file should be contained within a zipped archive file. The compressed LiDAR format LAZ and ESRI LiDAR format are not currently supported by the library. The following is an example of running a LiDAR tool using zipped input/output files:
 
 ```
 >>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las.zip" -o="output.las.zip" --radius=10.0
 ```
 
-The extra work of decoding/encoding compressed files does add some additional processing time, although the Rust-based compression library that is used is highly efficient. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file datasets with massive data storage requirements.
+Note that the double extensions (.las.zip) in the above command are not necessary and are only used for convienence of keeping track of LiDAR data sets (i.e. .zip extensions work too). The extra work of decoding/encoding compressed files does add additional processing time, although the Rust compression library that is used is highly efficient and usually only adds a few seconds to tool run times. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file data sets with massive storage requirements. 
 
 ## Contributing
 
