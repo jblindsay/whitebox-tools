@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 211 tools:
+The library currently contains the following 212 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -372,6 +372,8 @@ If you would like to contribute to the project as a developer, follow these inst
 4. Push to the branch (git push origin my-new-feature)
 5. Create a new Pull Request
 
+Unless explicitly stated otherwise, any contribution intentionally submitted for inclusion in the work shall be licensed [as above](#license) without any additional terms or conditions.
+
 **TODO**
 Describe the process of integrating a new tool into the library.
 
@@ -383,7 +385,7 @@ If you would like to contribute financial support for the project, please contac
 
 ## License
 
-The **WhiteboxTools** library is distributed under the [MIT license](LICENSE), a permissive open-source (free software) license.
+The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt), a permissive open-source (free software) license.
 
 ## Known Issues
 
