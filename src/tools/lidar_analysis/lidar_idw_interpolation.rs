@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: July 3, 2017
+Last Modified: July 17, 2017
 License: MIT
 
 NOTES: Add the ability to:
@@ -20,8 +20,8 @@ use std::path;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
@@ -260,7 +260,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
         if verbose {
             println!("Reading input LAS file...");
         }
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 16, 2017
-Last Modified: July 16, 2017
+Last Modified: July 17, 2017
 License: MIT
 */
 extern crate time;
@@ -14,7 +14,7 @@ use std;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use lidar::las;
+use lidar::*;
 use tools::WhiteboxTool;
 
 pub struct LasToAscii {
@@ -113,7 +113,7 @@ impl WhiteboxTool for LasToAscii {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
 
-                let input: las::LasFile = match las::LasFile::new(&input_file, "r") {
+                let input: LasFile = match LasFile::new(&input_file, "r") {
                     Ok(lf) => lf,
                     Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
                 };
@@ -133,7 +133,6 @@ impl WhiteboxTool for LasToAscii {
                 let n_points = input.header.number_of_points as usize;
 
                 writer.write_all("X Y Z Intensity Class Return Num_returns\n".as_bytes())?;
-                // let mut pd: las::PointData;
                 for k in 0..n_points {
                     let pd = input[k];
                     let s = format!("{} {} {} {} {} {} {}\n", pd.x, pd.y, pd.z, pd.intensity, pd.classification(), pd.return_number(), pd.number_of_returns());

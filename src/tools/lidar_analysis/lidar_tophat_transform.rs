@@ -15,8 +15,8 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use tools::WhiteboxTool;
 use structures::FixedRadiusSearch2D;
 
@@ -119,8 +119,7 @@ impl WhiteboxTool for LidarTophatTransform {
         }
 
         if verbose { println!("Reading input LAS file..."); }
-        //let input = las::LasFile::new(&input_file, "r");
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
@@ -257,29 +256,29 @@ impl WhiteboxTool for LidarTophatTransform {
         }
 
         // now output the data
-        let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+        let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
         for i in 0..n_points {
             let pr = input.get_record(i);
-            let pr2: las::LidarPointRecord;
+            let pr2: LidarPointRecord;
             match pr {
-                las::LidarPointRecord::PointRecord0 { mut point_data }  => {
+                LidarPointRecord::PointRecord0 { mut point_data }  => {
                     point_data.z = residuals[i];
-                    pr2 = las::LidarPointRecord::PointRecord0 { point_data: point_data };
+                    pr2 = LidarPointRecord::PointRecord0 { point_data: point_data };
 
                 },
-                las::LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
                     point_data.z = residuals[i];
-                    pr2 = las::LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
+                    pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
                 },
-                las::LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
+                LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
                     point_data.z = residuals[i];
-                    pr2 = las::LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
+                    pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
                 },
-                las::LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
+                LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
                     point_data.z = residuals[i];
-                    pr2 = las::LidarPointRecord::PointRecord3 { point_data: point_data,
+                    pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
                         gps_data: gps_data, rgb_data: rgb_data};
                 },
             }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: June 26, 2017
+Last Modified: July 17, 2017
 License: MIT
 */
 use std;
@@ -11,8 +11,8 @@ use std::io::{Error, ErrorKind};
 use std::fs::DirBuilder;
 use std::path;
 use std::path::Path;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use tools::WhiteboxTool;
 
 pub struct LidarTile {
@@ -43,7 +43,7 @@ impl LidarTile {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -i=*path*to*data*input.las --width_x=1000.0 --width_y=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v -i=*path*to*data*input.las --width_x=1000.0 --width_y=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
     
         LidarTile { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -138,7 +138,7 @@ impl WhiteboxTool for LidarTile {
 
         if verbose { println!("Performing analysis..."); }
 
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
@@ -239,7 +239,7 @@ impl WhiteboxTool for LidarTile {
                 row = (tile_num as f64 / cols as f64).floor() as usize;
                 col = tile_num % cols;
                 let output_file = format!("{}{}_row{}_col{}.las", output_dir, name, row - min_row + 1, col - min_col + 1);
-                let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+                let mut output = LasFile::initialize_using_file(&output_file, &input);
                 output.header.system_id = "EXTRACTION".to_string();
 
                 for i in first_point_num[tile_num]..last_point_num[tile_num] {

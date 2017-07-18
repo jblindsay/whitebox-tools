@@ -1,10 +1,17 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 2, 2017
+Last Modified: July 16, 2017
+License: MIT
+*/
 extern crate time;
 
 use std::env;
 use std::f64;
 use std::path;
 use std::io::{Error, ErrorKind};
-use lidar::las;
+use lidar::*;
 use tools::WhiteboxTool;
 
 pub struct LidarElevationSlice {
@@ -35,9 +42,9 @@ impl LidarElevationSlice {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --minz=100.0 --maxz=250.0
->>.*{0} -r={1} -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --class
->>.*{0} -r={1} -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --minz=100.0 --maxz=250.0
+>>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --class
+>>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0", short_exe, name).replace("*", &sep);
     
         LidarElevationSlice { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -149,12 +156,11 @@ impl WhiteboxTool for LidarElevationSlice {
         }
 
         if verbose { println!("Reading input LAS file..."); }
-        //let input = las::LasFile::new(&input_file, "r");
-        let input: las::LasFile = match las::LasFile::new(&input_file, "r") {
+        let input: LasFile = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
         };
-        let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+        let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
         if verbose { println!("Performing analysis..."); }
@@ -187,24 +193,24 @@ impl WhiteboxTool for LidarElevationSlice {
                     class_val = in_class_value; // inside elevation slice
                 }
                 let pr = input.get_record(i);
-                let pr2: las::LidarPointRecord;
+                let pr2: LidarPointRecord;
                 match pr {
-                    las::LidarPointRecord::PointRecord0 { mut point_data }  => {
+                    LidarPointRecord::PointRecord0 { mut point_data }  => {
                         point_data.set_classification(class_val);
-                        pr2 = las::LidarPointRecord::PointRecord0 { point_data: point_data };
+                        pr2 = LidarPointRecord::PointRecord0 { point_data: point_data };
 
                     },
-                    las::LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
                         point_data.set_classification(class_val);
-                        pr2 = las::LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
+                        pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
                     },
-                    las::LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
+                    LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
                         point_data.set_classification(class_val);
-                        pr2 = las::LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
+                        pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
                     },
-                    las::LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
+                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
                         point_data.set_classification(class_val);
-                        pr2 = las::LidarPointRecord::PointRecord3 { point_data: point_data,
+                        pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
                             gps_data: gps_data, rgb_data: rgb_data};
                     },
                 }

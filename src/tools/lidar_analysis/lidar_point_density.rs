@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 10, 2017
-Last Modified: July 10, 2017
+Last Modified: July 17, 2017
 License: MIT
 */
 extern crate time;
@@ -15,8 +15,8 @@ use std::path;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
@@ -219,7 +219,7 @@ impl WhiteboxTool for LidarPointDensity {
         if verbose {
             println!("Reading input LAS file...");
         }
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };

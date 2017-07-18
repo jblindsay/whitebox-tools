@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: July 4, 2017
+Last Modified: July 16, 2017
 License: MIT
 */
 extern crate time;
@@ -15,8 +15,7 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use std::path;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
 use raster::*;
 use tools::WhiteboxTool;
 
@@ -49,8 +48,8 @@ impl BlockMinimum {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
+.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
         BlockMinimum {
             name: name,
@@ -148,7 +147,7 @@ impl WhiteboxTool for BlockMinimum {
         if verbose {
             println!("Reading input LAS file...");
         }
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(_) => {
                 return Err(Error::new(ErrorKind::NotFound,

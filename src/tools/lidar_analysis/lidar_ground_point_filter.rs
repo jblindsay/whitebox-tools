@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 2, 2017
+Last Modified: July 17, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 
@@ -8,8 +15,8 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use tools::WhiteboxTool;
 use structures::FixedRadiusSearch2D;
 
@@ -37,7 +44,7 @@ impl LidarGroundPointFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
     
         LidarGroundPointFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -126,8 +133,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         }
 
         if verbose { println!("Reading input LAS file..."); }
-        //let input = las::LasFile::new(&input_file, "r");
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
@@ -263,7 +269,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         }
 
         // now output the data
-        let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+        let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
         for i in 0..n_points {

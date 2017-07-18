@@ -1,10 +1,18 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 1, 2017
+Last Modified: July 17, 2017
+License: MIT
+*/
+
 use std;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::u16;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use tools::WhiteboxTool;
 
 pub struct LidarInfo {
@@ -98,7 +106,7 @@ impl WhiteboxTool for LidarInfo {
             input_file = format!("{}{}", working_directory, input_file);
         }
 
-        let input: las::LasFile = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
         };

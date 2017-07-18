@@ -9,8 +9,8 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use lidar::las;
-use lidar::point_data::*;
+use lidar::*;
+// use lidar::point_data::*;
 use tools::WhiteboxTool;
 use self::na::Vector3;
 use structures::FixedRadiusSearch3D;
@@ -136,8 +136,7 @@ impl WhiteboxTool for LidarHillshade {
         }
 
         if verbose { println!("Reading input LAS file..."); }
-        //let input = las::LasFile::new(&input_file, "r");
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
@@ -213,7 +212,7 @@ impl WhiteboxTool for LidarHillshade {
         }
 
         // now output the data
-        let mut output = las::LasFile::initialize_using_file(&output_file, &input);
+        let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.point_format = 2;
 
         let (mut fx, mut fy, mut tan_slope, mut aspect): (f64, f64, f64, f64);
@@ -245,7 +244,7 @@ impl WhiteboxTool for LidarHillshade {
             }
             v = (hillshade) as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
             let rgb: RgbData = RgbData{ red: v, green: v, blue: v };
-            let lpr: las::LidarPointRecord = las::LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
+            let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
             output.add_point_record(lpr);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

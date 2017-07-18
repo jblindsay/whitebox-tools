@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
-Last Modified: July 2, 2017
+Last Modified: July 17, 2017
 License: MIT
 
 NOTES: This tool needs to be parallelized.
@@ -13,7 +13,7 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use lidar::las;
+use lidar::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
 use tools::WhiteboxTool;
@@ -48,8 +48,8 @@ impl FlightlineOverlap {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
+.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
         FlightlineOverlap {
             name: name,
@@ -147,7 +147,7 @@ impl WhiteboxTool for FlightlineOverlap {
         if verbose {
             println!("Reading input LAS file...");
         }
-        let input = match las::LasFile::new(&input_file, "r") {
+        let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(_) => {
                 return Err(Error::new(ErrorKind::NotFound,
@@ -174,7 +174,7 @@ impl WhiteboxTool for FlightlineOverlap {
         let mut old_progress: usize = 1;
         for i in 0..n_points {
             match input.get_record(i) {
-                las::LidarPointRecord::PointRecord1 {
+                LidarPointRecord::PointRecord1 {
                     point_data,
                     gps_data,
                 } => {
@@ -182,7 +182,7 @@ impl WhiteboxTool for FlightlineOverlap {
                     y = point_data.y;
                     gps_time = gps_data;
                 }
-                las::LidarPointRecord::PointRecord3 {
+                LidarPointRecord::PointRecord3 {
                     point_data,
                     gps_data,
                     rgb_data,
