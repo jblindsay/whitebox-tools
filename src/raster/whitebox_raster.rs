@@ -51,6 +51,8 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
                 configs.data_type = DataType::I16;
             } else if vec[1].trim().to_lowercase().to_string().contains("byte") {
                 configs.data_type = DataType::U8;
+            } else if vec[1].trim().to_lowercase().to_string().contains("i32") {
+                configs.data_type = DataType::I32;
             }
         } else if vec[0].to_lowercase().contains("data scale") {
             if vec[1].trim().to_lowercase().to_string().contains("continuous") {
@@ -215,12 +217,23 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("Stacks:\t{}\n", r.configs.bands);
     writer.write_all(s.as_bytes())?;
 
+    if r.configs.photometric_interp == PhotometricInterpretation::RGB {
+        r.configs.data_type = DataType::I32;
+    }
+    
     match r.configs.data_type {
         DataType::F64 => {
             writer.write_all("Data Type:\tDOUBLE\n".as_bytes())?;
         },
         DataType::F32 => {
             writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
+        },
+        DataType::U32 => {
+            // Java doesn't have an unsigned 32-bit integer, so Whitebox only has an I32.
+            writer.write_all("Data Type:\tI32\n".as_bytes())?;
+        },
+        DataType::I32 => {
+            writer.write_all("Data Type:\tI32\n".as_bytes())?;
         },
         DataType::I16 => {
             writer.write_all("Data Type:\tINTEGER\n".as_bytes())?;
@@ -307,6 +320,19 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             for i in 0..num_cells {
                 u64_bytes = unsafe { mem::transmute(r.data[i]) };
                 writer.write(&u64_bytes)?;
+            }
+        },
+        DataType::I32 => {
+            for i in 0..num_cells {
+                u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
+                // if i == 0 {
+                //     println!("Value as f64: {}", r.data[i]);
+                //     println!("Value as f32: {}", r.data[i] as f32);
+                //     println!("Value as u32: {}", r.data[i] as u32);
+                //     println!("Bytes: {:?}", u32_bytes);
+                //     println!("Value as f32 as u32: {}", (r.data[i] as f32) as u32);
+                // }
+                writer.write(&u32_bytes)?;
             }
         },
         DataType::F32 => {

@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 212 tools:
+The library currently contains the following 213 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -222,6 +222,7 @@ The library currently contains the following 212 tools:
 - ***ThickenRasterLine***: Thickens single-cell wide lines within a raster image.
 - ***TophatTransform***: Performs either a white or black top-hat transform on an input image
 - ***TotalFilter***: Performs a total filter on an input image.
+- ***WriteFunctionMemoryInsertion***: Performs a write function memory insertion for single-band multi-date change detection.
 
 **LiDAR Analysis**
 - ***BlockMaximum***: Creates a block-maximum raster from an input LAS file.
@@ -374,10 +375,10 @@ If you would like to contribute to the project as a developer, follow these inst
 
 Unless explicitly stated otherwise, any contribution intentionally submitted for inclusion in the work shall be licensed [as above](#license) without any additional terms or conditions.
 
+If you would like to contribute financial support for the project, please contact [John Lindsay](http://www.uoguelph.ca/~hydrogeo/index.html). We also welcome contributions in the form of media exposure. If you have written an article or blog about *WhiteboxTools* please let us know about it.
+
 **TODO**
 Describe the process of integrating a new tool into the library.
-
-If you would like to contribute financial support for the project, please contact [John Lindsay](http://www.uoguelph.ca/~hydrogeo/index.html). We also welcome contributions in the form of media exposure. If you have written an article or blog about *WhiteboxTools* please let us know about it.
 
 ## Contributors
 

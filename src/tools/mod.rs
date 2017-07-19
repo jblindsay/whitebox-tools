@@ -125,6 +125,7 @@ impl ToolManager {
         tool_names.push("ThickenRasterLine".to_string());
         tool_names.push("TophatTransform".to_string());
         tool_names.push("TotalFilter".to_string());
+        tool_names.push("WriteFunctionMemoryInsertion".to_string());
 
         // lidar_analysis
         tool_names.push("BlockMaximum".to_string());
@@ -407,6 +408,7 @@ impl ToolManager {
             "thickenrasterline" => Some(Box::new(tools::image_analysis::ThickenRasterLine::new())),
             "tophattransform" => Some(Box::new(tools::image_analysis::TophatTransform::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
+            "writefunctionmemoryinsertion" => Some(Box::new(tools::image_analysis::WriteFunctionMemoryInsertion::new())),
 
             // lidar_analysis
             "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),

@@ -373,6 +373,18 @@ impl Raster {
         (r, g, b, a)
     }
 
+    pub fn set_value_from_rgba(&mut self, row: isize, column: isize, rgba: (u32, u32, u32, u32)) {
+        if column >= 0 && row >= 0 {
+            let c: usize = column as usize;
+            let r: usize = row as usize;
+            if c < self.configs.columns && r < self.configs.rows {
+                let idx = r * self.configs.columns + c;
+                let (r, g, b, a) = rgba;
+                self.data[idx] += ((a << 24) | (b << 16) | (g << 8) | r) as f64;
+            }
+        }
+    }
+
     pub fn clip_display_min_max(&mut self, percent: f64) {
         let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
         let mut d = self.data.clone();

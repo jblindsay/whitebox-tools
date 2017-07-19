@@ -38,7 +38,7 @@ impl MedianFilter {
         
         let description = "Performs a median filter on an input image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
+        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
         parameters.push_str("--filter      Optional size of the filter kernel (default is 11; not used if --filterx and --filtery are specified).\n");
         parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
@@ -52,7 +52,7 @@ impl MedianFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
         MedianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
     }

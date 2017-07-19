@@ -1,3 +1,11 @@
+/* 
+This code is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 21, 2017
+Last Modified: July 17, 2017
+License: MIT
+*/
+
 extern crate byteorder;
 
 pub mod io_utils;
@@ -11,6 +19,15 @@ use std::env;
 use std::path;
 use tools::ToolManager;
 
+/// WhiteboxTools is an advanced geospatial data analysis engine. 
+///
+/// # Examples
+///
+/// From the command line prompt, *WhiteboxTools* can be called to run a tool as follows:
+///
+/// ```
+/// >>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' --run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
+/// ```
 fn main() {
     match run() {
         Ok(()) => {}

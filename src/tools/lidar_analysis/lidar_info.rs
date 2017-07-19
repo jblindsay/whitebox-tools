@@ -12,8 +12,24 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::u16;
 use lidar::*;
-// use lidar::point_data::*;
 use tools::WhiteboxTool;
+
+/// This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
+/// data. The reported information will include including data on the header, point return frequency, and classification 
+/// data and information about the variable length records (VLRs) and geokeys.
+/// 
+/// # Input Parameters
+///
+/// | Flag      | Description                                                     |
+/// |-----------|-----------------------------------------------------------------|
+/// | -i, input | Input LAS file.                                                 |
+/// | --vlr     | Flag indicates whether to print variable length records (VLRs). |
+/// | --geokeys | Flag indicates whether to print the geokeys.                    |
+///
+/// # Example
+/// ```
+/// >>./whitebox_tools -r=LidarInfo --wd=/path/to/data/ -i=file.las --vlr --geokeys
+/// ```
 
 pub struct LidarInfo {
     name: String,

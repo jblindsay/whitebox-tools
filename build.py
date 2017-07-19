@@ -12,6 +12,7 @@ def main():
     try:
         update_cargo = False
         clean_code = False
+        doc_code = False
         build_code = True
         mode = 'release'  # 'check', 'debug', or 'release'
 
@@ -35,6 +36,14 @@ def main():
             else:
                 print >>sys.stderr, "Clean successful"
 
+        if doc_code:
+            # Clean #
+            retcode = call(['cargo', 'doc'], shell=False)
+            if retcode < 0:
+                print >>sys.stderr, "Child was terminated by signal", -retcode
+            else:
+                print >>sys.stderr, "Clean successful"
+
         if build_code:
             # Build #
             if mode == 'release':
@@ -42,7 +51,7 @@ def main():
             elif mode == 'check':
                 retcode = call(['cargo', 'check'], shell=False)
             else:
-                retcode = call(['cargo', 'debug'], shell=False)
+                retcode = call(['cargo', 'build'], shell=False)
 
             if retcode < 0:
                 print >>sys.stderr, "Child was terminated by signal", -retcode
