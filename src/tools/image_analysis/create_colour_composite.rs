@@ -8,7 +8,6 @@ License: MIT
 extern crate time;
 extern crate num_cpus;
 
-// use std::mem;
 use std::env;
 use std::path;
 use std::f64;
@@ -303,16 +302,16 @@ impl WhiteboxTool for CreateColourComposite {
             let l = 0f64;
             let h = 255f64;
             let mut num_pixels = 0f64;
-            let mut r_l = i64::max_value() as f64;
-            let mut r_h = i64::min_value() as f64;
+            let mut r_l = i32::max_value() as f64;
+            let mut r_h = i32::min_value() as f64;
             let mut r_e = 0f64;
             let mut r_sqr_total = 0f64;
-            let mut g_l = i64::max_value() as f64;
-            let mut g_h = i64::min_value() as f64;
+            let mut g_l = i32::max_value() as f64;
+            let mut g_h = i32::min_value() as f64;
             let mut g_e = 0f64;
             let mut g_sqr_total = 0f64;
-            let mut b_l = i64::max_value() as f64;
-            let mut b_h = i64::min_value() as f64;
+            let mut b_l = i32::max_value() as f64;
+            let mut b_h = i32::min_value() as f64;
             let mut b_e = 0f64;
             let mut b_sqr_total = 0f64;
             
@@ -326,7 +325,7 @@ impl WhiteboxTool for CreateColourComposite {
                         b = (z as u32 >> 16) & 0xFF;
                         
                         if (r as f64) < r_l { r_l = r as f64; }
-                        if (r as f64 )> r_h { r_h = r as f64; }
+                        if (r as f64 ) > r_h { r_h = r as f64; }
                         r_e += r as f64;
                         r_sqr_total += (r * r) as f64;
 
@@ -359,21 +358,15 @@ impl WhiteboxTool for CreateColourComposite {
             let b_s = b_sqr_total as f64 / num_pixels as f64;
 
             let r_b = (r_h * r_h * (e - l) - r_s * (h - l) + r_l * r_l * (h - e)) / (2f64 * (r_h * (e - l) - r_e * (h - l) + r_l * (h - e)));
-
             let r_a = (h - l) / ((r_h - r_l) * (r_h + r_l - 2f64 * r_b));
-
             let r_c = l - r_a * ((r_l - r_b) * (r_l - r_b));
 
             let g_b = (g_h * g_h * (e - l) - g_s * (h - l) + g_l * g_l * (h - e)) / (2f64 * (g_h * (e - l) - g_e * (h - l) + g_l * (h - e)));
-
             let g_a = (h - l) / ((g_h - g_l) * (g_h + g_l - 2f64 * g_b));
-
             let g_c = l - g_a * ((g_l - g_b) * (g_l - g_b));
 
             let b_b = (b_h * b_h * (e - l) - b_s * (h - l) + b_l * b_l * (h - e)) / (2f64 * (b_h * (e - l) - b_e * (h - l) + b_l * (h - e)));
-
             let b_a = (h - l) / ((b_h - b_l) * (b_h + b_l - 2f64 * b_b));
-
             let b_c = l - b_a * ((b_l - b_b) * (b_l - b_b));
             
             for row in 0..rows {

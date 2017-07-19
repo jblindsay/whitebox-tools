@@ -1,5 +1,6 @@
 // private sub-module defined in other files
 mod adaptive_filter;
+mod balance_contrast_enhancement;
 mod bilateral_filter;
 mod closing;
 mod conservative_smoothing_filter;
@@ -43,6 +44,7 @@ mod write_func_memory_insertion;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::adaptive_filter::AdaptiveFilter;
+pub use self::balance_contrast_enhancement::BalanceContrastEnhancement;
 pub use self::bilateral_filter::BilateralFilter;
 pub use self::closing::Closing;
 pub use self::conservative_smoothing_filter::ConservativeSmoothingFilter;

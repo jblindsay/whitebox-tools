@@ -63,7 +63,6 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
                 configs.photometric_interp = PhotometricInterpretation::Boolean;
             } else if vec[1].trim().to_lowercase().to_string().contains("rgb") {
                 configs.photometric_interp = PhotometricInterpretation::RGB;
-                configs.data_type = DataType::RGBA32;
             }
         } else if vec[0].to_lowercase().contains("z units") {
             configs.z_units = vec[1].trim().to_string();
@@ -102,7 +101,7 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
 
     let data_size = if configs.data_type == DataType::F64 {
         8
-    } else if configs.data_type == DataType::F32 {
+    } else if configs.data_type == DataType::F32 || configs.data_type == DataType::I32 {
         4
     } else if configs.data_type == DataType::I16 {
         2
@@ -139,6 +138,15 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe { mem::transmute::<[u8; 4], f32>([buffer[offset], buffer[offset+1],
+                        buffer[offset+2], buffer[offset+3]])} as f64);
+                    j += 1;
+                    if j == num_cells { break; }
+                }
+            },
+            DataType::I32 => {
+                for i in 0..buf_size {
+                    offset = i * data_size;
+                    data.push(unsafe { mem::transmute::<[u8; 4], i32>([buffer[offset], buffer[offset+1],
                         buffer[offset+2], buffer[offset+3]])} as f64);
                     j += 1;
                     if j == num_cells { break; }
@@ -217,9 +225,9 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("Stacks:\t{}\n", r.configs.bands);
     writer.write_all(s.as_bytes())?;
 
-    if r.configs.photometric_interp == PhotometricInterpretation::RGB {
-        r.configs.data_type = DataType::I32;
-    }
+    // if r.configs.photometric_interp == PhotometricInterpretation::RGB {
+    //     r.configs.data_type = DataType::I32;
+    // }
     
     match r.configs.data_type {
         DataType::F64 => {
@@ -322,22 +330,15 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write(&u64_bytes)?;
             }
         },
-        DataType::I32 => {
-            for i in 0..num_cells {
-                u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
-                // if i == 0 {
-                //     println!("Value as f64: {}", r.data[i]);
-                //     println!("Value as f32: {}", r.data[i] as f32);
-                //     println!("Value as u32: {}", r.data[i] as u32);
-                //     println!("Bytes: {:?}", u32_bytes);
-                //     println!("Value as f32 as u32: {}", (r.data[i] as f32) as u32);
-                // }
-                writer.write(&u32_bytes)?;
-            }
-        },
         DataType::F32 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
+                writer.write(&u32_bytes)?;
+            }
+        },
+        DataType::I32 => {
+            for i in 0..num_cells {
+                u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
                 writer.write(&u32_bytes)?;
             }
         },

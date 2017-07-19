@@ -87,6 +87,7 @@ impl ToolManager {
 
         // image_analysis
         tool_names.push("AdaptiveFilter".to_string());
+        tool_names.push("BalanceContrastEnhancement".to_string());
         tool_names.push("BilateralFilter".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
@@ -357,6 +358,7 @@ impl ToolManager {
 
             // image_analysis
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
+            "balancecontrastenhancement" => Some(Box::new(tools::image_analysis::BalanceContrastEnhancement::new())),
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
             "conservativesmoothingfilter" => {
