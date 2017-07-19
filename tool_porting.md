@@ -1,4 +1,4 @@
-(Updated 17-07-2017)
+(Updated 19-07-2017)
 
 The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **213 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **212 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
@@ -66,7 +66,7 @@ The following table summarizes the progress that has been made in porting *White
 | Cost Allocation                                   | CostAllocation                      |          |                                                                                                                                                                                     |
 | Cost Pathway                                      | CostPathway                         |          |                                                                                                                                                                                     |
 | Create Blank Outlet Raster                        |                                     | 1        |                                                                                                                                                                                     |
-| Create Colour Composite                           |                                     | 1        |                                                                                                                                                                                     |
+| Create Colour Composite                           | CreateColourComposite               |          |                                                                                                                                                                                     |
 | Create Hexagonal Vector Grid                      |                                     | 2        |                                                                                                                                                                                     |
 | Create Multiscale Topographic Position Image      |                                     | 1        |                                                                                                                                                                                     |
 | Create New Shapefile                              |                                     | 2        |                                                                                                                                                                                     |

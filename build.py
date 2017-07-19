@@ -14,7 +14,7 @@ def main():
         clean_code = False
         doc_code = False
         build_code = True
-        mode = 'release'  # 'check', 'debug', or 'release'
+        mode = 'debug'  # 'check', 'debug', or 'release'
 
         # Change the current directory
         dir_path = os.path.dirname(os.path.realpath(__file__))

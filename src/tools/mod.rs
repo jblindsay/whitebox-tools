@@ -90,6 +90,7 @@ impl ToolManager {
         tool_names.push("BilateralFilter".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
+        tool_names.push("CreateColourComposite".to_string());
         tool_names.push("DiversityFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
@@ -361,6 +362,7 @@ impl ToolManager {
             "conservativesmoothingfilter" => {
                 Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new()))
             }
+            "createcolourcomposite" => Some(Box::new(tools::image_analysis::CreateColourComposite::new())),
             "diversityfilter" => Some(Box::new(tools::image_analysis::DiversityFilter::new())),
             "diffofgaussianfilter" => {
                 Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new()))

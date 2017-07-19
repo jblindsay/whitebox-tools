@@ -187,6 +187,7 @@ The library currently contains the following 213 tools:
 - ***BilateralFilter***: A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
 - ***Closing***: A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 - ***ConservativeSmoothingFilter***: Performs a conservative smoothing filter on an image.
+- ***CreateColourComposite***: Creates a colour-composite image from three bands of multispectral imagery.
 - ***DiffOfGaussianFilter***: Performs a Difference of Gaussian (DoG) filter on an image.
 - ***DiversityFilter***: Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 - ***EmbossFilter***: Performs an emboss filter on an image, similar to a hillshade operation.
