@@ -32,7 +32,7 @@ impl MultiscaleTopographicPositionImage {
     pub fn new() -> MultiscaleTopographicPositionImage {
         let name = "MultiscaleTopographicPositionImage".to_string();
         
-        let description = "Create multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.".to_string();
+        let description = "Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.".to_string();
         
         let mut parameters = "--local        Input local-scale topographic position (DEVmax) raster file.\n".to_owned();
         parameters.push_str("--meso         Input meso-scale topographic position (DEVmax) raster file.\n");
