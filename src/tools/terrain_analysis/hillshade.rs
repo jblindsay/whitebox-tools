@@ -44,7 +44,7 @@ impl Hillshade {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
     
         Hillshade { name: name, description: description, parameters: parameters, example_usage: usage }
     }

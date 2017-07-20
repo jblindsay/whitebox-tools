@@ -34,7 +34,7 @@ impl SplitColourComposite {
         let description = "This tool splits an RGB colour composite image into seperate multispectral images.".to_string();
         
         let mut parameters = "-i, --input   Input colour composite image file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file ('_r', '_g', and '_b'.\n");
+        parameters.push_str("-o, --output  Output raster file (suffixes of '_r', '_g', and '_b' will be appended).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
