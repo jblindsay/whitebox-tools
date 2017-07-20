@@ -33,7 +33,7 @@ impl LidarPointDensity {
         // public constructor
         let name = "LidarPointDensity".to_string();
 
-        let description = "Calculates the spatial pattern of point density fore a LiDAR data set."
+        let description = "Calculates the spatial pattern of point density for a LiDAR data set."
             .to_string();
 
         //let mut parameters = "-i, --input    Optional input LAS file; if excluded, all LAS files in working directory will be processed.\n".to_owned();
@@ -57,8 +57,8 @@ impl LidarPointDensity {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
+.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
         LidarPointDensity {
             name: name,

@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 215 tools:
+The library currently contains the following 216 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -219,6 +219,7 @@ The library currently contains the following 215 tools:
 - ***ScharrFilter***: Performs a Scharr edge-detection filter on an image.
 - ***SigmoidalContrastStretch***: Performs a sigmoidal contrast stretch on input images.
 - ***SobelFilter***: Performs a Sobel edge-detection filter on an image.
+- ***SplitColourComposite***: This tool splits an RGB colour composite image into seperate multispectral images.
 - ***StandardDeviationContrastStretch***: Performs a standard-deviation contrast stretch on input images.
 - ***StandardDeviationFilter***: Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 - ***ThickenRasterLine***: Thickens single-cell wide lines within a raster image.
@@ -238,9 +239,9 @@ The library currently contains the following 215 tools:
 - ***LidarInfo***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 - ***LidarJoin***: Joins multiple LiDAR (LAS) files into a single LAS file.
 - ***LidarNearestNeighbourGridding***: Grids LAS files using nearest-neighbour scheme.
-- ***LidarPointDensity***: Calculates the spatial pattern of point density fore a LiDAR data set.
+- ***LidarPointDensity***: Calculates the spatial pattern of point density for a LiDAR data set.
 - ***LidarTile***: Tiles a LiDAR LAS file into multiple LAS files.
-- ***LidarTophatTransform***: Performs a white top-hat transform on a Lidar dataset.
+- ***LidarTophatTransform***: Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
 **Mathematical and Statistical Analysis**
@@ -393,9 +394,9 @@ The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt
 ## Known Issues
 
 - Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
-- There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format.
-- Compressed LAS files (LAZ) are not supported.
-- File directories cannot contain apostrophes (') as they will be interpreted in the arguments array as single quoted strings.
+- There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
+- The LAZ compressed LiDAR data format is not currently supported although zipped LAS files are..
+- File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
 
 ## Frequently Asked Questions
 

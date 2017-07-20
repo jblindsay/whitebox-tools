@@ -39,7 +39,7 @@ impl CreateColourComposite {
         parameters.push_str("--green        Input raster file associated with the green band.\n");
         parameters.push_str("--blue         Input raster file associated with the blue band.\n");
         parameters.push_str("--opacity      Optional input raster file associated with the opacity (a).\n");
-        parameters.push_str("-o, --output   Output raster file.\n");
+        parameters.push_str("-o, --output   Output colour composite image file.\n");
         parameters.push_str("--enhance      Optional flag indicating whether a balance contrast enhancement is performed.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();

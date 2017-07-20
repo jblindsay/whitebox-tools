@@ -122,6 +122,7 @@ impl ToolManager {
         tool_names.push("ScharrFilter".to_string());
         tool_names.push("SigmoidalContrastStretch".to_string());
         tool_names.push("SobelFilter".to_string());
+        tool_names.push("SplitColourComposite".to_string());
         tool_names.push("StandardDeviationContrastStretch".to_string());
         tool_names.push("StandardDeviationFilter".to_string());
         tool_names.push("ThickenRasterLine".to_string());
@@ -405,6 +406,7 @@ impl ToolManager {
             "scharrfilter" => Some(Box::new(tools::image_analysis::ScharrFilter::new())),
             "sigmoidalcontraststretch" => Some(Box::new(tools::image_analysis::SigmoidalContrastStretch::new())),
             "sobelfilter" => Some(Box::new(tools::image_analysis::SobelFilter::new())),
+            "splitcolourcomposite" => Some(Box::new(tools::image_analysis::SplitColourComposite::new())),
             "standarddeviationcontraststretch" => Some(Box::new(tools::image_analysis::StandardDeviationContrastStretch::new())),
             "standarddeviationfilter" => {
                 Some(Box::new(tools::image_analysis::StandardDeviationFilter::new()))
