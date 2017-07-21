@@ -92,6 +92,7 @@ impl ToolManager {
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
         tool_names.push("CreateColourComposite".to_string());
+        tool_names.push("DirectDecorrelationStretch".to_string());
         tool_names.push("DiversityFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
@@ -368,6 +369,7 @@ impl ToolManager {
                 Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new()))
             }
             "createcolourcomposite" => Some(Box::new(tools::image_analysis::CreateColourComposite::new())),
+            "directdecorrelationstretch" => Some(Box::new(tools::image_analysis::DirectDecorrelationStretch::new())),
             "diversityfilter" => Some(Box::new(tools::image_analysis::DiversityFilter::new())),
             "diffofgaussianfilter" => {
                 Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new()))

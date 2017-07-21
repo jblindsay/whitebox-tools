@@ -285,7 +285,7 @@ impl WhiteboxTool for BalanceContrastEnhancement {
                             g_out = g_outf as u32;
                             b_out = b_outf as u32;
 
-                            data[col as usize] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64
+                            data[col as usize] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64;
                         }
                     }
                     tx.send((row, data)).unwrap();

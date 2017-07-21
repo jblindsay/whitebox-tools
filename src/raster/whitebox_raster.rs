@@ -336,7 +336,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write(&u32_bytes)?;
             }
         },
-        DataType::I32 => {
+        DataType::I32 | DataType::U32 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
                 writer.write(&u32_bytes)?;
