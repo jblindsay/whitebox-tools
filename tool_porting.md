@@ -440,6 +440,7 @@ Tools that are new in *WhiteboxTools*
 | ConvertRasterFormat                               | An amalgamation of all previous import/export tools within Whitebox GAT.                                                                                       |
 | Exp2                                              |                                                                                                                                                                |
 | FlightLineOverlap                                 |                                                                                                                                                                |
+| FlowAccumulationFullWorkflow                      |                                                                                                                                                                |
 | FlowLengthDiff                                    |                                                                                                                                                                |
 | GammaCorrection                                   |                                                                                                                                                                |
 | HortonStreamOrder                                 |                                                                                                                                                                |
