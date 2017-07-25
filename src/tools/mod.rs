@@ -72,6 +72,7 @@ impl ToolManager {
         tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FindParallelFlow".to_string());
         tool_names.push("FloodOrder".to_string());
+        tool_names.push("FlowAccumulationFullWorkflow".to_string());
         tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("Hillslopes".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
@@ -338,6 +339,7 @@ impl ToolManager {
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
             "floodorder" => Some(Box::new(tools::hydro_analysis::FloodOrder::new())),
+            "flowaccumulationfullworkflow" => Some(Box::new(tools::hydro_analysis::FlowAccumulationFullWorkflow::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),
             "hillslopes" => Some(Box::new(tools::hydro_analysis::Hillslopes::new())),
             "jensonsnappourpoints" => {

@@ -247,24 +247,54 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         let mut count_blue = 0;
         for i in (0..256).rev() {
             if count_red + histo_red[i] > clip_tail {
-                stretch_max = i as f64;
+                stretch_max = (i + 1) as f64;
                 break;
             } else {
                 count_red += histo_red[i];
             }
             if count_green + histo_green[i] > clip_tail {
-                stretch_max = i as f64;
+                stretch_max = (i + 1) as f64;
                 break;
             } else {
                 count_green += histo_green[i];
             }
             if count_blue + histo_blue[i] > clip_tail {
-                stretch_max = i as f64;
+                stretch_max = (i + 1) as f64;
                 break;
             } else {
                 count_blue += histo_blue[i];
             }
         }
+
+        let mut stretch_min = 0f64;
+        count_red = 0;
+        count_green = 0;
+        count_blue = 0;
+        for i in 0..256 {
+            if count_red + histo_red[i] > clip_tail {
+                stretch_min = (i - 1) as f64;
+                break;
+            } else {
+                count_red += histo_red[i];
+            }
+            if count_green + histo_green[i] > clip_tail {
+                stretch_min = (i - 1) as f64;
+                break;
+            } else {
+                count_green += histo_green[i];
+            }
+            if count_blue + histo_blue[i] > clip_tail {
+                stretch_min = (i - 1) as f64;
+                break;
+            } else {
+                count_blue += histo_blue[i];
+            }
+        }
+        
+
+        println!("{} {} {} {}", stretch_min, count_red, count_green, count_blue);
+        
+        let stretch_range = stretch_max - stretch_min;
 
         // Perform a linear stretch using the max data.
         let red_band = Arc::new(red_band);
@@ -287,17 +317,20 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                         z = input[(row, col)];
                         if z != nodata {
                             red = red_band[(row, col)] as u32;
+                            if red < stretch_min as u32 { red = stretch_min as u32; }
                             if red > stretch_max as u32 { red = stretch_max as u32; }
 
                             green = green_band[(row, col)] as u32;
+                            if green < stretch_min as u32 { green = stretch_min as u32; }
                             if green > stretch_max as u32 { green = stretch_max as u32; }
 
                             blue = blue_band[(row, col)] as u32;
+                            if blue < stretch_min as u32 { blue = stretch_min as u32; }
                             if blue > stretch_max as u32 { blue = stretch_max as u32; }
 
-                            red = ((red as f64 / stretch_max) * 255f64) as u32;
-                            green = ((green as f64 / stretch_max) * 255f64) as u32;
-                            blue = ((blue as f64 / stretch_max) * 255f64) as u32;
+                            red = (((red as f64 - stretch_min) / stretch_range) * 255f64) as u32;
+                            green = (((green as f64 - stretch_min) / stretch_range) * 255f64) as u32;
+                            blue = (((blue as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             a = (z as u32 >> 24) & 0xFF;
                             
                             data[col as usize] = ((a << 24) | (blue << 16) | (green << 8) | red) as f64;
@@ -329,7 +362,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Achromatic factor: {}", achromatic_factor));
-        output.add_metadata_entry(format!("Clip percent: {}", clip_percent));
+        output.add_metadata_entry(format!("Clip percent: {}", clip_percent * 100f64));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };
@@ -338,7 +371,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             Err(e) => return Err(e),
         };
 
-        
+
 
         /* The following is a single-threaded version that was used for testing */
 

@@ -45,8 +45,8 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
     
         D8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -161,8 +161,8 @@ impl WhiteboxTool for D8FlowAccumulation {
             let tx = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
                 let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
                 let (mut z, mut z_n): (f64, f64);
                 let (mut max_slope, mut slope): (f64, f64);
@@ -178,7 +178,7 @@ impl WhiteboxTool for D8FlowAccumulation {
 							max_slope = f64::MIN;
                             neighbouring_nodata = false;
 							for i in 0..8 {
-                                z_n = input[(row + d_y[i], col + d_x[i])];
+                                z_n = input[(row + dy[i], col + dx[i])];
                                 if z_n != nodata {
                                     slope = (z - z_n) / grid_lengths[i];
                                     if slope > max_slope && slope > 0f64 {
@@ -230,8 +230,8 @@ impl WhiteboxTool for D8FlowAccumulation {
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
                 let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
                 let mut z: f64;
                 let mut count: i8;
@@ -242,7 +242,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                         if z != nodata {
                             count = 0i8;
 							for i in 0..8 {
-                                if flow_dir[(row + d_y[i], col + d_x[i])] == inflowing_vals[i] {
+                                if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
                                     count += 1;
                                 }
                             }
@@ -280,8 +280,8 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         // let mut cell: (isize, isize);
@@ -295,8 +295,8 @@ impl WhiteboxTool for D8FlowAccumulation {
             num_inflowing.decrement(row, col, 1i8);
             dir = flow_dir[(row, col)];
             if dir >= 0 {
-                row_n = row + d_y[dir as usize];
-                col_n = col + d_x[dir as usize];
+                row_n = row + dy[dir as usize];
+                col_n = col + dx[dir as usize];
                 output.increment(row_n, col_n, fa);
                 num_inflowing.decrement(row_n, col_n, 1i8);
                 if num_inflowing[(row_n, col_n)] == 0i8 {

@@ -43,7 +43,7 @@ impl FillDepressions {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --fix_flats", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --fix_flats", short_exe, name).replace("*", &sep);
     
         FillDepressions { name: name, description: description, parameters: parameters, example_usage: usage }
     }

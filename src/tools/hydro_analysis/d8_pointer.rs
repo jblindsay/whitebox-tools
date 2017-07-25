@@ -35,7 +35,7 @@ impl D8Pointer {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
         D8Pointer { name: name, description: description, parameters: parameters, example_usage: usage }
     }
@@ -122,15 +122,15 @@ impl WhiteboxTool for D8Pointer {
         
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
-
+        let nodata = input.configs.nodata;
+        let columns = input.configs.columns as isize;
+                
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
                 let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
                 let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
