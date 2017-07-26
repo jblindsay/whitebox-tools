@@ -47,7 +47,8 @@ def main():
         if build_code:
             # Build #
             if mode == 'release':
-                retcode = call(['cargo', 'build', '--release'], shell=False)
+                retcode = call(['env', 'RUSTFLAGS=-C target-cpu=native',
+                                'cargo', 'build', '--release'], shell=False)
             elif mode == 'check':
                 retcode = call(['cargo', 'check'], shell=False)
             else:

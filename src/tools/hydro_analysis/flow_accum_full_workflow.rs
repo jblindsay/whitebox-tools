@@ -37,7 +37,7 @@ impl FlowAccumulationFullWorkflow {
     pub fn new() -> FlowAccumulationFullWorkflow { // public constructor
         let name = "FlowAccumulationFullWorkflow".to_string();
         
-        let description = "Resolves all of the depressions in a DEM, outputing an aspect-aligned flow pointer, then performs a flow accumulation operation".to_string();
+        let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.".to_string();
         
         let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         parameters.push_str("--out_dem       Output hydrologically corrected DEM file.\n");

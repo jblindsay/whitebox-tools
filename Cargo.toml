@@ -1,3 +1,4 @@
+
 [package]
 name = "whitebox_tools"
 version = "0.1.1"
@@ -5,7 +6,7 @@ authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 description = "Library for analyzing geospatial data."
 keywords = ["geospatial", "GIS", "geomatics", "lidar", "spatial analysis"]
 readme = "README.md"
-# repository = "https://github.com/jblindsay/whitebox-geospatial-analysis-tools"
+repository = "https://github.com/jblindsay/whitebox-geospatial-analysis-tools/whitebox_tools/"
 # documentation = "http://www.uoguelph.ca/~hydrogeo/software.shtml"
 license = "MIT"
 
@@ -20,6 +21,22 @@ license = "MIT"
 # [[bin]]
 # name = "whitebox_tools"
 # path = "src/main.rs"
+
+# [build]
+# rustflags = ["-Ctarget-cpu=native"]
+
+# [profile.release]
+# panic = 'abort'
+
+# The release profile, used for `cargo build --release`.
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 1
+panic = 'unwind'
 
 [dependencies]
 # libc = "^0.2.20"

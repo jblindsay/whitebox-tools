@@ -118,9 +118,10 @@ impl ToolManager {
         tool_names.push("PercentageContrastStretch".to_string());
         tool_names.push("PercentileFilter".to_string());
         tool_names.push("PrewittFilter".to_string());
-        tool_names.push("RobertsCrossFilter".to_string());
         tool_names.push("RangeFilter".to_string());
         tool_names.push("RemoveSpurs".to_string());
+        tool_names.push("RgbToIhs".to_string());
+        tool_names.push("RobertsCrossFilter".to_string());
         tool_names.push("ScharrFilter".to_string());
         tool_names.push("SigmoidalContrastStretch".to_string());
         tool_names.push("SobelFilter".to_string());
@@ -406,6 +407,7 @@ impl ToolManager {
             "prewittfilter" => Some(Box::new(tools::image_analysis::PrewittFilter::new())),
             "rangefilter" => Some(Box::new(tools::image_analysis::RangeFilter::new())),
             "removespurs" => Some(Box::new(tools::image_analysis::RemoveSpurs::new())),
+            "rgbtoihs" => Some(Box::new(tools::image_analysis::RgbToIhs::new())),
             "robertscrossfilter" => {
                 Some(Box::new(tools::image_analysis::RobertsCrossFilter::new()))
             }
