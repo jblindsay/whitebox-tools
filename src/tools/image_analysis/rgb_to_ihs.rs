@@ -132,6 +132,12 @@ impl WhiteboxTool for RgbToIhs {
                 } else {
                     hue_file = args[i+1].to_string();
                 }
+            } else if vec[0].to_lowercase() == "-s" || vec[0].to_lowercase() == "-saturation" || vec[0].to_lowercase() == "--saturation" {
+                if keyval {
+                    saturation_file = vec[1].to_string();
+                } else {
+                    saturation_file = args[i+1].to_string();
+                }
             }
         }
 
@@ -154,6 +160,9 @@ impl WhiteboxTool for RgbToIhs {
         }
         if !blue_file.contains(&sep) {
             blue_file = format!("{}{}", working_directory, blue_file);
+        }
+        if !composite_file.contains(&sep) {
+            composite_file = format!("{}{}", working_directory, composite_file);
         }
         if !intensity_file.contains(&sep) {
             intensity_file = format!("{}{}", working_directory, intensity_file);
@@ -294,7 +303,7 @@ impl WhiteboxTool for RgbToIhs {
             let elapsed_time = end - start;
             
             output_i.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output_i.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
+            // output_i.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
             output_i.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
             if verbose { println!("Saving intensity data...") };
@@ -304,7 +313,7 @@ impl WhiteboxTool for RgbToIhs {
             };
 
             output_h.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output_h.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
+            // output_h.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
             output_h.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
             if verbose { println!("Saving hue data...") };
@@ -314,7 +323,7 @@ impl WhiteboxTool for RgbToIhs {
             };
 
             output_s.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output_s.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
+            // output_s.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
             output_s.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
             if verbose { println!("Saving saturation data...") };

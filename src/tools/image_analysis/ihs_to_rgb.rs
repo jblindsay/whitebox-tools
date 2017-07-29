@@ -125,6 +125,12 @@ impl WhiteboxTool for IhsToRgb {
                 } else {
                     hue_file = args[i+1].to_string();
                 }
+            } else if vec[0].to_lowercase() == "-s" || vec[0].to_lowercase() == "-saturation" || vec[0].to_lowercase() == "--saturation" {
+                if keyval {
+                    saturation_file = vec[1].to_string();
+                } else {
+                    saturation_file = args[i+1].to_string();
+                }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "-composite" || vec[0].to_lowercase() == "--composite" {
                 if keyval {
                     composite_file = vec[1].to_string();
@@ -303,8 +309,8 @@ impl WhiteboxTool for IhsToRgb {
 
         } else {
             let mut output = Raster::initialize_using_file(&composite_file, &input_i);
-            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            output.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::RGB;
+            output.configs.data_type = DataType::I32;
             let out_nodata = 0f64;
             let (mut r, mut g, mut b): (u32, u32, u32);
             for row in 0..rows {

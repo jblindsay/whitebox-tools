@@ -291,9 +291,6 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             }
         }
         
-
-        println!("{} {} {} {}", stretch_min, count_red, count_green, count_blue);
-        
         let stretch_range = stretch_max - stretch_min;
 
         // Perform a linear stretch using the max data.

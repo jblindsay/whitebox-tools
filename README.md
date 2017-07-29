@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 222 tools:
+The library currently contains the following 223 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -213,6 +213,7 @@ The library currently contains the following 222 tools:
 - ***OlympicFilter***: Performs an olympic smoothing filter on an image.
 - ***Opening***: An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 - ***NormalizedDifferenceVegetationIndex***: Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
+- ***PanchromaticSharpening***: Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
 - ***PercentageContrastStretch***: Performs a percentage linear contrast stretch on input images.
 - ***PercentileFilter***: Performs a percentile filter on an input image.
 - ***PrewittFilter***: Performs a Prewitt edge-detection filter on an image.

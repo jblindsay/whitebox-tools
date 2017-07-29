@@ -385,6 +385,22 @@ impl Raster {
         }
     }
 
+    pub fn get_x_from_column(&self, column: isize) -> f64 {
+        self.configs.east + self.configs.resolution_x / 2f64 + column as f64 * self.configs.resolution_x
+    }
+
+    pub fn get_y_from_row(&self, row: isize) -> f64 {
+        self.configs.north - self.configs.resolution_y / 2f64 - row as f64 * self.configs.resolution_y
+    }
+
+    pub fn get_column_from_x(&self, x: f64) -> isize {
+        ((x - self.configs.east) / self.configs.resolution_x).floor() as isize
+    }
+
+    pub fn get_row_from_y(&self, y: f64) -> isize {
+        ((self.configs.north - y) / self.configs.resolution_y).floor() as isize
+    }
+
     pub fn clip_display_min_max(&mut self, percent: f64) {
         let t = (percent / 100.0 * (self.configs.rows * self.configs.columns) as f64) as usize;
         let mut d = self.data.clone();

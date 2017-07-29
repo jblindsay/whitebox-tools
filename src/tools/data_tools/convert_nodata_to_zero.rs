@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: July 26, 2017
 License: MIT
 */
 extern crate time;
@@ -136,6 +136,7 @@ impl WhiteboxTool for ConvertNodataToZero {
         let nodata = input.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.nodata = -32768f64; // make sure that the output image doesn't use a zero-valued nodata.
         
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
