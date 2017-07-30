@@ -28,28 +28,38 @@ pub struct DirectDecorrelationStretch {
 }
 
 impl DirectDecorrelationStretch {
-
     /// Public constructor.
     pub fn new() -> DirectDecorrelationStretch {
         let name = "DirectDecorrelationStretch".to_string();
-        
+
         let description = "Performs a direct decorrelation stretch enchancement on a colour-composite image of multispectral data.".to_string();
-        
+
         let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
         parameters.push_str("-k             Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7. (default is 0.5).\n");
         parameters.push_str("-clip_percent  Optional percent to clip the upper tail by during the stretch (default is 1.0).\n");
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.dep -o=output.dep -k=0.4", short_exe, name).replace("*", &sep);
-    
-        DirectDecorrelationStretch { name: name, description: description, parameters: parameters, example_usage: usage }
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.dep -o=output.dep -k=0.4",
+                            short_exe,
+                            name)
+                .replace("*", &sep);
+
+        DirectDecorrelationStretch {
+            name: name,
+            description: description,
+            parameters: parameters,
+            example_usage: usage,
+        }
     }
 }
 
@@ -70,14 +80,18 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         self.example_usage.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(&self,
+               args: Vec<String>,
+               working_directory: &'a str,
+               verbose: bool)
+               -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut achromatic_factor = 0.5f64;
         let mut clip_percent = 0.01f64;
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+                                  "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -88,17 +102,18 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-input" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-input" ||
+               vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-k" || vec[0].to_lowercase() == "--k" {
                 if keyval {
@@ -106,14 +121,19 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                 } else {
                     achromatic_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-clip_percent" || vec[0].to_lowercase() == "--clip_percent" {
+            } else if vec[0].to_lowercase() == "-clip_percent" ||
+                      vec[0].to_lowercase() == "--clip_percent" {
                 if keyval {
                     clip_percent = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     clip_percent = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-                if clip_percent < 0f64 { clip_percent = 0f64; }
-                if clip_percent > 50f64 { clip_percent = 50f64; }
+                if clip_percent < 0f64 {
+                    clip_percent = 0f64;
+                }
+                if clip_percent > 50f64 {
+                    clip_percent = 50f64;
+                }
                 clip_percent = clip_percent / 100f64;
             }
         }
@@ -129,8 +149,12 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if achromatic_factor < 0f64 { achromatic_factor = 0f64; }
-        if achromatic_factor > 1f64 { achromatic_factor = 1f64; }
+        if achromatic_factor < 0f64 {
+            achromatic_factor = 0f64;
+        }
+        if achromatic_factor > 1f64 {
+            achromatic_factor = 1f64;
+        }
 
         if !input_file.contains(&sep) {
             input_file = format!("{}{}", working_directory, input_file);
@@ -139,12 +163,14 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading image data...") };
+        if verbose {
+            println!("Reading image data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         // let input = Raster::new(&input_file, "r")?;
-        
+
         let start = time::now();
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -174,34 +200,58 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                             red = z as u32 & 0xFF;
                             green = (z as u32 >> 8) & 0xFF;
                             blue = (z as u32 >> 16) & 0xFF;
-                            
+
                             min_val = red;
-                            if green < min_val { min_val = green; }
-                            if blue < min_val { min_val = blue; }
+                            if green < min_val {
+                                min_val = green;
+                            }
+                            if blue < min_val {
+                                min_val = blue;
+                            }
 
                             r_out = red as f64 - achromatic_factor * min_val as f64;
                             g_out = green as f64 - achromatic_factor * min_val as f64;
                             b_out = blue as f64 - achromatic_factor * min_val as f64;
-                            
-                            if r_out > 255f64 { r_out = 255f64; }
-                            if g_out > 255f64 { g_out = 255f64; }
-                            if b_out > 255f64 { b_out = 255f64; }
 
-                            if r_out < 0f64 { r_out = 0f64; }
-                            if g_out < 0f64 { g_out = 0f64; }
-                            if b_out < 0f64 { b_out = 0f64; }
+                            if r_out > 255f64 {
+                                r_out = 255f64;
+                            }
+                            if g_out > 255f64 {
+                                g_out = 255f64;
+                            }
+                            if b_out > 255f64 {
+                                b_out = 255f64;
+                            }
+
+                            if r_out < 0f64 {
+                                r_out = 0f64;
+                            }
+                            if g_out < 0f64 {
+                                g_out = 0f64;
+                            }
+                            if b_out < 0f64 {
+                                b_out = 0f64;
+                            }
 
                             data_r[col as usize] = r_out as u8;
                             data_g[col as usize] = g_out as u8;
                             data_b[col as usize] = b_out as u8;
-                            
+
                             histo_red[r_out as usize] += 1;
                             histo_green[g_out as usize] += 1;
                             histo_blue[b_out as usize] += 1;
                             num_cells += 1;
                         }
                     }
-                    tx.send((row, data_r, histo_red, data_g, histo_green, data_b, histo_blue, num_cells)).unwrap();
+                    tx.send((row,
+                               data_r,
+                               histo_red,
+                               data_g,
+                               histo_green,
+                               data_b,
+                               histo_blue,
+                               num_cells))
+                        .unwrap();
                 }
             });
         }
@@ -265,6 +315,9 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                 count_blue += histo_blue[i];
             }
         }
+        if stretch_max > 255f64 {
+            stretch_max = 255f64;
+        }
 
         let mut stretch_min = 0f64;
         count_red = 0;
@@ -272,32 +325,46 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         count_blue = 0;
         for i in 0..256 {
             if count_red + histo_red[i] > clip_tail {
-                stretch_min = (i - 1) as f64;
+                if i > 0 {
+                    stretch_min = (i - 1) as f64;
+                } else {
+                    stretch_min = 0f64;
+                }
                 break;
             } else {
                 count_red += histo_red[i];
             }
             if count_green + histo_green[i] > clip_tail {
-                stretch_min = (i - 1) as f64;
+                if i > 0 {
+                    stretch_min = (i - 1) as f64;
+                } else {
+                    stretch_min = 0f64;
+                }
                 break;
             } else {
                 count_green += histo_green[i];
             }
             if count_blue + histo_blue[i] > clip_tail {
-                stretch_min = (i - 1) as f64;
+                if i > 0 {
+                    stretch_min = (i - 1) as f64;
+                } else {
+                    stretch_min = 0f64;
+                }
                 break;
             } else {
                 count_blue += histo_blue[i];
             }
         }
-        
+
         let stretch_range = stretch_max - stretch_min;
+
+        // println!("{}, {} , {}", stretch_min, stretch_max, stretch_range);
 
         // Perform a linear stretch using the max data.
         let red_band = Arc::new(red_band);
         let green_band = Arc::new(green_band);
         let blue_band = Arc::new(blue_band);
-        
+
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
@@ -314,23 +381,37 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                         z = input[(row, col)];
                         if z != nodata {
                             red = red_band[(row, col)] as u32;
-                            if red < stretch_min as u32 { red = stretch_min as u32; }
-                            if red > stretch_max as u32 { red = stretch_max as u32; }
+                            if red < stretch_min as u32 {
+                                red = stretch_min as u32;
+                            }
+                            if red > stretch_max as u32 {
+                                red = stretch_max as u32;
+                            }
 
                             green = green_band[(row, col)] as u32;
-                            if green < stretch_min as u32 { green = stretch_min as u32; }
-                            if green > stretch_max as u32 { green = stretch_max as u32; }
+                            if green < stretch_min as u32 {
+                                green = stretch_min as u32;
+                            }
+                            if green > stretch_max as u32 {
+                                green = stretch_max as u32;
+                            }
 
                             blue = blue_band[(row, col)] as u32;
-                            if blue < stretch_min as u32 { blue = stretch_min as u32; }
-                            if blue > stretch_max as u32 { blue = stretch_max as u32; }
+                            if blue < stretch_min as u32 {
+                                blue = stretch_min as u32;
+                            }
+                            if blue > stretch_max as u32 {
+                                blue = stretch_max as u32;
+                            }
 
                             red = (((red as f64 - stretch_min) / stretch_range) * 255f64) as u32;
-                            green = (((green as f64 - stretch_min) / stretch_range) * 255f64) as u32;
+                            green = (((green as f64 - stretch_min) / stretch_range) * 255f64) as
+                                    u32;
                             blue = (((blue as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             a = (z as u32 >> 24) & 0xFF;
-                            
-                            data[col as usize] = ((a << 24) | (blue << 16) | (green << 8) | red) as f64;
+
+                            data[col as usize] = ((a << 24) | (blue << 16) | (green << 8) | red) as
+                                                 f64;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -356,15 +437,23 @@ impl WhiteboxTool for DirectDecorrelationStretch {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
+                                          self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Achromatic factor: {}", achromatic_factor));
         output.add_metadata_entry(format!("Clip percent: {}", clip_percent * 100f64));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                                      .replace("PT", ""));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -394,7 +483,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         //             green = ((z as u32 >> 8) & 0xFF) as i32;
         //             blue = ((z as u32 >> 16) & 0xFF) as i32;
         //             a = ((z as u32 >> 24) & 0xFF) as i32;
-                    
+
         //             min_val = red;
         //             if green < min_val { min_val = green; }
         //             if blue < min_val { min_val = blue; }
@@ -402,7 +491,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         //             r_out = (red as f64 - achromatic_factor * min_val as f64) as i32;
         //             g_out = (green as f64 - achromatic_factor * min_val as f64) as i32;
         //             b_out = (blue as f64 - achromatic_factor * min_val as f64) as i32;
-                    
+
         //             if r_out > 255 { r_out = 255; }
         //             if g_out > 255 { g_out = 255; }
         //             if b_out > 255 { b_out = 255; }
@@ -412,7 +501,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         //             if b_out < 0 { b_out = 0; }
 
         //             output[(row, col)] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64;
-                    
+
         //             histo_red[r_out as usize] += 1;
         //             histo_green[g_out as usize] += 1;
         //             histo_blue[b_out as usize] += 1;
@@ -487,7 +576,8 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         //     }
         // }
 
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        println!("{}",
+                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         Ok(())
     }

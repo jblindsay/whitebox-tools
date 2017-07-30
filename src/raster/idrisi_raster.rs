@@ -9,7 +9,10 @@ use std::mem;
 use raster::*;
 use io_utils::byte_order_reader::Endianness;
 
-pub fn read_idrisi(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_idrisi(file_name: &String,
+                   configs: &mut RasterConfigs,
+                   data: &mut Vec<f64>)
+                   -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".rst", ".rdc");
     let f = try!(File::open(header_file));
@@ -20,58 +23,92 @@ pub fn read_idrisi(file_name: &String, configs: &mut RasterConfigs, data: &mut V
         configs.photometric_interp = PhotometricInterpretation::Continuous;
         let line_split = line_unwrapped.split(":");
         let vec = line_split.collect::<Vec<&str>>();
-        if vec[0].to_lowercase().contains("min. value") && !vec[0].to_lowercase().contains("lineage") {
+        if vec[0].to_lowercase().contains("min. value") &&
+           !vec[0].to_lowercase().contains("lineage") {
             configs.minimum = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("max. value") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("max. value") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.maximum = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("display min") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("display min") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.display_min = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("display max") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("display max") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.display_max = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("max. y") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("max. y") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.north = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("min. y") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("min. y") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.south = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("max. x") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("max. x") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.east = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("min. x") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("min. x") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.west = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("columns") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("columns") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
-        } else if vec[0].to_lowercase().contains("rows") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("rows") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
-        } else if vec[0].to_lowercase().contains("data type") && !vec[0].to_lowercase().contains("lineage") {
-            if vec[1].trim().to_lowercase().to_string().contains("real") {
+        } else if vec[0].to_lowercase().contains("data type") &&
+                  !vec[0].to_lowercase().contains("lineage") {
+            if vec[1]
+                   .trim()
+                   .to_lowercase()
+                   .to_string()
+                   .contains("real") {
                 configs.data_type = DataType::F32;
-            } else if vec[1].trim().to_lowercase().to_string().contains("int") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("int") {
                 configs.data_type = DataType::I16;
-            } else if vec[1].trim().to_lowercase().to_string().contains("byte") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("byte") {
                 configs.data_type = DataType::U8;
-            } else if vec[1].trim().to_lowercase().to_string().contains("rgb24") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("rgb24") {
                 configs.data_type = DataType::RGB24; //U32;
                 configs.photometric_interp = PhotometricInterpretation::RGB; //Rgb24;
             }
-        } else if vec[0].to_lowercase().contains("value units") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("value units") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.z_units = vec[1].trim().to_string();
-        } else if vec[0].to_lowercase().contains("ref.") && vec[0].to_lowercase().contains("units")
-            && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("ref.") &&
+                  vec[0].to_lowercase().contains("units") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.xy_units = vec[1].trim().to_string();
-        } else if vec[0].to_lowercase().contains("ref.") && vec[0].to_lowercase().contains("system")
-            && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("ref.") &&
+                  vec[0].to_lowercase().contains("system") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             configs.coordinate_ref_system_wkt = vec[1].trim().to_string();
-        } else if vec[0].to_lowercase().contains("byteorder") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("byteorder") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             if vec[1].trim().to_lowercase().contains("little_endian") ||
-              vec[1].trim().to_lowercase().contains("lsb") {
-                 configs.endian = Endianness::LittleEndian;
-             } else {
-                 configs.endian = Endianness::BigEndian;
-             }
-        } else if vec[0].to_lowercase().contains("lineage") || vec[0].to_lowercase().contains("comment") {
+               vec[1].trim().to_lowercase().contains("lsb") {
+                configs.endian = Endianness::LittleEndian;
+            } else {
+                configs.endian = Endianness::BigEndian;
+            }
+        } else if vec[0].to_lowercase().contains("lineage") ||
+                  vec[0].to_lowercase().contains("comment") {
             configs.metadata.push(vec[1].trim().to_string());
-        } else if vec[0].to_lowercase().contains("file type") && !vec[0].to_lowercase().contains("lineage") {
+        } else if vec[0].to_lowercase().contains("file type") &&
+                  !vec[0].to_lowercase().contains("lineage") {
             if !vec[1].trim().to_lowercase().contains("binary") ||
-              vec[1].trim().to_lowercase().contains("packed") {
-                  return Err(Error::new(ErrorKind::InvalidInput, "Idrisi ASCII and packed binary files are currently unsupported."));
+               vec[1].trim().to_lowercase().contains("packed") {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                                      "Idrisi ASCII and packed binary files are currently unsupported."));
             }
         }
     }
@@ -89,7 +126,8 @@ pub fn read_idrisi(file_name: &String, configs: &mut RasterConfigs, data: &mut V
         3 // rgb is actually 3 bytes
     } else if configs.data_type == DataType::I16 {
         2
-    } else { // DataType::Byte
+    } else {
+        // DataType::Byte
         1
     };
 
@@ -111,39 +149,59 @@ pub fn read_idrisi(file_name: &String, configs: &mut RasterConfigs, data: &mut V
             DataType::F32 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 4], f32>([buffer[offset], buffer[offset+1],
-                        buffer[offset+2], buffer[offset+3]])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 4], f32>([buffer[offset],
+                                                                  buffer[offset + 1],
+                                                                  buffer[offset + 2],
+                                                                  buffer[offset + 3]])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
-            DataType::U32 => { //RGB
+            }
+            DataType::U32 => {
+                //RGB
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 4], u32>([buffer[offset], buffer[offset+1],
-                        buffer[offset+2], 255])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 4], u32>([buffer[offset],
+                                                                  buffer[offset + 1],
+                                                                  buffer[offset + 2],
+                                                                  255])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::I16 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset+1]])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 2], i16>([buffer[offset],
+                                                                  buffer[offset + 1]])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::U8 => {
                 for i in 0..buf_size {
                     data.push(buffer[i] as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             _ => {
                 return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
-            },
+            }
         }
     }
 
@@ -155,8 +213,12 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
     for val in &r.data {
         let v = *val;
         if v != r.configs.nodata {
-            if v < r.configs.minimum { r.configs.minimum = v; }
-            if v > r.configs.maximum { r.configs.maximum = v; }
+            if v < r.configs.minimum {
+                r.configs.minimum = v;
+            }
+            if v > r.configs.maximum {
+                r.configs.maximum = v;
+            }
         }
     }
 
@@ -179,19 +241,22 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
     match r.configs.data_type {
         DataType::F32 => {
             try!(writer.write_all("data type   : real\n".as_bytes()));
-        },
-        DataType::U32 => { // rgb
+        }
+        DataType::U32 => {
+            // rgb
             try!(writer.write_all("data type   : RGB24\n".as_bytes()));
-        },
+        }
         DataType::I16 => {
             try!(writer.write_all("data type   : integer\n".as_bytes()));
-        },
+        }
         DataType::U8 => {
             try!(writer.write_all("data type   : byte\n".as_bytes()));
-        },
+        }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound, "Raster Data Type not specified."));
-        },
+            return Err(Error::new(ErrorKind::NotFound,
+                                  format!("Raster data type {:?} not supported in this format.",
+                                          r.configs.data_type)));
+        }
     }
 
     try!(writer.write_all("file type   : binary\n".as_bytes()));
@@ -275,28 +340,30 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
                 try!(writer.write(&u32_bytes));
             }
-        },
-        DataType::U32 => { // rgb data
-            return Err(Error::new(ErrorKind::Other, "Writing RGB24 raster is not currently supported."));
+        }
+        DataType::U32 => {
+            // rgb data
+            return Err(Error::new(ErrorKind::Other,
+                                  "Writing RGB24 raster is not currently supported."));
             // for i in 0..num_cells {
             //     u24_bytes = unsafe { mem::transmute(r.data[i] as u32) };
             //     try!(writer.write(&u16_bytes));
             // }
-        },
+        }
         DataType::I16 => {
             for i in 0..num_cells {
                 u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
                 try!(writer.write(&u16_bytes));
             }
-        },
+        }
         DataType::U8 => {
             for i in 0..num_cells {
                 try!(writer.write(&[r.data[i] as u8]));
             }
-        },
+        }
         _ => {
             return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
-        },
+        }
     }
 
     let _ = writer.flush();

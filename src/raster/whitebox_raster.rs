@@ -9,7 +9,10 @@ use std::mem;
 use raster::*;
 use io_utils::byte_order_reader::Endianness;
 
-pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_whitebox(file_name: &String,
+                     configs: &mut RasterConfigs,
+                     data: &mut Vec<f64>)
+                     -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".tas", ".dep");
     let f = File::open(header_file)?;
@@ -38,30 +41,68 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
             configs.display_min = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("display max") {
             configs.display_max = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("min") && !vec[0].to_lowercase().contains("display") {
+        } else if vec[0].to_lowercase().contains("min") &&
+                  !vec[0].to_lowercase().contains("display") {
             configs.minimum = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("max") && !vec[0].to_lowercase().contains("display") {
+        } else if vec[0].to_lowercase().contains("max") &&
+                  !vec[0].to_lowercase().contains("display") {
             configs.maximum = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("data type") {
-            if vec[1].trim().to_lowercase().to_string().contains("double") {
+            if vec[1]
+                   .trim()
+                   .to_lowercase()
+                   .to_string()
+                   .contains("double") {
                 configs.data_type = DataType::F64;
-            } else if vec[1].trim().to_lowercase().to_string().contains("float") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("float") {
                 configs.data_type = DataType::F32;
-            } else if vec[1].trim().to_lowercase().to_string().contains("integer") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("integer") {
                 configs.data_type = DataType::I16;
-            } else if vec[1].trim().to_lowercase().to_string().contains("byte") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("byte") {
                 configs.data_type = DataType::U8;
-            } else if vec[1].trim().to_lowercase().to_string().contains("i32") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("i32") {
                 configs.data_type = DataType::I32;
             }
         } else if vec[0].to_lowercase().contains("data scale") {
-            if vec[1].trim().to_lowercase().to_string().contains("continuous") {
+            if vec[1]
+                   .trim()
+                   .to_lowercase()
+                   .to_string()
+                   .contains("continuous") {
                 configs.photometric_interp = PhotometricInterpretation::Continuous;
-            } else if vec[1].trim().to_lowercase().to_string().contains("categorical") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("categorical") {
                 configs.photometric_interp = PhotometricInterpretation::Categorical;
-            } else if vec[1].trim().to_lowercase().to_string().contains("boolean") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("boolean") {
                 configs.photometric_interp = PhotometricInterpretation::Boolean;
-            } else if vec[1].trim().to_lowercase().to_string().contains("rgb") {
+            } else if vec[1]
+                          .trim()
+                          .to_lowercase()
+                          .to_string()
+                          .contains("rgb") {
                 configs.photometric_interp = PhotometricInterpretation::RGB;
             }
         } else if vec[0].to_lowercase().contains("z units") {
@@ -78,11 +119,11 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
             configs.palette_nonlinearity = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("byte order") {
             if vec[1].trim().to_lowercase().contains("little") ||
-              vec[1].trim().to_lowercase().contains("lsb") {
-                 configs.endian = Endianness::LittleEndian;
-             } else {
-                 configs.endian = Endianness::BigEndian;
-             }
+               vec[1].trim().to_lowercase().contains("lsb") {
+                configs.endian = Endianness::LittleEndian;
+            } else {
+                configs.endian = Endianness::BigEndian;
+            }
         } else if vec[0].to_lowercase().contains("metadata") {
             configs.metadata.push(vec[1].trim().to_string());
         }
@@ -101,11 +142,13 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
 
     let data_size = if configs.data_type == DataType::F64 {
         8
-    } else if configs.data_type == DataType::F32 || configs.data_type == DataType::I32 {
+    } else if configs.data_type == DataType::F32 ||
+              configs.data_type == DataType::I32 {
         4
     } else if configs.data_type == DataType::I16 {
         2
-    } else { // DataType::Byte
+    } else {
+        // DataType::Byte
         1
     };
 
@@ -127,49 +170,77 @@ pub fn read_whitebox(file_name: &String, configs: &mut RasterConfigs, data: &mut
             DataType::F64 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1],
-                        buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5],
-                        buffer[offset+6], buffer[offset+7]])});
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 8], f64>([buffer[offset],
+                                                                  buffer[offset + 1],
+                                                                  buffer[offset + 2],
+                                                                  buffer[offset + 3],
+                                                                  buffer[offset + 4],
+                                                                  buffer[offset + 5],
+                                                                  buffer[offset + 6],
+                                                                  buffer[offset + 7]])
+                              });
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::F32 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 4], f32>([buffer[offset], buffer[offset+1],
-                        buffer[offset+2], buffer[offset+3]])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 4], f32>([buffer[offset],
+                                                                  buffer[offset + 1],
+                                                                  buffer[offset + 2],
+                                                                  buffer[offset + 3]])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::I32 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 4], i32>([buffer[offset], buffer[offset+1],
-                        buffer[offset+2], buffer[offset+3]])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 4], i32>([buffer[offset],
+                                                                  buffer[offset + 1],
+                                                                  buffer[offset + 2],
+                                                                  buffer[offset + 3]])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::I16 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
-                    data.push(unsafe { mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset+1]])} as f64);
+                    data.push(unsafe {
+                                  mem::transmute::<[u8; 2], i16>([buffer[offset],
+                                                                  buffer[offset + 1]])
+                              } as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             DataType::U8 => {
                 for i in 0..buf_size {
                     data.push(buffer[i] as f64);
                     j += 1;
-                    if j == num_cells { break; }
+                    if j == num_cells {
+                        break;
+                    }
                 }
-            },
+            }
             _ => {
                 return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
-            },
+            }
         }
     }
 
@@ -181,8 +252,12 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     for val in &r.data {
         let v = *val;
         if v != r.configs.nodata {
-            if v < r.configs.minimum { r.configs.minimum = v; }
-            if v > r.configs.maximum { r.configs.maximum = v; }
+            if v < r.configs.minimum {
+                r.configs.minimum = v;
+            }
+            if v > r.configs.maximum {
+                r.configs.maximum = v;
+            }
         }
     }
 
@@ -228,30 +303,34 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // if r.configs.photometric_interp == PhotometricInterpretation::RGB {
     //     r.configs.data_type = DataType::I32;
     // }
-    
+
     match r.configs.data_type {
-        DataType::F64 => {
-            writer.write_all("Data Type:\tDOUBLE\n".as_bytes())?;
-        },
+        DataType::F64 | DataType::U32 => {
+            if r.configs.photometric_interp != PhotometricInterpretation::RGB {
+                // Java doesn't have an unsigned 32-bit integer, so Whitebox only has an I32.
+                writer.write_all("Data Type:\tDOUBLE\n".as_bytes())?;
+            } else {
+                writer.write_all("Data Type:\tI32\n".as_bytes())?;
+            }
+        }
         DataType::F32 => {
-            writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
-        },
-        DataType::U32 => {
             // Java doesn't have an unsigned 32-bit integer, so Whitebox only has an I32.
+            writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
+        }
+        DataType::I32 | DataType::U16 => {
             writer.write_all("Data Type:\tI32\n".as_bytes())?;
-        },
-        DataType::I32 => {
-            writer.write_all("Data Type:\tI32\n".as_bytes())?;
-        },
+        }
         DataType::I16 => {
             writer.write_all("Data Type:\tINTEGER\n".as_bytes())?;
-        },
-        DataType::U8 => {
+        }
+        DataType::U8 | DataType::I8 => {
             writer.write_all("Data Type:\tBYTE\n".as_bytes())?;
-        },
+        }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound, "Raster Data Type not specified."));
-        },
+            return Err(Error::new(ErrorKind::NotFound,
+                                  format!("Raster data type {:?} not supported in this format.",
+                                          r.configs.data_type)));
+        }
     }
 
     let s = format!("Z Units:\t{}\n", r.configs.z_units);
@@ -266,20 +345,22 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     match r.configs.photometric_interp {
         PhotometricInterpretation::Continuous => {
             writer.write_all("Data Scale:\tcontinuous\n".as_bytes())?;
-        },
-        PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
-            writer.write_all("Data Scale:\tcategorical\n".as_bytes())?;
-        },
+        }
+        PhotometricInterpretation::Categorical |
+        PhotometricInterpretation::Paletted => {
+            writer
+                .write_all("Data Scale:\tcategorical\n".as_bytes())?;
+        }
         PhotometricInterpretation::Boolean => {
             writer.write_all("Data Scale:\tBoolean\n".as_bytes())?;
-        },
+        }
         //DataScale::Rgb24 | DataScale::Rgb32 => {
         PhotometricInterpretation::RGB => {
             writer.write_all("Data Scale:\trgb\n".as_bytes())?;
-        },
+        }
         PhotometricInterpretation::Unknown => {
             writer.write_all("Data Scale:\tcontinuous\n".as_bytes())?;
-        },
+        }
     }
 
     let s = format!("Display Min:\t{}\n", r.configs.display_min);
@@ -296,13 +377,17 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
 
     if r.configs.endian == Endianness::LittleEndian {
-        writer.write_all("Byte Order:\tLITTLE_ENDIAN\n".as_bytes())?;
+        writer
+            .write_all("Byte Order:\tLITTLE_ENDIAN\n".as_bytes())?;
     } else {
         writer.write_all("Byte Order:\tBIG_ENDIAN\n".as_bytes())?;
     }
 
-    if r.configs.palette_nonlinearity < 0.0 { r.configs.palette_nonlinearity = 1.0; }
-    let s = format!("Palette Nonlinearity:\t{}\n", r.configs.palette_nonlinearity);
+    if r.configs.palette_nonlinearity < 0.0 {
+        r.configs.palette_nonlinearity = 1.0;
+    }
+    let s = format!("Palette Nonlinearity:\t{}\n",
+                    r.configs.palette_nonlinearity);
     writer.write_all(s.as_bytes())?;
 
     for md in &r.configs.metadata {
@@ -324,38 +409,45 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     let num_cells: usize = r.configs.rows * r.configs.columns;
     match r.configs.data_type {
-        DataType::F64 => {
-            for i in 0..num_cells {
-                u64_bytes = unsafe { mem::transmute(r.data[i]) };
-                writer.write(&u64_bytes)?;
+        DataType::F64 | DataType::U32 => {
+            if r.configs.photometric_interp != PhotometricInterpretation::RGB {
+                for i in 0..num_cells {
+                    u64_bytes = unsafe { mem::transmute(r.data[i]) };
+                    writer.write(&u64_bytes)?;
+                }
+            } else {
+                for i in 0..num_cells {
+                    u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
+                    writer.write(&u32_bytes)?;
+                }
             }
-        },
+        }
         DataType::F32 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
                 writer.write(&u32_bytes)?;
             }
-        },
-        DataType::I32 | DataType::U32 => {
+        }
+        DataType::I32 | DataType::U16 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
                 writer.write(&u32_bytes)?;
             }
-        },
+        }
         DataType::I16 => {
             for i in 0..num_cells {
                 u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
                 writer.write(&u16_bytes)?;
             }
-        },
-        DataType::U8 => {
+        }
+        DataType::U8 | DataType::I8 => {
             for i in 0..num_cells {
                 writer.write(&[r.data[i] as u8])?;
             }
-        },
+        }
         _ => {
             return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
-        },
+        }
     }
 
     let _ = writer.flush();

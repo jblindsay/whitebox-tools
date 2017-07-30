@@ -27,24 +27,36 @@ pub struct ConvertRasterFormat {
 }
 
 impl ConvertRasterFormat {
-    pub fn new() -> ConvertRasterFormat { // public constructor
+    pub fn new() -> ConvertRasterFormat {
+        // public constructor
         let name = "ConvertRasterFormat".to_string();
-        
+
         let description = "Converts raster data from one format to another.".to_string();
-        
+
         let mut parameters = "-i, --input   Input raster file.".to_owned();
         parameters.push_str("-o, --output  Output raster file.\n");
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
-    
-        ConvertRasterFormat { name: name, description: description, parameters: parameters, example_usage: usage }
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep",
+                            short_exe,
+                            name)
+                .replace("*", &sep);
+
+        ConvertRasterFormat {
+            name: name,
+            description: description,
+            parameters: parameters,
+            example_usage: usage,
+        }
     }
 }
 
@@ -65,13 +77,17 @@ impl WhiteboxTool for ConvertRasterFormat {
         self.example_usage.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(&self,
+               args: Vec<String>,
+               working_directory: &'a str,
+               verbose: bool)
+               -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+                                  "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -82,17 +98,18 @@ impl WhiteboxTool for ConvertRasterFormat {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" ||
+               vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -112,32 +129,53 @@ impl WhiteboxTool for ConvertRasterFormat {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
-            
+
+        // println!("config info {:?}", input.configs);
+
         let start = time::now();
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         println!("Initializing the output raster...");
         match output.set_data_from_raster(&input) {
             Ok(_) => (), // do nothings
             Err(err) => return Err(err),
         }
+        // for row in 0..input.configs.rows as isize {
+        //     for col in 0..input.configs.columns as isize {
+        //         output[(row, col)] = input[(row, col)];
+        //         if row % 1000 == 0 && col % 1000 == 0 {
+        //             println!("cell({}, {}) = {}", row, col, input[(row, col)]);
+        //         }
+        //     }
+        // }
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
+                                          self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                                      .replace("PT", ""));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        println!("{}",
+                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         Ok(())
     }

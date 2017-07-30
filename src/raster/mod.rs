@@ -125,6 +125,7 @@ impl Raster {
                 }
                 RasterType::GeoTiff => {
                     let _ = read_geotiff(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    r.update_min_max();
                     return Ok(r);
                 }
                 RasterType::GrassAscii => {
@@ -386,11 +387,13 @@ impl Raster {
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {
-        self.configs.east + self.configs.resolution_x / 2f64 + column as f64 * self.configs.resolution_x
+        self.configs.east + self.configs.resolution_x / 2f64 +
+        column as f64 * self.configs.resolution_x
     }
 
     pub fn get_y_from_row(&self, row: isize) -> f64 {
-        self.configs.north - self.configs.resolution_y / 2f64 - row as f64 * self.configs.resolution_y
+        self.configs.north - self.configs.resolution_y / 2f64 -
+        row as f64 * self.configs.resolution_y
     }
 
     pub fn get_column_from_x(&self, x: f64) -> isize {
@@ -729,7 +732,7 @@ impl Raster {
                 }
             }
         }
-        
+
         (lower_tail, upper_tail)
     }
 
