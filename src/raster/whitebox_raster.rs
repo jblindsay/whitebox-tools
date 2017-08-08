@@ -104,6 +104,7 @@ pub fn read_whitebox(file_name: &String,
                           .to_string()
                           .contains("rgb") {
                 configs.photometric_interp = PhotometricInterpretation::RGB;
+                configs.data_type = DataType::RGBA32;
             }
         } else if vec[0].to_lowercase().contains("z units") {
             configs.z_units = vec[1].trim().to_string();
@@ -201,7 +202,7 @@ pub fn read_whitebox(file_name: &String,
                     }
                 }
             }
-            DataType::I32 => {
+            DataType::I32 | DataType::RGBA32 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe {
@@ -317,7 +318,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             // Java doesn't have an unsigned 32-bit integer, so Whitebox only has an I32.
             writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
         }
-        DataType::I32 | DataType::U16 => {
+        DataType::I32 | DataType::U16 | DataType::RGB24 | DataType::RGBA32 => {
             writer.write_all("Data Type:\tI32\n".as_bytes())?;
         }
         DataType::I16 => {
@@ -354,7 +355,6 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
         PhotometricInterpretation::Boolean => {
             writer.write_all("Data Scale:\tBoolean\n".as_bytes())?;
         }
-        //DataScale::Rgb24 | DataScale::Rgb32 => {
         PhotometricInterpretation::RGB => {
             writer.write_all("Data Scale:\trgb\n".as_bytes())?;
         }
@@ -374,7 +374,6 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     let s = format!("NoData:\t{}\n", r.configs.nodata);
     writer.write_all(s.as_bytes())?;
-
 
     if r.configs.endian == Endianness::LittleEndian {
         writer
@@ -428,9 +427,20 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write(&u32_bytes)?;
             }
         }
-        DataType::I32 | DataType::U16 => {
+        DataType::I32 | DataType::U16 | DataType::RGBA32 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
+                writer.write(&u32_bytes)?;
+            }
+        }
+        DataType::RGB24 => {
+            // The Whitebox raster format doesn't really support a 24-bit RGB; 
+            // instead use a 32-bit RGBa with saturated alpha channel.
+            let mut val: u32;
+            let alpha_mask = (255 << 24) as u32;
+            for i in 0..num_cells {
+                val = alpha_mask | (r.data[i] as u32);
+                u32_bytes = unsafe { mem::transmute(val) };
                 writer.write(&u32_bytes)?;
             }
         }

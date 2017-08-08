@@ -310,9 +310,10 @@ impl WhiteboxTool for IhsToRgb {
         } else {
             let mut output = Raster::initialize_using_file(&composite_file, &input_i);
             output.configs.photometric_interp = PhotometricInterpretation::RGB;
-            output.configs.data_type = DataType::I32;
+            output.configs.data_type = DataType::RGB24;
             let out_nodata = 0f64;
             let (mut r, mut g, mut b): (u32, u32, u32);
+            let alpha_mask = (255 << 24) as u32;
             for row in 0..rows {
                 let data = rx.recv().unwrap();
                 let mut out_data = vec![out_nodata; columns as usize];
@@ -320,7 +321,7 @@ impl WhiteboxTool for IhsToRgb {
                     r = data.1[col as usize] as u32;
                     g = data.2[col as usize] as u32;
                     b = data.3[col as usize] as u32;
-                    out_data[col as usize] = ((255 << 24) | (b << 16) | (g << 8) | r) as f64;
+                    out_data[col as usize] = (alpha_mask | (b << 16) | (g << 8) | r) as f64;
                 }
                 output.set_row_data(data.0, out_data);
                 if verbose {

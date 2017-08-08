@@ -644,7 +644,7 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                 let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
                                 let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
                                 let a = 255u32;
-                                let value = (a << 24) | (red << 16) | (green << 8) | blue;
+                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
                                 let i = y * width + x;
                                 data[i] = value as f64;
                             }
@@ -660,7 +660,7 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                 let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
                                 let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
                                 let a = 255u32;
-                                let value = (a << 24) | (red << 16) | (green << 8) | blue;
+                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
                                 let i = y * width + x;
                                 data[i] = value as f64;
                             }
@@ -678,7 +678,7 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                 let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
                                 let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
                                 let a = bor.read_u8() as u32;
-                                let value = (a << 24) | (red << 16) | (green << 8) | blue;
+                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
                                 let i = y * width + x;
                                 data[i] = value as f64;
                             }
@@ -694,7 +694,7 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                 let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
                                 let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
                                 let a = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let value = (a << 24) | (red << 16) | (green << 8) | blue;
+                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
                                 let i = y * width + x;
                                 data[i] = value as f64;
                             }
@@ -988,21 +988,27 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                                 i = row * r.configs.columns + col;
                                 // writer.write_u24::<LittleEndian>(r.data[i] as u32)?;
                                 let val = r.data[i] as u32;
-                                bytes[0] = ((val >> 16u32) & 0xFF) as u8; // red
+                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
                                 bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[2] = (val & 0xFF) as u8; // blue
+                                bytes[0] = (val & 0xFF) as u8; // red
                                 writer.write(&bytes)?;
                             }
                         }
                     },
                     DataType::RGBA32 => {
                         let mut i: usize;
+                        let mut bytes: [u8; 4] = [0u8; 4];
                         for row in 0..r.configs.rows {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
                                 let val = r.data[i] as u32;
-                                let val2 = ((val >> 24u32) & 0xFF) | ((val >> 16u32) & 0xFF) | ((val >> 8u32) & 0xFF) | (val & 0xFF);
-                                writer.write_u32::<LittleEndian>(val2)?;
+                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
+                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
+                                bytes[0] = (val & 0xFF) as u8; // red
+                                bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
+                                writer.write(&bytes)?;
+                                // let val2 = ((val << 24u32) & 0xFF) | ((val << 16u32) & 0xFF) | ((val << 8u32) & 0xFF) | (val & 0xFF);
+                                // writer.write_u32::<LittleEndian>(val2)?;
                             }
                         }
                     },
@@ -1164,6 +1170,11 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         ifd_entries.push(IfdEntry::new(TAG_SOFTWARE, DT_ASCII, soft_bytes.len() as u32, larger_values_data.len() as u32));
         let _ = larger_values_data.write_all(&soft_bytes);
 
+        if samples_per_pixel == 4 {
+            // ExtraSamples tag (338)
+            ifd_entries.push(IfdEntry::new(TAG_EXTRASAMPLES, DT_SHORT, 1u32, 2u32));
+        }
+        
         // SampleFormat tag (339)
         let samples_format = match r.configs.data_type {
             DataType::U8 | DataType::U16 | DataType::U32 | DataType::U64 => 1u16,

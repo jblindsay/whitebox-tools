@@ -189,6 +189,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
                 let mut green_val: f64;
                 let mut blue_val: f64;
                 let (mut r, mut g, mut b): (u32, u32, u32);
+                let alpha_mask = (255 << 24) as u32;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata_r; columns as usize];
                     for col in 0..columns {
@@ -222,7 +223,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
                                 blue_val = 255f64;
                             }
                             b = blue_val as u32;
-                            data[col as usize] = ((255u32 << 24) | (b << 16) | (g << 8) | r) as f64;
+                            data[col as usize] = (alpha_mask | (b << 16) | (g << 8) | r) as f64;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -232,7 +233,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
 
         let mut output = Raster::initialize_using_file(&output_file, &input_r);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::I32;
+        output.configs.data_type = DataType::RGB24;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);

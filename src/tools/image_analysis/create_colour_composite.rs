@@ -280,7 +280,7 @@ impl WhiteboxTool for CreateColourComposite {
 
         let mut output = Raster::initialize_using_file(&output_file, &input_r);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::I32;
+        output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);
@@ -416,6 +416,7 @@ impl WhiteboxTool for CreateColourComposite {
         if input4_used {
             output.add_metadata_entry(format!("Input opacity file: {}", input4_file));
         }
+        output.add_metadata_entry(format!("Balance contrast enhancement: {}", enhance));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };

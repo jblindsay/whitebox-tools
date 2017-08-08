@@ -328,7 +328,7 @@ impl WhiteboxTool for PanchromaticSharpening {
 
         let mut output = Raster::initialize_using_file(&output_file, &pan);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::I32;
+        output.configs.data_type = DataType::RGBA32;
         let nodata_out = 0f64;
         output.reinitialize_values(nodata_out);
 

@@ -376,7 +376,7 @@ impl WhiteboxTool for BalanceContrastEnhancement {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::U32;
+        output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);
