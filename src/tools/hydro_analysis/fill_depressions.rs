@@ -504,7 +504,7 @@ struct GridCell {
 impl Eq for GridCell {}
 
 impl PartialOrd for GridCell {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &GridCell) -> Option<Ordering> {
         // Some(other.priority.cmp(&self.priority))
         other.priority.partial_cmp(&self.priority)
     }

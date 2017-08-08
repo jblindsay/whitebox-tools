@@ -6,7 +6,7 @@ Last Modified: July 7, 2017
 License: MIT
 */
 
-// extern crate byteorder;
+extern crate byteorder;
 extern crate num_cpus;
 
 pub mod arcascii_raster;
@@ -41,7 +41,7 @@ use raster::saga_raster::*;
 use raster::surfer7_raster::*;
 use raster::surfer_ascii_raster::*;
 use raster::whitebox_raster::*;
-use io_utils::byte_order_reader::*;
+use io_utils::*;
 use structures::Array2D;
 
 #[derive(Default, Clone)]
@@ -597,17 +597,57 @@ impl Raster {
     }
 
     pub fn update_min_max(&mut self) {
-        for val in &self.data {
-            let v = *val;
-            if v != self.configs.nodata {
-                if v < self.configs.minimum {
-                    self.configs.minimum = v;
+        let num_procs = num_cpus::get();
+        let nodata = self.configs.nodata;
+        let values = Arc::new(self.data.clone());
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let values = values.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut min_val = f64::INFINITY;
+                let mut max_val = f64::NEG_INFINITY;
+                let mut value: f64;
+                for i in (0..values.len()).filter(|v| v % num_procs == tid) {
+                    value = values[i];
+                    if value != nodata {
+                        if value < min_val {
+                            min_val = value;
+                        }
+                        if value > max_val {
+                            max_val = value;
+                        }
+                    }
                 }
-                if v > self.configs.maximum {
-                    self.configs.maximum = v;
+                tx.send((min_val, max_val)).unwrap();
+            });
+        }
+
+        for _ in 0..num_procs {
+            let (min_val, max_val) = rx.recv().unwrap();
+            if min_val != nodata {
+                if min_val < self.configs.minimum {
+                    self.configs.minimum = min_val;
+                }
+            }
+            if max_val != nodata {
+                if max_val > self.configs.maximum {
+                    self.configs.maximum = max_val;
                 }
             }
         }
+
+        // for val in &self.data {
+        //     let v = *val;
+        //     if v != self.configs.nodata {
+        //         if v < self.configs.minimum {
+        //             self.configs.minimum = v;
+        //         }
+        //         if v > self.configs.maximum {
+        //             self.configs.maximum = v;
+        //         }
+        //     }
+        // }
 
         if self.configs.display_min == f64::INFINITY {
             self.configs.display_min = self.configs.minimum;

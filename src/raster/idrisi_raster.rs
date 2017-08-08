@@ -7,7 +7,7 @@ use std::f64;
 use std::fs::File;
 use std::mem;
 use raster::*;
-use io_utils::byte_order_reader::Endianness;
+use io_utils::Endianness;
 
 pub fn read_idrisi(file_name: &String,
                    configs: &mut RasterConfigs,

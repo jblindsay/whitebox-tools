@@ -6,9 +6,12 @@ use std::f64;
 use std::fs::File;
 use std::mem;
 use raster::*;
-use io_utils::byte_order_reader::Endianness;
+use io_utils::Endianness;
 
-pub fn read_arcbinary(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_arcbinary(file_name: &String,
+                      configs: &mut RasterConfigs,
+                      data: &mut Vec<f64>)
+                      -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".flt", ".hdr");
     let f = File::open(header_file)?;
@@ -43,10 +46,10 @@ pub fn read_arcbinary(file_name: &String, configs: &mut RasterConfigs, data: &mu
             configs.nodata = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("byteorder") {
             if vec[1].trim().to_lowercase().contains("lsb") {
-                 configs.endian = Endianness::LittleEndian;
-             } else {
-                 configs.endian = Endianness::BigEndian;
-             }
+                configs.endian = Endianness::LittleEndian;
+            } else {
+                configs.endian = Endianness::BigEndian;
+            }
         }
     }
 
@@ -55,16 +58,18 @@ pub fn read_arcbinary(file_name: &String, configs: &mut RasterConfigs, data: &mu
     // set the North, East, South, and West coodinates
     if xllcorner != f64::NEG_INFINITY {
         //h.cellCornerMode = true
-        configs.east = xllcorner + (configs.columns as f64)*configs.resolution_x;
+        configs.east = xllcorner + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcorner;
         configs.south = yllcorner;
-        configs.north = yllcorner + (configs.rows as f64)*configs.resolution_y;
+        configs.north = yllcorner + (configs.rows as f64) * configs.resolution_y;
     } else {
         //h.cellCornerMode = false
-        configs.east = xllcenter - (0.5 * configs.resolution_x) + (configs.columns as f64)*configs.resolution_x;
+        configs.east = xllcenter - (0.5 * configs.resolution_x) +
+                       (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcenter - (0.5 * configs.resolution_x);
         configs.south = yllcenter - (0.5 * configs.resolution_y);
-        configs.north = yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64)*configs.resolution_y;
+        configs.north = yllcenter - (0.5 * configs.resolution_y) +
+                        (configs.rows as f64) * configs.resolution_y;
     }
 
     // read the data file
@@ -83,10 +88,16 @@ pub fn read_arcbinary(file_name: &String, configs: &mut RasterConfigs, data: &mu
         let mut offset: usize;
         for i in 0..buf_size {
             offset = i * 4;
-            data.push(unsafe { mem::transmute::<[u8; 4], f32>([buffer[offset], buffer[offset+1],
-                buffer[offset+2], buffer[offset+3]])} as f64);
+            data.push(unsafe {
+                          mem::transmute::<[u8; 4], f32>([buffer[offset],
+                                                          buffer[offset + 1],
+                                                          buffer[offset + 2],
+                                                          buffer[offset + 3]])
+                      } as f64);
             j += 1;
-            if j == num_cells { break; }
+            if j == num_cells {
+                break;
+            }
         }
 
     }
@@ -114,7 +125,8 @@ pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("YLLCORNER {}\n", r.configs.south);
     writer.write_all(s.as_bytes())?;
 
-    let s = format!("CELLSIZE {}\n", (r.configs.resolution_x + r.configs.resolution_y) / 2.0);
+    let s = format!("CELLSIZE {}\n",
+                    (r.configs.resolution_x + r.configs.resolution_y) / 2.0);
     writer.write_all(s.as_bytes())?;
 
     let s = format!("NODATA_VALUE {}\n", r.configs.nodata);

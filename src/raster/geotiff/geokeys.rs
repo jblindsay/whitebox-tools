@@ -3,7 +3,7 @@ use std::fmt;
 use std::mem;
 use std::mem::transmute;
 use raster::geotiff::IfdDirectory;
-use io_utils::byte_order_reader::Endianness;
+use io_utils::Endianness;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -23,31 +23,38 @@ pub struct GeoKeys {
 }
 
 impl GeoKeys {
-
     pub fn add_key_directory(&mut self, data: &Vec<u8>) {
         // convert the binary data to an array of u16's
-        let mut i : usize = 0;
+        let mut i: usize = 0;
         while i < data.len() as usize {
-            let k : u16 = data[i] as u16 | ((data[i + 1] as u16) << 8u16);
+            let k: u16 = data[i] as u16 | ((data[i + 1] as u16) << 8u16);
             self.geo_key_directory.push(k);
             i += 2;
         }
     }
 
     pub fn add_double_params(&mut self, data: &Vec<u8>) {
-        let mut i : usize = 0;
+        let mut i: usize = 0;
         while i < data.len() as usize {
-            let k: f64 = unsafe { mem::transmute::<[u8; 8], f64>([data[i],
-                data[i + 1], data[i + 2], data[i + 3],
-                data[i + 4], data[i + 5], data[i + 6],
-                data[i + 7]]) };
+            let k: f64 = unsafe {
+                mem::transmute::<[u8; 8], f64>([data[i],
+                                                data[i + 1],
+                                                data[i + 2],
+                                                data[i + 3],
+                                                data[i + 4],
+                                                data[i + 5],
+                                                data[i + 6],
+                                                data[i + 7]])
+            };
             i += 8;
             self.geo_double_params.push(k);
         }
     }
 
     pub fn add_ascii_params(&mut self, data: &Vec<u8>) {
-        self.geo_ascii_params = String::from_utf8_lossy(&data[0..data.len()]).trim().to_owned();
+        self.geo_ascii_params = String::from_utf8_lossy(&data[0..data.len()])
+            .trim()
+            .to_owned();
     }
 
     pub fn get_ifd_map(&self, byte_order: Endianness) -> HashMap<u16, IfdDirectory> {
@@ -58,24 +65,26 @@ impl GeoKeys {
 
         let mut ifd_map: HashMap<u16, IfdDirectory> = HashMap::new();
         for i in 0..number_of_keys as usize {
-            let offset = 4 * (i+1);
+            let offset = 4 * (i + 1);
             let key_id = self.geo_key_directory[offset];
 
             let mut field_type: u16 = 0;
-            let tiff_tag_location = self.geo_key_directory[offset+1];
-            let count = self.geo_key_directory[offset+2];
-            let value_offset = self.geo_key_directory[offset+3];
+            let tiff_tag_location = self.geo_key_directory[offset + 1];
+            let count = self.geo_key_directory[offset + 2];
+            let value_offset = self.geo_key_directory[offset + 3];
             let mut data: Vec<u8> = vec![];
             if tiff_tag_location == 34737 {
                 // ascii data
                 field_type = 2;
-                let value: &str = &self.geo_ascii_params[value_offset as usize..(value_offset+count) as usize];
+                let value: &str = &self.geo_ascii_params[value_offset as usize..
+                                   (value_offset + count) as usize];
                 let value2 = value.replace("|", "");
                 data = value2.into_bytes();
             } else if tiff_tag_location == 34736 {
                 // double (f64) data
                 field_type = 12;
-                let value = &self.geo_double_params[value_offset as usize..(value_offset+count) as usize];
+                let value = &self.geo_double_params[value_offset as usize..
+                             (value_offset + count) as usize];
                 for &v in value {
                     let byte_array = unsafe { transmute::<f64, [u8; 8]>(v) };
                     for i in 0..8 {
@@ -93,14 +102,12 @@ impl GeoKeys {
 
             }
 
-            let ifd = IfdDirectory::new(
-                key_id,
-                field_type,
-                count as u32,
-                value_offset as u32,
-                data,
-                byte_order
-            );
+            let ifd = IfdDirectory::new(key_id,
+                                        field_type,
+                                        count as u32,
+                                        value_offset as u32,
+                                        data,
+                                        byte_order);
             ifd_map.insert(key_id, ifd.clone());
 
         }
@@ -121,160 +128,523 @@ impl GeoKeys {
         let minor_revision = self.geo_key_directory[2];
         let number_of_keys = self.geo_key_directory[3];
 
-        s = s + &format!("GeoKey Header:
+        s = s +
+            &format!("GeoKey Header:
     Directory version={},
     Major revision={},
     Minor revision={},
-    Num. keys={}", key_directory_version, key_revision, minor_revision, number_of_keys);
+    Num. keys={}",
+                     key_directory_version,
+                     key_revision,
+                     minor_revision,
+                     number_of_keys);
 
         for i in 0..number_of_keys as usize {
-            let offset = 4 * (i+1);
+            let offset = 4 * (i + 1);
             let key_id = self.geo_key_directory[offset];
             let unknown_tag = TiffTag::new_unknown_tag();
             let key = match keys.get(&key_id) {
                 Some(key) => key,
-                None => &unknown_tag //&TiffTag::new_unknown_tag()
+                None => &unknown_tag, //&TiffTag::new_unknown_tag()
             };
             // if key.name != "Unknown" {
             //
             // }
 
-            let tiff_tag_location = self.geo_key_directory[offset+1];
-            let count = self.geo_key_directory[offset+2];
-            let value_offset = self.geo_key_directory[offset+3];
+            let tiff_tag_location = self.geo_key_directory[offset + 1];
+            let count = self.geo_key_directory[offset + 2];
+            let value_offset = self.geo_key_directory[offset + 3];
             if tiff_tag_location == 34737 {
-                let value: &str = &self.geo_ascii_params[value_offset as usize..(value_offset+count) as usize];
+                let value: &str = &self.geo_ascii_params[value_offset as usize..
+                                   (value_offset + count) as usize];
                 let value2 = value.replace("|", "");
-                s = s + &format!("\nGeoKey {}:
+                s = s +
+                    &format!("\nGeoKey {}:
     Key={:?},
     Type=ASCII,
-    Value={}", i+1, key, value2);
+    Value={}",
+                             i + 1,
+                             key,
+                             value2);
             } else if tiff_tag_location == 34736 {
-                let value = &self.geo_double_params[value_offset as usize..(value_offset+count) as usize];
-                s = s + &format!("\nGeoKey {}:
+                let value = &self.geo_double_params[value_offset as usize..
+                             (value_offset + count) as usize];
+                s = s +
+                    &format!("\nGeoKey {}:
     Key={:?},
     Type=Double,
     Count={},
-    Value={:?}", i+1, key, count, value);
+    Value={:?}",
+                             i + 1,
+                             key,
+                             count,
+                             value);
             } else if tiff_tag_location == 0 {
                 let key_code = key.code;
                 let value: String;
                 if keyword_map.contains_key(&key_code) {
                     match keyword_map.get(&key_code) {
                         Some(hm) => {
-                            match hm.get(&value_offset)  {
+                            match hm.get(&value_offset) {
                                 Some(v) => value = v.to_string(),
-                                None => value = "No value available".to_string()
+                                None => value = "No value available".to_string(),
                             }
-                        },
-                        None => value = "No value available".to_string()
+                        }
+                        None => value = "No value available".to_string(),
                     }
-                    s = s + &format!("\nGeoKey {}:
+                    s = s +
+                        &format!("\nGeoKey {}:
     Key={:?},
-    Value={}", i+1, key, value);
+    Value={}",
+                                 i + 1,
+                                 key,
+                                 value);
                 } else {
-                    s = s + &format!("\nGeoKey {}:
+                    s = s +
+                        &format!("\nGeoKey {}:
     Key={:?},
-    Value={}", i+1, key, value_offset);
+    Value={}",
+                                 i + 1,
+                                 key,
+                                 value_offset);
                 }
             } else {
                 s = s + "Unknown tag";
             }
-    }
+        }
         return s;
     }
-
 }
 
 pub fn get_keys_map() -> HashMap<u16, TiffTag> {
     let mut k = HashMap::new();
-    k.insert(254u16, TiffTag{ name: "NewSubFileType".to_string(), code: 254 });
-    k.insert(256u16, TiffTag{ name: "ImageWidth".to_string(), code: 256 });
-    k.insert(257u16, TiffTag{ name: "ImageLength".to_string(), code: 257 });
-    k.insert(258u16, TiffTag{ name: "BitsPerSample".to_string(), code: 258 });
-    k.insert(259u16, TiffTag{ name: "Compression".to_string(), code: 259 });
-    k.insert(262u16, TiffTag{ name: "PhotometricInterpretation".to_string(), code: 262 });
-    k.insert(266u16, TiffTag{ name: "FillOrder".to_string(), code: 266 });
-    k.insert(269u16, TiffTag{ name: "DocumentName".to_string(), code: 269 });
-    k.insert(284u16, TiffTag{ name: "PlanarConfiguration".to_string(), code: 284 });
-    k.insert(270u16, TiffTag{ name: "ImageDescription".to_string(), code: 270 });
-    k.insert(271u16, TiffTag{ name: "Make".to_string(), code: 271 });
-    k.insert(272u16, TiffTag{ name: "Model".to_string(), code: 272 });
-    k.insert(273u16, TiffTag{ name: "StripOffsets".to_string(), code: 273 });
-    k.insert(274u16, TiffTag{ name: "Orientation".to_string(), code: 274 });
-    k.insert(277u16, TiffTag{ name: "SamplesPerPixel".to_string(), code: 277 });
-    k.insert(278u16, TiffTag{ name: "RowsPerStrip".to_string(), code: 278 });
-    k.insert(279u16, TiffTag{ name: "StripByteCounts".to_string(), code: 279 });
-    k.insert(282u16, TiffTag{ name: "XResolution".to_string(), code: 282 });
-    k.insert(283u16, TiffTag{ name: "YResolution".to_string(), code: 283 });
-    k.insert(296u16, TiffTag{ name: "ResolutionUnit".to_string(), code: 296 });
-    k.insert(305u16, TiffTag{ name: "Software".to_string(), code: 305 });
-    k.insert(306u16, TiffTag{ name: "DateTime".to_string(), code: 306 });
-    k.insert(322u16, TiffTag{ name: "TileWidth".to_string(), code: 322 });
-    k.insert(323u16, TiffTag{ name: "TileLength".to_string(), code: 323 });
-    k.insert(324u16, TiffTag{ name: "TileOffsets".to_string(), code: 324 });
-    k.insert(325u16, TiffTag{ name: "TileByteCounts".to_string(), code: 325 });
-    k.insert(317u16, TiffTag{ name: "Predictor".to_string(), code: 317 });
-    k.insert(320u16, TiffTag{ name: "ColorMap".to_string(), code: 320 });
-    k.insert(338u16, TiffTag{ name: "ExtraSamples".to_string(), code: 338 });
-    k.insert(339u16, TiffTag{ name: "SampleFormat".to_string(), code: 339 });
+    k.insert(254u16,
+             TiffTag {
+                 name: "NewSubFileType".to_string(),
+                 code: 254,
+             });
+    k.insert(256u16,
+             TiffTag {
+                 name: "ImageWidth".to_string(),
+                 code: 256,
+             });
+    k.insert(257u16,
+             TiffTag {
+                 name: "ImageLength".to_string(),
+                 code: 257,
+             });
+    k.insert(258u16,
+             TiffTag {
+                 name: "BitsPerSample".to_string(),
+                 code: 258,
+             });
+    k.insert(259u16,
+             TiffTag {
+                 name: "Compression".to_string(),
+                 code: 259,
+             });
+    k.insert(262u16,
+             TiffTag {
+                 name: "PhotometricInterpretation".to_string(),
+                 code: 262,
+             });
+    k.insert(266u16,
+             TiffTag {
+                 name: "FillOrder".to_string(),
+                 code: 266,
+             });
+    k.insert(269u16,
+             TiffTag {
+                 name: "DocumentName".to_string(),
+                 code: 269,
+             });
+    k.insert(284u16,
+             TiffTag {
+                 name: "PlanarConfiguration".to_string(),
+                 code: 284,
+             });
+    k.insert(270u16,
+             TiffTag {
+                 name: "ImageDescription".to_string(),
+                 code: 270,
+             });
+    k.insert(271u16,
+             TiffTag {
+                 name: "Make".to_string(),
+                 code: 271,
+             });
+    k.insert(272u16,
+             TiffTag {
+                 name: "Model".to_string(),
+                 code: 272,
+             });
+    k.insert(273u16,
+             TiffTag {
+                 name: "StripOffsets".to_string(),
+                 code: 273,
+             });
+    k.insert(274u16,
+             TiffTag {
+                 name: "Orientation".to_string(),
+                 code: 274,
+             });
+    k.insert(277u16,
+             TiffTag {
+                 name: "SamplesPerPixel".to_string(),
+                 code: 277,
+             });
+    k.insert(278u16,
+             TiffTag {
+                 name: "RowsPerStrip".to_string(),
+                 code: 278,
+             });
+    k.insert(279u16,
+             TiffTag {
+                 name: "StripByteCounts".to_string(),
+                 code: 279,
+             });
+    k.insert(282u16,
+             TiffTag {
+                 name: "XResolution".to_string(),
+                 code: 282,
+             });
+    k.insert(283u16,
+             TiffTag {
+                 name: "YResolution".to_string(),
+                 code: 283,
+             });
+    k.insert(296u16,
+             TiffTag {
+                 name: "ResolutionUnit".to_string(),
+                 code: 296,
+             });
+    k.insert(305u16,
+             TiffTag {
+                 name: "Software".to_string(),
+                 code: 305,
+             });
+    k.insert(306u16,
+             TiffTag {
+                 name: "DateTime".to_string(),
+                 code: 306,
+             });
+    k.insert(322u16,
+             TiffTag {
+                 name: "TileWidth".to_string(),
+                 code: 322,
+             });
+    k.insert(323u16,
+             TiffTag {
+                 name: "TileLength".to_string(),
+                 code: 323,
+             });
+    k.insert(324u16,
+             TiffTag {
+                 name: "TileOffsets".to_string(),
+                 code: 324,
+             });
+    k.insert(325u16,
+             TiffTag {
+                 name: "TileByteCounts".to_string(),
+                 code: 325,
+             });
+    k.insert(317u16,
+             TiffTag {
+                 name: "Predictor".to_string(),
+                 code: 317,
+             });
+    k.insert(320u16,
+             TiffTag {
+                 name: "ColorMap".to_string(),
+                 code: 320,
+             });
+    k.insert(338u16,
+             TiffTag {
+                 name: "ExtraSamples".to_string(),
+                 code: 338,
+             });
+    k.insert(339u16,
+             TiffTag {
+                 name: "SampleFormat".to_string(),
+                 code: 339,
+             });
 
-    k.insert(34735u16, TiffTag{ name: "GeoKeyDirectoryTag".to_string(), code: 34735 });
-    k.insert(34736u16, TiffTag{ name: "GeoDoubleParamsTag".to_string(), code: 34736 });
-    k.insert(34737u16, TiffTag{ name: "GeoAsciiParamsTag".to_string(), code: 34737 });
-    k.insert(33550u16, TiffTag{ name: "ModelPixelScaleTag".to_string(), code: 33550 });
-    k.insert(33922u16, TiffTag{ name: "ModelTiepointTag".to_string(), code: 33922 });
-    k.insert(34264u16, TiffTag{ name: "ModelTransformationTag".to_string(), code: 34264 });
-    k.insert(42112u16, TiffTag{ name: "GDAL_METADATA".to_string(), code: 42112 });
-    k.insert(42113u16, TiffTag{ name: "GDAL_NODATA".to_string(), code: 42113 });
+    k.insert(34735u16,
+             TiffTag {
+                 name: "GeoKeyDirectoryTag".to_string(),
+                 code: 34735,
+             });
+    k.insert(34736u16,
+             TiffTag {
+                 name: "GeoDoubleParamsTag".to_string(),
+                 code: 34736,
+             });
+    k.insert(34737u16,
+             TiffTag {
+                 name: "GeoAsciiParamsTag".to_string(),
+                 code: 34737,
+             });
+    k.insert(33550u16,
+             TiffTag {
+                 name: "ModelPixelScaleTag".to_string(),
+                 code: 33550,
+             });
+    k.insert(33922u16,
+             TiffTag {
+                 name: "ModelTiepointTag".to_string(),
+                 code: 33922,
+             });
+    k.insert(34264u16,
+             TiffTag {
+                 name: "ModelTransformationTag".to_string(),
+                 code: 34264,
+             });
+    k.insert(42112u16,
+             TiffTag {
+                 name: "GDAL_METADATA".to_string(),
+                 code: 42112,
+             });
+    k.insert(42113u16,
+             TiffTag {
+                 name: "GDAL_NODATA".to_string(),
+                 code: 42113,
+             });
 
-    k.insert(1024u16, TiffTag{ name: "GTModelTypeGeoKey".to_string(), code: 1024 });
-    k.insert(1025u16, TiffTag{ name: "GTRasterTypeGeoKey".to_string(), code: 1025 });
-    k.insert(1026u16, TiffTag{ name: "GTCitationGeoKey".to_string(), code: 1026 });
-    k.insert(2048u16, TiffTag{ name: "GeographicTypeGeoKey".to_string(), code: 2048 });
-    k.insert(2049u16, TiffTag{ name: "GeogCitationGeoKey".to_string(), code: 2049 });
-    k.insert(2050u16, TiffTag{ name: "GeogGeodeticDatumGeoKey".to_string(), code: 2050 });
-    k.insert(2051u16, TiffTag{ name: "GeogPrimeMeridianGeoKey".to_string(), code: 2051 });
-    k.insert(2061u16, TiffTag{ name: "GeogPrimeMeridianLongGeoKey".to_string(), code: 2061 });
-    k.insert(2052u16, TiffTag{ name: "GeogLinearUnitsGeoKey".to_string(), code: 2052 });
-    k.insert(2053u16, TiffTag{ name: "GeogLinearUnitSizeGeoKey".to_string(), code: 2053 });
-    k.insert(2054u16, TiffTag{ name: "GeogAngularUnitsGeoKey".to_string(), code: 2054 });
-    k.insert(2055u16, TiffTag{ name: "GeogAngularUnitSizeGeoKey".to_string(), code: 2055 });
-    k.insert(2056u16, TiffTag{ name: "GeogEllipsoidGeoKey".to_string(), code: 2056 });
-    k.insert(2057u16, TiffTag{ name: "GeogSemiMajorAxisGeoKey".to_string(), code: 2057 });
-    k.insert(2058u16, TiffTag{ name: "GeogSemiMinorAxisGeoKey".to_string(), code: 2058 });
-    k.insert(2059u16, TiffTag{ name: "GeogInvFlatteningGeoKey".to_string(), code: 2059 });
-    k.insert(2060u16, TiffTag{ name: "GeogAzimuthUnitsGeoKey".to_string(), code: 2060 });
-    k.insert(3072u16, TiffTag{ name: "ProjectedCSTypeGeoKey".to_string(), code: 3072 });
-    k.insert(3073u16, TiffTag{ name: "PCSCitationGeoKey".to_string(), code: 3073 });
-    k.insert(3074u16, TiffTag{ name: "ProjectionGeoKey".to_string(), code: 3074 });
-    k.insert(3075u16, TiffTag{ name: "ProjCoordTransGeoKey".to_string(), code: 3075 });
-    k.insert(3076u16, TiffTag{ name: "ProjLinearUnitsGeoKey".to_string(), code: 3076 });
-    k.insert(3077u16, TiffTag{ name: "ProjLinearUnitSizeGeoKey".to_string(), code: 3077 });
-    k.insert(3078u16, TiffTag{ name: "ProjStdParallel1GeoKey".to_string(), code: 3078 });
-    k.insert(3079u16, TiffTag{ name: "ProjStdParallel2GeoKey".to_string(), code: 3079 });
-    k.insert(3080u16, TiffTag{ name: "ProjNatOriginLongGeoKey".to_string(), code: 3080 });
-    k.insert(3081u16, TiffTag{ name: "ProjNatOriginLatGeoKey".to_string(), code: 3081 });
-    k.insert(3082u16, TiffTag{ name: "ProjFalseEastingGeoKey".to_string(), code: 3082 });
-    k.insert(3083u16, TiffTag{ name: "ProjFalseNorthingGeoKey".to_string(), code: 3083 });
-    k.insert(3084u16, TiffTag{ name: "ProjFalseOriginLongGeoKey".to_string(), code: 3084 });
-    k.insert(3085u16, TiffTag{ name: "ProjFalseOriginLatGeoKey".to_string(), code: 3085 });
-    k.insert(3086u16, TiffTag{ name: "ProjFalseOriginEastingGeoKey".to_string(), code: 3086 });
-    k.insert(3087u16, TiffTag{ name: "ProjFalseOriginNorthingGeoKey".to_string(), code: 3087 });
-    k.insert(3088u16, TiffTag{ name: "ProjCenterLongGeoKey".to_string(), code: 3088 });
-    k.insert(3089u16, TiffTag{ name: "ProjCenterLatGeoKey".to_string(), code: 3089 });
-    k.insert(3090u16, TiffTag{ name: "ProjCenterEastingGeoKey".to_string(), code: 3090 });
-    k.insert(3091u16, TiffTag{ name: "ProjFalseOriginNorthingGeoKey".to_string(), code: 3091 });
-    k.insert(3092u16, TiffTag{ name: "ProjScaleAtNatOriginGeoKey".to_string(), code: 3092 });
-    k.insert(3093u16, TiffTag{ name: "ProjScaleAtCenterGeoKey".to_string(), code: 3093 });
-    k.insert(3094u16, TiffTag{ name: "ProjAzimuthAngleGeoKey".to_string(), code: 3094 });
-    k.insert(3095u16, TiffTag{ name: "ProjStraightVertPoleLongGeoKey".to_string(), code: 3095 });
-    k.insert(4096u16, TiffTag{ name: "VerticalCSTypeGeoKey".to_string(), code: 4096 });
-    k.insert(4097u16, TiffTag{ name: "VerticalCitationGeoKey".to_string(), code: 4097 });
-    k.insert(4098u16, TiffTag{ name: "VerticalDatumGeoKey".to_string(), code: 4098 });
-    k.insert(4099u16, TiffTag{ name: "VerticalUnitsGeoKey".to_string(), code: 4099 });
-    k.insert(50844u16, TiffTag{ name: "RPCCoefficientTag".to_string(), code: 50844 });
-    k.insert(34377u16, TiffTag{ name: "Photoshop".to_string(), code: 34377 });
+    k.insert(1024u16,
+             TiffTag {
+                 name: "GTModelTypeGeoKey".to_string(),
+                 code: 1024,
+             });
+    k.insert(1025u16,
+             TiffTag {
+                 name: "GTRasterTypeGeoKey".to_string(),
+                 code: 1025,
+             });
+    k.insert(1026u16,
+             TiffTag {
+                 name: "GTCitationGeoKey".to_string(),
+                 code: 1026,
+             });
+    k.insert(2048u16,
+             TiffTag {
+                 name: "GeographicTypeGeoKey".to_string(),
+                 code: 2048,
+             });
+    k.insert(2049u16,
+             TiffTag {
+                 name: "GeogCitationGeoKey".to_string(),
+                 code: 2049,
+             });
+    k.insert(2050u16,
+             TiffTag {
+                 name: "GeogGeodeticDatumGeoKey".to_string(),
+                 code: 2050,
+             });
+    k.insert(2051u16,
+             TiffTag {
+                 name: "GeogPrimeMeridianGeoKey".to_string(),
+                 code: 2051,
+             });
+    k.insert(2061u16,
+             TiffTag {
+                 name: "GeogPrimeMeridianLongGeoKey".to_string(),
+                 code: 2061,
+             });
+    k.insert(2052u16,
+             TiffTag {
+                 name: "GeogLinearUnitsGeoKey".to_string(),
+                 code: 2052,
+             });
+    k.insert(2053u16,
+             TiffTag {
+                 name: "GeogLinearUnitSizeGeoKey".to_string(),
+                 code: 2053,
+             });
+    k.insert(2054u16,
+             TiffTag {
+                 name: "GeogAngularUnitsGeoKey".to_string(),
+                 code: 2054,
+             });
+    k.insert(2055u16,
+             TiffTag {
+                 name: "GeogAngularUnitSizeGeoKey".to_string(),
+                 code: 2055,
+             });
+    k.insert(2056u16,
+             TiffTag {
+                 name: "GeogEllipsoidGeoKey".to_string(),
+                 code: 2056,
+             });
+    k.insert(2057u16,
+             TiffTag {
+                 name: "GeogSemiMajorAxisGeoKey".to_string(),
+                 code: 2057,
+             });
+    k.insert(2058u16,
+             TiffTag {
+                 name: "GeogSemiMinorAxisGeoKey".to_string(),
+                 code: 2058,
+             });
+    k.insert(2059u16,
+             TiffTag {
+                 name: "GeogInvFlatteningGeoKey".to_string(),
+                 code: 2059,
+             });
+    k.insert(2060u16,
+             TiffTag {
+                 name: "GeogAzimuthUnitsGeoKey".to_string(),
+                 code: 2060,
+             });
+    k.insert(3072u16,
+             TiffTag {
+                 name: "ProjectedCSTypeGeoKey".to_string(),
+                 code: 3072,
+             });
+    k.insert(3073u16,
+             TiffTag {
+                 name: "PCSCitationGeoKey".to_string(),
+                 code: 3073,
+             });
+    k.insert(3074u16,
+             TiffTag {
+                 name: "ProjectionGeoKey".to_string(),
+                 code: 3074,
+             });
+    k.insert(3075u16,
+             TiffTag {
+                 name: "ProjCoordTransGeoKey".to_string(),
+                 code: 3075,
+             });
+    k.insert(3076u16,
+             TiffTag {
+                 name: "ProjLinearUnitsGeoKey".to_string(),
+                 code: 3076,
+             });
+    k.insert(3077u16,
+             TiffTag {
+                 name: "ProjLinearUnitSizeGeoKey".to_string(),
+                 code: 3077,
+             });
+    k.insert(3078u16,
+             TiffTag {
+                 name: "ProjStdParallel1GeoKey".to_string(),
+                 code: 3078,
+             });
+    k.insert(3079u16,
+             TiffTag {
+                 name: "ProjStdParallel2GeoKey".to_string(),
+                 code: 3079,
+             });
+    k.insert(3080u16,
+             TiffTag {
+                 name: "ProjNatOriginLongGeoKey".to_string(),
+                 code: 3080,
+             });
+    k.insert(3081u16,
+             TiffTag {
+                 name: "ProjNatOriginLatGeoKey".to_string(),
+                 code: 3081,
+             });
+    k.insert(3082u16,
+             TiffTag {
+                 name: "ProjFalseEastingGeoKey".to_string(),
+                 code: 3082,
+             });
+    k.insert(3083u16,
+             TiffTag {
+                 name: "ProjFalseNorthingGeoKey".to_string(),
+                 code: 3083,
+             });
+    k.insert(3084u16,
+             TiffTag {
+                 name: "ProjFalseOriginLongGeoKey".to_string(),
+                 code: 3084,
+             });
+    k.insert(3085u16,
+             TiffTag {
+                 name: "ProjFalseOriginLatGeoKey".to_string(),
+                 code: 3085,
+             });
+    k.insert(3086u16,
+             TiffTag {
+                 name: "ProjFalseOriginEastingGeoKey".to_string(),
+                 code: 3086,
+             });
+    k.insert(3087u16,
+             TiffTag {
+                 name: "ProjFalseOriginNorthingGeoKey".to_string(),
+                 code: 3087,
+             });
+    k.insert(3088u16,
+             TiffTag {
+                 name: "ProjCenterLongGeoKey".to_string(),
+                 code: 3088,
+             });
+    k.insert(3089u16,
+             TiffTag {
+                 name: "ProjCenterLatGeoKey".to_string(),
+                 code: 3089,
+             });
+    k.insert(3090u16,
+             TiffTag {
+                 name: "ProjCenterEastingGeoKey".to_string(),
+                 code: 3090,
+             });
+    k.insert(3091u16,
+             TiffTag {
+                 name: "ProjFalseOriginNorthingGeoKey".to_string(),
+                 code: 3091,
+             });
+    k.insert(3092u16,
+             TiffTag {
+                 name: "ProjScaleAtNatOriginGeoKey".to_string(),
+                 code: 3092,
+             });
+    k.insert(3093u16,
+             TiffTag {
+                 name: "ProjScaleAtCenterGeoKey".to_string(),
+                 code: 3093,
+             });
+    k.insert(3094u16,
+             TiffTag {
+                 name: "ProjAzimuthAngleGeoKey".to_string(),
+                 code: 3094,
+             });
+    k.insert(3095u16,
+             TiffTag {
+                 name: "ProjStraightVertPoleLongGeoKey".to_string(),
+                 code: 3095,
+             });
+    k.insert(4096u16,
+             TiffTag {
+                 name: "VerticalCSTypeGeoKey".to_string(),
+                 code: 4096,
+             });
+    k.insert(4097u16,
+             TiffTag {
+                 name: "VerticalCitationGeoKey".to_string(),
+                 code: 4097,
+             });
+    k.insert(4098u16,
+             TiffTag {
+                 name: "VerticalDatumGeoKey".to_string(),
+                 code: 4098,
+             });
+    k.insert(4099u16,
+             TiffTag {
+                 name: "VerticalUnitsGeoKey".to_string(),
+                 code: 4099,
+             });
+    k.insert(50844u16,
+             TiffTag {
+                 name: "RPCCoefficientTag".to_string(),
+                 code: 50844,
+             });
+    k.insert(34377u16,
+             TiffTag {
+                 name: "Photoshop".to_string(),
+                 code: 34377,
+             });
 
     k
 }

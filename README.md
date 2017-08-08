@@ -361,7 +361,7 @@ The library currently contains the following 222 tools:
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
 ## Supported Data Formats
-The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. Currently GeoTiff files can be read but not written, although work is underway to add data writing capabilities. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. 
+The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. 
 
 At present, there is no ability in *WhiteboxTools* to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will be added to the library soon. 
 
@@ -400,7 +400,6 @@ The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt
 
 ## Known Issues
 
-- Currently GeoTIFF files can be read but cannot be written. This will hopefully be resolved soon.
 - There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
 - The LAZ compressed LiDAR data format is not currently supported although zipped LAS files are..
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
