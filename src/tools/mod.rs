@@ -102,6 +102,7 @@ impl ToolManager {
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("IntegralImage".to_string());
+        tool_names.push("KNearestMeanFilter".to_string());
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
         tool_names.push("LineDetectionFilter".to_string());
@@ -384,6 +385,7 @@ impl ToolManager {
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
+            "knearestmeanfilter" => Some(Box::new(tools::image_analysis::KNearestMeanFilter::new())),
             "laplacianfilter" => Some(Box::new(tools::image_analysis::LaplacianFilter::new())),
             "laplacianofgaussianfilter" => {
                 Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new()))

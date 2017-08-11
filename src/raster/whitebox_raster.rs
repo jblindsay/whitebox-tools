@@ -369,6 +369,9 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("Display Max:\t{}\n", r.configs.display_max);
     writer.write_all(s.as_bytes())?;
 
+    if r.configs.palette == String::from("not specified") {
+        r.configs.palette = "grey.plt".to_string();
+    }
     let s = format!("Preferred Palette:\t{}\n", r.configs.palette);
     writer.write_all(s.as_bytes())?;
 
