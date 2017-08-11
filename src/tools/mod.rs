@@ -105,6 +105,7 @@ impl ToolManager {
         tool_names.push("KNearestMeanFilter".to_string());
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
+        tool_names.push("LeeFilter".to_string());
         tool_names.push("LineDetectionFilter".to_string());
         tool_names.push("LineThinning".to_string());
         tool_names.push("MajorityFilter".to_string());
@@ -390,6 +391,7 @@ impl ToolManager {
             "laplacianofgaussianfilter" => {
                 Some(Box::new(tools::image_analysis::LaplacianOfGaussianFilter::new()))
             }
+            "leefilter" => Some(Box::new(tools::image_analysis::LeeFilter::new())),
             "linedetectionfilter" => {
                 Some(Box::new(tools::image_analysis::LineDetectionFilter::new()))
             }
