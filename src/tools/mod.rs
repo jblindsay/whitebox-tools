@@ -30,6 +30,7 @@ impl ToolManager {
         // gis_analysis
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
+        tool_names.push("Centroid".to_string());
         tool_names.push("Clump".to_string());
         tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
@@ -284,6 +285,7 @@ impl ToolManager {
             // gis_analysis
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
+            "centroid" => Some(Box::new(tools::gis_analysis::Centroid::new())),
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
