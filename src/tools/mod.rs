@@ -53,6 +53,7 @@ impl ToolManager {
         tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
+        tool_names.push("AverageFlowpathSlope".to_string());
         tool_names.push("AverageUpslopeFlowpathLength".to_string());
         tool_names.push("Basins".to_string());
         tool_names.push("BreachDepressions".to_string());
@@ -311,6 +312,7 @@ impl ToolManager {
 
 
             // hydro_analysis
+            "averageflowpathslope" => Some(Box::new(tools::hydro_analysis::AverageFlowpathSlope::new())),
             "averageupslopeflowpathlength" => {
                 Some(Box::new(tools::hydro_analysis::AverageUpslopeFlowpathLength::new()))
             }

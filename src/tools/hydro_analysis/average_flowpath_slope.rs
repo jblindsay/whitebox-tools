@@ -20,18 +20,18 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::WhiteboxTool;
 
-pub struct AverageUpslopeFlowpathLength {
+pub struct AverageFlowpathSlope {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl AverageUpslopeFlowpathLength {
-    pub fn new() -> AverageUpslopeFlowpathLength { // public constructor
-        let name = "AverageUpslopeFlowpathLength".to_string();
+impl AverageFlowpathSlope {
+    pub fn new() -> AverageFlowpathSlope { // public constructor
+        let name = "AverageFlowpathSlope".to_string();
         
-        let description = "Measures the average length of all upslope flowpaths draining each grid cell.".to_string();
+        let description = "Measures the average slope gradient from each grid cell to all upslope divide cells.".to_string();
         
         let mut parameters = "-i, --dem       Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
@@ -45,11 +45,11 @@ impl AverageUpslopeFlowpathLength {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        AverageUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
+        AverageFlowpathSlope { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for AverageUpslopeFlowpathLength {
+impl WhiteboxTool for AverageFlowpathSlope {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,22 +131,11 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let mut num_flowpaths: Array2D<i64> = Array2D::new(rows, columns, 0, 0)?;
-
-        let mut starting_row;
-        let mut ending_row = 0;
+        
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
@@ -158,7 +147,7 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
                 let mut dir: i8;
                 let mut neighbouring_nodata: bool;
                 let mut interior_pit_found = false;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
@@ -213,18 +202,10 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         
-        id = 0;
-        ending_row = 0;
         let (tx, rx) = mpsc::channel();
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
             let flow_dir = flow_dir.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
@@ -232,7 +213,7 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
                 let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
                 let mut z: f64;
                 let mut count: i8;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
@@ -253,8 +234,10 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
             });
         }
 
+        let mut num_flowpaths: Array2D<i64> = Array2D::new(rows, columns, 0, 0)?;
+        let mut total_flowpath_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
+        let mut total_upslope_divide_elev: Array2D<f64> = Array2D::new(rows, columns, 0f64, 0f64)?;
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        //output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
@@ -263,8 +246,9 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
                     stack.push((row, col));
-                    output[(row, col)] = 0.0;
+                    total_flowpath_length[(row, col)] = 0.0;
                     num_flowpaths[(row, col)] = 1;
+                    total_upslope_divide_elev[(row, col)] = input[(row, col)];
                 } else if num_inflowing[(row, col)] == -1i8 {
                     num_solved_cells += 1;
                 }
@@ -287,6 +271,9 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
         let mut val: i64;
         let mut dir: i8;
         let mut length: f64;
+        let mut z_mean: f64;
+        let mut z_diff: f64;
+        let mut divide_elev: f64;
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
@@ -296,14 +283,16 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
             if dir >= 0 {
                 row_n = row + d_y[dir as usize];
                 col_n = col + d_x[dir as usize];
-                length = output[(row, col)] + grid_lengths[dir as usize];
-                if output[(row_n, col_n)] == nodata {
-                    output[(row_n, col_n)] = length;
+                length = total_flowpath_length[(row, col)] + grid_lengths[dir as usize];
+                if total_flowpath_length[(row_n, col_n)] == nodata {
+                    total_flowpath_length[(row_n, col_n)] = length;
                 } else {
-                    output.increment(row_n, col_n, length);
+                    total_flowpath_length.increment(row_n, col_n, length);
                 }
                 val = num_flowpaths[(row, col)];
                 num_flowpaths.increment(row_n, col_n, val);
+                divide_elev = total_upslope_divide_elev[(row, col)];
+                total_upslope_divide_elev.increment(row_n, col_n, divide_elev);
 
                 num_inflowing.decrement(row_n, col_n, 1i8);
                 if num_inflowing[(row_n, col_n)] == 0i8 {
@@ -311,7 +300,9 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
                 }
             }
 
-            output[(row, col)] = output[(row, col)] / num_flowpaths[(row, col)] as f64;
+            z_mean = total_upslope_divide_elev[(row, col)] / num_flowpaths[(row, col)] as f64;
+            z_diff = z_mean - input[(row, col)];
+            output[(row, col)] = (z_diff / (total_flowpath_length[(row, col)] / num_flowpaths[(row, col)] as f64)).atan().to_degrees();
 
             if verbose {
                 num_solved_cells += 1;
@@ -324,7 +315,7 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
         }
 
         output.configs.palette = "blueyellow.plt".to_string();
-        output.configs.palette_nonlinearity = 0.3f64;
+        // output.configs.palette_nonlinearity = 0.3f64;
         let end = time::now();
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
