@@ -4,8 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 22 2017
 Last Modified: July 22, 2017
 License: MIT
-
-NOTES: Will need to add support for vector polygons eventually.
 */
 extern crate time;
 extern crate num_cpus;
@@ -17,22 +15,21 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Centroid {
+pub struct CumulativeDistribution {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Centroid {
-    pub fn new() -> Centroid { // public constructor
-        let name = "Centroid".to_string();
+impl CumulativeDistribution {
+    pub fn new() -> CumulativeDistribution { // public constructor
+        let name = "CumulativeDistribution".to_string();
         
-        let description = "Calclates the centroid, or average location, of raster polygon objects.".to_string();
+        let description = "Converts a raster image to its cumulative distribution function.".to_string();
         
         let mut parameters = "-i, --input    Input raster DEM file.\n".to_owned();
         parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("--text_output  Optional text output.\n");
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -41,14 +38,13 @@ impl Centroid {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Centroid { name: name, description: description, parameters: parameters, example_usage: usage }
+        CumulativeDistribution { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Centroid {
+impl WhiteboxTool for CumulativeDistribution {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,7 +64,6 @@ impl WhiteboxTool for Centroid {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut text_output = false;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -95,8 +90,6 @@ impl WhiteboxTool for Centroid {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-text_output" || vec[0].to_lowercase() == "--text_output" {
-                text_output = true;
             }
         }
 
@@ -127,58 +120,64 @@ impl WhiteboxTool for Centroid {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
 
-        let min_val = input.configs.minimum.floor() as usize;
-        let max_val = input.configs.maximum.ceil() as usize;
+        let min_val = input.configs.minimum;
+        let max_val = input.configs.maximum;
         let range = max_val - min_val;
-        
-        let mut total_columns = vec![0usize; range + 1];
-        let mut total_rows = vec![0usize; range + 1];
-        let mut total_n = vec![0usize; range + 1];
-        
+        let num_bins = 50000;
+        let bin_size = range / num_bins as f64;
+        let mut histogram = vec![0usize; num_bins];
+        let mut bin_num: usize;
+        let num_bins_less_one = num_bins - 1;
+        let mut num_cells = 0usize;
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let mut z: f64;
-        let mut a: usize;
         for row in 0..rows {
             for col in 0..columns {
                 z = input[(row, col)];
-                if z > 0f64 && z != nodata {
-                    a = (z - min_val as f64) as usize;
-                    total_columns[a] += col as usize;
-                    total_rows[a] += row as usize;
-                    total_n[a] += 1usize;
+                if z != nodata {
+                    num_cells += 1;
+                    bin_num = ((z - min_val) / bin_size) as usize;
+                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    histogram[bin_num] += 1;
                 }
             }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 1 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let mut col: isize;
-        let mut row: isize;
-        for a in 0..range+1 {
-            if total_n[a] > 0 {
-                col = (total_columns[a] / total_n[a]) as isize;
-                row = (total_rows[a] / total_n[a]) as isize;
-                output.set_value(row, col, (a + min_val) as f64);
-            }
+        let mut cdf = vec![0f64; num_bins];
+        cdf[0] = histogram[0] as f64; 
+        for i in 0..histogram.len() {
+            cdf[i] = cdf[i - 1] + histogram[i] as f64;
         }
 
-        if text_output {
-            let mut col: f64;
-            let mut row: f64;
-            println!("Patch Centroid\nPatch ID\tColumn\tRow");
-            for a in 0..range+1 {
-                if total_n[a] > 0 {
-                    col = total_columns[a] as f64 / total_n[a] as f64;
-                    row = total_rows[a] as f64 / total_n[a] as f64;
-                    println!("{}\t{}\t{}", (a + min_val), col, row);
+        for i in 0..histogram.len() {
+            cdf[i] = cdf[i] / num_cells as f64;
+        }
+
+        for row in 0..rows {
+            for col in 0..columns {
+                z = input[(row, col)];
+                if z != nodata {
+                    bin_num = ((z - min_val) / bin_size) as usize;
+                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    output[(row, col)] = cdf[bin_num];
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 2 of 2): {}%", progress);
+                    old_progress = progress;
                 }
             }
         }
+
 
         let end = time::now();
         let elapsed_time = end - start;
