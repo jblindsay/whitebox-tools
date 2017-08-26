@@ -152,7 +152,7 @@ impl WhiteboxTool for CumulativeDistribution {
 
         let mut cdf = vec![0f64; num_bins];
         cdf[0] = histogram[0] as f64; 
-        for i in 0..histogram.len() {
+        for i in 1..histogram.len() {
             cdf[i] = cdf[i - 1] + histogram[i] as f64;
         }
 

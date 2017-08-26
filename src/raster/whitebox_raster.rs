@@ -144,7 +144,8 @@ pub fn read_whitebox(file_name: &String,
     let data_size = if configs.data_type == DataType::F64 {
         8
     } else if configs.data_type == DataType::F32 ||
-              configs.data_type == DataType::I32 {
+              configs.data_type == DataType::I32 ||
+              configs.data_type == DataType::RGBA32 {
         4
     } else if configs.data_type == DataType::I16 {
         2
