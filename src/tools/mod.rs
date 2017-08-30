@@ -50,6 +50,7 @@ impl ToolManager {
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
         tool_names.push("PickFromList".to_string());
+        tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
         tool_names.push("WeightedSum".to_string());
 
@@ -309,6 +310,7 @@ impl ToolManager {
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
+            "rastercellassignment" => Some(Box::new(tools::gis_analysis::RasterCellAssignment::new())),
             "reclassequalinterval" => {
                 Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new()))
             }
