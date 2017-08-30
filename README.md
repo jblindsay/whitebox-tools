@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 228 tools:
+The library currently contains the following 229 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -200,6 +200,7 @@ The library currently contains the following 228 tools:
 - ***GammaCorrection***: Performs a sigmoidal contrast stretch on input images.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
 - ***HighPassFilter***: Performs a high-pass filter on an input image.
+- ***HistogramEqualization***: Performs a histogram equalization contrast enhancment on an image.
 - ***IhsToRgb***: Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 - ***IntegralImage***: Transforms an input image (summed area table) into its integral image equivalent.
 - ***KNearestMeanFilter***: A k-nearest mean filter is a type of edge-preserving smoothing filter.
