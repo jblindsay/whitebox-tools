@@ -11,7 +11,6 @@ belong to a SurferAscii or a Surfer7BinaryCollisions. This is more important for
 files since input files can be read and distiguishing feasture idenfitied from the file structure.
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

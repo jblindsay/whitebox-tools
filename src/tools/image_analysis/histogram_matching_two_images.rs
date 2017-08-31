@@ -1,13 +1,9 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: August 26, 2017
-Last Modified: August 30, 2017
+Created: August 31, 2017
+Last Modified: August 31, 2017
 License: MIT
-
-NOTES: 1. The tool should be updated to take multiple file inputs.
-       2. Unlike the original Whitebox GAT tool that this is based on, 
-          this tool will operate on RGB images in addition to greyscale images.
 */
 extern crate time;
 extern crate num_cpus;
@@ -23,24 +19,24 @@ use std::sync::mpsc;
 use std::thread;
 use tools::WhiteboxTool;
 
-pub struct HistogramEqualization {
+pub struct HistogramMatchingTwoImages {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl HistogramEqualization {
-    pub fn new() -> HistogramEqualization {
+impl HistogramMatchingTwoImages {
+    pub fn new() -> HistogramMatchingTwoImages {
         // public constructor
-        let name = "HistogramEqualization".to_string();
+        let name = "HistogramMatchingTwoImages".to_string();
 
-        let description = "Performs a histogram equalization contrast enhancment on an image."
+        let description = "This tool alters the cumululative distribution function of a raster image to that of another image."
             .to_string();
 
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
+        let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
+        parameters.push_str("--i2, --input2   Input reference raster file.\n");
+        parameters.push_str("-o, --output    Output raster file.\n");
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -52,9 +48,9 @@ impl HistogramEqualization {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=input1.dep --i2=input2.dep -o=output.dep", short_exe, name).replace("*", &sep);
 
-        HistogramEqualization {
+        HistogramMatchingTwoImages {
             name: name,
             description: description,
             parameters: parameters,
@@ -63,7 +59,7 @@ impl HistogramEqualization {
     }
 }
 
-impl WhiteboxTool for HistogramEqualization {
+impl WhiteboxTool for HistogramMatchingTwoImages {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -85,10 +81,10 @@ impl WhiteboxTool for HistogramEqualization {
                working_directory: &'a str,
                verbose: bool)
                -> Result<(), Error> {
-        let mut input_file = String::new();
+        let mut input_file1 = String::new();
+        let mut input_file2 = String::new();
         let mut output_file = String::new();
-        let mut num_tones = 256f64;
-
+        
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                   "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
@@ -102,24 +98,23 @@ impl WhiteboxTool for HistogramEqualization {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i1" || vec[0].to_lowercase() == "--i1" || vec[0].to_lowercase() == "--input1" {
                 if keyval {
-                    input_file = vec[1].to_string();
+                    input_file1 = vec[1].to_string();
                 } else {
-                    input_file = args[i + 1].to_string();
+                    input_file1 = args[i + 1].to_string();
+                }
+            } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--i2" || vec[0].to_lowercase() == "--input2" {
+                if keyval {
+                    input_file2 = vec[1].to_string();
+                } else {
+                    input_file2 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-num_tones" ||
-                      vec[0].to_lowercase() == "--num_tones" {
-                if keyval {
-                    num_tones = vec[1].to_string().parse::<f64>().unwrap();
-                } else {
-                    num_tones = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -135,40 +130,93 @@ impl WhiteboxTool for HistogramEqualization {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
-            input_file = format!("{}{}", working_directory, input_file);
+        if !input_file1.contains(&sep) {
+            input_file1 = format!("{}{}", working_directory, input_file1);
+        }
+        if !input_file2.contains(&sep) {
+            input_file2 = format!("{}{}", working_directory, input_file2);
         }
         if !output_file.contains(&sep) {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if num_tones < 16f64 {
-            println!("Warning: The output number of greytones must be at least 16. The value has been modified.");
-            num_tones = 16f64;
-        }
-        let num_tones_less_one = num_tones - 1f64;
-
         if verbose {
             println!("Reading input data...")
         };
-        let input = Arc::new(Raster::new(&input_file, "r")?);
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
+        let input1 = Arc::new(Raster::new(&input_file1, "r")?);
+        let rows1 = input1.configs.rows as isize;
+        let columns1 = input1.configs.columns as isize;
+        let nodata1 = input1.configs.nodata;
 
-        let is_rgb_image = 
-            if input.configs.data_type == DataType::RGB24 ||
-                input.configs.data_type == DataType::RGBA32 ||
-                input.configs.photometric_interp == PhotometricInterpretation::RGB {
-                
-                true
-            } else {
-                false
-            };
+        let min_value1 = input1.configs.minimum;
+        let max_value1 = input1.configs.maximum;
+        let num_bins1 = (2f64 * (int)(max_value1 - min_value1 + 1f64).ceil(), 
+                ((rows1 * cols1).powf(1f64 / 3f64)).ceil()).max() as usize;
+        let bin_size = (maxValue1 - minValue1) / num_bins1 as f64;
+        let histogram = vec![0f64; num_bins1];
+        let mut bin_num;
+        let num_bins_less_one1 = num_bins1 - 1;
+        
+        updateProgress("Loop 1 of 3: ", 0);
+        for (row = 0; row < rows1; row++) {
+            data = inputFile1.getRowValues(row);
+            for (col = 0; col < cols1; col++) {
+                z = data[col];
+                if (z != noData1) {
+                    numCells1++;
+                    binNum = (int)((z - minValue1) / binSize);
+                    if (binNum > numBinsLessOne1) { binNum = numBinsLessOne1; }
+                    histogram[binNum]++;
+                }
 
-        if input.configs.data_type == DataType::RGB48 {
+            }
+            if (cancelOp) { cancelOperation(); return; }
+            progress = (float) (100f * row / (rows1 - 1));    
+            updateProgress("Loop 1 of 3: ", (int)progress);
+        }
+
+        let num_procs = num_cpus::get() as isize;
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let cdf = cdf.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let num_cells_less_one = n - min_nonempty_bin; //n - 1f64;
+                let mut z_in: f64;
+                let mut z_out: f64;
+                let mut bin: usize;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z_in = input[(row, col)];
+                        if z_in != nodata {
+                            bin = input_fn(row, col);
+                            z_out = ((cdf[bin] - min_nonempty_bin) / num_cells_less_one * num_tones_less_one).round();
+                            data[col as usize] = output_fn(row, col, z_out);
+                        }
+                    }
+                    tx.send((row, data)).unwrap();
+                }
+            });
+        }
+
+
+
+
+
+        let input2 = Arc::new(Raster::new(&input_file2, "r")?);
+        let rows2 = input2.configs.rows as isize;
+        let columns2 = input2.configs.columns as isize;
+        let nodata2 = input2.configs.nodata;
+
+        if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGB48 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+
             return Err(Error::new(ErrorKind::InvalidInput,
-                "This tool cannot be applied to 48-bit RGB colour-composite images."));
+                "This tool is for single-band greyscale images and cannot be applied to RGB colour-composite images."));
         }
 
         let start = time::now();
@@ -187,8 +235,8 @@ impl WhiteboxTool for HistogramEqualization {
         if !is_rgb_image {    
             min_value = input.configs.minimum;
             range = input.configs.maximum - min_value;
-            if range.round() as usize > num_bins { 
-                num_bins = range.round() as usize; 
+            if range.round() > num_bins { 
+                num_bins = range.round(); 
                 histo = vec![0f64; num_bins];
             }
             bin_size = range / (num_bins - 1) as f64;

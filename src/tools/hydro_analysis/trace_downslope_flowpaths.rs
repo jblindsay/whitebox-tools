@@ -8,7 +8,6 @@ License: MIT
 NOTES: Add support for vector seed points.
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

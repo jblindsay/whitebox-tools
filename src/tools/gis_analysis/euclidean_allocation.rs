@@ -6,7 +6,6 @@ Last Modified: June 22, 2017
 License: MIT
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

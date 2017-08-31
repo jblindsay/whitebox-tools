@@ -8,7 +8,6 @@ License: MIT
 NOTES: Add anisotropy option.
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

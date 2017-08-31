@@ -6,7 +6,6 @@ Last Modified: July 7, 2017
 License: MIT
 */
 
-extern crate byteorder;
 extern crate num_cpus;
 
 pub mod arcascii_raster;

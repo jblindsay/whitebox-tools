@@ -9,7 +9,6 @@ NOTE: This algorithm can't easily be parallelized because the output raster must
 and written to during the same loop.
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

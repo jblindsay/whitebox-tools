@@ -8,7 +8,6 @@ License: MIT
 NOTES: Will need to add support for vector polygons eventually.
 */
 extern crate time;
-extern crate num_cpus;
 
 use std::env;
 use std::path;

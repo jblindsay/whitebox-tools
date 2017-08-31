@@ -5,7 +5,6 @@ Created: June 21, 2017
 Last Modified: July 17, 2017
 License: MIT
 */
-extern crate nalgebra as na;
 
 use std;
 use std::env;
