@@ -26,7 +26,7 @@ impl LidarJoin {
         
         let description = "Joins multiple LiDAR (LAS) files into a single LAS file.".to_string();
         
-        let mut parameters = "-i, --inputs      Input LAS files, separated by commas.\n".to_owned();
+        let mut parameters = "-i, --inputs  Input LAS files, separated by commas.\n".to_owned();
         parameters.push_str("-o, --output  Output LAS file.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
