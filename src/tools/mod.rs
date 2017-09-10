@@ -201,6 +201,7 @@ impl ToolManager {
         tool_names.push("RandomField".to_string());
         tool_names.push("RasterSummaryStats".to_string());
         tool_names.push("Reciprocal".to_string());
+        tool_names.push("RescaleValueRange".to_string());
         tool_names.push("Round".to_string());
         tool_names.push("Sin".to_string());
         tool_names.push("Sinh".to_string());
@@ -515,6 +516,7 @@ impl ToolManager {
             "randomfield" => Some(Box::new(tools::math_stat_analysis::RandomField::new())),
             "rastersummarystats" => Some(Box::new(tools::math_stat_analysis::RasterSummaryStats::new())),
             "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),
+            "rescalevaluerange" => Some(Box::new(tools::math_stat_analysis::RescaleValueRange::new())),
             "round" => Some(Box::new(tools::math_stat_analysis::Round::new())),
             "sin" => Some(Box::new(tools::math_stat_analysis::Sin::new())),
             "sinh" => Some(Box::new(tools::math_stat_analysis::Sinh::new())),

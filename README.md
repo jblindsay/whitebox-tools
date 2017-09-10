@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 234 tools:
+The library currently contains the following 235 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -299,6 +299,7 @@ The library currently contains the following 234 tools:
 - ***RandomField***: Creates an image containing random values.
 - ***RasterSummaryStats***: Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 - ***Reciprocal***: Returns the reciprocal (i.e. 1 / z) of values in a raster.
+- ***RescaleValueRange***: Performs a min-max contrast stretch on an input greytone image.
 - ***Round***: Rounds the values in an input raster to the nearest integer value.
 - ***Sin***: Returns the sine (sin) of each values in a raster.
 - ***Sinh***: Returns the hyperbolic sine (sinh) of each values in a raster.
@@ -420,7 +421,7 @@ The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt
 
 ### Do I need Whitebox GAT to use WhiteboxTools?
 
-No you do not. You can call the tools contained within *WhiteboxTools* completely independent from the *Whitebox GAT* user interface. In fact, you can interact with the tools using Python scripting or directly, using a terminal application (command prompt). See [Usage](#usage) for further details.
+No you do not. You can call the tools contained within *WhiteboxTools* completely independent from the *Whitebox GAT* user interface using a Remote Procedure Call (RPC) approach. In fact, you can interact with the tools using Python scripting or directly, using a terminal application (command prompt). See [Usage](#usage) for further details.
 
 ### How do I request a tool be added?
 
@@ -428,7 +429,7 @@ Eventually most of the tools in *Whitebox GAT* will be ported over to *WhiteboxT
 
 ### Can WhiteboxTools be incorporated into other software and open-source GIS projects?
 
-*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other software and GIS projects cannot use *WhiteboxTools* as well. In fact, this was one of the motivating factors for creating the library in the first place! Feel free to use *WhiteboxTools* as the geospatial analysis engine in your open-source software project.
+*WhiteboxTools* was developed with the open-source GIS [Whitebox GAT](http://www.uoguelph.ca/~hydrogeo/Whitebox/index.html) in mind. That said, the tools can be accessed independently and so long as you abide by the terms of the [MIT license](#license), there is no reason why other software and GIS projects cannot use *WhiteboxTools* as well. In fact, this was one of the motivating factors for creating the library in the first place. Feel free to use *WhiteboxTools* as the geospatial analysis engine in your open-source software project.
 
 ### Do I need Rust installed on my computer to run WhiteboxTools?
 
