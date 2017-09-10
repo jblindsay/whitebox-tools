@@ -22,6 +22,7 @@ mod percent_greater_than;
 mod percent_less_than;
 mod pick_from_list;
 mod raster_cell_assignment;
+mod reclass;
 mod reclass_equal_interval;
 mod weighted_sum;
 
@@ -49,5 +50,6 @@ pub use self::percent_greater_than::PercentGreaterThan;
 pub use self::percent_less_than::PercentLessThan;
 pub use self::pick_from_list::PickFromList;
 pub use self::raster_cell_assignment::RasterCellAssignment;
+pub use self::reclass::Reclass;
 pub use self::reclass_equal_interval::ReclassEqualInterval;
 pub use self::weighted_sum::WeightedSum;
