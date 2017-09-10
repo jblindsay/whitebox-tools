@@ -1,13 +1,16 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 9, 2017
-Last Modified: September 9, 2017
+Created: September 10, 2017
+Last Modified: September 10, 2017
 License: MIT
 */
 extern crate time;
 extern crate num_cpus;
 
+use std::io::BufReader;
+use std::io::BufRead;
+use std::fs::File;
 use std::collections::HashMap;
 use std::env;
 use std::path;
@@ -19,24 +22,23 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct Reclass {
+pub struct ReclassFromFile {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl Reclass {
+impl ReclassFromFile {
     /// public constructor
-    pub fn new() -> Reclass { 
-        let name = "Reclass".to_string();
+    pub fn new() -> ReclassFromFile { 
+        let name = "ReclassFromFile".to_string();
         
-        let description = "Reclassifies the values in a raster image.".to_string();
+        let description = "Reclassifies the values in a raster image using reclass ranges in a text file.".to_string();
         
         let mut parameters = "-i, --input     Input raster file.".to_owned();
+        parameters.push_str("--reclass_file  Input text file containing reclass ranges.\n");
         parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--reclass_vals  Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'.\n");
-        parameters.push_str("--assign_mode   Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -45,14 +47,13 @@ impl Reclass {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' --assign_mode ", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --reclass_file='reclass.txt' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Reclass { name: name, description: description, parameters: parameters, example_usage: usage }
+        ReclassFromFile { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for Reclass {
+impl WhiteboxTool for ReclassFromFile {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -72,7 +73,7 @@ impl WhiteboxTool for Reclass {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut reclass_str = String::new();
+        let mut reclass_file = String::new();
         let mut assign_mode = false;
          
         if args.len() == 0 {
@@ -100,14 +101,12 @@ impl WhiteboxTool for Reclass {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-reclass_vals" || vec[0].to_lowercase() == "--reclass_vals" {
+            } else if vec[0].to_lowercase() == "-reclass_file" || vec[0].to_lowercase() == "--reclass_file" {
                 if keyval {
-                    reclass_str = vec[1].to_string();
+                    reclass_file = vec[1].to_string();
                 } else {
-                    reclass_str = args[i+1].to_string();
+                    reclass_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-assign_mode" || vec[0].to_lowercase() == "--assign_mode" {
-                assign_mode = true;
             }
         }
 
@@ -117,17 +116,35 @@ impl WhiteboxTool for Reclass {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let mut v: Vec<&str> = reclass_str.split(";").collect();
-        if v.len() < 2 { // delimiter can be a semicolon, comma, space, or tab.
-            v = reclass_str.split(",").collect();
-            if v.len() < 2 {
-                v = reclass_str.split(" ").collect();
+        let sep: String = path::MAIN_SEPARATOR.to_string();
+
+        if !reclass_file.contains(&sep) {
+            reclass_file = format!("{}{}", working_directory, reclass_file);
+        }
+
+        let f = File::open(reclass_file)?;
+        let f = BufReader::new(f);
+        let mut reclass_vals: Vec<f64> = vec![];
+        for line in f.lines() {
+            let line_unwrapped = line.unwrap();
+            let mut v: Vec<&str> = line_unwrapped.split(";").collect();
+            if v.len() < 2 { // delimiter can be a semicolon, comma, space, or tab.
+                v = line_unwrapped.split(",").collect();
                 if v.len() < 2 {
-                    v = reclass_str.split("\t").collect();
+                    v = line_unwrapped.split(" ").collect();
+                    if v.len() < 2 {
+                        v = line_unwrapped.split("\t").collect();
+                    }
                 }
             }
+
+            if v.len() == 2 { assign_mode = true; }
+
+            for s in v {
+                reclass_vals.push(s.parse().unwrap());
+            }
         }
-        let reclass_vals: Vec<f64> = v.iter().map(|x| x.parse().unwrap()).collect();
+
         if reclass_vals.len() % 3 != 0 && !assign_mode {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
@@ -140,8 +157,6 @@ impl WhiteboxTool for Reclass {
             true => reclass_vals.len() / 2,
         };
         let reclass_vals = Arc::new(reclass_vals);
-
-        let sep: String = path::MAIN_SEPARATOR.to_string();
 
         let mut progress: usize;
         let mut old_progress: usize = 1;

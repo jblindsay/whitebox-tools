@@ -24,6 +24,7 @@ mod pick_from_list;
 mod raster_cell_assignment;
 mod reclass;
 mod reclass_equal_interval;
+mod reclass_from_file;
 mod weighted_sum;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -52,4 +53,5 @@ pub use self::pick_from_list::PickFromList;
 pub use self::raster_cell_assignment::RasterCellAssignment;
 pub use self::reclass::Reclass;
 pub use self::reclass_equal_interval::ReclassEqualInterval;
+pub use self::reclass_from_file::ReclassFromFile;
 pub use self::weighted_sum::WeightedSum;

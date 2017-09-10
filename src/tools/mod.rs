@@ -53,6 +53,7 @@ impl ToolManager {
         tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
+        tool_names.push("ReclassFromFile".to_string());
         tool_names.push("WeightedSum".to_string());
 
         // hydro_analysis
@@ -318,6 +319,7 @@ impl ToolManager {
             "reclassequalinterval" => {
                 Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new()))
             }
+            "reclassfromfile" => Some(Box::new(tools::gis_analysis::ReclassFromFile::new())),
             "weightedsum" => Some(Box::new(tools::gis_analysis::WeightedSum::new())),
 
 
