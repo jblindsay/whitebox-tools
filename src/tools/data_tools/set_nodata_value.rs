@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
-Last Modified: July 26, 2017
+Created: Sept. 10, 2017
+Last Modified: Sept. 10, 2017
 License: MIT
 */
 extern crate time;
@@ -18,23 +18,24 @@ use std::thread;
 use raster::*;
 use tools::WhiteboxTool;
 
-pub struct ConvertNodataToZero {
+pub struct SetNodataValue {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl ConvertNodataToZero {
-    pub fn new() -> ConvertNodataToZero {
+impl SetNodataValue {
+    pub fn new() -> SetNodataValue {
         // public constructor
-        let name = "ConvertNodataToZero".to_string();
+        let name = "SetNodataValue".to_string();
 
-        let description = "Converts nodata values in a raster to zero."
+        let description = "Assign a specified value in an input image to the NoData value."
             .to_string();
 
         let mut parameters = "-i, --input     Input raster file.\n".to_owned();
         parameters.push_str("-o, --output    Output raster file.\n");
+        parameters.push_str("--back_value    Background value to set to nodata (default is 0.0).\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -46,9 +47,9 @@ impl ConvertNodataToZero {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input=in.dep -o=NewRaster.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=in.dep -o=newRaster.dep --back_value=1.0", short_exe, name).replace("*", &sep);
 
-        ConvertNodataToZero {
+        SetNodataValue {
             name: name,
             description: description,
             parameters: parameters,
@@ -57,7 +58,7 @@ impl ConvertNodataToZero {
     }
 }
 
-impl WhiteboxTool for ConvertNodataToZero {
+impl WhiteboxTool for SetNodataValue {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -81,6 +82,7 @@ impl WhiteboxTool for ConvertNodataToZero {
                -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
+        let mut back_value = 0f64;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -106,6 +108,12 @@ impl WhiteboxTool for ConvertNodataToZero {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
+                }
+            } else if vec[0].to_lowercase() == "-back_value" || vec[0].to_lowercase() == "--back_value" {
+                if keyval {
+                    back_value = vec[1].to_string().parse().unwrap();
+                } else {
+                    back_value = args[i + 1].parse().unwrap();
                 }
             }
         }
@@ -136,7 +144,6 @@ impl WhiteboxTool for ConvertNodataToZero {
         let nodata = input.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.nodata = -32768f64; // make sure that the output image doesn't use a zero-valued nodata.
         
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -147,10 +154,10 @@ impl WhiteboxTool for ConvertNodataToZero {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        if input[(row, col)] != nodata {
+                        if input[(row, col)] != back_value {
                             data[col as usize] = input[(row, col)];
                         } else {
-                            data[col as usize] = 0.0f64;
+                            data[col as usize] = nodata;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -172,11 +179,9 @@ impl WhiteboxTool for ConvertNodataToZero {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input raster file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose {
             println!("Saving data...")

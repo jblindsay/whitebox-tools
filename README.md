@@ -117,12 +117,13 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 235 tools:
+The library currently contains the following 236 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
+- ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
 
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.

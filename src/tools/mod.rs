@@ -26,6 +26,7 @@ impl ToolManager {
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("NewRasterFromBase".to_string());
+        tool_names.push("SetNodataValue".to_string());
 
         // gis_analysis
         tool_names.push("AverageOverlay".to_string());
@@ -289,6 +290,7 @@ impl ToolManager {
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
+            "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
 
             // gis_analysis
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
