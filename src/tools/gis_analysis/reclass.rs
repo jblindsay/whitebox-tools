@@ -244,7 +244,7 @@ impl WhiteboxTool for Reclass {
                             z = input[(row, col)];
                             if z != nodata {
                                 // is z in the hashmap?
-                                if assign_map.contains_key(&((z * multiplier).round() as i64)) {
+                            if assign_map.contains_key(&((z * multiplier).round() as i64)) {
                                     z = *assign_map.get(&((z * multiplier).round() as i64)).unwrap();
                                 }
                                 data[col as usize] = z;

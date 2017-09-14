@@ -35,7 +35,7 @@ impl HistogramMatchingTwoImages {
 
         let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
         parameters.push_str("--i2, --input2   Input reference raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
+        parameters.push_str("-o, --output     Output raster file.\n");
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());

@@ -108,6 +108,7 @@ impl ToolManager {
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("HistogramEqualization".to_string());
+        tool_names.push("HistogramMatching".to_string());
         tool_names.push("HistogramMatchingTwoImages".to_string());
         tool_names.push("IntegralImage".to_string());
         tool_names.push("KNearestMeanFilter".to_string());
@@ -404,6 +405,7 @@ impl ToolManager {
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "histogramequalization" => Some(Box::new(tools::image_analysis::HistogramEqualization::new())),
+            "histogrammatching" => Some(Box::new(tools::image_analysis::HistogramMatching::new())),
             "histogrammatchingtwoimages" => Some(Box::new(tools::image_analysis::HistogramMatchingTwoImages::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
             "knearestmeanfilter" => Some(Box::new(tools::image_analysis::KNearestMeanFilter::new())),
