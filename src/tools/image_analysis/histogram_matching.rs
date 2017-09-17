@@ -33,7 +33,7 @@ impl HistogramMatching {
         // public constructor
         let name = "HistogramMatching".to_string();
 
-        let description = "Alters the statistical distribution of a raster image matching it to a specified cdf."
+        let description = "Alters the statistical distribution of a raster image matching it to a specified PDF."
             .to_string();
 
         let mut parameters = "-i, --input    Input raster file to modify.\n".to_owned();
@@ -180,7 +180,7 @@ impl WhiteboxTool for HistogramMatching {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Loop 1 of 3: {}%", progress);
+                    println!("Loop 1 of 2: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -200,10 +200,12 @@ impl WhiteboxTool for HistogramMatching {
         let f = File::open(histo_file.clone())?;
         let f = BufReader::new(f);
         for line in f.lines() {
-            let line_unwrapped = line.unwrap();
-            let mut v: Vec<&str> = line_unwrapped.split(";").collect();
+            // Remove the utf-8 byte order mark, if it's there. Also, there should be no line returns
+            // but under some circumstances, it may show up (e.g. Excel for Mac inserts \r instead of \n).
+            let line_unwrapped = line.unwrap().replace("\u{feff}", "").replace("\r", ",");
+            let mut v: Vec<&str> = line_unwrapped.split(",").collect();
             if v.len() < 2 { // delimiter can be a semicolon, comma, space, or tab.
-                v = line_unwrapped.split(",").collect();
+                v = line_unwrapped.split(";").collect();
                 if v.len() < 2 {
                     v = line_unwrapped.split(" ").collect();
                     if v.len() < 2 {
@@ -212,11 +214,27 @@ impl WhiteboxTool for HistogramMatching {
                 }
             }
             if v.len() == 2 {
-                let x = v[0].parse().unwrap();
-                let f = v[1].parse().unwrap();
+                let x = v[0].trim().parse().unwrap();
+                let f = v[1].trim().parse().unwrap();
                 reference_cdf.push(vec![x, f]);
-            } else if v.len() > 2 && v.len() % 2 == 0 {
-                // it's probably a matter of
+            } else if v.len() > 2 {
+                // it's probably a matter of inappropriate newline characters in the file.
+                let mut x = f64::NEG_INFINITY;
+                let mut f: f64;
+                for i in 0..v.len() {
+                    if !v[i].trim().to_string().is_empty() {
+                        if x == f64::NEG_INFINITY {
+                            x = v[i].trim().parse().unwrap();
+                        } else {
+                            f = v[i].trim().parse().unwrap();
+                            reference_cdf.push(vec![x, f]);
+                            x = f64::NEG_INFINITY;
+                        }
+                    }
+                }
+            } else {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                    "The reference probability distribution does not appear to be formatted correctly."));
             }
         }
 
@@ -229,8 +247,6 @@ impl WhiteboxTool for HistogramMatching {
         for i in 0..num_lines {
             reference_cdf[i][1] = reference_cdf[i][1] / total_frequency;
         }
-
-        println!("Hello world");
         
         let mut starting_vals = [0usize; 11];
         let mut p_val: f64;
@@ -329,7 +345,7 @@ impl WhiteboxTool for HistogramMatching {
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Loop 3 of 3: {}%", progress);
+                    println!("Loop 2 of 2: {}%", progress);
                     old_progress = progress;
                 }
             }
