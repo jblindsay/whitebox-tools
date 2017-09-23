@@ -4,6 +4,9 @@ Authors: Dr. John Lindsay
 Created: September 17, 2017
 Last Modified: September 17, 2017
 License: MIT
+
+NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT tool, which output a Shapefile.
+       2. It would be good to add the ability to input multiple LAS files.
 */
 extern crate time;
 extern crate num_cpus;

@@ -216,6 +216,39 @@ impl Raster {
     }
 
     pub fn get_value(&self, row: isize, column: isize) -> f64 {
+        // if column >= 0 && row >= 0 && column < self.configs.columns as isize && row < self.configs.rows as isize {
+        //     let c: usize = column as usize;
+        //     let r: usize = row as usize;
+        
+        //     let idx: usize = r * self.configs.columns + c;
+        //     return self.data[idx];
+        // }
+
+        // // it's not within the area of the data
+        // if !self.configs.reflect_at_edges {
+        //     return self.configs.nodata;
+        // }
+        // // if you get to this point, it should be reflected at the edges
+        // if row < 0 {
+        //     row = -row - 1;
+        // }
+        // if row >= self.configs.rows as isize {
+        //     row = self.configs.rows as isize - (row - self.configs.rows as isize) - 1;
+        // }
+        // if column < 0 {
+        //     column = -column - 1;
+        // }
+        // if column >= self.configs.columns as isize {
+        //     column = self.configs.columns as isize - (column - self.configs.columns as isize) - 1;
+        // }
+        // if column >= 0 && column < self.configs.columns as isize && row >= 0 && row < self.configs.rows as isize {
+        //     return self.get_value(row, column);
+        // }
+
+        // // it was too off grid to be reflected.
+        // self.configs.nodata
+
+
         if column < 0 {
             return self.configs.nodata;
         }
