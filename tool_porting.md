@@ -1,6 +1,6 @@
-(Updated 21-09-2017)
+(Updated 23-09-2017)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **239 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **189 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **240 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **189 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -435,6 +435,7 @@ Tools that are new in *WhiteboxTools*
 
 | Tool Name                                         | Notes                                                                                                                                                          |
 |---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Anova                                             |                                                                                                                                                                |
 | Basins                                            |                                                                                                                                                                |
 | BlockMaximum                                      |                                                                                                                                                                |
 | BlockMinimum                                      |                                                                                                                                                                |
