@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 23, 2017
-Last Modified: September 23, 2017
+Last Modified: September 24, 2017
 License: MIT
 */
 extern crate time;
@@ -129,6 +129,9 @@ impl WhiteboxTool for Anova {
         }
         if !output_file.contains(&sep) {
             output_file = format!("{}{}", working_directory, output_file);
+        }
+        if !output_file.ends_with(".html") {
+            output_file = output_file + ".html";
         }
 
         if verbose { println!("Reading data...") };

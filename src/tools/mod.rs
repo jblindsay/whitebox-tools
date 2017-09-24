@@ -157,6 +157,7 @@ impl ToolManager {
         tool_names.push("LidarIdwInterpolation".to_string());
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
+        tool_names.push("LidarKappaIndex".to_string());
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarTile".to_string());
@@ -473,6 +474,7 @@ impl ToolManager {
             }
             "lidarinfo" => Some(Box::new(tools::lidar_analysis::LidarInfo::new())),
             "lidarjoin" => Some(Box::new(tools::lidar_analysis::LidarJoin::new())),
+            "lidarkappaindex" => Some(Box::new(tools::lidar_analysis::LidarKappaIndex::new())),
             "lidarnearestneighbourgridding" => {
                 Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new()))
             }
