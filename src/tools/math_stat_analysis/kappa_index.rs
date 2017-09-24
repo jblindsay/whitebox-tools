@@ -7,6 +7,8 @@ License: MIT
 */
 extern crate time;
 
+use std::cmp::min;
+use std::cmp::max;
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
@@ -14,25 +16,25 @@ use std::env;
 use std::path;
 use std::path::Path;
 use std::f64;
-use lidar::*;
+use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::WhiteboxTool;
 
-pub struct LidarKappaIndex {
+pub struct KappaIndex {
     name: String,
     description: String,
     parameters: String,
     example_usage: String,
 }
 
-impl LidarKappaIndex {
-    pub fn new() -> LidarKappaIndex { // public constructor
-        let name = "LidarKappaIndex".to_string();
+impl KappaIndex {
+    pub fn new() -> KappaIndex { // public constructor
+        let name = "KappaIndex".to_string();
         
-        let description = "Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.".to_string();
+        let description = "Performs a kappa index of agreement (KIA) analysis on two categorical raster files.".to_string();
         
-        let mut parameters = "--i1, --input1    Input LAS file (classification).".to_owned();
-        parameters.push_str("--i2, --input2    Input LAS file (reference).\n");
+        let mut parameters = "--i1, --input1    Input raster file (classification).".to_owned();
+        parameters.push_str("--i2, --input2    Input raster file (reference).\n");
         parameters.push_str("-o, --output     Output HTML file.\n");
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -44,11 +46,11 @@ impl LidarKappaIndex {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --i1=class.tif --i2=reference.tif -o=kia.html", short_exe, name).replace("*", &sep);
     
-        LidarKappaIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        KappaIndex { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for LidarKappaIndex {
+impl WhiteboxTool for KappaIndex {
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -129,38 +131,48 @@ impl WhiteboxTool for LidarKappaIndex {
         }
 
         if verbose { println!("Reading data...") };
+
+        let input1 = Raster::new(&input_file1, "r")?;
+        let rows = input1.configs.rows as isize;
+        let columns = input1.configs.columns as isize;
+        let nodata1 = input1.configs.nodata;
+        let min1 = input1.configs.minimum.round() as i32;
+        let max1 = input1.configs.maximum.round() as i32;
+        
+        let input2 = Raster::new(&input_file2, "r")?;
+        if input2.configs.rows as isize != rows || input2.configs.columns as isize != columns {
+            panic!("Error: The input files do not contain the same raster extent.");
+        }
+        let nodata2 = input2.configs.nodata;
+        let min2 = input2.configs.minimum.round() as i32;
+        let max2 = input2.configs.maximum.round() as i32;
+
+        let min_val = min(min1, min2);
+        let max_val = max(max1, max2);
+        let range = (max_val - min_val) as usize + 1;
+
         let start = time::now();
 
-        let input1: LasFile = match LasFile::new(&input_file1, "r") {
-            Ok(lf) => lf,
-            Err(err) => panic!("Error: {}", err),
-        };
-
-        let input2: LasFile = match LasFile::new(&input_file2, "r") {
-            Ok(lf) => lf,
-            Err(err) => panic!("Error: {}", err),
-        };
-
-        let num_points = input1.header.number_of_points;
-        if input2.header.number_of_points != num_points {
-            panic!("Error: The input files do not contain the same number of points.");
-        }
-        let mut error_matrix: [[usize; 256]; 256] = [[0; 256]; 256];
-        let mut active_class: [bool; 256] = [false; 256];
-        let mut p1: PointData;
-        let mut p2: PointData;
+        let mut error_matrix = vec![vec![0usize; range]; range];
+        let mut active_class = vec![false; range];
+        let mut z1: f64;
+        let mut z2: f64;
         let (mut class1, mut class2): (usize, usize);
-        for i in 0..num_points as usize {
-            p1 = input1.get_point_info(i);
-            p2 = input2.get_point_info(i);
-            class1 = p1.classification() as usize;
-            class2 = p2.classification() as usize;
-            error_matrix[class1][class2] += 1;
-            active_class[class1] = true;
-            active_class[class2] = true;
+        for row in 0..rows {
+            for col in 0..columns {
+                z1 = input1.get_value(row, col);
+                z2 = input2.get_value(row, col);
+                if z1 != nodata1 && z2 != nodata2 {
+                    class1 = (z1 - min_val as f64).round() as usize;
+                    class2 = (z2 - min_val as f64).round() as usize;
+                    error_matrix[class1][class2] += 1;
+                    active_class[class1] = true;
+                    active_class[class2] = true;
+                }
+            }
 
             if verbose {
-                progress = (100.0_f64 * i as f64 / num_points as f64) as i32;
+                progress = (100.0_f64 * row as f64 / rows as f64) as i32;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -169,7 +181,7 @@ impl WhiteboxTool for LidarKappaIndex {
         }
 
         let mut num_classes = 0;
-        for a in 0..256usize {
+        for a in 0..range as usize {
             if active_class[a] { num_classes += 1; }
         }
 
@@ -181,17 +193,17 @@ impl WhiteboxTool for LidarKappaIndex {
         let kappa: f64;
         let overall_accuracy: f64;
 
-        for a in 0..256usize {
+        for a in 0..range as usize {
             agreements += error_matrix[a][a];
-            for b in 0..256usize {
+            for b in 0..range as usize {
                 n += error_matrix[a][b];
             }
         }
 
-        for a in 0..256usize {
+        for a in 0..range as usize {
             row_total = 0;
             col_total = 0;
-            for b in 0..256usize {
+            for b in 0..range as usize {
                 col_total += error_matrix[a][b];
                 row_total += error_matrix[b][a];
             }
@@ -295,9 +307,9 @@ impl WhiteboxTool for LidarKappaIndex {
         f.write(s.as_bytes()).unwrap();
         s = "<tr>";
         f.write(s.as_bytes()).unwrap();
-        for a in 0..256 {
+        for a in 0..range as usize {
             if active_class[a] {
-                let s = &format!("{}{}{}", "<th>", convert_class_val_to_class_string(a as u8), "</th>");
+                let s = &format!("{}{}{}", "<th>", (a as usize), "</th>");
                 f.write(s.as_bytes()).unwrap();
             }
         }
@@ -305,17 +317,17 @@ impl WhiteboxTool for LidarKappaIndex {
         s = "</tr>";
         f.write(s.as_bytes()).unwrap();
         let mut first_entry = true;
-        for a in 0..256 {
+        for a in 0..range as usize {
             if active_class[a] {
                 if first_entry {
-                    let s = format!("{}{}{}{}{}", "<tr><td rowspan=\"", num_classes, "\" valign=\"center\"><b>Class<br>Data</b></td> <td><b>", convert_class_val_to_class_string(a as u8), "</b></td>");
+                    let s = format!("{}{}{}{}{}", "<tr><td rowspan=\"", num_classes, "\" valign=\"center\"><b>Class<br>Data</b></td> <td><b>", (a as usize), "</b></td>");
                     f.write(s.as_bytes()).unwrap();
                 } else {
-                    let s = format!("{}{}{}", "<tr><td><b>", convert_class_val_to_class_string(a as u8), "</b></td>");
+                    let s = format!("{}{}{}", "<tr><td><b>", (a as usize), "</b></td>");
                     f.write(s.as_bytes()).unwrap();
                 }
                 row_total = 0;
-                for b in 0..256 {
+                for b in 0..range as usize {
                     if active_class[b] {
                         row_total += error_matrix[a][b];
                         let s = format!("{}{}{}", "<td class=\"numberCell\">", error_matrix[a][b], "</td>");
@@ -334,10 +346,10 @@ impl WhiteboxTool for LidarKappaIndex {
         f.write(s.as_bytes()).unwrap();
         s = "<th colspan=\"2\">Column Totals</th>";
         f.write(s.as_bytes()).unwrap();
-        for a in 0..256 {
+        for a in 0..range as usize {
             if active_class[a] {
                 col_total = 0;
-                for b in 0..256 {
+                for b in 0..range as usize {
                     if active_class[b] {
                         col_total += error_matrix[b][a];
                     }
@@ -361,12 +373,12 @@ impl WhiteboxTool for LidarKappaIndex {
         let mut average_producers = 0.0;
         let mut average_users = 0.0;
         let mut num_active = 0.0;
-        for a in 0..256 {
+        for a in 0..range as usize {
             if active_class[a] {
                 num_active += 1.0;
                 let mut row_total = 0;
                 let mut col_total = 0;
-                for b in 0..256 {
+                for b in 0..range as usize {
                     if active_class[b] {
                         col_total += error_matrix[a][b];
                         row_total += error_matrix[b][a];
@@ -374,7 +386,7 @@ impl WhiteboxTool for LidarKappaIndex {
                 }
                 average_users += 100.0 * error_matrix[a][a] as f64 / col_total as f64;
                 average_producers += 100.0 * error_matrix[a][a] as f64 / row_total as f64;
-                let s = &format!("{}{}{}{}{}{}{}", "<tr><td>",  convert_class_val_to_class_string(a as u8), "</td><td class=\"numberCell\">", format!("{:.*}", 2, (100.0 * error_matrix[a][a] as f64 / col_total as f64)),
+                let s = &format!("{}{}{}{}{}{}{}", "<tr><td>",  (a as usize), "</td><td class=\"numberCell\">", format!("{:.*}", 2, (100.0 * error_matrix[a][a] as f64 / col_total as f64)),
                         "%</td><td class=\"numberCell\">", format!("{:.*}", 2, (100.0 * error_matrix[a][a] as f64 / row_total as f64)), "%</td></tr>");
                 f.write(s.as_bytes()).unwrap();
             }

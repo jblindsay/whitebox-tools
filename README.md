@@ -117,7 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 241 tools:
+The library currently contains the following 242 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -287,6 +287,7 @@ The library currently contains the following 241 tools:
 - ***Increment***: Increases the values of each grid cell in an input raster by 1.0.
 - ***IntegerDivision***: Performs an integer division operation on two rasters or a raster and a constant value.
 - ***IsNoData***: Identifies NoData valued pixels in an image.
+- ***KappaIndex***: Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
 - ***LessThan***: Performs a less-than comparison operation on two rasters or a raster and a constant value.
 - ***Log10***: Returns the base-10 logarithm of values in a raster.
 - ***Log2***: Returns the base-2 logarithm of values in a raster.
