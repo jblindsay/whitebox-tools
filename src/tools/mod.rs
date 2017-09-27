@@ -186,6 +186,7 @@ impl ToolManager {
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
         tool_names.push("ImageCorrelation".to_string());
+        tool_names.push("ImageRegression".to_string());
         tool_names.push("Increment".to_string());
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
@@ -508,6 +509,7 @@ impl ToolManager {
             "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
             "imagecorrelation" => Some(Box::new(tools::math_stat_analysis::ImageCorrelation::new())),
+            "imageregression" => Some(Box::new(tools::math_stat_analysis::ImageRegression::new())),
             "increment" => Some(Box::new(tools::math_stat_analysis::Increment::new())),
             "integerdivision" => Some(Box::new(tools::math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),

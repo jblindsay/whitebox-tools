@@ -39,12 +39,13 @@ codegen-units = 1
 panic = 'unwind'
 
 [dependencies]
-# libc = "^0.2.20"
-time = "^0.1.35"
-kdtree = "^0.3.1"
-nalgebra = "^0.10.1"
-rand = "^0.3.15"
 byteorder = "^1.0.0"
+kdtree = "^0.3.1"
+# libc = "^0.2.20"
+nalgebra = "^0.10.1"
 num_cpus = "^1.2.1"
-zip = "0.2.5"
+rand = "^0.3.15"
 # rayon = "^0.6.0"
+statrs = "0.8.0"
+time = "^0.1.35"
+zip = "0.2.5"
