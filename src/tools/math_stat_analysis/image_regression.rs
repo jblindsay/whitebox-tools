@@ -573,11 +573,14 @@ impl WhiteboxTool for ImageRegression {
         } else {
             "+"
         };
-        let s2 = &format!("<p><strong>Regression equation: </strong</p>: {} = {} &#215; {} {} {}", x_filename.clone(), slope, y_filename.clone(), sign.clone(), intercept.abs());
+        let s2 = &format!("<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>", x_filename.clone(), slope, y_filename.clone(), sign.clone(), intercept.abs());
         writer.write_all(s2.as_bytes())?;
 
         s = "<p>Caveat: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant
             and statistical significance says nothing about the practical significance of a difference.</p>";
+        writer.write_all(s.as_bytes())?;
+
+        s = "</body>";
         writer.write_all(s.as_bytes())?;
 
         let _ = writer.flush();
