@@ -441,7 +441,7 @@ impl WhiteboxTool for ImageRegression {
         writer.write_all(s1.as_bytes())?;
 
         // Model summary
-        s = "<br><table align=\"center\">
+        s = "<br><table>
         <caption>Model Summary</caption>
         <tr>
             <th class=\"headerCell\">R</th>
@@ -465,7 +465,7 @@ impl WhiteboxTool for ImageRegression {
 
 
         // ANOVA table
-        s = "<br><table align=\"center\">
+        s = "<br><br><table>
         <caption>Analysis of Variance (ANOVA)</caption>
         <tr>
             <th class=\"headerCell\">Source</th>
@@ -524,7 +524,7 @@ impl WhiteboxTool for ImageRegression {
 
 
         // Regression coefficients
-        s = "<br><table align=\"center\">
+        s = "<br><br><table>
         <caption>Coefficients</caption>
         <tr>
             <th class=\"headerCell\">Variable</th>
