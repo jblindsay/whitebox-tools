@@ -2,3 +2,4 @@
 /target/debug/
 /target/release/
 *.pyc
+/.vscode
