@@ -156,6 +156,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
 
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         output.configs.data_type = DataType::F32;
+        output.configs.reflect_at_edges = true;
         // output.reinitialize_values(0.0);
 
         let mut stack = Vec::with_capacity((rows * columns) as usize);
