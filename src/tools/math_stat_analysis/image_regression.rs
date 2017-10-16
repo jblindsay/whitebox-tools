@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: September 27, 2017
+Last Modified: October 16, 2017
 License: MIT
 */
 extern crate time;
@@ -38,7 +38,7 @@ impl ImageRegression {
 
         let description = "Performs image regression analysis on two input images.".to_string();
 
-        let mut parameters = "--i1, --input1    Input raster file (independent variable, x).".to_owned();
+        let mut parameters = "--i1, --input1    Input raster file (independent variable, x).\n".to_owned();
         parameters.push_str("--i2, --input2    Input raster file (depdendent variable, y).\n");
         parameters.push_str("-o, --output      Optional output html file.\n");
         parameters.push_str("--out_residuals   Optional output raster file for residuals map.\n");
@@ -54,8 +54,7 @@ impl ImageRegression {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.html
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.html --out_residuals='residuals.tif' --standardize",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1='file1.tif' --i2='file2.tif' -o='outfile.html' --out_residuals='residuals.tif' --standardize",
                             short_exe, name).replace("*", &sep);
 
         ImageRegression {
@@ -174,6 +173,8 @@ impl WhiteboxTool for ImageRegression {
         if !residuals_file.contains(&sep) {
             residuals_file = format!("{}{}", working_directory, residuals_file);
         }
+
+        println!("I'm here {} {}", input_file1.clone(), input_file2.clone());
 
         let input1 = Arc::new(Raster::new(&input_file1, "r")?);
         let rows = input1.configs.rows as isize;
@@ -573,7 +574,7 @@ impl WhiteboxTool for ImageRegression {
         } else {
             "+"
         };
-        let s2 = &format!("<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>", x_filename.clone(), slope, y_filename.clone(), sign.clone(), intercept.abs());
+        let s2 = &format!("<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>", y_filename.clone(), slope, x_filename.clone(), sign.clone(), intercept.abs());
         writer.write_all(s2.as_bytes())?;
 
         s = "<p>Caveat: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant
