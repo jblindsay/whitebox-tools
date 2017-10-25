@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: October 16, 2017
+Last Modified: October 25, 2017
 License: MIT
 */
 extern crate time;
@@ -360,7 +360,7 @@ impl WhiteboxTool for ImageRegression {
         let end = time::now();
         let elapsed_time = end - start;
 
-        println!("\n{}",  &format!("Elapsed Time: {}", elapsed_time).replace("PT", ""));
+        if verbose { println!("\n{}",  &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")); }
 
 
         let f = File::create(output_file.clone())?;

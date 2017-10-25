@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
-Last Modified: September 9, 2017
+Last Modified: October 25, 2017
 License: MIT
 */
 extern crate time;
@@ -297,8 +297,8 @@ impl WhiteboxTool for ImageCorrelation {
         let elapsed_time = end - start;
 
         
-        println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose { println!("\n{}",
+                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
 
 
         let f = File::create(output_file.clone())?;
