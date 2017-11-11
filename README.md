@@ -128,7 +128,7 @@ The library currently contains the following 243 tools:
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
-- ***Centroid***: Calclates the centroid, or average location, of raster polygon objects.
+- ***Centroid***: Calculates the centroid, or average location, of raster polygon objects.
 - ***Clump***: Groups cells that form physically discrete areas, assigning them unique identifiers.
 - ***CostAllocation***: Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
 - ***CostDistance***: Performs cost-distance accumulation on a cost surface and a group of source cells.
