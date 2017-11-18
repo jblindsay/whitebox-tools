@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: Auguest 26, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -21,12 +21,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct StandardDeviationContrastStretch {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -36,11 +36,48 @@ impl StandardDeviationContrastStretch {
         
         let description = "Performs a standard-deviation contrast stretch on input images.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--stdev       Standard deviation clip value (default is 2.0).\n");
-        parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--stdev       Standard deviation clip value (default is 2.0).\n");
+        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Standard Deviation Threshold".to_owned(), 
+            flags: vec!["--clip".to_owned(), "--stdev".to_owned()], 
+            description: "Standard deviation clip value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.0".to_owned()),
+            optional: false
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Number of Tones".to_owned(), 
+            flags: vec!["--num_tones".to_owned()], 
+            description: "Number of tones in the output image.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("256".to_owned()),
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -55,6 +92,10 @@ impl StandardDeviationContrastStretch {
 }
 
 impl WhiteboxTool for StandardDeviationContrastStretch {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -64,7 +105,17 @@ impl WhiteboxTool for StandardDeviationContrastStretch {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -102,7 +153,7 @@ impl WhiteboxTool for StandardDeviationContrastStretch {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-stdev" || vec[0].to_lowercase() == "--stdev" {
+            } else if vec[0].to_lowercase() == "-stdev" || vec[0].to_lowercase() == "--stdev" || vec[0].to_lowercase() == "--clip" {
                 if keyval {
                     clip_stdev = vec[1].to_string().parse::<f64>().unwrap();
                 } else {

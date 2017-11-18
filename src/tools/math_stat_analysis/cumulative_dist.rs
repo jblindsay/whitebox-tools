@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 22 2017
-Last Modified: July 22, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -12,12 +12,12 @@ use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct CumulativeDistribution {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -27,8 +27,27 @@ impl CumulativeDistribution {
         
         let description = "Converts a raster image to its cumulative distribution function.".to_string();
         
-        let mut parameters = "-i, --input    Input raster DEM file.\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file.\n");
+        // let mut parameters = "-i, --input    Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -44,6 +63,10 @@ impl CumulativeDistribution {
 }
 
 impl WhiteboxTool for CumulativeDistribution {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -53,7 +76,17 @@ impl WhiteboxTool for CumulativeDistribution {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

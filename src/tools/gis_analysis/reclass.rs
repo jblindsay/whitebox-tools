@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 9, 2017
-Last Modified: September 9, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct Reclass {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,11 +33,48 @@ impl Reclass {
         
         let description = "Reclassifies the values in a raster image.".to_string();
         
-        let mut parameters = "-i, --input     Input raster file.".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--reclass_vals  Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'.\n");
-        parameters.push_str("--assign_mode   Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs.\n");
+        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--reclass_vals  Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'.\n");
+        // parameters.push_str("--assign_mode   Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Class Interval Size".to_owned(), 
+            flags: vec!["--reclass_vals".to_owned()], 
+            description: "Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'".to_owned(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Operate in assign mode? (i.e. Reclass data are pair values rather than triplets)".to_owned(), 
+            flags: vec!["--assign_mode".to_owned()], 
+            description: "Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -53,6 +90,10 @@ impl Reclass {
 }
 
 impl WhiteboxTool for Reclass {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,7 +103,10 @@ impl WhiteboxTool for Reclass {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

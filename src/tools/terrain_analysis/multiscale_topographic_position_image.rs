@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: July 19, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,13 +16,13 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct MultiscaleTopographicPositionImage {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,12 +34,58 @@ impl MultiscaleTopographicPositionImage {
         
         let description = "Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.".to_string();
         
-        let mut parameters = "--local        Input local-scale topographic position (DEVmax) raster file.\n".to_owned();
-        parameters.push_str("--meso         Input meso-scale topographic position (DEVmax) raster file.\n");
-        parameters.push_str("--broad        Input broad-scale topographic position (DEVmax) raster file.\n");
-        parameters.push_str("-o, --output   Output colour composite image file.\n");
-        parameters.push_str("--lightness    Image lightness value (default is 1.2).\n");
+        // let mut parameters = "--local        Input local-scale topographic position (DEVmax) raster file.\n".to_owned();
+        // parameters.push_str("--meso         Input meso-scale topographic position (DEVmax) raster file.\n");
+        // parameters.push_str("--broad        Input broad-scale topographic position (DEVmax) raster file.\n");
+        // parameters.push_str("-o, --output   Output colour composite image file.\n");
+        // parameters.push_str("--lightness    Image lightness value (default is 1.2).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Local-Scale File".to_owned(), 
+            flags: vec!["--local".to_owned()], 
+            description: "Input local-scale topographic position (DEVmax) raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Meso-Scale File".to_owned(), 
+            flags: vec!["--meso".to_owned()], 
+            description: "Input meso-scale topographic position (DEVmax) raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Broad-Scale File".to_owned(), 
+            flags: vec!["--broad".to_owned()], 
+            description: "Input broad-scale topographic position (DEVmax) raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Image Lightness Value".to_owned(), 
+            flags: vec!["--lightness".to_owned()], 
+            description: "Image lightness value (default is 1.2).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.2".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -54,6 +100,10 @@ impl MultiscaleTopographicPositionImage {
 }
 
 impl WhiteboxTool for MultiscaleTopographicPositionImage {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -63,7 +113,17 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

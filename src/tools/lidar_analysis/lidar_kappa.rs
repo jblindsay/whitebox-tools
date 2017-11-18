@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 24, 2017
-Last Modified: September 24, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::path::Path;
 use std::f64;
 use lidar::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LidarKappaIndex {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,9 +31,37 @@ impl LidarKappaIndex {
         
         let description = "Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.".to_string();
         
-        let mut parameters = "--i1, --input1    Input LAS file (classification).".to_owned();
-        parameters.push_str("--i2, --input2    Input LAS file (reference).\n");
-        parameters.push_str("-o, --output     Output HTML file.\n");
+        // let mut parameters = "--i1, --input1    Input LAS file (classification).\n".to_owned();
+        // parameters.push_str("--i2, --input2    Input LAS file (reference).\n");
+        // parameters.push_str("-o, --output      Output HTML file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input LiDAR File (Classification)".to_owned(), 
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+            description: "Input LiDAR classification file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input LiDAR File (Reference)".to_owned(), 
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+            description: "Input LiDAR reference file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output HTML File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output HTML file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Html),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +77,10 @@ impl LidarKappaIndex {
 }
 
 impl WhiteboxTool for LidarKappaIndex {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +90,17 @@ impl WhiteboxTool for LidarKappaIndex {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

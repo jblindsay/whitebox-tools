@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
-Last Modified: July 12, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct ExtractValleys {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,11 +34,57 @@ impl ExtractValleys {
         let description = "Identifies potential valley bottom grid cells based on local topolography alone."
             .to_string();
 
-        let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--variant       Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'.\n");
-        parameters.push_str("--line_thin     Optional flag indicating whether post-processing line-thinning should be performed.\n");
-        parameters.push_str("--filter        Optional argument (only used when variant='lq') providing the filter size, in grid cells, used for lq-filtering (default is 5).\n");
+        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--variant       Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'.\n");
+        // parameters.push_str("--line_thin     Optional flag indicating whether post-processing line-thinning should be performed.\n");
+        // parameters.push_str("--filter        Optional argument (only used when variant='lq') providing the filter size, in grid cells, used for lq-filtering (default is 5).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Variant".to_owned(), 
+            flags: vec!["--variant".to_owned()], 
+            description: "Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["Lower Quartile".to_owned(), "Johnston and Rosenfeld".to_owned(), "Peucker and Douglas".to_owned()]),
+            default_value: Some("Lower Quartile".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Perform line-thinning?".to_owned(), 
+            flags: vec!["--line_thin".to_owned()], 
+            description: "Optional flag indicating whether post-processing line-thinning should be performed.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter Size (Only For Lower Quartile)".to_owned(), 
+            flags: vec!["--filter".to_owned()], 
+            description: "Optional argument (only used when variant='lq') providing the filter size, in grid cells, used for lq-filtering (default is 5).".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("5".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -63,6 +109,10 @@ impl ExtractValleys {
 }
 
 impl WhiteboxTool for ExtractValleys {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -72,7 +122,17 @@ impl WhiteboxTool for ExtractValleys {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

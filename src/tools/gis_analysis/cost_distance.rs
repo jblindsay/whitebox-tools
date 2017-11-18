@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: July 4, 2017
+Last Modified: November 15, 2017
 License: MIT
 
 NOTES: Add anisotropy option.
@@ -15,12 +15,12 @@ use std::i32;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct CostDistance {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -30,10 +30,47 @@ impl CostDistance {
         
         let description = "Performs cost-distance accumulation on a cost surface and a group of source cells.".to_string();
         
-        let mut parameters = "--source        Input source raster file.\n".to_owned();
-        parameters.push_str("--cost          Input cost (friction) raster file.\n");
-        parameters.push_str("--out_accum     Output cost accumulation raster file.\n");
-        parameters.push_str("--out_backlink  Output backlink raster file.\n");
+        // let mut parameters = "--source        Input source raster file.\n".to_owned();
+        // parameters.push_str("--cost          Input cost (friction) raster file.\n");
+        // parameters.push_str("--out_accum     Output cost accumulation raster file.\n");
+        // parameters.push_str("--out_backlink  Output backlink raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Source File".to_owned(), 
+            flags: vec!["--source".to_owned()], 
+            description: "Input source raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Cost (Friction) File".to_owned(), 
+            flags: vec!["--cost".to_owned()], 
+            description: "Input cost (friction) raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Cost Accumulation File".to_owned(), 
+            flags: vec!["--out_accum".to_owned()], 
+            description: "Output cost accumulation raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Backlink File".to_owned(), 
+            flags: vec!["--out_backlink".to_owned()], 
+            description: "Output backlink raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +86,10 @@ impl CostDistance {
 }
 
 impl WhiteboxTool for CostDistance {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +99,10 @@ impl WhiteboxTool for CostDistance {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 8, 2017
-Last Modified: July 8, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -13,12 +13,12 @@ use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct DownslopeFlowpathLength {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -28,12 +28,58 @@ impl DownslopeFlowpathLength {
         
         let description = "Calculates the downslope flowpath length from each cell to basin outlet.".to_string();
         
-        let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--watersheds       Optional input watershed raster file.\n");
-        parameters.push_str("--weights          Optional input weights raster file.\n");
-        parameters.push_str("-o, --output       Output raster file.\n");
-        parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme.\n");
+        // let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
+        // parameters.push_str("--watersheds       Optional input watershed raster file.\n");
+        // parameters.push_str("--weights          Optional input weights raster file.\n");
+        // parameters.push_str("-o, --output       Output raster file.\n");
+        // parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input D8 Pointer File".to_owned(), 
+            flags: vec!["--d8_pntr".to_owned()], 
+            description: "Input D8 pointer raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Watersheds File (optional)".to_owned(), 
+            flags: vec!["--watersheds".to_owned()], 
+            description: "Optional input watershed raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Weights File (optional)".to_owned(), 
+            flags: vec!["--weights".to_owned()], 
+            description: "Optional input weights raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
+            flags: vec!["--esri_pntr".to_owned()], 
+            description: "D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -49,6 +95,10 @@ impl DownslopeFlowpathLength {
 }
 
 impl WhiteboxTool for DownslopeFlowpathLength {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +108,10 @@ impl WhiteboxTool for DownslopeFlowpathLength {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

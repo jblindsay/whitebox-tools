@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: June 28, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: This tool should be updated to incorporate the option for an area-slope based threshold.
@@ -18,12 +18,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct ExtractStreams {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,11 +33,48 @@ impl ExtractStreams {
         
         let description = "Extracts stream grid cells from a flow accumulation raster.".to_string();
         
-        let mut parameters = "--flow_accum       Input D8 flow accumulation raster file.\n".to_owned();
-        parameters.push_str("-o, --output       Output raster file.\n");
-        parameters.push_str("--threshold        Threshold in flow accumulation values for channelization.\n");
-        parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-       
+        // let mut parameters = "--flow_accum       Input D8 flow accumulation raster file.\n".to_owned();
+        // parameters.push_str("-o, --output       Output raster file.\n");
+        // parameters.push_str("--threshold        Threshold in flow accumulation values for channelization.\n");
+        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input D8 Flow Accumulation File".to_owned(), 
+            flags: vec!["--flow_accum".to_owned()], 
+            description: "Input raster D8 flow accumulation file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Channelization Threshold".to_owned(), 
+            flags: vec!["--threshold".to_owned()], 
+            description: "Threshold in flow accumulation values for channelization.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Should a background value of zero be used?".to_owned(), 
+            flags: vec!["--zero_background".to_owned()], 
+            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -52,6 +89,10 @@ impl ExtractStreams {
 }
 
 impl WhiteboxTool for ExtractStreams {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -61,7 +102,17 @@ impl WhiteboxTool for ExtractStreams {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -105,7 +156,7 @@ impl WhiteboxTool for ExtractStreams {
                 } else {
                     fa_threshold = args[i+1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
                 background_val = 0f64;
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 21, 2017
-Last Modified: July 21, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,13 +17,13 @@ use std::thread;
 use raster::*;
 use structures::Array2D;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct DirectDecorrelationStretch {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,10 +34,47 @@ impl DirectDecorrelationStretch {
 
         let description = "Performs a direct decorrelation stretch enchancement on a colour-composite image of multispectral data.".to_string();
 
-        let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("-k             Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7. (default is 0.5).\n");
-        parameters.push_str("-clip_percent  Optional percent to clip the upper tail by during the stretch (default is 1.0).\n");
+        // let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file.\n");
+        // parameters.push_str("-k             Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7. (default is 0.5).\n");
+        // parameters.push_str("-clip_percent  Optional percent to clip the upper tail by during the stretch (default is 1.0).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Colour Composite Image File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input colour composite image file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Achromatic Factor (0-1)".to_owned(), 
+            flags: vec!["-k".to_owned()], 
+            description: "Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.5".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Percent to clip the upper tail".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional percent to clip the upper tail by during the stretch.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -64,6 +101,10 @@ impl DirectDecorrelationStretch {
 }
 
 impl WhiteboxTool for DirectDecorrelationStretch {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -73,7 +114,10 @@ impl WhiteboxTool for DirectDecorrelationStretch {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -122,7 +166,8 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                     achromatic_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-clip_percent" ||
-                      vec[0].to_lowercase() == "--clip_percent" {
+                      vec[0].to_lowercase() == "--clip_percent" ||
+                      vec[0].to_lowercase() == "--clip" {
                 if keyval {
                     clip_percent = vec[1].to_string().parse::<f64>().unwrap();
                 } else {

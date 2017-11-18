@@ -188,6 +188,53 @@ class WhiteboxTools(object):
             return ret
         except (OSError, ValueError, CalledProcessError) as err:
             return err
+    
+    def tool_parameters(self, tool_name):
+        ''' Retrieve the tool parameter descriptions for a specific tool.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--toolparameters={}".format(tool_name))
+
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
+
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
+    
+    def view_code(self, tool_name):
+        ''' Opens a web browser to view the source code for a specific tool
+            on the projects source code repository.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--viewcode={}".format(tool_name))
+
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
+
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
 
     def list_tools(self):
         ''' Lists all available tools in whitebox - tools.

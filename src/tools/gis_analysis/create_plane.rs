@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: November 15, 2017
 License: MIT
 */
 extern crate time;
@@ -15,12 +15,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct CreatePlane {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,11 +32,57 @@ impl CreatePlane {
         let description = "Creates a raster image based on the equation for a simple plane."
             .to_string();
 
-        let mut parameters = "--base          Input base raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--gradient      Slope gradient in degrees (-85.0 to 85.0.\n");
-        parameters.push_str("--aspect        Aspect (direction) in degrees clockwise from north (0.0-360.0).\n");
-        parameters.push_str("--constant      Constant value (default is 0.0).\n");
+        // let mut parameters = "--base          Input base raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--gradient      Slope gradient in degrees (-85.0 to 85.0).\n");
+        // parameters.push_str("--aspect        Aspect (direction) in degrees clockwise from north (0.0-360.0).\n");
+        // parameters.push_str("--constant      Constant value (default is 0.0).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Base File".to_owned(), 
+            flags: vec!["--base".to_owned()], 
+            description: "Input base raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Gradient".to_owned(), 
+            flags: vec!["--gradient".to_owned()], 
+            description: "Slope gradient in degrees (-85.0 to 85.0).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("15.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Aspect".to_owned(), 
+            flags: vec!["--aspect".to_owned()], 
+            description: "Aspect (direction) in degrees clockwise from north (0.0-360.0).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("90.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Constant".to_owned(), 
+            flags: vec!["--constant".to_owned()], 
+            description: "Constant value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: false
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -60,6 +106,10 @@ impl CreatePlane {
 }
 
 impl WhiteboxTool for CreatePlane {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -69,7 +119,10 @@ impl WhiteboxTool for CreatePlane {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

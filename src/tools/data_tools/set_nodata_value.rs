@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Sept. 10, 2017
-Last Modified: Sept. 10, 2017
+Last Modified: November 14, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,15 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
+use tools::ToolParameter;
+use tools::ParameterType;
+use tools::ParameterFileType;
 
 pub struct SetNodataValue {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -30,13 +33,40 @@ impl SetNodataValue {
         // public constructor
         let name = "SetNodataValue".to_string();
 
-        let description = "Assign a specified value in an input image to the NoData value."
-            .to_string();
+        let description = "Assign a specified value in an input image to the NoData value.".to_string();
 
-        let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--back_value    Background value to set to nodata (default is 0.0).\n");
+        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--back_value    Background value to set to nodata (default is 0.0).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Background Value".to_owned(), 
+            flags: vec!["--back_value".to_owned()], 
+            description: "Background value to set to nodata.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -59,6 +89,10 @@ impl SetNodataValue {
 }
 
 impl WhiteboxTool for SetNodataValue {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,7 +102,10 @@ impl WhiteboxTool for SetNodataValue {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

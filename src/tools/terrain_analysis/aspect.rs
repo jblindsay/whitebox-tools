@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: July 22, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct Aspect {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,9 +31,37 @@ impl Aspect {
         
         let description = "Calculates an aspect raster from an input DEM.".to_string();
         
-        let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.\n");
+        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.\n");
+        
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Z Conversion Factor".to_owned(), 
+            flags: vec!["--zfactor".to_owned()], 
+            description: "Optional multiplier for when the vertical and horizontal units are not the same.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +77,10 @@ impl Aspect {
 }
 
 impl WhiteboxTool for Aspect {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +90,10 @@ impl WhiteboxTool for Aspect {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

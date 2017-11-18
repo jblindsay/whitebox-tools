@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: June 26, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct NormalizedDifferenceVegetationIndex {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,12 +31,58 @@ impl NormalizedDifferenceVegetationIndex {
         
         let description = "Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.".to_string();
         
-        let mut parameters = "--nir         Input near-infrared band image.".to_owned();
-        parameters.push_str("--red         Input red-band image.\n");
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
-        parameters.push_str("--osavi       Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.");
+        // let mut parameters = "--nir         Input near-infrared band image.\n".to_owned();
+        // parameters.push_str("--red         Input red-band image.\n");
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
+        // parameters.push_str("--osavi       Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Near-Infrared File".to_owned(), 
+            flags: vec!["--nir".to_owned()], 
+            description: "Input near-infrared band image.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Red File".to_owned(), 
+            flags: vec!["--red".to_owned()], 
+            description: "Input red band image.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Distribution Tail Clip Amount (%)".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Use the optimized soil-adjusted veg index (OSAVI)?".to_owned(), 
+            flags: vec!["--osavi".to_owned()], 
+            description: "Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -52,6 +98,10 @@ impl NormalizedDifferenceVegetationIndex {
 }
 
 impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -61,7 +111,17 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

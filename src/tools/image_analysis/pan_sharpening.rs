@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 27, 2017
-Last Modified: July 27, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 extern crate time;
@@ -17,13 +17,13 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct PanchromaticSharpening {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,13 +34,77 @@ impl PanchromaticSharpening {
 
         let description = "Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.".to_string();
 
-        let mut parameters = "--red          Input red band raster file.\n".to_owned();
-        parameters.push_str("--green        Input green raster file.\n");
-        parameters.push_str("--blue         Input blue raster file.\n");
-        parameters.push_str("--composite    Optional input colour-composite image file.\n");
-        parameters.push_str("--pan          Input panchromatic image file.\n");
-        parameters.push_str("-o, --output   Output colour composite image file.\n");
-        parameters.push_str("--method       Options include 'brovey' and 'ihs' (default is 'brovey').\n");
+        // let mut parameters = "--red          Input red band raster file.\n".to_owned();
+        // parameters.push_str("--green        Input green raster file.\n");
+        // parameters.push_str("--blue         Input blue raster file.\n");
+        // parameters.push_str("--composite    Optional input colour-composite image file.\n");
+        // parameters.push_str("--pan          Input panchromatic image file.\n");
+        // parameters.push_str("-o, --output   Output colour composite image file.\n");
+        // parameters.push_str("--method       Options include 'brovey' and 'ihs' (default is 'brovey').\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Red Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--red".to_owned()], 
+            description: "Input red band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Green Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--green".to_owned()], 
+            description: "Input green band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Blue Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--blue".to_owned()], 
+            description: "Input blue band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Colour-Composite Image File (optional; only if individual bands not specified)".to_owned(), 
+            flags: vec!["--composite".to_owned()], 
+            description: "Input colour-composite image file. Only used if individual bands are not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Panchromatic Band File".to_owned(), 
+            flags: vec!["--pan".to_owned()], 
+            description: "Input panchromatic band file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Colour Composite File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output colour composite file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Pan-Sharpening Method".to_owned(), 
+            flags: vec!["--method".to_owned()], 
+            description: "Options include 'brovey' (default) and 'ihs'".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["brovey".to_owned(), "ihs".to_owned()]),
+            default_value: Some("brovey".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -65,6 +129,10 @@ impl PanchromaticSharpening {
 }
 
 impl WhiteboxTool for PanchromaticSharpening {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -74,7 +142,17 @@ impl WhiteboxTool for PanchromaticSharpening {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

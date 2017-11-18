@@ -24,12 +24,12 @@ use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct FlowAccumulationFullWorkflow {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -39,15 +39,88 @@ impl FlowAccumulationFullWorkflow {
         
         let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.".to_string();
         
-        let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        parameters.push_str("--out_dem       Output hydrologically corrected DEM file.\n");
-        parameters.push_str("--out_pntr      Output flow pointer raster file.\n");
-        parameters.push_str("--out_accum     Output flow accumulation raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
-        parameters.push_str("--esri_style    Uses the ESRI style D8 pointer output (default is false).\n");
+        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
+        // parameters.push_str("--out_dem       Output hydrologically corrected DEM file.\n");
+        // parameters.push_str("--out_pntr      Output flow pointer raster file.\n");
+        // parameters.push_str("--out_accum     Output flow accumulation raster file.\n");
+        // parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
+        // parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
+        // parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
+        // parameters.push_str("--esri_style    Uses the ESRI style D8 pointer output (default is false).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output DEM File".to_owned(), 
+            flags: vec!["--out_dem".to_owned()], 
+            description: "Output raster DEM file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Flow Pointer File".to_owned(), 
+            flags: vec!["--out_pntr".to_owned()], 
+            description: "Output raster flow pointer file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Flow Accumulation File".to_owned(), 
+            flags: vec!["--out_accum".to_owned()], 
+            description: "Output raster flow accumulation file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Type".to_owned(), 
+            flags: vec!["--out_type".to_owned()], 
+            description: "Output type; one of 'cells', 'sca' (default), and 'ca'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["Cells".to_owned(), "Specific Contributing Area".to_owned(), "Catchment Area".to_owned()]),
+            default_value: Some("Specific Contributing Area".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Log-transform the output?".to_owned(), 
+            flags: vec!["--log".to_owned()], 
+            description: "Optional flag to request the output be log-transformed.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Clip the upper tail by 1%?".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional flag to request clipping the display max by 1%.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
+            flags: vec!["--esri_pntr".to_owned()], 
+            description: "D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -62,6 +135,10 @@ impl FlowAccumulationFullWorkflow {
 }
 
 impl WhiteboxTool for FlowAccumulationFullWorkflow {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -71,7 +148,10 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -142,7 +222,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                 log_transform = true;
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 clip_max = true;
-            } else if vec[0].to_lowercase() == "-esri_style" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_style" || vec[0].to_lowercase() == "--esri_style" || vec[0].to_lowercase() == "--esri_pntr" {
                 esri_style = true;
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 18, 2017
-Last Modified: September 18, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct RootMeanSquareError {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,8 +31,27 @@ impl RootMeanSquareError {
         
         let description = "Calculates the RMSE and other accuracy statistics.".to_string();
         
-        let mut parameters = "-i, --input    Input raster file.".to_owned();
-        parameters.push_str("--base     Base raster used for comparison.\n");
+        // let mut parameters = "-i, --input    Input raster file.\n".to_owned();
+        // parameters.push_str("--base         Base raster used for comparison.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Base File".to_owned(), 
+            flags: vec!["--base".to_owned()], 
+            description: "Input base raster file used for comparison.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -48,6 +67,10 @@ impl RootMeanSquareError {
 }
 
 impl WhiteboxTool for RootMeanSquareError {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -57,7 +80,17 @@ impl WhiteboxTool for RootMeanSquareError {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

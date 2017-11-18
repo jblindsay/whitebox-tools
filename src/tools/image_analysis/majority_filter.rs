@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: July 6, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
@@ -18,13 +18,13 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct MajorityFilter {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -36,12 +36,49 @@ impl MajorityFilter {
         
         let description = "Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--filter      Optional size of the filter kernel (default is 11; not used if --filterx and --filtery are specified).\n");
-        parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-        parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--filter      Optional size of the filter kernel (default is 11; not used if --filterx and --filtery are specified).\n");
+        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
+        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter X-Dimension".to_owned(), 
+            flags: vec!["--filterx".to_owned()], 
+            description: "Size of the filter kernel in the x-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter Y-Dimension".to_owned(), 
+            flags: vec!["--filtery".to_owned()], 
+            description: "Size of the filter kernel in the y-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -56,6 +93,10 @@ impl MajorityFilter {
 }
 
 impl WhiteboxTool for MajorityFilter {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -65,7 +106,10 @@ impl WhiteboxTool for MajorityFilter {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

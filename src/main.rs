@@ -7,6 +7,8 @@ License: MIT
 */
 
 extern crate byteorder;
+extern crate serde;
+extern crate serde_json;
 
 pub mod io_utils;
 pub mod lidar;
@@ -18,6 +20,10 @@ use std::io::Error;
 use std::env;
 use std::path;
 use tools::ToolManager;
+
+#[macro_use]
+extern crate serde_derive;
+
 
 /// WhiteboxTools is an advanced geospatial data analysis engine. 
 ///
@@ -41,7 +47,9 @@ fn run() -> Result<(), Error> {
     let mut tool_name = String::new();
     let mut run_tool = false;
     let mut tool_help = false;
+    let mut tool_parameters = false;
     let mut list_tools = false;
+    let mut view_code = false;
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
         let args: Vec<String> = env::args().collect();
@@ -95,8 +103,28 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             tool_help = true;
+        } else if arg.starts_with("-toolparameters") || arg.starts_with("--toolparameters") {
+            let mut v = arg.replace("--toolparameters", "")
+                .replace("-toolparameters", "")
+                .replace("\"", "")
+                .replace("\'", "");
+            if v.starts_with("=") {
+                v = v[1..v.len()].to_string();
+            }
+            tool_name = v;
+            tool_parameters = true;
         } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
             list_tools = true;
+        } else if arg.starts_with("-viewcode") || arg.starts_with("--viewcode") {
+            let mut v = arg.replace("--viewcode", "")
+                .replace("-viewcode", "")
+                .replace("\"", "")
+                .replace("\'", "");
+            if v.starts_with("=") {
+                v = v[1..v.len()].to_string();
+            }
+            tool_name = v;
+            view_code = true;
         } else if arg.starts_with("-license") || arg.starts_with("-licence") ||
                   arg.starts_with("--license") ||
                   arg.starts_with("--licence") || arg.starts_with("-l") {
@@ -123,8 +151,12 @@ fn run() -> Result<(), Error> {
         return tm.run_tool(tool_name, tool_args_vec);
     } else if tool_help {
         return tm.tool_help(tool_name);
+    } else if tool_parameters {
+        return tm.tool_parameters(tool_name);
     } else if list_tools {
         tm.list_tools();
+    } else if view_code {
+        return tm.get_tool_source_code(tool_name);
     }
 
     Ok(())
@@ -146,6 +178,7 @@ The following commands are recognized:
 --listtools      Lists all available tools.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
+--viewcode       Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
 -h, --help       Prints help information.
 
 Example Usage:

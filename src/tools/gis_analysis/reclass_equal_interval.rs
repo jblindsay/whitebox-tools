@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: July 6, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct ReclassEqualInterval {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,12 +32,58 @@ impl ReclassEqualInterval {
         
         let description = "Reclassifies the values in a raster image based on equal-ranges.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--interval    Class interval size (default is 10.0).\n");
-        parameters.push_str("--start_val   Optional starting value (default is input minimum value).\n");
-        parameters.push_str("--end_val     Optional ending value (default is input maximum value).\n");
-         
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--interval    Class interval size (default is 10.0).\n");
+        // parameters.push_str("--start_val   Optional starting value (default is input minimum value).\n");
+        // parameters.push_str("--end_val     Optional ending value (default is input maximum value).\n");
+        
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Class Interval Size".to_owned(), 
+            flags: vec!["--interval".to_owned()], 
+            description: "Class interval size.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("10.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Starting Value".to_owned(), 
+            flags: vec!["--start_val".to_owned()], 
+            description: "Optional starting value (default is input minimum value).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Ending Value".to_owned(), 
+            flags: vec!["--start_val".to_owned()], 
+            description: "Optional ending value (default is input maximum value).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -52,6 +98,11 @@ impl ReclassEqualInterval {
 }
 
 impl WhiteboxTool for ReclassEqualInterval {
+
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -61,7 +112,10 @@ impl WhiteboxTool for ReclassEqualInterval {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

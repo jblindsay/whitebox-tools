@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: July 13, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -21,12 +21,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct MinMaxContrastStretch {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -36,12 +36,58 @@ impl MinMaxContrastStretch {
         
         let description = "Performs a min-max contrast stretch on an input greytone image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--min_val     Lower tail clip value.\n");
-        parameters.push_str("--max_val     Upper tail clip value.\n");
-        parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--min_val     Lower tail clip value.\n");
+        // parameters.push_str("--max_val     Upper tail clip value.\n");
+        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Lower Tail Clip Value".to_owned(), 
+            flags: vec!["--min_val".to_owned()], 
+            description: "Lower tail clip value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Upper Tail Clip Value".to_owned(), 
+            flags: vec!["--max_val".to_owned()], 
+            description: "Upper tail clip value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Number of Tones".to_owned(), 
+            flags: vec!["--num_tones".to_owned()], 
+            description: "Number of tones in the output image.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("256".to_owned()),
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -56,6 +102,10 @@ impl MinMaxContrastStretch {
 }
 
 impl WhiteboxTool for MinMaxContrastStretch {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -65,7 +115,17 @@ impl WhiteboxTool for MinMaxContrastStretch {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

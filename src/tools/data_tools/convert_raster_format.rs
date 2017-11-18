@@ -2,13 +2,13 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: July 6, 2017
+Last Modified: November 14, 2017
 License: MIT
 
 NOTE: At the moment this tool determines input/output raster formats based on extensions, but due to file 
 extension naming collisions, it would be good to add user hints. For example, the extension 'grd' could
-belong to a SurferAscii or a Surfer7BinaryCollisions. This is more important for distinguishing output 
-files since input files can be read and distiguishing feasture idenfitied from the file structure.
+belong to a SurferAscii or a Surfer7Binary. This is more important for distinguishing output 
+files since input files can be read and distiguishing features idenfitied from the file structure.
 */
 extern crate time;
 
@@ -16,12 +16,15 @@ use std::env;
 use std::path;
 use std::io::{Error, ErrorKind};
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
+use tools::ToolParameter;
+use tools::ParameterType;
+use tools::ParameterFileType;
 
 pub struct ConvertRasterFormat {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,8 +35,27 @@ impl ConvertRasterFormat {
 
         let description = "Converts raster data from one format to another.".to_string();
 
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -60,6 +82,10 @@ impl ConvertRasterFormat {
 }
 
 impl WhiteboxTool for ConvertRasterFormat {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -69,7 +95,10 @@ impl WhiteboxTool for ConvertRasterFormat {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

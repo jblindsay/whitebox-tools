@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: June 26, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LaplacianOfGaussianFilter {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,10 +32,38 @@ impl LaplacianOfGaussianFilter {
         
         let description = "Performs a Laplacian-of-Gaussian (LoG) filter on an image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--sigma       Standard deviation in pixels.\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--sigma       Standard deviation in pixels.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Standard Deviation (Pixels)".to_owned(), 
+            flags: vec!["--sigma".to_owned()], 
+            description: "Standard deviation in pixels.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.75".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -50,6 +78,10 @@ impl LaplacianOfGaussianFilter {
 }
 
 impl WhiteboxTool for LaplacianOfGaussianFilter {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -59,7 +91,10 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct FlipImage {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,10 +33,38 @@ impl FlipImage {
         let description = "Reflects an image in the vertical or horizontal axis."
             .to_string();
 
-        let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--direction     Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 'b' (both). Default is 'v'.\n");
+        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--direction     Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 'b' (both). Default is 'v'.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Direction".to_owned(), 
+            flags: vec!["--direction".to_owned()], 
+            description: "Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 'b' (both).".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["vertical".to_owned(), "horizontal".to_owned(), "both".to_owned()]),
+            default_value: Some("vertical".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -59,6 +87,10 @@ impl FlipImage {
 }
 
 impl WhiteboxTool for FlipImage {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,7 +100,10 @@ impl WhiteboxTool for FlipImage {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

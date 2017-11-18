@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: July 17, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 use std;
@@ -12,13 +12,12 @@ use std::fs::DirBuilder;
 use std::path;
 use std::path::Path;
 use lidar::*;
-// use lidar::point_data::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LidarTile {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -28,13 +27,67 @@ impl LidarTile {
         
         let description = "Tiles a LiDAR LAS file into multiple LAS files.".to_string();
         
-        let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        parameters.push_str("-width_x      Width of tiles in the x dimension; default 1000.0.\n");
-        parameters.push_str("--width_y     Width of tiles in the y dimension; default 1000.0.\n");
-        parameters.push_str("--origin_x    Origin point for tile grid, x dimension; default 0.0.\n");
-        parameters.push_str("--origin_y    Origin point for tile grid, y dimension; default 0.0.\n");
-        parameters.push_str("--min_points  Minimum number of points contained in a tile for it to be output; default 0.\n");
-             
+        // let mut parameters = "-i, --input   Input LAS file.\n".to_owned();
+        // parameters.push_str("--width_x     Width of tiles in the x dimension; default 1000.0.\n");
+        // parameters.push_str("--width_y     Width of tiles in the y dimension; default 1000.0.\n");
+        // parameters.push_str("--origin_x    Origin point for tile grid, x dimension; default 0.0.\n");
+        // parameters.push_str("--origin_y    Origin point for tile grid, y dimension; default 0.0.\n");
+        // parameters.push_str("--min_points  Minimum number of points contained in a tile for it to be output; default 0.\n");
+        
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Tile Width in X Dimension".to_owned(), 
+            flags: vec!["--width_x".to_owned()], 
+            description: "Width of tiles in the X dimension; default 1000.0.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1000.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Tile Width in Y Dimension".to_owned(), 
+            flags: vec!["--width_y".to_owned()], 
+            description: "Width of tiles in the Y dimension.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1000.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Origin Point X-Coordinate".to_owned(), 
+            flags: vec!["--origin_x".to_owned()], 
+            description: "Origin point X coordinate for tile grid.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Origin Point Y-Coordinate".to_owned(), 
+            flags: vec!["--origin_y".to_owned()], 
+            description: "Origin point Y coordinate for tile grid.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Minimum Number of Tile Points".to_owned(), 
+            flags: vec!["--min_points".to_owned()], 
+            description: "Minimum number of points contained in a tile for it to be saved.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("0".to_owned()),
+            optional: true
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -50,6 +103,10 @@ impl LidarTile {
 }
 
 impl WhiteboxTool for LidarTile {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -59,7 +116,17 @@ impl WhiteboxTool for LidarTile {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

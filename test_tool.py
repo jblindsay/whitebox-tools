@@ -125,9 +125,10 @@ def main():
             os.path.abspath(__file__)) + "/target/release/"
         wbt.set_whitebox_dir(wb_dir)
 
-        wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
+        # wkdir = "/Users/johnlindsay/Documents/data/GarveyGlenWatershed/"
         # wkdir = "/Users/johnlindsay/Documents/data/DanData/"
         # wkdir = "/Users/johnlindsay/Desktop/WhiteboxGAT-mac/resources/samples/Vermont DEM/"
+        wkdir = "Users/johnlindsay/Documents/Data/NewBrunswick/"
         wbt.set_working_dir(wkdir)
 
         # Tool name and arguments
@@ -268,10 +269,13 @@ def main():
         #         "--output=\"tmp6.dep\"",
         #         "--filter=411"]
 
-        name = "Watershed"
-        args = ["--d8_pntr=\"tmp14.dep\"",
-                "--pour_pts=\"pour_pts.dep\"",
-                "--output=\"tmp15.dep\""]
+        name = "MaxElevationDeviation"
+        args = ["--dem='alosDEM1.dep'",
+                "--out_mag='mag1.dep'",
+                "--out_scale='scale1.dep'",
+                "--min_scale=15",
+                "--max_scale=60",
+                "--step=5"]
 
         # Run the tool and check the return value
         ret = wbt.run_tool(name, args, custom_callback)

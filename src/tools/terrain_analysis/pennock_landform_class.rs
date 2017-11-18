@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
-Last Modified: July 12, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct PennockLandformClass {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,13 +31,68 @@ impl PennockLandformClass {
         
         let description = "Classifies hillslope zones based on slope, profile curvature, and plan curvature.".to_string();
         
-        let mut parameters = "-i, --dem      Input raster DEM file.\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("--zfactor      Optional multiplier for when the vertical and horizontal units are not the same.");
-        parameters.push_str("--slope        Slope threshold value, in degrees (default is 3.0).");
-        parameters.push_str("--prof         Profile curvature threshold value (default is 0.1).");
-        parameters.push_str("--plan         Plan curvature threshold value (default is 0.0).");
+        // let mut parameters = "-i, --dem      Input raster DEM file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file.\n");
+        // parameters.push_str("--zfactor      Optional multiplier for when the vertical and horizontal units are not the same.");
+        // parameters.push_str("--slope        Slope threshold value, in degrees (default is 3.0).");
+        // parameters.push_str("--prof         Profile curvature threshold value (default is 0.1).");
+        // parameters.push_str("--plan         Plan curvature threshold value (default is 0.0).");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Slope Threshold (degrees)".to_owned(), 
+            flags: vec!["--slope".to_owned()], 
+            description: "Slope threshold value, in degrees (default is 3.0)".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: Some("3.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Profile Curvature Threshold".to_owned(), 
+            flags: vec!["--prof".to_owned()], 
+            description: "Profile curvature threshold value (default is 0.1)".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: Some("0.1".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Plan Curvature Threshold".to_owned(), 
+            flags: vec!["--plan".to_owned()], 
+            description: "Plan curvature threshold value (default is 0.0).".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: Some("0.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Z Conversion Factor".to_owned(), 
+            flags: vec!["--zfactor".to_owned()], 
+            description: "Optional multiplier for when the vertical and horizontal units are not the same.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -52,6 +107,10 @@ impl PennockLandformClass {
 }
 
 impl WhiteboxTool for PennockLandformClass {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -61,7 +120,17 @@ impl WhiteboxTool for PennockLandformClass {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

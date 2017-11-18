@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Daniel Newman
 Created: August 10, 2017
-Last Modified: August 28, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct RasterCellAssignment {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,9 +32,37 @@ impl RasterCellAssignment {
 
         let description = "Assign row or column number to cells.".to_string();
 
-        let mut parameters = "-i, --input      Input raster file.".to_owned();
-        parameters.push_str("-o, --output      Output raster file.\n");
-        parameters.push_str("-a, --assign      Which variable would you like to assign to grid cells? Options include 'column', 'row', 'x', and 'y'.\n");
+        // let mut parameters = "-i, --input       Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output      Output raster file.\n");
+        // parameters.push_str("-a, --assign      Which variable would you like to assign to grid cells? Options include 'column', 'row', 'x', and 'y'.\n");
+        
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Which spatial variable should be assigned?".to_owned(), 
+            flags: vec!["-a".to_owned(), "--assign".to_owned()], 
+            description: "Which variable would you like to assign to grid cells? Options include 'column', 'row', 'x', and 'y'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["column".to_owned(),"row".to_owned(), "x".to_owned(), "y".to_owned()]),
+            default_value: Some("column".to_owned()),
+            optional: false
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -50,6 +78,11 @@ impl RasterCellAssignment {
 }
 
 impl WhiteboxTool for RasterCellAssignment {
+
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -59,7 +92,10 @@ impl WhiteboxTool for RasterCellAssignment {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

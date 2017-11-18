@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: September 10, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct RescaleValueRange {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,13 +31,68 @@ impl RescaleValueRange {
         
         let description = "Performs a min-max contrast stretch on an input greytone image.".to_string();
         
-        let mut parameters = "-i, --input    Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("--out_min_val  New minimum value in output image.\n");
-        parameters.push_str("--out_max_val  New maximum value in output image.\n");
-        parameters.push_str("--clip_min     Optional lower tail clip value.\n");
-        parameters.push_str("--clip_max     Optional upper tail clip value.\n");
+        // let mut parameters = "-i, --input    Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file.\n");
+        // parameters.push_str("--out_min_val  New minimum value in output image.\n");
+        // parameters.push_str("--out_max_val  New maximum value in output image.\n");
+        // parameters.push_str("--clip_min     Optional lower tail clip value.\n");
+        // parameters.push_str("--clip_max     Optional upper tail clip value.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Raster Minimum Value".to_owned(), 
+            flags: vec!["--out_min_val".to_owned()], 
+            description: "New minimum value in output image.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Raster Maximum Value".to_owned(), 
+            flags: vec!["--out_max_val".to_owned()], 
+            description: "New maximum value in output image.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Lower-Tail Clip Value (optional)".to_owned(), 
+            flags: vec!["--clip_min".to_owned()], 
+            description: "Optional lower tail clip value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Upper-Tail Clip Value (optional)".to_owned(), 
+            flags: vec!["--clip_max".to_owned()], 
+            description: "Optional upper tail clip value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -53,6 +108,10 @@ impl RescaleValueRange {
 }
 
 impl WhiteboxTool for RescaleValueRange {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,7 +121,17 @@ impl WhiteboxTool for RescaleValueRange {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

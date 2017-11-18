@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: June 25, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -13,12 +13,12 @@ use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct TributaryIdentifier {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -28,12 +28,58 @@ impl TributaryIdentifier {
         
         let description = "Assigns a unique identifier to each tributary in a stream network.".to_string();
         
-        let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams       Input streams raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-       
+        // let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
+        // parameters.push_str("--streams          Input streams raster file.\n");
+        // parameters.push_str("-o, --output       Output raster file.\n");
+        // parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input D8 Pointer File".to_owned(), 
+            flags: vec!["--d8_pntr".to_owned()], 
+            description: "Input raster D8 pointer file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Streams File".to_owned(), 
+            flags: vec!["--streams".to_owned()], 
+            description: "Input raster streams file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
+            flags: vec!["--esri_pntr".to_owned()], 
+            description: "D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Should a background value of zero be used?".to_owned(), 
+            flags: vec!["--zero_background".to_owned()], 
+            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -49,6 +95,10 @@ impl TributaryIdentifier {
 }
 
 impl WhiteboxTool for TributaryIdentifier {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +108,17 @@ impl WhiteboxTool for TributaryIdentifier {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -105,7 +165,7 @@ impl WhiteboxTool for TributaryIdentifier {
                 }
             } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
                 background_val = 0f64;
             }
         }

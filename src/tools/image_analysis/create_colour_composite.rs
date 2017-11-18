@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: July 19, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 extern crate time;
@@ -17,13 +17,13 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct CreateColourComposite {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -35,13 +35,67 @@ impl CreateColourComposite {
         let description = "Creates a colour-composite image from three bands of multispectral imagery."
             .to_string();
 
-        let mut parameters = "--red          Input raster file associated with the red band.\n"
-            .to_owned();
-        parameters.push_str("--green        Input raster file associated with the green band.\n");
-        parameters.push_str("--blue         Input raster file associated with the blue band.\n");
-        parameters.push_str("--opacity      Optional input raster file associated with the opacity (a).\n");
-        parameters.push_str("-o, --output   Output colour composite image file.\n");
-        parameters.push_str("--enhance      Optional flag indicating whether a balance contrast enhancement is performed.\n");
+        // let mut parameters = "--red          Input raster file associated with the red band.\n".to_owned();
+        // parameters.push_str("--green        Input raster file associated with the green band.\n");
+        // parameters.push_str("--blue         Input raster file associated with the blue band.\n");
+        // parameters.push_str("--opacity      Optional input raster file associated with the opacity (a).\n");
+        // parameters.push_str("-o, --output   Output colour composite image file.\n");
+        // parameters.push_str("--enhance      Optional flag indicating whether a balance contrast enhancement is performed.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Red Band Image File".to_owned(), 
+            flags: vec!["--red".to_owned()], 
+            description: "Input red band image file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Green Band Image File".to_owned(), 
+            flags: vec!["--green".to_owned()], 
+            description: "Input green band image file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Blue Band Image File".to_owned(), 
+            flags: vec!["--blue".to_owned()], 
+            description: "Input blue band image file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Opacity Band Image File (Optional)".to_owned(), 
+            flags: vec!["--opacity".to_owned()], 
+            description: "Input opacity band image file (optional).".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Colour Composite File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output colour composite file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Perform balance contrast enhancement?".to_owned(), 
+            flags: vec!["--enhance".to_owned()], 
+            description: "Optional flag indicating whether a balance contrast enhancement is performed.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -66,6 +120,10 @@ impl CreateColourComposite {
 }
 
 impl WhiteboxTool for CreateColourComposite {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -75,7 +133,10 @@ impl WhiteboxTool for CreateColourComposite {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

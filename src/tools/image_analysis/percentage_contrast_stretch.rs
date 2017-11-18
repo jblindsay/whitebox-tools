@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: August 26, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -21,12 +21,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct PercentageContrastStretch {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -38,11 +38,57 @@ impl PercentageContrastStretch {
         let description = "Performs a percentage linear contrast stretch on input images."
             .to_string();
 
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--clip        Clip size in percentage (default is 1.0).\n");
-        parameters.push_str("--tail        Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').\n");
-        parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--clip        Clip size in percentage (default is 1.0).\n");
+        // parameters.push_str("--tail        Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').\n");
+        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Distribution Tail Clip Amount (%)".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Tail".to_owned(), 
+            flags: vec!["--tail".to_owned()], 
+            description: "Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["upper".to_owned(), "lower".to_owned(), "both".to_owned()]),
+            default_value: Some("both".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Number of Tones".to_owned(), 
+            flags: vec!["--num_tones".to_owned()], 
+            description: "Number of tones in the output image.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("256".to_owned()),
+            optional: false
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -66,6 +112,10 @@ impl PercentageContrastStretch {
 }
 
 impl WhiteboxTool for PercentageContrastStretch {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -75,7 +125,17 @@ impl WhiteboxTool for PercentageContrastStretch {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

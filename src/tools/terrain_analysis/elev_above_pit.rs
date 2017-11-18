@@ -17,12 +17,12 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct ElevAbovePit {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,8 +32,27 @@ impl ElevAbovePit {
         
         let description = "Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.".to_string();
         
-        let mut parameters = "--dem         Input DEM raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
+        // let mut parameters = "--dem         Input DEM raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +68,10 @@ impl ElevAbovePit {
 }
 
 impl WhiteboxTool for ElevAbovePit {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +81,17 @@ impl WhiteboxTool for ElevAbovePit {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -82,7 +115,7 @@ impl WhiteboxTool for ElevAbovePit {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-dem" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-dem" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     dem_file = vec[1].to_string();
                 } else {

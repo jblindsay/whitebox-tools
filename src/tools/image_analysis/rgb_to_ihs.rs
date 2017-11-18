@@ -16,13 +16,13 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 /// Tool struct containing the essential descriptors required to interact with the tool.
 pub struct RgbToIhs {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,14 +34,78 @@ impl RgbToIhs {
         
         let description = "Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.".to_string();
         
-        let mut parameters = "--red          Input red band raster file.\n".to_owned();
-        parameters.push_str("--green        Input green raster file.\n");
-        parameters.push_str("--blue         Input blue raster file.\n");
-        parameters.push_str("--composite    Optional input colour-composite image file.\n");
-        parameters.push_str("--intensity    Output intensity raster file.\n");
-        parameters.push_str("--hue          Output hue raster file.\n");
-        parameters.push_str("--saturation   Output saturation file.\n");
+        // let mut parameters = "--red          Input red band raster file.\n".to_owned();
+        // parameters.push_str("--green        Input green raster file.\n");
+        // parameters.push_str("--blue         Input blue raster file.\n");
+        // parameters.push_str("--composite    Optional input colour-composite image file.\n");
+        // parameters.push_str("--intensity    Output intensity raster file.\n");
+        // parameters.push_str("--hue          Output hue raster file.\n");
+        // parameters.push_str("--saturation   Output saturation file.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Red Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--red".to_owned()], 
+            description: "Input red band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Green Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--green".to_owned()], 
+            description: "Input green band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Blue Band File (optional; only if colour-composite not specified)".to_owned(), 
+            flags: vec!["--blue".to_owned()], 
+            description: "Input blue band image file. Optionally specified if colour-composite not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Colour-Composite Image File (optional; only if individual bands not specified)".to_owned(), 
+            flags: vec!["--composite".to_owned()], 
+            description: "Input colour-composite image file. Only used if individual bands are not specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Intensity File".to_owned(), 
+            flags: vec!["--intensity".to_owned()], 
+            description: "Output intensity raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Hue File".to_owned(), 
+            flags: vec!["--hue".to_owned()], 
+            description: "Output hue raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Saturation File".to_owned(), 
+            flags: vec!["--saturation".to_owned()], 
+            description: "Output saturation raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -57,6 +121,10 @@ impl RgbToIhs {
 }
 
 impl WhiteboxTool for RgbToIhs {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -66,7 +134,17 @@ impl WhiteboxTool for RgbToIhs {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

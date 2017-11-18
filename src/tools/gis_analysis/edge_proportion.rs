@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: July 13, 2017
+Last Modified: November 15, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct EdgeProportion {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,10 +31,38 @@ impl EdgeProportion {
         
         let description = "Calculate the proportion of cells in a raster polygon that are edge cells.".to_string();
         
-        let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--output_text   Optional flag indicating whether a text report should also be output.\n");
+        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--output_text   Optional flag indicating whether a text report should also be output.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output a text report?".to_owned(), 
+            flags: vec!["--output_text".to_owned()], 
+            description: "flag indicating whether a text report should also be output.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -49,6 +77,10 @@ impl EdgeProportion {
 }
 
 impl WhiteboxTool for EdgeProportion {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +90,10 @@ impl WhiteboxTool for EdgeProportion {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

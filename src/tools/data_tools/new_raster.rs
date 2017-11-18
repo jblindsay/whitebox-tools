@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: November 14, 2017
 License: MIT
 */
 extern crate time;
@@ -12,12 +12,15 @@ use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
+use tools::ToolParameter;
+use tools::ParameterType;
+use tools::ParameterFileType;
 
 pub struct NewRasterFromBase {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -28,10 +31,47 @@ impl NewRasterFromBase {
 
         let description = "Creates a new raster using a base image.".to_string();
 
-        let mut parameters = "--base          Input base raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--value         Constant value to fill raster with; either 'nodata' or numberic value (default is nodata).\n");
-        parameters.push_str("--data_type     Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').\n");
+        // let mut parameters = "--base          Input base raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--value         Constant value to fill raster with; either 'nodata' or numberic value (default is nodata).\n");
+        // parameters.push_str("--data_type     Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Base File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--base".to_owned()], 
+            description: "Input base raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Constant Value".to_owned(), 
+            flags: vec!["--value".to_owned()], 
+            description: "Constant value to fill raster with; either 'nodata' or numeric value.".to_owned(),
+            parameter_type: ParameterType::StringOrNumber,
+            default_value: Some("nodata".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Data Type".to_owned(), 
+            flags: vec!["--data_type".to_owned()], 
+            description: "Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["double".to_owned(), "float".to_owned(), "integer".to_owned()]),
+            default_value: Some("float".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -56,6 +96,10 @@ impl NewRasterFromBase {
 }
 
 impl WhiteboxTool for NewRasterFromBase {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -65,7 +109,10 @@ impl WhiteboxTool for NewRasterFromBase {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -95,7 +142,8 @@ impl WhiteboxTool for NewRasterFromBase {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-base" || vec[0].to_lowercase() == "--base" {
+            if vec[0].to_lowercase() == "-base" || vec[0].to_lowercase() == "--base"
+            || vec[0].to_lowercase() == "-i" {
                 if keyval {
                     base_file = vec[1].to_string();
                 } else {
@@ -114,7 +162,8 @@ impl WhiteboxTool for NewRasterFromBase {
                     out_val_str = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-data_type" ||
-                      vec[0].to_lowercase() == "--data_type" {
+                      vec[0].to_lowercase() == "--data_type" ||
+                      vec[0].to_lowercase() == "--datatype" {
                 if keyval {
                     data_type = vec[1].to_string();
                 } else {

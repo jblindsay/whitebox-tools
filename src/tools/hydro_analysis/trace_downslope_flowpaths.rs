@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: July 4, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: Add support for vector seed points.
@@ -14,12 +14,12 @@ use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct TraceDownslopeFlowpaths {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -29,12 +29,58 @@ impl TraceDownslopeFlowpaths {
         
         let description = "Traces downslope flowpaths from one or more target sites (i.e. seed points).".to_string();
         
-        let mut parameters = "--seed_pts         Input seed points raster file.\n".to_owned();
-        parameters.push_str("--flow_dir         Input D8 flow direction (pointer) raster file.\n");
-        parameters.push_str("-o, --output       Output cost pathway raster file.\n");
-        parameters.push_str("--esri_pntr        Optional flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        parameters.push_str("--zero_background  Optional flag indicating whether the background value of zero should be used.\n");
-       
+        // let mut parameters = "--seed_pts         Input seed points raster file.\n".to_owned();
+        // parameters.push_str("--d8_pntr          Input D8 flow direction (pointer) raster file.\n");
+        // parameters.push_str("-o, --output       Output cost pathway raster file.\n");
+        // parameters.push_str("--esri_pntr        Optional flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
+        // parameters.push_str("--zero_background  Optional flag indicating whether the background value of zero should be used.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Seed Points File".to_owned(), 
+            flags: vec!["--seed_pts".to_owned()], 
+            description: "Input raster seed points file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input D8 Pointer File".to_owned(), 
+            flags: vec!["--d8_pntr".to_owned()], 
+            description: "Input D8 pointer raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
+            flags: vec!["--esri_pntr".to_owned()], 
+            description: "D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Should a background value of zero be used?".to_owned(), 
+            flags: vec!["--zero_background".to_owned()], 
+            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -49,6 +95,10 @@ impl TraceDownslopeFlowpaths {
 }
 
 impl WhiteboxTool for TraceDownslopeFlowpaths {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +108,10 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -91,7 +144,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 } else {
                     seed_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-flow_dir" || vec[0].to_lowercase() == "--flow_dir" {
+            } else if vec[0].to_lowercase() == "--d8_pntr" || vec[0].to_lowercase() == "-flow_dir" || vec[0].to_lowercase() == "--flow_dir" {
                 if keyval {
                     flowdir_file = vec[1].to_string();
                 } else {
@@ -105,7 +158,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 }
             } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
                 background_val = 0f64;
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 26, 2017
+Last Modified: November 14, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,15 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
+use tools::ToolParameter;
+use tools::ParameterType;
+use tools::ParameterFileType;
 
 pub struct ConvertNodataToZero {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -30,11 +33,29 @@ impl ConvertNodataToZero {
         // public constructor
         let name = "ConvertNodataToZero".to_string();
 
-        let description = "Converts nodata values in a raster to zero."
-            .to_string();
+        let description = "Converts nodata values in a raster to zero.".to_string();
 
-        let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
+        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -58,6 +79,10 @@ impl ConvertNodataToZero {
 }
 
 impl WhiteboxTool for ConvertNodataToZero {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -67,7 +92,10 @@ impl WhiteboxTool for ConvertNodataToZero {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

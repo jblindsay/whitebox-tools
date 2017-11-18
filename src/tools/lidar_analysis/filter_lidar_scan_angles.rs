@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 17, 2017
-Last Modified: September 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT tool, which output a Shapefile.
@@ -16,12 +16,12 @@ use std::f64;
 use std::path;
 use std::io::{Error, ErrorKind};
 use lidar::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct FilterLidarScanAngles {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,9 +31,37 @@ impl FilterLidarScanAngles {
         
         let description = "Removes points in a LAS file with scan angles greater than a threshold.".to_string();
         
-        let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        parameters.push_str("-o, --output   Output LAS file.\n");
-        parameters.push_str("--threshold    Scan angle threshold.\n");
+        // let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output LAS file.\n");
+        // parameters.push_str("--threshold    Scan angle threshold.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output LiDAR file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Threshold (degrees)".to_owned(), 
+            flags: vec!["--threshold".to_owned()], 
+            description: "Scan angle threshold.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
   
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +77,10 @@ impl FilterLidarScanAngles {
 }
 
 impl WhiteboxTool for FilterLidarScanAngles {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +90,17 @@ impl WhiteboxTool for FilterLidarScanAngles {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

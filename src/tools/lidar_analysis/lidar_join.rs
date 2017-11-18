@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: July 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 
@@ -11,12 +11,12 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 use lidar::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LidarJoin {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -26,8 +26,27 @@ impl LidarJoin {
         
         let description = "Joins multiple LiDAR (LAS) files into a single LAS file.".to_string();
         
-        let mut parameters = "-i, --inputs  Input LAS files, separated by commas.\n".to_owned();
-        parameters.push_str("-o, --output  Output LAS file.\n");
+        // let mut parameters = "-i, --inputs  Input LAS files, separated by commas.\n".to_owned();
+        // parameters.push_str("-o, --output  Output LAS file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input LiDAR Files".to_owned(), 
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+            description: "Input LiDAR files.".to_owned(),
+            parameter_type: ParameterType::FileList(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output LiDAR file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -43,6 +62,10 @@ impl LidarJoin {
 }
 
 impl WhiteboxTool for LidarJoin {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -52,7 +75,17 @@ impl WhiteboxTool for LidarJoin {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

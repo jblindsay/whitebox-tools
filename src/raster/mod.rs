@@ -216,57 +216,61 @@ impl Raster {
     }
 
     pub fn get_value(&self, row: isize, column: isize) -> f64 {
-        // if column >= 0 && row >= 0 && column < self.configs.columns as isize && row < self.configs.rows as isize {
-        //     let c: usize = column as usize;
-        //     let r: usize = row as usize;
+        if column >= 0 && row >= 0 && column < self.configs.columns as isize && row < self.configs.rows as isize {
+            let c: usize = column as usize;
+            let r: usize = row as usize;
         
-        //     let idx: usize = r * self.configs.columns + c;
-        //     return self.data[idx];
-        // }
+            let idx: usize = r * self.configs.columns + c;
+            return self.data[idx];
+        }
 
-        // // it's not within the area of the data
-        // if !self.configs.reflect_at_edges {
+        // it's not within the area of the data
+        if !self.configs.reflect_at_edges {
+            return self.configs.nodata;
+        }
+
+        let mut c = column;
+        let mut r = row;
+
+        // if you get to this point, it should be reflected at the edges
+        if r < 0 {
+            r = -r - 1;
+        }
+        if r >= self.configs.rows as isize {
+            r = self.configs.rows as isize - (r - self.configs.rows as isize) - 1;
+        }
+        if c < 0 {
+            c = -c - 1;
+        }
+        if c >= self.configs.columns as isize {
+            c = self.configs.columns as isize - (c - self.configs.columns as isize) - 1;
+        }
+        if c >= 0 && c < self.configs.columns as isize && row >= 0 && row < self.configs.rows as isize {
+            return self.get_value(r, c);
+        }
+
+        // it was too off grid to be reflected.
+        self.configs.nodata
+
+
+        // if column < 0 {
         //     return self.configs.nodata;
         // }
-        // // if you get to this point, it should be reflected at the edges
         // if row < 0 {
-        //     row = -row - 1;
-        // }
-        // if row >= self.configs.rows as isize {
-        //     row = self.configs.rows as isize - (row - self.configs.rows as isize) - 1;
-        // }
-        // if column < 0 {
-        //     column = -column - 1;
-        // }
-        // if column >= self.configs.columns as isize {
-        //     column = self.configs.columns as isize - (column - self.configs.columns as isize) - 1;
-        // }
-        // if column >= 0 && column < self.configs.columns as isize && row >= 0 && row < self.configs.rows as isize {
-        //     return self.get_value(row, column);
+        //     return self.configs.nodata;
         // }
 
-        // // it was too off grid to be reflected.
-        // self.configs.nodata
+        // let c: usize = column as usize;
+        // let r: usize = row as usize;
 
-
-        if column < 0 {
-            return self.configs.nodata;
-        }
-        if row < 0 {
-            return self.configs.nodata;
-        }
-
-        let c: usize = column as usize;
-        let r: usize = row as usize;
-
-        if c >= self.configs.columns {
-            return self.configs.nodata;
-        }
-        if r >= self.configs.rows {
-            return self.configs.nodata;
-        }
-        let idx: usize = r * self.configs.columns + c;
-        self.data[idx]
+        // if c >= self.configs.columns {
+        //     return self.configs.nodata;
+        // }
+        // if r >= self.configs.rows {
+        //     return self.configs.nodata;
+        // }
+        // let idx: usize = r * self.configs.columns + c;
+        // self.data[idx]
     }
 
     pub fn set_value(&mut self, row: isize, column: isize, value: f64) {

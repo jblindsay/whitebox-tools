@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 14, 2017
-Last Modified: July 14, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,13 +17,13 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
 use self::rand::distributions::{Normal, IndependentSample, Range};
 
 pub struct TurningBandsSimulation {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -35,11 +35,48 @@ impl TurningBandsSimulation {
         let description = "Creates an image containing random values based on a turning-bands simulation."
             .to_string();
 
-        let mut parameters = "--base          Input base raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--range         The field's range, in xy-units, related to the extent of spatial autocorrelation.\n");
-        parameters.push_str("--iterations    The number of iterations; default is 1000.\n");
+        // let mut parameters = "--base          Input base raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--range         The field's range, in xy-units, related to the extent of spatial autocorrelation.\n");
+        // parameters.push_str("--iterations    The number of iterations; default is 1000.\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Base File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--base".to_owned()], 
+            description: "Input base raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Range of Autocorrelation (map units)".to_owned(), 
+            flags: vec!["--range".to_owned()], 
+            description: "The field's range, in xy-units, related to the extent of spatial autocorrelation.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Iterations".to_owned(), 
+            flags: vec!["--iterations".to_owned()], 
+            description: "The number of iterations.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("1000".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -62,6 +99,10 @@ impl TurningBandsSimulation {
 }
 
 impl WhiteboxTool for TurningBandsSimulation {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -71,7 +112,17 @@ impl WhiteboxTool for TurningBandsSimulation {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -101,7 +152,7 @@ impl WhiteboxTool for TurningBandsSimulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--base" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 31, 2017
-Last Modified: August 31, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct HistogramMatchingTwoImages {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,9 +33,37 @@ impl HistogramMatchingTwoImages {
         let description = "This tool alters the cumululative distribution function of a raster image to that of another image."
             .to_string();
 
-        let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
-        parameters.push_str("--i2, --input2   Input reference raster file.\n");
-        parameters.push_str("-o, --output     Output raster file.\n");
+        // let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
+        // parameters.push_str("--i2, --input2   Input reference raster file.\n");
+        // parameters.push_str("-o, --output     Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File To Modify".to_owned(), 
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+            description: "Input raster file to modify.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Input Reference File".to_owned(), 
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+            description: "Input reference raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -59,6 +87,10 @@ impl HistogramMatchingTwoImages {
 }
 
 impl WhiteboxTool for HistogramMatchingTwoImages {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -68,7 +100,10 @@ impl WhiteboxTool for HistogramMatchingTwoImages {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

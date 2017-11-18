@@ -50,9 +50,10 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 | -------------- | ---------------------------------------------------------------------------- |
 | --cd, --wd     | Changes the working directory; used in conjunction with --run flag.          |
 | -l, --license  | Prints the whitebox-tools license.                                           |
-| --listtools    | Lists all available tools, with tool descriptions                            |
+| --listtools    | Lists all available tools, with tool descriptions.                           |
 | -r, --run      | Runs a tool; used in conjuction with --cd flag; -r="LidarInfo".              |
 | --toolhelp     | Prints the help associated with a tool; --toolhelp="LidarInfo".              |
+| --viewcode     | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".  |
 | -h, --help     | Prints help information.                                                     |
 
 Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.g. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).

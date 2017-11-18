@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 6, 2017
+Last Modified: November 16, 2017
+License: MIT
+*/
 extern crate time;
 
 use std::env;
@@ -8,12 +15,12 @@ use std::collections::VecDeque;
 use raster::*;
 use structures::FixedRadiusSearch2D;
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct RemoveOffTerrainObjects {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -23,10 +30,47 @@ impl RemoveOffTerrainObjects {
         
         let description = "Removes off-terrain objects from a raster digital elevation model (DEM).".to_string();
         
-        let mut parameters = "-i, --dem          Input raster file.".to_owned();
-        parameters.push_str("-o, --output       Output raster file.\n");
-        parameters.push_str("--filter           Filter size (cells); default is 11.\n");
-        parameters.push_str("--slope            Slope threshold; default is 15.0.\n");
+        // let mut parameters = "-i, --dem          Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output       Output raster file.\n");
+        // parameters.push_str("--filter           Filter size (cells); default is 11.\n");
+        // parameters.push_str("--slope            Slope threshold; default is 15.0.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter Dimension".to_owned(), 
+            flags: vec!["--filter".to_owned()], 
+            description: "Filter size (cells).".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Slope Threshold".to_owned(), 
+            flags: vec!["--slope".to_owned()], 
+            description: "Slope threshold value.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: Some("15.0".to_owned()),
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -42,6 +86,10 @@ impl RemoveOffTerrainObjects {
 }
 
 impl WhiteboxTool for RemoveOffTerrainObjects {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -51,7 +99,17 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

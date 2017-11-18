@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: July 16, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 
@@ -11,12 +11,12 @@ use std::f64;
 use std::path;
 use std::io::{Error, ErrorKind};
 use lidar::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LidarElevationSlice {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -26,14 +26,78 @@ impl LidarElevationSlice {
         
         let description = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.".to_string();
         
-        let parameters = "-i, --input        Input LAS file.
--o, --output       Output LAS file.
---maxz             Maximum elevation value.
---minz             Minimum elevation value.
---class            Optional boolean flag indicating whether points outside the range should be retained in output but reclassified.
---inclassval       Optional parameter specifying the class value assigned to points within the slice; default is 2.
---outclassval      Optional parameter specifying the class value assigned to points outside the slice; default is 1.".to_owned();
+//         let parameters = "-i, --input        Input LAS file.
+// -o, --output       Output LAS file.
+// --maxz             Maximum elevation value.
+// --minz             Minimum elevation value.
+// --class            Optional boolean flag indicating whether points outside the range should be retained in output but reclassified.
+// --inclassval       Optional parameter specifying the class value assigned to points within the slice; default is 2.
+// --outclassval      Optional parameter specifying the class value assigned to points outside the slice; default is 1.".to_owned();
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output LiDAR file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Minimum Elevation Value".to_owned(), 
+            flags: vec!["--minz".to_owned()], 
+            description: "Minimum elevation value (optional).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Maximum Elevation Value".to_owned(), 
+            flags: vec!["--maxz".to_owned()], 
+            description: "Maximum elevation value (optional).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Retain but reclass points outside the specified elevation range?".to_owned(), 
+            flags: vec!["--class".to_owned()], 
+            description: "Optional boolean flag indicating whether points outside the range should be retained in output but reclassified.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Class Value Assigned to Points Within Range (Optional)".to_owned(), 
+            flags: vec!["--inclassval".to_owned()], 
+            description: "Optional parameter specifying the class value assigned to points within the slice.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("2".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Class Value Assigned to Points Outside Range (Optional)".to_owned(), 
+            flags: vec!["--outclassval".to_owned()], 
+            description: "Optional parameter specifying the class value assigned to points within the slice.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("1".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -50,6 +114,10 @@ impl LidarElevationSlice {
 }
 
 impl WhiteboxTool for LidarElevationSlice {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -59,7 +127,17 @@ impl WhiteboxTool for LidarElevationSlice {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

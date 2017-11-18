@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: June 27, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct EmbossFilter {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,11 +31,48 @@ impl EmbossFilter {
         
         let description = "Performs an emboss filter on an image, similar to a hillshade operation.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--direction   Direction for filter; options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw' (default is 'n').\n");
-        parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--direction   Direction for filter; options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw' (default is 'n').\n");
+        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Direction".to_owned(), 
+            flags: vec!["--direction".to_owned()], 
+            description: "Direction of reflection; options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw'".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["n".to_owned(), "s".to_owned(), "e".to_owned(), "w".to_owned(), "ne".to_owned(), "se".to_owned(), "nw".to_owned(), "sw".to_owned()]),
+            default_value: Some("n".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Percent to clip the distribution tails".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -50,6 +87,10 @@ impl EmbossFilter {
 }
 
 impl WhiteboxTool for EmbossFilter {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -59,7 +100,10 @@ impl WhiteboxTool for EmbossFilter {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

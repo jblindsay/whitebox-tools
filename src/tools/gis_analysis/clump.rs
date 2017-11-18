@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: June 22, 2017
+Last Modified: November 15, 2017
 License: MIT
 */
 extern crate time;
@@ -12,12 +12,12 @@ use std::path;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct Clump {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -27,11 +27,48 @@ impl Clump {
         
         let description = "Groups cells that form physically discrete areas, assigning them unique identifiers.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--diag        Optional flag indicating whether diagonal connections should be considered.");
-        parameters.push_str("--zero_back   Optional flag indicating whether zero values should be treated as a background.");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--diag        Optional flag indicating whether diagonal connections should be considered.\n");
+        // parameters.push_str("--zero_back   Optional flag indicating whether zero values should be treated as a background.");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Include diagonal connections?".to_owned(), 
+            flags: vec!["--diag".to_owned()], 
+            description: "Flag indicating whether diagonal connections should be considered.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Treat zero values as background?".to_owned(), 
+            flags: vec!["--zero_back".to_owned()], 
+            description: "Flag indicating whether zero values should be treated as a background.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -39,13 +76,17 @@ impl Clump {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --diag", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --diag", short_exe, name).replace("*", &sep);
     
         Clump { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
 impl WhiteboxTool for Clump {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -55,7 +96,10 @@ impl WhiteboxTool for Clump {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

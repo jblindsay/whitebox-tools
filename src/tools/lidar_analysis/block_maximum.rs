@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: July 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::thread;
 use std::path;
 use lidar::*;
 use raster::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct BlockMaximum {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,10 +33,47 @@ impl BlockMaximum {
 
         let description = "Creates a block-maximum raster from an input LAS file.".to_string();
 
-        let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file.\n");
-        parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
+        // let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file.\n");
+        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
+        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input LiDAR File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Grid Resolution".to_owned(), 
+            flags: vec!["--resolution".to_owned()], 
+            description: "Output raster's grid resolution.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
+            flags: vec!["--palette".to_owned()], 
+            description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -61,6 +98,10 @@ impl BlockMaximum {
 }
 
 impl WhiteboxTool for BlockMaximum {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -70,7 +111,17 @@ impl WhiteboxTool for BlockMaximum {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct FindParallelFlow {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -34,9 +34,37 @@ impl FindParallelFlow {
         let description = "Finds areas of parallel flow in D8 flow direction rasters."
             .to_string();
 
-        let mut parameters = "--d8_pntr       Input D8 pointer raster file.\n".to_owned();
-        parameters.push_str("--streams       Optional input streams raster file.\n");
-        parameters.push_str("-o, --output    Output raster file.\n");
+        // let mut parameters = "--d8_pntr       Input D8 pointer raster file.\n".to_owned();
+        // parameters.push_str("--streams       Optional input streams raster file.\n");
+        // parameters.push_str("-o, --output    Output raster file.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input D8 Pointer File".to_owned(), 
+            flags: vec!["--d8_pntr".to_owned()], 
+            description: "Input D8 pointer raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Streams File".to_owned(), 
+            flags: vec!["--streams".to_owned()], 
+            description: "Input raster streams file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -61,6 +89,10 @@ impl FindParallelFlow {
 }
 
 impl WhiteboxTool for FindParallelFlow {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -70,7 +102,10 @@ impl WhiteboxTool for FindParallelFlow {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

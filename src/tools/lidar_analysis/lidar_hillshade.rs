@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: June 14, 2017
+Last Modified: November 16, 2017
+License: MIT
+*/
 extern crate time;
 extern crate nalgebra as na;
 extern crate num_cpus;
@@ -10,15 +17,14 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use lidar::*;
-// use lidar::point_data::*;
-use tools::WhiteboxTool;
+use tools::*;
 use self::na::Vector3;
 use structures::FixedRadiusSearch3D;
 
 pub struct LidarHillshade {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -28,11 +34,57 @@ impl LidarHillshade {
         
         let description = "Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.".to_string();
         
-        let parameters = "-i, --input        Input LAS file.
--o, --output       Output LAS file.
---azimuth          Optional azimuth in degrees of illumination source (default is 315.0).
---altitude         Optional altitude in degrees of illumination source (efault is 30.0).
---radius           Search radius; default is 1.0.".to_owned();
+//         let parameters = "-i, --input        Input LAS file.
+// -o, --output       Output LAS file.
+// --azimuth          Optional azimuth in degrees of illumination source (default is 315.0).
+// --altitude         Optional altitude in degrees of illumination source (efault is 30.0).
+// --radius           Search radius; default is 1.0.".to_owned();
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input LiDAR File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Azimuth (degrees)".to_owned(), 
+            flags: vec!["--azimuth".to_owned()], 
+            description: "Illumination source azimuth in degrees.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("315.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Altitude (degrees)".to_owned(), 
+            flags: vec!["--altitude".to_owned()], 
+            description: "Illumination source altitude in degrees.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("30.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Search Radius".to_owned(), 
+            flags: vec!["--radius".to_owned()], 
+            description: "Search Radius.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: false
+        });
   
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +101,10 @@ impl LidarHillshade {
 }
 
 impl WhiteboxTool for LidarHillshade {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +114,17 @@ impl WhiteboxTool for LidarHillshade {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

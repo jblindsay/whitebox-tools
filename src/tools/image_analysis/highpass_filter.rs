@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: June 26, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -18,12 +18,12 @@ use std::thread;
 use raster::*;
 use structures::Array2D;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct HighPassFilter {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,12 +33,49 @@ impl HighPassFilter {
         
         let description = "Performs a high-pass filter on an input image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
-        parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-        parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
+        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
+        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter X-Dimension".to_owned(), 
+            flags: vec!["--filterx".to_owned()], 
+            description: "Size of the filter kernel in the x-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter Y-Dimension".to_owned(), 
+            flags: vec!["--filtery".to_owned()], 
+            description: "Size of the filter kernel in the y-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -53,6 +90,10 @@ impl HighPassFilter {
 }
 
 impl WhiteboxTool for HighPassFilter {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,7 +103,10 @@ impl WhiteboxTool for HighPassFilter {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

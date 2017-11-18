@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 17, 2017
-Last Modified: July 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct DownslopeIndex {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,11 +32,48 @@ impl DownslopeIndex {
         
         let description = "Calculates the Hjerdt et al. (2004) downslope index.".to_string();
         
-        let mut parameters = "-i, --dem       Input DEM raster file.\n".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--drop          Vertical drop value (default is 2.0).\n");
-        parameters.push_str("--out_type      Output type, options include 'tangent', 'degrees', 'radians', 'distance' (default is 'tangent').\n");
+        // let mut parameters = "-i, --dem       Input DEM raster file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--drop          Vertical drop value (default is 2.0).\n");
+        // parameters.push_str("--out_type      Output type, options include 'tangent', 'degrees', 'radians', 'distance' (default is 'tangent').\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Verical Drop".to_owned(), 
+            flags: vec!["--drop".to_owned()], 
+            description: "Vertical drop value (default is 2.0).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.0".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Type".to_owned(), 
+            flags: vec!["--out_type".to_owned()], 
+            description: "Output type, options include 'tangent', 'degrees', 'radians', 'distance' (default is 'tangent').".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["tangent".to_owned(), "degrees".to_owned(), "radians".to_owned(), "distance".to_owned()]),
+            default_value: Some("tangent".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -51,6 +88,10 @@ impl DownslopeIndex {
 }
 
 impl WhiteboxTool for DownslopeIndex {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -60,7 +101,17 @@ impl WhiteboxTool for DownslopeIndex {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

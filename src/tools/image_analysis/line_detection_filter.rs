@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: July 11, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LineDetectionFilter {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,11 +32,57 @@ impl LineDetectionFilter {
 
         let description = "Performs a line-detection filter on an image.".to_string();
 
-        let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--variant     Optional variant value. Options include 'v' (vertical), 'h' (horizontal), '45', and '135' (default is 'v').\n");
-        parameters.push_str("--absvals     Optional flag indicating whether outputs should be absolute values.\n");
-        parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--variant     Optional variant value. Options include 'v' (vertical), 'h' (horizontal), '45', and '135' (default is 'v').\n");
+        // parameters.push_str("--absvals     Optional flag indicating whether outputs should be absolute values.\n");
+        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Variant".to_owned(), 
+            flags: vec!["--variant".to_owned()], 
+            description: "Optional variant value. Options include 'v' (vertical), 'h' (horizontal), '45', and '135' (default is 'v').".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["vertical".to_owned(), "horizontal".to_owned(), "45".to_owned(), "135".to_owned()]),
+            default_value: Some("vertical".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output absolute values?".to_owned(), 
+            flags: vec!["--absvals".to_owned()], 
+            description: "Optional flag indicating whether outputs should be absolute values.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Distribution Tail Clip Amount (%)".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -60,6 +106,10 @@ impl LineDetectionFilter {
 }
 
 impl WhiteboxTool for LineDetectionFilter {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -69,7 +119,10 @@ impl WhiteboxTool for LineDetectionFilter {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -118,13 +171,13 @@ impl WhiteboxTool for LineDetectionFilter {
                 } else {
                     variant = args[i + 1].to_string();
                 }
-                if variant.contains("v") {
+                if variant.to_lowercase().contains("v") {
                     variant = "v".to_string();
-                } else if variant.contains("h") {
+                } else if variant.to_lowercase().contains("h") {
                     variant = "h".to_string();
-                } else if variant.contains("45") {
+                } else if variant.to_lowercase().contains("45") {
                     variant = "45".to_string();
-                } else if variant.contains("135") {
+                } else if variant.to_lowercase().contains("135") {
                     variant = "135".to_string();
                 }
             } else if vec[0].to_lowercase() == "-absvals" || vec[0].to_lowercase() == "--absvals" {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: October 25, 2017
+Last Modified: November 17, 2017
 License: MIT
 */
 extern crate time;
@@ -22,13 +22,13 @@ use std::thread;
 use std::process::Command;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 
 pub struct ImageRegression {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -38,11 +38,57 @@ impl ImageRegression {
 
         let description = "Performs image regression analysis on two input images.".to_string();
 
-        let mut parameters = "--i1, --input1    Input raster file (independent variable, x).\n".to_owned();
-        parameters.push_str("--i2, --input2    Input raster file (depdendent variable, y).\n");
-        parameters.push_str("-o, --output      Optional output html file.\n");
-        parameters.push_str("--out_residuals   Optional output raster file for residuals map.\n");
-        parameters.push_str("--standardize     Optional flag indicating whether to standardize the residuals map.");
+        // let mut parameters = "--i1, --input1    Input raster file (independent variable, x).\n".to_owned();
+        // parameters.push_str("--i2, --input2    Input raster file (depdendent variable, y).\n");
+        // parameters.push_str("-o, --output      Optional output html file.\n");
+        // parameters.push_str("--out_residuals   Optional output raster file for residuals map.\n");
+        // parameters.push_str("--standardize     Optional flag indicating whether to standardize the residuals map.");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Independent Variable (X).".to_owned(), 
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+            description: "Input raster file (independent variable, X).".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Dependent Variable (Y).".to_owned(), 
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+            description: "Input raster file (dependent variable, Y).".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Summary Report File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output HTML file for regression summary report.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Html),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Optional Residuals Output File".to_owned(), 
+            flags: vec!["--out_residuals".to_owned()], 
+            description: "Output raster regression resdidual file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Standardize the residuals map?".to_owned(), 
+            flags: vec!["--standardize".to_owned()], 
+            description: "Optional flag indicating whether to standardize the residuals map.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -67,6 +113,10 @@ impl ImageRegression {
 }
 
 impl WhiteboxTool for ImageRegression {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -76,7 +126,17 @@ impl WhiteboxTool for ImageRegression {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

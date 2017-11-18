@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: July 2, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -16,12 +16,12 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct SedimentTransportIndex {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -31,11 +31,57 @@ impl SedimentTransportIndex {
         
         let description = "Calculates the sediment transport index.".to_string();
         
-        let mut parameters = "--sca             Input specific contributing area (SCA) raster file.".to_owned();
-        parameters.push_str("--slope           Input slope raster file.\n");
-        parameters.push_str("-o, --output      Output raster file.\n");
-        parameters.push_str("--sca_exponent    SCA exponent value (default is 0.4).\n");
-        parameters.push_str("--slope_exponent  Slope exponent value (default is 1.3).\n");
+        // let mut parameters = "--sca             Input specific contributing area (SCA) raster file.\n".to_owned();
+        // parameters.push_str("--slope           Input slope raster file.\n");
+        // parameters.push_str("-o, --output      Output raster file.\n");
+        // parameters.push_str("--sca_exponent    SCA exponent value (default is 0.4).\n");
+        // parameters.push_str("--slope_exponent  Slope exponent value (default is 1.3).\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Specific Contributing Area (SCA) File".to_owned(), 
+            flags: vec!["--sca".to_owned()], 
+            description: "Input raster specific contributing area (SCA) file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Slope File".to_owned(), 
+            flags: vec!["--slope".to_owned()], 
+            description: "Input raster slope file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Specific Contributing Area (SCA) Exponent".to_owned(), 
+            flags: vec!["--sca_exponent".to_owned()], 
+            description: "SCA exponent value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.4".to_owned()),
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Slope Exponent".to_owned(), 
+            flags: vec!["--slope_exponent".to_owned()], 
+            description: "Slope exponent value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.3".to_owned()),
+            optional: false
+        });
          
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -51,6 +97,10 @@ impl SedimentTransportIndex {
 }
 
 impl WhiteboxTool for SedimentTransportIndex {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -60,7 +110,17 @@ impl WhiteboxTool for SedimentTransportIndex {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: July 17, 2017
+Last Modified: November 17, 2017
 License: MIT
 
 NOTES: Add the ability to:
@@ -24,12 +24,12 @@ use lidar::*;
 // use lidar::point_data::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct LidarIdwInterpolation {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -41,18 +41,117 @@ impl LidarIdwInterpolation {
         let description = "Interpolates LAS files using an inverse-distance weighted (IDW) scheme."
             .to_string();
 
-        //let mut parameters = "-i, --input    Optional input LAS file; if excluded, all LAS files in working directory will be processed.\n".to_owned();
-        let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
-        parameters.push_str("-o, --output   Output raster file (including extension).\n");
-        parameters.push_str("--parameter    Interapolation parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'user data'.\n");
-        parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
-        parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        parameters.push_str("--weight       IDW weight value (default is 1.0).\n");
-        parameters.push_str("--radius       Search radius; default is 2.5.\n");
-        parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
-        parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
-        parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
-        parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
+        // let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
+        // parameters.push_str("-o, --output   Output raster file (including extension).\n");
+        // parameters.push_str("--parameter    Interapolation parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'user data'.\n");
+        // parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
+        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
+        // parameters.push_str("--weight       IDW weight value (default is 1.0).\n");
+        // parameters.push_str("--radius       Search radius; default is 2.5.\n");
+        // parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
+        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
+        // parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
+        // parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file (including extension).".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file (including extension).".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Interpolation Parameter".to_owned(), 
+            flags: vec!["--parameter".to_owned()], 
+            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["elevation".to_owned(), "intensity".to_owned(), "class".to_owned(), "scan angle".to_owned(), "user data".to_owned()]),
+            default_value: Some("elevation".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Point Returns Included".to_owned(), 
+            flags: vec!["--returns".to_owned()], 
+            description: "Point return types to include; options are 'all' (default), 'last', 'first'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["all".to_owned(), "last".to_owned(), "first".to_owned()]),
+            default_value: Some("all".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Grid Resolution".to_owned(), 
+            flags: vec!["--resolution".to_owned()], 
+            description: "Output raster's grid resolution.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "IDW Weight (Exponent) Value".to_owned(), 
+            flags: vec!["--weight".to_owned()], 
+            description: "IDW weight value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Search Radius".to_owned(), 
+            flags: vec!["--radius".to_owned()], 
+            description: "Search Radius.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.5".to_owned()),
+            optional: true
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Exclusion Classes (0-18, based on LAS spec; e.g. 3,4,5,6,7)".to_owned(), 
+            flags: vec!["--exclude_cls".to_owned()], 
+            description: "Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'.".to_owned(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: true
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
+            flags: vec!["--palette".to_owned()], 
+            description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Minimum Elevation Value (optional)".to_owned(), 
+            flags: vec!["--minz".to_owned()], 
+            description: "Optional minimum elevation for inclusion in interpolation.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Maximum Elevation Value (optional)".to_owned(), 
+            flags: vec!["--maxz".to_owned()], 
+            description: "Optional maximum elevation for inclusion in interpolation.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -77,6 +176,10 @@ impl LidarIdwInterpolation {
 }
 
 impl WhiteboxTool for LidarIdwInterpolation {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -86,7 +189,17 @@ impl WhiteboxTool for LidarIdwInterpolation {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

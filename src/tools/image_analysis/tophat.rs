@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: June 28, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -18,12 +18,12 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct TophatTransform {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,13 +33,59 @@ impl TophatTransform {
         
         let description = "Performs either a white or black top-hat transform on an input image.".to_string();
         
-        let mut parameters = "-i, --input   Input raster file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
-        parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-        parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
-        parameters.push_str("--variant     Optional variant value. Options include 'white' and 'black' (default is 'white').\n");
+        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
+        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
+        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
+        // parameters.push_str("--variant     Optional variant value. Options include 'white' and 'black' (default is 'white').\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter X-Dimension".to_owned(), 
+            flags: vec!["--filterx".to_owned()], 
+            description: "Size of the filter kernel in the x-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Filter Y-Dimension".to_owned(), 
+            flags: vec!["--filtery".to_owned()], 
+            description: "Size of the filter kernel in the y-direction.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Variant".to_owned(), 
+            flags: vec!["--variant".to_owned()], 
+            description: "Optional variant value. Options include 'white' and 'black'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["white".to_owned(), "black".to_owned()]),
+            default_value: Some("white".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -54,6 +100,10 @@ impl TophatTransform {
 }
 
 impl WhiteboxTool for TophatTransform {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -63,7 +113,17 @@ impl WhiteboxTool for TophatTransform {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

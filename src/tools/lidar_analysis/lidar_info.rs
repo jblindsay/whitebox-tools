@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
-Last Modified: July 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 
@@ -12,7 +12,7 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::u16;
 use lidar::*;
-use tools::WhiteboxTool;
+use tools::*;
 
 /// This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
 /// data. The reported information will include including data on the header, point return frequency, and classification 
@@ -34,7 +34,7 @@ use tools::WhiteboxTool;
 pub struct LidarInfo {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -44,9 +44,37 @@ impl LidarInfo {
         
         let description = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.".to_string();
         
-        let parameters = "-i, input        Input LAS file.
---vlr            Flag indicates whether to print variable length records (VLRs).
---geokeys        Flag indicates whether to print the geokeys.".to_owned();
+//         let parameters = "-i, input        Input LAS file.
+// --vlr            Flag indicates whether to print variable length records (VLRs).
+// --geokeys        Flag indicates whether to print the geokeys.".to_owned();
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Print the variable length records (VLRs)?".to_owned(), 
+            flags: vec!["--vlr".to_owned()], 
+            description: "Flag indicating whether or not to print the variable length records (VLRs).".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Print the geokeys?".to_owned(), 
+            flags: vec!["--geokeys".to_owned()], 
+            description: "Flag indicating whether or not to print the geokeys.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -63,6 +91,10 @@ impl LidarInfo {
 }
 
 impl WhiteboxTool for LidarInfo {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -72,7 +104,17 @@ impl WhiteboxTool for LidarInfo {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: June 27, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: This tool should be updated to take vector pour points as inputs/outputs when vector support has been added.
@@ -15,12 +15,12 @@ use std::isize;
 use std::f64;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct JensonSnapPourPoints {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -30,10 +30,47 @@ impl JensonSnapPourPoints {
         
         let description = "Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.".to_string();
         
-        let mut parameters = "--pour_pts    Input pour points (outlet) raster file.\n".to_owned();
-        parameters.push_str("--streams     Input raster streams file.\n");
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--snap_dist   Maximum snap distance in map units.\n");
+        // let mut parameters = "--pour_pts    Input pour points (outlet) raster file.\n".to_owned();
+        // parameters.push_str("--streams     Input raster streams file.\n");
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--snap_dist   Maximum snap distance in map units.\n");
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input Pour Points (Outlet) File".to_owned(), 
+            flags: vec!["--pour_pts".to_owned()], 
+            description: "Input raster pour points (outlet) file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Streams File".to_owned(), 
+            flags: vec!["--streams".to_owned()], 
+            description: "Input raster streams file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Maximum Snap Distance (map units)".to_owned(), 
+            flags: vec!["--snap_dist".to_owned()], 
+            description: "Maximum snap distance in map units.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -49,6 +86,10 @@ impl JensonSnapPourPoints {
 }
 
 impl WhiteboxTool for JensonSnapPourPoints {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -58,7 +99,10 @@ impl WhiteboxTool for JensonSnapPourPoints {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 20, 2017
-Last Modified: July 20, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -17,12 +17,12 @@ use std::thread;
 use raster::*;
 use structures::Array2D;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct MaxElevationDeviation {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,13 +32,68 @@ impl MaxElevationDeviation {
         
         let description = "Calculates the maximum elevation deviation over a range of spatial scales.".to_string();
         
-        let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        parameters.push_str("--out_mag     Output DEVmax magnitude raster file.\n");
-        parameters.push_str("--out_scale   Output DEVmax scale raster file.\n");
-        parameters.push_str("--min_scale   Minimum search neighbourhood radius in cells.\n");
-        parameters.push_str("--max_scale   Minimum search neighbourhood radius in cells.\n");
-        parameters.push_str("--step        Step size as any positive non-zero integer (default is 10).\n");
+        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
+        // parameters.push_str("--out_mag     Output DEVmax magnitude raster file.\n");
+        // parameters.push_str("--out_scale   Output DEVmax scale raster file.\n");
+        // parameters.push_str("--min_scale   Minimum search neighbourhood radius in cells.\n");
+        // parameters.push_str("--max_scale   Minimum search neighbourhood radius in cells.\n");
+        // parameters.push_str("--step        Step size as any positive non-zero integer (default is 10).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output DEVmax Magnitude File".to_owned(), 
+            flags: vec!["--out_mag".to_owned()], 
+            description: "Output raster DEVmax magnitude file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output DEVmax Scale File".to_owned(), 
+            flags: vec!["--out_scale".to_owned()], 
+            description: "Output raster DEVmax scale file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Minimum Search Neighbourhood Radius (grid cells)".to_owned(), 
+            flags: vec!["--min_scale".to_owned()], 
+            description: "Minimum search neighbourhood radius in grid cells.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Maximum Search Neighbourhood Radius (grid cells)".to_owned(), 
+            flags: vec!["--max_scale".to_owned()], 
+            description: "Maximum search neighbourhood radius in grid cells.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Step Size".to_owned(), 
+            flags: vec!["--step".to_owned()], 
+            description: "Step size as any positive non-zero integer.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("10".to_owned()),
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -53,6 +108,10 @@ impl MaxElevationDeviation {
 }
 
 impl WhiteboxTool for MaxElevationDeviation {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -62,7 +121,17 @@ impl WhiteboxTool for MaxElevationDeviation {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
-Last Modified: July 17, 2017
+Last Modified: November 16, 2017
 License: MIT
 
 NOTES: This tool needs to be parallelized.
@@ -16,12 +16,12 @@ use std::path;
 use lidar::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct FlightlineOverlap {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -32,11 +32,48 @@ impl FlightlineOverlap {
 
         let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
 
-        let parameters = "-i, --input        Input LAS file.
--o, --output       Output raster file.
---resolution       Output raster's grid resolution.
---palette          Optional palette name (for use with Whitebox raster files)"
-                .to_owned();
+//         let parameters = "-i, --input        Input LAS file.
+// -o, --output       Output raster file.
+// --resolution       Output raster's grid resolution.
+// --palette          Optional palette name (for use with Whitebox raster files)"
+//                 .to_owned();
+
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input LiDAR File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+            description: "Input LiDAR file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Grid Resolution".to_owned(), 
+            flags: vec!["--resolution".to_owned()], 
+            description: "Output raster's grid resolution.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
+            flags: vec!["--palette".to_owned()], 
+            description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: true
+        });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -61,6 +98,10 @@ impl FlightlineOverlap {
 }
 
 impl WhiteboxTool for FlightlineOverlap {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -70,7 +111,17 @@ impl WhiteboxTool for FlightlineOverlap {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
+        }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {

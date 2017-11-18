@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 24, 2017
-Last Modified: July 2, 2017
+Last Modified: November 16, 2017
 License: MIT
 */
 extern crate time;
@@ -18,12 +18,12 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
-use tools::WhiteboxTool;
+use tools::*;
 
 pub struct DInfFlowAccumulation {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -33,13 +33,68 @@ impl DInfFlowAccumulation {
         
         let description = "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
         
-        let mut parameters = "--dem           Input raster DEM file.".to_owned();
-        parameters.push_str("-o, --output    Output raster file.\n");
-        parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
-        parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
-         
+        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
+        // parameters.push_str("-o, --output    Output raster file.\n");
+        // parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
+        // parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
+        // parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
+        // parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
+        
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output Type".to_owned(), 
+            flags: vec!["--out_type".to_owned()], 
+            description: "Output type; one of 'cells', 'sca' (default), and 'ca'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["Cells".to_owned(), "Specific Contributing Area".to_owned(), "Catchment Area".to_owned()]),
+            default_value: Some("Specific Contributing Area".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Convergence Threshold (grid cells; blank for none)".to_owned(), 
+            flags: vec!["--threshold".to_owned()], 
+            description: "Optional convergence threshold parameter, in grid cells; default is inifinity.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Log-transform the output?".to_owned(), 
+            flags: vec!["--log".to_owned()], 
+            description: "Optional flag to request the output be log-transformed.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Clip the upper tail by 1%?".to_owned(), 
+            flags: vec!["--clip".to_owned()], 
+            description: "Optional flag to request clipping the display max by 1%.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -55,6 +110,10 @@ impl DInfFlowAccumulation {
 }
 
 impl WhiteboxTool for DInfFlowAccumulation {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -64,7 +123,10 @@ impl WhiteboxTool for DInfFlowAccumulation {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {

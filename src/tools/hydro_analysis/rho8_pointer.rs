@@ -1,3 +1,10 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: July 16, 2017
+Last Modified: November 16, 2017
+License: MIT
+*/
 extern crate time;
 extern crate num_cpus;
 extern crate rand;
@@ -10,13 +17,13 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
-use tools::WhiteboxTool;
+use tools::*;
 use self::rand::distributions::{IndependentSample, Range};
 
 pub struct Rho8Pointer {
     name: String,
     description: String,
-    parameters: String,
+    parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
@@ -26,10 +33,38 @@ impl Rho8Pointer {
         
         let description = "Calculates a stochastic Rho8 flow pointer raster from an input DEM.".to_string();
         
-        let mut parameters = "--dem         Input raster DEM file.".to_owned();
-        parameters.push_str("-o, --output  Output raster file.\n");
-        parameters.push_str("--esri_style  Uses the ESRI style D8 pointer output (default is false).\n");
+        // let mut parameters = "--dem         Input raster DEM file.\n".to_owned();
+        // parameters.push_str("-o, --output  Output raster file.\n");
+        // parameters.push_str("--esri_style  Uses the ESRI style D8 pointer output (default is false).\n");
         
+        let mut parameters = vec![];
+        parameters.push(ToolParameter{
+            name: "Input DEM File".to_owned(), 
+            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+            description: "Input raster DEM file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Should the pointer file use the ESRI pointer scheme?".to_owned(), 
+            flags: vec!["--esri_pntr".to_owned()], 
+            description: "D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -44,6 +79,10 @@ impl Rho8Pointer {
 }
 
 impl WhiteboxTool for Rho8Pointer {
+    fn get_source_file(&self) -> String {
+        String::from(file!())
+    }
+    
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -53,7 +92,10 @@ impl WhiteboxTool for Rho8Pointer {
     }
 
     fn get_tool_parameters(&self) -> String {
-        self.parameters.clone()
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
+        }
     }
 
     fn get_example_usage(&self) -> String {
@@ -90,7 +132,7 @@ impl WhiteboxTool for Rho8Pointer {
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_style" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
                 esri_style = true;
             }
         }
