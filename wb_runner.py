@@ -39,7 +39,7 @@ class FileSelector(tk.Frame):
 
         self.runner = runner
 
-        ttk.Frame.__init__(self, master, padding='0.05i')
+        ttk.Frame.__init__(self, master, padding='0.1i')
         self.grid()
 
         self.label = ttk.Label(self, text=self.name, justify=tk.LEFT)
@@ -521,7 +521,7 @@ class DataInput(tk.Frame):
 
         ttk.Frame.__init__(self, master)
         self.grid()
-        self['padding'] = '0.05i'
+        self['padding'] = '0.1i'
 
         self.label = ttk.Label(self, text=self.name, justify=tk.LEFT)
         self.label.grid(row=0, column=0, sticky=tk.W)

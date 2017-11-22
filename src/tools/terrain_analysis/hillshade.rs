@@ -147,7 +147,7 @@ impl WhiteboxTool for Hillshade {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

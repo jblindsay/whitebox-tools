@@ -28,24 +28,24 @@ pub fn read_arcbinary(file_name: &String,
         let line_split = line_unwrapped.split(" ");
         let vec = line_split.collect::<Vec<&str>>();
         if vec[0].to_lowercase().contains("nrows") {
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
         } else if vec[0].to_lowercase().contains("ncols") {
-            configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
         } else if vec[0].to_lowercase().contains("xllcorner") {
-            xllcenter = vec[1].trim().to_string().parse::<f64>().unwrap();
+            xllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("yllcorner") {
-            yllcenter = vec[1].trim().to_string().parse::<f64>().unwrap();
+            yllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("xllcenter") {
-            xllcorner = vec[1].trim().to_string().parse::<f64>().unwrap();
+            xllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("yllcenter") {
-            yllcorner = vec[1].trim().to_string().parse::<f64>().unwrap();
+            yllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("cellsize") {
-            configs.resolution_x = vec[1].trim().to_string().parse::<f64>().unwrap();
-            configs.resolution_y = vec[1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_x = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_y = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("nodata_value") {
-            configs.nodata = vec[1].trim().to_string().parse::<f64>().unwrap();
+            configs.nodata = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("byteorder") {
-            if vec[1].trim().to_lowercase().contains("lsb") {
+            if vec[vec.len()-1].trim().to_lowercase().contains("lsb") {
                 configs.endian = Endianness::LittleEndian;
             } else {
                 configs.endian = Endianness::BigEndian;

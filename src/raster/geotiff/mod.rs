@@ -1118,7 +1118,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         ifd_entries.push(IfdEntry::new(TAG_PHOTOMETRICINTERPRETATION, DT_SHORT, 1u32, pi as u32));
 
         // StripOffsets tag (273)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPOFFSETS, DT_LONG, r.configs.columns as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(TAG_STRIPOFFSETS, DT_LONG, r.configs.rows as u32, larger_values_data.len() as u32));
         let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
         for i in 0..r.configs.rows as u32 {
             let _ = larger_values_data.write_u32::<LittleEndian>(8u32 + row_length_in_bytes * i);
@@ -1131,7 +1131,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         ifd_entries.push(IfdEntry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u32, 1u32));
 
         // StripByteCounts tag (279)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPBYTECOUNTS, DT_LONG, r.configs.columns as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(TAG_STRIPBYTECOUNTS, DT_LONG, r.configs.rows as u32, larger_values_data.len() as u32));
         let total_bytes_per_pixel = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 1u32,
             DataType::I16 | DataType::U16 => 2u32,
