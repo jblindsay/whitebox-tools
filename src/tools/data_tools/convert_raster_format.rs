@@ -126,8 +126,7 @@ impl WhiteboxTool for ConvertRasterFormat {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" ||
-               vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {

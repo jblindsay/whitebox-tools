@@ -192,8 +192,6 @@ impl WhiteboxTool for Slope {
         let mut id = 0;
         while ending_row < rows {
             let input = input.clone();
-            let rows = rows.clone();
-            // let z_factor = z_factor.clone();
             starting_row = id * row_block_size;
             ending_row = starting_row + row_block_size;
             if ending_row > rows {

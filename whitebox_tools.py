@@ -2,6 +2,13 @@
 ''' This file is intended to be a helper for running whitebox-tools plugins from a Python script.
 See whitebox_example.py for an example of how to use it.
 '''
+
+# This script is part of the WhiteboxTools geospatial analysis library.
+# Authors: Dr. John Lindsay
+# Created: November 28, 2017
+# Last Modified: November 28, 2017
+# License: MIT
+
 from __future__ import print_function
 import os
 from os import path
@@ -188,7 +195,7 @@ class WhiteboxTools(object):
             return ret
         except (OSError, ValueError, CalledProcessError) as err:
             return err
-    
+
     def tool_parameters(self, tool_name):
         ''' Retrieve the tool parameter descriptions for a specific tool.
         '''
@@ -211,7 +218,7 @@ class WhiteboxTools(object):
             return ret
         except (OSError, ValueError, CalledProcessError) as err:
             return err
-    
+
     def view_code(self, tool_name):
         ''' Opens a web browser to view the source code for a specific tool
             on the projects source code repository.

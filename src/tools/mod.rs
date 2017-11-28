@@ -249,6 +249,7 @@ impl ToolManager {
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
+        tool_names.push("FeaturePreservingDenoise".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
@@ -604,6 +605,7 @@ impl ToolManager {
 
             // terrain_analysis
             "aspect" => Some(Box::new(tools::terrain_analysis::Aspect::new())),
+            "featurepreservingdenoise" => Some(Box::new(tools::terrain_analysis::FeaturePreservingDenoise::new())),
             "devfrommeanelev" => Some(Box::new(tools::terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(tools::terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => {

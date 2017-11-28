@@ -67,7 +67,7 @@ impl RemoveOffTerrainObjects {
             name: "Slope Threshold".to_owned(), 
             flags: vec!["--slope".to_owned()], 
             description: "Slope threshold value.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::Float,
             default_value: Some("15.0".to_owned()),
             optional: false
         });

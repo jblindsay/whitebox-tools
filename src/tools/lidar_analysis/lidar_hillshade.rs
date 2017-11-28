@@ -308,7 +308,7 @@ impl WhiteboxTool for LidarHillshade {
                     hillshade = 0f64;
                 }
             }
-            v = (hillshade) as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
+            v = hillshade as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
             let rgb: RgbData = RgbData{ red: v, green: v, blue: v };
             let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
             output.add_point_record(lpr);

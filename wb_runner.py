@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+
+# This script is part of the WhiteboxTools geospatial analysis library.
+# Authors: Dr. John Lindsay
+# Created: November 28, 2017
+# Last Modified: November 28, 2017
+# License: MIT
+
 import sys
 if sys.version_info[0] < 3:
     raise "Must be using Python 3"
@@ -21,13 +28,14 @@ from whitebox_tools import WhiteboxTools
 
 wbt = WhiteboxTools()
 
+
 class FileSelector(tk.Frame):
     def __init__(self, json_str, runner, master=None):
         # first make sure that the json data has the correct fields
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
         self.file_type = ""
         if "ExistingFile" in self.parameter_type:
@@ -48,10 +56,11 @@ class FileSelector(tk.Frame):
 
         if self.optional:
             self.label['text'] = self.label['text'] + "*"
-        
+
         fs_frame = ttk.Frame(self, padding='0.0i')
         self.value = tk.StringVar()
-        self.entry = ttk.Entry(fs_frame, width=45, justify=tk.LEFT, textvariable=self.value)
+        self.entry = ttk.Entry(
+            fs_frame, width=45, justify=tk.LEFT, textvariable=self.value)
         self.entry.grid(row=0, column=0, sticky=tk.NSEW)
         self.entry.columnconfigure(0, weight=1)
         if default_value:
@@ -59,7 +68,8 @@ class FileSelector(tk.Frame):
 
         # self.img = tk.PhotoImage(file=script_dir + "/img/open.gif")
         # self.open_button = ttk.Button(fs_frame, width=55, image=self.img, command=self.select_dir)
-        self.open_button = ttk.Button(fs_frame, width=4, text="...", command=self.select_file)
+        self.open_button = ttk.Button(
+            fs_frame, width=4, text="...", command=self.select_file)
         self.open_button.grid(row=0, column=1, sticky=tk.E)
         self.open_button.columnconfigure(0, weight=1)
         fs_frame.grid(row=1, column=0, sticky=tk.NSEW)
@@ -69,33 +79,35 @@ class FileSelector(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
-        
+
         # Add the bindings
         if _platform == "darwin":
             self.entry.bind("<Command-Key-a>", self.select_all)
         else:
             self.entry.bind("<Control-Key-a>", self.select_all)
-    
+
     def select_file(self):
         try:
             result = self.value.get()
             init_dir = self.runner.working_dir
-            if self.parameter_type == "Directory": 
+            if self.parameter_type == "Directory":
                 result = filedialog.askdirectory()
             elif "ExistingFile" in self.parameter_type:
                 ftypes = [('All files', '*.*')]
                 if 'Raster' in self.file_type:
-                    ftypes=[('Raster files',('*.dep', '*.tif', '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                    ftypes = [('Raster files', ('*.dep', '*.tif',
+                                                '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
                 elif 'Lidar' in self.file_type:
-                    ftypes=[("LiDAR files",('*.las', '*.zip'))]
+                    ftypes = [("LiDAR files", ('*.las', '*.zip'))]
                 elif 'Vector' in self.file_type:
-                    ftypes=[("Shapefiles","*.shp")]
+                    ftypes = [("Shapefiles", "*.shp")]
                 elif 'Text' in self.file_type:
-                    ftypes=[("Text files","*.txt"),("all files","*.*")]
+                    ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
                 elif 'HTML' in self.file_type:
-                    ftypes=[("HTML files","*.html")]
-                
-                result = filedialog.askopenfilename(initialdir=init_dir,title="Select file",filetypes=ftypes)
+                    ftypes = [("HTML files", "*.html")]
+
+                result = filedialog.askopenfilename(
+                    initialdir=init_dir, title="Select file", filetypes=ftypes)
 
             elif "NewFile" in self.parameter_type:
                 result = filedialog.asksaveasfilename()
@@ -106,14 +118,14 @@ class FileSelector(tk.Frame):
 
         except:
             t = "file"
-            if self.parameter_type == "Directory": 
+            if self.parameter_type == "Directory":
                 t = "directory"
             messagebox.showinfo("Warning", "Could not find {}".format(t))
-    
+
     def get_value(self):
         if self.value.get():
             v = self.value.get()
-            # Do some quality assurance here. 
+            # Do some quality assurance here.
             # Is there a directory included?
             if os.sep not in v:
                 v = self.runner.working_dir + os.sep + v
@@ -138,10 +150,11 @@ class FileSelector(tk.Frame):
             return "{}='{}'".format(self.flag, v)
         else:
             t = "file"
-            if self.parameter_type == "Directory": 
+            if self.parameter_type == "Directory":
                 t = "directory"
             if not self.optional:
-                messagebox.showinfo("Error", "Unspecified {} parameter {}.".format(t, self.flag))
+                messagebox.showinfo(
+                    "Error", "Unspecified {} parameter {}.".format(t, self.flag))
 
         return None
 
@@ -149,13 +162,14 @@ class FileSelector(tk.Frame):
         self.entry.select_range(0, tk.END)
         return 'break'
 
+
 class FileOrFloat(tk.Frame):
     def __init__(self, json_str, runner, master=None):
         # first make sure that the json data has the correct fields
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
         self.file_type = j['parameter_type']['ExistingFileOrFloat']
         self.optional = j['optional']
@@ -173,10 +187,11 @@ class FileOrFloat(tk.Frame):
 
         if self.optional:
             self.label['text'] = self.label['text'] + "*"
-        
+
         fs_frame = ttk.Frame(self, padding='0.0i')
         self.value = tk.StringVar()
-        self.entry = ttk.Entry(fs_frame, width=35, justify=tk.LEFT, textvariable=self.value)
+        self.entry = ttk.Entry(
+            fs_frame, width=35, justify=tk.LEFT, textvariable=self.value)
         self.entry.grid(row=0, column=0, sticky=tk.NSEW)
         self.entry.columnconfigure(0, weight=1)
         if default_value:
@@ -184,7 +199,8 @@ class FileOrFloat(tk.Frame):
 
         # self.img = tk.PhotoImage(file=script_dir + "/img/open.gif")
         # self.open_button = ttk.Button(fs_frame, width=55, image=self.img, command=self.select_dir)
-        self.open_button = ttk.Button(fs_frame, width=4, text="...", command=self.select_file)
+        self.open_button = ttk.Button(
+            fs_frame, width=4, text="...", command=self.select_file)
         self.open_button.grid(row=0, column=1, sticky=tk.E)
         # self.open_button.columnconfigure(0, weight=1)
 
@@ -193,7 +209,8 @@ class FileOrFloat(tk.Frame):
         # self.label.columnconfigure(0, weight=1)
 
         self.value2 = tk.StringVar()
-        self.entry2 = ttk.Entry(fs_frame, width=10, justify=tk.LEFT, textvariable=self.value2)
+        self.entry2 = ttk.Entry(
+            fs_frame, width=10, justify=tk.LEFT, textvariable=self.value2)
         self.entry2.grid(row=0, column=3, sticky=tk.NSEW)
         self.entry2.columnconfigure(0, weight=1)
         self.entry2['justify'] = 'right'
@@ -205,30 +222,32 @@ class FileOrFloat(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
-        
+
         # Add the bindings
         if _platform == "darwin":
             self.entry.bind("<Command-Key-a>", self.select_all)
         else:
             self.entry.bind("<Control-Key-a>", self.select_all)
-    
+
     def select_file(self):
         try:
             result = self.value.get()
             init_dir = self.runner.working_dir
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
-                ftypes=[('Raster files',('*.dep', '*.tif', '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                ftypes = [('Raster files', ('*.dep', '*.tif',
+                                            '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
             elif 'Lidar' in self.file_type:
-                ftypes=[("LiDAR files",('*.las', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:
-                ftypes=[("Shapefiles","*.shp")]
+                ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
-                ftypes=[("Text files","*.txt"),("all files","*.*")]
+                ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
             elif 'HTML' in self.file_type:
-                ftypes=[("HTML files","*.html")]
-            
-            result = filedialog.askopenfilename(initialdir=init_dir,title="Select file",filetypes=ftypes)
+                ftypes = [("HTML files", "*.html")]
+
+            result = filedialog.askopenfilename(
+                initialdir=init_dir, title="Select file", filetypes=ftypes)
 
             self.value.set(result)
             # update the working directory
@@ -236,12 +255,12 @@ class FileOrFloat(tk.Frame):
 
         except:
             t = "file"
-            if self.parameter_type == "Directory": 
+            if self.parameter_type == "Directory":
                 t = "directory"
             messagebox.showinfo("Warning", "Could not find {}".format(t))
-    
+
     def RepresentsFloat(self, s):
-        try: 
+        try:
             float(s)
             return True
         except ValueError:
@@ -250,7 +269,7 @@ class FileOrFloat(tk.Frame):
     def get_value(self):
         if self.value.get():
             v = self.value.get()
-            # Do some quality assurance here. 
+            # Do some quality assurance here.
             # Is there a directory included?
             if os.sep not in v:
                 v = self.runner.working_dir + os.sep + v
@@ -278,24 +297,27 @@ class FileOrFloat(tk.Frame):
             if self.RepresentsFloat(v):
                 return "{}={}".format(self.flag, v)
             else:
-                    messagebox.showinfo("Error", "Error converting parameter {} to type Float.".format(self.flag))
+                messagebox.showinfo(
+                    "Error", "Error converting parameter {} to type Float.".format(self.flag))
         else:
             if not self.optional:
-                messagebox.showinfo("Error", "Unspecified file/numeric parameter {}.".format(self.flag))
+                messagebox.showinfo(
+                    "Error", "Unspecified file/numeric parameter {}.".format(self.flag))
 
         return None
 
     def select_all(self, event):
         self.entry.select_range(0, tk.END)
         return 'break'
-    
+
+
 class MultifileSelector(tk.Frame):
     def __init__(self, json_str, runner, master=None):
         # first make sure that the json data has the correct fields
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
         self.file_type = ""
         self.file_type = j['parameter_type']['FileList']
@@ -314,21 +336,24 @@ class MultifileSelector(tk.Frame):
 
         if self.optional:
             self.label['text'] = self.label['text'] + "*"
-        
+
         fs_frame = ttk.Frame(self, padding='0.0i')
-        self.opt = tk.Listbox(fs_frame, width=44, height=4) #, variable=self.value)
+        # , variable=self.value)
+        self.opt = tk.Listbox(fs_frame, width=44, height=4)
         self.opt.grid(row=0, column=0, sticky=tk.NSEW)
         s = ttk.Scrollbar(fs_frame, orient=tk.VERTICAL, command=self.opt.yview)
-        s.grid(row=0, column=1, sticky=(tk.N,tk.S))
+        s.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.opt['yscrollcommand'] = s.set
-        
+
         btn_frame = ttk.Frame(fs_frame, padding='0.0i')
-        self.open_button = ttk.Button(btn_frame, width=4, text="...", command=self.select_file)
+        self.open_button = ttk.Button(
+            btn_frame, width=4, text="...", command=self.select_file)
         self.open_button.grid(row=0, column=0, sticky=tk.NE)
         self.open_button.columnconfigure(0, weight=1)
         self.open_button.rowconfigure(0, weight=1)
 
-        self.delete_button = ttk.Button(btn_frame, width=4, text="del", command=self.delete_entry)
+        self.delete_button = ttk.Button(
+            btn_frame, width=4, text="del", command=self.delete_entry)
         self.delete_button.grid(row=1, column=0, sticky=tk.NE)
         self.delete_button.columnconfigure(0, weight=1)
         self.delete_button.rowconfigure(1, weight=1)
@@ -343,24 +368,26 @@ class MultifileSelector(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
-    
+
     def select_file(self):
         try:
             #result = self.value.get()
             init_dir = self.runner.working_dir
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
-                ftypes=[('Raster files',('*.dep', '*.tif', '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                ftypes = [('Raster files', ('*.dep', '*.tif',
+                                            '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
             elif 'Lidar' in self.file_type:
-                ftypes=[("LiDAR files",('*.las', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:
-                ftypes=[("Shapefiles","*.shp")]
+                ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
-                ftypes=[("Text files","*.txt"),("all files","*.*")]
+                ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
             elif 'HTML' in self.file_type:
-                ftypes=[("HTML files","*.html")]
-            
-            result = filedialog.askopenfilenames(initialdir=init_dir,title="Select files",filetypes=ftypes)
+                ftypes = [("HTML files", "*.html")]
+
+            result = filedialog.askopenfilenames(
+                initialdir=init_dir, title="Select files", filetypes=ftypes)
             if result:
                 for v in result:
                     self.opt.insert(tk.END, v)
@@ -370,7 +397,7 @@ class MultifileSelector(tk.Frame):
 
         except:
             messagebox.showinfo("Warning", "Could not find file")
-    
+
     def delete_entry(self):
         self.opt.delete(tk.ANCHOR)
 
@@ -381,7 +408,7 @@ class MultifileSelector(tk.Frame):
                 s = ""
                 for i in range(0, len(l)):
                     v = l[i]
-                    if i < len(l)-1:
+                    if i < len(l) - 1:
                         s += "{};".format(v)
                     else:
                         s += "{}".format(v)
@@ -389,12 +416,15 @@ class MultifileSelector(tk.Frame):
                 return "{}='{}'".format(self.flag, s)
             else:
                 if not self.optional:
-                    messagebox.showinfo("Error", "Unspecified non-optional parameter {}.".format(self.flag))
-        
+                    messagebox.showinfo(
+                        "Error", "Unspecified non-optional parameter {}.".format(self.flag))
+
         except:
-            messagebox.showinfo("Error", "Error formating files for parameter {}".format(self.flag))
+            messagebox.showinfo(
+                "Error", "Error formating files for parameter {}".format(self.flag))
 
         return None
+
 
 class BooleanInput(tk.Frame):
     def __init__(self, json_str, master=None):
@@ -402,9 +432,10 @@ class BooleanInput(tk.Frame):
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
-        self.optional = True # just for quality control. BooleanInputs are always optional.
+        # just for quality control. BooleanInputs are always optional.
+        self.optional = True
         default_value = j['default_value']
 
         ttk.Frame.__init__(self, master)
@@ -414,7 +445,8 @@ class BooleanInput(tk.Frame):
         frame = ttk.Frame(self, padding='0.0i')
 
         self.value = tk.IntVar()
-        c = ttk.Checkbutton(frame, text=self.name, width=55, variable=self.value)
+        c = ttk.Checkbutton(frame, text=self.name,
+                            width=55, variable=self.value)
         c.grid(row=0, column=0, sticky=tk.W)
 
         # set the default value
@@ -429,12 +461,13 @@ class BooleanInput(tk.Frame):
         # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-    
+
     def get_value(self):
         if self.value.get() == 1:
             return self.flag
         else:
             return None
+
 
 class OptionsInput(tk.Frame):
     def __init__(self, json_str, master=None):
@@ -442,7 +475,7 @@ class OptionsInput(tk.Frame):
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
         self.optional = j['optional']
         default_value = j['default_value']
@@ -458,13 +491,13 @@ class OptionsInput(tk.Frame):
         self.label.columnconfigure(0, weight=1)
 
         frame2 = ttk.Frame(frame, padding='0.0i')
-        opt = tk.Listbox(frame2, width=40) #, variable=self.value)
+        opt = tk.Listbox(frame2, width=40)  # , variable=self.value)
         opt.grid(row=0, column=0, sticky=tk.NSEW)
         s = ttk.Scrollbar(frame2, orient=tk.VERTICAL, command=opt.yview)
-        s.grid(row=0, column=1, sticky=(tk.N,tk.S))
+        s.grid(row=0, column=1, sticky=(tk.N, tk.S))
         opt['yscrollcommand'] = s.set
-        
-        self.value = None # initialize in event of no default and no selection
+
+        self.value = None  # initialize in event of no default and no selection
         i = 1
         default_index = -1
         list = j['parameter_type']['OptionList']
@@ -474,7 +507,7 @@ class OptionsInput(tk.Frame):
             if v == default_value:
                 default_index = i - 1
             i = i + 1
-        
+
         if i - 1 < 5:
             opt['height'] = i - 1
         else:
@@ -485,7 +518,7 @@ class OptionsInput(tk.Frame):
             opt.select_set(default_index)
             opt.event_generate("<<ListboxSelect>>")
             opt.see(default_index)
-        
+
         frame2.grid(row=0, column=0, sticky=tk.W)
         frame.grid(row=1, column=0, sticky=tk.W)
         frame.columnconfigure(0, weight=1)
@@ -493,14 +526,15 @@ class OptionsInput(tk.Frame):
         # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-    
+
     def get_value(self):
         if self.value:
             return "{}='{}'".format(self.flag, self.value)
         else:
             if not self.optional:
-                messagebox.showinfo("Error", "Unspecified non-optional parameter {}.".format(self.flag))
-        
+                messagebox.showinfo(
+                    "Error", "Unspecified non-optional parameter {}.".format(self.flag))
+
         return None
 
     def select(self, event):
@@ -508,13 +542,14 @@ class OptionsInput(tk.Frame):
         selection = widget.curselection()
         self.value = widget.get(selection[0])
 
+
 class DataInput(tk.Frame):
     def __init__(self, json_str, master=None):
         # first make sure that the json data has the correct fields
         j = json.loads(json_str)
         self.name = j['name']
         self.description = j['description']
-        self.flag = j['flags'][len(j['flags'])-1]
+        self.flag = j['flags'][len(j['flags']) - 1]
         self.parameter_type = j['parameter_type']
         self.optional = j['optional']
         default_value = j['default_value']
@@ -539,37 +574,37 @@ class DataInput(tk.Frame):
 
         if self.optional:
             self.label['text'] = self.label['text'] + "*"
-        
+
         if ("Integer" in self.parameter_type or
-        "Float" in self.parameter_type or
-        "Double" in self.parameter_type):
+            "Float" in self.parameter_type or
+                "Double" in self.parameter_type):
             self.entry['justify'] = 'right'
-        
+
         # Add the bindings
         if _platform == "darwin":
             self.entry.bind("<Command-Key-a>", self.select_all)
         else:
             self.entry.bind("<Control-Key-a>", self.select_all)
-        
+
         self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=10)
         self.rowconfigure(0, weight=1)
 
     def RepresentsInt(self, s):
-        try: 
+        try:
             int(s)
             return True
         except ValueError:
             return False
-    
+
     def RepresentsFloat(self, s):
-        try: 
+        try:
             float(s)
             return True
         except ValueError:
             return False
-    
+
     def get_value(self):
         v = self.value.get()
         if v:
@@ -577,22 +612,26 @@ class DataInput(tk.Frame):
                 if self.RepresentsInt(self.value.get()):
                     return "{}={}".format(self.flag, self.value.get())
                 else:
-                     messagebox.showinfo("Error", "Error converting parameter {} to type Integer.".format(self.flag))
+                    messagebox.showinfo(
+                        "Error", "Error converting parameter {} to type Integer.".format(self.flag))
             elif "Float" in self.parameter_type:
                 if self.RepresentsFloat(self.value.get()):
                     return "{}={}".format(self.flag, self.value.get())
                 else:
-                     messagebox.showinfo("Error", "Error converting parameter {} to type Float.".format(self.flag))
+                    messagebox.showinfo(
+                        "Error", "Error converting parameter {} to type Float.".format(self.flag))
             elif "Double" in self.parameter_type:
                 if self.RepresentsFloat(self.value.get()):
                     return "{}={}".format(self.flag, self.value.get())
                 else:
-                     messagebox.showinfo("Error", "Error converting parameter {} to type Double.".format(self.flag))
-            else: # String or StringOrNumber types
+                    messagebox.showinfo(
+                        "Error", "Error converting parameter {} to type Double.".format(self.flag))
+            else:  # String or StringOrNumber types
                 return "{}='{}'".format(self.flag, self.value.get())
         else:
             if not self.optional:
-                messagebox.showinfo("Error", "Unspecified non-optional parameter {}.".format(self.flag))
+                messagebox.showinfo(
+                    "Error", "Unspecified non-optional parameter {}.".format(self.flag))
 
         return None
 
@@ -600,11 +639,12 @@ class DataInput(tk.Frame):
         self.entry.select_range(0, tk.END)
         return 'break'
 
+
 class WbRunner(tk.Frame):
     def __init__(self, tool_name=None, master=None):
         # First, try to find the WhiteboxTools exe directory
         if _platform == 'win32':
-                ext = '.exe'
+            ext = '.exe'
         else:
             ext = ''
 
@@ -616,7 +656,7 @@ class WbRunner(tk.Frame):
             if filename.endswith(exe_name):
                 self.exe_path = path.dirname(path.abspath(filename))
                 break
-        
+
         wbt.set_whitebox_dir(self.exe_path)
 
         ttk.Frame.__init__(self, master)
@@ -626,7 +666,8 @@ class WbRunner(tk.Frame):
         self.master.title("WhiteboxTools Runner")
         # self.master.lift()
         if _platform == "darwin":
-            os.system('''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
+            os.system(
+                '''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
         self.create_widgets()
         self.working_dir = str(Path.home())
 
@@ -634,15 +675,18 @@ class WbRunner(tk.Frame):
         toplevel_frame = ttk.Frame(self, padding='0.1i')
 
         (self.toolslist, selected_item) = self.get_tools_list()
-        self.tools_frame = ttk.LabelFrame(toplevel_frame, text="{} Available Tools".format(len(self.toolslist)), padding='0.1i')
+        self.tools_frame = ttk.LabelFrame(toplevel_frame, text="{} Available Tools".format(
+            len(self.toolslist)), padding='0.1i')
         self.toolnames = tk.StringVar(value=self.toolslist)
-        self.tools_listbox = tk.Listbox(self.tools_frame, height=22, listvariable=self.toolnames)
+        self.tools_listbox = tk.Listbox(
+            self.tools_frame, height=22, listvariable=self.toolnames)
         self.tools_listbox.bind("<<ListboxSelect>>", self.update_tool_help)
         self.tools_listbox.grid(row=0, column=0, sticky=tk.NSEW)
         self.tools_listbox.columnconfigure(0, weight=10)
         self.tools_listbox.rowconfigure(0, weight=1)
-        s = ttk.Scrollbar(self.tools_frame, orient=tk.VERTICAL, command=self.tools_listbox.yview)
-        s.grid(row=0, column=1, sticky=(tk.N,tk.S))
+        s = ttk.Scrollbar(self.tools_frame, orient=tk.VERTICAL,
+                          command=self.tools_listbox.yview)
+        s.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.tools_listbox['yscrollcommand'] = s.set
         self.tools_frame.grid(row=0, column=0, sticky=tk.NSEW)
         self.tools_frame.columnconfigure(0, weight=10)
@@ -654,11 +698,13 @@ class WbRunner(tk.Frame):
         # json_str = '{"default_value": null, "description": "Directory containing data files.", "flags": ["--wd"], "name": "Working Directory", "optional": true, "parameter_type": "Directory"}'
         # self.wd = FileSelector(json_str, overall_frame)
         # self.wd.grid(row=0, column=0, sticky=tk.NSEW)
-        
+
         current_tool_frame = ttk.Frame(overall_frame, padding='0.1i')
-        self.current_tool_lbl = ttk.Label(current_tool_frame, text="Current Tool: {}".format(self.tool_name), justify=tk.LEFT) #, font=("Helvetica", 12, "bold")
-        self.current_tool_lbl.grid(row=0, column=0, sticky=tk.W)  
-        self.view_code_button = ttk.Button(current_tool_frame, text="View Code", width=8, command=self.view_code)
+        self.current_tool_lbl = ttk.Label(current_tool_frame, text="Current Tool: {}".format(
+            self.tool_name), justify=tk.LEFT)  # , font=("Helvetica", 12, "bold")
+        self.current_tool_lbl.grid(row=0, column=0, sticky=tk.W)
+        self.view_code_button = ttk.Button(
+            current_tool_frame, text="View Code", width=8, command=self.view_code)
         self.view_code_button.grid(row=0, column=1, sticky=tk.E)
         current_tool_frame.grid(row=1, column=0, sticky=tk.NSEW)
         current_tool_frame.columnconfigure(0, weight=1)
@@ -671,7 +717,7 @@ class WbRunner(tk.Frame):
 
         # args_frame = ttk.Frame(overall_frame, padding='0.1i')
         # self.args_label = ttk.Label(args_frame, text="Tool Arguments:", justify=tk.LEFT)
-        # self.args_label.grid(row=0, column=0, sticky=tk.W)  
+        # self.args_label.grid(row=0, column=0, sticky=tk.W)
         # args_frame2 = ttk.Frame(args_frame, padding='0.0i')
         # self.args_value = tk.StringVar()
         # self.args_text = ttk.Entry(args_frame2, width=45, justify=tk.LEFT, textvariable=self.args_value)
@@ -694,10 +740,12 @@ class WbRunner(tk.Frame):
         #     self.args_text.bind("<Control-Key-a>", self.args_select_all)
 
         buttonsFrame = ttk.Frame(overall_frame, padding='0.1i')
-        self.run_button = ttk.Button(buttonsFrame, text="Run", width=8, command=self.run_tool)
+        self.run_button = ttk.Button(
+            buttonsFrame, text="Run", width=8, command=self.run_tool)
         self.run_button.pack(pady=10, padx=10)
         self.run_button.grid(row=0, column=0)
-        self.quitButton = ttk.Button(buttonsFrame, text="Cancel", width=8, command=self.cancel_operation)
+        self.quitButton = ttk.Button(
+            buttonsFrame, text="Cancel", width=8, command=self.cancel_operation)
         self.quitButton.grid(row=0, column=1)
         buttonsFrame.grid(row=3, column=0, sticky=tk.E)
 
@@ -705,7 +753,8 @@ class WbRunner(tk.Frame):
         outlabel = ttk.Label(output_frame, text="Output:", justify=tk.LEFT)
         outlabel.grid(row=0, column=0, sticky=tk.NW)
         k = wbt.tool_help(self.tool_name)
-        self.out_text = ScrolledText(output_frame, width=63, height=10, wrap=tk.NONE, padx=7, pady=7)
+        self.out_text = ScrolledText(
+            output_frame, width=63, height=10, wrap=tk.NONE, padx=7, pady=7)
         self.out_text.insert(tk.END, k)
         self.out_text.grid(row=1, column=0, sticky=tk.NSEW)
         self.out_text.columnconfigure(0, weight=1)
@@ -720,10 +769,12 @@ class WbRunner(tk.Frame):
             self.out_text.bind("<Control-Key-a>", self.select_all)
 
         progress_frame = ttk.Frame(overall_frame, padding='0.1i')
-        self.progress_label = ttk.Label(progress_frame, text="Progress:", justify=tk.LEFT)
+        self.progress_label = ttk.Label(
+            progress_frame, text="Progress:", justify=tk.LEFT)
         self.progress_label.grid(row=0, column=0, sticky=tk.E, padx=5)
         self.progress_var = tk.DoubleVar()
-        self.progress = ttk.Progressbar(progress_frame, orient="horizontal", variable=self.progress_var, length=200, maximum=100)
+        self.progress = ttk.Progressbar(
+            progress_frame, orient="horizontal", variable=self.progress_var, length=200, maximum=100)
         self.progress.grid(row=0, column=1, sticky=tk.E)
         progress_frame.grid(row=5, column=0, sticky=tk.E)
 
@@ -745,7 +796,8 @@ class WbRunner(tk.Frame):
 
         menubar = tk.Menu(self)
         filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Locate WhiteboxTools exe", command=self.select_exe)
+        filemenu.add_command(
+            label="Locate WhiteboxTools exe", command=self.select_exe)
         # filemenu.add_command(label="Set Working Directory", command=self.wd.select_file)
         filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
         filemenu.add_separator()
@@ -753,14 +805,17 @@ class WbRunner(tk.Frame):
         menubar.add_cascade(label="File", menu=filemenu)
 
         editmenu = tk.Menu(menubar, tearoff=0)
-        editmenu.add_command(label="Cut", command=lambda: self.focus_get().event_generate("<<Cut>>"))
-        editmenu.add_command(label="Copy", command=lambda: self.focus_get().event_generate("<<Copy>>"))
-        editmenu.add_command(label="Paste", command=lambda: self.focus_get().event_generate("<<Paste>>"))
-        
+        editmenu.add_command(
+            label="Cut", command=lambda: self.focus_get().event_generate("<<Cut>>"))
+        editmenu.add_command(
+            label="Copy", command=lambda: self.focus_get().event_generate("<<Copy>>"))
+        editmenu.add_command(
+            label="Paste", command=lambda: self.focus_get().event_generate("<<Paste>>"))
+
         menubar.add_cascade(label="Edit ", menu=editmenu)
 
         self.master.config(menu=menubar)
-    
+
     def select_exe(self):
         try:
             filename = filedialog.askopenfilename(initialdir=self.exe_path)
@@ -768,7 +823,8 @@ class WbRunner(tk.Frame):
             wbt.set_whitebox_dir(self.exe_path)
             self.refresh_tools()
         except:
-            messagebox.showinfo("Warning", "Could not find WhiteboxTools executable file.")
+            messagebox.showinfo(
+                "Warning", "Could not find WhiteboxTools executable file.")
 
     def run_tool(self):
         # wd_str = self.wd.get_value()
@@ -781,7 +837,8 @@ class WbRunner(tk.Frame):
             if v:
                 args.append(v)
             elif not widget.optional:
-                messagebox.showinfo("Error", "Non-optional tool parameter not specified.")
+                messagebox.showinfo(
+                    "Error", "Non-optional tool parameter not specified.")
                 return
 
         self.print_line_to_output("")
@@ -803,7 +860,7 @@ class WbRunner(tk.Frame):
     def print_line_to_output(self, value):
         self.out_text.insert(tk.END, value + "\n")
         self.out_text.see(tk.END)
-    
+
     def cancel_operation(self):
         wbt.cancel_op = True
         self.print_line_to_output("Cancelling operation...")
@@ -825,7 +882,8 @@ class WbRunner(tk.Frame):
         j = json.loads(wbt.tool_parameters(self.tool_name))
         param_num = 0
         for p in j['parameters']:
-            json_str = json.dumps(p, sort_keys=True, indent=2, separators=(',', ': '))
+            json_str = json.dumps(
+                p, sort_keys=True, indent=2, separators=(',', ': '))
             pt = p['parameter_type']
             if 'ExistingFileOrFloat' in pt:
                 ff = FileOrFloat(json_str, self, self.tool_args_frame)
@@ -847,21 +905,23 @@ class WbRunner(tk.Frame):
                 b = OptionsInput(json_str, self.tool_args_frame)
                 b.grid(row=param_num, column=0, sticky=tk.W)
                 param_num = param_num + 1
-            elif ('Float' in pt or 'Integer' in pt or 
-            'String' in pt or 'StringOrNumber' in pt or
-            'StringList' in pt):
+            elif ('Float' in pt or 'Integer' in pt or
+                  'String' in pt or 'StringOrNumber' in pt or
+                  'StringList' in pt):
                 b = DataInput(json_str, self.tool_args_frame)
                 b.grid(row=param_num, column=0, sticky=tk.NSEW)
                 param_num = param_num + 1
             else:
-                messagebox.showinfo("Error", "Unsupported parameter type: {}.".format(pt))
-            
+                messagebox.showinfo(
+                    "Error", "Unsupported parameter type: {}.".format(pt))
+
         self.update_args_box()
         self.out_text.see("%d.%d" % (1, 0))
 
     def update_args_box(self):
         s = ""
-        self.current_tool_lbl['text'] = "Current Tool: {}".format(self.tool_name)
+        self.current_tool_lbl['text'] = "Current Tool: {}".format(
+            self.tool_name)
         # self.spacer['width'] = width=(35-len(self.tool_name))
         for item in wbt.tool_help(self.tool_name).splitlines():
             if item.startswith("-"):
@@ -878,12 +938,12 @@ class WbRunner(tk.Frame):
                         s = s + value + "='{}' "
                     else:
                         s = s + value + "={} "
-        
+
         # self.args_value.set(s.strip())
-    
+
     def clear_args_box(self):
         self.args_value.set("")
-    
+
     def args_select_all(self, event):
         self.args_text.select_range(0, tk.END)
         return 'break'
@@ -894,13 +954,14 @@ class WbRunner(tk.Frame):
         if "%" in value:
             str_array = value.split(" ")
             label = value.replace(str_array[len(str_array) - 1], "").strip()
-            progress = int(str_array[len(str_array) - 1].replace("%", "").strip())
+            progress = int(
+                str_array[len(str_array) - 1].replace("%", "").strip())
             self.progress_var.set(progress)
             self.progress_label['text'] = label
         else:
             self.print_line_to_output(value)
 
-        self.update() # this is needed for cancelling and updating the progress bar
+        self.update()  # this is needed for cancelling and updating the progress bar
 
     def select_all(self, event):
         self.out_text.tag_add(tk.SEL, "1.0", tk.END)
@@ -929,13 +990,15 @@ class WbRunner(tk.Frame):
         self.tools_listbox.delete(0, len(self.toolslist))
         for item in self.toolslist:
             self.tools_listbox.insert(len(self.toolslist), item)
-        
-        self.tools_frame["text"] = "{} Available Tools".format(len(self.toolslist))
-        
+
+        self.tools_frame["text"] = "{} Available Tools".format(
+            len(self.toolslist))
+
 
 class JsonPayload(object):
     def __init__(self, j):
         self.__dict__ = json.loads(j)
+
 
 def main():
     tool_name = None
@@ -944,6 +1007,7 @@ def main():
 
     wbr = WbRunner(tool_name)
     wbr.mainloop()
+
 
 if __name__ == '__main__':
     main()

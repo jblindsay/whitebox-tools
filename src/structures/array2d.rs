@@ -64,6 +64,17 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
         }
     }
 
+    pub fn get_row_data(&self, row: isize) -> Vec<T> {
+        let columns = self.columns as usize;
+        let mut values: Vec<T> = vec![self.nodata; columns];
+        if row >= 0 && row < self.rows as isize {
+            for column in 0..values.len() {
+                values[column] = self.data[row as usize * columns + column];
+            }
+        }
+        values
+    }
+
     pub fn get_value(&self, row: isize, column: isize) -> T {
         if column < 0 { return self.nodata; }
         if row < 0 { return self.nodata; }
