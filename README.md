@@ -38,6 +38,12 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 >> python build.py
 ```
 
+Or, using Rust's Cargo build tool directly:
+
+```
+>> cargo build --release
+```
+
 Compilation can take several minutes. The whitebox-tools.exe executable file will be located within the ```/target/release/``` folder. Once the project has reached the 1.0 milestone (stable), pre-compiled binaries for *WhiteboxTools* will be distributed with releases of *Whitebox GAT* GIS for each of the supported platforms. Until this time, you will need to compile the executable from source files.
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler. Ultimately, you should not have to interact with Rust directly, but rather the build script will do this for you.
