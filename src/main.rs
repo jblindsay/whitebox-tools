@@ -178,6 +178,7 @@ The following commands are recognized:
 --listtools      Lists all available tools.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
+--toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
 --viewcode       Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
 -h, --help       Prints help information.
 
