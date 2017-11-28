@@ -44,7 +44,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 
 ## Usage
 
-*WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized:
+*WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized by the *WhiteboxTools* library:
 
 | Command        | Description                                                                  |
 | -------------- | ---------------------------------------------------------------------------- |
@@ -59,6 +59,8 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.g. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
+
+In addition to direct command-line and script-based interation, a very basic user-interface called *WB Runner* can be used to call the tools within the *WhiteboxTools* executable file, providing the required tool arguments.
 
 **Example command prompt:**
 
@@ -115,6 +117,7 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 ```
 
 **WhiteboxTools Runner**
+
 There is a Python script contained within the *WhiteboxTools* directory called '*wb_runner.py*'. This script is intended to provide a very basic user-interface for running the tools contained within the *WhiteboxTools* library. The user-interface uses Python's TkInter GUI library and should be cross-platform. The user interface is currently experimental and is under heavy testing. Please report any issues that you experience in using it.
 
 ![WhiteboxTools Runner](./img/WBRunner.png)
