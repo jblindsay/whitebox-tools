@@ -33,10 +33,6 @@ impl LidarGroundPointFilter {
         
         let description = "Identifies ground points within LiDAR dataset.".to_string();
         
-//         let parameters = "-i, --input        Input LAS file.
-// -o, --output       Output LAS file.
-// --radius           Search radius; default is 1.0.".to_owned();
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -64,7 +60,16 @@ impl LidarGroundPointFilter {
             default_value: Some("1.0".to_owned()),
             optional: false
         });
-  
+        
+        parameters.push(ToolParameter{
+            name: "Off-terrain Point Height".to_owned(), 
+            flags: vec!["--otoheight".to_owned()], 
+            description: "Inter-point height difference to be considered an off-terrain point.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());

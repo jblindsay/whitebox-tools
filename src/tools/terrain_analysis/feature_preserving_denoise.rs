@@ -206,6 +206,10 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
+        if filter_size < 3 { filter_size = 3; }
+        if num_iter < 1 { num_iter = 1; }
+        if max_norm_diff > 90f64 { max_norm_diff = 90f64; }
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
         let mut progress: usize;
@@ -240,6 +244,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
+        let intercell_break_slope = 60f64.to_radians(); // make user-specified.
+        let res_x = input.configs.resolution_x;
+        let res_y = input.configs.resolution_y;
+        let max_z_diff_ew = intercell_break_slope.tan() * res_x;
+        let max_z_diff_ns = intercell_break_slope.tan() * res_y;
+        let max_z_diff_diag = intercell_break_slope.tan() * (res_x*res_x + res_y*res_y).sqrt();
+
         /////////////////////////////////////////////
         // Fit planes to each grid cell in the DEM //
         /////////////////////////////////////////////
@@ -255,6 +266,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             thread::spawn(move || {
                 let dx = [ 0, 1, 1, 1, 0, -1, -1, -1, 0 ];
                 let dy = [ 0, -1, 0, 1, 1, 1, 0, -1, -1 ];
+
+                let max_z_diff = [ max_z_diff_ns, max_z_diff_diag, max_z_diff_ew, max_z_diff_diag, max_z_diff_ns, max_z_diff_diag, max_z_diff_ew, max_z_diff_diag, max_z_diff_ns ];
+
                 let mut z: f64;
                 let (mut xn, mut yn, mut zn): (f64, f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -264,16 +278,25 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                         // x = input.get_x_from_column(col);
                         z = input.get_value(row, col);
                         if z != nodata {
+                            z *= z_factor;
                             let mut pt_data: Vec<Vector3<f64>> = Vec::with_capacity(9);
-                            for c in 0..dx.len() {
-                                yn = input.get_y_from_row(row + dy[c]);
-                                xn = input.get_x_from_column(col + dx[c]);
-                                zn = input.get_value(row + dy[c], col + dx[c]);
+                            for i in 0..dx.len() {
+                                yn = input.get_y_from_row(row + dy[i]);
+                                xn = input.get_x_from_column(col + dx[i]);
+                                zn = input.get_value(row + dy[i], col + dx[i]);
                                 if zn != nodata {
-                                    zn = zn * z_factor;
+                                    zn *= z_factor;
                                 } else {
-                                    zn = z * z_factor;
+                                    zn = z;
                                 }
+
+                                if (zn - z).abs() > max_z_diff[i] {
+                                    // This indicates a very steep inter-cell slope.
+                                    // Don't use this neighbouring cell value to 
+                                    // calculate the plane.
+                                    zn = z;
+                                }
+
                                 pt_data.push(Vector3 { x: xn, y: yn, z: zn });
                             }
                             data[col as usize] = plane_from_points(&pt_data);
@@ -351,7 +374,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                             }
                             if w > 0f64 {
                                 p_avg /= w;
-                                p_avg.d = -(p_avg.a * x + p_avg.b * y + p_avg.c * z);
+                                p_avg.d = -(p_avg.a * x + p_avg.b * y + p_avg.c * z*z_factor);
                                 data[col as usize] = p_avg; 
                             } else {
                                 data[col as usize] = p; 
@@ -381,13 +404,26 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         // Smooth the DEM. //
         /////////////////////
         // let smoothed_plane_data = Arc::new(smoothed_plane_data);
+
+        // let (mut fx, mut fy): (f64, f64);
+        // let (mut tan_slope, mut aspect): (f64, f64);
+        // let (mut term1, mut term2, mut term3): (f64, f64, f64);
+        // let mut azimuth = 315.0f64;
+        // let mut altitude = 30.0f64;
+        // azimuth = (azimuth - 90f64).to_radians();
+        // altitude = altitude.to_radians();
+        // let sin_theta = altitude.sin();
+        // let cos_theta = altitude.cos();
+        // let mut hillshade;
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let dx = [ 0, 1, 1, 1, 0, -1, -1, -1, 0 ];
         let dy = [ 0, -1, 0, 1, 1, 1, 0, -1, -1 ];
-        let mut prev_elev_change = 0f64;
+        let max_z_diff = [ max_z_diff_ns, max_z_diff_diag, max_z_diff_ew, max_z_diff_diag, max_z_diff_ns, max_z_diff_diag, max_z_diff_ew, max_z_diff_diag, max_z_diff_ns ];
         for loop_num in 0..num_iter {
             let (mut x, mut y, mut z): (f64, f64, f64);
             let mut z0: f64;
+            let mut zn: f64;
             let mut weights = vec![0.0; dx.len()];
             let mut values = vec![0.0; dx.len()];
             let mut weight_sum: f64;
@@ -395,6 +431,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             let mut p: Plane;
             let mut pn: Plane;
             let mut total_elev_change = 0f64;
+            // let mut num_changed_cells = 0;
             for row in 0..rows {
                 y = input.get_y_from_row(row);
                 for col in 0..columns {
@@ -402,15 +439,17 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                     z = input.get_value(row, col);
                     if z != nodata {
                         p = smoothed_plane_data.get_value(row, col);
+                        z0 = p.estimate_z(x, y); //z;
                         weight_sum = 0f64;
                         for i in 0..dx.len() {
                             if input.get_value(row + dy[i], col + dx[i]) != nodata {
                                 pn = smoothed_plane_data.get_value(row + dy[i], col + dx[i]);
+                                zn = pn.estimate_z(x, y);
                                 norm_diff = p.angle_between(pn);
-                                if norm_diff < max_norm_diff {
+                                if norm_diff < max_norm_diff && (zn - z0).abs() < max_z_diff[i] {
                                     weights[i] = 1f64 - (norm_diff / max_norm_diff);
-                                    values[i] = smoothed_plane_data.get_value(row + dy[i], col + dx[i]).estimate_z(x, y);
                                     weight_sum += weights[i];
+                                    values[i] = zn;
                                 } else {
                                     weights[i] = 0f64;
                                     values[i] = 0f64;
@@ -420,17 +459,35 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                 values[i] = 0f64;
                             }
                         }
-                        if weight_sum > 0f64 {
-                            z0 = z;
+                        if weight_sum > 1f64 {
                             z = 0f64;
                             for i in 0..dx.len() {
                                 z += weights[i] / weight_sum * values[i];
                             }
                             smoothed_plane_data.set_value(row, col, Plane{ a: p.a, b: p.b, c: p.c, d: -(p.a * x + p.b * y + p.c * z) });
                             total_elev_change += (z - z0).abs();
+                            // if (z - z0).abs() > 0.0001f64 { 
+                            //     num_changed_cells += 1;
+                            // }
                         }
 
                         if loop_num == num_iter-1 {
+                            // fx = -p.a / p.c;
+                            // fy = -p.b / p.c;
+                            // if fx != 0f64 {
+                            //     tan_slope = (fx * fx + fy * fy).sqrt();
+                            //     aspect = (180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs())).to_radians();
+                            //     term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                            //     term2 = sin_theta / tan_slope;
+                            //     term3 = cos_theta * (azimuth - aspect).sin();
+                            //     hillshade = term1 * (term2 - term3);
+                            // } else {
+                            //     hillshade = 0.5;
+                            // }
+                            // if hillshade < 0f64 {
+                            //     hillshade = 0f64;
+                            // }
+                            // z = hillshade * 255f64;
                             output.set_value(row, col, z);
                         }
                     }
@@ -444,9 +501,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 }
             }
 
-            println!("Iteration {} elevation change: {}", loop_num+1, (total_elev_change - prev_elev_change));
-            prev_elev_change = total_elev_change;
-
+            println!("Iteration {} elevation change: {}", loop_num+1, total_elev_change); 
+            // println!("Iteration {}: {} grid cell elevations modified", loop_num+1, num_changed_cells);
+            
             // let mut total_elev_change = 0f64;
             // let smoothed_plane_data2 = Arc::new(smoothed_plane_data);
             // let (tx, rx) = mpsc::channel();
