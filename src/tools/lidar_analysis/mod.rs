@@ -2,6 +2,7 @@
 mod block_maximum;
 mod block_minimum;
 mod filter_lidar_scan_angles;
+mod find_flightline_edge_points;
 mod flightline_overlap;
 mod las_to_ascii;
 mod lidar_elevation_slice; 
@@ -21,6 +22,7 @@ mod normal_vectors;
 pub use self::block_maximum::BlockMaximum;
 pub use self::block_minimum::BlockMinimum;
 pub use self::filter_lidar_scan_angles::FilterLidarScanAngles;
+pub use self::find_flightline_edge_points::FindFlightlineEdgePoints;
 pub use self::flightline_overlap::FlightlineOverlap;
 pub use self::las_to_ascii::LasToAscii;
 pub use self::lidar_elevation_slice::LidarElevationSlice;

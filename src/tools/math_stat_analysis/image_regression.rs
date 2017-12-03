@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: November 17, 2017
+Last Modified: December 3, 2017
 License: MIT
 */
 extern crate time;

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: November 16, 2017
+Last Modified: December 3, 2017
 License: MIT
 */
 extern crate time;
@@ -31,7 +31,7 @@ impl LidarGroundPointFilter {
     pub fn new() -> LidarGroundPointFilter { // public constructor
         let name = "LidarGroundPointFilter".to_string();
         
-        let description = "Identifies ground points within LiDAR dataset.".to_string();
+        let description = "Identifies ground points within LiDAR dataset using a slope-based method.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -60,15 +60,6 @@ impl LidarGroundPointFilter {
             default_value: Some("2.0".to_owned()),
             optional: false
         });
-        
-        parameters.push(ToolParameter{
-            name: "Off-terrain Point Height Threshold".to_owned(), 
-            flags: vec!["--height_threshold".to_owned()], 
-            description: "Inter-point height difference to be considered an off-terrain point.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
-            optional: true
-        });
 
         parameters.push(ToolParameter{
             name: "Inter-point Slope Threshold".to_owned(), 
@@ -76,6 +67,15 @@ impl LidarGroundPointFilter {
             description: "Maximum inter-point slope to be considered an off-terrain point.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("45.0".to_owned()),
+            optional: true
+        });
+        
+        parameters.push(ToolParameter{
+            name: "Off-terrain Point Height Threshold".to_owned(), 
+            flags: vec!["--height_threshold".to_owned()], 
+            description: "Inter-point height difference to be considered an off-terrain point.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
             optional: true
         });
 
