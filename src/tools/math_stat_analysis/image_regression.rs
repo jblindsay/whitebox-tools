@@ -234,7 +234,7 @@ impl WhiteboxTool for ImageRegression {
             residuals_file = format!("{}{}", working_directory, residuals_file);
         }
 
-        println!("I'm here {} {}", input_file1.clone(), input_file2.clone());
+        // println!("I'm here {} {}", input_file1.clone(), input_file2.clone());
 
         let input1 = Arc::new(Raster::new(&input_file1, "r")?);
         let rows = input1.configs.rows as isize;

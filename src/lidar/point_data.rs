@@ -232,6 +232,15 @@ impl PointData {
         false
     }
 
+    /// Returns 'true' if the the point is classified as low (7) or high (18) noise.
+    pub fn is_classified_noise(&self) -> bool {
+        let cls = self.classification();
+        if cls == 7 || cls == 18 {
+            return true;
+        }
+        false
+    }
+
     /// Returns the classification value of the point.
     pub fn classification(&self) -> u8 {
         self.class_bit_field.classification()

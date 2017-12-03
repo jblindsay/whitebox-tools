@@ -846,7 +846,8 @@ class WbRunner(tk.Frame):
         self.print_line_to_output("")
         # Run the tool and check the return value for an error
         if wbt.run_tool(self.tool_name, args, self.custom_callback) == 1:
-            print("ERROR running {}".format(name))
+            print("Error running {}".format(self.tool_name))
+
         else:
             self.run_button["text"] = "Run"
             self.progress_var.set(0)
@@ -952,12 +953,18 @@ class WbRunner(tk.Frame):
         ''' A custom callback for dealing with tool output.
         '''
         if "%" in value:
-            str_array = value.split(" ")
-            label = value.replace(str_array[len(str_array) - 1], "").strip()
-            progress = int(
-                str_array[len(str_array) - 1].replace("%", "").strip())
-            self.progress_var.set(progress)
-            self.progress_label['text'] = label
+            try:
+                str_array = value.split(" ")
+                label = value.replace(
+                    str_array[len(str_array) - 1], "").strip()
+                progress = float(
+                    str_array[len(str_array) - 1].replace("%", "").strip())
+                self.progress_var.set(int(progress))
+                self.progress_label['text'] = label
+            except ValueError as e:
+                print("Problem converting parsed data into number: ", e)
+            except Exception as e:
+                print(e)
         else:
             self.print_line_to_output(value)
 
