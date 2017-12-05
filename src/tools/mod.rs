@@ -262,6 +262,7 @@ impl ToolManager {
         tool_names.push("ElevRelativeToWatershedMinMax".to_string());
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
+        tool_names.push("FindRidges".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("MaxBranchLength".to_string());
@@ -622,6 +623,7 @@ impl ToolManager {
             "elevrelativetowatershedminmax" => Some(Box::new(tools::terrain_analysis::ElevRelativeToWatershedMinMax::new())),
             "fetchanalysis" => Some(Box::new(tools::terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),
+            "findridges" => Some(Box::new(tools::terrain_analysis::FindRidges::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),

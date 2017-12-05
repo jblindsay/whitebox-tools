@@ -33,11 +33,6 @@ impl ExtractStreams {
         
         let description = "Extracts stream grid cells from a flow accumulation raster.".to_string();
         
-        // let mut parameters = "--flow_accum       Input D8 flow accumulation raster file.\n".to_owned();
-        // parameters.push_str("-o, --output       Output raster file.\n");
-        // parameters.push_str("--threshold        Threshold in flow accumulation values for channelization.\n");
-        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input D8 Flow Accumulation File".to_owned(), 

@@ -34,12 +34,6 @@ impl ExtractValleys {
         let description = "Identifies potential valley bottom grid cells based on local topolography alone."
             .to_string();
 
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--variant       Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'.\n");
-        // parameters.push_str("--line_thin     Optional flag indicating whether post-processing line-thinning should be performed.\n");
-        // parameters.push_str("--filter        Optional argument (only used when variant='lq') providing the filter size, in grid cells, used for lq-filtering (default is 5).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -406,7 +400,6 @@ impl WhiteboxTool for ExtractValleys {
             }
         }
         
-
         if line_thin {
             println!("Line thinning operation...");
             let mut did_something = true;

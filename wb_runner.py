@@ -204,7 +204,7 @@ class FileOrFloat(tk.Frame):
         self.open_button.grid(row=0, column=1, sticky=tk.E)
         # self.open_button.columnconfigure(0, weight=1)
 
-        self.label = ttk.Label(fs_frame, text='Or', justify=tk.LEFT)
+        self.label = ttk.Label(fs_frame, text='OR', justify=tk.LEFT)
         self.label.grid(row=0, column=2, sticky=tk.W)
         # self.label.columnconfigure(0, weight=1)
 
