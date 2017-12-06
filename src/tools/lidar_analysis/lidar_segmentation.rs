@@ -4,11 +4,18 @@ Authors: Dr. John Lindsay
 Created: 5/12/2017, 2017
 Last Modified: 5/12/2017, 2017
 License: MIT
+
+Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
+       lend themselves to useful estimation of point normal vectors. As such,
+       this tool will not work satisfactory under dense forest cover. Tree cover
+       should first be removed using the LidarGroundPointRemoval or similar tool.
 */
 extern crate time;
 extern crate nalgebra as na;
 extern crate num_cpus;
+extern crate rand;
 
+use std::cmp;
 use std::env;
 use std::f64;
 use std::f64::NEG_INFINITY;
@@ -20,20 +27,21 @@ use std::thread;
 use lidar::*;
 use tools::*;
 use self::na::Vector3;
-use structures::{ FixedRadiusSearch2D, FixedRadiusSearch3D };
+use structures::FixedRadiusSearch3D;
+use self::rand::Rng;
 
-pub struct LidarSegmentationBasedFilter {
+pub struct LidarSegmentation {
     name: String,
     description: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
 
-impl LidarSegmentationBasedFilter {
-    pub fn new() -> LidarSegmentationBasedFilter { // public constructor
-        let name = "LidarSegmentationBasedFilter".to_string();
+impl LidarSegmentation {
+    pub fn new() -> LidarSegmentation { // public constructor
+        let name = "LidarSegmentation".to_string();
         
-        let description = "Identifies ground points within LiDAR point clouds using a segmentation based approach.".to_string();
+        let description = "Segments a LiDAR point cloud based on normal vectors.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -68,8 +76,8 @@ impl LidarSegmentationBasedFilter {
             flags: vec!["--norm_diff".to_owned()], 
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("2.0".to_owned()),
-            optional: true
+            default_value: Some("10.0".to_owned()),
+            optional: false
         });
         
         parameters.push(ToolParameter{
@@ -78,16 +86,7 @@ impl LidarSegmentationBasedFilter {
             description: "Maximum difference in elevation (z units) between neighbouring points of the same segment.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
-        });
-
-        parameters.push(ToolParameter{
-            name: "Classify Points".to_owned(), 
-            flags: vec!["--classify".to_owned()], 
-            description: "Classify points as ground (2) or off-ground (1).".to_owned(),
-            parameter_type: ParameterType::Boolean,
-            default_value: None,
-            optional: true
+            optional: false
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -97,13 +96,13 @@ impl LidarSegmentationBasedFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classify", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75", short_exe, name).replace("*", &sep);
     
-        LidarSegmentationBasedFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarSegmentation { name: name, description: description, parameters: parameters, example_usage: usage }
     }
 }
 
-impl WhiteboxTool for LidarSegmentationBasedFilter {
+impl WhiteboxTool for LidarSegmentation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -140,10 +139,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let mut search_radius = 5f64;
         let mut max_norm_diff = 2f64;
         let mut max_z_diff = 1f64;
-        let ground_class_value = 2u8;
-        let otp_class_value = 1u8;
-        let mut filter = true;
-
+        
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
@@ -186,22 +182,6 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 } else {
                     max_z_diff = args[i+1].to_string().parse::<f64>().unwrap();
                 }
-            } else if flag_val == "-classify" {
-                filter = false;
-            // } else if flag_val == "-groundclass" {
-            //     filter = false;
-            //     if keyval {
-            //         ground_class_value = vec[1].to_string().parse::<u8>().unwrap();
-            //     } else {
-            //         ground_class_value = args[i+1].to_string().parse::<u8>().unwrap();
-            //     }
-            // } else if flag_val == "-otp_class_value" {
-            //     filter = false;
-            //     if keyval {
-            //         otp_class_value = vec[1].to_string().parse::<u8>().unwrap();
-            //     } else {
-            //         otp_class_value = args[i+1].to_string().parse::<u8>().unwrap();
-            //     }
             }
         }
 
@@ -229,8 +209,6 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
 
         let start = time::now();
 
-        if verbose { println!("Performing tophat transform..."); }
-
         if max_norm_diff < 0f64 { max_norm_diff = 0f64; }
         if max_norm_diff > 90f64 { max_norm_diff = 90f64; }
         max_norm_diff = max_norm_diff.to_radians();
@@ -238,110 +216,8 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let mut progress: i32;
         let mut old_progress: i32 = -1;
         let num_procs = num_cpus::get();
-
-        // We'll eventually need the ability to do fixed radius searches around
-        // each point in the point cloud in both 2D and 3D.
-        let mut frs2d: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius * 2f64);
-        for i in 0..n_points {
-            let p: PointData = input.get_point_info(i);
-            frs2d.insert(p.x, p.y, i);
-            if verbose {
-                progress = (100.0_f64 * i as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Binning points in 2D: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
         let input = Arc::new(input); // wrap input in an Arc
         
-        /////////////////////////////////////////////
-        // Perform a top-hat transform on the data //
-        /////////////////////////////////////////////
-
-        let mut neighbourhood_min = vec![f64::MAX; n_points];
-        let mut residuals = vec![f64::MIN; n_points];
-        
-        // Erosion
-        let frs = Arc::new(frs2d); // wrap FRS in an Arc
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let frs = frs.clone();
-            let input = input.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut index_n: usize;
-                let mut z_n: f64;
-                let mut min_z: f64;
-                for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
-                    let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x, p.y);
-                    min_z = f64::MAX;
-                    for j in 0..ret.len() {
-                        index_n = ret[j].0;
-                        z_n = input.get_point_info(index_n).z;
-                        if z_n < min_z {
-                            min_z = z_n;
-                        }
-                    }
-                    tx.send((point_num, min_z)).unwrap();
-                }
-            });
-        }
-
-        for point_num in 0..n_points {
-            let data = rx.recv().unwrap();
-            neighbourhood_min[data.0] = data.1;
-            if verbose {
-                progress = (100.0_f64 * point_num as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Erosion: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        // Dilation
-        let neighbourhood_min = Arc::new(neighbourhood_min); // wrap neighbourhood_min in an Arc
-        for tid in 0..num_procs {
-            let frs = frs.clone();
-            let input = input.clone();
-            let neighbourhood_min = neighbourhood_min.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut index_n: usize;
-                let mut z_n: f64;
-                let mut max_z: f64;
-                for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
-                    let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x, p.y);
-                    max_z = f64::MIN;
-                    for j in 0..ret.len() {
-                        index_n = ret[j].0;
-                        z_n = neighbourhood_min[index_n];
-                        if z_n > max_z {
-                            max_z = z_n;
-                        }
-                    }
-                    tx.send((point_num, max_z)).unwrap();
-                }
-            });
-        }
-
-        for point_num in 0..n_points {
-            let data = rx.recv().unwrap();
-            let z = input.get_point_info(data.0).z;
-            residuals[data.0] = z - data.1;
-            if verbose {
-                progress = (100.0_f64 * point_num as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Dilation: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
         /////////////////////////////////////////////////////////
         // Calculate the normals for each point in the dataset //
         /////////////////////////////////////////////////////////
@@ -349,8 +225,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let mut frs3d: FixedRadiusSearch3D<usize> = FixedRadiusSearch3D::new(search_radius);
         for point_num in 0..n_points {
             let p: PointData = input.get_point_info(point_num);
-            frs3d.insert(p.x, p.y, residuals[point_num], point_num); 
-            // using the top-hat transformed data to calculate normals
+            frs3d.insert(p.x, p.y, p.z, point_num); 
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -361,23 +236,25 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         }
 
         let frs = Arc::new(frs3d); // wrap FRS in an Arc
-        let residuals = Arc::new(residuals); // wrap the residual point heights.
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let frs = frs.clone();
             let input = input.clone();
-            let residuals = residuals.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
+                let mut height_diff: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x, p.y, residuals[point_num]);
+                    let ret = frs.search(p.x, p.y, p.z);
                     let mut data: Vec<Vector3<f64>> = Vec::with_capacity(ret.len());
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
-                        let p2: PointData = input.get_point_info(index_n);
-                        data.push(Vector3 { x: p2.x, y: p2.y, z: residuals[index_n] });
+                        let pn: PointData = input.get_point_info(index_n);
+                        height_diff = (pn.z - p.z).abs();
+                        if height_diff < max_z_diff {
+                            data.push(Vector3 { x: pn.x, y: pn.y, z: pn.z });
+                        }
                     }
                     tx.send((point_num, plane_from_points(&data))).unwrap();
                 }
@@ -385,15 +262,9 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         }
 
         let mut normal_vectors = vec![Normal::new(); n_points];
-        let mut is_ground_point = vec![false; n_points];
-        let mut stack = Vec::with_capacity(n_points);
         for point_num in 0..n_points {
             let data = rx.recv().unwrap();
             normal_vectors[data.0] = data.1;
-            if residuals[data.0] == 0f64 {
-                is_ground_point[data.0] = true;
-                stack.push(data.0);
-            }
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -407,42 +278,58 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         // Perform the segmentation operation //
         ////////////////////////////////////////
         if verbose { println!("Segmenting the point cloud..."); }
+        let mut segment_id = vec![0usize; n_points];
+        let mut current_segment = 0usize;
         let mut point_id: usize;
         let mut norm_diff: f64;
         let mut height_diff: f64;
         let mut index_n: usize;
-        let mut z: f64;
-        while !stack.is_empty() {
-            point_id = stack.pop().unwrap();
-            z = residuals[point_id];
-            /* Check the neighbours to see if there are any
-               points that have similar normal vectors and 
-               heights. */
-            let p: PointData = input.get_point_info(point_id);
-            let ret = frs.search(p.x, p.y, residuals[point_id]);
-            for j in 0..ret.len() {
-                index_n = ret[j].0;
-                if !is_ground_point[index_n] { 
-                    // It hasn't already been identified as a ground point.
-                    // Calculate height difference.
-                    height_diff = (residuals[index_n] - z).abs();
-                    if height_diff < max_z_diff {
-                        // Check the difference in normal vectors.
-                        norm_diff = normal_vectors[point_id].angle_between(normal_vectors[index_n]);
-                        if norm_diff < max_norm_diff {
-                            // This neighbour is part of the ground.
-                            is_ground_point[index_n] = true;
-                            stack.push(index_n);
-                        }
-                    }
+        let mut solved_points = 0;
+        let mut stack = vec![];
+        while solved_points < n_points {
+            // Find a seed-point for a segment
+            for i in 0..n_points {
+                if segment_id[i] == 0 {
+                    // No segment ID has yet been assigned to this point.
+                    current_segment += 1;
+                    segment_id[i] = current_segment;
+                    stack.push(i);
+                    break;
                 }
             }
 
-            if verbose {
-                progress = (100f64 * (1f64 - stack.len() as f64 / num_points)) as i32;
-                if progress != old_progress {
-                    println!("Segmenting the point cloud: {}%", progress);
-                    old_progress = progress;
+            while !stack.is_empty() {
+                solved_points += 1;
+                if verbose {
+                    progress = (100f64 * solved_points as f64 / num_points) as i32;
+                    if progress != old_progress {
+                        println!("Segmenting the point cloud: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+                point_id = stack.pop().unwrap();
+                /* Check the neighbours to see if there are any
+                points that have similar normal vectors and 
+                heights. */
+                let p: PointData = input.get_point_info(point_id);
+                let ret = frs.search(p.x, p.y, p.z);
+                for j in 0..ret.len() {
+                    index_n = ret[j].0;
+                    if segment_id[index_n] == 0 { 
+                        // It hasn't already been placed in a segment.
+                        let pn: PointData = input.get_point_info(index_n);
+                        // Calculate height difference.
+                        height_diff = (pn.z - p.z).abs();
+                        if height_diff < max_z_diff {
+                            // Check the difference in normal vectors.
+                            norm_diff = normal_vectors[point_id].angle_between(normal_vectors[index_n]);
+                            if norm_diff < max_norm_diff {
+                                // This neighbour is part of the ground.
+                                segment_id[index_n] = current_segment;
+                                stack.push(index_n);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -450,68 +337,59 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         /////////////////////
         // Output the data //
         /////////////////////
+
+        let mut clrs: Vec<(u16, u16, u16)> = Vec::new();
+        let mut rng = rand::thread_rng();
+        let (mut r, mut g, mut b): (u16, u16, u16) = (0u16, 0u16, 0u16);
+        for _ in 0..current_segment+1 as usize {
+            let mut flag = false;
+            while !flag {
+                r = rng.gen::<u8>() as u16 * 256u16;
+                g = rng.gen::<u8>() as u16 * 256u16;
+                b = rng.gen::<u8>() as u16 * 256u16;
+                let max_val = cmp::max(cmp::max(r, g), b);
+                //let min_val = cmp::min(cmp::min(r, g), b);
+                if max_val >= u16::max_value() / 2 { // && min_val >= u16::max_value() / 4 {
+                    flag = true;
+                }
+            }
+            clrs.push((r, g, b));
+        }
+
         let mut output = LasFile::initialize_using_file(&output_file, &input);
-        let mut num_points_filtered = 0;
-        if filter {
-            output.header.system_id = "EXTRACTION".to_string();
-
-            for point_num in 0..n_points {
-                if is_ground_point[point_num] {
-                    output.add_point_record(input.get_record(point_num));
-                } else {
-                    num_points_filtered += 1;
-                }
-                if verbose {
-                    progress = (100.0_f64 * point_num as f64 / num_points) as i32;
-                    if progress != old_progress {
-                        println!("Saving data: {}%", progress);
-                        old_progress = progress;
-                    }
+        output.header.point_format = 2;
+        for point_num in 0..n_points {
+            let p: PointData = input[point_num];
+            let seg_val = segment_id[point_num];
+            let rgb: RgbData = RgbData{ red: clrs[seg_val].0, green: clrs[seg_val].1, blue: clrs[seg_val].2 };
+            let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
+            output.add_point_record(lpr);
+            if verbose {
+                progress = (100.0_f64 * point_num as f64 / num_points) as i32;
+                if progress != old_progress {
+                    println!("Saving data: {}%", progress);
+                    old_progress = progress;
                 }
             }
-        } else { // classify
-            for point_num in 0..n_points {
-                let class_val = match is_ground_point[point_num] {
-                    true => ground_class_value,
-                    false => otp_class_value,
-                };
-                let pr = input.get_record(point_num);
-                let pr2: LidarPointRecord;
-                match pr {
-                    LidarPointRecord::PointRecord0 { mut point_data }  => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord0 { point_data: point_data };
-
-                    },
-                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
-                    },
-                    LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
-                    },
-                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
-                            gps_data: gps_data, rgb_data: rgb_data};
-                    },
-                }
-                output.add_point_record(pr2);
-                if verbose {
-                    progress = (100.0_f64 * point_num as f64 / num_points) as i32;
-                    if progress != old_progress {
-                        println!("Saving data: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-            num_points_filtered = 1; // so it passes the saving
         }
-
-        if num_points_filtered == 0 {
-            println!("Warning: No points were filtered from the point cloud.");
-        }
+        // let (mut r, mut g, mut b): (u16, u16, u16);
+        // for i in 0..n_points {
+        //     let p: PointData = input.get_point_info(i);
+        //     r = ((1.0 + normal_values[i].x) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
+        //     g = ((1.0 + normal_values[i].y) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].y) / 2.0 * 65535.0) as u16;
+        //     b = ((1.0 + normal_values[i].z) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].z) / 2.0 * 65535.0) as u16;
+        
+        //     let rgb: RgbData = RgbData{ red: r, green: g, blue: b };
+        //     let lpr = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
+        //     output.add_point_record(lpr);
+        //     if verbose {
+        //         progress = (100.0_f64 * i as f64 / num_points) as i32;
+        //         if progress != old_progress {
+        //             println!("Saving data: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
         let end = time::now();
         let elapsed_time = end - start;

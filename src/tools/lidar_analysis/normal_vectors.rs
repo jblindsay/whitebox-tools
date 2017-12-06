@@ -278,6 +278,9 @@ impl WhiteboxTool for NormalVectors {
 fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
     let n = points.len();
     // assert!(n >= 3, "At least three points required");
+    if n < 3 {
+        return Vector3 { x: 0f64, y: 0f64, z: 0f64 };
+    }
 
     let mut sum = Vector3{ x: 0.0, y: 0.0, z: 0.0 };
     for p in points {

@@ -164,6 +164,7 @@ impl ToolManager {
         tool_names.push("LidarKappaIndex".to_string());
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
+        tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
@@ -490,6 +491,7 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new()))
             }
             "lidarpointdensity" => Some(Box::new(tools::lidar_analysis::LidarPointDensity::new())),
+            "lidarsegmentation" => Some(Box::new(tools::lidar_analysis::LidarSegmentation::new())),
             "lidarsegmentationbasedfilter" => Some(Box::new(tools::lidar_analysis::LidarSegmentationBasedFilter::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
             "lidartophattransform" => {
