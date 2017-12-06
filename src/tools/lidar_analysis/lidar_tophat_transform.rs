@@ -32,10 +32,6 @@ impl LidarTophatTransform {
         
         let description = "Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy".to_string();
         
-        // let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output LAS file.\n");
-        // parameters.push_str("--radius       Search radius; default is 1.0.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -115,7 +111,7 @@ impl WhiteboxTool for LidarTophatTransform {
         
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -188,7 +184,6 @@ impl WhiteboxTool for LidarTophatTransform {
         }
 
         let mut neighbourhood_min = vec![f64::MAX; n_points];
-        // let mut neighbourhood_max_min = vec![f64::MIN; n_points];
         let mut residuals = vec![f64::MIN; n_points];
         
         /////////////

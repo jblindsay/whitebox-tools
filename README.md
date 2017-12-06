@@ -62,6 +62,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 | --toolparameters  | Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\". |
 | --viewcode        | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".               |
 | -h, --help        | Prints help information.                                                                  |
+| --version         | Prints the version information.                                                           |
 
 Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.g. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
@@ -135,7 +136,7 @@ The *WB Runner* does not rely on the *Whitebox GAT* user interface at all and ca
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 247 tools:
+The library currently contains the following 248 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -278,6 +279,7 @@ The library currently contains the following 247 tools:
 - ***LidarKappaIndex***: Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 - ***LidarNearestNeighbourGridding***: Grids LAS files using nearest-neighbour scheme.
 - ***LidarPointDensity***: Calculates the spatial pattern of point density for a LiDAR data set.
+- ***LidarSegmentationBasedFilter***: Identifies ground points within LiDAR point clouds using a segmentation based approach.
 - ***LidarTile***: Tiles a LiDAR LAS file into multiple LAS files.
 - ***LidarTophatTransform***: Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.

@@ -113,7 +113,7 @@ impl WhiteboxTool for EmbossFilter {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+                                "Tool run with no paramters."));
         }
         
         let mut input_file = String::new();

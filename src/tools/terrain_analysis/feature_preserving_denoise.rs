@@ -71,7 +71,7 @@ impl FeaturePreservingDenoise {
         
         parameters.push(ToolParameter{
             name: "Normal Difference Threshold".to_owned(), 
-            flags: vec!["--norm_dif".to_owned()], 
+            flags: vec!["--norm_diff".to_owned()], 
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("15.0".to_owned()),
@@ -150,7 +150,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+                                "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -179,7 +179,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 } else {
                     filter_size = args[i+1].to_string().parse::<usize>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-norm_dif" || vec[0].to_lowercase() == "--norm_dif" {
+            } else if vec[0].to_lowercase() == "-norm_diff" || vec[0].to_lowercase() == "--norm_diff" {
                 if keyval {
                     max_norm_diff = vec[1].to_string().parse::<f64>().unwrap();
                 } else {

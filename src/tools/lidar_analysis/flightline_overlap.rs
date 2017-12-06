@@ -141,7 +141,7 @@ impl WhiteboxTool for FlightlineOverlap {
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+                                  "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");

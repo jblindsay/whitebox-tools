@@ -75,7 +75,7 @@ class FileSelector(tk.Frame):
         fs_frame.grid(row=1, column=0, sticky=tk.NSEW)
         fs_frame.columnconfigure(0, weight=10)
         fs_frame.columnconfigure(1, weight=1)
-        self.pack(fill=tk.BOTH, expand=1)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -218,7 +218,7 @@ class FileOrFloat(tk.Frame):
         fs_frame.grid(row=1, column=0, sticky=tk.NSEW)
         fs_frame.columnconfigure(0, weight=10)
         fs_frame.columnconfigure(1, weight=1)
-        self.pack(fill=tk.BOTH, expand=1)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -364,7 +364,7 @@ class MultifileSelector(tk.Frame):
         fs_frame.columnconfigure(0, weight=10)
         fs_frame.columnconfigure(1, weight=1)
         fs_frame.columnconfigure(2, weight=1)
-        self.pack(fill=tk.BOTH, expand=1)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -586,7 +586,7 @@ class DataInput(tk.Frame):
         else:
             self.entry.bind("<Control-Key-a>", self.select_all)
 
-        self.pack(fill=tk.BOTH, expand=1)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=10)
         self.rowconfigure(0, weight=1)
@@ -742,7 +742,7 @@ class WbRunner(tk.Frame):
         buttonsFrame = ttk.Frame(overall_frame, padding='0.1i')
         self.run_button = ttk.Button(
             buttonsFrame, text="Run", width=8, command=self.run_tool)
-        self.run_button.pack(pady=10, padx=10)
+        # self.run_button.pack(pady=10, padx=10)
         self.run_button.grid(row=0, column=0)
         self.quitButton = ttk.Button(
             buttonsFrame, text="Cancel", width=8, command=self.cancel_operation)
@@ -783,7 +783,7 @@ class WbRunner(tk.Frame):
         overall_frame.columnconfigure(0, weight=1)
         toplevel_frame.columnconfigure(0, weight=1)
         toplevel_frame.columnconfigure(1, weight=4)
-        self.pack(fill=tk.BOTH, expand=1)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 

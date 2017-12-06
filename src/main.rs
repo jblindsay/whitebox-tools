@@ -55,7 +55,7 @@ fn run() -> Result<(), Error> {
         let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
         // return Err(Error::new(ErrorKind::InvalidInput,
-        //                       "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+        //                       "Tool run with no paramters."));
         // print help
         help();
         // list tools
@@ -181,6 +181,7 @@ The following commands are recognized:
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
 --viewcode       Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
 -h, --help       Prints help information.
+--version        Prints the version information.
 
 Example Usage:
 >> .*EXE_NAME -r=lidar_info --cd=\"*path*to*data*\" -i=input.las --vlr --geokeys

@@ -33,10 +33,6 @@ impl NormalVectors {
         let name = "NormalVectors".to_string();
         
         let description = "Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.".to_string();
-        
-//         let parameters = "-i, --input        Input LAS file.
-// -o, --output       Output LAS file.
-// --radius           Search radius; default is 1.0.".to_owned();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -117,7 +113,7 @@ impl WhiteboxTool for NormalVectors {
         
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters. Please see help (-h) for parameter descriptions."));
+            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -242,7 +238,7 @@ impl WhiteboxTool for NormalVectors {
         output.header.point_format = 2;
 
         let (mut r, mut g, mut b): (u16, u16, u16);
-        for i in 0..input.header.number_of_points as usize {
+        for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
             r = ((1.0 + normal_values[i].x) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
             g = ((1.0 + normal_values[i].y) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].y) / 2.0 * 65535.0) as u16;
