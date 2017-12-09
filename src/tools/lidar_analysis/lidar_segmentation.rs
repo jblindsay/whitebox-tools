@@ -286,14 +286,16 @@ impl WhiteboxTool for LidarSegmentation {
         let mut index_n: usize;
         let mut solved_points = 0;
         let mut stack = vec![];
+        let mut last_seed = 0;
         while solved_points < n_points {
             // Find a seed-point for a segment
-            for i in 0..n_points {
+            for i in last_seed..n_points {
                 if segment_id[i] == 0 {
                     // No segment ID has yet been assigned to this point.
                     current_segment += 1;
                     segment_id[i] = current_segment;
                     stack.push(i);
+                    last_seed = i;
                     break;
                 }
             }

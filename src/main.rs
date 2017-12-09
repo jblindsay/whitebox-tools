@@ -49,6 +49,7 @@ fn run() -> Result<(), Error> {
     let mut tool_help = false;
     let mut tool_parameters = false;
     let mut list_tools = false;
+    let mut keywords: Vec<String> = vec![];
     let mut view_code = false;
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
@@ -114,6 +115,14 @@ fn run() -> Result<(), Error> {
             tool_name = v;
             tool_parameters = true;
         } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
+            // let mut v = arg.replace("--listtools", "")
+            //     .replace("-listtools", "")
+            //     .replace("\"", "")
+            //     .replace("\'", "");
+            // if v.starts_with("=") {
+            //     v = v[1..v.len()].to_string();
+            // }
+            // keywords = v.split(" ").map(|s| s.to_string()).collect();
             list_tools = true;
         } else if arg.starts_with("-viewcode") || arg.starts_with("--viewcode") {
             let mut v = arg.replace("--viewcode", "")
@@ -139,6 +148,8 @@ fn run() -> Result<(), Error> {
             // it's an arg to be fed to the tool
             // println!("arg: {}", arg); //temp
             tool_args_vec.push(arg.trim().to_string().clone());
+        } else {
+            keywords.push(arg.trim().to_string().clone());
         }
     }
 
@@ -154,7 +165,12 @@ fn run() -> Result<(), Error> {
     } else if tool_parameters {
         return tm.tool_parameters(tool_name);
     } else if list_tools {
-        tm.list_tools();
+        // tm.list_tools();
+        if keywords.len() == 0 {
+            tm.list_tools();
+        } else {
+            tm.list_tools_with_keywords(keywords)
+        }
     } else if view_code {
         return tm.get_tool_source_code(tool_name);
     }
@@ -175,7 +191,7 @@ fn help() {
 The following commands are recognized:
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
 -l, --license    Prints the whitebox-tools license.
---listtools      Lists all available tools.
+--listtools      Lists all available tools. Keywords may also be used, --listtools slope.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".

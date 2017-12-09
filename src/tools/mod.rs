@@ -698,18 +698,6 @@ impl ToolManager {
     pub fn tool_parameters(&self, tool_name: String) -> Result<(), Error> {
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => {
-                // let p = tool.get_tool_parameters();
-                // let mut s = String::from("{\"parameters\": [");
-                // for i in 0..p.len() {
-                //     if i < tool.parameters.len() - 1 {
-                //         s.push_str(&(p[i].to_string()));
-                //         s.push_str(",");
-                //     } else {
-                //         s.push_str(&(p[i].to_string()));
-                //     }
-                // }
-                // s.push_str("]}");
-                // println!("{}", s);
                 println!("{}", tool.get_tool_parameters())
             }, 
             None => {
@@ -729,6 +717,28 @@ impl ToolManager {
         }
 
         let mut ret = format!("All {} Available Tools:\n", tool_details.len());
+        for i in 0..tool_details.len() {
+            ret.push_str(&format!("{}: {}\n\n", tool_details[i].0, tool_details[i].1));
+        }
+
+        println!("{}", ret);
+    }
+
+    pub fn list_tools_with_keywords(&self, keywords: Vec<String>) {
+        let mut tool_details: Vec<(String, String)> = Vec::new();
+        for val in &self.tool_names {
+            let tool = self.get_tool(&val).unwrap();
+            let (nm, des) = get_name_and_description(tool);
+            for kw in &keywords {
+                if nm.to_lowercase().contains(&(kw.to_lowercase())) ||
+                   des.to_lowercase().contains(&(kw.to_lowercase())) {
+                    tool_details.push(get_name_and_description(self.get_tool(&val).unwrap()));
+                    break;
+                }
+            }
+        }
+
+        let mut ret = format!("All {} Tools containing keywords:\n", tool_details.len());
         for i in 0..tool_details.len() {
             ret.push_str(&format!("{}: {}\n\n", tool_details[i].0, tool_details[i].1));
         }
