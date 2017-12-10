@@ -53,7 +53,7 @@ fn run() -> Result<(), Error> {
     let mut view_code = false;
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
-        let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
         // return Err(Error::new(ErrorKind::InvalidInput,
         //                       "Tool run with no paramters."));
@@ -148,7 +148,8 @@ fn run() -> Result<(), Error> {
             // it's an arg to be fed to the tool
             // println!("arg: {}", arg); //temp
             tool_args_vec.push(arg.trim().to_string().clone());
-        } else {
+        } else if !arg.contains("whitebox_tools") {
+            // add it to the keywords list
             keywords.push(arg.trim().to_string().clone());
         }
     }
@@ -165,11 +166,10 @@ fn run() -> Result<(), Error> {
     } else if tool_parameters {
         return tm.tool_parameters(tool_name);
     } else if list_tools {
-        // tm.list_tools();
         if keywords.len() == 0 {
             tm.list_tools();
         } else {
-            tm.list_tools_with_keywords(keywords)
+            tm.list_tools_with_keywords(keywords);
         }
     } else if view_code {
         return tm.get_tool_source_code(tool_name);
