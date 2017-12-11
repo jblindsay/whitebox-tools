@@ -784,8 +784,8 @@ class WbRunner(tk.Frame):
         toplevel_frame.columnconfigure(0, weight=1)
         toplevel_frame.columnconfigure(1, weight=4)
         # self.pack(fill=tk.BOTH, expand=1)
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        # toplevel_frame.columnconfigure(0, weight=1)
+        # toplevel_frame.rowconfigure(0, weight=1)
 
         toplevel_frame.grid(row=0, column=0, sticky=tk.NSEW)
 
@@ -814,7 +814,22 @@ class WbRunner(tk.Frame):
 
         menubar.add_cascade(label="Edit ", menu=editmenu)
 
+        helpmenu = tk.Menu(menubar, tearoff=0)
+        helpmenu.add_command(
+            label="About", command=self.help)
+
+        helpmenu.add_command(
+            label="License", command=self.license)
+
+        menubar.add_cascade(label="Help ", menu=helpmenu)
+
         self.master.config(menu=menubar)
+
+    def help(self):
+        self.print_to_output(wbt.version())
+
+    def license(self):
+        self.print_to_output(wbt.license())
 
     def select_exe(self):
         try:

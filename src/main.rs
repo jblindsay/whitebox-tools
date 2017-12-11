@@ -150,7 +150,13 @@ fn run() -> Result<(), Error> {
             tool_args_vec.push(arg.trim().to_string().clone());
         } else if !arg.contains("whitebox_tools") {
             // add it to the keywords list
-            keywords.push(arg.trim().to_string().clone());
+            keywords.push(
+                arg.trim()
+                .replace("\"", "")
+                .replace("\'", "")
+                .to_string()
+                .clone()
+            );
         }
     }
 
@@ -162,8 +168,10 @@ fn run() -> Result<(), Error> {
     if run_tool {
         return tm.run_tool(tool_name, tool_args_vec);
     } else if tool_help {
+        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
         return tm.tool_help(tool_name);
     } else if tool_parameters {
+        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
         return tm.tool_parameters(tool_name);
     } else if list_tools {
         if keywords.len() == 0 {
@@ -172,6 +180,7 @@ fn run() -> Result<(), Error> {
             tm.list_tools_with_keywords(keywords);
         }
     } else if view_code {
+        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
         return tm.get_tool_source_code(tool_name);
     }
 
@@ -190,13 +199,14 @@ fn help() {
 
 The following commands are recognized:
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
+-h, --help       Prints help information.
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
+-v               Verbose mode. Without this flag, tool outputs will not be printed.
 --viewcode       Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
--h, --help       Prints help information.
 --version        Prints the version information.
 
 Example Usage:

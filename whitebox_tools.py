@@ -151,7 +151,7 @@ class WhiteboxTools(object):
             return err
 
     def version(self):
-        ''' Retrieves the version information for whitebox - tools.
+        ''' Retrieves the version information for whitebox-tools.
         '''
         try:
             os.chdir(self.exe_path)
@@ -243,7 +243,7 @@ class WhiteboxTools(object):
         except (OSError, ValueError, CalledProcessError) as err:
             return err
 
-    def list_tools(self):
+    def list_tools(self, keywords=[]):
         ''' Lists all available tools in whitebox - tools.
         '''
         try:
@@ -251,6 +251,9 @@ class WhiteboxTools(object):
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--listtools")
+            if len(keywords) > 0:
+                for kw in keywords:
+                    args.append(kw)
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)

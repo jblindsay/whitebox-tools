@@ -29,7 +29,8 @@ def main():
         print("Version information: {}".format(wbt.version()))
 
         # List all available tools in whitebox-tools
-        print(wbt.list_tools())
+        print(wbt.list_tools())  # prints all tools
+        # print(wbt.list_tools(['lidar', 'LAS'])) # prints tools with 'lidar' or 'LAS' in tool name or description.
 
         # print(wbt.tool_help("dev_from_mean_elev"))
         print(wbt.tool_help("elev_percentile"))

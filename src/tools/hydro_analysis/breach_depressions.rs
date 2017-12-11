@@ -194,7 +194,7 @@ impl WhiteboxTool for BreachDepressions {
 
         let min_val = input.configs.minimum;
         let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-        let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
+        let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
         
         let mut output = Raster::initialize_using_file(&output_file, &input);
