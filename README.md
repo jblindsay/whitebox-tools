@@ -4,7 +4,7 @@
 
 *Bringing the power of Whitebox GAT to the world at large*
 
-- [Desciption](#description)
+- [Description](#description)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Available Tools](#available-tools)
@@ -32,7 +32,7 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 ## Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and archetectures. If you do not find your operating system/archetecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary.
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary.
 
 To compile the latest development version of *WhiteboxTools* from source files, ensure that the latest stable version of the [Rust programming language](https://www.rust-lang.org) compiler is installed on your machine. Fork the *WhiteboxTools* GitHub repository and then run the *build.py* Python script. To run the build script, type the following command into a terminal, after having changed the terminal working directory to the *WhiteboxTools* folder:
 
@@ -60,7 +60,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 | -h, --help        | Prints help information.                                                                          |
 | -l, --license     | Prints the whitebox-tools license.                                                                |
 | --listtools       | Lists all available tools, with tool descriptions. Keywords may also be used, --listtools slope.  |
-| -r, --run         | Runs a tool; used in conjuction with --cd flag; -r="LidarInfo".                                   |
+| -r, --run         | Runs a tool; used in conjunction with --cd flag; -r="LidarInfo".                                   |
 | --toolhelp        | Prints the help associated with a tool; --toolhelp="LidarInfo".                                   |
 | --toolparameters  | Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".         |
 | -v                | Verbose mode. Without this flag, tool outputs will not be printed.                                |
@@ -71,7 +71,7 @@ Generally, the Unix convention is that single-letter arguments (options) use a s
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
-In addition to direct command-line and script-based interation, a very basic user-interface called *WB Runner* can be used to call the tools within the *WhiteboxTools* executable file, providing the required tool arguments.
+In addition to direct command-line and script-based interaction, a very basic user-interface called *WB Runner* can be used to call the tools within the *WhiteboxTools* executable file, providing the required tool arguments.
 
 **Example command prompt:**
 
@@ -150,7 +150,7 @@ The library currently contains the following 249 tools:
 **GIS Analysis**
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
-- ***Centroid***: Calclates the centroid, or average location, of raster polygon objects.
+- ***Centroid***: Calculates the centroid, or average location, of raster polygon objects.
 - ***Clump***: Groups cells that form physically discrete areas, assigning them unique identifiers.
 - ***CostAllocation***: Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
 - ***CostDistance***: Performs cost-distance accumulation on a cost surface and a group of source cells.
@@ -177,7 +177,7 @@ The library currently contains the following 249 tools:
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 
 **Hydrological Analysis**
-- ***AverageFlowpathSlope***: easures the average length of all upslope flowpaths draining each grid cell.
+- ***AverageFlowpathSlope***: measures the average length of all upslope flowpaths draining each grid cell.
 - ***AverageUpslopeFlowpathLength***: Measures the average length of all upslope flowpaths draining each grid cell.
 - ***Basins***: Identifies drainage basins that drain to the DEM edge.
 - ***BreachDepressions***: Breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.
@@ -219,7 +219,7 @@ The library currently contains the following 249 tools:
 - ***Closing***: A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 - ***ConservativeSmoothingFilter***: Performs a conservative smoothing filter on an image.
 - ***CreateColourComposite***: Creates a colour-composite image from three bands of multispectral imagery.
-- ***DirectDecorrelationStretch***: Performs a direct decorrelation stretch enchancement on a colour-composite image of multispectral data.
+- ***DirectDecorrelationStretch***: Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 - ***DiffOfGaussianFilter***: Performs a Difference of Gaussian (DoG) filter on an image.
 - ***DiversityFilter***: Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 - ***EmbossFilter***: Performs an emboss filter on an image, similar to a hillshade operation.
@@ -227,9 +227,9 @@ The library currently contains the following 249 tools:
 - ***GammaCorrection***: Performs a sigmoidal contrast stretch on input images.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.
 - ***HighPassFilter***: Performs a high-pass filter on an input image.
-- ***HistogramEqualization***: Performs a histogram equalization contrast enhancment on an image.
+- ***HistogramEqualization***: Performs a histogram equalization contrast enhancement on an image.
 - ***HistogramMatching***: Alters the statistical distribution of a raster image matching it to a specified PDF.
-- ***HistogramMatchingTwoImages***: This tool alters the cumululative distribution function of a raster image to that of another image.
+- ***HistogramMatchingTwoImages***: This tool alters the cumulative distribution function of a raster image to that of another image.
 - ***IhsToRgb***: Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 - ***IntegralImage***: Transforms an input image (summed area table) into its integral image equivalent.
 - ***KNearestMeanFilter***: A k-nearest mean filter is a type of edge-preserving smoothing filter.
@@ -238,7 +238,7 @@ The library currently contains the following 249 tools:
 - ***LeeFilter***: Performs a Lee (Sigma) smoothing filter on an image.
 - ***LineDetectionFilter***: Performs a line-detection filter on an image.
 - ***LineThinning***: Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
-- ***MajorityFilter***: Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.
+- ***MajorityFilter***: Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
 - ***MaximumFilter***: Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 - ***MeanFilter***: Performs a mean filter (low-pass filter) on an input image.
 - ***MedianFilter***: Performs a median filter on an input image.
@@ -252,7 +252,7 @@ The library currently contains the following 249 tools:
 - ***PercentileFilter***: Performs a percentile filter on an input image.
 - ***PrewittFilter***: Performs a Prewitt edge-detection filter on an image.
 - ***RangeFilter***: Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
-- ***RemoveSpurs***: Removes the spurs (prunning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
+- ***RemoveSpurs***: Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 - ***RgbToIhs***: Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 - ***RobertsCrossFilter***: Performs a Robert's cross edge-detection filter on an image.
 - ***ScharrFilter***: Performs a Scharr edge-detection filter on an image.
@@ -328,7 +328,7 @@ The library currently contains the following 249 tools:
 - ***NotEqualTo***: Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 - ***Or***: Performs a logical OR operator on two Boolean raster images.
 - ***Power***: Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
-- ***Quantiles***: Tranforms raster values into quantiles.
+- ***Quantiles***: Transforms raster values into quantiles.
 - ***RandomField***: Creates an image containing random values.
 - ***RasterSummaryStats***: Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 - ***Reciprocal***: Returns the reciprocal (i.e. 1 / z) of values in a raster.
@@ -410,7 +410,7 @@ The library currently contains the following 249 tools:
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
 ## Supported Data Formats
-The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorportate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possilbe) Rust codebase. 
+The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
 
 At present, there is no ability in *WhiteboxTools* to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will be added to the library soon. 
 
@@ -420,7 +420,7 @@ LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committ
 >>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las.zip" -o="output.las.zip" --radius=10.0
 ```
 
-Note that the double extensions (.las.zip) in the above command are not necessary and are only used for convienence of keeping track of LiDAR data sets (i.e. .zip extensions work too). The extra work of decoding/encoding compressed files does add additional processing time, although the Rust compression library that is used is highly efficient and usually only adds a few seconds to tool run times. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file data sets with massive storage requirements. 
+Note that the double extensions (.las.zip) in the above command are not necessary and are only used for convenience of keeping track of LiDAR data sets (i.e. .zip extensions work too). The extra work of decoding/encoding compressed files does add additional processing time, although the Rust compression library that is used is highly efficient and usually only adds a few seconds to tool run times. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file data sets with massive storage requirements. 
 
 ## Contributing
 
@@ -481,18 +481,18 @@ The answer to this question depends strongly on the type of analysis and data th
 
 ### Are pre-compiled executables of WhiteboxTools available?
 
-Pre-compiled binaries for *WhiteboxTools* can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. If you need binaries for other operating systems/system archetectures, you will need to compile the executable from source files. See [Installation](#installation) for details.
+Pre-compiled binaries for *WhiteboxTools* can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. If you need binaries for other operating systems/system architectures, you will need to compile the executable from source files. See [Installation](#installation) for details.
 
 ### Why is WhiteboxTools programmed in Rust?
 
-I spent a long time evaluating potential programming language for future development efforts for the *Whitebox GAT* project. My most important criterion for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many Whitebox users. The language should be fast and productive--Java is already quite fast, but if I am going to change development languages, I would like a performance boost. Furthermore, given that many, though not all, of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offerred easy and safe concurrent programming. Although many would consider C/C++ for this work, I was looking for a modern and safe language. Fortunately, we are living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. [See [*GoSpatial*](https://github.com/jblindsay/go-spatial) and [*lidario*](https://github.com/jblindsay/lidario).]
+I spent a long time evaluating potential programming language for future development efforts for the *Whitebox GAT* project. My most important criterion for a language was that it compile to native code, rather than target the Java virtual machine (JVM). I have been keen to move Whitebox GAT away from Java because of some of the challenges that supporting the JVM has included for many Whitebox users. The language should be fast and productive--Java is already quite fast, but if I am going to change development languages, I would like a performance boost. Furthermore, given that many, though not all, of the algorithms used for geospatial analysis scale well with concurrent (parallel) implementations, I favoured languages that offered easy and safe concurrent programming. Although many would consider C/C++ for this work, I was looking for a modern and safe language. Fortunately, we are living through a renaissance period in programming language development and there are many newer languages that fit the bill nicely. Over the past two years, I considered each of Go, Rust, D, Nim, and Crystal for Whitebox development and ultimately decided on Rust. [See [*GoSpatial*](https://github.com/jblindsay/go-spatial) and [*lidario*](https://github.com/jblindsay/lidario).]
 
-Each of the languages I examined has its own advantages of disadvantages, so why Rust? It's a combination of factors that made it a compelling option for this project. Compared with many on the list, Rust is a mature language with a vibrant user community. Like C/C++, it's a high-performance and low-level language that allows for complete control of the system. However, Rust is also one of the safest languages, meaning that I can be confident that *WhiteboxTools* will not contain common bugs, such as memory use-after-release, memory leaks and race conditions within concurrent code. Importantly, and quite uniquely, this safty is achieved in the Rust language without the use of a garbage collector (automatic memory management). Garbage collectors can be great, but they do generally come with a certain efficiency trade-off that Rust does not have. The other main advantage of Rust's approach to memory management is that it allows for  a level of interaction with scripting languages (e.g. Python) that is quite difficult to do in garbage collected languages. Although **WhiteboxTools** is currently set up to use an automation approach to interacting with Python code that calls it, I like the fact that I have the option to create a *WhiteboxTools* shared library. 
+Each of the languages I examined has its own advantages of disadvantages, so why Rust? It's a combination of factors that made it a compelling option for this project. Compared with many on the list, Rust is a mature language with a vibrant user community. Like C/C++, it's a high-performance and low-level language that allows for complete control of the system. However, Rust is also one of the safest languages, meaning that I can be confident that *WhiteboxTools* will not contain common bugs, such as memory use-after-release, memory leaks and race conditions within concurrent code. Importantly, and quite uniquely, this safety is achieved in the Rust language without the use of a garbage collector (automatic memory management). Garbage collectors can be great, but they do generally come with a certain efficiency trade-off that Rust does not have. The other main advantage of Rust's approach to memory management is that it allows for  a level of interaction with scripting languages (e.g. Python) that is quite difficult to do in garbage collected languages. Although **WhiteboxTools** is currently set up to use an automation approach to interacting with Python code that calls it, I like the fact that I have the option to create a *WhiteboxTools* shared library. 
 
-Not everything with Rust is perfect however. It is still a very young language and there are many pieces still mising from its ecosystem. Futhermore, it is not the easiest language to learn, particularly for people who are inexperienced with programming. This may limit my ability to attract other programers to the Whitebox project, which would be unfortunate. However, overall, Rust was the best option for this particular application.
+Not everything with Rust is perfect however. It is still a very young language and there are many pieces still missing from its ecosystem. Furthermore, it is not the easiest language to learn, particularly for people who are inexperienced with programming. This may limit my ability to attract other programers to the Whitebox project, which would be unfortunate. However, overall, Rust was the best option for this particular application.
 
 ### How does WhiteboxTools' design philosophy differ?
 
-*Whitebox GAT* is frequently praised for its consistent design and ease of use. Like *Whitebox GAT*, *WhiteboxTools* follows the convention of *one tool for one function*. For example, in *WhiteboxTools* assigning the links in a stream channel network their Horton, Strahler, Shreve, or Hack stream ordering numbers requires running separate tools (i.e. *HortonStreamOrder*, *StrahlerStreamOrder*, *ShreveStreamMagnitude*, and *HackStreamOrder*). By contrast, in GRASS GIS<sup>1</sup> and ArcGIS single tools (i.e. the *r.stream.order* and *Stream Order* tools respectively) can be configured to output different channel ordering schemes. The *WhiteboxTools* design is intended to simplify the user experience and to make it easier to find the right tool for a task. With more specific tool names that are reflective of their specific purposes, users are not as reliant on reading help documentation to identify the tool for the task at hand. Similarly, it is not uncommon for tools in other GIS to have multiple outputs. For example, in GRASS GIS the *r.slope.aspect* tool can be configured to output slope, aspect, profile curvature, plan curvature, and several other common terrain surface derivatives. Based on the *one tool for one function* design approach of *WhiteboxTools*, multiple outputs are indicative that a tool should be split into different, more specific tools. Are you more likely to go to a tool named *r.slope.aspect* or *TangentialCurvature* when you want to create a tangential curvature raster from a DEM? If you're new to the software and are unfamilar with it, probably the later is more obvious. The *WhiteboxTools* design approach also has the added benefit of simplifying the documentation for tools. The one downside to this design approach, however, is that it results (or will result) in a large number of tools, often with signifcant overlap in function. 
+*Whitebox GAT* is frequently praised for its consistent design and ease of use. Like *Whitebox GAT*, *WhiteboxTools* follows the convention of *one tool for one function*. For example, in *WhiteboxTools* assigning the links in a stream channel network their Horton, Strahler, Shreve, or Hack stream ordering numbers requires running separate tools (i.e. *HortonStreamOrder*, *StrahlerStreamOrder*, *ShreveStreamMagnitude*, and *HackStreamOrder*). By contrast, in GRASS GIS<sup>1</sup> and ArcGIS single tools (i.e. the *r.stream.order* and *Stream Order* tools respectively) can be configured to output different channel ordering schemes. The *WhiteboxTools* design is intended to simplify the user experience and to make it easier to find the right tool for a task. With more specific tool names that are reflective of their specific purposes, users are not as reliant on reading help documentation to identify the tool for the task at hand. Similarly, it is not uncommon for tools in other GIS to have multiple outputs. For example, in GRASS GIS the *r.slope.aspect* tool can be configured to output slope, aspect, profile curvature, plan curvature, and several other common terrain surface derivatives. Based on the *one tool for one function* design approach of *WhiteboxTools*, multiple outputs are indicative that a tool should be split into different, more specific tools. Are you more likely to go to a tool named *r.slope.aspect* or *TangentialCurvature* when you want to create a tangential curvature raster from a DEM? If you're new to the software and are unfamiliar with it, probably the later is more obvious. The *WhiteboxTools* design approach also has the added benefit of simplifying the documentation for tools. The one downside to this design approach, however, is that it results (or will result) in a large number of tools, often with signifcant overlap in function. 
 
 <sup>1</sup> NOTE: It's not my intent to criticize GRASS GIS, as I deeply respect the work that the GRASS developers have contributed. Rather, I am contrasting the consequences of *WhiteboxTools'* design philosophy to that of other GIS.
