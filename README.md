@@ -32,7 +32,9 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 ## Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. To compile the latest development version of *WhiteboxTools* from source files, ensure that the latest stable version of the [Rust programming language](https://www.rust-lang.org) compiler is installed on your machine. Fork the *WhiteboxTools* GitHub repository and then run the *build.py* Python script. To run the build script, type the following command into a terminal, after having changed the terminal working directory to the *WhiteboxTools* folder:
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and archetectures. If you do not find your operating system/archetecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary.
+
+To compile the latest development version of *WhiteboxTools* from source files, ensure that the latest stable version of the [Rust programming language](https://www.rust-lang.org) compiler is installed on your machine. Fork the *WhiteboxTools* GitHub repository and then run the *build.py* Python script. To run the build script, type the following command into a terminal, after having changed the terminal working directory to the *WhiteboxTools* folder:
 
 ```
 >> python build.py
@@ -44,7 +46,7 @@ Or, using Rust's Cargo build tool directly:
 >> cargo build --release
 ```
 
-Compilation can take several minutes. The whitebox-tools.exe executable file will be located within the ```/target/release/``` folder. Once the project has reached the 1.0 milestone (stable), pre-compiled binaries for *WhiteboxTools* will be distributed with releases of *Whitebox GAT* GIS for each of the supported platforms. Until this time, you will need to compile the executable from source files.
+Compilation can take several minutes. The whitebox-tools.exe executable file will be located within the ```/target/release/``` folder.
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler. Ultimately, you should not have to interact with Rust directly, but rather the build script will do this for you.
 
@@ -120,7 +122,7 @@ args = ["--input=\"DEM.dep\"",
         "--filter=101"]
 
 # Run the tool and check the return value
-if wbt.run_tool(tool_name, args, callback) != 0:
+if wbt.run_tool(tool_name, args) != 0:
     print("ERROR running {}".format(name))
 
 ```
@@ -479,7 +481,7 @@ The answer to this question depends strongly on the type of analysis and data th
 
 ### Are pre-compiled executables of WhiteboxTools available?
 
-Once the project has reached the stable 1.0 milestone, pre-compiled binaries for *WhiteboxTools* will be distributed with releases of *Whitebox GAT* GIS for each of the supported platforms. Until this time, you will need to compile the executable from source files. See [Installation](#installation) for details.
+Pre-compiled binaries for *WhiteboxTools* can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. If you need binaries for other operating systems/system archetectures, you will need to compile the executable from source files. See [Installation](#installation) for details.
 
 ### Why is WhiteboxTools programmed in Rust?
 

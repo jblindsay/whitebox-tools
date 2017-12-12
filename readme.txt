@@ -1,6 +1,9 @@
 WhiteboxTools
 
-The main tool library is contained in the whitebox_tools (or whitebox_tools.exe on MS Windows) file. This is a command-line program that can be run from a terminal, i.e. command prompt. For details on usage, change the working directory (cd) to this folder and type the following at the command prompt:
+The main tool library is contained in the whitebox_tools (or whitebox_tools.exe on 
+MS Windows) file. This is a command-line program that can be run from a terminal, i.e. 
+command prompt. For details on usage, change the working directory (cd) to this folder 
+and type the following at the command prompt:
 
 ./whitebox_tools --help
 
@@ -22,16 +25,22 @@ Example Usage:
 ./whitebox-tools -r=lidar_info --cd="/path/to/data/" -i=input.las --vlr --geokeys
 
 
-The WhiteboxTools library may also be called from Python automation scripts. The whitebox_tools.py script can be used as an easy way of interfacing with the various commands. To use this script, simply use the following import:
+The WhiteboxTools library may also be called from Python automation scripts. The 
+whitebox_tools.py script can be used as an easy way of interfacing with the various 
+commands. To use this script, simply use the following import:
 
 from whitebox_tools import WhiteboxTools
 
-See the whitebox_example.py script for more details on how to interface with WhiteboxTools from Python.
+See the whitebox_example.py script for more details on how to interface with WhiteboxTools 
+from Python.
 
-Additionally, included in this directory is the WhiteboxTools Runner, a simple Tkinter user-interface that allows users to run the WhiteboxTools tools, with convenience for specifying tool parameters. To run this interface, simply type:
+Additionally, included in this directory is the WhiteboxTools Runner, a simple Tkinter 
+user-interface that allows users to run the WhiteboxTools tools, with convenience for 
+specifying tool parameters. To run this interface, simply type:
 
 python3 wb_runner.py
 
 At the command prompt (after cd'ing to this folder, which contains the script).
 
-WhiteboxTools is distributed under a permissive MIT open-source license. See LICENSE.txt for more details.
+WhiteboxTools is distributed under a permissive MIT open-source license. See LICENSE.txt 
+for more details.
