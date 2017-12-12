@@ -129,9 +129,9 @@ if wbt.run_tool(tool_name, args, callback) != 0:
 
 There is a Python script contained within the *WhiteboxTools* directory called '*wb_runner.py*'. This script is intended to provide a very basic user-interface for running the tools contained within the *WhiteboxTools* library. The user-interface uses Python's TkInter GUI library and should be cross-platform. The user interface is currently experimental and is under heavy testing. Please report any issues that you experience in using it.
 
-![WhiteboxTools Runner](./img/WBRunner.png)
+![WhiteboxTools Runner user-interface](./img/WBRunner.png)
 
-The *WB Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WB Runner*.
+The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WhiteboxTools Runner*.
 
 ## Available Tools
 
