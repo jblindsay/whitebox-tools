@@ -4,6 +4,10 @@ Authors: Dr. John Lindsay
 Created: July 9, 2017
 Last Modified: November 16, 2017
 License: MIT
+
+Notes: Based on Lindsay JB, Seibert J. 2013. Measuring the significance of a divide 
+to local drainage patterns. International Journal of Geographical Information Science, 
+27: 1453-1468. DOI: 10.1080/13658816.2012.705289
 */
 extern crate time;
 extern crate num_cpus;
@@ -30,7 +34,7 @@ impl MaxBranchLength {
     pub fn new() -> MaxBranchLength { // public constructor
         let name = "MaxBranchLength".to_string();
         
-        let description = "Branch length is used to map drainage divides or ridge lines.".to_string();
+        let description = "Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.".to_string();
         
         // let mut parameters = "--dem          Input raster DEM file.\n".to_owned();
         // parameters.push_str("-o, --output   Output raster file.\n");

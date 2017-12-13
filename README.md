@@ -32,23 +32,29 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 ## Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary.
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
-To compile the latest development version of *WhiteboxTools* from source files, ensure that the latest stable version of the [Rust programming language](https://www.rust-lang.org) compiler is installed on your machine. Fork the *WhiteboxTools* GitHub repository and then run the *build.py* Python script. To run the build script, type the following command into a terminal, after having changed the terminal working directory to the *WhiteboxTools* folder:
+1. install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this link.
+
+2. Download the Whitebox GAT source code. Note: WhiteboxTools is currently housed as a sub-repository of the main Whitebox GAT repo. To download the code, click the green Clone or download button on the GitHub repository site.
+
+3. Decompress the zipped download file.
+
+4. Open a terminal (command prompt) window and change the working directory to the whitebox_tools sub-folder, which is contained within the decompressed downloaded Whitebox GAT folder:
 
 ```
->> python build.py
+>> cd /path/to/folder/whitebox_tools/
 ```
 
-Or, using Rust's Cargo build tool directly:
+5. Finally, use the rust package manager Cargo, which will be installed along with Rust, to compile the executable:
 
 ```
 >> cargo build --release
 ```
 
-Compilation can take several minutes. The whitebox-tools.exe executable file will be located within the ```/target/release/``` folder.
+Depending on your system, the compilation may take several minutes. When completed, the compiled binary executable file will be contained within the *whitebox_tools/target/release/ folder*. Type *./whitebox_tools --help* at the command prompt (after cd'ing to the containing folder) for information on how to run the executable from the terminal.
 
-Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler. Ultimately, you should not have to interact with Rust directly, but rather the build script will do this for you.
+Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
 
 ## Usage
 
@@ -180,7 +186,7 @@ The library currently contains the following 249 tools:
 - ***AverageFlowpathSlope***: measures the average length of all upslope flowpaths draining each grid cell.
 - ***AverageUpslopeFlowpathLength***: Measures the average length of all upslope flowpaths draining each grid cell.
 - ***Basins***: Identifies drainage basins that drain to the DEM edge.
-- ***BreachDepressions***: Breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.
+- ***BreachDepressions***: Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
 - ***BreachSingleCellPits***: Removes single-cell pits from an input DEM by breaching.
 - ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
@@ -384,7 +390,7 @@ The library currently contains the following 249 tools:
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***FindRidges***: Identifies potential ridge and peak grid cells.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.
-- ***MaxBranchLength***: Branch length is used to map drainage divides or ridge lines.
+- ***MaxBranchLength***: Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
 - ***MaxDownslopeElevChange***: Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
 - ***MaxElevationDeviation***: Calculates the maximum elevation deviation over a range of spatial scales.
 - ***MinDownslopeElevChange***: Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.

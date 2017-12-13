@@ -4,6 +4,10 @@ Authors: Dr. John Lindsay
 Created: June 28, 2017
 Last Modified: November 16, 2017
 License: MIT
+
+Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal 
+methods for flow path enforcement in digital elevation models. Hydrological Processes, 
+30(6): 846–857. DOI: 10.1002/hyp.10648
 */
 extern crate time;
 
@@ -30,7 +34,7 @@ impl BreachDepressions {
     pub fn new() -> BreachDepressions { // public constructor
         let name = "BreachDepressions".to_string();
         
-        let description = "Breaches all of the depressions in a DEM. This should be preferred over depression filling in most cases.".to_string();
+        let description = "Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.".to_string();
         
         // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
         // parameters.push_str("-o, --output    Output raster file.\n");
