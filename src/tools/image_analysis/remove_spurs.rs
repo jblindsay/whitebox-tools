@@ -32,7 +32,7 @@ impl RemoveSpurs {
     pub fn new() -> RemoveSpurs { // public constructor
         let name = "RemoveSpurs".to_string();
         
-        let description = "Removes the spurs (prunning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.".to_string();
+        let description = "Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.".to_string();
         
         // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         // parameters.push_str("-o, --output  Output raster file.\n");

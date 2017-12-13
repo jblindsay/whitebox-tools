@@ -32,7 +32,7 @@ impl DirectDecorrelationStretch {
     pub fn new() -> DirectDecorrelationStretch {
         let name = "DirectDecorrelationStretch".to_string();
 
-        let description = "Performs a direct decorrelation stretch enchancement on a colour-composite image of multispectral data.".to_string();
+        let description = "Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.".to_string();
 
         // let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
         // parameters.push_str("-o, --output   Output raster file.\n");

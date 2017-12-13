@@ -25,7 +25,7 @@ impl Quantiles {
     pub fn new() -> Quantiles { // public constructor
         let name = "Quantiles".to_string();
         
-        let description = "Tranforms raster values into quantiles.".to_string();
+        let description = "Transforms raster values into quantiles.".to_string();
         
         // let mut parameters = "-i, --input      Input raster file.\n".to_owned();
         // parameters.push_str("-o, --output     Output raster file.\n");

@@ -34,7 +34,7 @@ impl MajorityFilter {
     pub fn new() -> MajorityFilter {
         let name = "MajorityFilter".to_string();
         
-        let description = "Assigns each cell in the output grid the most frequently occuring value (mode) in a moving window centred on each grid cell in the input raster.".to_string();
+        let description = "Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.".to_string();
         
         // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         // parameters.push_str("-o, --output  Output raster file.\n");

@@ -30,7 +30,7 @@ impl HistogramMatchingTwoImages {
         // public constructor
         let name = "HistogramMatchingTwoImages".to_string();
 
-        let description = "This tool alters the cumululative distribution function of a raster image to that of another image."
+        let description = "This tool alters the cumulative distribution function of a raster image to that of another image."
             .to_string();
 
         // let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
