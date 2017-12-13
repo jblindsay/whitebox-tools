@@ -274,7 +274,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "whitebox_tools"
-version = "0.1.2"
+version = "0.1.4"
 dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "kdtree 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",

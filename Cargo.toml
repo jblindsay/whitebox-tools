@@ -22,30 +22,25 @@ license = "MIT"
 # name = "whitebox_tools"
 # path = "src/main.rs"
 
-# [build]
-# rustflags = ["-Ctarget-cpu=native"]
-
 # [profile.release]
 # panic = 'abort'
 
 # The release profile, used for `cargo build --release`.
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = false
-debug-assertions = false
-codegen-units = 1
-panic = 'unwind'
+# [profile.release]
+# opt-level = 3
+# debug = false
+# rpath = false
+# lto = false
+# debug-assertions = false
+# codegen-units = 1
+# panic = 'unwind'
 
 [dependencies]
 byteorder = "^1.0.0"
 kdtree = "^0.3.1"
-# libc = "^0.2.20"
 nalgebra = "^0.10.1"
 num_cpus = "^1.2.1"
 rand = "^0.3.15"
-# rayon = "^0.6.0"
 serde = "1.0.19"
 serde_derive = "1.0.19"
 serde_json = "1.0.6"

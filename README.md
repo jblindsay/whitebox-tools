@@ -34,9 +34,9 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 *WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
-1. install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this link.
+1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
-2. Download the Whitebox GAT source code. Note: WhiteboxTools is currently housed as a sub-repository of the main Whitebox GAT repo. To download the code, click the green Clone or download button on the GitHub repository site.
+2. Download the Whitebox GAT [source code](https://github.com/jblindsay/whitebox-geospatial-analysis-tools). Note: WhiteboxTools is currently housed as a sub-repository of the main Whitebox GAT repo. To download the code, click the green Clone or download button on the GitHub repository site.
 
 3. Decompress the zipped download file.
 
