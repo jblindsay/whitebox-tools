@@ -1,4 +1,5 @@
 // private sub-module defined in other files
+mod aggregate_raster;
 mod average_overlay;
 mod buffer_raster;
 mod centroid;
@@ -28,6 +29,7 @@ mod reclass_from_file;
 mod weighted_sum;
 
 // exports identifiers from private sub-modules in the current module namespace
+pub use self::aggregate_raster::AggregateRaster;
 pub use self::average_overlay::AverageOverlay;
 pub use self::buffer_raster::BufferRaster;
 pub use self::centroid::Centroid;

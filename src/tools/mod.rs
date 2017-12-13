@@ -31,6 +31,7 @@ impl ToolManager {
         tool_names.push("SetNodataValue".to_string());
 
         // gis_analysis
+        tool_names.push("AggregateRaster".to_string());
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
         tool_names.push("Centroid".to_string());
@@ -308,6 +309,7 @@ impl ToolManager {
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
 
             // gis_analysis
+            "aggregateraster" => Some(Box::new(tools::gis_analysis::AggregateRaster::new())),
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "centroid" => Some(Box::new(tools::gis_analysis::Centroid::new())),
