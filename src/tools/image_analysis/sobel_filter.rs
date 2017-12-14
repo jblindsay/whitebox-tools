@@ -117,6 +117,10 @@ impl WhiteboxTool for SobelFilter {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools/Filters".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,

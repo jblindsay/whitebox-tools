@@ -143,6 +143,10 @@ impl WhiteboxTool for CreateColourComposite {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

@@ -4,6 +4,8 @@ Authors: Dr. John Lindsay
 Created: July 12, 2017
 Last Modified: November 16, 2017
 License: MIT
+
+Notes: Some degree of DEM smoothing is likely required to get reasonable results.
 */
 extern crate time;
 extern crate num_cpus;
@@ -135,6 +137,10 @@ impl WhiteboxTool for PennockLandformClass {
 
     fn get_example_usage(&self) -> String {
         self.example_usage.clone()
+    }
+
+    fn get_toolbox(&self) -> String {
+        "Geomorphometric Analysis".to_owned()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

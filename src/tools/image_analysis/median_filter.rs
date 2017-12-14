@@ -135,6 +135,10 @@ impl WhiteboxTool for MedianFilter {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools/Filters".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();

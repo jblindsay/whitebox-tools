@@ -118,6 +118,10 @@ impl WhiteboxTool for NewRasterFromBase {
     fn get_example_usage(&self) -> String {
         self.example_usage.clone()
     }
+    
+    fn get_toolbox(&self) -> String {
+        "Data Tools".to_owned()
+    }
 
     fn run<'a>(&self,
                args: Vec<String>,

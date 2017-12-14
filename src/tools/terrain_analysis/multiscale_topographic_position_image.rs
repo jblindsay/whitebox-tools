@@ -130,6 +130,10 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Geomorphometric Analysis".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input1_file = String::new();
         let mut input2_file = String::new();

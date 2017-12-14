@@ -704,7 +704,7 @@ class WbRunner(tk.Frame):
             self.tool_name), justify=tk.LEFT)  # , font=("Helvetica", 12, "bold")
         self.current_tool_lbl.grid(row=0, column=0, sticky=tk.W)
         self.view_code_button = ttk.Button(
-            current_tool_frame, text="View Code", width=8, command=self.view_code)
+            current_tool_frame, text="View Code", width=12, command=self.view_code)
         self.view_code_button.grid(row=0, column=1, sticky=tk.E)
         current_tool_frame.grid(row=1, column=0, sticky=tk.NSEW)
         current_tool_frame.columnconfigure(0, weight=1)

@@ -133,6 +133,10 @@ impl WhiteboxTool for ExtractValleys {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Stream Network Analysis".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

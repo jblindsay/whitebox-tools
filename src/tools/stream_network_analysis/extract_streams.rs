@@ -114,6 +114,10 @@ impl WhiteboxTool for ExtractStreams {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Stream Network Analysis".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut flow_accum_file = String::new();
         let mut output_file = String::new();

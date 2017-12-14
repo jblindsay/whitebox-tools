@@ -112,6 +112,10 @@ impl WhiteboxTool for FindParallelFlow {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Hydrological Analysis".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

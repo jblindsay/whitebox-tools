@@ -48,6 +48,7 @@ fn run() -> Result<(), Error> {
     let mut run_tool = false;
     let mut tool_help = false;
     let mut tool_parameters = false;
+    let mut toolbox = false;
     let mut list_tools = false;
     let mut keywords: Vec<String> = vec![];
     let mut view_code = false;
@@ -114,6 +115,16 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             tool_parameters = true;
+        } else if arg.starts_with("-toolbox") || arg.starts_with("--toolbox") {
+            let mut v = arg.replace("--toolbox", "")
+                .replace("-toolhelp", "")
+                .replace("\"", "")
+                .replace("\'", "");
+            if v.starts_with("=") {
+                v = v[1..v.len()].to_string();
+            }
+            tool_name = v;
+            toolbox = true;
         } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
             // let mut v = arg.replace("--listtools", "")
             //     .replace("-listtools", "")
@@ -173,6 +184,9 @@ fn run() -> Result<(), Error> {
     } else if tool_parameters {
         if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
         return tm.tool_parameters(tool_name);
+    } else if toolbox {
+        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        return tm.toolbox(tool_name);
     } else if list_tools {
         if keywords.len() == 0 {
             tm.list_tools();
@@ -203,6 +217,7 @@ The following commands are recognized:
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
+--toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
 -v               Verbose mode. Without this flag, tool outputs will not be printed.

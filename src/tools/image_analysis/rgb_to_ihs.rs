@@ -151,6 +151,10 @@ impl WhiteboxTool for RgbToIhs {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools".to_owned()
+    }
+    
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut red_file = String::new();
         let mut green_file = String::new();

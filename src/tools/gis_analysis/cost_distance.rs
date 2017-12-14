@@ -109,6 +109,10 @@ impl WhiteboxTool for CostDistance {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "GIS Analysis/Distance Tools".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut source_file = String::new();
         let mut cost_file = String::new();

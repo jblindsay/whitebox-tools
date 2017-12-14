@@ -107,6 +107,10 @@ impl WhiteboxTool for Xor {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Math and Stats Tools".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input1 = String::new();
         let mut input2 = String::new();

@@ -710,6 +710,19 @@ impl ToolManager {
         Ok(())
     }
 
+    pub fn toolbox(&self, tool_name: String) -> Result<(), Error> {
+        match self.get_tool(tool_name.as_ref()) {
+            Some(tool) => {
+                println!("{}", tool.get_toolbox())
+            }, 
+            None => {
+                return Err(Error::new(ErrorKind::NotFound,
+                                      format!("Unrecognized tool name {}.", tool_name)))
+            }
+        }
+        Ok(())
+    }
+
     pub fn list_tools(&self) {
         let mut tool_details: Vec<(String, String)> = Vec::new();
 
@@ -730,10 +743,12 @@ impl ToolManager {
         let mut tool_details: Vec<(String, String)> = Vec::new();
         for val in &self.tool_names {
             let tool = self.get_tool(&val).unwrap();
+            let toolbox = tool.get_toolbox();
             let (nm, des) = get_name_and_description(tool);
             for kw in &keywords {
                 if nm.to_lowercase().contains(&(kw.to_lowercase())) ||
-                   des.to_lowercase().contains(&(kw.to_lowercase())) {
+                   des.to_lowercase().contains(&(kw.to_lowercase())) ||
+                   toolbox.to_lowercase().contains(&(kw.to_lowercase())) {
                     tool_details.push(get_name_and_description(self.get_tool(&val).unwrap()));
                     break;
                 }
@@ -767,6 +782,7 @@ pub trait WhiteboxTool {
     fn get_tool_description(&self) -> String;
     fn get_tool_parameters(&self) -> String;
     fn get_example_usage(&self) -> String;
+    fn get_toolbox(&self) -> String;
     fn get_source_file(&self) -> String;
     fn run<'a>(&self,
                args: Vec<String>,

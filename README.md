@@ -66,7 +66,8 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 | -h, --help        | Prints help information.                                                                          |
 | -l, --license     | Prints the whitebox-tools license.                                                                |
 | --listtools       | Lists all available tools, with tool descriptions. Keywords may also be used, --listtools slope.  |
-| -r, --run         | Runs a tool; used in conjunction with --cd flag; -r="LidarInfo".                                   |
+| -r, --run         | Runs a tool; used in conjunction with --cd flag; -r="LidarInfo".                                  |
+| --toolbox         | Prints the toolbox associated with a tool; --toolbox=Slope.                                       |
 | --toolhelp        | Prints the help associated with a tool; --toolhelp="LidarInfo".                                   |
 | --toolparameters  | Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".         |
 | -v                | Verbose mode. Without this flag, tool outputs will not be printed.                                |

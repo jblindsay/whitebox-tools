@@ -108,6 +108,10 @@ impl WhiteboxTool for CostPathway {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "GIS Analysis/Distance Tools".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut destination_file = String::new();
         let mut backlink_file = String::new();

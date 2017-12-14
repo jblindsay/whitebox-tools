@@ -206,6 +206,10 @@ impl WhiteboxTool for LidarIdwInterpolation {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "LiDAR Tools".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

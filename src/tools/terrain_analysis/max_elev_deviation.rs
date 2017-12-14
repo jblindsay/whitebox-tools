@@ -138,6 +138,10 @@ impl WhiteboxTool for MaxElevationDeviation {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Geomorphometric Analysis".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_mag_file = String::new();

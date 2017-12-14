@@ -117,6 +117,10 @@ impl WhiteboxTool for RelativeStreamPowerIndex {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Geomorphometric Analysis".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut sca_file = String::new();
         let mut slope_file = String::new();

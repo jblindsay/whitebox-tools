@@ -128,6 +128,10 @@ impl WhiteboxTool for CrispnessIndex {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Math and Stats Tools".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

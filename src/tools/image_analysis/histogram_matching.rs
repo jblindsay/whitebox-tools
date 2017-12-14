@@ -113,6 +113,10 @@ impl WhiteboxTool for HistogramMatching {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools/Image Enhancement".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

@@ -121,6 +121,10 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "Image Processing Tools".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input1_file = String::new();
         let mut input2_file = String::new();

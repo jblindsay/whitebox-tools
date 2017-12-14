@@ -129,6 +129,10 @@ impl WhiteboxTool for CreatePlane {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "GIS Analysis".to_owned()
+    }
+
     fn run<'a>(&self,
                args: Vec<String>,
                working_directory: &'a str,

@@ -86,6 +86,10 @@ impl WhiteboxTool for MinOverlay {
         self.example_usage.clone()
     }
 
+    fn get_toolbox(&self) -> String {
+        "GIS Analysis/Overlay Tools".to_owned()
+    }
+
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut output_file = String::new();
