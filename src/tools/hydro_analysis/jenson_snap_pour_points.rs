@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTES: This tool should be updated to take vector pour points as inputs/outputs when vector support has been added.
@@ -20,6 +20,7 @@ use tools::*;
 pub struct JensonSnapPourPoints {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -27,14 +28,9 @@ pub struct JensonSnapPourPoints {
 impl JensonSnapPourPoints {
     pub fn new() -> JensonSnapPourPoints { // public constructor
         let name = "JensonSnapPourPoints".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.".to_string();
         
-        // let mut parameters = "--pour_pts    Input pour points (outlet) raster file.\n".to_owned();
-        // parameters.push_str("--streams     Input raster streams file.\n");
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--snap_dist   Maximum snap distance in map units.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Pour Points (Outlet) File".to_owned(), 
@@ -81,7 +77,13 @@ impl JensonSnapPourPoints {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --pour_pts='pour_pts.dep' --streams='streams.dep' -o='output.dep' --snap_dist=15.0", short_exe, name).replace("*", &sep);
     
-        JensonSnapPourPoints { name: name, description: description, parameters: parameters, example_usage: usage }
+        JensonSnapPourPoints { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -110,7 +112,7 @@ impl WhiteboxTool for JensonSnapPourPoints {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

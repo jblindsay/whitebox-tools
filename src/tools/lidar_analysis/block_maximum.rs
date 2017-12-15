@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct BlockMaximum {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,13 +31,8 @@ impl BlockMaximum {
     pub fn new() -> BlockMaximum {
         // public constructor
         let name = "BlockMaximum".to_string();
-
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Creates a block-maximum raster from an input LAS file.".to_string();
-
-        // let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -91,6 +87,7 @@ impl BlockMaximum {
         BlockMaximum {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -129,7 +126,7 @@ impl WhiteboxTool for BlockMaximum {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

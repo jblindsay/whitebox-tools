@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct Hillshade {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,14 +29,8 @@ pub struct Hillshade {
 impl Hillshade {
     pub fn new() -> Hillshade { // public constructor
         let name = "Hillshade".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates a hillshade raster from an input DEM.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--azimuth     Illumination source azimuth.\n");
-        // parameters.push_str("--altitude    Illumination source altitude.\n");
-        // parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -92,7 +87,13 @@ impl Hillshade {
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
     
-        Hillshade { name: name, description: description, parameters: parameters, example_usage: usage }
+        Hillshade { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -128,7 +129,7 @@ impl WhiteboxTool for Hillshade {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

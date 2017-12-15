@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 
 Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal 
@@ -26,6 +26,7 @@ use tools::*;
 pub struct BreachDepressions {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,13 +34,8 @@ pub struct BreachDepressions {
 impl BreachDepressions {
     pub fn new() -> BreachDepressions { // public constructor
         let name = "BreachDepressions".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.".to_string();
-        
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--max_depth     Optional maximum breach depth (default is Inf).\n");
-        // parameters.push_str("--max_length    Optional maximum breach channel length (in cells; default is Inf).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -87,7 +83,13 @@ impl BreachDepressions {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        BreachDepressions { name: name, description: description, parameters: parameters, example_usage: usage }
+        BreachDepressions { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -116,7 +118,7 @@ impl WhiteboxTool for BreachDepressions {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

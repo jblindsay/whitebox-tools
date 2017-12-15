@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -26,6 +26,7 @@ use tools::*;
 pub struct HistogramEqualization {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -34,13 +35,9 @@ impl HistogramEqualization {
     pub fn new() -> HistogramEqualization {
         // public constructor
         let name = "HistogramEqualization".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a histogram equalization contrast enhancment on an image."
             .to_string();
-
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -85,6 +82,7 @@ impl HistogramEqualization {
         HistogramEqualization {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -116,7 +114,7 @@ impl WhiteboxTool for HistogramEqualization {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

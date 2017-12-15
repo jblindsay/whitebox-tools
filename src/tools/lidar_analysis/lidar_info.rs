@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
-Last Modified: December 3, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 
@@ -38,6 +38,7 @@ use tools::*;
 pub struct LidarInfo {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -45,7 +46,7 @@ pub struct LidarInfo {
 impl LidarInfo {
     pub fn new() -> LidarInfo { // public constructor
         let name = "LidarInfo".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.".to_string();
         
         let mut parameters = vec![];
@@ -95,7 +96,13 @@ impl LidarInfo {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las", short_exe, name).replace("*", &sep);
     
-        LidarInfo { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarInfo { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -131,7 +138,7 @@ impl WhiteboxTool for LidarInfo {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

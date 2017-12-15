@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 8, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct DownslopeFlowpathLength {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,14 +26,8 @@ pub struct DownslopeFlowpathLength {
 impl DownslopeFlowpathLength {
     pub fn new() -> DownslopeFlowpathLength { // public constructor
         let name = "DownslopeFlowpathLength".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates the downslope flowpath length from each cell to basin outlet.".to_string();
-        
-        // let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--watersheds       Optional input watershed raster file.\n");
-        // parameters.push_str("--weights          Optional input weights raster file.\n");
-        // parameters.push_str("-o, --output       Output raster file.\n");
-        // parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -90,7 +85,13 @@ impl DownslopeFlowpathLength {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=flowpath_len.dep
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.flt --watersheds=basin.flt --weights=weights.flt -o=flowpath_len.flt --esri_pntr", short_exe, name).replace("*", &sep);
     
-        DownslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
+        DownslopeFlowpathLength { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -119,7 +120,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

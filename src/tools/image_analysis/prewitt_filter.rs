@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct PrewittFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,12 +29,8 @@ pub struct PrewittFilter {
 impl PrewittFilter {
     pub fn new() -> PrewittFilter { // public constructor
         let name = "PrewittFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Prewitt edge-detection filter on an image.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -72,7 +69,13 @@ impl PrewittFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --clip=1.0", short_exe, name).replace("*", &sep);
     
-        PrewittFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        PrewittFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl WhiteboxTool for PrewittFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

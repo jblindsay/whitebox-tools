@@ -6,7 +6,7 @@ See whitebox_example.py for an example of how to use it.
 # This script is part of the WhiteboxTools geospatial analysis library.
 # Authors: Dr. John Lindsay
 # Created: November 28, 2017
-# Last Modified: November 28, 2017
+# Last Modified: Dec. 14, 2017
 # License: MIT
 
 from __future__ import print_function
@@ -204,6 +204,29 @@ class WhiteboxTools(object):
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--toolparameters={}".format(tool_name))
+
+            proc = Popen(args, shell=False, stdout=PIPE,
+                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            ret = ""
+            while True:
+                line = proc.stdout.readline()
+                if line != '':
+                    ret += line
+                else:
+                    break
+
+            return ret
+        except (OSError, ValueError, CalledProcessError) as err:
+            return err
+
+    def toolbox(self, tool_name):
+        ''' Retrieve the toolbox for a specific tool.
+        '''
+        try:
+            os.chdir(self.exe_path)
+            args = []
+            args.append("." + os.path.sep + self.exe_name)
+            args.append("--toolbox={}".format(tool_name))
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)

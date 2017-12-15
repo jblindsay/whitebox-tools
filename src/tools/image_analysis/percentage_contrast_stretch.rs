@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -26,6 +26,7 @@ use tools::*;
 pub struct PercentageContrastStretch {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -34,15 +35,9 @@ impl PercentageContrastStretch {
     pub fn new() -> PercentageContrastStretch {
         // public constructor
         let name = "PercentageContrastStretch".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a percentage linear contrast stretch on input images."
             .to_string();
-
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--clip        Clip size in percentage (default is 1.0).\n");
-        // parameters.push_str("--tail        Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').\n");
-        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -105,6 +100,7 @@ impl PercentageContrastStretch {
         PercentageContrastStretch {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -143,7 +139,7 @@ impl WhiteboxTool for PercentageContrastStretch {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

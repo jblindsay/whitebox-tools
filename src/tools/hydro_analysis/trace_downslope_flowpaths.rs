@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTES: Add support for vector seed points.
@@ -19,6 +19,7 @@ use tools::*;
 pub struct TraceDownslopeFlowpaths {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -26,15 +27,9 @@ pub struct TraceDownslopeFlowpaths {
 impl TraceDownslopeFlowpaths {
     pub fn new() -> TraceDownslopeFlowpaths { // public constructor
         let name = "TraceDownslopeFlowpaths".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Traces downslope flowpaths from one or more target sites (i.e. seed points).".to_string();
         
-        // let mut parameters = "--seed_pts         Input seed points raster file.\n".to_owned();
-        // parameters.push_str("--d8_pntr          Input D8 flow direction (pointer) raster file.\n");
-        // parameters.push_str("-o, --output       Output cost pathway raster file.\n");
-        // parameters.push_str("--esri_pntr        Optional flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        // parameters.push_str("--zero_background  Optional flag indicating whether the background value of zero should be used.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Seed Points File".to_owned(), 
@@ -90,7 +85,13 @@ impl TraceDownslopeFlowpaths {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --seed_pts=seeds.dep --flow_dir=flow_directions.dep --output=flow_paths.dep", short_exe, name).replace("*", &sep);
     
-        TraceDownslopeFlowpaths { name: name, description: description, parameters: parameters, example_usage: usage }
+        TraceDownslopeFlowpaths { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -119,7 +120,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

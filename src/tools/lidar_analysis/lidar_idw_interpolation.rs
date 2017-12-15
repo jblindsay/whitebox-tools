@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: November 17, 2017
+Last Modified: December 15, 2017
 License: MIT
 
 NOTES: Add the ability to:
@@ -14,14 +14,12 @@ extern crate num_cpus;
 
 use std::env;
 use std::f64;
-// use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use lidar::*;
-// use lidar::point_data::*;
 use raster::*;
 use structures::FixedRadiusSearch2D;
 use tools::*;
@@ -29,6 +27,7 @@ use tools::*;
 pub struct LidarIdwInterpolation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -37,21 +36,9 @@ impl LidarIdwInterpolation {
     pub fn new() -> LidarIdwInterpolation {
         // public constructor
         let name = "LidarIdwInterpolation".to_string();
-
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Interpolates LAS files using an inverse-distance weighted (IDW) scheme."
             .to_string();
-
-        // let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file (including extension).\n");
-        // parameters.push_str("--parameter    Interapolation parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'user data'.\n");
-        // parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
-        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        // parameters.push_str("--weight       IDW weight value (default is 1.0).\n");
-        // parameters.push_str("--radius       Search radius; default is 2.5.\n");
-        // parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
-        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
-        // parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
-        // parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -166,11 +153,12 @@ impl LidarIdwInterpolation {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
-        LidarIdwInterpolation {
-            name: name,
-            description: description,
-            parameters: parameters,
-            example_usage: usage,
+        LidarIdwInterpolation { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
         }
     }
 }
@@ -207,7 +195,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

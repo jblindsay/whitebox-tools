@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct Atan2 {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,9 @@ pub struct Atan2 {
 impl Atan2 {
     pub fn new() -> Atan2 { // public constructor
         let name = "Atan2".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Returns the 2-argument inverse tangent (atan2).".to_string();
         
-        // let mut parameters = "--input_y      Input y raster file or constant value (rise).\n".to_owned();
-        // parameters.push_str("--input_x      Input x raster file or constant value (run).\n");
-        // parameters.push_str("-o, --output   Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Y File Or Constant Value".to_owned(), 
@@ -72,7 +69,13 @@ impl Atan2 {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --input_y='in1.dep' --input_x='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Atan2 { name: name, description: description, parameters: parameters, example_usage: usage }
+        Atan2 { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl WhiteboxTool for Atan2 {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 20, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct MaxElevationDeviation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,15 +30,8 @@ pub struct MaxElevationDeviation {
 impl MaxElevationDeviation {
     pub fn new() -> MaxElevationDeviation { // public constructor
         let name = "MaxElevationDeviation".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the maximum elevation deviation over a range of spatial scales.".to_string();
-        
-        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        // parameters.push_str("--out_mag     Output DEVmax magnitude raster file.\n");
-        // parameters.push_str("--out_scale   Output DEVmax scale raster file.\n");
-        // parameters.push_str("--min_scale   Minimum search neighbourhood radius in cells.\n");
-        // parameters.push_str("--max_scale   Minimum search neighbourhood radius in cells.\n");
-        // parameters.push_str("--step        Step size as any positive non-zero integer (default is 10).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -103,7 +97,13 @@ impl MaxElevationDeviation {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
     
-        MaxElevationDeviation { name: name, description: description, parameters: parameters, example_usage: usage }
+        MaxElevationDeviation { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -139,7 +139,7 @@ impl WhiteboxTool for MaxElevationDeviation {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

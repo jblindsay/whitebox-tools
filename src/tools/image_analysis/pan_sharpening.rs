@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 27, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct PanchromaticSharpening {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,16 +32,8 @@ impl PanchromaticSharpening {
     /// Public constructor.
     pub fn new() -> PanchromaticSharpening {
         let name = "PanchromaticSharpening".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.".to_string();
-
-        // let mut parameters = "--red          Input red band raster file.\n".to_owned();
-        // parameters.push_str("--green        Input green raster file.\n");
-        // parameters.push_str("--blue         Input blue raster file.\n");
-        // parameters.push_str("--composite    Optional input colour-composite image file.\n");
-        // parameters.push_str("--pan          Input panchromatic image file.\n");
-        // parameters.push_str("-o, --output   Output colour composite image file.\n");
-        // parameters.push_str("--method       Options include 'brovey' and 'ihs' (default is 'brovey').\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -122,6 +115,7 @@ impl PanchromaticSharpening {
         PanchromaticSharpening {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -160,7 +154,7 @@ impl WhiteboxTool for PanchromaticSharpening {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

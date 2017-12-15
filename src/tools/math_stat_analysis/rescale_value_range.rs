@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct RescaleValueRange {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,15 +29,8 @@ pub struct RescaleValueRange {
 impl RescaleValueRange {
     pub fn new() -> RescaleValueRange { // public constructor
         let name = "RescaleValueRange".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs a min-max contrast stretch on an input greytone image.".to_string();
-        
-        // let mut parameters = "-i, --input    Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--out_min_val  New minimum value in output image.\n");
-        // parameters.push_str("--out_max_val  New maximum value in output image.\n");
-        // parameters.push_str("--clip_min     Optional lower tail clip value.\n");
-        // parameters.push_str("--clip_max     Optional upper tail clip value.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -103,7 +97,13 @@ impl RescaleValueRange {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 --clip_max=200.0 ", short_exe, name).replace("*", &sep);
     
-        RescaleValueRange { name: name, description: description, parameters: parameters, example_usage: usage }
+        RescaleValueRange { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -139,7 +139,7 @@ impl WhiteboxTool for RescaleValueRange {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

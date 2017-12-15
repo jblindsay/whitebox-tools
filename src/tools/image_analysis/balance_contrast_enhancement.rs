@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct BalanceContrastEnhancement {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,13 +31,9 @@ impl BalanceContrastEnhancement {
     /// Public constructor.
     pub fn new() -> BalanceContrastEnhancement {
         let name = "BalanceContrastEnhancement".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a balance contrast enhancement on a colour-composite image of multispectral data."
             .to_string();
-
-        // let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--band_mean    Optional band mean value (default is 100).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -81,6 +78,7 @@ impl BalanceContrastEnhancement {
         BalanceContrastEnhancement {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -112,7 +110,7 @@ impl WhiteboxTool for BalanceContrastEnhancement {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

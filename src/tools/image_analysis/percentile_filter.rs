@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -24,6 +24,7 @@ use tools::*;
 pub struct PercentileFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,15 +34,8 @@ impl PercentileFilter {
     /// Public constructor.
     pub fn new() -> PercentileFilter {
         let name = "PercentileFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a percentile filter on an input image.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--filter      Optional size of the filter kernel (default is 11; not used if --filterx and --filtery are specified).\n");
-        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
-        // parameters.push_str("--sig_digits  Optional number of significant digits (default is 2).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -98,7 +92,13 @@ impl PercentileFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        PercentileFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        PercentileFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -134,7 +134,7 @@ impl WhiteboxTool for PercentileFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

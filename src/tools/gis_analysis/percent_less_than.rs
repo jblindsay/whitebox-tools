@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct PercentLessThan {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,13 +26,9 @@ pub struct PercentLessThan {
 impl PercentLessThan {
     pub fn new() -> PercentLessThan { // public constructor
         let name = "PercentLessThan".to_string();
-        
+        let toolbox = "GIS Analysis/Overlay Tools".to_string();
         let description = "Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.".to_string();
         
-        // let mut parameters = "-i, --inputs     Input raster files, separated by commas or semicolons.\n".to_owned();
-        // parameters.push_str("--comparison     Input comparison raster file.\n");
-        // parameters.push_str("-o, --output     Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Files".to_owned(), 
@@ -69,7 +66,13 @@ impl PercentLessThan {
         }
         let usage = format!(">>.*{} -r={} --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
     
-        PercentLessThan { name: name, description: description, parameters: parameters, example_usage: usage }
+        PercentLessThan { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -99,7 +102,7 @@ impl WhiteboxTool for PercentLessThan {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Overlay Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

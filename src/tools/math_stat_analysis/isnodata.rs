@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct IsNoData {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ impl IsNoData {
     /// public constructor
     pub fn new() -> IsNoData { 
         let name = "IsNoData".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Identifies NoData valued pixels in an image.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -63,7 +61,13 @@ impl IsNoData {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        IsNoData { name: name, description: description, parameters: parameters, example_usage: usage }
+        IsNoData { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -99,7 +103,7 @@ impl WhiteboxTool for IsNoData {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

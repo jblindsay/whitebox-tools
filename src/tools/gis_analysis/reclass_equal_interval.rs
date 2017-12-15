@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct ReclassEqualInterval {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,8 @@ impl ReclassEqualInterval {
     /// public constructor
     pub fn new() -> ReclassEqualInterval { 
         let name = "ReclassEqualInterval".to_string();
-        
+        let toolbox = "GIS Analysis/Reclass Tools".to_string();
         let description = "Reclassifies the values in a raster image based on equal-ranges.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--interval    Class interval size (default is 10.0).\n");
-        // parameters.push_str("--start_val   Optional starting value (default is input minimum value).\n");
-        // parameters.push_str("--end_val     Optional ending value (default is input maximum value).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -93,7 +88,13 @@ impl ReclassEqualInterval {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --interval=10.0 --start_val=0.0", short_exe, name).replace("*", &sep);
     
-        ReclassEqualInterval { name: name, description: description, parameters: parameters, example_usage: usage }
+        ReclassEqualInterval { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -123,7 +124,7 @@ impl WhiteboxTool for ReclassEqualInterval {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Reclass Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

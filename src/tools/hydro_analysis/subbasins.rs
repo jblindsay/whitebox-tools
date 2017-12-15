@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct Subbasins {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,13 +26,8 @@ pub struct Subbasins {
 impl Subbasins {
     pub fn new() -> Subbasins { // public constructor
         let name = "Subbasins".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Identifies the catchments, or sub-basin, draining to each link in a stream network.".to_string();
-        
-        // let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--streams     Input streams raster file.\n");
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--esri_pntr   D8 pointer uses the ESRI style scheme (default is false).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -79,7 +75,13 @@ impl Subbasins {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --streams='streams.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
     
-        Subbasins { name: name, description: description, parameters: parameters, example_usage: usage }
+        Subbasins { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +110,7 @@ impl WhiteboxTool for Subbasins {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

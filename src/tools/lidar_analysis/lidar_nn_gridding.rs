@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: Add the ability to:
@@ -14,7 +14,6 @@ extern crate num_cpus;
 
 use std::env;
 use std::f64;
-// use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::Arc;
@@ -28,6 +27,7 @@ use tools::*;
 pub struct LidarNearestNeighbourGridding {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -36,19 +36,8 @@ impl LidarNearestNeighbourGridding {
     pub fn new() -> LidarNearestNeighbourGridding {
         // public constructor
         let name = "LidarNearestNeighbourGridding".to_string();
-
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Grids LAS files using nearest-neighbour scheme.".to_string();
-
-        // let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file (including extension).\n");
-        // parameters.push_str("--parameter    Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'.\n");
-        // parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
-        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        // parameters.push_str("--radius       Search radius; default is 2.5.\n");
-        // parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
-        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
-        // parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
-        // parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -157,6 +146,7 @@ impl LidarNearestNeighbourGridding {
         LidarNearestNeighbourGridding {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -195,7 +185,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

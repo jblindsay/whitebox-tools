@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 10, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct LidarPointDensity {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,19 +32,9 @@ impl LidarPointDensity {
     pub fn new() -> LidarPointDensity {
         // public constructor
         let name = "LidarPointDensity".to_string();
-
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Calculates the spatial pattern of point density for a LiDAR data set."
             .to_string();
-
-        // let mut parameters = "-i, --input    Input LAS file (including extension).\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file (including extension).\n");
-        // parameters.push_str("--returns      Point return types to include; options are 'all' (default), 'last', 'first'.\n");
-        // parameters.push_str("--resolution   Output raster's grid resolution.\n");
-        // parameters.push_str("--radius       Search radius; default is 2.5.\n");
-        // parameters.push_str("--exclude_cls  Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'");
-        // parameters.push_str("--palette      Optional palette name (for use with Whitebox raster files).\n");
-        // parameters.push_str("--minz         Optional minimum elevation for inclusion in interpolation.\n");
-        // parameters.push_str("--maxz         Optional maximum elevation for inclusion in interpolation.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -143,6 +134,7 @@ impl LidarPointDensity {
         LidarPointDensity {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -181,7 +173,7 @@ impl WhiteboxTool for LidarPointDensity {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: June 28, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating 
@@ -29,6 +29,7 @@ use tools::*;
 pub struct FlowAccumulationFullWorkflow {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -36,17 +37,8 @@ pub struct FlowAccumulationFullWorkflow {
 impl FlowAccumulationFullWorkflow {
     pub fn new() -> FlowAccumulationFullWorkflow { // public constructor
         let name = "FlowAccumulationFullWorkflow".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.".to_string();
-        
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("--out_dem       Output hydrologically corrected DEM file.\n");
-        // parameters.push_str("--out_pntr      Output flow pointer raster file.\n");
-        // parameters.push_str("--out_accum     Output flow accumulation raster file.\n");
-        // parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        // parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        // parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
-        // parameters.push_str("--esri_style    Uses the ESRI style D8 pointer output (default is false).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -130,7 +122,13 @@ impl FlowAccumulationFullWorkflow {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.dep' --out_dem='DEM_filled.dep' --out_pntr='pointer.dep' --out_accum='accum.dep' --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
     
-        FlowAccumulationFullWorkflow { name: name, description: description, parameters: parameters, example_usage: usage }
+        FlowAccumulationFullWorkflow { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -159,7 +157,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

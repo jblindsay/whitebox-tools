@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 7, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FetchAnalysis {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,9 @@ impl FetchAnalysis {
     /// public constructor
     pub fn new() -> FetchAnalysis { 
         let name = "FetchAnalysis".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Performs an analysis of fetch or upwind distance to an obstacle.".to_string();
         
-        // let mut parameters = "-i, --dem      Input DEM raster file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--azimuth      Wind azimuth in degrees (default is 0.0).\n");
-        // parameters.push_str("--hgt_inc      Height increment value (default is 0.05).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -83,7 +79,13 @@ impl FetchAnalysis {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --azimuth=315.0", short_exe, name).replace("*", &sep);
     
-        FetchAnalysis { name: name, description: description, parameters: parameters, example_usage: usage }
+        FetchAnalysis { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -119,7 +121,7 @@ impl WhiteboxTool for FetchAnalysis {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

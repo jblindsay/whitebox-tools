@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: December 3, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 extern crate time;
@@ -28,6 +28,7 @@ use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 pub struct ImageRegression {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -35,14 +36,8 @@ pub struct ImageRegression {
 impl ImageRegression {
     pub fn new() -> ImageRegression {
         let name = "ImageRegression".to_string();
-
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs image regression analysis on two input images.".to_string();
-
-        // let mut parameters = "--i1, --input1    Input raster file (independent variable, x).\n".to_owned();
-        // parameters.push_str("--i2, --input2    Input raster file (depdendent variable, y).\n");
-        // parameters.push_str("-o, --output      Optional output html file.\n");
-        // parameters.push_str("--out_residuals   Optional output raster file for residuals map.\n");
-        // parameters.push_str("--standardize     Optional flag indicating whether to standardize the residuals map.");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -106,6 +101,7 @@ impl ImageRegression {
         ImageRegression {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -144,7 +140,7 @@ impl WhiteboxTool for ImageRegression {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

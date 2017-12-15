@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct AbsoluteValue {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ impl AbsoluteValue {
     /// public constructor
     pub fn new() -> AbsoluteValue { 
         let name = "AbsoluteValue".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Calculates the absolute value of every cell in a raster.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -63,7 +61,13 @@ impl AbsoluteValue {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        AbsoluteValue { name: name, description: description, parameters: parameters, example_usage: usage }
+        AbsoluteValue { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -99,7 +103,7 @@ impl WhiteboxTool for AbsoluteValue {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

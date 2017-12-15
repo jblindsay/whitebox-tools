@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: November 23, 2017
-Last Modified: November 23, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: This tool implements a highly modified form of the algorithm described by 
@@ -31,6 +31,7 @@ use structures::Array2D;
 pub struct FeaturePreservingDenoise {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -38,7 +39,7 @@ pub struct FeaturePreservingDenoise {
 impl FeaturePreservingDenoise {
     pub fn new() -> FeaturePreservingDenoise { // public constructor
         let name = "FeaturePreservingDenoise".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.".to_string();
         
         let mut parameters = vec![];
@@ -105,7 +106,13 @@ impl FeaturePreservingDenoise {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        FeaturePreservingDenoise { name: name, description: description, parameters: parameters, example_usage: usage }
+        FeaturePreservingDenoise { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -141,7 +148,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

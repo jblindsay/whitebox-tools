@@ -24,6 +24,7 @@ use tools::ParameterFileType;
 pub struct ConvertRasterFormat {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,7 +33,7 @@ impl ConvertRasterFormat {
     pub fn new() -> ConvertRasterFormat {
         // public constructor
         let name = "ConvertRasterFormat".to_string();
-
+        let toolbox = "Data Tools".to_string();
         let description = "Converts raster data from one format to another.".to_string();
 
         // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
@@ -75,6 +76,7 @@ impl ConvertRasterFormat {
         ConvertRasterFormat {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -106,7 +108,7 @@ impl WhiteboxTool for ConvertRasterFormat {
     }
 
     fn get_toolbox(&self) -> String {
-        "Data Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

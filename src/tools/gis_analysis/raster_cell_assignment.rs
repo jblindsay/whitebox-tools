@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Daniel Newman
 Created: August 10, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct RasterCellAssignment {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,13 +30,9 @@ impl RasterCellAssignment {
     /// public constructor
     pub fn new() -> RasterCellAssignment {
         let name = "RasterCellAssignment".to_string();
-
+        let toolbox = "GIS Analysis".to_string();
         let description = "Assign row or column number to cells.".to_string();
 
-        // let mut parameters = "-i, --input       Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output      Output raster file.\n");
-        // parameters.push_str("-a, --assign      Which variable would you like to assign to grid cells? Options include 'column', 'row', 'x', and 'y'.\n");
-        
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -73,7 +70,13 @@ impl RasterCellAssignment {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --assign='column'", short_exe, name).replace("*", &sep);
 
-        RasterCellAssignment { name: name, description: description, parameters: parameters, example_usage: usage }
+        RasterCellAssignment { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -103,7 +106,7 @@ impl WhiteboxTool for RasterCellAssignment {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

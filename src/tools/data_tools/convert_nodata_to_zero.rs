@@ -24,6 +24,7 @@ use tools::ParameterFileType;
 pub struct ConvertNodataToZero {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,11 +33,8 @@ impl ConvertNodataToZero {
     pub fn new() -> ConvertNodataToZero {
         // public constructor
         let name = "ConvertNodataToZero".to_string();
-
+        let toolbox = "Data Tools".to_string();
         let description = "Converts nodata values in a raster to zero.".to_string();
-
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -72,6 +70,7 @@ impl ConvertNodataToZero {
         ConvertNodataToZero {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -103,7 +102,7 @@ impl WhiteboxTool for ConvertNodataToZero {
     }
 
     fn get_toolbox(&self) -> String {
-        "Data Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

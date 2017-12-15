@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 24, 2017
-Last Modified: November 16, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct LidarKappaIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,9 @@ pub struct LidarKappaIndex {
 impl LidarKappaIndex {
     pub fn new() -> LidarKappaIndex { // public constructor
         let name = "LidarKappaIndex".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.".to_string();
         
-        // let mut parameters = "--i1, --input1    Input LAS file (classification).\n".to_owned();
-        // parameters.push_str("--i2, --input2    Input LAS file (reference).\n");
-        // parameters.push_str("-o, --output      Output HTML file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input LiDAR File (Classification)".to_owned(), 
@@ -72,7 +69,13 @@ impl LidarKappaIndex {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --i1=class.tif --i2=reference.tif -o=kia.html", short_exe, name).replace("*", &sep);
     
-        LidarKappaIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarKappaIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl WhiteboxTool for LidarKappaIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

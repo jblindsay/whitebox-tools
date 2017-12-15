@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct StreamLinkSlope {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,16 +26,9 @@ pub struct StreamLinkSlope {
 impl StreamLinkSlope {
     pub fn new() -> StreamLinkSlope { // public constructor
         let name = "StreamLinkSlope".to_string();
-        
+        let toolbox = "Stream Network Analysis".to_string();
         let description = "Estimates the average slope of each link (or tributary) in a stream network.".to_string();
         
-        // let mut parameters = "--d8_pntr          Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--linkid           Input streams link ID (or tributary ID) raster file.\n");
-        // parameters.push_str("--dem              Input digital elevation model (DEM) raster file.");
-        // parameters.push_str("-o, --output       Output raster file.\n");
-        // parameters.push_str("--esri_pntr        Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input D8 Pointer File".to_owned(), 
@@ -100,7 +94,13 @@ impl StreamLinkSlope {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --linkid=streamsID.dep --dem=dem.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        StreamLinkSlope { name: name, description: description, parameters: parameters, example_usage: usage }
+        StreamLinkSlope { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -136,7 +136,7 @@ impl WhiteboxTool for StreamLinkSlope {
     }
 
     fn get_toolbox(&self) -> String {
-        "Stream Network Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

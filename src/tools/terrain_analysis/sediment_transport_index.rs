@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct SedimentTransportIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,15 +29,9 @@ pub struct SedimentTransportIndex {
 impl SedimentTransportIndex {
     pub fn new() -> SedimentTransportIndex { // public constructor
         let name = "SedimentTransportIndex".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the sediment transport index.".to_string();
         
-        // let mut parameters = "--sca             Input specific contributing area (SCA) raster file.\n".to_owned();
-        // parameters.push_str("--slope           Input slope raster file.\n");
-        // parameters.push_str("-o, --output      Output raster file.\n");
-        // parameters.push_str("--sca_exponent    SCA exponent value (default is 0.4).\n");
-        // parameters.push_str("--slope_exponent  Slope exponent value (default is 1.3).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Specific Contributing Area (SCA) File".to_owned(), 
@@ -92,7 +87,13 @@ impl SedimentTransportIndex {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 --slope_exponent=1.0", short_exe, name).replace("*", &sep);
     
-        SedimentTransportIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        SedimentTransportIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -128,7 +129,7 @@ impl WhiteboxTool for SedimentTransportIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

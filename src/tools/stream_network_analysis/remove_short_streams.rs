@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct RemoveShortStreams {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,14 +26,8 @@ pub struct RemoveShortStreams {
 impl RemoveShortStreams {
     pub fn new() -> RemoveShortStreams { // public constructor
         let name = "RemoveShortStreams".to_string();
-        
+        let toolbox = "Stream Network Analysis".to_string();
         let description = "Removes short first-order streams from a stream network.".to_string();
-        
-        // let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--streams       Input streams raster file.\n");
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--min_length    Minimum tributary length (in map units) used for network prunning.\n");
-        // parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -89,7 +84,13 @@ impl RemoveShortStreams {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        RemoveShortStreams { name: name, description: description, parameters: parameters, example_usage: usage }
+        RemoveShortStreams { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -125,7 +126,7 @@ impl WhiteboxTool for RemoveShortStreams {
     }
 
     fn get_toolbox(&self) -> String {
-        "Stream Network Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct LaplacianOfGaussianFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,8 @@ pub struct LaplacianOfGaussianFilter {
 impl LaplacianOfGaussianFilter {
     pub fn new() -> LaplacianOfGaussianFilter { // public constructor
         let name = "LaplacianOfGaussianFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Laplacian-of-Gaussian (LoG) filter on an image.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--sigma       Standard deviation in pixels.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -73,7 +70,13 @@ impl LaplacianOfGaussianFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma=2.0", short_exe, name).replace("*", &sep);
     
-        LaplacianOfGaussianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        LaplacianOfGaussianFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -102,7 +105,7 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

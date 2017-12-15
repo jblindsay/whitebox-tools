@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 9, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct Reclass {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,13 +31,8 @@ impl Reclass {
     /// public constructor
     pub fn new() -> Reclass { 
         let name = "Reclass".to_string();
-        
+        let toolbox = "GIS Analysis/Reclass Tools".to_string();
         let description = "Reclassifies the values in a raster image.".to_string();
-        
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--reclass_vals  Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'.\n");
-        // parameters.push_str("--assign_mode   Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -85,7 +81,13 @@ impl Reclass {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' --assign_mode ", short_exe, name).replace("*", &sep);
     
-        Reclass { name: name, description: description, parameters: parameters, example_usage: usage }
+        Reclass { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -114,7 +116,7 @@ impl WhiteboxTool for Reclass {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Reclass Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

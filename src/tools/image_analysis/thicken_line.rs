@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
@@ -20,6 +20,7 @@ use tools::*;
 pub struct ThickenRasterLine {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -27,12 +28,9 @@ pub struct ThickenRasterLine {
 impl ThickenRasterLine {
     pub fn new() -> ThickenRasterLine { // public constructor
         let name = "ThickenRasterLine".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Thickens single-cell wide lines within a raster image.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -61,7 +59,13 @@ impl ThickenRasterLine {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ThickenRasterLine { name: name, description: description, parameters: parameters, example_usage: usage }
+        ThickenRasterLine { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -97,7 +101,7 @@ impl WhiteboxTool for ThickenRasterLine {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

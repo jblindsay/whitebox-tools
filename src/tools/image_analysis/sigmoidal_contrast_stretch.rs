@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -26,6 +26,7 @@ use tools::*;
 pub struct SigmoidalContrastStretch {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,14 +34,8 @@ pub struct SigmoidalContrastStretch {
 impl SigmoidalContrastStretch {
     pub fn new() -> SigmoidalContrastStretch { // public constructor
         let name = "SigmoidalContrastStretch".to_string();
-        
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a sigmoidal contrast stretch on input images.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--cutoff      Cutoff value between 0.0 and 0.95 (default is 0.0).\n");
-        // parameters.push_str("--gain        Gain value (default is 1.0).\n");
-        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -97,7 +92,13 @@ impl SigmoidalContrastStretch {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --cutoff=0.1 --gain=2.0 --num_tones=1024", short_exe, name).replace("*", &sep);
     
-        SigmoidalContrastStretch { name: name, description: description, parameters: parameters, example_usage: usage }
+        SigmoidalContrastStretch { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -133,7 +134,7 @@ impl WhiteboxTool for SigmoidalContrastStretch {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

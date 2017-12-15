@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 16, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use self::rand::distributions::{IndependentSample, Range};
 pub struct Rho8Pointer {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,12 +31,8 @@ pub struct Rho8Pointer {
 impl Rho8Pointer {
     pub fn new() -> Rho8Pointer { // public constructor
         let name = "Rho8Pointer".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates a stochastic Rho8 flow pointer raster from an input DEM.".to_string();
-        
-        // let mut parameters = "--dem         Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--esri_style  Uses the ESRI style D8 pointer output (default is false).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -74,7 +71,13 @@ impl Rho8Pointer {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        Rho8Pointer { name: name, description: description, parameters: parameters, example_usage: usage }
+        Rho8Pointer { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -103,7 +106,7 @@ impl WhiteboxTool for Rho8Pointer {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

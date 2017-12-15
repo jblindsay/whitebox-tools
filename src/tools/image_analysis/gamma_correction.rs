@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -25,6 +25,7 @@ use tools::*;
 pub struct GammaCorrection {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,13 +33,9 @@ pub struct GammaCorrection {
 impl GammaCorrection {
     pub fn new() -> GammaCorrection { // public constructor
         let name = "GammaCorrection".to_string();
-        
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a sigmoidal contrast stretch on input images.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--gamma       Gamma value (default is 0.5).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -76,7 +73,13 @@ impl GammaCorrection {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --gamma=0.5", short_exe, name).replace("*", &sep);
     
-        GammaCorrection { name: name, description: description, parameters: parameters, example_usage: usage }
+        GammaCorrection { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -105,7 +108,7 @@ impl WhiteboxTool for GammaCorrection {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: July 13, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct ElevAbovePit {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ pub struct ElevAbovePit {
 impl ElevAbovePit {
     pub fn new() -> ElevAbovePit { // public constructor
         let name = "ElevAbovePit".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.".to_string();
         
-        // let mut parameters = "--dem         Input DEM raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -63,7 +61,13 @@ impl ElevAbovePit {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ElevAbovePit { name: name, description: description, parameters: parameters, example_usage: usage }
+        ElevAbovePit { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -99,7 +103,7 @@ impl WhiteboxTool for ElevAbovePit {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

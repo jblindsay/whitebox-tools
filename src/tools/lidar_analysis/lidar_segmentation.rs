@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017, 2017
-Last Modified: 5/12/2017, 2017
+Last Modified: 15/12/2017, 2017
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -33,6 +33,7 @@ use self::rand::Rng;
 pub struct LidarSegmentation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -40,7 +41,7 @@ pub struct LidarSegmentation {
 impl LidarSegmentation {
     pub fn new() -> LidarSegmentation { // public constructor
         let name = "LidarSegmentation".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Segments a LiDAR point cloud based on normal vectors.".to_string();
         
         let mut parameters = vec![];
@@ -98,7 +99,13 @@ impl LidarSegmentation {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75", short_exe, name).replace("*", &sep);
     
-        LidarSegmentation { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarSegmentation { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -134,7 +141,7 @@ impl WhiteboxTool for LidarSegmentation {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

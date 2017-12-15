@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 16, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct DInfPointer {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ pub struct DInfPointer {
 impl DInfPointer {
     pub fn new() -> DInfPointer { // public constructor
         let name = "DInfPointer".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.".to_string();
         
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -63,7 +61,13 @@ impl DInfPointer {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep", short_exe, name).replace("*", &sep);
     
-        DInfPointer { name: name, description: description, parameters: parameters, example_usage: usage }
+        DInfPointer { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -92,7 +96,7 @@ impl WhiteboxTool for DInfPointer {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

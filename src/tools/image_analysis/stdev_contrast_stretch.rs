@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -26,6 +26,7 @@ use tools::*;
 pub struct StandardDeviationContrastStretch {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,13 +34,8 @@ pub struct StandardDeviationContrastStretch {
 impl StandardDeviationContrastStretch {
     pub fn new() -> StandardDeviationContrastStretch { // public constructor
         let name = "StandardDeviationContrastStretch".to_string();
-        
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a standard-deviation contrast stretch on input images.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--stdev       Standard deviation clip value (default is 2.0).\n");
-        // parameters.push_str("--num_tones   Number of tones in the output image (default is 256).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -87,7 +83,13 @@ impl StandardDeviationContrastStretch {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --stdev=2.0 --num_tones=1024", short_exe, name).replace("*", &sep);
     
-        StandardDeviationContrastStretch { name: name, description: description, parameters: parameters, example_usage: usage }
+        StandardDeviationContrastStretch { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -123,7 +125,7 @@ impl WhiteboxTool for StandardDeviationContrastStretch {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

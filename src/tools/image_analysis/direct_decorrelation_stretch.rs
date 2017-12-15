@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 21, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct DirectDecorrelationStretch {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,13 +32,8 @@ impl DirectDecorrelationStretch {
     /// Public constructor.
     pub fn new() -> DirectDecorrelationStretch {
         let name = "DirectDecorrelationStretch".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.".to_string();
-
-        // let mut parameters = "-i, --input    Input colour-composite image file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("-k             Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7. (default is 0.5).\n");
-        // parameters.push_str("-clip_percent  Optional percent to clip the upper tail by during the stretch (default is 1.0).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -94,6 +90,7 @@ impl DirectDecorrelationStretch {
         DirectDecorrelationStretch {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -125,7 +122,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

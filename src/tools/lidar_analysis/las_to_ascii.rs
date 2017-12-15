@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 16, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -20,6 +20,7 @@ use tools::*;
 pub struct LasToAscii {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -27,10 +28,8 @@ pub struct LasToAscii {
 impl LasToAscii {
     pub fn new() -> LasToAscii { // public constructor
         let name = "LasToAscii".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Converts one or more LAS files into ASCII text files.".to_string();
-        
-        // let parameters = "-i, --inputs      Input LAS files, separated by commas.\n".to_owned();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -51,7 +50,13 @@ impl LasToAscii {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\"", short_exe, name).replace("*", &sep);
     
-        LasToAscii { name: name, description: description, parameters: parameters, example_usage: usage }
+        LasToAscii { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -87,7 +92,7 @@ impl WhiteboxTool for LasToAscii {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

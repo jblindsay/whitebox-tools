@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FillDepressions {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,9 @@ pub struct FillDepressions {
 impl FillDepressions {
     pub fn new() -> FillDepressions { // public constructor
         let name = "FillDepressions".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.".to_string();
         
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--fix_flats     Optional flag indicating whether flat areas should have a small gradient applied.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -72,7 +69,13 @@ impl FillDepressions {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --fix_flats", short_exe, name).replace("*", &sep);
     
-        FillDepressions { name: name, description: description, parameters: parameters, example_usage: usage }
+        FillDepressions { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -101,7 +104,7 @@ impl WhiteboxTool for FillDepressions {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

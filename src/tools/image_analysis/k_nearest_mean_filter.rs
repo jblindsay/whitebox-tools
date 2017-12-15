@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct KNearestMeanFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,15 +30,8 @@ pub struct KNearestMeanFilter {
 impl KNearestMeanFilter {
     pub fn new() -> KNearestMeanFilter { // public constructor
         let name = "KNearestMeanFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "A k-nearest mean filter is a type of edge-preserving smoothing filter.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--filter      Size of the filter kernel (default is 3).\n");
-        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 3; not used if --filter is specified).\n");
-        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 3; not used if --filter is specified).\n");
-        // parameters.push_str("-k            k-value in pixels (default is 5); this is the number of nearest-valued neighbours to use.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -95,7 +89,13 @@ impl KNearestMeanFilter {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=9 -k=5
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filtery=7 --filtery=9  -k=5", short_exe, name).replace("*", &sep);
     
-        KNearestMeanFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        KNearestMeanFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -124,7 +124,7 @@ impl WhiteboxTool for KNearestMeanFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

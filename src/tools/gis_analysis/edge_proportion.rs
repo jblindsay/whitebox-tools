@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 15, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct EdgeProportion {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,12 +29,8 @@ pub struct EdgeProportion {
 impl EdgeProportion {
     pub fn new() -> EdgeProportion { // public constructor
         let name = "EdgeProportion".to_string();
-        
+        let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
         let description = "Calculate the proportion of cells in a raster polygon that are edge cells.".to_string();
-        
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--output_text   Optional flag indicating whether a text report should also be output.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -72,7 +69,13 @@ impl EdgeProportion {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --output_text", short_exe, name).replace("*", &sep);
     
-        EdgeProportion { name: name, description: description, parameters: parameters, example_usage: usage }
+        EdgeProportion { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -101,7 +104,7 @@ impl WhiteboxTool for EdgeProportion {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Patch Shape Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

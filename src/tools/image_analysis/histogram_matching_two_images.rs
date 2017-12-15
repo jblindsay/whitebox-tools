@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 31, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct HistogramMatchingTwoImages {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,13 +30,9 @@ impl HistogramMatchingTwoImages {
     pub fn new() -> HistogramMatchingTwoImages {
         // public constructor
         let name = "HistogramMatchingTwoImages".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "This tool alters the cumulative distribution function of a raster image to that of another image."
             .to_string();
-
-        // let mut parameters = "--i1, --input1   Input raster file to modify.\n".to_owned();
-        // parameters.push_str("--i2, --input2   Input reference raster file.\n");
-        // parameters.push_str("-o, --output     Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -80,6 +77,7 @@ impl HistogramMatchingTwoImages {
         HistogramMatchingTwoImages {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -111,7 +109,7 @@ impl WhiteboxTool for HistogramMatchingTwoImages {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

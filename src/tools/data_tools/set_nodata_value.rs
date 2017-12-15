@@ -24,6 +24,7 @@ use tools::ParameterFileType;
 pub struct SetNodataValue {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,7 +33,7 @@ impl SetNodataValue {
     pub fn new() -> SetNodataValue {
         // public constructor
         let name = "SetNodataValue".to_string();
-
+        let toolbox = "Data Tools".to_string();
         let description = "Assign a specified value in an input image to the NoData value.".to_string();
 
         // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
@@ -82,6 +83,7 @@ impl SetNodataValue {
         SetNodataValue {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -113,7 +115,7 @@ impl WhiteboxTool for SetNodataValue {
     }
 
     fn get_toolbox(&self) -> String {
-        "Data Tools".to_owned()
+        self.toolbox.clone()
     }
     
     fn run<'a>(&self,

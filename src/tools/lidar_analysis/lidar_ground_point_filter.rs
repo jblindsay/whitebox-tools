@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: December 3, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use structures::FixedRadiusSearch2D;
 pub struct LidarGroundPointFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,7 +31,7 @@ pub struct LidarGroundPointFilter {
 impl LidarGroundPointFilter {
     pub fn new() -> LidarGroundPointFilter { // public constructor
         let name = "LidarGroundPointFilter".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Identifies ground points within LiDAR dataset using a slope-based method.".to_string();
         
         let mut parameters = vec![];
@@ -88,7 +89,13 @@ impl LidarGroundPointFilter {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
     
-        LidarGroundPointFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarGroundPointFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -124,7 +131,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

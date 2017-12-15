@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FindNoFlowCells {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ impl FindNoFlowCells {
     pub fn new() -> FindNoFlowCells {
         // public constructor
         let name = "FindNoFlowCells".to_string();
-
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Finds grid cells with no downslope neighbours."
             .to_string();
-
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -70,6 +68,7 @@ impl FindNoFlowCells {
         FindNoFlowCells {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -101,7 +100,7 @@ impl WhiteboxTool for FindNoFlowCells {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

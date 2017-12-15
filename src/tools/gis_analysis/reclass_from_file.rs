@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -25,6 +25,7 @@ use tools::*;
 pub struct ReclassFromFile {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,12 +34,8 @@ impl ReclassFromFile {
     /// public constructor
     pub fn new() -> ReclassFromFile { 
         let name = "ReclassFromFile".to_string();
-        
+        let toolbox = "GIS Analysis/Reclass Tools".to_string();
         let description = "Reclassifies the values in a raster image using reclass ranges in a text file.".to_string();
-        
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("--reclass_file  Input text file containing reclass ranges.\n");
-        // parameters.push_str("-o, --output    Output raster file.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -77,7 +74,13 @@ impl ReclassFromFile {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --reclass_file='reclass.txt' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        ReclassFromFile { name: name, description: description, parameters: parameters, example_usage: usage }
+        ReclassFromFile { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -106,7 +109,7 @@ impl WhiteboxTool for ReclassFromFile {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Reclass Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

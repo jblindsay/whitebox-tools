@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 25, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct IhsToRgb {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,16 +32,8 @@ impl IhsToRgb {
     /// Public constructor.
     pub fn new() -> IhsToRgb {
         let name = "IhsToRgb".to_string();
-        
+        let toolbox = "Image Processing Tools".to_owned();
         let description = "Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.".to_string();
-        
-        // let mut parameters = "--intensity   Input intensity raster file.\n".to_owned();
-        // parameters.push_str("--hue          Input hue raster file.\n");
-        // parameters.push_str("--saturation   Input saturation file.\n");
-        // parameters.push_str("--red          Output red band raster file.\n");
-        // parameters.push_str("--green        Output green raster file.\n");
-        // parameters.push_str("--blue         Output blue raster file.\n");
-        // parameters.push_str("--composite    Optional output colour-composite image file.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -116,7 +109,13 @@ impl IhsToRgb {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --intensity=intensity.dep --hue=hue.dep --saturation=saturation.dep --red=band3.dep --green=band2.dep --blue=band1.dep
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --intensity=intensity.dep --hue=hue.dep --saturation=saturation.dep --composite=image.dep", short_exe, name).replace("*", &sep);
     
-        IhsToRgb { name: name, description: description, parameters: parameters, example_usage: usage }
+        IhsToRgb { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -145,7 +144,7 @@ impl WhiteboxTool for IhsToRgb {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

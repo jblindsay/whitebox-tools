@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/12/2017
-Last Modified: 04/12/2017
+Last Modified: 15/12/2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FindRidges {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,7 +30,7 @@ impl FindRidges {
     pub fn new() -> FindRidges {
         // public constructor
         let name = "FindRidges".to_string();
-
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Identifies potential ridge and peak grid cells."
             .to_string();
 
@@ -76,6 +77,7 @@ impl FindRidges {
         FindRidges {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -114,7 +116,7 @@ impl WhiteboxTool for FindRidges {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

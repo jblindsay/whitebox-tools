@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: This tool needs to be parallelized.
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FlightlineOverlap {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,8 @@ impl FlightlineOverlap {
     pub fn new() -> FlightlineOverlap {
         // public constructor
         let name = "FlightlineOverlap".to_string();
-
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
-
-//         let parameters = "-i, --input        Input LAS file.
-// -o, --output       Output raster file.
-// --resolution       Output raster's grid resolution.
-// --palette          Optional palette name (for use with Whitebox raster files)"
-//                 .to_owned();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -91,6 +86,7 @@ impl FlightlineOverlap {
         FlightlineOverlap {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -129,7 +125,7 @@ impl WhiteboxTool for FlightlineOverlap {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

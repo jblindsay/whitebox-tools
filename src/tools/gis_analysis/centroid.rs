@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 22 2017
-Last Modified: November 15, 2017
+Last Modified: December 14, 2017
 License: MIT
 
 NOTES: Will need to add support for vector polygons eventually.
@@ -19,6 +19,7 @@ use tools::*;
 pub struct Centroid {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -26,13 +27,9 @@ pub struct Centroid {
 impl Centroid {
     pub fn new() -> Centroid { // public constructor
         let name = "Centroid".to_string();
-        
+        let toolbox = "GIS Analysis".to_string();
         let description = "Calculates the centroid, or average location, of raster polygon objects.".to_string();
         
-        // let mut parameters = "-i, --input    Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--text_output  Optional text output.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -71,7 +68,13 @@ impl Centroid {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
     
-        Centroid { name: name, description: description, parameters: parameters, example_usage: usage }
+        Centroid { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -100,7 +103,7 @@ impl WhiteboxTool for Centroid {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

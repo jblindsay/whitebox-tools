@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 17, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct DownslopeIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,13 +30,8 @@ pub struct DownslopeIndex {
 impl DownslopeIndex {
     pub fn new() -> DownslopeIndex { // public constructor
         let name = "DownslopeIndex".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the Hjerdt et al. (2004) downslope index.".to_string();
-        
-        // let mut parameters = "-i, --dem       Input DEM raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--drop          Vertical drop value (default is 2.0).\n");
-        // parameters.push_str("--out_type      Output type, options include 'tangent', 'degrees', 'radians', 'distance' (default is 'tangent').\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -83,7 +79,13 @@ impl DownslopeIndex {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.dep -o=dsi.dep --drop=5.0 --out_type=distance", short_exe, name).replace("*", &sep);
     
-        DownslopeIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        DownslopeIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -119,7 +121,7 @@ impl WhiteboxTool for DownslopeIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

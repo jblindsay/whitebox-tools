@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 16, 2017
 License: MIT
 */
 extern crate time;
@@ -24,6 +24,7 @@ use structures::FixedRadiusSearch3D;
 pub struct NormalVectors {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,7 +32,7 @@ pub struct NormalVectors {
 impl NormalVectors {
     pub fn new() -> NormalVectors { // public constructor
         let name = "NormalVectors".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.".to_string();
 
         let mut parameters = vec![];
@@ -71,7 +72,13 @@ impl NormalVectors {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
     
-        NormalVectors { name: name, description: description, parameters: parameters, example_usage: usage }
+        NormalVectors { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -107,7 +114,7 @@ impl WhiteboxTool for NormalVectors {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

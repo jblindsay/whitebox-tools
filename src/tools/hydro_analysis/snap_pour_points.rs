@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTES: This tool should be updated to take vector pour points as inputs/outputs when vector support has been added.
@@ -19,6 +19,7 @@ use tools::*;
 pub struct SnapPourPoints {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -26,14 +27,9 @@ pub struct SnapPourPoints {
 impl SnapPourPoints {
     pub fn new() -> SnapPourPoints { // public constructor
         let name = "SnapPourPoints".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.".to_string();
         
-        // let mut parameters = "--pour_pts    Input pour points (outlet) raster file.\n".to_owned();
-        // parameters.push_str("--flow_accum  Input D8 flow accumulation raster file.\n");
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--snap_dist   Maximum snap distance in map units.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Pour Points (Outlet) File".to_owned(), 
@@ -80,7 +76,13 @@ impl SnapPourPoints {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --pour_pts='pour_pts.dep' --flow_accum='d8accum.dep' -o='output.dep' --snap_dist=15.0", short_exe, name).replace("*", &sep);
     
-        SnapPourPoints { name: name, description: description, parameters: parameters, example_usage: usage }
+        SnapPourPoints { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -109,7 +111,7 @@ impl WhiteboxTool for SnapPourPoints {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

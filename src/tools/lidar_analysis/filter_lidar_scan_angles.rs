@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 17, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT tool, which output a Shapefile.
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FilterLidarScanAngles {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,9 @@ pub struct FilterLidarScanAngles {
 impl FilterLidarScanAngles {
     pub fn new() -> FilterLidarScanAngles { // public constructor
         let name = "FilterLidarScanAngles".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Removes points in a LAS file with scan angles greater than a threshold.".to_string();
         
-        // let mut parameters = "-i, --input    Input LAS file.\n".to_owned();
-        // parameters.push_str("-o, --output   Output LAS file.\n");
-        // parameters.push_str("--threshold    Scan angle threshold.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -72,7 +69,13 @@ impl FilterLidarScanAngles {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --threshold=10.0", short_exe, name).replace("*", &sep);
     
-        FilterLidarScanAngles { name: name, description: description, parameters: parameters, example_usage: usage }
+        FilterLidarScanAngles { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl WhiteboxTool for FilterLidarScanAngles {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

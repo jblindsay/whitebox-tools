@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct FindParallelFlow {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,13 +31,9 @@ impl FindParallelFlow {
     pub fn new() -> FindParallelFlow {
         // public constructor
         let name = "FindParallelFlow".to_string();
-
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Finds areas of parallel flow in D8 flow direction rasters."
             .to_string();
-
-        // let mut parameters = "--d8_pntr       Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--streams       Optional input streams raster file.\n");
-        // parameters.push_str("-o, --output    Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -82,6 +79,7 @@ impl FindParallelFlow {
         FindParallelFlow {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -113,7 +111,7 @@ impl WhiteboxTool for FindParallelFlow {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

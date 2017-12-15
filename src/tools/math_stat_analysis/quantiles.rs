@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct Quantiles {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,13 +25,9 @@ pub struct Quantiles {
 impl Quantiles {
     pub fn new() -> Quantiles { // public constructor
         let name = "Quantiles".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Transforms raster values into quantiles.".to_string();
         
-        // let mut parameters = "-i, --input      Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output     Output raster file.\n");
-        // parameters.push_str("--num_quantiles  Number of quantiles (default 4)");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -68,7 +65,13 @@ impl Quantiles {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --num_quantiles=5", short_exe, name).replace("*", &sep);
     
-        Quantiles { name: name, description: description, parameters: parameters, example_usage: usage }
+        Quantiles { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -104,7 +107,7 @@ impl WhiteboxTool for Quantiles {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

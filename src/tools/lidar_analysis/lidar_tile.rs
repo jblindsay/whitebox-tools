@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 use std;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct LidarTile {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,15 +25,8 @@ pub struct LidarTile {
 impl LidarTile {
     pub fn new() -> LidarTile { // public constructor
         let name = "LidarTile".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Tiles a LiDAR LAS file into multiple LAS files.".to_string();
-        
-        // let mut parameters = "-i, --input   Input LAS file.\n".to_owned();
-        // parameters.push_str("--width_x     Width of tiles in the x dimension; default 1000.0.\n");
-        // parameters.push_str("--width_y     Width of tiles in the y dimension; default 1000.0.\n");
-        // parameters.push_str("--origin_x    Origin point for tile grid, x dimension; default 0.0.\n");
-        // parameters.push_str("--origin_y    Origin point for tile grid, y dimension; default 0.0.\n");
-        // parameters.push_str("--min_points  Minimum number of points contained in a tile for it to be output; default 0.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -98,7 +92,13 @@ impl LidarTile {
         }
         let usage = format!(">>.*{0} -r={1} -v -i=*path*to*data*input.las --width_x=1000.0 --width_y=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
     
-        LidarTile { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarTile { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -134,7 +134,7 @@ impl WhiteboxTool for LidarTile {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

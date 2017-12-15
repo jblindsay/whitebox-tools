@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct PickFromList {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,13 +25,9 @@ pub struct PickFromList {
 impl PickFromList {
     pub fn new() -> PickFromList { // public constructor
         let name = "PickFromList".to_string();
-        
+        let toolbox = "GIS Analysis/Overlay Tools".to_string();
         let description = "Outputs the value from a raster stack specified by a position raster.".to_string();
         
-        // let mut parameters = "-i, --inputs     Input raster files, contained in quotes and separated by commas or semicolons.\n".to_owned();
-        // parameters.push_str("--pos_input      Input position raster file.\n");
-        // parameters.push_str("-o, --output     Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Files".to_owned(), 
@@ -68,7 +65,13 @@ impl PickFromList {
         }
         let usage = format!(">>.*{} -r={} --wd='*path*to*data*' --pos_input=position.dep -i='image1.dep;image2.dep;image3.dep' -o=output.dep", short_exe, name).replace("*", &sep);
     
-        PickFromList { name: name, description: description, parameters: parameters, example_usage: usage }
+        PickFromList { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -98,7 +101,7 @@ impl WhiteboxTool for PickFromList {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Overlay Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
@@ -24,6 +24,7 @@ use tools::*;
 pub struct LineThinning {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,12 +32,9 @@ pub struct LineThinning {
 impl LineThinning {
     pub fn new() -> LineThinning { // public constructor
         let name = "LineThinning".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -65,7 +63,13 @@ impl LineThinning {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        LineThinning { name: name, description: description, parameters: parameters, example_usage: usage }
+        LineThinning { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -94,7 +98,7 @@ impl WhiteboxTool for LineThinning {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

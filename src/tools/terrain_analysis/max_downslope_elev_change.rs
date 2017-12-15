@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct MaxDownslopeElevChange {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ impl MaxDownslopeElevChange {
     pub fn new() -> MaxDownslopeElevChange {
         // public constructor
         let name = "MaxDownslopeElevChange".to_string();
-
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors."
             .to_string();
-
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -70,6 +68,7 @@ impl MaxDownslopeElevChange {
         MaxDownslopeElevChange {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -108,7 +107,7 @@ impl WhiteboxTool for MaxDownslopeElevChange {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
     
     fn run<'a>(&self,

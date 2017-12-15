@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 6, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -20,6 +20,7 @@ use tools::*;
 pub struct RemoveOffTerrainObjects {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -27,14 +28,9 @@ pub struct RemoveOffTerrainObjects {
 impl RemoveOffTerrainObjects {
     pub fn new() -> RemoveOffTerrainObjects { // public constructor
         let name = "RemoveOffTerrainObjects".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Removes off-terrain objects from a raster digital elevation model (DEM).".to_string();
         
-        // let mut parameters = "-i, --dem          Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output       Output raster file.\n");
-        // parameters.push_str("--filter           Filter size (cells); default is 11.\n");
-        // parameters.push_str("--slope            Slope threshold; default is 15.0.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -81,7 +77,13 @@ impl RemoveOffTerrainObjects {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=bare_earth_DEM.dep --filter=25 --slope=10.0", short_exe, name).replace("*", &sep);
     
-        RemoveOffTerrainObjects { name: name, description: description, parameters: parameters, example_usage: usage }
+        RemoveOffTerrainObjects { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -117,7 +119,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

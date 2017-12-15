@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 18, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct WriteFunctionMemoryInsertion {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,13 +33,8 @@ impl WriteFunctionMemoryInsertion {
     /// Public constructor.
     pub fn new() -> WriteFunctionMemoryInsertion {
         let name = "WriteFunctionMemoryInsertion".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Performs a write function memory insertion for single-band multi-date change detection.".to_string();
-        
-        // let mut parameters = "--i1, --input1   Input raster file associated with the first date.\n".to_owned();
-        // parameters.push_str("--i2, --input2   Input raster file associated with the second date.\n");
-        // parameters.push_str("--i3, --input3   Optional input raster file associated with the third date.\n");
-        // parameters.push_str("-o, --output     Output raster file.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -86,7 +82,13 @@ impl WriteFunctionMemoryInsertion {
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i1=input1.dep -i2=input2.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        WriteFunctionMemoryInsertion { name: name, description: description, parameters: parameters, example_usage: usage }
+        WriteFunctionMemoryInsertion { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -122,7 +124,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: December 3, 2017
-Last Modified: December 4, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct Isobasins {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,7 +30,7 @@ pub struct Isobasins {
 impl Isobasins {
     pub fn new() -> Isobasins { // public constructor
         let name = "Isobasins".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).".to_string();
         
         let mut parameters = vec![];
@@ -69,7 +70,13 @@ impl Isobasins {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --size=1000", short_exe, name).replace("*", &sep);
     
-        Isobasins { name: name, description: description, parameters: parameters, example_usage: usage }
+        Isobasins { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -98,7 +105,7 @@ impl WhiteboxTool for Isobasins {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

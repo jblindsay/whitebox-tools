@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 
@@ -23,6 +23,7 @@ use tools::*;
 pub struct NumInflowingNeighbours {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,12 +31,9 @@ pub struct NumInflowingNeighbours {
 impl NumInflowingNeighbours {
     pub fn new() -> NumInflowingNeighbours { // public constructor
         let name = "NumInflowingNeighbours".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.".to_string();
         
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -64,7 +62,13 @@ impl NumInflowingNeighbours {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        NumInflowingNeighbours { name: name, description: description, parameters: parameters, example_usage: usage }
+        NumInflowingNeighbours { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -93,7 +97,7 @@ impl WhiteboxTool for NumInflowingNeighbours {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

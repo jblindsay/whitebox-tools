@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: June 25, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -26,6 +26,7 @@ use tools::ParameterFileType;
 pub struct MeanFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,13 +34,8 @@ pub struct MeanFilter {
 impl MeanFilter {
     pub fn new() -> MeanFilter { // public constructor
         let name = "MeanFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a mean filter (low-pass filter) on an input image.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 3).\n");
-        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 3).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -90,6 +86,7 @@ impl MeanFilter {
         MeanFilter { 
             name: name, 
             description: description, 
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage 
         }
@@ -121,7 +118,7 @@ impl WhiteboxTool for MeanFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

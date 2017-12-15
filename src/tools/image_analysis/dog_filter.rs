@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct DiffOfGaussianFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,9 @@ pub struct DiffOfGaussianFilter {
 impl DiffOfGaussianFilter {
     pub fn new() -> DiffOfGaussianFilter { // public constructor
         let name = "DiffOfGaussianFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Difference of Gaussian (DoG) filter on an image.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--sigma1      Standard deviation distance in pixels.\n");
-        // parameters.push_str("--sigma2      Standard deviation distance in pixels.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -83,7 +79,13 @@ impl DiffOfGaussianFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma1=2.0 --sigma2=4.0", short_exe, name).replace("*", &sep);
     
-        DiffOfGaussianFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        DiffOfGaussianFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -112,7 +114,7 @@ impl WhiteboxTool for DiffOfGaussianFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

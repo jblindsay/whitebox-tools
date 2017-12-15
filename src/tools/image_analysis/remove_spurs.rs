@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
@@ -24,6 +24,7 @@ use tools::*;
 pub struct RemoveSpurs {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,13 +32,9 @@ pub struct RemoveSpurs {
 impl RemoveSpurs {
     pub fn new() -> RemoveSpurs { // public constructor
         let name = "RemoveSpurs".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--iterations  Maximum number of iterations (default is 10).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -75,7 +72,13 @@ impl RemoveSpurs {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep --iterations=10", short_exe, name).replace("*", &sep);
     
-        RemoveSpurs { name: name, description: description, parameters: parameters, example_usage: usage }
+        RemoveSpurs { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -111,7 +114,7 @@ impl WhiteboxTool for RemoveSpurs {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

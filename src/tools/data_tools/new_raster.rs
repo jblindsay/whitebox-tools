@@ -20,6 +20,7 @@ use tools::ParameterFileType;
 pub struct NewRasterFromBase {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,7 +29,7 @@ impl NewRasterFromBase {
     pub fn new() -> NewRasterFromBase {
         // public constructor
         let name = "NewRasterFromBase".to_string();
-
+        let toolbox = "Data Tools".to_string();
         let description = "Creates a new raster using a base image.".to_string();
 
         // let mut parameters = "--base          Input base raster file.\n".to_owned();
@@ -89,6 +90,7 @@ impl NewRasterFromBase {
         NewRasterFromBase {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -120,7 +122,7 @@ impl WhiteboxTool for NewRasterFromBase {
     }
     
     fn get_toolbox(&self) -> String {
-        "Data Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

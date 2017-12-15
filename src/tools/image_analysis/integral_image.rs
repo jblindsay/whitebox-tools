@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct IntegralImage {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,12 +25,9 @@ pub struct IntegralImage {
 impl IntegralImage {
     pub fn new() -> IntegralImage { // public constructor
         let name = "IntegralImage".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Transforms an input image (summed area table) into its integral image equivalent.".to_string();
         
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -58,7 +56,13 @@ impl IntegralImage {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        IntegralImage { name: name, description: description, parameters: parameters, example_usage: usage }
+        IntegralImage { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -87,7 +91,7 @@ impl WhiteboxTool for IntegralImage {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

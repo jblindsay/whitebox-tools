@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 15, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 extern crate time;
@@ -20,6 +20,7 @@ use tools::*;
 pub struct CreatePlane {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,15 +29,9 @@ impl CreatePlane {
     pub fn new() -> CreatePlane {
         // public constructor
         let name = "CreatePlane".to_string();
-
+        let toolbox = "GIS Analysis".to_string();
         let description = "Creates a raster image based on the equation for a simple plane."
             .to_string();
-
-        // let mut parameters = "--base          Input base raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--gradient      Slope gradient in degrees (-85.0 to 85.0).\n");
-        // parameters.push_str("--aspect        Aspect (direction) in degrees clockwise from north (0.0-360.0).\n");
-        // parameters.push_str("--constant      Constant value (default is 0.0).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -99,6 +94,7 @@ impl CreatePlane {
         CreatePlane {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -130,7 +126,7 @@ impl WhiteboxTool for CreatePlane {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct CreateColourComposite {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,16 +32,9 @@ impl CreateColourComposite {
     /// Public constructor.
     pub fn new() -> CreateColourComposite {
         let name = "CreateColourComposite".to_string();
-
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Creates a colour-composite image from three bands of multispectral imagery."
             .to_string();
-
-        // let mut parameters = "--red          Input raster file associated with the red band.\n".to_owned();
-        // parameters.push_str("--green        Input raster file associated with the green band.\n");
-        // parameters.push_str("--blue         Input raster file associated with the blue band.\n");
-        // parameters.push_str("--opacity      Optional input raster file associated with the opacity (a).\n");
-        // parameters.push_str("-o, --output   Output colour composite image file.\n");
-        // parameters.push_str("--enhance      Optional flag indicating whether a balance contrast enhancement is performed.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -113,6 +107,7 @@ impl CreateColourComposite {
         CreateColourComposite {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -144,7 +139,7 @@ impl WhiteboxTool for CreateColourComposite {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

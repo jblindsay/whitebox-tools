@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct NormalizedDifferenceVegetationIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,14 +29,8 @@ pub struct NormalizedDifferenceVegetationIndex {
 impl NormalizedDifferenceVegetationIndex {
     pub fn new() -> NormalizedDifferenceVegetationIndex { // public constructor
         let name = "NormalizedDifferenceVegetationIndex".to_string();
-        
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.".to_string();
-        
-        // let mut parameters = "--nir         Input near-infrared band image.\n".to_owned();
-        // parameters.push_str("--red         Input red-band image.\n");
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
-        // parameters.push_str("--osavi       Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -93,7 +88,13 @@ impl NormalizedDifferenceVegetationIndex {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --nir=band4.dep --red=band3.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --nir=band4.dep --red=band3.dep -o=output.dep --clip=1.0 --osavi", short_exe, name).replace("*", &sep);
     
-        NormalizedDifferenceVegetationIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        NormalizedDifferenceVegetationIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -129,7 +130,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

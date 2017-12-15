@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: December 13, 2017
-Last Modified: December 13, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct AggregateRaster {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,7 +29,7 @@ pub struct AggregateRaster {
 impl AggregateRaster {
     pub fn new() -> AggregateRaster { // public constructor
         let name = "AggregateRaster".to_string();
-        
+        let toolbox = "GIS Analysis".to_string();
         let description = "Aggregates a raster to a lower resolution.".to_string();
         
         let mut parameters = vec![];
@@ -77,7 +78,13 @@ impl AggregateRaster {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --output_text", short_exe, name).replace("*", &sep);
     
-        AggregateRaster { name: name, description: description, parameters: parameters, example_usage: usage }
+        AggregateRaster { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -106,7 +113,7 @@ impl WhiteboxTool for AggregateRaster {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

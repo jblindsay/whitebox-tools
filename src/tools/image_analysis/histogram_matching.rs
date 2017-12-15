@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 14, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -24,6 +24,7 @@ use tools::*;
 pub struct HistogramMatching {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -32,13 +33,9 @@ impl HistogramMatching {
     pub fn new() -> HistogramMatching {
         // public constructor
         let name = "HistogramMatching".to_string();
-
+        let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Alters the statistical distribution of a raster image matching it to a specified PDF."
             .to_string();
-
-        // let mut parameters = "-i, --input    Input raster file to modify.\n".to_owned();
-        // parameters.push_str("--histo_file   Input reference pdf text file.\n");
-        // parameters.push_str("-o, --output   Output raster file.\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -83,6 +80,7 @@ impl HistogramMatching {
         HistogramMatching {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -114,7 +112,7 @@ impl WhiteboxTool for HistogramMatching {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Image Enhancement".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: November 17, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 
@@ -16,6 +16,7 @@ use tools::*;
 pub struct LidarElevationSlice {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -23,17 +24,9 @@ pub struct LidarElevationSlice {
 impl LidarElevationSlice {
     pub fn new() -> LidarElevationSlice { // public constructor
         let name = "LidarElevationSlice".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.".to_string();
-        
-//         let parameters = "-i, --input        Input LAS file.
-// -o, --output       Output LAS file.
-// --maxz             Maximum elevation value.
-// --minz             Minimum elevation value.
-// --class            Optional boolean flag indicating whether points outside the range should be retained in output but reclassified.
-// --inclassval       Optional parameter specifying the class value assigned to points within the slice; default is 2.
-// --outclassval      Optional parameter specifying the class value assigned to points outside the slice; default is 1.".to_owned();
-        
+                
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -109,7 +102,13 @@ impl LidarElevationSlice {
 >>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --class
 >>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0", short_exe, name).replace("*", &sep);
     
-        LidarElevationSlice { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarElevationSlice { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -145,7 +144,7 @@ impl WhiteboxTool for LidarElevationSlice {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

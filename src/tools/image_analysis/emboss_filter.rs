@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct EmbossFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,8 @@ pub struct EmbossFilter {
 impl EmbossFilter {
     pub fn new() -> EmbossFilter { // public constructor
         let name = "EmbossFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs an emboss filter on an image, similar to a hillshade operation.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--direction   Direction for filter; options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw' (default is 'n').\n");
-        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -82,7 +78,13 @@ impl EmbossFilter {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --direction='s' --clip=1.0", short_exe, name).replace("*", &sep);
     
-        EmbossFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        EmbossFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -111,7 +113,7 @@ impl WhiteboxTool for EmbossFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

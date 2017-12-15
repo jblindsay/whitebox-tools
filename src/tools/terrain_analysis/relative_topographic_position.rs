@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 6, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct RelativeTopographicPosition {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,8 @@ pub struct RelativeTopographicPosition {
 impl RelativeTopographicPosition {
     pub fn new() -> RelativeTopographicPosition { // public constructor
         let name = "RelativeTopographicPosition".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the relative topographic position index from a DEM.".to_string();
-        
-        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--filter      Size of the filter kernel (default is 11).\n");
-        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 11; not used if --filter is specified).\n");
-        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 11; not used if --filter is specified).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -84,7 +79,13 @@ impl RelativeTopographicPosition {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --filter=25", short_exe, name).replace("*", &sep);
     
-        RelativeTopographicPosition { name: name, description: description, parameters: parameters, example_usage: usage }
+        RelativeTopographicPosition { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -120,7 +121,7 @@ impl WhiteboxTool for RelativeTopographicPosition {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

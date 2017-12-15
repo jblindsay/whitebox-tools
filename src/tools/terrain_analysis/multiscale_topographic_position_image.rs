@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 16, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct MultiscaleTopographicPositionImage {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,14 +32,8 @@ impl MultiscaleTopographicPositionImage {
     /// Public constructor.
     pub fn new() -> MultiscaleTopographicPositionImage {
         let name = "MultiscaleTopographicPositionImage".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.".to_string();
-        
-        // let mut parameters = "--local        Input local-scale topographic position (DEVmax) raster file.\n".to_owned();
-        // parameters.push_str("--meso         Input meso-scale topographic position (DEVmax) raster file.\n");
-        // parameters.push_str("--broad        Input broad-scale topographic position (DEVmax) raster file.\n");
-        // parameters.push_str("-o, --output   Output colour composite image file.\n");
-        // parameters.push_str("--lightness    Image lightness value (default is 1.2).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -95,7 +90,13 @@ impl MultiscaleTopographicPositionImage {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --local=DEV_local.dep --meso=DEV_meso.dep --broad=DEV_broad.dep -o=output.dep --lightness=1.5", short_exe, name).replace("*", &sep);
     
-        MultiscaleTopographicPositionImage { name: name, description: description, parameters: parameters, example_usage: usage }
+        MultiscaleTopographicPositionImage { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -131,7 +132,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

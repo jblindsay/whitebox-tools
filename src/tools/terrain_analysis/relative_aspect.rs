@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 17, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct RelativeAspect {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,13 +29,8 @@ pub struct RelativeAspect {
 impl RelativeAspect {
     pub fn new() -> RelativeAspect { // public constructor
         let name = "RelativeAspect".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates relative aspect (relative to a user-specified direction) from an input DEM.".to_string();
-        
-        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--azimuth     Illumination source azimuth.\n");
-        // parameters.push_str("--zfactor     Optional multiplier for when the vertical and horizontal units are not the same.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -82,7 +78,13 @@ impl RelativeAspect {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --azimuth=180.0", short_exe, name).replace("*", &sep);
     
-        RelativeAspect { name: name, description: description, parameters: parameters, example_usage: usage }
+        RelativeAspect { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -118,7 +120,7 @@ impl WhiteboxTool for RelativeAspect {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct RelativeStreamPowerIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,14 +29,9 @@ pub struct RelativeStreamPowerIndex {
 impl RelativeStreamPowerIndex {
     pub fn new() -> RelativeStreamPowerIndex { // public constructor
         let name = "RelativeStreamPowerIndex".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the relative stream power index.".to_string();
         
-        // let mut parameters = "--sca          Input specific contributing area (SCA) raster file.\n".to_owned();
-        // parameters.push_str("--slope        Input slope raster file.\n");
-        // parameters.push_str("-o, --output   Output raster file.\n");
-        // parameters.push_str("--exponent     SCA exponent value (default is 1.0).\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Specific Contributing Area (SCA) File".to_owned(), 
@@ -82,7 +78,13 @@ impl RelativeStreamPowerIndex {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --exponent=1.1", short_exe, name).replace("*", &sep);
     
-        RelativeStreamPowerIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        RelativeStreamPowerIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -118,7 +120,7 @@ impl WhiteboxTool for RelativeStreamPowerIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

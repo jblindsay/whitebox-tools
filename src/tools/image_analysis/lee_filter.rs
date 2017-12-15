@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct LeeFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,16 +29,8 @@ pub struct LeeFilter {
 impl LeeFilter {
     pub fn new() -> LeeFilter { // public constructor
         let name = "LeeFilter".to_string();
-        
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Lee (Sigma) smoothing filter on an image.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--filter      Size of the filter kernel (default is 5).\n");
-        // parameters.push_str("--filterx     Optional size of the filter kernel in the x-direction (default is 5; not used if --filter is specified).\n");
-        // parameters.push_str("--filtery     Optional size of the filter kernel in the y-direction (default is 5; not used if --filter is specified).\n");
-        // parameters.push_str("--sigma       Sigma value should be related to the standarad deviation of the distribution of image speckle noise.\n");
-        // parameters.push_str("-m            M-threshold value the minimum allowable number of pixels within the intensity range (default is 10).\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -104,7 +97,13 @@ impl LeeFilter {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=9 --sigma=10.0 -m=5
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filtery=7 --filtery=9 --sigma=10.0  -m=5", short_exe, name).replace("*", &sep);
     
-        LeeFilter { name: name, description: description, parameters: parameters, example_usage: usage }
+        LeeFilter { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -133,7 +132,7 @@ impl WhiteboxTool for LeeFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

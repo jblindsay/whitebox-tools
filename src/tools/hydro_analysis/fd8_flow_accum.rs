@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct FD8FlowAccumulation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,16 +30,8 @@ pub struct FD8FlowAccumulation {
 impl FD8FlowAccumulation {
     pub fn new() -> FD8FlowAccumulation { // public constructor
         let name = "FD8FlowAccumulation".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates an FD8 flow accumulation raster from an input DEM.".to_string();
-        
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        // parameters.push_str("--exponent      Optional exponent parameter; default is 1.1.\n");
-        // parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
-        // parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        // parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -114,7 +107,13 @@ impl FD8FlowAccumulation {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
-        FD8FlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
+        FD8FlowAccumulation { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -143,7 +142,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

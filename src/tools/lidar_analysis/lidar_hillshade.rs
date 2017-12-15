@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 14, 2017
-Last Modified: November 16, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 extern crate time;
@@ -24,6 +24,7 @@ use structures::FixedRadiusSearch3D;
 pub struct LidarHillshade {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -31,15 +32,9 @@ pub struct LidarHillshade {
 impl LidarHillshade {
     pub fn new() -> LidarHillshade { // public constructor
         let name = "LidarHillshade".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.".to_string();
         
-//         let parameters = "-i, --input        Input LAS file.
-// -o, --output       Output LAS file.
-// --azimuth          Optional azimuth in degrees of illumination source (default is 315.0).
-// --altitude         Optional altitude in degrees of illumination source (efault is 30.0).
-// --radius           Search radius; default is 1.0.".to_owned();
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input LiDAR File".to_owned(), 
@@ -96,7 +91,13 @@ impl LidarHillshade {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0
 >>.*{0} -r={1} --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --azimuth=180.0 --altitude=20.0 --radius=1.0", short_exe, name).replace("*", &sep);
     
-        LidarHillshade { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarHillshade { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -132,7 +133,7 @@ impl WhiteboxTool for LidarHillshade {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct RasterSummaryStats {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,10 +29,8 @@ pub struct RasterSummaryStats {
 impl RasterSummaryStats {
     pub fn new() -> RasterSummaryStats { // public constructor
         let name = "RasterSummaryStats".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Measures a rasters average, standard deviation, num. non-nodata cells, and total.".to_string();
-        
-        // let parameters = "-i, --input     Input raster file.\n".to_owned();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -52,7 +51,13 @@ impl RasterSummaryStats {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep", short_exe, name).replace("*", &sep);
     
-        RasterSummaryStats { name: name, description: description, parameters: parameters, example_usage: usage }
+        RasterSummaryStats { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage
+        }
     }
 }
 
@@ -88,7 +93,7 @@ impl WhiteboxTool for RasterSummaryStats {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

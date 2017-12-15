@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: November 16, 2017
+Last Modified: December 15, 2017
 License: MIT
 */
 
@@ -16,6 +16,7 @@ use tools::*;
 pub struct LidarJoin {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -23,12 +24,9 @@ pub struct LidarJoin {
 impl LidarJoin {
     pub fn new() -> LidarJoin { // public constructor
         let name = "LidarJoin".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Joins multiple LiDAR (LAS) files into a single LAS file.".to_string();
         
-        // let mut parameters = "-i, --inputs  Input LAS files, separated by commas.\n".to_owned();
-        // parameters.push_str("-o, --output  Output LAS file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input LiDAR Files".to_owned(), 
@@ -57,7 +55,13 @@ impl LidarJoin {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\"", short_exe, name).replace("*", &sep);
     
-        LidarJoin { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarJoin { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -93,7 +97,7 @@ impl WhiteboxTool for LidarJoin {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

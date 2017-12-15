@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use tools::*;
 pub struct Watershed {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,13 +26,8 @@ pub struct Watershed {
 impl Watershed {
     pub fn new() -> Watershed { // public constructor
         let name = "Watershed".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Identifies the watershed, or drainage basin, draining to a set of target cells.".to_string();
-        
-        // let mut parameters = "--d8_pntr     Input D8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--pour_pts    Input pour points (outlet) raster file.\n");
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--esri_pntr   D8 pointer uses the ESRI style scheme.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -79,7 +75,13 @@ impl Watershed {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --pour_pts='pour_pts.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
     
-        Watershed { name: name, description: description, parameters: parameters, example_usage: usage }
+        Watershed { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +110,7 @@ impl WhiteboxTool for Watershed {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

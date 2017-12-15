@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct MaxUpslopeFlowpathLength {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,12 +30,9 @@ pub struct MaxUpslopeFlowpathLength {
 impl MaxUpslopeFlowpathLength {
     pub fn new() -> MaxUpslopeFlowpathLength { // public constructor
         let name = "MaxUpslopeFlowpathLength".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Measures the maximum length of all upslope flowpaths draining each grid cell.".to_string();
         
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -64,7 +62,13 @@ impl MaxUpslopeFlowpathLength {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --log --clip", short_exe, name).replace("*", &sep);
     
-        MaxUpslopeFlowpathLength { name: name, description: description, parameters: parameters, example_usage: usage }
+        MaxUpslopeFlowpathLength { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -93,7 +97,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

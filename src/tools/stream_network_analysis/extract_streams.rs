@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: This tool should be updated to incorporate the option for an area-slope based threshold.
@@ -23,6 +23,7 @@ use tools::*;
 pub struct ExtractStreams {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,7 +31,7 @@ pub struct ExtractStreams {
 impl ExtractStreams {
     pub fn new() -> ExtractStreams { // public constructor
         let name = "ExtractStreams".to_string();
-        
+        let toolbox = "Stream Network Analysis".to_string();
         let description = "Extracts stream grid cells from a flow accumulation raster.".to_string();
         
         let mut parameters = vec![];
@@ -79,7 +80,13 @@ impl ExtractStreams {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --flow_accum='d8accum.dep' -o='output.dep' --threshold=100.0  --zero_background", short_exe, name).replace("*", &sep);
     
-        ExtractStreams { name: name, description: description, parameters: parameters, example_usage: usage }
+        ExtractStreams { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -115,7 +122,7 @@ impl WhiteboxTool for ExtractStreams {
     }
 
     fn get_toolbox(&self) -> String {
-        "Stream Network Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

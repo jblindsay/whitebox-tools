@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use structures::FixedRadiusSearch2D;
 pub struct LidarTophatTransform {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,7 +30,7 @@ pub struct LidarTophatTransform {
 impl LidarTophatTransform {
     pub fn new() -> LidarTophatTransform { // public constructor
         let name = "LidarTophatTransform".to_string();
-        
+        let toolbox = "LiDAR Tools".to_string();
         let description = "Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy".to_string();
         
         let mut parameters = vec![];
@@ -69,7 +70,13 @@ impl LidarTophatTransform {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
     
-        LidarTophatTransform { name: name, description: description, parameters: parameters, example_usage: usage }
+        LidarTophatTransform { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -105,7 +112,7 @@ impl WhiteboxTool for LidarTophatTransform {
     }
 
     fn get_toolbox(&self) -> String {
-        "LiDAR Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

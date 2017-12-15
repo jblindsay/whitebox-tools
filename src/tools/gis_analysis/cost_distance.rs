@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: November 15, 2017
+Last Modified: December 14, 2017
 License: MIT
 
 NOTES: Add anisotropy option.
@@ -20,6 +20,7 @@ use tools::*;
 pub struct CostDistance {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -27,14 +28,9 @@ pub struct CostDistance {
 impl CostDistance {
     pub fn new() -> CostDistance { // public constructor
         let name = "CostDistance".to_string();
-        
+        let toolbox = "GIS Analysis/Distance Tools".to_string();
         let description = "Performs cost-distance accumulation on a cost surface and a group of source cells.".to_string();
         
-        // let mut parameters = "--source        Input source raster file.\n".to_owned();
-        // parameters.push_str("--cost          Input cost (friction) raster file.\n");
-        // parameters.push_str("--out_accum     Output cost accumulation raster file.\n");
-        // parameters.push_str("--out_backlink  Output backlink raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Source File".to_owned(), 
@@ -81,7 +77,13 @@ impl CostDistance {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --source=src.dep --cost=cost.dep --out_accum=accum.dep --out_backlink=backlink.dep", short_exe, name).replace("*", &sep);
     
-        CostDistance { name: name, description: description, parameters: parameters, example_usage: usage }
+        CostDistance { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -110,7 +112,7 @@ impl WhiteboxTool for CostDistance {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Distance Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

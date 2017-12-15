@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 24, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 16, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct DInfFlowAccumulation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,15 +31,8 @@ pub struct DInfFlowAccumulation {
 impl DInfFlowAccumulation {
     pub fn new() -> DInfFlowAccumulation { // public constructor
         let name = "DInfFlowAccumulation".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
-        
-        // let mut parameters = "--dem           Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--out_type      Output type; one of 'cells', 'sca' (default), and 'ca'.\n");
-        // parameters.push_str("--threshold     Optional convergence threshold parameter, in grid cells; default is inifinity.\n");
-        // parameters.push_str("--log           Optional flag to request the output be log-transformed.\n");
-        // parameters.push_str("--clip          Optional flag to request clipping the display max by 1%.\n");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -105,7 +99,13 @@ impl DInfFlowAccumulation {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
-        DInfFlowAccumulation { name: name, description: description, parameters: parameters, example_usage: usage }
+        DInfFlowAccumulation { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -134,7 +134,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

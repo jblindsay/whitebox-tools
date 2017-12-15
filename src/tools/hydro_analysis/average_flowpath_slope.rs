@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 22, 2017
-Last Modified: November 16, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 
@@ -23,6 +23,7 @@ use tools::*;
 pub struct AverageFlowpathSlope {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,12 +31,9 @@ pub struct AverageFlowpathSlope {
 impl AverageFlowpathSlope {
     pub fn new() -> AverageFlowpathSlope { // public constructor
         let name = "AverageFlowpathSlope".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Measures the average slope gradient from each grid cell to all upslope divide cells.".to_string();
         
-        // let mut parameters = "-i, --dem       Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -64,7 +62,13 @@ impl AverageFlowpathSlope {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        AverageFlowpathSlope { name: name, description: description, parameters: parameters, example_usage: usage }
+        AverageFlowpathSlope { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -93,7 +97,7 @@ impl WhiteboxTool for AverageFlowpathSlope {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

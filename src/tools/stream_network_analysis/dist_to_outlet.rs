@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct DistanceToOutlet {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,15 +25,9 @@ pub struct DistanceToOutlet {
 impl DistanceToOutlet {
     pub fn new() -> DistanceToOutlet { // public constructor
         let name = "DistanceToOutlet".to_string();
-        
+        let toolbox = "Stream Network Analysis".to_string();
         let description = "Calculates the distance of stream grid cells to the channel network outlet cell.".to_string();
         
-        // let mut parameters = "--d8_pntr       Input D8 or Rho8 pointer raster file.\n".to_owned();
-        // parameters.push_str("--streams       Input streams raster file.\n");
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--esri_pntr     Flag indicating whether the D8 pointer uses the ESRI style scheme (default is false).\n");
-        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input D8 Pointer File".to_owned(), 
@@ -89,7 +84,13 @@ impl DistanceToOutlet {
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 >>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
-        DistanceToOutlet { name: name, description: description, parameters: parameters, example_usage: usage }
+        DistanceToOutlet { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -125,7 +126,7 @@ impl WhiteboxTool for DistanceToOutlet {
     }
 
     fn get_toolbox(&self) -> String {
-        "Stream Network Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

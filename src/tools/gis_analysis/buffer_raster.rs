@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: November 15, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -18,6 +18,7 @@ use structures::Array2D;
 pub struct BufferRaster {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -25,7 +26,7 @@ pub struct BufferRaster {
 impl BufferRaster {
     pub fn new() -> BufferRaster { // public constructor
         let name = "BufferRaster".to_string();
-        
+        let toolbox = "GIS Analysis/Distance Tools".to_string();
         let description = "Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.".to_string();
         
         // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
@@ -79,7 +80,13 @@ impl BufferRaster {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        BufferRaster { name: name, description: description, parameters: parameters, example_usage: usage }
+        BufferRaster { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -108,7 +115,7 @@ impl WhiteboxTool for BufferRaster {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis/Distance Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

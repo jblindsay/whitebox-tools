@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct LineDetectionFilter {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,8 @@ impl LineDetectionFilter {
     pub fn new() -> LineDetectionFilter {
         // public constructor
         let name = "LineDetectionFilter".to_string();
-
+        let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a line-detection filter on an image.".to_string();
-
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--variant     Optional variant value. Options include 'v' (vertical), 'h' (horizontal), '45', and '135' (default is 'v').\n");
-        // parameters.push_str("--absvals     Optional flag indicating whether outputs should be absolute values.\n");
-        // parameters.push_str("--clip        Optional amount to clip the distribution tails by, in percent (default is 0.0).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -99,6 +94,7 @@ impl LineDetectionFilter {
         LineDetectionFilter {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -130,7 +126,7 @@ impl WhiteboxTool for LineDetectionFilter {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools/Filters".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

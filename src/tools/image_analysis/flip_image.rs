@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct FlipImage {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,14 +30,10 @@ impl FlipImage {
     pub fn new() -> FlipImage {
         // public constructor
         let name = "FlipImage".to_string();
-
+        let toolbox = "Image Processing Tools".to_string();
         let description = "Reflects an image in the vertical or horizontal axis."
             .to_string();
 
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--direction     Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 'b' (both). Default is 'v'.\n");
-        
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
@@ -80,6 +77,7 @@ impl FlipImage {
         FlipImage {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -111,7 +109,7 @@ impl WhiteboxTool for FlipImage {
     }
 
     fn get_toolbox(&self) -> String {
-        "Image Processing Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

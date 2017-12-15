@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: November 15, 2017
+Last Modified: December 14, 2017
 License: MIT
 */
 extern crate time;
@@ -17,6 +17,7 @@ use tools::*;
 pub struct Clump {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -24,13 +25,8 @@ pub struct Clump {
 impl Clump {
     pub fn new() -> Clump { // public constructor
         let name = "Clump".to_string();
-        
+        let toolbox = "GIS Analysis".to_string();
         let description = "Groups cells that form physically discrete areas, assigning them unique identifiers.".to_string();
-        
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
-        // parameters.push_str("--diag        Optional flag indicating whether diagonal connections should be considered.\n");
-        // parameters.push_str("--zero_back   Optional flag indicating whether zero values should be treated as a background.");
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -78,7 +74,13 @@ impl Clump {
         }
         let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --diag", short_exe, name).replace("*", &sep);
     
-        Clump { name: name, description: description, parameters: parameters, example_usage: usage }
+        Clump { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -107,7 +109,7 @@ impl WhiteboxTool for Clump {
     }
 
     fn get_toolbox(&self) -> String {
-        "GIS Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

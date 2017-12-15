@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -21,6 +21,7 @@ use tools::*;
 pub struct NumDownslopeNeighbours {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -28,12 +29,9 @@ pub struct NumDownslopeNeighbours {
 impl NumDownslopeNeighbours {
     pub fn new() -> NumDownslopeNeighbours { // public constructor
         let name = "NumDownslopeNeighbours".to_string();
-        
+        let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the number of downslope neighbours to each grid cell in a DEM.".to_string();
         
-        // let mut parameters = "-i, --dem     Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -62,7 +60,13 @@ impl NumDownslopeNeighbours {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
-        NumDownslopeNeighbours { name: name, description: description, parameters: parameters, example_usage: usage }
+        NumDownslopeNeighbours { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -98,7 +102,7 @@ impl WhiteboxTool for NumDownslopeNeighbours {
     }
 
     fn get_toolbox(&self) -> String {
-        "Geomorphometric Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

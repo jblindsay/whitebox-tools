@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 15, 2017
-Last Modified: August 15, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: This index (C) is taken from Lindsay (2006) Sensitivity of channel mapping techniques to uncertainty in digital
@@ -39,6 +39,7 @@ use tools::*;
 pub struct CrispnessIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -47,11 +48,8 @@ impl CrispnessIndex {
     pub fn new() -> CrispnessIndex {
         // public constructor
         let name = "CrispnessIndex".to_string();
-
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.".to_string();
-
-        // let mut parameters = "-i, --input       Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output   Optional output html file (default name will be based on input file if unspecified).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -91,6 +89,7 @@ impl CrispnessIndex {
         CrispnessIndex {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -129,7 +128,7 @@ impl WhiteboxTool for CrispnessIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

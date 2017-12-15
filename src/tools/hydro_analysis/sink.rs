@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 14, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct Sink {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -29,13 +30,9 @@ pub struct Sink {
 impl Sink {
     pub fn new() -> Sink { // public constructor
         let name = "Sink".to_string();
-        
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Identifies the depressions in a DEM, giving each feature a unique identifier.".to_string();
         
-        // let mut parameters = "--dem              Input raster DEM file.\n".to_owned();
-        // parameters.push_str("-o, --output       Output raster file.\n");
-        // parameters.push_str("--zero_background  Flag indicating whether the background value of zero should be used.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input DEM File".to_owned(), 
@@ -73,7 +70,13 @@ impl Sink {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --zero_background", short_exe, name).replace("*", &sep);
     
-        Sink { name: name, description: description, parameters: parameters, example_usage: usage }
+        Sink { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -102,7 +105,7 @@ impl WhiteboxTool for Sink {
     }
 
     fn get_toolbox(&self) -> String {
-        "Hydrological Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

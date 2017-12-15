@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 24, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -23,6 +23,7 @@ use tools::*;
 pub struct KappaIndex {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,13 +31,9 @@ pub struct KappaIndex {
 impl KappaIndex {
     pub fn new() -> KappaIndex { // public constructor
         let name = "KappaIndex".to_string();
-        
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs a kappa index of agreement (KIA) analysis on two categorical raster files.".to_string();
         
-        // let mut parameters = "--i1, --input1    Input raster file (classification).\n".to_owned();
-        // parameters.push_str("--i2, --input2    Input raster file (reference).\n");
-        // parameters.push_str("-o, --output     Output HTML file.\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Classification File".to_owned(), 
@@ -74,7 +71,13 @@ impl KappaIndex {
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --i1=class.tif --i2=reference.tif -o=kia.html", short_exe, name).replace("*", &sep);
     
-        KappaIndex { name: name, description: description, parameters: parameters, example_usage: usage }
+        KappaIndex { 
+            name: name, 
+            description: description, 
+            toolbox: toolbox,
+            parameters: parameters, 
+            example_usage: usage 
+        }
     }
 }
 
@@ -110,7 +113,7 @@ impl WhiteboxTool for KappaIndex {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {

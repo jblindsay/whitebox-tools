@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -25,6 +25,7 @@ use tools::*;
 pub struct ImageCorrelation {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -33,11 +34,8 @@ impl ImageCorrelation {
     pub fn new() -> ImageCorrelation {
         // public constructor
         let name = "ImageCorrelation".to_string();
-
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs image correlation on two or more input images.".to_string();
-
-        // let mut parameters = "-i, --inputs   Input raster files, separated by commas.\n".to_owned();
-        // parameters.push_str("-o, --output   Optional output html file (default name will be based on input file if unspecified).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -76,6 +74,7 @@ impl ImageCorrelation {
         ImageCorrelation {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -114,7 +113,7 @@ impl WhiteboxTool for ImageCorrelation {
     }
 
     fn get_toolbox(&self) -> String {
-        "Math and Stats Tools".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,

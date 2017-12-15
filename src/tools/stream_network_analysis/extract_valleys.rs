@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
-Last Modified: November 16, 2017
+Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
@@ -22,6 +22,7 @@ use tools::*;
 pub struct ExtractValleys {
     name: String,
     description: String,
+    toolbox: String,
     parameters: Vec<ToolParameter>,
     example_usage: String,
 }
@@ -30,7 +31,7 @@ impl ExtractValleys {
     pub fn new() -> ExtractValleys {
         // public constructor
         let name = "ExtractValleys".to_string();
-
+        let toolbox = "Stream Network Analysis".to_string();
         let description = "Identifies potential valley bottom grid cells based on local topolography alone."
             .to_string();
 
@@ -96,6 +97,7 @@ impl ExtractValleys {
         ExtractValleys {
             name: name,
             description: description,
+            toolbox: toolbox,
             parameters: parameters,
             example_usage: usage,
         }
@@ -134,7 +136,7 @@ impl WhiteboxTool for ExtractValleys {
     }
 
     fn get_toolbox(&self) -> String {
-        "Stream Network Analysis".to_owned()
+        self.toolbox.clone()
     }
 
     fn run<'a>(&self,
