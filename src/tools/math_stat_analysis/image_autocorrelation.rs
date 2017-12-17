@@ -1,12 +1,13 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 3, 2017
-Last Modified: Dec. 15, 2017
+Created: Dec. 16, 2017
+Last Modified: Dec. 16, 2017
 License: MIT
 */
 extern crate time;
 extern crate num_cpus;
+extern crate statrs;
 
 use std::io::BufWriter;
 use std::fs::File;
@@ -21,8 +22,9 @@ use std::process::Command;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
+use self::statrs::distribution::{Normal, Univariate};
 
-pub struct ImageCorrelation {
+pub struct ImageAutocorrelation {
     name: String,
     description: String,
     toolbox: String,
@@ -30,12 +32,12 @@ pub struct ImageCorrelation {
     example_usage: String,
 }
 
-impl ImageCorrelation {
-    pub fn new() -> ImageCorrelation {
+impl ImageAutocorrelation {
+    pub fn new() -> ImageAutocorrelation {
         // public constructor
-        let name = "ImageCorrelation".to_string();
+        let name = "ImageAutocorrelation".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs image correlation on two or more input images.".to_string();
+        let description = "Performs Moran's I analysis on two or more input images.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -45,6 +47,19 @@ impl ImageCorrelation {
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
             optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Contiguity Type".to_owned(), 
+            flags: vec!["--contiguity".to_owned()], 
+            description: "Contiguity type.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec![
+                "Rook".to_owned(), 
+                "King".to_owned(), 
+                "Bishop".to_owned()
+            ]),
+            default_value: Some("Rook".to_owned()),
+            optional: true
         });
 
         parameters.push(ToolParameter{
@@ -66,12 +81,12 @@ impl ImageCorrelation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.html",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.htm --contiguity=Bishopsl",
                             short_exe,
                             name)
                 .replace("*", &sep);
 
-        ImageCorrelation {
+        ImageAutocorrelation {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -81,7 +96,7 @@ impl ImageCorrelation {
     }
 }
 
-impl WhiteboxTool for ImageCorrelation {
+impl WhiteboxTool for ImageAutocorrelation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -123,6 +138,7 @@ impl WhiteboxTool for ImageCorrelation {
                -> Result<(), Error> {
         let mut input_files: String = String::new();
         let mut output_file = String::new();
+        let mut contiguity = String::new();
 
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -137,17 +153,24 @@ impl WhiteboxTool for ImageCorrelation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--inputs" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-inputs" {
                 if keyval {
                     input_files = vec[1].to_string();
                 } else {
                     input_files = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
+                }
+            } else if flag_val == "-contiguity" {
+                if keyval {
+                    contiguity = vec[1].to_string().to_lowercase();
+                } else {
+                    contiguity = args[i+1].to_string().to_lowercase();
                 }
             }
         }
@@ -164,6 +187,18 @@ impl WhiteboxTool for ImageCorrelation {
         let mut old_progress: usize = 1;
 
         let start = time::now();
+
+        
+        let (dx, dy) = if contiguity.contains("bishop") {
+            (vec![1, 1, -1, -1], vec![-1, 1, 1, -1])
+        } else if contiguity.contains("queen")
+                || contiguity.contains("king") {
+            (vec![1, 1, 1, 0, -1, -1, -1, 0],
+            vec![-1, 0, 1, 1, 1, 0, -1, -1])
+        } else {
+            // go with the rook default
+            (vec![1, 0, -1, 0], vec![0, 1, 0, -1])
+        };
 
         let mut files = input_files.split(";");
         let mut files_vec = files.collect::<Vec<&str>>();
@@ -198,13 +233,24 @@ impl WhiteboxTool for ImageCorrelation {
 
         let num_files = file_names.len();
 
+        let distribution = Normal::new(0.0, 1.0).unwrap();
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
 
         let mut image_totals = vec![0f64; num_files];
-        let mut image_n = vec![0f64; num_files];
-        let mut image_averages = vec![0f64; num_files];
-        let mut correlation_matrix = vec![vec![-99f64; num_files]; num_files];
+        let mut n = vec![0f64; num_files];
+        let mut mean = vec![0f64; num_files];
+        let mut e_i = vec![0f64; num_files];
+        let mut std_dev = vec![0f64; num_files];
+        let mut i = vec![0f64; num_files];
+        let mut var_normality = vec![0f64; num_files];
+        let mut var_randomization = vec![0f64; num_files];
+        let mut z_n = vec![0f64; num_files];
+        let mut z_r = vec![0f64; num_files];
+        let mut p_value_n = vec![0f64; num_files];
+        let mut p_value_r = vec![0f64; num_files];
+        // let mut correlation_matrix = vec![vec![-99f64; num_files]; num_files];
         let mut rows: isize = 0;
         let mut columns: isize = 0;
         if verbose { println!("Calculating image averages..."); }
@@ -233,10 +279,8 @@ impl WhiteboxTool for ImageCorrelation {
                     let mut z: f64;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         for col in 0..columns {
-                            z = input[(row, col)];
+                            z = input.get_value(row, col);
                             if z != nodata {
-                                // image_totals[a] += z;
-                                // image_n[a] += 1f64;
                                 total += z;
                                 n += 1f64;
                             }
@@ -245,88 +289,93 @@ impl WhiteboxTool for ImageCorrelation {
                     tx.send((total, n)).unwrap();
                 });
             }
-            for _ in 0..num_procs {
-                let (total, n) = rx.recv().unwrap();
+            for np in 0..num_procs {
+                let (total, image_n) = rx.recv().unwrap();
                 image_totals[a] += total;
-                image_n[a] += n;
-            }
-            image_averages[a] = image_totals[a] / image_n[a];
-            
-            if verbose {
-                progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Calculating image averages ({} of {}): {}%", (a + 1), files_vec.len(), progress);
-                    old_progress = progress;
+                n[a] += image_n;
+
+                if verbose && num_procs > 1 {
+                    progress = (100.0_f64 * np as f64 / (num_procs - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress (Loop 1 of 2): {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
-        }
-        let image_averages = Arc::new(image_averages);
+            mean[a] = image_totals[a] / n[a];
 
-        if verbose { println!("Calculating the correlation matrix:"); }
-        let mut i = 0;
-        for a in 0..num_files {
-            let value = &file_names[a];
-            let image1 = Arc::new(Raster::new(&value, "r")?);
-            let nodata1 = image1.configs.nodata;
-            for b in 0..(i+1) {
-                if a == b {
-                    correlation_matrix[a][b] = 1.0;
-                } else {
-                    let image2 = Arc::new(Raster::new(&file_names[b], "r")?);
-                    let nodata2 = image2.configs.nodata;
 
-                    let (tx, rx) = mpsc::channel();
-                    for tid in 0..num_procs {
-                        let image1 = image1.clone();
-                        let image2 = image2.clone();
-                        let image_averages = image_averages.clone();
-                        let tx = tx.clone();
-                        thread::spawn(move || {
-                            let mut z1: f64;
-                            let mut z2: f64;
-                            let mut image1_total_deviation = 0f64;
-                            let mut image2_total_deviation = 0f64;
-                            let mut total_product_deviations = 0f64;
-                            for row in (0..rows).filter(|r| r % num_procs == tid) {
-                                for col in 0..columns {
-                                    z1 = image1[(row, col)];
-                                    z2 = image2[(row, col)];
-                                    if z1 != nodata1 && z2 != nodata2 {
-                                        image1_total_deviation += (z1 - image_averages[a]) * (z1 - image_averages[a]);
-                                        image2_total_deviation += (z2 - image_averages[b]) * (z2 - image_averages[b]);
-                                        total_product_deviations += (z1 - image_averages[a]) * (z2 - image_averages[b]);
-                                    }
-                                }
+            e_i[a] = -1f64 / (n[a] - 1f64);
+            let mut total_deviation = 0f64;
+            let mut w = 0f64;
+            let mut numerator = 0f64;
+            let mut s2 = 0f64; 
+            let mut wij: f64;
+            let mut z: f64;
+            let mut zn: f64;
+            let mut x: isize;
+            let mut y: isize;
+            let num_neighbours = dx.len();
+            let mut k = 0f64;
+            for row in 0..rows {
+                for col in 0..columns {
+                    z = input.get_value(row, col);
+                    if z != nodata {
+                        total_deviation += (z - mean[a]) * (z - mean[a]);
+                        k += (z - mean[a]) * (z - mean[a]) * (z - mean[a]) * (z - mean[a]);
+                        wij = 0f64;
+                        for i in 0..num_neighbours {
+                            x = col + dx[i];
+                            y = row + dy[i];
+                            zn = input.get_value(y, x);
+                            if zn != nodata {
+                                w += 1f64;
+                                numerator += (z - mean[a]) * (zn - mean[a]);
+                                wij += 1f64;
                             }
-                            tx.send((image1_total_deviation, image2_total_deviation, total_product_deviations)).unwrap();
-                        });
+                        }
+                        s2 += wij * wij;
                     }
-                    let mut image1_total_deviation = 0f64;
-                    let mut image2_total_deviation = 0f64;
-                    let mut total_product_deviations = 0f64;
-                    for _ in 0..num_procs {
-                        let (val1, val2, val3) = rx.recv().unwrap();
-                        image1_total_deviation += val1;
-                        image2_total_deviation += val2;
-                        total_product_deviations += val3;
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress (Loop 2 of 2): {}%", progress);
+                        old_progress = progress;
                     }
-                    correlation_matrix[a][b] = total_product_deviations / (image1_total_deviation * image2_total_deviation).sqrt();
                 }
             }
-            i += 1;
+            
+            let s1 = 4f64 * w;
+            s2 = s2 * 4f64;
+            
+            std_dev[a] = (total_deviation / (n[a] - 1f64)).sqrt();
 
+            i[a] = n[a] * numerator / (total_deviation * w);
+            
+            var_normality[a] = (n[a] * n[a] * s1 - n[a] * s2 + 3f64 * w * w) / 
+                    ((w * w) * (n[a] * n[a] - 1f64));
+            
+            z_n[a] = (i[a] - e_i[a]) / var_normality[a].sqrt(); 
+            p_value_n[a] = 2f64 * (1f64 - distribution.cdf(z_n[a].abs()));
+            
+            k = k / (n[a] * std_dev[a] * std_dev[a] * std_dev[a] * std_dev[a]);
+            
+            var_randomization[a] = (n[a] * ((n[a] * n[a] - 3f64 * n[a] + 3f64) * s1 - n[a] * s2 + 3f64 * w * w) - 
+                    k * (n[a] * n[a] - n[a]) * s1 - 2f64 * n[a] * s1 + 6f64 * w * w) / 
+                    ((n[a] - 1f64) * (n[a] - 2f64) * (n[a] - 3f64) * w * w);
+            
+            z_r[a] = (i[a] - e_i[a]) / var_randomization[a].sqrt(); 
+            p_value_r[a] = 2f64 * (1f64 - distribution.cdf(z_r[a].abs()));
+                
             if verbose {
                 progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Calculating the correlation matrix ({} of {}): {}%", (a + 1), files_vec.len(), progress);
+                    println!("Loop {} of {}: {}%", (a + 1), files_vec.len(), progress);
                     old_progress = progress;
                 }
             }
         }
-
-        // for value in correlation_matrix {
-        //     println!("{:?}", value);
-        // }
 
         
         let end = time::now();
@@ -336,14 +385,13 @@ impl WhiteboxTool for ImageCorrelation {
         if verbose { println!("\n{}",
                  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
 
-
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
         writer.write_all("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-            <title>Image Correlation</title>
+            <title>Spatial Autocorrelation</title>
             <style  type=\"text/css\">
                 h1 {
                     font-size: 14pt;
@@ -373,7 +421,7 @@ impl WhiteboxTool for ImageCorrelation {
                 }
                 td, th {
                     border: 1px solid #222222;
-                    text-align: center;
+                    text-align: centre;
                     padding: 8px;
                 }
                 tr:nth-child(even) {
@@ -385,44 +433,34 @@ impl WhiteboxTool for ImageCorrelation {
             </style>
         </head>
         <body>
-            <h1>Image Correlation Report</h1>
+            <h1>Spatial Autocorrelation Report</h1>
         ".as_bytes())?;
 
         // output the names of the input files.
-        writer.write_all("<p><strong>Input files</strong>:</br>".as_bytes())?;
         for a in 0..num_files {
-            let value = &file_names[a]; //files_vec[a];
-            writer.write_all(format!("<strong>Image {}</strong>: {}</br>", a + 1, value).as_bytes())?;
+            let value = &file_names[a];
+            writer.write_all(&format!("<p><strong>Image {}</strong>: {}</p", a + 1, value).as_bytes())?;
+
+            writer.write_all("<div><table align=\"center\">".as_bytes())?;
+            writer.write_all("<caption>Moran's I Results</caption>".as_bytes())?;
+
+            writer.write_all(&format!("<tr><td>Number of cells included</td><td>{}</td class=\"numberCell\"></tr>", n[a]).as_bytes())?;
+            // if (units[a].equals("")) {
+                writer.write_all(&format!("<tr><td>Mean of cells included</td><td class=\"numberCell\">{:.*}</td></tr>", 4, mean[a]).as_bytes())?;
+            // } else {
+            //     retstr.append("Mean of cells included:\t\t").append(df2.format(mean[a])).append(" ").append(units[a]).append("\n");
+            // }
+            writer.write_all(&format!("<tr><td>Spatial autocorrelation (Moran's I)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, i[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>Expected value</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, e_i[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>Variance of I (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, var_normality[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>z test stat (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, z_n[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>p-value (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, p_value_n[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>Variance of I (randomization assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, var_randomization[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>z test stat (randomization assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, z_r[a]).as_bytes())?;
+            writer.write_all(&format!("<tr><td>p-value (randomization assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, p_value_r[a]).as_bytes())?;
+            writer.write_all("</table></div>".as_bytes())?;
         }
-        writer.write_all("</p>".as_bytes())?;
-
-        writer.write_all("<br><table align=\"center\">".as_bytes())?;
-        writer.write_all("<caption>Pearson correlation matrix</caption>".as_bytes())?;
-
-        let mut out_string = String::from("<tr><th></th>");
-        for a in 0..num_files {
-            out_string.push_str(&format!("<th>Image {}</th>", a+1));
-        }
-        out_string.push_str("</tr>");
-
-        for a in 0..num_files {
-            out_string.push_str("<tr>");
-            out_string.push_str(&format!("<td><strong>Image {}</strong></td>", a+1));
-            for b in 0..num_files {
-                let value = correlation_matrix[a][b];
-                if value != -99f64 {
-                    let value_str = &format!("{:.*}", 4, value);
-                    out_string.push_str(&format!("<td>{}</td>", value_str));
-                } else {
-                    out_string.push_str("<td></td>");
-                }
-            }
-            out_string.push_str("</tr>");
-        }
-
-        writer.write_all(out_string.as_bytes())?;
-
-        writer.write_all("</table>".as_bytes())?;
+        
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();

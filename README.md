@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 251 tools:
+The library currently contains the following 252 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -319,6 +319,7 @@ The library currently contains the following 251 tools:
 - ***ExtractRasterStatistics***: Extracts descriptive statistics for a group of patches in a raster.
 - ***Floor***: Returns the largest (closest to positive infinity) value that is greater than or equal to the values in a raster.
 - ***GreaterThan***: Performs a greater-than comparison operation on two rasters or a raster and a constant value.
+- ***ImageAutocorrelation***: Performs Moran's I analysis on two or more input images.
 - ***ImageCorrelation***: Performs image correlation on two or more input images.
 - ***ImageRegression***: Performs image regression analysis on two input images.
 - ***Increment***: Increases the values of each grid cell in an input raster by 1.0.

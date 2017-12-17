@@ -193,6 +193,7 @@ impl ToolManager {
         tool_names.push("ExtractRasterStatistics".to_string());
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
+        tool_names.push("ImageAutocorrelation".to_string());
         tool_names.push("ImageCorrelation".to_string());
         tool_names.push("ImageRegression".to_string());
         tool_names.push("Increment".to_string());
@@ -524,6 +525,7 @@ impl ToolManager {
             "extractrasterstatistics" => Some(Box::new(tools::math_stat_analysis::ExtractRasterStatistics::new())),
             "floor" => Some(Box::new(tools::math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(tools::math_stat_analysis::GreaterThan::new())),
+            "imageautocorrelation" => Some(Box::new(tools::math_stat_analysis::ImageAutocorrelation::new())),
             "imagecorrelation" => Some(Box::new(tools::math_stat_analysis::ImageCorrelation::new())),
             "imageregression" => Some(Box::new(tools::math_stat_analysis::ImageRegression::new())),
             "increment" => Some(Box::new(tools::math_stat_analysis::Increment::new())),

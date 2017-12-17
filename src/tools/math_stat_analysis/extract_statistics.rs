@@ -62,7 +62,7 @@ impl ExtractRasterStatistics {
         });
 
         parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
+            name: "Output Raster File".to_owned(), 
             flags: vec!["-o".to_owned(), "--output".to_owned()], 
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
@@ -86,11 +86,19 @@ impl ExtractRasterStatistics {
             optional: true
         });
 
+        // parameters.push(ToolParameter{
+        //     name: "Would you like an HTML table output?".to_owned(), 
+        //     flags: vec!["--out_table".to_owned()], 
+        //     description: "Would you like an HTML table output?".to_owned(),
+        //     parameter_type: ParameterType::Boolean,
+        //     default_value: None,
+        //     optional: true
+        // });
         parameters.push(ToolParameter{
-            name: "Would you like an HTML table output?".to_owned(), 
+            name: "Output HTML Table File".to_owned(), 
             flags: vec!["--out_table".to_owned()], 
-            description: "Would you like an HTML table output?".to_owned(),
-            parameter_type: ParameterType::Boolean,
+            description: "Output HTML Table file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
             optional: true
         });
@@ -103,7 +111,7 @@ impl ExtractRasterStatistics {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' -o='output.dep' --stat='minimum'
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' --out_table", short_exe, name).replace("*", &sep);
+>>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' --out_table='output.html'", short_exe, name).replace("*", &sep);
     
         ExtractRasterStatistics { 
             name: name, 
@@ -154,7 +162,8 @@ impl WhiteboxTool for ExtractRasterStatistics {
         let mut input_file = String::new();
         let mut features_file = String::new();
         let mut output_file = String::new();
-        let mut out_table = false;
+        // let mut out_table = false;
+        let mut output_html_file = String::new();
         let mut stat_type = String::from("average");
          
         if args.len() == 0 {
@@ -190,7 +199,12 @@ impl WhiteboxTool for ExtractRasterStatistics {
                     output_file = args[i+1].to_string();
                 }
             } else if flag_val == "-out_table" {
-                out_table = true;
+                // out_table = true;
+                if keyval {
+                    output_html_file = vec[1].to_string();
+                } else {
+                    output_html_file = args[i+1].to_string();
+                }
             } else if flag_val == "-stat" {
                 if keyval {
                     stat_type = vec[1].to_string().to_lowercase();
@@ -221,6 +235,15 @@ impl WhiteboxTool for ExtractRasterStatistics {
             if !output_file.contains(&sep) {
                 output_file = format!("{}{}", working_directory, output_file);
             }
+        }
+        if !output_html_file.is_empty() {
+            if !output_html_file.contains(&sep) {
+                output_html_file = format!("{}{}", working_directory, output_html_file);
+            }
+        }
+        if output_file.is_empty() && output_html_file.is_empty() {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "At least one of --output or --out_table must be specified."));
         }
 
         if verbose { println!("Reading data...") };
@@ -404,21 +427,21 @@ impl WhiteboxTool for ExtractRasterStatistics {
             };
         }
 
-        if out_table {
-            let output_html_file = if output_file.is_empty() {
-                // output_file not specified and should be based on input file
-                let p = path::Path::new(&input_file);
-                let mut extension = String::from(".");
-                let ext = p.extension().unwrap().to_str().unwrap();
-                extension.push_str(ext);
-                input_file.replace(&extension, ".html")
-            } else {
-                let p = path::Path::new(&output_file);
-                let mut extension = String::from(".");
-                let ext = p.extension().unwrap().to_str().unwrap();
-                extension.push_str(ext);
-                output_file.replace(&extension, ".html")
-            };
+        if !output_html_file.is_empty() { // out_table {
+            // let output_html_file = if output_file.is_empty() {
+            //     // output_file not specified and should be based on input file
+            //     let p = path::Path::new(&input_file);
+            //     let mut extension = String::from(".");
+            //     let ext = p.extension().unwrap().to_str().unwrap();
+            //     extension.push_str(ext);
+            //     input_file.replace(&extension, ".html")
+            // } else {
+            //     let p = path::Path::new(&output_file);
+            //     let mut extension = String::from(".");
+            //     let ext = p.extension().unwrap().to_str().unwrap();
+            //     extension.push_str(ext);
+            //     output_file.replace(&extension, ".html")
+            // };
             
 
             let f = File::create(output_html_file.clone())?;
@@ -457,7 +480,7 @@ impl WhiteboxTool for ExtractRasterStatistics {
                     }
                     td, th {
                         border: 1px solid #222222;
-                        text-align: left;
+                        text-align: center;
                         padding: 8px;
                     }
                     tr:nth-child(even) {
