@@ -1007,6 +1007,18 @@ class WbRunner(tk.Frame):
 
         return (list, selected_item)
 
+    # def get_toolboxes(self):
+    #     toolboxes = set()
+    #     for item in wbt.list_tools().splitlines():
+    #         if item:
+    #             if "available tools" not in item.lower():
+    #                 value = item.split(":")[0]
+    #                 tb = wbt.toolbox(value)
+    #                 toolboxes.add(tb.strip())
+
+    #     for v in sorted(toolboxes):
+    #         self.print_line_to_output(v)
+
     def refresh_tools(self):
         (self.toolslist, selected_item) = self.get_tools_list()
         self.tools_listbox.delete(0, len(self.toolslist))

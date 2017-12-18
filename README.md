@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 252 tools:
+The library currently contains the following 253 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -310,6 +310,7 @@ The library currently contains the following 252 tools:
 - ***Cos***: Returns the cosine (cos) of each values in a raster.
 - ***Cosh***: Returns the hyperbolic cosine (cosh) of each values in a raster.
 - ***CrispnessIndex***: Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
+- ***CrossTabulation***: Performs a cross-tabulation on two categorical images.
 - ***CumulativeDistribution***: Converts a raster image to its cumulative distribution function.
 - ***Decrement***: Decreases the values of each grid cell in an input raster by 1.0.
 - ***Divide***: Performs a division operation on two rasters or a raster and a constant value.

@@ -72,7 +72,7 @@ impl ReclassEqualInterval {
 
         parameters.push(ToolParameter{
             name: "Ending Value".to_owned(), 
-            flags: vec!["--start_val".to_owned()], 
+            flags: vec!["--end_val".to_owned()], 
             description: "Optional ending value (default is input maximum value).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,

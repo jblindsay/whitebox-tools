@@ -184,6 +184,7 @@ impl ToolManager {
         tool_names.push("Cos".to_string());
         tool_names.push("Cosh".to_string());
         tool_names.push("CrispnessIndex".to_string());
+        tool_names.push("CrossTabulation".to_string());
         tool_names.push("CumulativeDistribution".to_string());
         tool_names.push("Decrement".to_string());
         tool_names.push("Divide".to_string());
@@ -516,6 +517,7 @@ impl ToolManager {
             "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
             "cosh" => Some(Box::new(tools::math_stat_analysis::Cosh::new())),
             "crispnessindex" => Some(Box::new(tools::math_stat_analysis::CrispnessIndex::new())),
+            "crosstabulation" => Some(Box::new(tools::math_stat_analysis::CrossTabulation::new())),
             "cumulativedistribution" => Some(Box::new(tools::math_stat_analysis::CumulativeDistribution::new())),
             "decrement" => Some(Box::new(tools::math_stat_analysis::Decrement::new())),
             "divide" => Some(Box::new(tools::math_stat_analysis::Divide::new())),

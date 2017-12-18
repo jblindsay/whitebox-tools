@@ -68,7 +68,7 @@ impl ImageAutocorrelation {
             description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: false
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -250,7 +250,6 @@ impl WhiteboxTool for ImageAutocorrelation {
         let mut z_r = vec![0f64; num_files];
         let mut p_value_n = vec![0f64; num_files];
         let mut p_value_r = vec![0f64; num_files];
-        // let mut correlation_matrix = vec![vec![-99f64; num_files]; num_files];
         let mut rows: isize = 0;
         let mut columns: isize = 0;
         if verbose { println!("Calculating image averages..."); }
@@ -439,7 +438,7 @@ impl WhiteboxTool for ImageAutocorrelation {
         // output the names of the input files.
         for a in 0..num_files {
             let value = &file_names[a];
-            writer.write_all(&format!("<p><strong>Image {}</strong>: {}</p", a + 1, value).as_bytes())?;
+            writer.write_all(&format!("<p><strong>Image {}</strong>: {}</p>", a + 1, value).as_bytes())?;
 
             writer.write_all("<div><table align=\"center\">".as_bytes())?;
             writer.write_all("<caption>Moran's I Results</caption>".as_bytes())?;
