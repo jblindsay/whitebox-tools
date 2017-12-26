@@ -81,7 +81,7 @@ impl ImageAutocorrelation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.htm --contiguity=Bishopsl",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.html --contiguity=Bishops",
                             short_exe,
                             name)
                 .replace("*", &sep);

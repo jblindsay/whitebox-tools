@@ -63,7 +63,7 @@ impl FillSingleCellPits {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=NewRaster.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=NewRaster.dep", short_exe, name).replace("*", &sep);
 
         FillSingleCellPits {
             name: name,

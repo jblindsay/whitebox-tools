@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: December 15, 2017
+Last Modified: December 23, 2017
 License: MIT
 
 NOTES: Add the ability to:
@@ -150,7 +150,7 @@ impl LidarIdwInterpolation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
         LidarIdwInterpolation { 
@@ -444,6 +444,29 @@ impl WhiteboxTool for LidarIdwInterpolation {
                         }
                     }
                     interp_vals.push(p.scan_angle as f64);
+                    if verbose {
+                        progress = (100.0_f64 * i as f64 / num_points) as i32;
+                        if progress != old_progress {
+                            println!("Binning points: {}%", progress);
+                            old_progress = progress;
+                        }
+                    }
+                }
+            }
+            "classs" => {
+                for i in 0..n_points {
+                    let p: PointData = input[i];
+                    if !p.class_bit_field.withheld() {
+                        if all_returns || (p.is_late_return() & late_returns) ||
+                           (p.is_early_return() & early_returns) {
+                            if include_class_vals[p.classification() as usize] {
+                                if p.z >= min_z && p.z <= max_z {
+                                    frs.insert(p.x, p.y, i);
+                                }
+                            }
+                        }
+                    }
+                    interp_vals.push(p.classification() as f64);
                     if verbose {
                         progress = (100.0_f64 * i as f64 / num_points) as i32;
                         if progress != old_progress {

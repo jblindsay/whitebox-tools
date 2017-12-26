@@ -91,8 +91,8 @@ impl ExtractValleys {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=pointer.dep -o=out.dep --variant='JandR' --line_thin
->>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=pointer.dep -o=out.dep --variant='lq' --filter=7 --line_thin", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.dep -o=out.dep --variant='JandR' --line_thin
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.dep -o=out.dep --variant='lq' --filter=7 --line_thin", short_exe, name).replace("*", &sep);
 
         ExtractValleys {
             name: name,

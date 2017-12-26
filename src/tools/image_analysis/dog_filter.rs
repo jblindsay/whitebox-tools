@@ -77,7 +77,7 @@ impl DiffOfGaussianFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma1=2.0 --sigma2=4.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma1=2.0 --sigma2=4.0", short_exe, name).replace("*", &sep);
     
         DiffOfGaussianFilter { 
             name: name, 

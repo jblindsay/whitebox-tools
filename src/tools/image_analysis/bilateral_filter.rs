@@ -77,7 +77,7 @@ impl BilateralFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma_dist=2.5 --sigma_int=4.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --sigma_dist=2.5 --sigma_int=4.0", short_exe, name).replace("*", &sep);
     
         BilateralFilter { 
             name: name, 

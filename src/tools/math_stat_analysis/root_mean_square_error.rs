@@ -58,7 +58,7 @@ impl RootMeanSquareError {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.dep", short_exe, name).replace("*", &sep);
     
         RootMeanSquareError { 
             name: name, 

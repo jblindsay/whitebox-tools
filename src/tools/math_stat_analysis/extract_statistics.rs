@@ -110,8 +110,8 @@ impl ExtractRasterStatistics {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' -o='output.dep' --stat='minimum'
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' --out_table='output.html'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' -o='output.dep' --stat='minimum'
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' --features='groups.dep' --out_table='output.html'", short_exe, name).replace("*", &sep);
     
         ExtractRasterStatistics { 
             name: name, 

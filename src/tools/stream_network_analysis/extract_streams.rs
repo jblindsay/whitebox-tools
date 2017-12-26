@@ -78,7 +78,7 @@ impl ExtractStreams {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --flow_accum='d8accum.dep' -o='output.dep' --threshold=100.0  --zero_background", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --flow_accum='d8accum.dep' -o='output.dep' --threshold=100.0  --zero_background", short_exe, name).replace("*", &sep);
     
         ExtractStreams { 
             name: name, 

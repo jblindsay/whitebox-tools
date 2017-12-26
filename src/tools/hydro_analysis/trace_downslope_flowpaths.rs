@@ -83,7 +83,7 @@ impl TraceDownslopeFlowpaths {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --seed_pts=seeds.dep --flow_dir=flow_directions.dep --output=flow_paths.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --seed_pts=seeds.dep --flow_dir=flow_directions.dep --output=flow_paths.dep", short_exe, name).replace("*", &sep);
     
         TraceDownslopeFlowpaths { 
             name: name, 

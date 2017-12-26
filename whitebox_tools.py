@@ -82,6 +82,11 @@ class WhiteboxTools(object):
             if self.verbose:
                 args2.append("-v")
 
+            cl = ""
+            for v in args2:
+                cl += v + " "
+            callback(cl.strip() + "\n")
+
             proc = Popen(args2, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
 

@@ -76,7 +76,7 @@ impl LaplacianFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --variant='3x3(1)' --clip=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --variant='3x3(1)' --clip=1.0", short_exe, name).replace("*", &sep);
     
         LaplacianFilter { 
             name: name, 

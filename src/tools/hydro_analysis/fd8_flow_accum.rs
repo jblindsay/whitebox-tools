@@ -104,8 +104,8 @@ impl FD8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
     
         FD8FlowAccumulation { 
             name: name, 

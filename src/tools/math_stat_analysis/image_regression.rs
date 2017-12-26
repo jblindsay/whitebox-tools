@@ -153,6 +153,7 @@ impl WhiteboxTool for ImageRegression {
         let mut output_file = String::new();
         let mut residuals_file = String::new();
         let mut standardize_residuals = false;
+        let mut output_residuals = false;
 
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -191,6 +192,7 @@ impl WhiteboxTool for ImageRegression {
                 } else {
                     residuals_file = args[i + 1].to_string();
                 }
+                output_residuals = true;
             } else if vec[0].to_lowercase() == "-standardize" || vec[0].to_lowercase() == "--standardize" {
                 standardize_residuals = true;
             }
@@ -228,10 +230,6 @@ impl WhiteboxTool for ImageRegression {
         }
         if !output_file.contains(&sep) {
             output_file = format!("{}{}", working_directory, output_file);
-        }
-
-        if !residuals_file.contains(&sep) {
-            residuals_file = format!("{}{}", working_directory, residuals_file);
         }
 
         let input1 = Arc::new(Raster::new(&input_file1, "r")?);
@@ -363,7 +361,10 @@ impl WhiteboxTool for ImageRegression {
         let slope_t = slope / slope_se;
         let slope_pvalue =  2f64 * (1f64 - t.cdf(slope.abs() / slope_se));
         
-        if !residuals_file.is_empty() {
+        if output_residuals {
+            if !residuals_file.contains(&sep) {
+                residuals_file = format!("{}{}", working_directory, residuals_file);
+            }
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
                 let input1 = input1.clone();
@@ -635,7 +636,7 @@ impl WhiteboxTool for ImageRegression {
         let s2 = &format!("<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>", y_filename.clone(), slope, x_filename.clone(), sign.clone(), intercept.abs());
         writer.write_all(s2.as_bytes())?;
 
-        s = "<p>Caveat: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant
+        s = "<p>Caveat: Given a sufficiently large sample, extremely weak and non-notable relations can be found to be statistically significant
             and statistical significance says nothing about the practical significance of a difference.</p>";
         writer.write_all(s.as_bytes())?;
 

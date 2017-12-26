@@ -65,8 +65,8 @@ impl Centroid {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
     
         Centroid { 
             name: name, 

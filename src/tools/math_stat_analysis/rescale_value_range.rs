@@ -94,8 +94,8 @@ impl RescaleValueRange {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 --clip_max=200.0 ", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 --clip_max=200.0 ", short_exe, name).replace("*", &sep);
     
         RescaleValueRange { 
             name: name, 

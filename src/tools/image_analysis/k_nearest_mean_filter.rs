@@ -86,8 +86,8 @@ impl KNearestMeanFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=9 -k=5
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filtery=7 --filtery=9  -k=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=9 -k=5
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filtery=7 --filtery=9  -k=5", short_exe, name).replace("*", &sep);
     
         KNearestMeanFilter { 
             name: name, 

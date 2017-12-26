@@ -13,6 +13,7 @@ extern crate serde_json;
 pub mod io_utils;
 pub mod lidar;
 pub mod raster;
+pub mod rendering;
 pub mod tools;
 pub mod structures;
 
@@ -54,6 +55,7 @@ fn run() -> Result<(), Error> {
     let mut view_code = false;
     let mut tool_args_vec: Vec<String> = vec![];
     let mut verbose = false;
+    let mut finding_working_dir = false;
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
         // return Err(Error::new(ErrorKind::InvalidInput,
@@ -79,10 +81,12 @@ fn run() -> Result<(), Error> {
             if v.starts_with("=") {
                 v = v[1..v.len()].to_string();
             }
+            if v.trim().is_empty() {
+                finding_working_dir = true;
+            }
             if !v.ends_with(sep) {
                 v.push_str(sep);
             }
-            // working_dir = format!("\"{}\"", v);
             working_dir = v.to_string();
         } else if arg.starts_with("-run") || arg.starts_with("--run") || arg.starts_with("-r") {
             let mut v = arg.replace("--run", "")
@@ -153,7 +157,7 @@ fn run() -> Result<(), Error> {
         } else if arg.starts_with("-version") || arg.starts_with("--version") {
             version();
             return Ok(());
-        } else if arg.starts_with("-v") {
+        } else if arg.trim() == "-v" {
             verbose = true;
         } else if arg.starts_with("-") {
             // it's an arg to be fed to the tool
@@ -168,6 +172,12 @@ fn run() -> Result<(), Error> {
                 .to_string()
                 .clone()
             );
+            if finding_working_dir {
+                working_dir = arg.trim().to_string().clone();
+                finding_working_dir = false;
+            } else if tool_args_vec.len() > 0 {
+                tool_args_vec.push(arg.trim().to_string().clone());
+            }
         }
     }
 
@@ -177,6 +187,7 @@ fn run() -> Result<(), Error> {
     }
     let tm = ToolManager::new(&working_dir, &verbose)?;
     if run_tool {
+        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
         return tm.run_tool(tool_name, tool_args_vec);
     } else if tool_help {
         if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }

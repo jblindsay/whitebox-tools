@@ -75,7 +75,7 @@ impl RemoveOffTerrainObjects {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" --dem=DEM.dep -o=bare_earth_DEM.dep --filter=25 --slope=10.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=bare_earth_DEM.dep --filter=25 --slope=10.0", short_exe, name).replace("*", &sep);
     
         RemoveOffTerrainObjects { 
             name: name, 

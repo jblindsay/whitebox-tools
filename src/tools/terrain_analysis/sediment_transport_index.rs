@@ -85,7 +85,7 @@ impl SedimentTransportIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 --slope_exponent=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 --slope_exponent=1.0", short_exe, name).replace("*", &sep);
     
         SedimentTransportIndex { 
             name: name, 

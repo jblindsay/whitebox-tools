@@ -78,8 +78,8 @@ impl Reclass {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
->>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' --assign_mode ", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' --assign_mode ", short_exe, name).replace("*", &sep);
     
         Reclass { 
             name: name, 

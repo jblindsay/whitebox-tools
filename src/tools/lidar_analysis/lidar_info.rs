@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
-Last Modified: December 15, 2017
+Last Modified: December 26, 2017
 License: MIT
 */
 
@@ -93,7 +93,7 @@ impl LidarInfo {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las", short_exe, name).replace("*", &sep);
     
         LidarInfo { 
@@ -157,21 +157,22 @@ impl WhiteboxTool for LidarInfo {
             let vec = cmd.collect::<Vec<&str>>();
             keyval = false;
             if vec.len() > 1 { keyval = true; }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-vlr" || vec[0].to_lowercase() == "--vlr" {
+            } else if flag_val == "-vlr" {
                 show_vlrs = true;
-            } else if vec[0].to_lowercase() == "-geokeys" || vec[0].to_lowercase() == "--geokeys" {
+            } else if flag_val == "-geokeys" {
                 show_geokeys = true;
             }
         }

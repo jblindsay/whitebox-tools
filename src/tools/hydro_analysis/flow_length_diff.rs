@@ -64,7 +64,7 @@ impl FlowLengthDiff {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=output.dep", short_exe, name).replace("*", &sep);
     
         FlowLengthDiff { 
             name: name, 

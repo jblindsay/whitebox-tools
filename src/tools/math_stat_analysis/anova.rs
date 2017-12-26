@@ -73,7 +73,7 @@ impl Anova {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i=data.tif --features=classes.tif -o=anova.html", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=data.tif --features=classes.tif -o=anova.html", short_exe, name).replace("*", &sep);
     
         Anova { 
             name: name, 

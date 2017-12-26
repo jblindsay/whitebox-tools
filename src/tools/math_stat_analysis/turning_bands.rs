@@ -83,7 +83,7 @@ impl TurningBandsSimulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" --base=in.dep -o=out.dep --range=850.0 --iterations=2500", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.dep -o=out.dep --range=850.0 --iterations=2500", short_exe, name).replace("*", &sep);
 
         TurningBandsSimulation {
             name: name,

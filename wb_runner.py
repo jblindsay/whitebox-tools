@@ -857,8 +857,8 @@ class WbRunner(tk.Frame):
                 return
 
         self.print_line_to_output("")
-        self.print_line_to_output("Tool arguments:{}".format(args))
-        self.print_line_to_output("")
+        # self.print_line_to_output("Tool arguments:{}".format(args))
+        # self.print_line_to_output("")
         # Run the tool and check the return value for an error
         if wbt.run_tool(self.tool_name, args, self.custom_callback) == 1:
             print("Error running {}".format(self.tool_name))

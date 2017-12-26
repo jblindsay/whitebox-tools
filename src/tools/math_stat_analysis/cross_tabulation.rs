@@ -71,7 +71,7 @@ impl CrossTabulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif, file2.tif, file3.tif\" -o=outfile.htm --contiguity=Bishopsl",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=\"file1.tif\" --i2=\"file2.tif\" -o=outfile.html",
                             short_exe, name).replace("*", &sep);
 
         CrossTabulation {
@@ -286,15 +286,15 @@ impl WhiteboxTool for CrossTabulation {
                 }
                 .header {
                     font-weight: bold;
-                    text-align: centre;
+                    text-align: center;
                 }
             </style>
         </head>
         <body>
             <h1>Cross Tabulation Report</h1> ".as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Image 1</strong>: {}</p", input_file1.clone()).as_bytes())?;
-        writer.write_all(&format!("<p><strong>Image 2</strong>: {}</p", input_file2.clone()).as_bytes())?;
+        writer.write_all(&format!("<p><strong>Image 1</strong> (columns): {}</p>", input_file1.clone()).as_bytes())?;
+        writer.write_all(&format!("<p><strong>Image 2</strong> (rows): {}</p>", input_file2.clone()).as_bytes())?;
 
         // output the table.
         writer.write_all("<div><table align=\"center\">".as_bytes())?;

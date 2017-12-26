@@ -63,7 +63,7 @@ impl Quantiles {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --num_quantiles=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --num_quantiles=5", short_exe, name).replace("*", &sep);
     
         Quantiles { 
             name: name, 

@@ -87,7 +87,7 @@ impl AdaptiveFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25 --threshold = 2.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.dep -o=output.dep --filter=25 --threshold = 2.0", short_exe, name).replace("*", &sep);
     
         AdaptiveFilter { 
             name: name, 

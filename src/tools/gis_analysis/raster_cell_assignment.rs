@@ -68,7 +68,7 @@ impl RasterCellAssignment {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --assign='column'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --assign='column'", short_exe, name).replace("*", &sep);
 
         RasterCellAssignment { 
             name: name, 

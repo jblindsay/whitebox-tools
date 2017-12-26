@@ -159,6 +159,7 @@ impl ToolManager {
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
         tool_names.push("LidarHillshade".to_string());
+        tool_names.push("LidarHistogram".to_string());
         tool_names.push("LidarIdwInterpolation".to_string());
         tool_names.push("LidarInfo".to_string());
         tool_names.push("LidarJoin".to_string());
@@ -216,6 +217,7 @@ impl ToolManager {
         tool_names.push("Power".to_string());
         tool_names.push("Quantiles".to_string());
         tool_names.push("RandomField".to_string());
+        tool_names.push("RasterHistogram".to_string());
         tool_names.push("RasterSummaryStats".to_string());
         tool_names.push("Reciprocal".to_string());
         tool_names.push("RescaleValueRange".to_string());
@@ -486,6 +488,7 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarGroundPointFilter::new()))
             }
             "lidarhillshade" => Some(Box::new(tools::lidar_analysis::LidarHillshade::new())),
+            "lidarhistogram" => Some(Box::new(tools::lidar_analysis::LidarHistogram::new())),
             "lidaridwinterpolation" => {
                 Some(Box::new(tools::lidar_analysis::LidarIdwInterpolation::new()))
             }
@@ -549,6 +552,7 @@ impl ToolManager {
             "power" => Some(Box::new(tools::math_stat_analysis::Power::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
             "randomfield" => Some(Box::new(tools::math_stat_analysis::RandomField::new())),
+            "rasterhistogram" => Some(Box::new(tools::math_stat_analysis::RasterHistogram::new())),
             "rastersummarystats" => Some(Box::new(tools::math_stat_analysis::RasterSummaryStats::new())),
             "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),
             "rescalevaluerange" => Some(Box::new(tools::math_stat_analysis::RescaleValueRange::new())),
