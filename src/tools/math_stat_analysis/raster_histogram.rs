@@ -176,8 +176,12 @@ impl WhiteboxTool for RasterHistogram {
         let min = input.configs.display_min;
         let max = input.configs.display_max;
         let range = max - min + 0.00001f64;
-        let num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
-        let bin_width = range / num_bins as f64;
+        let mut num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
+        let mut bin_width = range / num_bins as f64;
+        if input.configs.photometric_interp == PhotometricInterpretation::Categorical {
+            bin_width = 1f64;
+            num_bins = range.ceil() as usize;
+        }
         let mut freq_data = vec![0usize; num_bins];
         
         let mut val: f64;

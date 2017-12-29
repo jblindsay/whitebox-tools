@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 255 tools:
+The library currently contains the following 256 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -241,6 +241,7 @@ The library currently contains the following 255 tools:
 - ***HistogramMatchingTwoImages***: This tool alters the cumulative distribution function of a raster image to that of another image.
 - ***IhsToRgb***: Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 - ***IntegralImage***: Transforms an input image (summed area table) into its integral image equivalent.
+- ***KMeansClustering***: Performs a k-means clustering operation on a multi-spectral dataset.
 - ***KNearestMeanFilter***: A k-nearest mean filter is a type of edge-preserving smoothing filter.
 - ***LaplacianFilter***: Performs a Laplacian filter on an image.
 - ***LaplacianOfGaussianFilter***: Performs a Laplacian-of-Gaussian (LoG) filter on an image.

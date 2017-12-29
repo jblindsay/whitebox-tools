@@ -115,6 +115,7 @@ impl ToolManager {
         tool_names.push("HistogramMatching".to_string());
         tool_names.push("HistogramMatchingTwoImages".to_string());
         tool_names.push("IntegralImage".to_string());
+        tool_names.push("KMeansClustering".to_string());
         tool_names.push("KNearestMeanFilter".to_string());
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
@@ -430,6 +431,7 @@ impl ToolManager {
             "histogrammatching" => Some(Box::new(tools::image_analysis::HistogramMatching::new())),
             "histogrammatchingtwoimages" => Some(Box::new(tools::image_analysis::HistogramMatchingTwoImages::new())),
             "integralimage" => Some(Box::new(tools::image_analysis::IntegralImage::new())),
+            "kmeansclustering" => Some(Box::new(tools::image_analysis::KMeansClustering::new())),
             "knearestmeanfilter" => Some(Box::new(tools::image_analysis::KNearestMeanFilter::new())),
             "laplacianfilter" => Some(Box::new(tools::image_analysis::LaplacianFilter::new())),
             "laplacianofgaussianfilter" => {

@@ -86,14 +86,6 @@ impl ExtractRasterStatistics {
             optional: true
         });
 
-        // parameters.push(ToolParameter{
-        //     name: "Would you like an HTML table output?".to_owned(), 
-        //     flags: vec!["--out_table".to_owned()], 
-        //     description: "Would you like an HTML table output?".to_owned(),
-        //     parameter_type: ParameterType::Boolean,
-        //     default_value: None,
-        //     optional: true
-        // });
         parameters.push(ToolParameter{
             name: "Output HTML Table File".to_owned(), 
             flags: vec!["--out_table".to_owned()], 
