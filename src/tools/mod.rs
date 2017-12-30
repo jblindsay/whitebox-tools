@@ -67,9 +67,11 @@ impl ToolManager {
         tool_names.push("BreachDepressions".to_string());
         tool_names.push("BreachSingleCellPits".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
+        tool_names.push("D8MassFlux".to_string());
         tool_names.push("D8Pointer".to_string());
         tool_names.push("DepthInSink".to_string());
         tool_names.push("DInfFlowAccumulation".to_string());
+        tool_names.push("DInfMassFlux".to_string());
         tool_names.push("DInfPointer".to_string());
         tool_names.push("DownslopeDistanceToStream".to_string());
         tool_names.push("DownslopeFlowpathLength".to_string());
@@ -360,11 +362,13 @@ impl ToolManager {
             "d8flowaccumulation" => {
                 Some(Box::new(tools::hydro_analysis::D8FlowAccumulation::new()))
             }
+            "d8massflux" => Some(Box::new(tools::hydro_analysis::D8MassFlux::new())),
             "d8pointer" => Some(Box::new(tools::hydro_analysis::D8Pointer::new())),
             "depthinsink" => Some(Box::new(tools::hydro_analysis::DepthInSink::new())),
             "dinfflowaccumulation" => {
                 Some(Box::new(tools::hydro_analysis::DInfFlowAccumulation::new()))
             }
+            "dinfmassflux" => Some(Box::new(tools::hydro_analysis::DInfMassFlux::new())),
             "dinfpointer" => Some(Box::new(tools::hydro_analysis::DInfPointer::new())),
             "downslopedistancetostream" => {
                 Some(Box::new(tools::hydro_analysis::DownslopeDistanceToStream::new()))

@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 256 tools:
+The library currently contains the following 258 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -192,9 +192,11 @@ The library currently contains the following 256 tools:
 - ***BreachDepressions***: Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
 - ***BreachSingleCellPits***: Removes single-cell pits from an input DEM by breaching.
 - ***D8FlowAccumulation***: Calculates a D8 flow accumulation raster from an input DEM.
+- ***D8MassFlux***: Performs a D8 mass flux calculation.
 - ***D8Pointer***: Calculates a D8 flow pointer raster from an input DEM.
 - ***DepthInSink***: Measures the depth of sinks (depressions) in a DEM.
 - ***DInfFlowAccumulation***: Calculates a D-infinity flow accumulation raster from an input DEM.
+- ***DInfMassFlux***: Performs a D-infinity mass flux calculation.
 - ***DInfPointer***: Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 - ***DownslopeDistanceToStream***: Measures distance to the nearest downslope stream cell.
 - ***DownslopeFlowpathLength***: Calculates the downslope flowpath length from each cell to basin outlet.

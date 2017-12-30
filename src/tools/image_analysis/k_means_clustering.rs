@@ -253,6 +253,14 @@ impl WhiteboxTool for KMeansClustering {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        if !output_html_file.contains(&sep) {
+            output_html_file = format!("{}{}", working_directory, output_html_file);
+        }
+
+        if !output_html_file.ends_with(".html") {
+            output_html_file.push_str(".html");
+        }
+
         let mut cmd = input_files_str.split(";");
         let mut input_files = cmd.collect::<Vec<&str>>();
         if input_files.len() == 1 {
