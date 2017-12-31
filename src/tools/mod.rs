@@ -54,6 +54,7 @@ impl ToolManager {
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
         tool_names.push("PickFromList".to_string());
+        tool_names.push("RadiusOfGyration".to_string());
         tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
@@ -343,6 +344,7 @@ impl ToolManager {
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
+            "radiusofgyration" => Some(Box::new(tools::gis_analysis::RadiusOfGyration::new())),
             "rastercellassignment" => Some(Box::new(tools::gis_analysis::RasterCellAssignment::new())),
             "reclass" => Some(Box::new(tools::gis_analysis::Reclass::new())),
             "reclassequalinterval" => {

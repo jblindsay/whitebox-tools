@@ -1,22 +1,37 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 22 2017
-Last Modified: December 14, 2017
+Created: December 31 2017
+Last Modified: December 31, 2017
 License: MIT
 
-NOTES: Will need to add support for vector polygons eventually.
+NOTES: This can be used to calculate the radius of gyration (RoG) for the polygon 
+features within a raster image. RoG measures how far across the landscape a polygon 
+extends its reach on average, given by the mean distance between cells in a patch 
+(Mcgarigal et al. 2002). The radius of gyration can be considered a measure of the 
+average distance an organism can move within a patch before encountering the patch 
+boundary from a random starting point (Mcgarigal et al. 2002). The input raster grid 
+should contain polygons with unique identifiers greater than zero. The user must also 
+specify the name of the output raster file (where the radius of gyration will be 
+assigned to each feature in the input file) and the specified option of outputting text 
+data.
+
+Should be updated to output to html table instead.
 */
 extern crate time;
+extern crate num_cpus;
 
 use std::env;
 use std::path;
 use std::f64;
+use std::sync::Arc;
+use std::sync::mpsc;
+use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
-pub struct Centroid {
+pub struct RadiusOfGyration {
     name: String,
     description: String,
     toolbox: String,
@@ -24,11 +39,11 @@ pub struct Centroid {
     example_usage: String,
 }
 
-impl Centroid {
-    pub fn new() -> Centroid { // public constructor
-        let name = "Centroid".to_string();
+impl RadiusOfGyration {
+    pub fn new() -> RadiusOfGyration { // public constructor
+        let name = "RadiusOfGyration".to_string();
         let toolbox = "GIS Analysis".to_string();
-        let description = "Calculates the centroid, or average location, of raster polygon objects.".to_string();
+        let description = "Calculates the distance of cells from their polygon's centroid.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -65,10 +80,9 @@ impl Centroid {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=polygons.dep -o=output.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=polygons.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=polygons.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
     
-        Centroid { 
+        RadiusOfGyration { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -78,7 +92,7 @@ impl Centroid {
     }
 }
 
-impl WhiteboxTool for Centroid {
+impl WhiteboxTool for RadiusOfGyration {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -112,8 +126,7 @@ impl WhiteboxTool for Centroid {
         let mut text_output = false;
         
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -124,19 +137,20 @@ impl WhiteboxTool for Centroid {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i+1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-text_output" || vec[0].to_lowercase() == "--text_output" {
+            } else if flag_val == "-text_output" {
                 text_output = true;
             }
         }
@@ -161,21 +175,124 @@ impl WhiteboxTool for Centroid {
 
         if verbose { println!("Reading data...") };
 
-        let input = Raster::new(&input_file, "r")?;
+        let input = Arc::new(Raster::new(&input_file, "r")?);
         let start = time::now();
         
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
+        let resolution_x = input.configs.resolution_x;
+        let resolution_y = input.configs.resolution_y;
 
         let min_val = input.configs.minimum.floor() as usize;
         let max_val = input.configs.maximum.ceil() as usize;
         let range = max_val - min_val;
         
+        let num_procs = num_cpus::get() as isize;
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut z: f64;
+                let mut a: usize;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut total_columns = vec![0usize; range + 1];
+                    let mut total_rows = vec![0usize; range + 1];
+                    let mut total_n = vec![0usize; range + 1];
+                    for col in 0..columns {
+                        z = input.get_value(row, col);
+                        if z > 0f64 && z != nodata {
+                            a = (z - min_val as f64) as usize;
+                            total_columns[a] += col as usize;
+                            total_rows[a] += row as usize;
+                            total_n[a] += 1usize;
+                        }
+                    }
+                    tx.send((total_columns, total_rows, total_n)).unwrap();
+                }
+            });
+        }
+
         let mut total_columns = vec![0usize; range + 1];
         let mut total_rows = vec![0usize; range + 1];
         let mut total_n = vec![0usize; range + 1];
         
+        for row in 0..rows {
+            let (tc, tr, n) = rx.recv().unwrap();
+
+            for a in 0..range+1 {
+                total_columns[a] += tc[a];
+                total_rows[a] += tr[a];
+                total_n[a] += n[a];
+            }
+            
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 1 of 3): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let mut centroid_x = vec![0f64; range + 1];
+        let mut centroid_y = vec![0f64; range + 1];
+        for a in 0..range+1 {
+            if total_n[a] > 0 {
+                centroid_x[a] = total_columns[a] as f64 / total_n[a] as f64;
+                centroid_y[a] = total_rows[a] as f64 / total_n[a] as f64;
+            }
+        }
+
+        let centroid_x = Arc::new(centroid_x);
+        let centroid_y = Arc::new(centroid_y);
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let centroid_x = centroid_x.clone();
+            let centroid_y = centroid_y.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut z: f64;
+                let mut a: usize;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut gyradius = vec![0f64; range + 1];
+                    for col in 0..columns {
+                        z = input.get_value(row, col);
+                        if z > 0f64 && z != nodata {
+                            a = (z - min_val as f64) as usize;
+                            gyradius[a] = ((col as f64 - centroid_x[a]) * resolution_x) * ((col as f64 - centroid_x[a]) * resolution_x) +
+                                ((row as f64 - centroid_y[a]) * resolution_y) * ((row as f64 - centroid_y[a]) * resolution_y)
+                        }
+                    }
+                    tx.send(gyradius).unwrap();
+                }
+            });
+        }
+
+        let mut gyradius = vec![0f64; range + 1];
+        for row in 0..rows {
+            let g = rx.recv().unwrap();
+            for a in 0..range+1 {
+                gyradius[a] += g[a];
+            }
+            
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 2 of 3): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        for a in 0..range+1 {
+            if total_n[a] > 0 && gyradius[a] > 0f64 {
+                gyradius[a] = (gyradius[a] / total_n[a] as f64).sqrt();
+            }
+        }
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let mut z: f64;
         let mut a: usize;
@@ -184,39 +301,25 @@ impl WhiteboxTool for Centroid {
                 z = input[(row, col)];
                 if z > 0f64 && z != nodata {
                     a = (z - min_val as f64) as usize;
-                    total_columns[a] += col as usize;
-                    total_rows[a] += row as usize;
-                    total_n[a] += 1usize;
+                    output.set_value(row, col, gyradius[a]);
+                } else {
+                    output.set_value(row, col, z);
                 }
             }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 3 of 3): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let mut col: isize;
-        let mut row: isize;
-        for a in 0..range+1 {
-            if total_n[a] > 0 {
-                col = (total_columns[a] / total_n[a]) as isize;
-                row = (total_rows[a] / total_n[a]) as isize;
-                output.set_value(row, col, (a + min_val) as f64);
-            }
-        }
-
         if text_output {
-            let mut col: f64;
-            let mut row: f64;
-            println!("Patch Centroid\nPatch ID\tColumn\tRow");
+            println!("Patch Radius of Gyration\nPatch ID\tValue");
             for a in 0..range+1 {
                 if total_n[a] > 0 {
-                    col = total_columns[a] as f64 / total_n[a] as f64;
-                    row = total_rows[a] as f64 / total_n[a] as f64;
-                    println!("{}\t{}\t{}", (a + min_val), col, row);
+                    println!("{:.0}\t{:.4}", (a + min_val), gyradius[a]);
                 }
             }
         }

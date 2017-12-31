@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 259 tools:
+The library currently contains the following 260 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -179,6 +179,7 @@ The library currently contains the following 259 tools:
 - ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 - ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 - ***PickFromList***: Outputs the value from a raster stack specified by a position raster.
+- ***RadiusOfGyration***: Calculates the distance of cells from their polygon's centroid.
 - ***RasterCellAssignment***: Assign row or column number to cells.
 - ***Reclass***: Reclassifies the values in a raster image.
 - ***ReclassEqualInterval***: Reclassifies the values in a raster image based on equal-ranges.
