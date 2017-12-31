@@ -130,6 +130,7 @@ impl ToolManager {
         tool_names.push("MedianFilter".to_string());
         tool_names.push("MinMaxContrastStretch".to_string());
         tool_names.push("MinimumFilter".to_string());
+        tool_names.push("ModifiedKMeansClustering".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("Opening".to_string());
@@ -452,6 +453,7 @@ impl ToolManager {
             "meanfilter" => Some(Box::new(tools::image_analysis::MeanFilter::new())),
             "medianfilter" => Some(Box::new(tools::image_analysis::MedianFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
+            "modifiedkmeansclustering" => Some(Box::new(tools::image_analysis::ModifiedKMeansClustering::new())),
             "normalizeddifferencevegetationindex" => {
                 Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new()))
             }
@@ -727,13 +729,21 @@ impl ToolManager {
     }
 
     pub fn toolbox(&self, tool_name: String) -> Result<(), Error> {
-        match self.get_tool(tool_name.as_ref()) {
-            Some(tool) => {
-                println!("{}", tool.get_toolbox())
-            }, 
-            None => {
-                return Err(Error::new(ErrorKind::NotFound,
-                                      format!("Unrecognized tool name {}.", tool_name)))
+        if !tool_name.is_empty() {
+            match self.get_tool(tool_name.as_ref()) {
+                Some(tool) => {
+                    println!("{}", tool.get_toolbox())
+                }, 
+                None => {
+                    return Err(Error::new(ErrorKind::NotFound,
+                                        format!("Unrecognized tool name {}.", tool_name)))
+                }
+            }
+        } else {
+            for val in &self.tool_names {
+                let tool = self.get_tool(&val).unwrap();
+                let toolbox = tool.get_toolbox();
+                println!("{}: {}\n", val, toolbox);
             }
         }
         Ok(())

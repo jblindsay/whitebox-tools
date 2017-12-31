@@ -224,7 +224,7 @@ class WhiteboxTools(object):
         except (OSError, ValueError, CalledProcessError) as err:
             return err
 
-    def toolbox(self, tool_name):
+    def toolbox(self, tool_name=''):
         ''' Retrieve the toolbox for a specific tool.
         '''
         try:

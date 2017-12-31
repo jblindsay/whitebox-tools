@@ -825,6 +825,8 @@ class WbRunner(tk.Frame):
 
         self.master.config(menu=menubar)
 
+        # self.get_toolboxes()
+
     def help(self):
         self.print_to_output(wbt.version())
 
@@ -1007,17 +1009,16 @@ class WbRunner(tk.Frame):
 
         return (list, selected_item)
 
-    # def get_toolboxes(self):
-    #     toolboxes = set()
-    #     for item in wbt.list_tools().splitlines():
-    #         if item:
-    #             if "available tools" not in item.lower():
-    #                 value = item.split(":")[0]
-    #                 tb = wbt.toolbox(value)
-    #                 toolboxes.add(tb.strip())
+    def get_toolboxes(self):
+        toolboxes = set()
+        for item in wbt.toolbox().splitlines():  # run wbt.toolbox with no tool specified--returns all
+            if item:
+                tb = item.split(":")[1].strip()
+                toolboxes.add(tb)
 
-    #     for v in sorted(toolboxes):
-    #         self.print_line_to_output(v)
+        for v in sorted(toolboxes):
+            # print(v)
+            self.print_line_to_output(v)
 
     def refresh_tools(self):
         (self.toolslist, selected_item) = self.get_tools_list()

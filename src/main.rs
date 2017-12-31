@@ -197,6 +197,7 @@ fn run() -> Result<(), Error> {
         return tm.tool_parameters(tool_name);
     } else if toolbox {
         if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        if tool_name.is_empty() { tool_name = String::new(); }
         return tm.toolbox(tool_name);
     } else if list_tools {
         if keywords.len() == 0 {
