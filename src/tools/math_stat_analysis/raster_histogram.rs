@@ -189,7 +189,7 @@ impl WhiteboxTool for RasterHistogram {
         for row in 0..rows {
             for col in 0..columns {
                 val = input.get_value(row, col);
-                if val != nodata && val >= min && max <= max {
+                if val != nodata && val >= min && val <= max {
                     bin = ((val - min) / bin_width).floor() as usize;
                     freq_data[bin] += 1;
                 }

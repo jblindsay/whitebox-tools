@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 260 tools:
+The library currently contains the following 261 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -267,6 +267,7 @@ The library currently contains the following 260 tools:
 - ***PrewittFilter***: Performs a Prewitt edge-detection filter on an image.
 - ***RangeFilter***: Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
 - ***RemoveSpurs***: Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
+- ***Resample***: Resamples one or more input images into a destination image.
 - ***RgbToIhs***: Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 - ***RobertsCrossFilter***: Performs a Robert's cross edge-detection filter on an image.
 - ***ScharrFilter***: Performs a Scharr edge-detection filter on an image.

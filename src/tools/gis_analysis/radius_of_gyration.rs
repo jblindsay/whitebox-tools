@@ -326,6 +326,8 @@ impl WhiteboxTool for RadiusOfGyration {
 
         let end = time::now();
         let elapsed_time = end - start;
+        output.configs.palette = "spectrum_black_background.plt".to_string();
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));

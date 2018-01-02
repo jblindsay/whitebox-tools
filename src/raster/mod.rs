@@ -112,7 +112,7 @@ impl Raster {
             raster_type: get_raster_type_from_file(file_name.to_string(), fm.clone()),
             ..Default::default()
         };
-        if r.file_mode == "r" {
+        if r.file_mode.contains("r") {
             match get_raster_type_from_file(file_name.to_string(), fm) {
                 RasterType::ArcBinary => {
                     let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data).unwrap();
