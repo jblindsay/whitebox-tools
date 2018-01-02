@@ -224,6 +224,7 @@ impl ToolManager {
         tool_names.push("Power".to_string());
         tool_names.push("Quantiles".to_string());
         tool_names.push("RandomField".to_string());
+        tool_names.push("RandomSample".to_string());
         tool_names.push("RasterHistogram".to_string());
         tool_names.push("RasterSummaryStats".to_string());
         tool_names.push("Reciprocal".to_string());
@@ -566,6 +567,7 @@ impl ToolManager {
             "power" => Some(Box::new(tools::math_stat_analysis::Power::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
             "randomfield" => Some(Box::new(tools::math_stat_analysis::RandomField::new())),
+            "randomsample" => Some(Box::new(tools::math_stat_analysis::RandomSample::new())),
             "rasterhistogram" => Some(Box::new(tools::math_stat_analysis::RasterHistogram::new())),
             "rastersummarystats" => Some(Box::new(tools::math_stat_analysis::RasterSummaryStats::new())),
             "reciprocal" => Some(Box::new(tools::math_stat_analysis::Reciprocal::new())),

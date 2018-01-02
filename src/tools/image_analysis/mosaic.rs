@@ -128,7 +128,7 @@ impl WhiteboxTool for Mosaic {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut output_file = String::new();
-        let mut method = String::new("cc");
+        let mut method = String::from("cc");
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,

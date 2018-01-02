@@ -122,11 +122,10 @@ impl WhiteboxTool for Resample {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut destination_file = String::new();
-        let mut method = String::new("cc");
+        let mut method = String::from("cc");
         
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");

@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 262 tools:
+The library currently contains the following 263 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -350,6 +350,7 @@ The library currently contains the following 262 tools:
 - ***Power***: Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 - ***Quantiles***: Transforms raster values into quantiles.
 - ***RandomField***: Creates an image containing random values.
+- ***RandomSample***: Creates an image containing randomly located sample grid cells with unique IDs.
 - ***RasterHistogram***: Creates a histogram from raster values.
 - ***RasterSummaryStats***: Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 - ***Reciprocal***: Returns the reciprocal (i.e. 1 / z) of values in a raster.
