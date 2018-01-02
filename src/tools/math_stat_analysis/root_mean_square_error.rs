@@ -244,7 +244,7 @@ impl WhiteboxTool for RootMeanSquareError {
                     let mut dx: f64;
                     let mut dy: f64;
                     let src_north = base_raster.configs.north;
-                    let src_east = base_raster.configs.east;
+                    let src_west = base_raster.configs.west;
                     let src_resolution_x = base_raster.configs.resolution_x;
                     let src_resolution_y = base_raster.configs.resolution_y;
                     let mut n0: f64;
@@ -262,7 +262,7 @@ impl WhiteboxTool for RootMeanSquareError {
                             if z1 != nodata {
                                 x = input.get_x_from_column(col);
                                 src_row = (src_north - y) / src_resolution_y;
-                                src_col = (x - src_east) / src_resolution_x;
+                                src_col = (x - src_west) / src_resolution_x;
                                 origin_row = src_row.floor() as isize;
                                 origin_col = src_col.floor() as isize;
                                 dx = src_col - src_col.floor();

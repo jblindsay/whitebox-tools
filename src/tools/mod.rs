@@ -132,6 +132,7 @@ impl ToolManager {
         tool_names.push("MinMaxContrastStretch".to_string());
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("ModifiedKMeansClustering".to_string());
+        tool_names.push("Mosaic".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("Opening".to_string());
@@ -457,6 +458,7 @@ impl ToolManager {
             "medianfilter" => Some(Box::new(tools::image_analysis::MedianFilter::new())),
             "minimumfilter" => Some(Box::new(tools::image_analysis::MinimumFilter::new())),
             "modifiedkmeansclustering" => Some(Box::new(tools::image_analysis::ModifiedKMeansClustering::new())),
+            "mosaic" => Some(Box::new(tools::image_analysis::Mosaic::new())),
             "normalizeddifferencevegetationindex" => {
                 Some(Box::new(tools::image_analysis::NormalizedDifferenceVegetationIndex::new()))
             }

@@ -423,7 +423,7 @@ impl Raster {
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {
-        self.configs.east + self.configs.resolution_x / 2f64 +
+        self.configs.west - self.configs.resolution_x / 2f64 +
         column as f64 * self.configs.resolution_x
     }
 
@@ -433,7 +433,7 @@ impl Raster {
     }
 
     pub fn get_column_from_x(&self, x: f64) -> isize {
-        ((x - self.configs.east) / self.configs.resolution_x).floor() as isize
+        ((x - self.configs.west) / self.configs.resolution_x).floor() as isize
     }
 
     pub fn get_row_from_y(&self, y: f64) -> isize {

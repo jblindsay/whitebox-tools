@@ -1,21 +1,27 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: January 1 2018
-Last Modified: January 1, 2018
+Created: January 2 2018
+Last Modified: January 2, 2018
 License: MIT
 
-Note: Resample is very similar in operation to the Mosaic tool. The Resample tool should 
-be used when there is an existing image into which you would like to dump information 
-from one or more source images. If the source images are more extensive than the 
-destination image, i.e. there are areas that extend beyond the destination image 
-boundaries, these areas will not be represented in the updated image. Grid cells in the 
-destination image that are not overlapping with any of the input source images will not 
-be updated, i.e. they will possess the same value as before the resampling operation. The 
-Mosaic tool is used when there is no existing destination image. In this case, a new 
-image is created that represents the bounding rectangle of each of the two or more input 
-images. Grid cells in the output image that do not overlap with any of the input images 
-will be assigned the NoData value.
+Note: This tool will create an image mosaic from one or more input image files using 
+one of three resampling methods including, nearest neighbour, bilinear interpolation, 
+and cubic convolution. The order of the input source image files is important. Grid 
+cells in the output image will be assigned the corresponding value determined from the 
+first image found in the list to possess an overlapping coordinate.
+
+Resample is very similar in operation to the Mosaic tool. The Resample tool should be 
+used when there is an existing image into which you would like to dump information from 
+one or more source images. If the source images are more extensive than the destination 
+image, i.e. there are areas that extend beyond the destination image boundaries, these 
+areas will not be represented in the updated image. Grid cells in the destination image 
+that are not overlapping with any of the input source images will not be updated, i.e. 
+they will possess the same value as before the resampling operation. The Mosaic tool is 
+used when there is no existing destination image. In this case, a new image is created 
+that represents the bounding rectangle of each of the two or more input images. Grid 
+cells in the output image that do not overlap with any of the input images will be 
+assigned the NoData value.
 */
 extern crate time;
 extern crate num_cpus;
@@ -30,7 +36,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
-pub struct Resample {
+pub struct Mosaic {
     name: String,
     description: String,
     toolbox: String,
@@ -38,11 +44,11 @@ pub struct Resample {
     example_usage: String,
 }
 
-impl Resample {
-    pub fn new() -> Resample { // public constructor
-        let name = "Resample".to_string();
+impl Mosaic {
+    pub fn new() -> Mosaic { // public constructor
+        let name = "Mosaic".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Resamples one or more input images into a destination image.".to_string();
+        let description = "Mosaics two or more images together.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -55,10 +61,10 @@ impl Resample {
         });
 
         parameters.push(ToolParameter{
-            name: "Destination File".to_owned(), 
-            flags: vec!["--destination".to_owned()], 
-            description: "Destination raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            name: "Output File".to_owned(), 
+            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
         });
@@ -79,9 +85,9 @@ impl Resample {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' --destination=dest.dep --method='cc", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' -o=dest.dep --method='cc", short_exe, name).replace("*", &sep);
     
-        Resample { 
+        Mosaic { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -91,7 +97,7 @@ impl Resample {
     }
 }
 
-impl WhiteboxTool for Resample {
+impl WhiteboxTool for Mosaic {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -121,7 +127,7 @@ impl WhiteboxTool for Resample {
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files = String::new();
-        let mut destination_file = String::new();
+        let mut output_file = String::new();
         let mut method = String::new("cc");
         
         if args.len() == 0 {
@@ -144,8 +150,8 @@ impl WhiteboxTool for Resample {
                 } else {
                     args[i+1].to_string()
                 };
-            } else if flag_val == "-destination" {
-                destination_file = if keyval {
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i+1].to_string()
@@ -177,14 +183,8 @@ impl WhiteboxTool for Resample {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !destination_file.contains(&sep) {
-            destination_file = format!("{}{}", working_directory, destination_file);
-        }
-
-        // see if the destination file exists.
-        if !path::Path::new(&destination_file).exists() {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The destination raster file does not exist. If you want to create a new file, try the Mosaic tool rather than Resample."));
+        if !output_file.contains(&sep) {
+            output_file = format!("{}{}", working_directory, output_file);
         }
 
         let mut cmd = input_files.split(";");
@@ -194,23 +194,25 @@ impl WhiteboxTool for Resample {
             input_vec = cmd.collect::<Vec<&str>>();
         }
         let num_files = input_vec.len();
-        if num_files < 1 {
+        if num_files < 2 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                "There is something incorrect about the input files. At least one input is required to operate this tool."));
+                "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
         }
 
         let start = time::now();
-
-        // Open the destination raster.
-        let mut destination = Raster::new(&destination_file, "rw")?;
-        let rows = destination.configs.rows as isize;
-        let columns = destination.configs.columns as isize;
-        let nodata = destination.configs.nodata;
 
         // read the input files
         if verbose { println!("Reading data...") };
         let mut inputs: Vec<Raster> = Vec::with_capacity(num_files);
         let mut nodata_vals: Vec<f64> = Vec::with_capacity(num_files);
+        let mut north = f64::NEG_INFINITY;
+        let mut south = f64::INFINITY;
+        let mut east = f64::NEG_INFINITY;
+        let mut west = f64::INFINITY;
+        let mut resolution_x = f64::INFINITY;
+        let mut resolution_y = f64::INFINITY;
+        let mut north_greater_than_south = true;
+        let mut east_greater_than_west = true;
         for i in 0..num_files {
             let value = input_vec[i];
             if !value.trim().is_empty() {
@@ -220,21 +222,80 @@ impl WhiteboxTool for Resample {
                 }
                 inputs.push(Raster::new(&input_file, "r")?);
                 nodata_vals.push(inputs[i].configs.nodata);
+
+                if i == 0 {
+                    if inputs[i].configs.north < inputs[i].configs.south {
+                        north_greater_than_south = false;
+                        north = f64::INFINITY;
+                        south = f64::NEG_INFINITY;
+                    }
+                    if inputs[i].configs.east < inputs[i].configs.west {
+                        east_greater_than_west = false;
+                        east = f64::INFINITY;
+                        west = f64::NEG_INFINITY;
+                    }
+                }
+                
+                if north_greater_than_south {
+                    if inputs[i].configs.north > north { north = inputs[i].configs.north; }
+                    if inputs[i].configs.south < south { south = inputs[i].configs.south; }
+                } else {
+                    if inputs[i].configs.north < north { north = inputs[i].configs.north; }
+                    if inputs[i].configs.south > south { south = inputs[i].configs.south; }
+                }
+                
+                if east_greater_than_west {
+                    if inputs[i].configs.east > east { east = inputs[i].configs.east; }
+                    if inputs[i].configs.west < west { west = inputs[i].configs.west; }
+                } else {
+                    if inputs[i].configs.east < east { east = inputs[i].configs.east; }
+                    if inputs[i].configs.west > west { west = inputs[i].configs.west; }
+                }
+                
+                if inputs[i].configs.resolution_x < resolution_x { 
+                    resolution_x = inputs[i].configs.resolution_x; 
+                }
+                if inputs[i].configs.resolution_y < resolution_y { 
+                    resolution_y = inputs[i].configs.resolution_y; 
+                }
             } else {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "There is a problem with the list of input files. At least one specified input is empty."));
             }
         }
 
+        // create the output image
+        let rows = ((north - south).abs() / resolution_y).ceil() as isize;
+        let columns = ((east - west).abs() / resolution_x).ceil() as isize;
+        let south: f64 = north - rows as f64 * resolution_y;
+        let east = west + columns as f64 * resolution_x;
+        let nodata = -32768.0f64;
+
+        let mut configs = RasterConfigs { ..Default::default() };
+        configs.rows = rows as usize;
+        configs.columns = columns as usize;
+        configs.north = north;
+        configs.south = south;
+        configs.east = east;
+        configs.west = west;
+        configs.resolution_x = resolution_x;
+        configs.resolution_y = resolution_y;
+        configs.nodata = nodata;
+        configs.data_type = inputs[0].configs.data_type;
+        configs.photometric_interp = inputs[0].configs.photometric_interp;
+        configs.palette = inputs[0].configs.palette.clone();
+
+        let mut output = Raster::initialize_using_config(&output_file, &configs);        
+
         // create the x and y arrays
         let mut x: Vec<f64> = Vec::with_capacity(columns as usize);
         for col in 0..columns {
-            x.push(destination.get_x_from_column(col));
+            x.push(output.get_x_from_column(col));
         }
 
         let mut y: Vec<f64> = Vec::with_capacity(rows as usize);
         for row in 0..rows {
-            y.push(destination.get_y_from_row(row));
+            y.push(output.get_y_from_row(row));
         }
 
         let x = Arc::new(x);
@@ -260,7 +321,7 @@ impl WhiteboxTool for Resample {
                                 row_src = inputs[i].get_row_from_y(y[row as usize]);
                                 col_src = inputs[i].get_column_from_x(x[col as usize]);
                                 // row_src = ((inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y).round() as isize;
-                                // col_src = ((x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x).round() as isize;
+                                //col_src = ((x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x).round() as isize;
                                 z = inputs[i].get_value(row_src, col_src);
                                 if z != nodata_vals[i] {
                                     data[col as usize] = z;
@@ -276,7 +337,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().unwrap();
                 for col in 0..columns {
                     if data[col as usize] != nodata {
-                        destination.set_value(row, col, data[col as usize]);
+                        output.set_value(row, col, data[col as usize]);
                     }
                 }
                 if verbose {
@@ -288,8 +349,8 @@ impl WhiteboxTool for Resample {
                 }
             }
         } else if method == "cc" {
-            destination.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            destination.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            output.configs.data_type = DataType::F32;
 
             for tid in 0..num_procs {
                 let inputs = inputs.clone();
@@ -320,6 +381,8 @@ impl WhiteboxTool for Resample {
                                 col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
+                                // if origin_row < 0 || origin_col < 0 { break; }
+                                // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
@@ -357,7 +420,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().unwrap();
                 for col in 0..columns as usize {
                     if data[col] != nodata {
-                        destination.set_value(row, col as isize, data[col]);
+                        output.set_value(row, col as isize, data[col]);
                     }
                 }
                 if verbose {
@@ -370,8 +433,8 @@ impl WhiteboxTool for Resample {
             }
 
         } else { // bilinear
-            destination.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            destination.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            output.configs.data_type = DataType::F32;
             for tid in 0..num_procs {
                 let inputs = inputs.clone();
                 let nodata_vals = nodata_vals.clone();
@@ -399,6 +462,8 @@ impl WhiteboxTool for Resample {
                                 col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
+                                // if origin_row < 0 || origin_col < 0 { break; }
+                                // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
@@ -436,7 +501,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().unwrap();
                 for col in 0..columns as usize {
                     if data[col] != nodata {
-                        destination.set_value(row, col as isize, data[col]);
+                        output.set_value(row, col as isize, data[col]);
                     }
                 }
                 if verbose {
@@ -451,11 +516,12 @@ impl WhiteboxTool for Resample {
         
         let end = time::now();
         let elapsed_time = end - start;
-        destination.add_metadata_entry(format!("Modified by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!("Modified by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!("Resampling method: {}", method));
         
         if verbose { println!("Saving data...") };
-        let _ = match destination.write() {
-            Ok(_) => if verbose { println!("Destination file written") },
+        let _ = match output.write() {
+            Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
 
