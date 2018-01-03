@@ -209,6 +209,7 @@ impl ToolManager {
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
         tool_names.push("KappaIndex".to_string());
+        tool_names.push("KSTestForNormality".to_string());
         tool_names.push("LessThan".to_string());
         tool_names.push("Log10".to_string());
         tool_names.push("Log2".to_string());
@@ -552,6 +553,7 @@ impl ToolManager {
             "integerdivision" => Some(Box::new(tools::math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "kappaindex" => Some(Box::new(tools::math_stat_analysis::KappaIndex::new())),
+            "kstestfornormality" => Some(Box::new(tools::math_stat_analysis::KSTestForNormality::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
             "log10" => Some(Box::new(tools::math_stat_analysis::Log10::new())),
             "log2" => Some(Box::new(tools::math_stat_analysis::Log2::new())),
