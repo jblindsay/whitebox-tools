@@ -54,7 +54,7 @@ class FileSelector(tk.Frame):
         self.label.grid(row=0, column=0, sticky=tk.W)
         self.label.columnconfigure(0, weight=1)
 
-        if self.optional:
+        if not self.optional:
             self.label['text'] = self.label['text'] + "*"
 
         fs_frame = ttk.Frame(self, padding='0.0i')
@@ -185,7 +185,7 @@ class FileOrFloat(tk.Frame):
         self.label.grid(row=0, column=0, sticky=tk.W)
         self.label.columnconfigure(0, weight=1)
 
-        if self.optional:
+        if not self.optional:
             self.label['text'] = self.label['text'] + "*"
 
         fs_frame = ttk.Frame(self, padding='0.0i')
@@ -334,7 +334,7 @@ class MultifileSelector(tk.Frame):
         self.label.grid(row=0, column=0, sticky=tk.W)
         self.label.columnconfigure(0, weight=1)
 
-        if self.optional:
+        if not self.optional:
             self.label['text'] = self.label['text'] + "*"
 
         fs_frame = ttk.Frame(self, padding='0.0i')
@@ -572,7 +572,7 @@ class DataInput(tk.Frame):
         self.entry.grid(row=0, column=1, sticky=tk.NSEW)
         self.entry.columnconfigure(1, weight=10)
 
-        if self.optional:
+        if not self.optional:
             self.label['text'] = self.label['text'] + "*"
 
         if ("Integer" in self.parameter_type or

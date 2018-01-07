@@ -153,31 +153,31 @@ impl WhiteboxTool for BlockMinimum {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-resolution" ||
-                      vec[0].to_lowercase() == "--resolution" {
-                if keyval {
-                    grid_res = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-resolution" {
+                grid_res = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
-                if keyval {
-                    palette = vec[1].to_string();
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-palette" {
+                palette = if keyval {
+                    vec[1].to_string()
                 } else {
-                    palette = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 

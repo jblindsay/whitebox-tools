@@ -107,8 +107,8 @@ impl LasFile {
         self.header.min_z = f64::INFINITY;
         self.header.max_z = f64::NEG_INFINITY;
 
-		self.header.system_id = "LiDAR Tools by John Lindsay     ".to_string();
-		self.header.generating_software = "LiDAR Tools                     ".to_string();
+		self.header.system_id = "WhiteboxTools by John Lindsay   ".to_string();
+		self.header.generating_software = "WhiteboxTools                   ".to_string();
 		self.header.number_of_points_by_return = [0, 0, 0, 0, 0];
 
 		self.header.x_scale_factor = 0.0001;
@@ -181,7 +181,9 @@ impl LasFile {
 
         self.header.number_of_points += 1;
         if which_return == 0 { which_return = 1; }
-        self.header.number_of_points_by_return[which_return-1] += 1;
+        if which_return <= 5 {
+            self.header.number_of_points_by_return[which_return-1] += 1;
+        }
     }
 
     pub fn get_record(&self, index: usize) -> LidarPointRecord {
@@ -396,7 +398,7 @@ impl LasFile {
                     vlr.binary_data.push(buffer[offset + i as usize]);
                 }
                 offset += vlr.record_length_after_header as usize;
-
+                
                 if vlr.record_id == 34_735 {
                     self.geokeys.add_key_directory(&vlr.binary_data);
                 } else if vlr.record_id == 34_736 {
@@ -434,7 +436,6 @@ impl LasFile {
                     self.use_point_intensity = false;
                     self.use_point_userdata = false;
                 }
-
 
                 for i in 0..self.header.number_of_points {
                     offset = (self.header.offset_to_points + (i as u32) * (self.header.point_record_length as u32)) as usize;
@@ -612,7 +613,7 @@ impl LasFile {
         }
         writer.write_all(self.header.system_id.as_bytes())?; //string_bytes));
         
-        self.header.generating_software = fixed_length_string("whitebox_tools by John Lindsay", 32);
+        self.header.generating_software = fixed_length_string("WhiteboxTools                   ", 32);
         writer.write_all(self.header.generating_software.as_bytes())?;
         
         let now = time::now();
@@ -642,7 +643,7 @@ impl LasFile {
         
         u8_bytes = unsafe {mem::transmute(self.header.point_format)};
         writer.write_all(&u8_bytes)?;
-        
+
         // Intensity and userdata are both optional. Figure out if they need to be read.
         // The only way to do this is to compare the point record length by point format
         let rec_lengths = [ [20_u16, 18_u16, 19_u16, 17_u16],
@@ -709,7 +710,7 @@ impl LasFile {
         
         u64_bytes = unsafe { mem::transmute(self.header.waveform_data_start) };
         writer.write_all(&u64_bytes)?;
-        
+
         ///////////////////////////////
         // Write the VLRs to the file /
         ///////////////////////////////
@@ -720,7 +721,7 @@ impl LasFile {
 
             let user_id: &str = &vlr.user_id;
             //string_bytes = unsafe { mem::transmute(user_id) };
-            writer.write_all(user_id.as_bytes())?; //string_bytes));
+            writer.write_all(fixed_length_string(user_id, 16).as_bytes())?; //string_bytes));
             
             u16_bytes = unsafe { mem::transmute(vlr.record_id) };
             writer.write_all(&u16_bytes)?;
@@ -730,7 +731,7 @@ impl LasFile {
             
             let description: &str = &vlr.description;
             //string_bytes = unsafe { mem::transmute(description) };
-            writer.write_all(description.as_bytes())?;
+            writer.write_all(fixed_length_string(description, 32).as_bytes())?;
             
             writer.write_all(&vlr.binary_data)?;
         }

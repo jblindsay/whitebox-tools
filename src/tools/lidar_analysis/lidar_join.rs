@@ -137,9 +137,6 @@ impl WhiteboxTool for LidarJoin {
         }
 
         let sep = std::path::MAIN_SEPARATOR;
-        // if !working_directory.ends_with(sep) {
-        //     working_directory.push_str(&(sep.to_string()));
-        // }
 
         if !output_file.contains(sep) {
             output_file = format!("{}{}", working_directory, output_file);

@@ -132,24 +132,25 @@ impl WhiteboxTool for LidarKappaIndex {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i1" || vec[0].to_lowercase() == "--i1" || vec[0].to_lowercase() == "--input1" {
-                if keyval {
-                    input_file1 = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i1" || flag_val == "-input1" {
+                input_file1 = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file1 = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--i2" || vec[0].to_lowercase() == "--input2" {
-                if keyval {
-                    input_file2 = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-i2" || flag_val == "-input2" {
+                input_file2 = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file2 = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
+                    args[i+1].to_string()
+                };
             }
         }
 
