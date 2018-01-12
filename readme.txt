@@ -47,25 +47,26 @@ for more details.
 
 Release Notes:
 
-Version 0.2 ()
+Version 0.2 (12-02-2018)
 
 - Added the following tools:
-KSTestForNormality
-RadomSample
-Mosaic
-Resample
-RadiusOfGyration
-KMeansClustering
-ModifiedKMeansClustering
-D8MassFlux
-DInfMassFlux
-RasterHistogram
-LidarHistogram
-CrossTabulation
-ImageAutocorrelation
-ExtractRasterStatistics
-AggregateRaster
-Viewshed
+    KSTestForNormality
+    RadomSample
+    Mosaic
+    Resample
+    RadiusOfGyration
+    KMeansClustering
+    ModifiedKMeansClustering
+    D8MassFlux
+    DInfMassFlux
+    RasterHistogram
+    LidarHistogram
+    CrossTabulation
+    ImageAutocorrelation
+    ExtractRasterStatistics
+    AggregateRaster
+    Viewshed
 
 - Fixed several bugs including one affecting the reading of LAS files.
+
 - Numerous enhancements
