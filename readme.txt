@@ -44,3 +44,28 @@ At the command prompt (after cd'ing to this folder, which contains the script).
 
 WhiteboxTools is distributed under a permissive MIT open-source license. See LICENSE.txt 
 for more details.
+
+Release Notes:
+
+Version 0.2 ()
+
+- Added the following tools:
+KSTestForNormality
+RadomSample
+Mosaic
+Resample
+RadiusOfGyration
+KMeansClustering
+ModifiedKMeansClustering
+D8MassFlux
+DInfMassFlux
+RasterHistogram
+LidarHistogram
+CrossTabulation
+ImageAutocorrelation
+ExtractRasterStatistics
+AggregateRaster
+Viewshed
+
+- Fixed several bugs including one affecting the reading of LAS files.
+- Numerous enhancements

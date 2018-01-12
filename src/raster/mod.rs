@@ -290,7 +290,11 @@ impl Raster {
             let r: usize = row as usize;
             if c < self.configs.columns && r < self.configs.rows {
                 let idx = r * self.configs.columns + c;
-                self.data[idx] -= value;
+                if self.data[idx] != self.configs.nodata {
+                    self.data[idx] -= value;
+                } else {
+                    self.data[idx] = value;
+                }
             }
         }
     }
@@ -301,7 +305,11 @@ impl Raster {
             let r: usize = row as usize;
             if c < self.configs.columns && r < self.configs.rows {
                 let idx = r * self.configs.columns + c;
-                self.data[idx] += value;
+                if self.data[idx] != self.configs.nodata {
+                    self.data[idx] += value;
+                } else {
+                    self.data[idx] = value;
+                }
             }
         }
     }

@@ -6,7 +6,8 @@ Last Modified: Dec. 15, 2017
 License: MIT
 
 NOTES: This tool implements a highly modified form of the algorithm described by 
-        Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving mesh denoising
+        Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving 
+        mesh denoising
 */
 extern crate time;
 extern crate nalgebra as na;
@@ -331,6 +332,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
         }
 
+        let t1 = time::now();
+        println!("{}", format!("Fitting planes: {}", t1 - start).replace("PT", ""));
+
         //////////////////////////////////////////////////////////
         // Smooth the normal vector field of the fitted planes. //
         //////////////////////////////////////////////////////////
@@ -410,6 +414,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 }
             }
         }
+
+        let t2 = time::now();
+        println!("{}", format!("Smoothing normal vectors: {}", t2 - t1).replace("PT", ""));
 
         /////////////////////
         // Smooth the DEM. //
@@ -806,8 +813,10 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             // }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let t3 = time::now();
+        println!("{}", format!("Updating DEM: {}", t3 - t2).replace("PT", ""));
+
+        let elapsed_time = time::now() - start;
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
         output.configs.palette = input.configs.palette.clone();

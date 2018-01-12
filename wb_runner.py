@@ -96,7 +96,9 @@ class FileSelector(tk.Frame):
                 ftypes = [('All files', '*.*')]
                 if 'Raster' in self.file_type:
                     ftypes = [('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                                                '*.tiff', '*.flt',
+                                                '*.sdat', '*.rdc',
+                                                '*.asc'))]
                 elif 'Lidar' in self.file_type:
                     ftypes = [("LiDAR files", ('*.las', '*.zip'))]
                 elif 'Vector' in self.file_type:
@@ -236,7 +238,9 @@ class FileOrFloat(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                            '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                                                '*.tiff', '*.flt',
+                                                '*.sdat', '*.rdc',
+                                                '*.asc'))]
             elif 'Lidar' in self.file_type:
                 ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:
@@ -376,7 +380,9 @@ class MultifileSelector(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                            '*.tiff', '*.flt', '*.sdat', '*.rdc'))]
+                                                '*.tiff', '*.flt',
+                                                '*.sdat', '*.rdc',
+                                                '*.asc'))]
             elif 'Lidar' in self.file_type:
                 ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:

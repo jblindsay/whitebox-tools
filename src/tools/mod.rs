@@ -302,6 +302,7 @@ impl ToolManager {
         tool_names.push("Slope".to_string());
         tool_names.push("TangentialCurvature".to_string());
         tool_names.push("TotalCurvature".to_string());
+        tool_names.push("Viewshed".to_string());
         tool_names.push("WetnessIndex".to_string());
 
         tool_names.sort();
@@ -694,6 +695,7 @@ impl ToolManager {
                 Some(Box::new(tools::terrain_analysis::TangentialCurvature::new()))
             }
             "totalcurvature" => Some(Box::new(tools::terrain_analysis::TotalCurvature::new())),
+            "viewshed" => Some(Box::new(tools::terrain_analysis::Viewshed::new())),
             "wetnessindex" => Some(Box::new(tools::terrain_analysis::WetnessIndex::new())),
 
             _ => None,

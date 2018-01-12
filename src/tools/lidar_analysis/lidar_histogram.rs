@@ -243,6 +243,7 @@ impl WhiteboxTool for LidarHistogram {
                 }
             }
         }
+        
 
         let mut range = max - min + 0.00001f64;
         let mut num_bins = 1000usize;

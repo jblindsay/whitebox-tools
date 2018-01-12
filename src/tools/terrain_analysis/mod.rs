@@ -34,6 +34,7 @@ mod sediment_transport_index;
 mod slope;
 mod tan_curvature;
 mod total_curvature;
+mod viewshed;
 mod wetness_index;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -72,4 +73,5 @@ pub use self::sediment_transport_index::SedimentTransportIndex;
 pub use self::slope::Slope;
 pub use self::tan_curvature::TangentialCurvature;
 pub use self::total_curvature::TotalCurvature;
+pub use self::viewshed::Viewshed;
 pub use self::wetness_index::WetnessIndex;
