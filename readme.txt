@@ -40,6 +40,10 @@ specifying tool parameters. To run this interface, simply type:
 
 python3 wb_runner.py
 
+Or, if Python 3 is the default Python intepreter:
+
+python wb_runner.py
+
 At the command prompt (after cd'ing to this folder, which contains the script).
 
 WhiteboxTools is distributed under a permissive MIT open-source license. See LICENSE.txt 
