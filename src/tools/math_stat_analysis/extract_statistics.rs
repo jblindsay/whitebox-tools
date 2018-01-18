@@ -82,7 +82,7 @@ impl ExtractRasterStatistics {
                 "standard deviation".to_owned(), 
                 "total".to_owned()
             ]),
-            default_value: Some("mean".to_owned()),
+            default_value: Some("average".to_owned()),
             optional: true
         });
 
