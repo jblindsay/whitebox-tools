@@ -55,9 +55,9 @@ impl D8FlowAccumulation {
         parameters.push(ToolParameter{
             name: "Output Type".to_owned(), 
             flags: vec!["--out_type".to_owned()], 
-            description: "Output type; one of 'cells', 'sca' (default), and 'ca'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["Cells".to_owned(), "Specific Contributing Area".to_owned(), "Catchment Area".to_owned()]),
-            default_value: Some("Specific Contributing Area".to_owned()),
+            description: "Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["cells".to_owned(), "specific contributing area".to_owned(), "catchment area".to_owned()]),
+            default_value: Some("specific contributing area".to_owned()),
             optional: true
         });
 
@@ -86,8 +86,8 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type='cells'
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --out_type='specific catchment area' --log --clip", short_exe, name).replace("*", &sep);
     
         D8FlowAccumulation { 
             name: name, 
