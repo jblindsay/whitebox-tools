@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: December 23, 2017
+Last Modified: January 21, 2018
 License: MIT
 
 NOTES: Add the ability to:
@@ -544,20 +544,10 @@ impl WhiteboxTool for LidarIdwInterpolation {
             let frs = Arc::new(frs); // wrap FRS in an Arc
             let interp_vals = Arc::new(interp_vals); // wrap interp_vals in an Arc
             let num_procs = num_cpus::get() as isize;
-            let row_block_size = rows / num_procs;
             let (tx, rx) = mpsc::channel();
-            let mut starting_row;
-            let mut ending_row = 0;
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let frs = frs.clone();
                 let interp_vals = interp_vals.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx1 = tx.clone();
                 thread::spawn(move || {
                     let mut index_n: usize;
@@ -566,7 +556,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     let mut dist: f64;
                     let mut val: f64;
                     let mut sum_weights: f64;
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
                             x = west + col as f64 * grid_res + 0.5;

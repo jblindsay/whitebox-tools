@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -259,23 +259,12 @@ impl WhiteboxTool for StreamSlopeContinuous {
                                 "The input files must have the same number of rows and columns and spatial extent."));
         }
 
-        let mut starting_row;
-        let mut ending_row = 0;
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let pntr = pntr.clone();
             let streams = streams.clone();
             let dem = dem.clone();
-            // let z_factor = z_factor.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
@@ -315,7 +304,7 @@ impl WhiteboxTool for StreamSlopeContinuous {
                 let mut n_inflowing: f64;
                 let mut z_dn: f64;
                 let mut c: usize;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         if streams[(row, col)] > 0f64 && streams[(row, col)] != nodata && 

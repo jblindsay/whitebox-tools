@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -301,12 +301,8 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut starting_row;
-        let mut ending_row = 0;
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input_data = input.clone();
             let d_x1 = d_x1.clone();
             let d_y1 = d_y1.clone();
@@ -314,19 +310,13 @@ impl WhiteboxTool for DiffOfGaussianFilter {
             let d_x2 = d_x2.clone();
             let d_y2 = d_y2.clone();
             let weights2 = weights2.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let (mut sum, mut z_final1, mut z_final2): (f64, f64, f64);
                 let mut z: f64;
                 let mut zn: f64;
                 let (mut x, mut y): (isize, isize);
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input_data[(row, col)];

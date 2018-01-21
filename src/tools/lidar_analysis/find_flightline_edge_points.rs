@@ -6,8 +6,6 @@ Last Modified: Dec. 15, 2017
 License: MIT
 */
 extern crate time;
-extern crate nalgebra as na;
-extern crate num_cpus;
 
 use std::env;
 use std::f64;

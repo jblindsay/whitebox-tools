@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 6, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -195,7 +195,6 @@ impl WhiteboxTool for RelativeTopographicPosition {
             filter_size_y += 1;
         }
 
-        // let (mut z, mut z_n): (f64, f64);
         let midpoint_x = (filter_size_x as f64 / 2f64).floor() as isize;
         let midpoint_y = (filter_size_y as f64 / 2f64).floor() as isize;
         let mut progress: usize;
@@ -211,28 +210,16 @@ impl WhiteboxTool for RelativeTopographicPosition {
         if verbose { println!("Reading data...") };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        // let input = Raster::new(&input_file, "r")?;
-
+        
         let start = time::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
 
-        let mut starting_row;
-        let mut ending_row = 0;
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
-            let rows = rows.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
@@ -241,7 +228,7 @@ impl WhiteboxTool for RelativeTopographicPosition {
                 let (mut n, mut total, mut mean) : (f64, f64, f64);
                 let (mut min_val, mut max_val): (f64, f64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                     let mut valid_cells: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -211,24 +211,14 @@ impl WhiteboxTool for Atan2 {
             let columns = in2.configs.columns as isize;
             let nodata2 = in2.configs.nodata;
 
-            let mut starting_row;
-            let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;
-            let row_block_size = rows / num_procs;
             let (tx, rx) = mpsc::channel();
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let in2 = in2.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx = tx.clone();
                 thread::spawn(move || {
                     let mut z2: f64;
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data: Vec<f64> = vec![nodata2; columns as usize];
                         for col in 0..columns {
                             z2 = in2[(row, col)];
@@ -278,24 +268,14 @@ impl WhiteboxTool for Atan2 {
             let columns = in1.configs.columns as isize;
             let nodata1 = in1.configs.nodata;
             
-            let mut starting_row;
-            let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;
-            let row_block_size = rows / num_procs;
             let (tx, rx) = mpsc::channel();
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let in1 = in1.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx = tx.clone();
                 thread::spawn(move || {
                     let mut z1: f64;
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data: Vec<f64> = vec![nodata1; columns as usize];
                         for col in 0..columns {
                             z1 = in1[(row, col)];
@@ -353,26 +333,16 @@ impl WhiteboxTool for Atan2 {
                                     "The input files must have the same number of rows and columns and spatial extent."));
             }
             
-            let mut starting_row;
-            let mut ending_row = 0;
             let num_procs = num_cpus::get() as isize;
-            let row_block_size = rows / num_procs;
             let (tx, rx) = mpsc::channel();
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let in1 = in1.clone();
                 let in2 = in2.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx = tx.clone();
                 thread::spawn(move || {
                     let mut z1: f64;
                     let mut z2: f64;
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data: Vec<f64> = vec![nodata1; columns as usize];
                         for col in 0..columns {
                             z1 = in1[(row, col)];

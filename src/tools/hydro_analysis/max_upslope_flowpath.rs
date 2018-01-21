@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -166,20 +166,10 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
         
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
 
-        let mut starting_row;
-        let mut ending_row = 0;
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
@@ -191,7 +181,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
                 let mut dir: i8;
                 let mut neighbouring_nodata: bool;
                 let mut interior_pit_found = false;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
@@ -246,18 +236,10 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         
-        id = 0;
-        ending_row = 0;
         let (tx, rx) = mpsc::channel();
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
             let flow_dir = flow_dir.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
@@ -265,7 +247,7 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
                 let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
                 let mut z: f64;
                 let mut count: i8;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];

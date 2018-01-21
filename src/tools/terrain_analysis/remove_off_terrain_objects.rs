@@ -4,6 +4,8 @@ Authors: Dr. John Lindsay
 Created: June 6, 2017
 Last Modified: Dec. 15, 2017
 License: MIT
+
+Note: This algorithm could be parallelized
 */
 extern crate time;
 

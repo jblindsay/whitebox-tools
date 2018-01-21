@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -253,22 +253,12 @@ impl WhiteboxTool for BilateralFilter {
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut starting_row;
-        let mut ending_row = 0;
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input_data = input.clone();
             let dx = dx.clone();
             let dy = dy.clone();
             let weights_d = weights_d.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let (mut sum, mut z_final): (f64, f64);
@@ -278,7 +268,7 @@ impl WhiteboxTool for BilateralFilter {
                 let mut weight: f64;
                 let mut weights_i = vec![0.0; num_pixels_in_filter];
 
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input_data[(row, col)];

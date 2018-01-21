@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -203,27 +203,17 @@ impl WhiteboxTool for LidarTophatTransform {
 
         let frs = Arc::new(frs); // wrap FRS in an Arc
         let input = Arc::new(input); // wrap input in an Arc
-        let mut starting_pt;
-        let mut ending_pt = 0;
         let num_procs = num_cpus::get();
-        let pt_block_size = n_points / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_pt < n_points {
+        for tid in 0..num_procs {
             let frs = frs.clone();
             let input = input.clone();
-            starting_pt = id * pt_block_size;
-            ending_pt = starting_pt + pt_block_size;
-            if ending_pt > n_points {
-                ending_pt = n_points;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut min_z: f64;
-                for i in starting_pt..ending_pt {
+                for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
                     let ret = frs.search(p.x, p.y);
                     min_z = f64::MAX;
@@ -255,24 +245,16 @@ impl WhiteboxTool for LidarTophatTransform {
         // Dilation //
         //////////////
         let neighbourhood_min = Arc::new(neighbourhood_min); // wrap neighbourhood_min in an Arc
-        id = 0;
-        ending_pt = 0;
-        while ending_pt < n_points {
+        for tid in 0..num_procs {
             let frs = frs.clone();
             let input = input.clone();
             let neighbourhood_min = neighbourhood_min.clone();
-            starting_pt = id * pt_block_size;
-            ending_pt = starting_pt + pt_block_size;
-            if ending_pt > n_points {
-                ending_pt = n_points;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut max_z: f64;
-                for i in starting_pt..ending_pt {
+                for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
                     let ret = frs.search(p.x, p.y);
                     max_z = f64::MIN;

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -259,28 +259,15 @@ impl WhiteboxTool for TotalFilter {
         let i = Arc::new(integral); // wrap integral in an Arc
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let (tx, rx) = mpsc::channel();
-        let mut starting_row;
-        let mut ending_row = 0;
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input_data = input.clone();
             let i = i.clone();
-            let rows = rows.clone();
-            let columns = columns.clone();
-            let nodata = nodata.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                 let mut z: f64;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     y1 = row - midpoint_y - 1;
                     if y1 < 0 {
                         y1 = 0;

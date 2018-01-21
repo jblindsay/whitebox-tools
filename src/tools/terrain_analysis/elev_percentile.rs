@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -244,28 +244,16 @@ impl WhiteboxTool for ElevPercentile {
         let mut binned_data : Array2D<i64> = Array2D::new(rows, columns, bin_nodata, bin_nodata)?;
 
         let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
         let (tx, rx) = mpsc::channel();
-
-        let mut starting_row;
-        let mut ending_row = 0;
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
-            let rows = rows.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
                 let mut z : f64;
                 let mut val : i64;
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![bin_nodata; columns as usize];
                     for col in 0..columns {
                         z = input.get_value(row, col);
@@ -293,20 +281,10 @@ impl WhiteboxTool for ElevPercentile {
 
         let bd = Arc::new(binned_data); // wrap binned_data in an Arc
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        // let mut starting_row;
-        ending_row = 0;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_row < rows {
+        for tid in 0..num_procs {
             let input = input.clone();
             let binned_data = bd.clone();
-            let rows = rows.clone();
-            starting_row = id * row_block_size;
-            ending_row = starting_row + row_block_size;
-            if ending_row > rows {
-                ending_row = rows;
-            }
-            id += 1;
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
@@ -315,7 +293,7 @@ impl WhiteboxTool for ElevPercentile {
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
                 let mut m : i64;
                 let (mut n, mut n_less_than): (f64, f64);
-                for row in starting_row..ending_row {
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
                     start_row = row - midpoint_y;
                     end_row = row + midpoint_y;
                     let mut histo : Vec<i64> = vec![];

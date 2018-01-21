@@ -18,34 +18,40 @@ pub fn read_arcascii(file_name: &String, configs: &mut RasterConfigs, data: &mut
     //let mut likely_float = false;
     for line in f.lines() {
         let line_unwrapped = line.unwrap();
-        let line_split = line_unwrapped.split(" ");
-        let vec = line_split.collect::<Vec<&str>>();
+        let mut line_split = line_unwrapped.split(" ");
+        let mut vec = line_split.collect::<Vec<&str>>();
+        if vec.len() == 1 {
+            line_split = line_unwrapped.split("\t");
+            vec = line_split.collect::<Vec<&str>>();
+        }
         if vec[0].to_lowercase().contains("nrows") {
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
         } else if vec[0].to_lowercase().contains("ncols") {
-            configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
         } else if vec[0].to_lowercase().contains("xllcorner") {
-            xllcenter = vec[1].trim().to_string().parse::<f64>().unwrap();
+            xllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("yllcorner") {
-            yllcenter = vec[1].trim().to_string().parse::<f64>().unwrap();
+            yllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("xllcenter") {
-            xllcorner = vec[1].trim().to_string().parse::<f64>().unwrap();
+            xllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("yllcenter") {
-            yllcorner = vec[1].trim().to_string().parse::<f64>().unwrap();
+            yllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("cellsize") {
-            configs.resolution_x = vec[1].trim().to_string().parse::<f64>().unwrap();
-            configs.resolution_y = vec[1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_x = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_y = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("nodata_value") {
-            if vec[1].contains(".") {
+            if vec[vec.len()-1].contains(".") {
                 //likely_float = true;
                 configs.data_type = DataType::F32;
             } else {
                 configs.data_type = DataType::I32;
             }
-            configs.nodata = vec[1].trim().to_string().parse::<f64>().unwrap();
+            configs.nodata = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else { // it's a data line
             for val in vec {
-                data.push(val.trim().to_string().parse::<f64>().unwrap());
+                if !val.trim().to_string().is_empty() {
+                    data.push(val.trim().to_string().parse::<f64>().unwrap());
+                }
             }
         }
     }

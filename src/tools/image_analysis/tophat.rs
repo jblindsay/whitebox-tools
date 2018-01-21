@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: January 21, 2018
 License: MIT
 */
 extern crate time;
@@ -238,31 +238,20 @@ impl WhiteboxTool for TophatTransform {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        let mut starting_row;
-        let mut ending_row = 0;
-        let num_procs = num_cpus::get() as isize;
-        let row_block_size = rows / num_procs;
-            
+        let num_procs = num_cpus::get() as isize;    
 
         if variant == "white".to_string() {
 
             // first perform the erosion
             let (tx, rx) = mpsc::channel();
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let input = input.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx1 = tx.clone();
                 thread::spawn(move || {
                     let (mut z_n, mut z) : (f64, f64);
                     let mut min_val: f64;
                     let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                         start_row = row - midpoint_y;
                         end_row = row + midpoint_y;
@@ -324,24 +313,16 @@ impl WhiteboxTool for TophatTransform {
 
             // now perform the dilation
             let erosion = Arc::new(erosion); // wrap the erosion result in an Arc
-            ending_row = 0;
             let (tx, rx) = mpsc::channel();
-            id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let input_data = input.clone();
                 let input = erosion.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx1 = tx.clone();
                 thread::spawn(move || {
                     let (mut z_n, mut z) : (f64, f64);
                     let mut max_val: f64;
                     let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                         start_row = row - midpoint_y;
                         end_row = row + midpoint_y;
@@ -421,21 +402,14 @@ impl WhiteboxTool for TophatTransform {
         } else { // black top-hat transform 
             // first perform the dilation
             let (tx, rx) = mpsc::channel();
-            let mut id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let input = input.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx1 = tx.clone();
                 thread::spawn(move || {
                     let (mut z_n, mut z) : (f64, f64);
                     let mut max_val: f64;
                     let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_max_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                         start_row = row - midpoint_y;
                         end_row = row + midpoint_y;
@@ -497,24 +471,16 @@ impl WhiteboxTool for TophatTransform {
 
             // now perform the erosion
             let dilation = Arc::new(dilation); // wrap the erosion result in an Arc
-            ending_row = 0;
             let (tx, rx) = mpsc::channel();
-            id = 0;
-            while ending_row < rows {
+            for tid in 0..num_procs {
                 let input_data = input.clone();
                 let input = dilation.clone();
-                starting_row = id * row_block_size;
-                ending_row = starting_row + row_block_size;
-                if ending_row > rows {
-                    ending_row = rows;
-                }
-                id += 1;
                 let tx1 = tx.clone();
                 thread::spawn(move || {
                     let (mut z_n, mut z) : (f64, f64);
                     let mut min_val: f64;
                     let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
-                    for row in starting_row..ending_row {
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_min_vals: VecDeque<f64> = VecDeque::with_capacity(filter_size_x);
                         start_row = row - midpoint_y;
                         end_row = row + midpoint_y;
