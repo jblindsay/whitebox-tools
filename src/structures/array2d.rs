@@ -29,17 +29,27 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
     pub fn set_value(&mut self, row: isize, column: isize, value: T) {
         if column >= 0 && row >= 0 {
             if column < self.columns && row < self.rows {
-                let idx = row * self.columns + column;
-                self.data[idx as usize] = value;
+                self.data[(row * self.columns + column) as usize] = value;
             }
         }
+    }
+
+    pub fn get_value(&self, row: isize, column: isize) -> T {
+        // if column < 0 { return self.nodata; }
+        // if row < 0 { return self.nodata; }
+        // if column >= self.columns { return self.nodata; }
+        // if row >= self.rows { return self.nodata; }
+        // let idx = row * self.columns + column;
+        // self.data[idx as usize]
+        if row < 0 || column < 0 { return self.nodata; }
+        if row >= self.rows || column >= self.columns { return self.nodata; }
+        self.data[(row * self.columns + column) as usize]
     }
 
     pub fn increment(&mut self, row: isize, column: isize, value: T) {
         if column >= 0 && row >= 0 {
             if column < self.columns && row < self.rows {
-                let idx = row * self.columns + column;
-                self.data[idx as usize] += value;
+                self.data[(row * self.columns + column) as usize] += value;
             }
         }
     }
@@ -47,8 +57,7 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
     pub fn decrement(&mut self, row: isize, column: isize, value: T) {
         if column >= 0 && row >= 0 {
             if column < self.columns && row < self.rows {
-                let idx = row * self.columns + column;
-                self.data[idx as usize] -= value;
+                self.data[(row * self.columns + column) as usize] -= value;
             }
         }
     }
@@ -57,8 +66,7 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
         for column in 0..values.len() as isize  {
             if row >= 0 {
                 if column < self.columns && row < self.rows {
-                    let idx = row * self.columns + column;
-                    self.data[idx as usize] = values[column as usize];
+                    self.data[(row * self.columns + column) as usize] = values[column as usize];
                 }
             }
         }
@@ -73,15 +81,6 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
             }
         }
         values
-    }
-
-    pub fn get_value(&self, row: isize, column: isize) -> T {
-        if column < 0 { return self.nodata; }
-        if row < 0 { return self.nodata; }
-        if column >= self.columns { return self.nodata; }
-        if row >= self.rows { return self.nodata; }
-        let idx = row * self.columns + column;
-        self.data[idx as usize]
     }
 
     pub fn columns(&self) -> isize { self.columns }

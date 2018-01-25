@@ -216,6 +216,10 @@ impl Raster {
     }
 
     pub fn get_value(&self, row: isize, column: isize) -> f64 {
+        // if row < 0 || column < 0 { return self.configs.nodata; }
+        // if row as usize >= self.configs.rows || column as usize >= self.configs.columns { return self.configs.nodata; }
+        // self.data[row as usize * self.configs.columns + column as usize]
+
         if column >= 0 && row >= 0 && column < self.configs.columns as isize && row < self.configs.rows as isize {
             let c: usize = column as usize;
             let r: usize = row as usize;
@@ -251,6 +255,10 @@ impl Raster {
 
         // it was too off grid to be reflected.
         self.configs.nodata
+
+
+
+
 
 
         // if column < 0 {
