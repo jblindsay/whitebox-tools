@@ -1,4 +1,4 @@
-pub struct LineGraph {
+pub struct Scattergram {
     pub parent_id: String,
     pub width: f64,
     pub height: f64,
@@ -7,10 +7,10 @@ pub struct LineGraph {
     pub series_labels: Vec<String>, 
     pub x_axis_label: String,
     pub y_axis_label: String,
-    pub draw_points: bool,
+    pub draw_trendline: bool,
 }
 
-impl LineGraph {
+impl Scattergram {
     pub fn get_svg(&self) -> String {
         let data_x2 = format!("{:?}", self.data_x);
         let data_y2 = format!("{:?}", self.data_y);
@@ -19,14 +19,14 @@ impl LineGraph {
         s.push_str(&format!(r#"
     <script>
       var plot = {
-        dataX: {}, // dataX need not be specified if it is a simple series of 1, 2, 3...
+        dataX: {},
         dataY: {},
         seriesLabels: {},
         xAxisLabel: "{}",
         yAxisLabel: "{}",
         width: {},
         height: {},
-        drawPoints: {},
+        drawTrendline: {},
         parentId: "{}"
       };"#, 
       data_x2,
@@ -36,15 +36,12 @@ impl LineGraph {
       self.y_axis_label, 
       self.width, 
       self.height,
-      self.draw_points,
-      self.parent_id
-      ));
+      self.draw_trendline,
+      self.parent_id));
 
         s.push_str(&r#"
-      "use strict";
         // which of the series labels is longest?
         var maxSeriesLabelLength = 0;
-        var a;
         for (a = 0; a < plot.seriesLabels.length; a++) {
           var sl = plot.seriesLabels[a];
           if (sl.length > maxSeriesLabelLength) { maxSeriesLabelLength = sl.length; }
@@ -75,6 +72,8 @@ impl LineGraph {
              [227, 119, 194], [127, 127, 127],
              [188, 189, 34], [23, 190, 207]];
 
+        var regularOpacity = 0.75;
+        var deselectedOpacity = 0.10;
 
         // create the svg element
         var svgns = "http://www.w3.org/2000/svg";
@@ -97,17 +96,6 @@ impl LineGraph {
 
         // how many series are there?
         var numSeries = plot.dataY.length;
-
-        // if dataX is empty, fill it with the series 1, 2, 3, 4, ...
-        if (plot.dataX.length == 0) {
-          for (s = 0; s < numSeries; s++) {
-            var seriesXData = [];
-            for (a = 0; a < plot.dataY[s].length; a++) {
-              seriesXData.push(a + 1);
-            }
-            plot.dataX.push(seriesXData);
-          }
-        }
 
         // style
         var style = document.createElement("style");
@@ -150,13 +138,15 @@ impl LineGraph {
         }`;
 
         var dataPointHoverWidth = 4.0;
-        if (!plot.drawPoints) {
-          dataPointHoverWidth = 6.0;
-        }
         var s;
         for (s = 0; s < numSeries; s++) {
           var clrNum = s % tableau20.length;
-          let clr = `rgb(${tableau20[clrNum][0]},${tableau20[clrNum][1]},${tableau20[clrNum][2]})`;
+          var red = tableau20[clrNum][0];
+          var green = tableau20[clrNum][1];
+          var blue = tableau20[clrNum][2];
+          let clr = `rgb(${red},${green},${blue})`;
+          // var w = 0.85;
+          // let tlClr = `rgb(${Math.floor(red * w)},${Math.floor(green * w)},${Math.floor(blue * w)})`;
 
           styleString += `
           .seriesLine${s} {
@@ -171,15 +161,15 @@ impl LineGraph {
             stroke: ${clr};
             opacity:1.0;
           }
-          .seriesLineThick${s} {
+          .seriesTrendline${s} {
             fill: none;
-            stroke-width:2;
+            stroke-width:1.5;
             stroke: ${clr};
             opacity:1.0;
           }
-          .seriesLineThick${s}:hover {
+          .seriesTrendline${s}:hover {
             fill: none;
-            stroke-width:3;
+            stroke-width:2.5;
             stroke: ${clr};
             opacity:1.0;
           }
@@ -187,13 +177,13 @@ impl LineGraph {
             fill: ${clr};
             stroke-width:0;
             stroke: ${clr};
-            opacity:1.0;
+            opacity: ${regularOpacity};
           }
-          .dataPoint${s}:hover {
+          .selectedDataPoint${s} {
             fill: red;
-            stroke-width:${dataPointHoverWidth};
+            stroke-width: ${dataPointHoverWidth};
             stroke: red;
-            opacity:1.0;
+            opacity: 1.0;
           }
           `;
         }
@@ -408,103 +398,131 @@ impl LineGraph {
         showValue.setAttribute('x', 10);
         showValue.setAttribute('text-anchor', 'start');
 
-        // draw the line(s)
+        // draw the data
         var g2 = document.createElementNS(svgns, "g");
         g2.setAttribute('id', 'lines');
         g.appendChild(g2);
 
         var radius = 3.0;
         if (totalNumPoints > 15) { radius = 2.5; }
-        if (!plot.drawPoints) {
-          radius = 1.0;
-        }
         for (let s = 0; s < numSeries; s++) {
           var numPoints = Math.min(plot.dataX[s].length, plot.dataY[s].length);
-          let seriesLine = document.createElementNS(svgns, "polyline");
-          var pointsString = `${(plot.dataX[s][0] - xMin) / xRange * plotWidth},${-(plot.dataY[s][0] - yMin) / yRange * plotHeight}`;
-          for (let a = 1; a < numPoints; a++) {
-            pointsString += ` ${(plot.dataX[s][a] - xMin) / xRange * plotWidth},${-(plot.dataY[s][a] - yMin) / yRange * plotHeight}`
-          }
-          seriesLine.setAttribute('points', pointsString);
-          var seriesLabel = "seriesLine";
-          if (!plot.drawPoints) { seriesLabel = "seriesLineThick"; }
-          seriesLine.setAttribute('class', `${seriesLabel}${s}`);
-          seriesLine.addEventListener('mouseover', function() {
-            var s2;
-            for (s2 = 0; s2 < numSeries; s2++) {
-              if (s2 != s) {
-                var x = document.getElementsByClassName(`${seriesLabel}${s2}`);
-                var i;
-                for (i = 0; i < x.length; i++) {
-                  x[i].style.opacity = 0.25;
-                }
-                x = document.getElementsByClassName(`dataPoint${s2}`);
-                for (i = 0; i < x.length; i++) {
-                    x[i].style.opacity = 0.25;
-                }
-              }
-            }
-          }, false);
-          seriesLine.addEventListener('mouseout', function() {
-            var s2;
-            for (s2 = 0; s2 < numSeries; s2++) {
-              if (s2 != s) {
-                var x = document.getElementsByClassName(`${seriesLabel}${s2}`);
-                var i;
-                for (i = 0; i < x.length; i++) {
-                  x[i].style.opacity = 1.0;
-                }
-                x = document.getElementsByClassName(`dataPoint${s2}`);
-                for (i = 0; i < x.length; i++) {
-                    x[i].style.opacity = 1.0;
-                }
-              }
-            }
-          }, false);
-          g2.appendChild(seriesLine);
-
           // draw the data points
           for (let a = 0; a < numPoints; a++) {
             let c = document.createElementNS(svgns, "circle");
-            c.setAttribute('cx', `${(plot.dataX[s][a] - xMin) / xRange * plotWidth}`);
-            c.setAttribute('cy', `${-(plot.dataY[s][a] - yMin) / yRange * plotHeight}`);
+            c.setAttribute('cx', (plot.dataX[s][a] - xMin) / xRange * plotWidth);
+            c.setAttribute('cy', -(plot.dataY[s][a] - yMin) / yRange * plotHeight);
             c.setAttribute('r', radius);
             c.setAttribute('class', `dataPoint${s}`);
             c.addEventListener('mouseover', function() {
+              c.setAttribute('class', `selectedDataPoint${s}`);
+              c.style.opacity = 1.0;
               var s2;
               for (s2 = 0; s2 < numSeries; s2++) {
                 if (s2 != s) {
-                  var x = document.getElementsByClassName(`${seriesLabel}${s2}`);
+                  document.getElementById(`seriesTrendline${s2}`).style.opacity = deselectedOpacity;
                   var i;
-                  for (i = 0; i < x.length; i++) {
-                    x[i].style.opacity = 0.25;
-                  }
                   x = document.getElementsByClassName(`dataPoint${s2}`);
                   for (i = 0; i < x.length; i++) {
-                      x[i].style.opacity = 0.25;
+                      x[i].style.opacity = deselectedOpacity;
                   }
                 }
               }
               showValue.innerHTML = `x: ${(plot.dataX[s][a]).toFixed(xSigDigits+2)}, y: ${(plot.dataY[s][a]).toFixed(ySigDigits+2)}`;
             }, false);
             c.addEventListener('mouseout', function() {
+              c.setAttribute('class', `dataPoint${s}`);
+              c.style.opacity = regularOpacity;
               var s2;
               for (s2 = 0; s2 < numSeries; s2++) {
                 if (s2 != s) {
-                  var x = document.getElementsByClassName(`${seriesLabel}${s2}`);
+                  document.getElementById(`seriesTrendline${s2}`).style.opacity = 1.0;
                   var i;
-                  for (i = 0; i < x.length; i++) {
-                    x[i].style.opacity = 1.0;
-                  }
                   x = document.getElementsByClassName(`dataPoint${s2}`);
                   for (i = 0; i < x.length; i++) {
-                      x[i].style.opacity = 1.0;
+                      x[i].style.opacity = regularOpacity;
                   }
                 }
               }
               showValue.innerHTML = "";
             }, false);
             g2.appendChild(c);
+          }
+        }
+
+        // Draw the trendlne(s)
+        if (plot.drawTrendline) {
+          // first calculate the trendlines
+          for (let s = 0; s < numSeries; s++) {
+            var n = Math.min(plot.dataX[s].length, plot.dataY[s].length);
+            var sumX = 0.0;
+            var sumY = 0.0;
+            var sumXY = 0.0;
+            var sumXX = 0.0;
+            var sumYY = 0.0;
+            var a;
+            var x, y;
+            var minX = Infinity, maxX = -Infinity;
+            for (a = 0; a < numPoints; a++) {
+              x = plot.dataX[s][a];
+              y = plot.dataY[s][a];
+              sumX += x
+              sumY += y
+              sumXY += x*y;
+              sumXX += x*x;
+              sumYY += y*y;
+              if (x < minX) { minX = x; }
+              if (x > maxX) { maxX = x; }
+            }
+
+            let slope = (n * sumXY - (sumX * sumY)) / (n * sumXX - (sumX * sumX));
+            let intercept = (sumY - slope * sumX) / n;
+            let r = (n * sumXY - (sumX * sumY)) / ((Math.sqrt(n * sumXX - (sumX * sumX)) * (Math.sqrt(n * sumYY - (sumY * sumY)))));
+            let r_sqr = r * r;
+            var yMean = sumY / n;
+            var xMean = sumX / n;
+
+            var line = document.createElementNS(svgns, "line");
+            line.setAttribute('x1', (minX - xMin) / xRange * plotWidth);
+            var yHat = -(((slope * minX + intercept) - yMin) / yRange * plotHeight);
+            line.setAttribute('y1', yHat);
+            line.setAttribute('x2', (maxX - xMin) / xRange * plotWidth);
+            yHat = -(((slope * maxX + intercept) - yMin) / yRange * plotHeight);
+            line.setAttribute('y2', yHat);
+            line.setAttribute('class', `seriesTrendline${s}`);
+            line.setAttribute('id', `seriesTrendline${s}`);
+            // line.setAttribute('style', 'stroke:black');
+
+            line.addEventListener('mouseover', function() {
+              var s2;
+              for (s2 = 0; s2 < numSeries; s2++) {
+                if (s2 != s) {
+                  document.getElementById(`seriesTrendline${s2}`).style.opacity = deselectedOpacity;
+                  var i;
+                  x = document.getElementsByClassName(`dataPoint${s2}`);
+                  for (i = 0; i < x.length; i++) {
+                      x[i].style.opacity = deselectedOpacity;
+                  }
+                }
+              }
+            showValue.innerHTML = `y = ${(slope).toFixed(xSigDigits+2)}x &times; ${(intercept).toFixed(xSigDigits+2)} (r^2 = ${(r_sqr).toFixed(xSigDigits+2)})`;
+            }, false);
+            line.addEventListener('mouseout', function() {
+              var s2;
+              for (s2 = 0; s2 < numSeries; s2++) {
+                if (s2 != s) {
+                  document.getElementById(`seriesTrendline${s2}`).style.opacity = 1.0;
+                  var i;
+                  x = document.getElementsByClassName(`dataPoint${s2}`);
+                  for (i = 0; i < x.length; i++) {
+                      x[i].style.opacity = regularOpacity;
+                  }
+                }
+              }
+              showValue.innerHTML = "";
+            }, false);
+
+            g2.appendChild(line);
           }
         }
 
@@ -531,26 +549,13 @@ impl LineGraph {
           g.appendChild(legend);
           for (let s = 0; s < numSeries; s++) {
             var y = -(plotHeight - 35 - 23 * (s+1));
-            var line = document.createElementNS(svgns, "line");
-            line.setAttribute('x1', plotWidth + 10);
-            line.setAttribute('y1', y);
-            line.setAttribute('x2', plotWidth + 40);
-            line.setAttribute('y2', y);
-            if (plot.drawPoints) {
-              line.setAttribute('class', `seriesLine${s}`);
-            } else {
-              line.setAttribute('class', `seriesLineThick${s}`);
-            }
-            legend.appendChild(line);
 
-            if (plot.drawPoints) {
-              var c = document.createElementNS(svgns, "circle");
-              c.setAttribute('cx', plotWidth+25);
-              c.setAttribute('cy', y);
-              c.setAttribute('r', radius);
-              c.setAttribute('class', `dataPoint${s}`);
-              legend.appendChild(c);
-            }
+            var c = document.createElementNS(svgns, "circle");
+            c.setAttribute('cx', plotWidth+25);
+            c.setAttribute('cy', y);
+            c.setAttribute('r', radius);
+            c.setAttribute('class', `dataPoint${s}`);
+            legend.appendChild(c);
 
             var legendLabel = document.createElementNS(svgns, "text");
             legendLabel.setAttribute('x', plotWidth + 48);
