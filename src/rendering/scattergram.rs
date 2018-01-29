@@ -8,6 +8,9 @@ pub struct Scattergram {
     pub x_axis_label: String,
     pub y_axis_label: String,
     pub draw_trendline: bool,
+    pub draw_gridlines: bool,
+    pub draw_legend: bool,
+    pub draw_grey_background bool,
 }
 
 impl Scattergram {
@@ -27,7 +30,10 @@ impl Scattergram {
         width: {},
         height: {},
         drawTrendline: {},
-        parentId: "{}"
+        drawGridlines: {},
+        drawLegend: {},
+        drawGreyBackground: {},
+        parentId: "{}""
       };"#, 
       data_x2,
       data_y2,
@@ -37,9 +43,13 @@ impl Scattergram {
       self.width, 
       self.height,
       self.draw_trendline,
+      self.draw_gridlines,
+      self.draw_legend,
+      self.draw_grey_background,
       self.parent_id));
 
         s.push_str(&r#"
+      function update(svg) {
         // which of the series labels is longest?
         var maxSeriesLabelLength = 0;
         for (a = 0; a < plot.seriesLabels.length; a++) {
@@ -47,7 +57,7 @@ impl Scattergram {
           if (sl.length > maxSeriesLabelLength) { maxSeriesLabelLength = sl.length; }
         }
         var plotLeftMargin = 70.0;
-        var plotRightMargin = 65.0 + maxSeriesLabelLength * 7;
+        var plotRightMargin = plot.drawLegend ? 65.0 + maxSeriesLabelLength * 7 : 50.0;
         var plotBottomMargin = 70.0;
         var plotTopMargin = 40.0;
         var plotWidth = plot.width - plotLeftMargin - plotRightMargin;
@@ -63,8 +73,28 @@ impl Scattergram {
         var btnColor = 'rgb(170,170,170)';
         var btnHoverColor = 'rgb(150,150,150)';
         var plotBackgroundColor = 'rgb(255,255,255)';
-        var chartBackgroundColor = 'rgb(255,255,255)';
-        var gridLineColor = 'rgb(120,120,120)';
+        if (plot.drawGreyBackground) {
+          plotBackgroundColor = '#DDD';
+        }
+        var chartBackgroundColor = 'white';
+        // var gridLineColor = 'rgb(120,120,120)';
+        // if (plot.drawGreyBackground) {
+          var gridLineColor = '#EEE';
+        // }
+        var trendlineColor = 'DimGray';
+        if (plot.drawGreyBackground) {
+          trendlineColor = 'DimGray';
+        }
+        var showValueClr = "black";
+        // if (plot.drawGreyBackground) {
+        //   showValueClr = '#FFF';
+        // }
+
+        // Gridlines
+        // var gridlineDash = '1, 5';
+        // if (plot.drawGreyBackground) {
+          var gridlineDash = 'none';
+        // }
 
         var tableau20 = [[31, 119, 180], [255, 127, 14],
              [44, 160, 44], [214, 39, 40],
@@ -84,6 +114,7 @@ impl Scattergram {
               svg.removeChild(svg.lastChild);
           }
         }
+        svg.id = "plotSvg";
         svg.setAttribute('width', `${plot.width}`);
         svg.setAttribute('height', `${plot.height}`);
         var div = document.getElementById(plot.parentId);
@@ -104,38 +135,67 @@ impl Scattergram {
           font-family:Sans,Arial;
         }
         .axisLabel {
-          font-weight: bold;
+          font-weight: normal;
         }
         .xTickLabel {
           fill: black;
           font-size: 85%;
+          font-weight: lighter;
         }
         .yTickLabel {
           fill: black;
           font-size: 85%;
-          // writing-mode: sideways-lr;
+          font-weight: lighter;
         }
         .gridLine {
           stroke: ${gridLineColor};
-          stroke-dasharray: 1, 5;
-          stroke-width: 1.0;
+          stroke-dasharray: ${gridlineDash};
+          stroke-width: 0.80;
         }
         .tick {
           stroke: black;
-          stroke-width: 1;
+          stroke-width: 0.5;
         }
-        .button {
-          opacity:1.0;
-        }
-        .buttonLabel {
-          fill: white;
-          font-size: 85%;
-          text-shadow: 1px 1px #000;
+        #plotBorder {
+          fill: none;
+          stroke: black;
+          stroke-width: 0.5;
         }
         #showValue {
-          fill: black;
           font-size: 85%;
-        }`;
+          fill: ${showValueClr};
+        }
+        #context-menu {
+          position:absolute;
+          display:none;
+        }
+        #context-menu ul {
+          list-style:none;
+          margin:0;
+          padding:0;
+          background: #EFEFEF;
+          opacity: 0.90;
+        }
+        #context-menu {
+          border:solid 1px #CCC;
+        }
+        #context-menu li {
+          font-family:Sans,Arial;
+          font-size: 75%;
+          text-align: left;
+          color:#000;
+          display:block;
+          padding:5px 15px;
+          border-bottom:solid 1px #CCC;
+        }
+        #context-menu li:last-child {
+          border:none;
+        }
+        #context-menu li:hover {
+          background:#007AFF;
+          color:#FFF;
+        }
+        `;
 
         var dataPointHoverWidth = 4.0;
         var s;
@@ -149,28 +209,30 @@ impl Scattergram {
           // let tlClr = `rgb(${Math.floor(red * w)},${Math.floor(green * w)},${Math.floor(blue * w)})`;
 
           styleString += `
-          .seriesLine${s} {
-            fill: none;
-            stroke-width:1;
-            stroke: ${clr};
-            opacity:1.0;
-          }
-          .seriesLine${s}:hover {
-            fill: none;
-            stroke-width:2;
-            stroke: ${clr};
-            opacity:1.0;
-          }
+          // .seriesLine${s} {
+          //   fill: none;
+          //   stroke-width:1;
+          //   stroke: ${clr};
+          //   opacity:1.0;
+          // }
+          // .seriesLine${s}:hover {
+          //   fill: none;
+          //   stroke-width:2;
+          //   stroke: ${clr};
+          //   opacity:1.0;
+          // }
           .seriesTrendline${s} {
             fill: none;
             stroke-width:1.5;
-            stroke: ${clr};
+            stroke-dasharray: none;
+            stroke: ${trendlineColor};
             opacity:1.0;
           }
           .seriesTrendline${s}:hover {
             fill: none;
             stroke-width:2.5;
-            stroke: ${clr};
+            stroke-dasharray: none;
+            stroke: red;
             opacity:1.0;
           }
           .dataPoint${s} {
@@ -273,15 +335,17 @@ impl Scattergram {
         }
         for (a = 0; a <= xAxisNumTicks; a++) {
             // grid line
-            if (xAxisNumTicks <= 10 || a % 2 == dominantTick) {
-              if (a > 0 && a < xAxisNumTicks) {
-                var line = document.createElementNS(svgns, "line");
-                line.setAttribute('x1', (a * xAxisTickSpacing) / xRange * plotWidth);
-                line.setAttribute('y1', 0);
-                line.setAttribute('x2', (a * xAxisTickSpacing) / xRange * plotWidth);
-                line.setAttribute('y2', -plotHeight);
-                line.setAttribute('class', 'gridLine');
-                g.appendChild(line);
+            if (plot.drawGridlines) {
+              if (xAxisNumTicks <= 10 || a % 2 == dominantTick) {
+                if (a > 0 && a < xAxisNumTicks) {
+                  var line = document.createElementNS(svgns, "line");
+                  line.setAttribute('x1', (a * xAxisTickSpacing) / xRange * plotWidth);
+                  line.setAttribute('y1', 0);
+                  line.setAttribute('x2', (a * xAxisTickSpacing) / xRange * plotWidth);
+                  line.setAttribute('y2', -plotHeight);
+                  line.setAttribute('class', 'gridLine');
+                  g.appendChild(line);
+                }
               }
             }
             // tick mark
@@ -334,7 +398,8 @@ impl Scattergram {
           dominantTick = 1;
         }
         for (a = 0; a <= yAxisNumTicks; a++) {
-            // grid line
+          // grid line
+          if (plot.drawGridlines) {
             if (yAxisNumTicks <= 10 || a % 2 == dominantTick) {
               if (a > 0 && a < yAxisNumTicks) {
                 var line = document.createElementNS(svgns, "line");
@@ -346,6 +411,7 @@ impl Scattergram {
                 g.appendChild(line);
               }
             }
+          }
             // tick mark
             var line = document.createElementNS(svgns, "line");
             line.setAttribute('x1', 0);
@@ -404,7 +470,10 @@ impl Scattergram {
         g.appendChild(g2);
 
         var radius = 3.0;
-        if (totalNumPoints > 15) { radius = 2.5; }
+        if (totalNumPoints > 15) { radius = 2.75; }
+        if (totalNumPoints > 100) { radius = 2.50; }
+        if (totalNumPoints > 1000) { radius = 2.0; }
+        if (totalNumPoints > 10000) { radius = 1.75; }
         for (let s = 0; s < numSeries; s++) {
           var numPoints = Math.min(plot.dataX[s].length, plot.dataY[s].length);
           // draw the data points
@@ -420,7 +489,9 @@ impl Scattergram {
               var s2;
               for (s2 = 0; s2 < numSeries; s2++) {
                 if (s2 != s) {
-                  document.getElementById(`seriesTrendline${s2}`).style.opacity = deselectedOpacity;
+                  if (plot.drawTrendline) {
+                    document.getElementById(`seriesTrendline${s2}`).style.opacity = deselectedOpacity;
+                  }
                   var i;
                   x = document.getElementsByClassName(`dataPoint${s2}`);
                   for (i = 0; i < x.length; i++) {
@@ -436,7 +507,9 @@ impl Scattergram {
               var s2;
               for (s2 = 0; s2 < numSeries; s2++) {
                 if (s2 != s) {
-                  document.getElementById(`seriesTrendline${s2}`).style.opacity = 1.0;
+                  if (plot.drawTrendline) {
+                    document.getElementById(`seriesTrendline${s2}`).style.opacity = 1.0;
+                  }
                   var i;
                   x = document.getElementsByClassName(`dataPoint${s2}`);
                   for (i = 0; i < x.length; i++) {
@@ -505,7 +578,7 @@ impl Scattergram {
                   }
                 }
               }
-            showValue.innerHTML = `y = ${(slope).toFixed(xSigDigits+2)}x &times; ${(intercept).toFixed(xSigDigits+2)} (r^2 = ${(r_sqr).toFixed(xSigDigits+2)})`;
+            showValue.innerHTML = `y = ${(slope).toFixed(xSigDigits+2)}x &times; ${(intercept).toFixed(xSigDigits+2)} (r-sqr = ${(r_sqr).toFixed(xSigDigits+2)})`;
             }, false);
             line.addEventListener('mouseout', function() {
               var s2;
@@ -526,9 +599,9 @@ impl Scattergram {
           }
         }
 
+        // Show value label
         showValue.setAttribute('id', 'showValue');
         showValue.setAttribute('y', -plotHeight + 20);
-        showValue.setAttribute('class', 'xTickLabel');
         g.appendChild(showValue);
 
         // plot border
@@ -537,13 +610,13 @@ impl Scattergram {
         plotBorder.setAttribute('y', -plotHeight);
         plotBorder.setAttribute('width', plotWidth);
         plotBorder.setAttribute('height', plotHeight);
-        plotBorder.style.fill = "none";
-        plotBorder.style.stroke = "black";
-        plotBorder.style.strokeWidth = 1.0;
+        plotBorder.id = "plotBorder";
         g.appendChild(plotBorder);
 
         // add a legend
-        if (plot.seriesLabels.length > 0) {
+        if (plot.seriesLabels.length > 0 && plot.drawLegend) {
+          radius = 3.0;
+          if (totalNumPoints > 15) { radius = 2.5; }
           var legend = document.createElementNS(svgns, "g");
           legend.setAttribute('id', 'legend');
           g.appendChild(legend);
@@ -569,86 +642,104 @@ impl Scattergram {
           }
         }
 
-        // Add buttons
-        var buttonWidth = 50;
-        var buttonHeight = 30;
+        // Add an invisible context menu to the parentId.
+        var cm = document.createElement('div');
+        cm.id = 'context-menu';
+        cm.className = 'context-menu';
+        var list = document.createElement('ul');
 
-        function copy() {
-          var content = `<svg xmlns='${svgns}' width='${width}' height='${height}'>\n${svg.innerHTML}\n</svg>`;
-
+        var copyBtn = document.createElement("li");
+        copyBtn.innerHTML = "Copy";
+        copyBtn.addEventListener('click', function() {
+          var content = `<svg xmlns='${svgns}' width='${plot.width}' height='${plot.height}'>\n${svg.innerHTML}\n</svg>`;
           // Create an auxiliary hidden input
           var aux = document.createElement("input");
-
           // Get the text from the element passed into the input
           aux.setAttribute("value", content);
-
           // Append the aux input to the body
           document.body.appendChild(aux);
-
           // Highlight the content
           aux.select();
-
           // Execute the copy command
           document.execCommand("copy");
-
           // Remove the input from the body
           document.body.removeChild(aux);
-
           // Give a notification
           alert("The plot's SVG content has been copied to the clipboard.");
+        }, false);
+        list.appendChild(copyBtn);
+
+        var gridlineBtn = document.createElement("li");
+        var verb = plot.drawGridlines ? "Hide " : "Show ";
+        gridlineBtn.innerHTML = verb + "Gridlines";
+        gridlineBtn.addEventListener('click', function() {
+          plot.drawGridlines = !plot.drawGridlines;
+          // update the context menu label
+          var verb = plot.drawGridlines ? "Hide " : "Show ";
+          gridlineBtn.innerHTML = verb + "Gridlines";
+          update(svg);
+        }, false);
+        list.appendChild(gridlineBtn);
+
+        var legendBtn = document.createElement("li");
+        var verb = plot.drawLegend ? "Hide " : "Show ";
+        legendBtn.innerHTML = verb + "Legend";
+        legendBtn.addEventListener('click', function() {
+          plot.drawLegend = !plot.drawLegend;
+          // update the context menu label
+          var verb = plot.drawLegend ? "Hide " : "Show ";
+          legendBtn.innerHTML = verb + "Legend";
+          update(svg);
+        }, false);
+        list.appendChild(legendBtn);
+
+        var trendlineBtn = document.createElement("li");
+        var verb = plot.drawTrendline ? "Hide " : "Show ";
+        var suffix = (numSeries > 1) ? "s" : "";
+        trendlineBtn.innerHTML = verb + "Trendline" + suffix;
+        trendlineBtn.addEventListener('click', function() {
+          plot.drawTrendline = !plot.drawTrendline;
+          // update the context menu label
+          var verb = plot.drawTrendline ? "Hide " : "Show ";
+          var suffix = (numSeries > 1) ? "s" : "";
+          trendlineBtn.innerHTML = verb + "Trendline" + suffix;
+          update(svg);
+        }, false);
+        list.appendChild(trendlineBtn);
+
+        var backgroundColorBtn = document.createElement("li");
+        var verb = plot.drawGreyBackground ? "Light " : "Dark ";
+        backgroundColorBtn.innerHTML = verb + "Background";
+        backgroundColorBtn.addEventListener('click', function() {
+          plot.drawGreyBackground = !plot.drawGreyBackground;
+          // update the context menu label
+          var verb = plot.drawGreyBackground ? "Light " : "Dark ";
+          backgroundColorBtn.innerHTML = verb + "Background";
+          update(svg);
+        }, false);
+        list.appendChild(backgroundColorBtn);
+
+        cm.appendChild(list);
+        document.getElementById(plot.parentId).appendChild(cm);
+
+        var menu = document.getElementById('context-menu');
+        document.onclick = function () {
+            menu.style.display = 'none';
         };
 
-        var copyRect = document.createElementNS(svgns, "rect");
-        copyRect.setAttribute('id', 'convertHistoMode');
-        copyRect.setAttribute('x', plotLeftMargin+plotWidth+10);
-        copyRect.setAttribute('y', plotTopMargin);
-        copyRect.setAttribute('rx', 5);
-        copyRect.setAttribute('ry', 5);
-        copyRect.setAttribute('width', buttonWidth);
-        copyRect.setAttribute('height', buttonHeight);
-        copyRect.setAttribute('class', 'button');
-        copyRect.style.fill = btnColor;
-        copyRect.style.stroke = "none";
-        copyRect.addEventListener('mouseover', function() {
-          copyRect.style.fill = btnHoverColor;
-        }, false);
-        copyRect.addEventListener('mouseout', function() {
-          copyRect.style.fill = btnColor;
-        }, false);
-        copyRect.addEventListener('click', function() {
-          copy();
-        }, false);
-        copyRect.addEventListener('mousedown', function() {
-          copyRect.style.fill = highlightColor;
-        }, false);
-        copyRect.addEventListener('mouseup', function() {
-          copyRect.style.fill = btnHoverColor;
-        }, false);
-        svg.appendChild(copyRect);
-
-        var copyLabel = document.createElementNS(svgns, "text");
-        copyLabel.setAttribute('x', plotLeftMargin+plotWidth+10 + buttonWidth / 2.0);
-        copyLabel.setAttribute('y', plotTopMargin + buttonHeight / 2.0);
-        copyLabel.setAttribute('text-anchor', 'middle');
-        copyLabel.setAttribute('class', 'buttonLabel');
-        copyLabel.setAttribute('dominant-baseline', 'middle');
-        copyLabel.innerHTML = "Copy";
-        copyLabel.addEventListener('mouseover', function() {
-          copyRect.style.fill = btnHoverColor;
-        }, false);
-        copyLabel.addEventListener('click', function() {
-          copy();
-        }, false);
-        copyLabel.addEventListener('mouseout', function() {
-          copyRect.style.fill = btnColor;
-        }, false);
-        copyLabel.addEventListener('mousedown', function() {
-          copyRect.style.fill = highlightColor;
-        }, false);
-        copyLabel.addEventListener('mouseup', function() {
-          copyRect.style.fill = btnHoverColor;
-        }, false);
-        svg.appendChild(copyLabel);
+        document.getElementById('plotSvg').oncontextmenu = function (evt) {
+            evt = (evt) ? evt : ((event) ? event : null);
+            var posnX = (evt.pageX) ? evt.pageX : ((evt.offsetX) ? evt.offsetX + 10 : null);
+            var posnY = (evt.pageY) ? evt.pageY : ((evt.offsetY) ? evt.offsetY + 10 : null);
+            menu.style.left = posnX + 'px';
+            menu.style.top = posnY + 'px';
+            menu.style.display = 'block';
+            if (typeof evt.preventDefault != "undefined") {
+                evt.preventDefault();
+            } else {
+                evt.returnValue = false;
+            }
+        };
       }
 
       function decimalPlaces(num) {

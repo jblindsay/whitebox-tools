@@ -282,6 +282,7 @@ impl ToolManager {
         tool_names.push("FindRidges".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
+        tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxBranchLength".to_string());
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
@@ -661,6 +662,7 @@ impl ToolManager {
             "findridges" => Some(Box::new(tools::terrain_analysis::FindRidges::new())),
             "hillshade" => Some(Box::new(tools::terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
+            "maxanisotropydev" => Some(Box::new(tools::terrain_analysis::MaxAnisotropyDev::new())),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
             "maxdownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MaxDownslopeElevChange::new())),
             "maxelevationdeviation" => Some(Box::new(tools::terrain_analysis::MaxElevationDeviation::new())),

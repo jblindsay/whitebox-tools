@@ -147,7 +147,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 265 tools:
+The library currently contains the following 266 tools:
 
 **Data Tools**
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
@@ -393,6 +393,7 @@ The library currently contains the following 265 tools:
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
 **Terrain Analysis**
+- ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 - ***Aspect***: Calculates an aspect raster from an input DEM.
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
