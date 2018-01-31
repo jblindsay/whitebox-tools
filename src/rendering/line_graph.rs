@@ -10,7 +10,7 @@ pub struct LineGraph {
     pub draw_points: bool,
     pub draw_gridlines: bool,
     pub draw_legend: bool,
-    pub draw_grey_background bool,
+    pub draw_grey_background: bool,
 }
 
 impl LineGraph {
@@ -19,22 +19,22 @@ impl LineGraph {
         let data_y2 = format!("{:?}", self.data_y);
         let series_labels2 = format!("{:?}", self.series_labels);
         let mut s = String::new();
-        s.push_str(&format!(r#"
+        s.push_str(&format!("
     <script>
-      var plot = {
-        dataX: {}, // dataX need not be specified if it is a simple series of 1, 2, 3...
+      var plot = {{
+        dataX: {},
         dataY: {},
         seriesLabels: {},
-        xAxisLabel: "{}",
-        yAxisLabel: "{}",
+        xAxisLabel: \"{}\",
+        yAxisLabel: \"{}\",
         width: {},
         height: {},
         drawPoints: {},
         drawGridlines: {},
         drawLegend: {},
         drawGreyBackground: {},
-        parentId: "{}"
-      };"#, 
+        parentId: \"{}\"
+      }};", 
       data_x2,
       data_y2,
       series_labels2,
@@ -50,7 +50,8 @@ impl LineGraph {
       ));
 
         s.push_str(&r#"
-      // which of the series labels is longest?
+      function update(svg) {
+        // which of the series labels is longest?
         var maxSeriesLabelLength = 0;
         var a;
         for (a = 0; a < plot.seriesLabels.length; a++) {

@@ -215,6 +215,13 @@ impl Raster {
         output
     }
 
+    pub fn get_short_filename(&self) -> String {
+        let path = Path::new(&self.file_name);
+        let file_name = path.file_stem().unwrap();
+        let f = file_name.to_str().unwrap();
+        f.to_string()
+    }
+
     pub fn get_value(&self, row: isize, column: isize) -> f64 {
         // if row < 0 || column < 0 { return self.configs.nodata; }
         // if row as usize >= self.configs.rows || column as usize >= self.configs.columns { return self.configs.nodata; }

@@ -393,7 +393,6 @@ The library currently contains the following 266 tools:
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
 **Terrain Analysis**
-- ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 - ***Aspect***: Calculates an aspect raster from an input DEM.
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
@@ -408,6 +407,8 @@ The library currently contains the following 266 tools:
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***FindRidges***: Identifies potential ridge and peak grid cells.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.
+- ***HypsometricAnalysis***: Calculates a hypsometric curve for one or more DEMs.
+- ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 - ***MaxBranchLength***: Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
 - ***MaxDownslopeElevChange***: Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
 - ***MaxElevationDeviation***: Calculates the maximum elevation deviation over a range of spatial scales.

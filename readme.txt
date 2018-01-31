@@ -51,6 +51,15 @@ for more details.
 
 Release Notes:
 
+Version 0.3 ()
+
+- Added the following tools:
+    MaxAnisotropyDev
+    HysometricAnalysis
+
+- Added functionality to create beautiful and interactive line graph and scattergram 
+  outputs for tools.
+
 Version 0.2 (12-02-2018)
 
 - Added the following tools:

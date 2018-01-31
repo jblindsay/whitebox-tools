@@ -10,7 +10,7 @@ pub struct Scattergram {
     pub draw_trendline: bool,
     pub draw_gridlines: bool,
     pub draw_legend: bool,
-    pub draw_grey_background bool,
+    pub draw_grey_background: bool,
 }
 
 impl Scattergram {
@@ -19,22 +19,22 @@ impl Scattergram {
         let data_y2 = format!("{:?}", self.data_y);
         let series_labels2 = format!("{:?}", self.series_labels);
         let mut s = String::new();
-        s.push_str(&format!(r#"
+        s.push_str(&format!("
     <script>
-      var plot = {
+      var plot = {{
         dataX: {},
         dataY: {},
         seriesLabels: {},
-        xAxisLabel: "{}",
-        yAxisLabel: "{}",
+        xAxisLabel: \"{}\",
+        yAxisLabel: \"{}\",
         width: {},
         height: {},
         drawTrendline: {},
         drawGridlines: {},
         drawLegend: {},
         drawGreyBackground: {},
-        parentId: "{}""
-      };"#, 
+        parentId: \"{}\"
+      }};", 
       data_x2,
       data_y2,
       series_labels2,
