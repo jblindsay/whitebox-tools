@@ -56,6 +56,7 @@ Version 0.3 ()
 - Added the following tools:
     MaxAnisotropyDev
     HysometricAnalysis
+    SlopeVsElevationPlot
 
 - Added functionality to create beautiful and interactive line graph and scattergram 
   outputs for tools.

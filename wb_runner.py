@@ -6,13 +6,14 @@
 # Last Modified: November 28, 2017
 # License: MIT
 
+import __future__
 import sys
-if sys.version_info[0] < 3:
-    raise Exception("Must be using Python 3")
-
+# if sys.version_info[0] < 3:
+#     raise Exception("Must be using Python 3")
 import json
 import os
 from os import path
+# from __future__ import print_function
 # from enum import Enum
 from pathlib import Path
 import glob

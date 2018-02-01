@@ -401,7 +401,7 @@ impl WhiteboxTool for MaxElevationDeviation {
         output_mag.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_mag.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag.add_metadata_entry(format!("Step size y: {}", step));
-        output_mag .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving magnitude data...") };
         let _ = match output_mag.write() {
@@ -420,7 +420,7 @@ impl WhiteboxTool for MaxElevationDeviation {
         output_scale.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_scale.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale.add_metadata_entry(format!("Step size: {}", step));
-        output_scale .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving scale data...") };
         let _ = match output_scale.write() {

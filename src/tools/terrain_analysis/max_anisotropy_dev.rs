@@ -368,7 +368,7 @@ impl WhiteboxTool for MaxAnisotropyDev {
                                                     if v > 0f64 {
                                                         s = v.sqrt();
                                                         mean = sum / n as f64;
-                                                        values[1] = (z - mean) / s - values[0]; // N-S DEV
+                                                        values[1] = (z - mean) / s; // - values[0]; // N-S DEV
                                                         // if values[1] < min_dev { min_dev = values[1]; }
                                                         // if values[1] > max_dev { max_dev = values[1]; }
                                                         values[1] -= values[0];
@@ -393,7 +393,7 @@ impl WhiteboxTool for MaxAnisotropyDev {
                                                     if v > 0f64 {
                                                         s = v.sqrt();
                                                         mean = sum / n as f64;
-                                                        values[2] = (z - mean) / s - values[0]; // E-W DEV
+                                                        values[2] = (z - mean) / s; // - values[0]; // E-W DEV
                                                         // if values[2] < min_dev { min_dev = values[2]; }
                                                         // if values[2] > max_dev { max_dev = values[2]; }
                                                         values[2] -= values[0];
@@ -424,7 +424,7 @@ impl WhiteboxTool for MaxAnisotropyDev {
                                                     if v > 0f64 {
                                                         s = v.sqrt();
                                                         mean = sum / n as f64;
-                                                        values[3] = (z - mean) / s - values[0]; // NE-SW DEV
+                                                        values[3] = (z - mean) / s; // - values[0]; // NE-SW DEV
                                                         // if values[3] < min_dev { min_dev = values[3]; }
                                                         // if values[3] > max_dev { max_dev = values[3]; }
                                                         values[3] -= values[0];
@@ -455,7 +455,7 @@ impl WhiteboxTool for MaxAnisotropyDev {
                                                     if v > 0f64 {
                                                         s = v.sqrt();
                                                         mean = sum / n as f64;
-                                                        values[4] = (z - mean) / s - values[0]; // NW-SE DEV
+                                                        values[4] = (z - mean) / s; // - values[0]; // NW-SE DEV
                                                         // if values[4] < min_dev { min_dev = values[4]; }
                                                         // if values[4] > max_dev { max_dev = values[4]; }
                                                         values[4] -= values[0];
@@ -519,13 +519,13 @@ impl WhiteboxTool for MaxAnisotropyDev {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output_mag.configs.palette = "light_quant.pal".to_string();
+        output_mag.configs.palette = "blue_white_red.pal".to_string();
         output_mag.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output_mag.add_metadata_entry(format!("Input file: {}", input_file));
         output_mag.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_mag.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag.add_metadata_entry(format!("Step size y: {}", step));
-        output_mag .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving magnitude data...") };
         let _ = match output_mag.write() {
@@ -537,14 +537,13 @@ impl WhiteboxTool for MaxAnisotropyDev {
             Err(e) => return Err(e),
         };
 
-
         output_scale.configs.palette = "spectrum.plt".to_string();
         output_scale.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output_scale.add_metadata_entry(format!("Input file: {}", input_file));
         output_scale.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_scale.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale.add_metadata_entry(format!("Step size: {}", step));
-        output_scale .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving scale data...") };
         let _ = match output_scale.write() {
