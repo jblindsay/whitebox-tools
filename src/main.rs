@@ -16,6 +16,7 @@ pub mod raster;
 pub mod rendering;
 pub mod tools;
 pub mod structures;
+pub mod vector;
 
 use std::io::Error;
 use std::env;
@@ -35,12 +36,26 @@ extern crate serde_derive;
 /// ```
 /// >>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' --run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
 /// ```
+
 fn main() {
     match run() {
         Ok(()) => {}
         Err(err) => panic!("{}", err),
     }
 }
+
+// This is just used for testing new features.
+// fn main() {
+//     // let file_name = "/Users/johnlindsay/Documents/data/whitebox_cities.shp";
+//     let file_name = "/Users/johnlindsay/Documents/data/world_map.shp";
+//     // let file_name = "/Users/johnlindsay/Documents/data/Minnesota/HUC07inside08_buff25m.shp";
+  
+//     let sf = vector::Shapefile::new(file_name, "r").unwrap();
+//     println!("{}", sf.header);
+//     for i in 0..sf.num_records {
+//         println!("id={}, {:?}", i, sf.get_record(i).geometry.points);
+//     }
+// }
 
 fn run() -> Result<(), Error> {
     let sep: &str = &path::MAIN_SEPARATOR.to_string();

@@ -134,7 +134,7 @@ impl Default for Endianness {
 impl Endianness {
     pub fn from_str<'a>(val: &'a str) -> Endianness {
         let val_lc: &str = &val.to_lowercase();
-        if val_lc.contains("lsb") || val_lc.contains("little") || val_lc.contains("intel") {
+        if val_lc.contains("lsb") || val_lc.contains("little") || val_lc.contains("intel") || val_lc.contains("least") {
             return Endianness::LittleEndian;
         } else {
             return Endianness::BigEndian;
