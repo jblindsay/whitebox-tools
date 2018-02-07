@@ -6,7 +6,7 @@ Last Modified: July 17, 2017
 License: MIT
 */
 use std::io::prelude::*;
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 use std::fs;
 use std::fs::File;
 use std::fmt;
@@ -70,7 +70,7 @@ pub struct Shapefile {
     pub file_mode: String,
     pub header: ShapefileHeader,
     pub num_records: usize,
-    pub records: Vec<ShapefileRecord>,
+    pub records: Vec<ShapefileGeometry>,
 }
 
 impl Shapefile {
@@ -82,7 +82,7 @@ impl Shapefile {
             ..Default::default()
         };
         if sf.file_mode.contains("r") {
-            sf.read()
+            sf.read()?;
         } else {
             // write
             // return Ok(r);
@@ -91,12 +91,12 @@ impl Shapefile {
         
     }
 
-    pub fn get_record<'a>(&'a self, index: usize) -> &'a ShapefileRecord {
+    pub fn get_record<'a>(&'a self, index: usize) -> &'a ShapefileGeometry {
         if index >= self.records.len() { panic!("Record index out of bounds"); }
         &self.records[index]
     }
 
-    fn read(&mut self) {
+    fn read(&mut self) -> Result<(), Error>  {
         // read the header
         let mut f = File::open(self.file_name.clone()).unwrap(); //?;
         let metadata = fs::metadata(self.file_name.clone()).unwrap(); //?;
@@ -132,37 +132,24 @@ impl Shapefile {
         self.header.m_max = bor.read_f64();
 
         // Read the data
+        bor.byte_order = Endianness::LittleEndian;
         match self.header.shape_type {
             ShapeType::Point => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    bor.pos += 4; // Don't need to read the shapeType. It's not going to change.
-                    r.geometry = ShapefileGeometry {
+                    bor.pos += 12; // Don't need to read the header and shapeType. It's not going to change.
+                    let sfg = ShapefileGeometry {
                         shape_type: ShapeType::Point, 
                         num_points: 1i32, 
                         points: vec![ Point2D{ x: bor.read_f64(), y: bor.read_f64() } ],
                         ..Default::default()
                     };
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::PolyLine | ShapeType::Polygon => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    
+                    bor.pos += 8;
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
                         x_min: bor.read_f64(),
@@ -182,21 +169,13 @@ impl Shapefile {
                         sfg.points.push(Point2D{ x: bor.read_f64(), y: bor.read_f64() });
                     }  
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::MultiPoint => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    
+                    bor.pos += 8;
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
                         x_min: bor.read_f64(),
@@ -211,22 +190,14 @@ impl Shapefile {
                         sfg.points.push(Point2D{ x: bor.read_f64(), y: bor.read_f64() });
                     }  
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::PointZ => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    bor.pos += 4; // Don't need to read the shapeType. It's not going to change.
-                    r.geometry = ShapefileGeometry {
+                    bor.pos += 12; // Don't need to read the header and shapeType. It's not going to change.
+                    let sfg = ShapefileGeometry {
                         shape_type: ShapeType::Point, 
                         num_points: 1i32, 
                         points: vec![ Point2D{ x: bor.read_f64(), y: bor.read_f64() } ],
@@ -234,20 +205,13 @@ impl Shapefile {
                         m_array: vec![ bor.read_f64() ],
                         ..Default::default()
                     };
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::PolyLineZ | ShapeType::PolygonZ => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    
+                    bor.pos += 8;
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
                         x_min: bor.read_f64(),
@@ -279,21 +243,13 @@ impl Shapefile {
                         sfg.m_array.push(bor.read_f64());
                     }  
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::MultiPointZ => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    
+                    bor.pos += 8;
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
                         x_min: bor.read_f64(),
@@ -320,42 +276,27 @@ impl Shapefile {
                         sfg.m_array.push(bor.read_f64());
                     }
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::PointM => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    bor.pos += 4; // Don't need to read the shapeType. It's not going to change.
-                    r.geometry = ShapefileGeometry {
+                    bor.pos += 12; // Don't need to read the header and shapeType. It's not going to change.
+                    let sfg = ShapefileGeometry {
                         shape_type: ShapeType::Point, 
                         num_points: 1i32, 
                         points: vec![ Point2D{ x: bor.read_f64(), y: bor.read_f64() } ],
                         m_array: vec![ bor.read_f64() ],
                         ..Default::default()
                     };
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::PolyLineM | ShapeType::PolygonM => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
-                    
+                    bor.pos += 8;
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
                         x_min: bor.read_f64(),
@@ -381,20 +322,13 @@ impl Shapefile {
                         sfg.m_array.push(bor.read_f64());
                     }  
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
             ShapeType::MultiPointM => {
                 while bor.pos < file_size {
-                    bor.byte_order = Endianness::BigEndian;
-                    let mut r = ShapefileRecord {
-                        record_number: bor.read_i32(), 
-                        content_length: bor.read_i32(),
-                        ..Default::default()
-                    };
-                    bor.byte_order = Endianness::LittleEndian;
+                    bor.pos += 8;
                     
                     let mut sfg = ShapefileGeometry {
                         shape_type: ShapeType::from_int(bor.read_i32()), 
@@ -416,34 +350,18 @@ impl Shapefile {
                         sfg.m_array.push(bor.read_f64());
                     }
 
-                    r.geometry = sfg;
-                    self.records.push(r);
+                    self.records.push(sfg);
                 }
             },
 
-            _ => panic!("Unrecognized ShapeType."),
+            _ => {
+                return Err(Error::new(ErrorKind::InvalidInput, "Unrecognized ShapeType."));
+            },
         }
 
         self.num_records = self.records.len();
-    }
-}
 
-#[derive(Default, Clone)]
-pub struct ShapefileRecord {
-  pub record_number: i32,
-  pub content_length: i32,
-  pub geometry: ShapefileGeometry,
-}
-
-impl fmt::Display for ShapefileRecord {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("record_number: {}
-content_length: {}
-data: {}", 
-            self.record_number, 
-            self.content_length,
-            self.geometry);
-        write!(f, "{}", s)
+        Ok(())
     }
 }
 

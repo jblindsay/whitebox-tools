@@ -284,7 +284,11 @@ impl WhiteboxTool for FillMissingData {
                                     z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
                                 }
                             }
-                            data[col as usize] = z;
+                            if ret.len() > 0 {
+                                data[col as usize] = z;
+                            } else {
+                                data[col as usize] = nodata;
+                            }
                         } else {
                             data[col as usize] = input[(row, col)];
                         }

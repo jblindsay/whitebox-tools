@@ -2,12 +2,11 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: January 21, 2018
+Last Modified: Feb. 6, 2018
 License: MIT
 
 NOTES: Add the ability to:
-Exclude points based on max scan angle divation
-Interpolate all LAS files within a directory (i.e. directory input rather than single file).
+Exclude points based on max scan angle divation.
 */
 extern crate time;
 extern crate num_cpus;
@@ -114,14 +113,14 @@ impl LidarIdwInterpolation {
             optional: true
         });
         
-        parameters.push(ToolParameter{
-            name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
-            flags: vec!["--palette".to_owned()], 
-            description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
-            parameter_type: ParameterType::String,
-            default_value: None,
-            optional: true
-        });
+        // parameters.push(ToolParameter{
+        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
+        //     flags: vec!["--palette".to_owned()], 
+        //     description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
+        //     parameter_type: ParameterType::String,
+        //     default_value: None,
+        //     optional: true
+        // });
 
         parameters.push(ToolParameter{
             name: "Minimum Elevation Value (optional)".to_owned(), 
@@ -353,7 +352,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     }
                 },
             }
-            // return Ok(());
         } else {
             inputs.push(input_file.clone());
             if output_file.is_empty() {
@@ -367,7 +365,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
             output_file = outputs[k].replace("\"", "").clone();
 
             if verbose && inputs.len() > 1 {
-                println!("Interpolating {} of {} ({:.2}%) {}", k+1, inputs.len(), (k+1) as f64 / inputs.len() as f64 * 100f64, input_file.clone());
+                println!("Interpolating {} of {} ({})", k+1, inputs.len(), input_file.clone());
             }
 
             if !input_file.contains(path::MAIN_SEPARATOR) {
@@ -614,12 +612,12 @@ impl WhiteboxTool for LidarIdwInterpolation {
             output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
             output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
 
-            if verbose {
+            if verbose && inputs.len() == 1 {
                 println!("Saving data...")
             };
             let _ = match output.write() {
                 Ok(_) => {
-                    if verbose {
+                    if verbose && inputs.len() == 1 {
                         println!("Output file written")
                     }
                 }

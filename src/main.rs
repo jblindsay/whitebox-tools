@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: July 17, 2017
+Last Modified: February 7, 2018
 License: MIT
 */
 
@@ -44,7 +44,7 @@ fn main() {
     }
 }
 
-// This is just used for testing new features.
+// // This is just used for testing new features.
 // fn main() {
 //     // let file_name = "/Users/johnlindsay/Documents/data/whitebox_cities.shp";
 //     let file_name = "/Users/johnlindsay/Documents/data/world_map.shp";
@@ -53,7 +53,7 @@ fn main() {
 //     let sf = vector::Shapefile::new(file_name, "r").unwrap();
 //     println!("{}", sf.header);
 //     for i in 0..sf.num_records {
-//         println!("id={}, {:?}", i, sf.get_record(i).geometry.points);
+//         println!("id={}, {:?}", i, sf.get_record(i).points);
 //     }
 // }
 
@@ -261,7 +261,7 @@ Example Usage:
 
 fn license() {
     let license_text = "whitebox-tools License
-Copyright 2017 John Lindsay
+Copyright 2018 John Lindsay
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the \"Software\"), to deal in the Software without restriction,

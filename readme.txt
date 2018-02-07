@@ -51,15 +51,21 @@ for more details.
 
 Release Notes:
 
-Version 0.3 ()
+Version 0.3 (07-02-2018)
 
 - Added the following tools:
     MaxAnisotropyDev
     HysometricAnalysis
     SlopeVsElevationPlot
+    LidarRemoveOutliers
 
+- Added initial support for reading Shapefile geometries. This is still a proof-of-concept
+  and no tools as of yet use Shapefile inputs. 
 - Added functionality to create beautiful and interactive line graph and scattergram 
   outputs for tools.
+- LiDAR interpolation tools now have the option to interpolate all LAS files within the 
+  working directory when an input file name is not specified.
+- Added first draft of a pdf user manual for WhiteboxTools.
 
 Version 0.2 (12-02-2018)
 

@@ -11,6 +11,7 @@ use std::env;
 use std::path;
 use std::f64;
 use raster::*;
+// use vector::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
@@ -42,8 +43,8 @@ impl Watershed {
         parameters.push(ToolParameter{
             name: "Input Pour Points (Outlet) File".to_owned(), 
             flags: vec!["--pour_pts".to_owned()], 
-            description: "Input raster pour points (outlet) file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            description: "Input vector pour points (outlet) file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector),
             default_value: None,
             optional: false
         });
@@ -52,7 +53,7 @@ impl Watershed {
             name: "Output File".to_owned(), 
             flags: vec!["-o".to_owned(), "--output".to_owned()], 
             description: "Output raster file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::NewFile(ParameterFileType::RasterAndVector),
             default_value: None,
             optional: false
         });
@@ -179,7 +180,9 @@ impl WhiteboxTool for Watershed {
         if verbose { println!("Reading data...") };
 
         let pntr = Raster::new(&d8_file, "r")?;
+        
         let pourpts = Raster::new(&pourpts_file, "r")?;
+        // let pourpts = Shapefile::new(&pourpts_file, "r")?;
 
         let start = time::now();
 

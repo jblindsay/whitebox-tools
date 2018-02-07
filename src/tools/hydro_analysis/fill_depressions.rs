@@ -56,7 +56,7 @@ impl FillDepressions {
             flags: vec!["--fix_flats".to_owned()], 
             description: "Optional flag indicating whether flat areas should have a small gradient applied.".to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: None,
+            default_value: Some("true".to_string()),
             optional: true
         });
 

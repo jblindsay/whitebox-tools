@@ -1,19 +1,20 @@
-![WhiteboxTools Logo](./img/WhiteboxToolsLogoBlue.png)
+![](./img/WhiteboxToolsLogoBlue.png)
 
 <!--# WhiteboxTools-->
 
 *Bringing the power of Whitebox GAT to the world at large*
 
-- [Description](#description)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Available Tools](#available-tools)
-- [Supported Data Formats](#supported-data-formats)
-- [Contributing](#contributing)
-- [Contributors](#contributors)
-- [License](#license)
-- [Known Issues](#known-issues)
-- [Frequently Asked Questions](#frequently-asked-questions)
+**Contents**
+
+1. [Description](#description)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Available Tools](#available-tools)
+5. [Supported Data Formats](#supported-data-formats)
+6. [Contributing](#contributing)
+7. [License](#license)
+8. [Known Issues](#known-issues)
+9. [Frequently Asked Questions](#frequently-asked-questions)
     * [Do I need Whitebox GAT to use WhiteboxTools?](#do-i-need-whitebox-gat-to-use-whiteboxtools)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
     * [Can WhiteboxTools be incorporated into other software and open-source GIS projects?](#can-whiteboxtools-be-incorporated-into-other-software-and-open-source-gis-projects)
@@ -24,16 +25,16 @@
     * [Do I need Rust installed on my computer to run WhiteboxTools?](#do-i-need-rust-installed-on-my-computer-to-run-whiteboxtools)
     * [How does WhiteboxTools' design philosophy differ?](#how-does-whiteboxtools-design-philosophy-differ)
     
-## Description
+## 1. Description
 
-**WhiteboxTools** is an advanced geospatial data analysis engine developed at the [University of Guelph's](http://www.uoguelph.ca) [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/index.html). Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 400 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
+**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 400 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
 
 The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded
 the *GoSpatial* project, having subsumed all of its functionality.
 
-## Installation
+## 2. Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
 1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
@@ -57,7 +58,7 @@ Depending on your system, the compilation may take several minutes. When complet
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
 
-## Usage
+## 3. Usage
 
 *WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized by the *WhiteboxTools* library:
 
@@ -75,7 +76,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 | --viewcode        | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".                       |
 | --version         | Prints the version information.                                                                   |
 
-Generally, the Unix convention is that single-letter arguments (options) use a single dash (e.g. -h) while word-arguments (longer, more descriptive argument names) use double dashes (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
+Generally, the Unix convention is that single-letter arguments (options) use a single hyphen (e.g. -h) while word-arguments (longer, more descriptive argument names) use double hyphen (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
 
@@ -84,10 +85,11 @@ In addition to direct command-line and script-based interaction, a very basic us
 **Example command prompt:**
 
 ```
->>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' --run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
+>>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' --run=DevFromMeanElev 
+--input='DEM clipped.dep' --output='DEV raster.dep' -v
 ```
 
-Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. The '>>' is shorthand for the command prompt and is not intended to be typed. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\) instead.
+Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. The '>>' is shorthand for the command prompt and is not intended to be typed. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead.
 
 **Example Python script:**
 
@@ -137,25 +139,27 @@ if wbt.run_tool(tool_name, args) != 0:
 
 **WhiteboxTools Runner**
 
-There is a Python script contained within the *WhiteboxTools* directory called '*wb_runner.py*'. This script is intended to provide a very basic user-interface for running the tools contained within the *WhiteboxTools* library. The user-interface uses Python's TkInter GUI library and should be cross-platform. The user interface is currently experimental and is under heavy testing. Please report any issues that you experience in using it.
+There is a Python script contained within the *WhiteboxTools* directory called '*wb_runner.py*'. This script is intended to provide a very basic user-interface for running the tools contained within the *WhiteboxTools* library. The user-interface uses Python's TkInter GUI library and is cross-platform. The user interface is currently experimental and is under heavy testing. Please report any issues that you experience in using it.
 
-![WhiteboxTools Runner user-interface](./img/WBRunner.png)
+![*WhiteboxTools Runner* user-interface](./img/WBRunner.png)
 
 The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WhiteboxTools Runner*.
 
-## Available Tools
+## 4. Available Tools
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 268 tools:
+The library currently contains the following 269 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
+
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
 
 **GIS Analysis**
+
 - ***AggregateRaster***: Aggregates a raster to a lower resolution.
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -187,6 +191,7 @@ The library currently contains the following 268 tools:
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 
 **Hydrological Analysis**
+
 - ***AverageFlowpathSlope***: measures the average length of all upslope flowpaths draining each grid cell.
 - ***AverageUpslopeFlowpathLength***: Measures the average length of all upslope flowpaths draining each grid cell.
 - ***Basins***: Identifies drainage basins that drain to the DEM edge.
@@ -225,6 +230,7 @@ The library currently contains the following 268 tools:
 - ***Watershed***: Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 **Image Analysis**
+
 - ***AdaptiveFilter***: Performs an adaptive filter on an image.
 - ***BalanceContrastEnhancement***: Performs a balance contrast enhancement on a colour-composite image of multispectral data.
 - ***BilateralFilter***: A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
@@ -283,6 +289,7 @@ The library currently contains the following 268 tools:
 - ***WriteFunctionMemoryInsertion***: Performs a write function memory insertion for single-band multi-date change detection.
 
 **LiDAR Analysis**
+
 - ***BlockMaximum***: Creates a block-maximum raster from an input LAS file.
 - ***BlockMinimum***: Creates a block-minimum raster from an input LAS file.
 - ***FilterLidarScanAngles***: Removes points in a LAS file with scan angles greater than a threshold.
@@ -299,6 +306,7 @@ The library currently contains the following 268 tools:
 - ***LidarKappaIndex***: Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 - ***LidarNearestNeighbourGridding***: Grids LAS files using nearest-neighbour scheme.
 - ***LidarPointDensity***: Calculates the spatial pattern of point density for a LiDAR data set.
+- ***LidarRemoveOutliers***: Removes outliers (high and low points) in a LiDAR point cloud.
 - ***LidarSegmentation***: Segments a LiDAR point cloud based on normal vectors.
 - ***LidarSegmentationBasedFilter***: Identifies ground points within LiDAR point clouds using a segmentation based approach.
 - ***LidarTile***: Tiles a LiDAR LAS file into multiple LAS files.
@@ -306,6 +314,7 @@ The library currently contains the following 268 tools:
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
 **Mathematical and Statistical Analysis**
+
 - ***AbsoluteValue***: Calculates the absolute value of every cell in a raster.
 - ***Add***: Performs an addition operation on two rasters or a raster and a constant value.
 - ***And***: Performs a logical AND operator on two Boolean raster images.
@@ -373,6 +382,7 @@ The library currently contains the following 268 tools:
 - ***ZScores***: Standardizes the values in an input raster by converting to z-scores.
 
 **Stream Network Analysis**
+
 - ***DistanceToOutlet***: Calculates the distance of stream grid cells to the channel network outlet cell.
 - ***ExtractStreams***: Extracts stream grid cells from a flow accumulation raster.
 - ***ExtractValleys***: Identifies potential valley bottom grid cells based on local topolography alone.
@@ -393,6 +403,7 @@ The library currently contains the following 268 tools:
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
 
 **Terrain Analysis**
+
 - ***Aspect***: Calculates an aspect raster from an input DEM.
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
@@ -436,20 +447,21 @@ The library currently contains the following 268 tools:
 
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
-## Supported Data Formats
+## 5. Supported Data Formats
 The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the problem to the [author](#contributors). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
 
-At present, there is no ability in *WhiteboxTools* to read or write vector geospatial data. Support for Shapefile, GeoJSON, and other common vector formats will be added to the library soon. 
+At present, there is limited ability in *WhiteboxTools* to read vector geospatial data. Support for Shapefile (and other common vector formats) will be enhanced within the library soon. 
 
 LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. *WhiteboxTools* can read and write LAS files that have been compressed (zipped with a .zip extension) using the common DEFLATE algorithm. Note that only LAS file should be contained within a zipped archive file. The compressed LiDAR format LAZ and ESRI LiDAR format are not currently supported by the library. The following is an example of running a LiDAR tool using zipped input/output files:
 
 ```
->>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las.zip" -o="output.las.zip" --radius=10.0
+>>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" 
+-i="input.las.zip" -o="output.las.zip" --radius=10.0
 ```
 
 Note that the double extensions (.las.zip) in the above command are not necessary and are only used for convenience of keeping track of LiDAR data sets (i.e. .zip extensions work too). The extra work of decoding/encoding compressed files does add additional processing time, although the Rust compression library that is used is highly efficient and usually only adds a few seconds to tool run times. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file data sets with massive storage requirements. 
 
-## Contributing
+## 6. Contributing
 
 If you would like to contribute to the project as a developer, follow these instructions to get started:
 
@@ -463,24 +475,18 @@ Unless explicitly stated otherwise, any contribution intentionally submitted for
 
 If you would like to contribute financial support for the project, please contact [John Lindsay](http://www.uoguelph.ca/~hydrogeo/index.html). We also welcome contributions in the form of media exposure. If you have written an article or blog about *WhiteboxTools* please let us know about it.
 
-**TODO**
-Describe the process of integrating a new tool into the library.
-
-## Contributors
-
-- [jblindsay](https://github.com/jblindsay) Dr. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html)) - creator, maintainer
-
-## License
+## 7. License
 
 The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt), a permissive open-source (free software) license.
 
-## Known Issues
+## 8. Known Issues
 
-- There is no support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
-- The LAZ compressed LiDAR data format is not currently supported although zipped LAS files are..
+- There is limited support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
+- The LAZ compressed LiDAR data format is currently unsupported although zipped LAS files (.zip) are.
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
+- The Python scripts included with **WhiteboxTools** require Python 3. They will not work with Python 2, which is frequently the default Python version installed on many systems.
 
-## Frequently Asked Questions
+## 9. Frequently Asked Questions
 
 ### Do I need Whitebox GAT to use WhiteboxTools?
 
@@ -504,7 +510,7 @@ The answer to this question depends strongly on the type of analysis and data th
 
 ### Are pre-compiled executables of WhiteboxTools available?
 
-Pre-compiled binaries for *WhiteboxTools* can be downloaded from the [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. If you need binaries for other operating systems/system architectures, you will need to compile the executable from source files. See [Installation](#installation) for details.
+Pre-compiled binaries for *WhiteboxTools* can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. If you need binaries for other operating systems/system architectures, you will need to compile the executable from source files. See [Installation](#installation) for details.
 
 ### Why is WhiteboxTools programmed in Rust?
 

@@ -173,6 +173,7 @@ impl ToolManager {
         tool_names.push("LidarKappaIndex".to_string());
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
+        tool_names.push("LidarRemoveOutliers".to_string());
         tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
         tool_names.push("LidarTile".to_string());
@@ -519,6 +520,7 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarNearestNeighbourGridding::new()))
             }
             "lidarpointdensity" => Some(Box::new(tools::lidar_analysis::LidarPointDensity::new())),
+            "lidarremoveoutliers" => Some(Box::new(tools::lidar_analysis::LidarRemoveOutliers::new())),
             "lidarsegmentation" => Some(Box::new(tools::lidar_analysis::LidarSegmentation::new())),
             "lidarsegmentationbasedfilter" => Some(Box::new(tools::lidar_analysis::LidarSegmentationBasedFilter::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
@@ -723,11 +725,20 @@ impl ToolManager {
     }
 
     pub fn tool_help(&self, tool_name: String) -> Result<(), Error> {
-        match self.get_tool(tool_name.as_ref()) {
-            Some(tool) => println!("{}", get_help(tool)),
-            None => {
-                return Err(Error::new(ErrorKind::NotFound,
-                                      format!("Unrecognized tool name {}.", tool_name)))
+        if !tool_name.is_empty() {
+            match self.get_tool(tool_name.as_ref()) {
+                Some(tool) => println!("{}", get_help(tool)),
+                None => {
+                    return Err(Error::new(ErrorKind::NotFound,
+                                        format!("Unrecognized tool name {}.", tool_name)))
+                }
+            }
+        } else {
+            let mut i = 1;
+            for val in &self.tool_names {
+                let tool = self.get_tool(&val).unwrap();
+                println!("{}. {}\n", i, get_help(tool));
+                i += 1;
             }
         }
         Ok(())
@@ -839,9 +850,12 @@ fn get_help<'a>(wt: Box<WhiteboxTool + 'a>) -> String {
     let tool_name = wt.get_tool_name();
     let description = wt.get_tool_description();
     let parameters = wt.get_tool_parameters();
+    let toolbox = wt.get_toolbox();
     let o: serde_json::Value = serde_json::from_str(&parameters).unwrap();
     let a = o["parameters"].as_array().unwrap();
     let mut p = String::new();
+    p.push_str("Flag               Description\n");
+    p.push_str("-----------------  -----------\n");
     for d in a {
         let mut s = String::new();
         for f in d["flags"].as_array().unwrap() {
@@ -852,25 +866,32 @@ fn get_help<'a>(wt: Box<WhiteboxTool + 'a>) -> String {
     let example = wt.get_example_usage();
     let s: String;
     if example.len() <= 1 {
-        s = format!("{} Help
+        s = format!("{}
 
 Description:\n{}
-
-Parameters:\n{}
+Toolbox: {}
+Parameters:\n
+{}
 ",
                     tool_name,
-                    p,
-                    description);
+                    description,
+                    toolbox,
+                    p);
     } else {
-        s = format!("{} Help
-
+        s = format!("{}
 Description:\n{}
+Toolbox: {}
+Parameters:\n
+{}
 
-Parameters:\n{}
 Example usage:
-{}",
+```
+{}
+```
+",
                     tool_name,
                     description,
+                    toolbox,
                     p,
                     example);
     }
@@ -923,6 +944,7 @@ enum ParameterFileType {
     Lidar,
     Raster,
     Vector,
+    RasterAndVector,
     Text,
     Html,
 }

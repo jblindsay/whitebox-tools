@@ -413,7 +413,11 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                             z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
                         }
                     }
-                    out[(row, col)] = z;
+                    if ret.len() > 0 {
+                        out[(row, col)] = z;
+                    } else {
+                        out[(row, col)] = nodata;
+                    }
                 } else {
                     out[(row, col)] = opening[(row, col)] + tophat[(row, col)];
                 }

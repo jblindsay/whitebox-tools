@@ -239,9 +239,9 @@ class FileOrFloat(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
-                                                '*.sdat', '*.rdc',
-                                                '*.asc'))]
+                                            '*.tiff', '*.flt',
+                                            '*.sdat', '*.rdc',
+                                            '*.asc'))]
             elif 'Lidar' in self.file_type:
                 ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:
@@ -381,9 +381,9 @@ class MultifileSelector(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
-                                                '*.sdat', '*.rdc',
-                                                '*.asc'))]
+                                            '*.tiff', '*.flt',
+                                            '*.sdat', '*.rdc',
+                                            '*.asc'))]
             elif 'Lidar' in self.file_type:
                 ftypes = [("LiDAR files", ('*.las', '*.zip'))]
             elif 'Vector' in self.file_type:
@@ -515,10 +515,10 @@ class OptionsInput(tk.Frame):
                 default_index = i - 1
             i = i + 1
 
-        if i - 1 < 5:
+        if i - 1 < 4:
             opt['height'] = i - 1
         else:
-            opt['height'] = 4
+            opt['height'] = 3
 
         opt.bind("<<ListboxSelect>>", self.select)
         if default_index >= 0:
@@ -852,7 +852,7 @@ class WbRunner(tk.Frame):
 
     def run_tool(self):
         # wd_str = self.wd.get_value()
-        # wbt.set_working_dir(wd_str)
+        wbt.set_working_dir(self.working_dir)
         # args = shlex.split(self.args_value.get())
 
         args = []

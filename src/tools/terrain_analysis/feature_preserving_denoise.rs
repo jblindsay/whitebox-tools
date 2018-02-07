@@ -1067,7 +1067,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size: {}", filter_size));
-        output.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff.to_degrees()));
+        output.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff));
         output.add_metadata_entry(format!("Iterations: {}", num_iter));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
