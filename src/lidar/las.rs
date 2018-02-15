@@ -13,9 +13,11 @@ use std::mem;
 use std::path::Path;
 use std::str;
 use lidar::header::LasHeader;
-use lidar::point_data::{ ClassificationBitField, PointBitField, PointData, RgbData, WaveformPacket };
+use lidar::point_data::{ PointData, ColourData, WaveformPacket };
 use lidar::vlr::Vlr;
 use raster::geotiff::geokeys::GeoKeys;
+use structures::BoundingBox;
+use io_utils::{ByteOrderReader, Endianness};
 use std::ops::Index;
 use std::io::Seek;
 use self::zip::result::ZipResult;
@@ -33,7 +35,7 @@ pub struct LasFile {
     point_data: Vec<PointData>,
     // point_buffer_size: usize,
     gps_data: Vec<f64>,
-    rgb_data: Vec<RgbData>,
+    colour_data: Vec<ColourData>,
     waveform_data: Vec<WaveformPacket>,
     pub geokeys: GeoKeys,
     // starting_point: usize,
@@ -109,7 +111,7 @@ impl LasFile {
 
 		self.header.system_id = "WhiteboxTools by John Lindsay   ".to_string();
 		self.header.generating_software = "WhiteboxTools                   ".to_string();
-		self.header.number_of_points_by_return = [0, 0, 0, 0, 0];
+		self.header.number_of_points_by_return_old = [0, 0, 0, 0, 0];
 
 		self.header.x_scale_factor = 0.0001;
 		self.header.y_scale_factor = 0.0001;
@@ -143,32 +145,96 @@ impl LasFile {
                 x = point_data.x;
                 y = point_data.y;
                 z = point_data.z;
-                which_return = point_data.bit_field.return_number() as usize;
+                which_return = point_data.return_number() as usize;
             },
             LidarPointRecord::PointRecord1 { point_data, gps_data } => {
                 self.point_data.push(point_data);
                 x = point_data.x;
                 y = point_data.y;
                 z = point_data.z;
-                which_return = point_data.bit_field.return_number() as usize;
+                which_return = point_data.return_number() as usize;
                 self.gps_data.push(gps_data);
             },
-            LidarPointRecord::PointRecord2 { point_data, rgb_data } => {
+            LidarPointRecord::PointRecord2 { point_data, colour_data } => {
                 self.point_data.push(point_data);
                 x = point_data.x;
                 y = point_data.y;
                 z = point_data.z;
-                which_return = point_data.bit_field.return_number() as usize;
-                self.rgb_data.push(rgb_data);
+                which_return = point_data.return_number() as usize;
+                self.colour_data.push(colour_data);
             },
-            LidarPointRecord::PointRecord3 { point_data, gps_data, rgb_data } => {
+            LidarPointRecord::PointRecord3 { point_data, gps_data, colour_data } => {
                 self.point_data.push(point_data);
                 x = point_data.x;
                 y = point_data.y;
                 z = point_data.z;
-                which_return = point_data.bit_field.return_number() as usize;
+                which_return = point_data.return_number() as usize;
                 self.gps_data.push(gps_data);
-                self.rgb_data.push(rgb_data);
+                self.colour_data.push(colour_data);
+            },
+            LidarPointRecord::PointRecord4 { point_data, gps_data, wave_packet } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.waveform_data.push(wave_packet);
+            },
+            LidarPointRecord::PointRecord5 { point_data, gps_data, colour_data, wave_packet } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.colour_data.push(colour_data);
+                self.waveform_data.push(wave_packet);
+            },
+            LidarPointRecord::PointRecord6 { point_data, gps_data } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+            },
+            LidarPointRecord::PointRecord7 { point_data, gps_data, colour_data } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.colour_data.push(colour_data);
+            },
+            LidarPointRecord::PointRecord8 { point_data, gps_data, colour_data } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.colour_data.push(colour_data);
+            },
+            LidarPointRecord::PointRecord9 { point_data, gps_data, wave_packet } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.waveform_data.push(wave_packet);
+            },
+            LidarPointRecord::PointRecord10 { point_data, gps_data, colour_data, wave_packet } => {
+                self.point_data.push(point_data);
+                x = point_data.x;
+                y = point_data.y;
+                z = point_data.z;
+                which_return = point_data.return_number() as usize;
+                self.gps_data.push(gps_data);
+                self.colour_data.push(colour_data);
+                self.waveform_data.push(wave_packet);
             },
         }
 
@@ -193,16 +259,73 @@ impl LasFile {
                 lpr = LidarPointRecord::PointRecord0 { point_data: self.point_data[index] };
             },
             1 => {
-                lpr = LidarPointRecord::PointRecord1 { point_data: self.point_data[index],
-                    gps_data: self.gps_data[index] };
+                lpr = LidarPointRecord::PointRecord1 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index] 
+                };
             },
             2 => {
-                lpr = LidarPointRecord::PointRecord2 { point_data: self.point_data[index],
-                    rgb_data: self.rgb_data[index] };
+                lpr = LidarPointRecord::PointRecord2 { 
+                    point_data: self.point_data[index],
+                    colour_data: self.colour_data[index] 
+                };
             },
             3 => {
-                lpr = LidarPointRecord::PointRecord3 { point_data: self.point_data[index],
-                    gps_data: self.gps_data[index], rgb_data: self.rgb_data[index] };
+                lpr = LidarPointRecord::PointRecord3 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    colour_data: self.colour_data[index] 
+                };
+            },
+            4 => {
+                lpr = LidarPointRecord::PointRecord4 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    wave_packet: self.waveform_data[index] 
+                };
+            },
+            5 => {
+                lpr = LidarPointRecord::PointRecord5 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    colour_data: self.colour_data[index],
+                    wave_packet: self.waveform_data[index] 
+                };
+            },
+            6 => {
+                lpr = LidarPointRecord::PointRecord6 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index]
+                };
+            },
+            7 => {
+                lpr = LidarPointRecord::PointRecord7 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    colour_data: self.colour_data[index]
+                };
+            },
+            8 => {
+                lpr = LidarPointRecord::PointRecord8 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    colour_data: self.colour_data[index]
+                };
+            },
+            9 => {
+                lpr = LidarPointRecord::PointRecord9 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    wave_packet: self.waveform_data[index] 
+                };
+            },
+            10 => {
+                lpr = LidarPointRecord::PointRecord10 { 
+                    point_data: self.point_data[index],
+                    gps_data: self.gps_data[index], 
+                    colour_data: self.colour_data[index],
+                    wave_packet: self.waveform_data[index] 
+                };
             },
             _ => {
                 panic!("Unsupported point format");
@@ -215,9 +338,9 @@ impl LasFile {
         self.point_data[index]
     }
 
-    pub fn get_rgb(&self, index: usize) -> Result<RgbData, Error> {
-        if self.rgb_data.len() >= index {
-            return Ok(self.rgb_data[index]);
+    pub fn get_rgb(&self, index: usize) -> Result<ColourData, Error> {
+        if self.colour_data.len() >= index {
+            return Ok(self.colour_data[index]);
         } else {
             return Err(Error::new(ErrorKind::NotFound, "RGB value not found, possibly because the file point format does not include colour data."));
         }
@@ -231,8 +354,16 @@ impl LasFile {
         }
     }
 
-    pub fn read(&mut self) -> Result<(), Error> {
+    pub fn get_extent(&self) -> BoundingBox {
+        BoundingBox {
+            min_x: self.header.min_x,
+            max_x: self.header.max_x,
+            min_y: self.header.min_y,
+            max_y: self.header.max_y
+        }
+    }
 
+    pub fn read(&mut self) -> Result<(), Error> {
         let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
             false => {
                 let mut f = File::open(&self.file_name)?;
@@ -273,7 +404,8 @@ impl LasFile {
         self.header.version_major = buffer[24];
         self.header.version_minor = buffer[25];
         if self.header.version_major < 1 || self.header.version_major > 2 || self.header.version_minor > 5 {
-            // There's something wrong. It could be that the project ID values are not included in the header.
+            // There's something wrong. It could be that the project ID values, which are optional,
+            // are not included in the header.
             self.header.version_major = buffer[8];
             self.header.version_minor = buffer[9];
             if self.header.version_major < 1 || self.header.version_major > 2 || self.header.version_minor > 5 {
@@ -282,235 +414,408 @@ impl LasFile {
             }
             self.header.project_id_used = false;
         }
-        unsafe {
 
-            //////////////////////////
-            // Read the File Header //
-            //////////////////////////
-            let mut offset: usize = 0;
-            self.header.file_signature = String::from_utf8_lossy(&buffer[offset..offset+4]).to_string();
-            if self.header.file_signature != "LASF" {
-                return Err(Error::new(ErrorKind::Other, "Either the file is formatted incorrectly or it is an unsupported LAS version."));
+        let mut bor = ByteOrderReader::new(buffer, Endianness::LittleEndian);
+        
+        bor.pos = 0;
+        self.header.file_signature = bor.read_utf8(4);
+        if self.header.file_signature != "LASF" {
+            return Err(Error::new(ErrorKind::Other, "Either the file is formatted incorrectly or it is an unsupported LAS version."));
+        }
+        self.header.file_source_id = bor.read_u16();
+        let ge_val = bor.read_u16();
+        self.header.global_encoding = GlobalEncodingField { value: ge_val};
+        if self.header.project_id_used {
+            self.header.project_id1 = bor.read_u32();
+            self.header.project_id2 = bor.read_u16();
+            self.header.project_id3 = bor.read_u16();
+            for i in 0..8 {
+                self.header.project_id4[i] = bor.read_u8();
             }
-            offset += 4;
-            self.header.file_source_id = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            offset += 2;
-            let ge_val = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            self.header.global_encoding = GlobalEncodingField { value: ge_val};
-            offset += 2;
-            if self.header.project_id_used {
-                self.header.project_id1 = mem::transmute::<[u8; 4], u32>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3]]);
-                offset += 4;
-                self.header.project_id2 = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                offset += 2;
-                self.header.project_id3 = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                offset += 2;
-                for i in 0..8 {
-                    self.header.project_id4[i] = buffer[offset + i];
-                }
-                offset += 8;
-            }
-            // The version major and minor are read earlier.
-            // Two bytes that must be added to the offset here.
-            offset += 2;
-            //self.header.project_id4 = String::from_utf8_lossy(&buffer[16..24]).trim().to_string();
-            self.header.system_id = String::from_utf8_lossy(&buffer[offset..offset+32]).trim().to_string();
-            offset += 32;
-            self.header.generating_software = String::from_utf8_lossy(&buffer[offset..offset+32]).trim().to_string();
-            offset += 32;
-            // self.header.system_id = String::from_utf8_lossy(&buffer[26..58]).trim().to_string();
-            // self.header.generating_software = String::from_utf8_lossy(&buffer[58..90]).trim().to_string();
-            self.header.file_creation_day = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            offset += 2;
-            self.header.file_creation_year = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            offset += 2;
-            self.header.header_size = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            offset += 2;
-            self.header.offset_to_points = mem::transmute::<[u8; 4], u32>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3]]);
-            offset += 4;
-            self.header.number_of_vlrs = mem::transmute::<[u8; 4], u32>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3]]);
-            offset += 4;
-            self.header.point_format = buffer[offset];
-            offset += 1;
-            self.header.point_record_length = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-            offset += 2;
-            self.header.number_of_points = mem::transmute::<[u8; 4], u32>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3]]);
-            offset += 4;
+        }
+        // The version major and minor are read earlier.
+        // Two bytes that must be added to the offset here.
+        bor.pos += 2;
+        self.header.system_id = bor.read_utf8(32); 
+        self.header.generating_software = bor.read_utf8(32);
+        self.header.file_creation_day = bor.read_u16();
+        self.header.file_creation_year = bor.read_u16();
+        self.header.header_size = bor.read_u16();
+        self.header.offset_to_points = bor.read_u32();
+        self.header.number_of_vlrs = bor.read_u32();
+        self.header.point_format = bor.read_u8();
+        self.header.point_record_length = bor.read_u16();
+        self.header.number_of_points_old = bor.read_u32();
 
-            // let mut num_returns = 5;
-            // if self.header.version_major == 1_u8 && self.header.version_minor > 3_u8 {
-            //     num_returns = 7;
-            // }
-            // offset = 111;
+        for i in 0..5 {
+            self.header.number_of_points_by_return_old[i] = bor.read_u32();
+        }
+        self.header.x_scale_factor = bor.read_f64();
+        self.header.y_scale_factor = bor.read_f64();
+        self.header.z_scale_factor = bor.read_f64();
+        self.header.x_offset = bor.read_f64();
+        self.header.y_offset = bor.read_f64();
+        self.header.z_offset = bor.read_f64();
+        self.header.max_x = bor.read_f64();
+        self.header.min_x = bor.read_f64();
+        self.header.max_y = bor.read_f64();
+        self.header.min_y = bor.read_f64();
+        self.header.max_z = bor.read_f64();
+        self.header.min_z = bor.read_f64();
+
+        if self.header.version_major == 1 && self.header.version_minor >= 3 {
+            self.header.waveform_data_start = bor.read_u64();
+            self.header.offset_to_ex_vlrs = bor.read_u64();
+            self.header.number_of_extended_vlrs = bor.read_u32();
+            self.header.number_of_points = bor.read_u64();
+            for i in 0..15 {
+                self.header.number_of_points_by_return[i] = bor.read_u64();
+            }
+        }
+
+        if self.header.number_of_points_old != 0 { 
+            self.header.number_of_points = self.header.number_of_points_old as u64;
             for i in 0..5 {
-                self.header.number_of_points_by_return[i] = mem::transmute::<[u8; 4], u32>([buffer[offset + i * 4], buffer[offset + i * 4 + 1], buffer[offset + i * 4 + 2], buffer[offset + i * 4 + 3]]);
-                // self.header.number_of_points_by_return.push(mem::transmute::<[u8; 4], u32>([buffer[offset + i * 4], buffer[offset + i * 4 + 1], buffer[offset + i * 4 + 2], buffer[offset + i * 4 + 3]]));
-            }
-            offset += 5 * 4;
-            self.header.x_scale_factor = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.y_scale_factor = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.z_scale_factor = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.x_offset = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.y_offset = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.z_offset = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.max_x = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.min_x = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.max_y = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.min_y = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.max_z = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            offset += 8;
-            self.header.min_z = mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-
-            if self.header.version_major == 1 && self.header.version_minor == 3 {
-                offset += 8;
-                self.header.waveform_data_start = mem::transmute::<[u8; 8], u64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]);
-            }
-
-            ///////////////////////
-            // Read the VLR data //
-            ///////////////////////
-            offset = self.header.header_size as usize;
-            //self.vlr_data = vec![Vlr{0'u16, "".to_string(), 0'u16, 0'u16, "".to_string()}; self.header.number_of_vlrs as usize];
-            for _ in 0..self.header.number_of_vlrs {
-                let mut vlr: Vlr = Default::default();
-                vlr.reserved = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                offset += 2;
-                vlr.user_id = String::from_utf8_lossy(&buffer[offset..offset+16]).trim().to_string();
-                offset += 16;
-                vlr.record_id = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                offset += 2;
-                vlr.record_length_after_header = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                offset += 2;
-                vlr.description = String::from_utf8_lossy(&buffer[offset..offset+32]).trim().to_string();
-                offset += 32;
-                // get the byte data
-                for i in 0..vlr.record_length_after_header {
-                    vlr.binary_data.push(buffer[offset + i as usize]);
+                if self.header.number_of_points_by_return_old[i] as u64 > self.header.number_of_points_by_return[i] {
+                    self.header.number_of_points_by_return[i] = self.header.number_of_points_by_return_old[i] as u64;
                 }
-                offset += vlr.record_length_after_header as usize;
-                
-                if vlr.record_id == 34_735 {
-                    self.geokeys.add_key_directory(&vlr.binary_data);
-                } else if vlr.record_id == 34_736 {
-                    self.geokeys.add_double_params(&vlr.binary_data);
-                } else if vlr.record_id == 34_737 {
-                    self.geokeys.add_ascii_params(&vlr.binary_data);
-                }
-                self.vlr_data.push(vlr);
+            }
+        }
+
+        ///////////////////////
+        // Read the VLR data //
+        ///////////////////////
+        bor.seek(self.header.header_size as usize);
+        for _ in 0..self.header.number_of_vlrs {
+            let mut vlr: Vlr = Default::default();
+            vlr.reserved = bor.read_u16();
+            vlr.user_id = bor.read_utf8(16);
+            vlr.record_id = bor.read_u16();
+            vlr.record_length_after_header = bor.read_u16();
+            vlr.description = bor.read_utf8(32);
+            // get the byte data
+            for _ in 0..vlr.record_length_after_header {
+                vlr.binary_data.push(bor.read_u8());
+            }
+            
+            if vlr.record_id == 34_735 {
+                self.geokeys.add_key_directory(&vlr.binary_data);
+            } else if vlr.record_id == 34_736 {
+                self.geokeys.add_double_params(&vlr.binary_data);
+            } else if vlr.record_id == 34_737 {
+                self.geokeys.add_ascii_params(&vlr.binary_data);
+            }
+            self.vlr_data.push(vlr);
+        }
+
+        if self.file_mode != "rh" { // file_mode = "rh" does not read points, only the header.
+            /////////////////////////
+            // Read the point data //
+            /////////////////////////
+            
+            // Intensity and userdata are both optional. Figure out if they need to be read.
+            // The only way to do this is to compare the point record length by point format
+            let rec_lengths = [ [20_u16, 18_u16, 19_u16, 17_u16],
+                                [28_u16, 26_u16, 27_u16, 25_u16],
+                                [26_u16, 24_u16, 25_u16, 23_u16],
+                                [34_u16, 32_u16, 33_u16, 31_u16],
+                                [57_u16, 55_u16, 56_u16, 54_u16],
+                                [63_u16, 61_u16, 62_u16, 60_u16],
+                                [30_u16, 28_u16, 29_u16, 27_u16],
+                                [36_u16, 34_u16, 35_u16, 33_u16],
+                                [38_u16, 36_u16, 37_u16, 35_u16],
+                                [59_u16, 57_u16, 58_u16, 56_u16],
+                                [67_u16, 65_u16, 66_u16, 64_u16] ];
+
+            if self.header.point_record_length == rec_lengths[self.header.point_format as usize][0] {
+                self.use_point_intensity = true;
+                self.use_point_userdata = true;
+            } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][1] {
+                self.use_point_intensity = false;
+                self.use_point_userdata = true;
+            } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][2] {
+                self.use_point_intensity = true;
+                self.use_point_userdata = false;
+            } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][3] {
+                self.use_point_intensity = false;
+                self.use_point_userdata = false;
             }
 
-            if self.file_mode != "rh" { // file_mode = "rh" does not read points, only the header.
-                /////////////////////////
-                // Read the point data //
-                /////////////////////////
-                // self.starting_point = 0;
-                // let _ = self.read_points().unwrap();
-
-                // Intensity and userdata are both optional. Figure out if they need to be read.
-                // The only way to do this is to compare the point record length by point format
-                let rec_lengths = [ [20_u16, 18_u16, 19_u16, 17_u16],
-                                    [28_u16, 26_u16, 27_u16, 25_u16],
-                                    [26_u16, 24_u16, 25_u16, 23_u16],
-                                    [34_u16, 32_u16, 33_u16, 31_u16] ];
-
-                if self.header.point_record_length == rec_lengths[self.header.point_format as usize][0] {
-                    self.use_point_intensity = true;
-                    self.use_point_userdata = true;
-                } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][1] {
-                    self.use_point_intensity = false;
-                    self.use_point_userdata = true;
-                } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][2] {
-                    self.use_point_intensity = true;
-                    self.use_point_userdata = false;
-                } else if self.header.point_record_length == rec_lengths[self.header.point_format as usize][3] {
-                    self.use_point_intensity = false;
-                    self.use_point_userdata = false;
-                }
-
+            if self.header.point_format == 0 {
                 for i in 0..self.header.number_of_points {
-                    offset = (self.header.offset_to_points + (i as u32) * (self.header.point_record_length as u32)) as usize;
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = ((mem::transmute::<[u8; 4], i32>([buffer[offset], buffer[offset+1], buffer[offset+2],
-                        buffer[offset+3]])) as f64) * self.header.x_scale_factor + self.header.x_offset;
-                    offset += 4;
-                    p.y = ((mem::transmute::<[u8; 4], i32>([buffer[offset], buffer[offset+1], buffer[offset+2],
-                        buffer[offset+3]])) as f64) * self.header.y_scale_factor + self.header.y_offset;
-                    offset += 4;
-                    p.z = ((mem::transmute::<[u8; 4], i32>([buffer[offset], buffer[offset+1], buffer[offset+2],
-                        buffer[offset+3]])) as f64) * self.header.z_scale_factor + self.header.z_offset;
-                    offset += 4;
-                    if self.use_point_intensity {
-                        p.intensity = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        offset += 2;
-                    }
-                    p.bit_field =  PointBitField { value: buffer[offset] };
-                    offset += 1;
-                    p.class_bit_field = ClassificationBitField { value: buffer[offset] };
-                    offset += 1;
-                    p.scan_angle = mem::transmute::<[u8; 1], i8>([buffer[offset]]);
-                    offset += 1;
-                    if self.use_point_userdata {
-                        p.user_data = buffer[offset];
-                        offset += 1;
-                    }
-                    p.point_source_id = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
                     self.point_data.push(p);
                 }
-
-                if self.header.point_format == 1 {
+            } else if self.header.point_format == 1 {
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
                     // read the GPS data
-                    for i in 0..self.header.number_of_points {
-                        offset = (self.header.offset_to_points + 20u32 + (i as u32) * (self.header.point_record_length as u32)) as usize;
-                        self.gps_data.push(mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]));
-                    }
-                } else if self.header.point_format == 2 {
+                    self.gps_data.push(bor.read_f64());
+                }
+            } else if self.header.point_format == 2 {
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
                     // read the RGB data
-                    for i in 0..self.header.number_of_points {
-                        offset = (self.header.offset_to_points + 20u32 + (i as u32) * (self.header.point_record_length as u32)) as usize;
-                        let mut rgb: RgbData = Default::default();
-                        rgb.red = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        offset += 2;
-                        rgb.green = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        offset += 2;
-                        rgb.blue = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        self.rgb_data.push(rgb);
-                        // let r: u16 = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        // offset += 2;
-                        // let g: u16 = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        // offset += 2;
-                        // let b: u16 = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        // self.rgb_data.push(RgbData { red: r, green: g, blue: b });
-                    }
-                } else if self.header.point_format == 3 {
-                    for i in 0..self.header.number_of_points {
-                        // read the GPS data
-                        offset = (self.header.offset_to_points + 20u32 + (i as u32) * (self.header.point_record_length as u32)) as usize;
-                        self.gps_data.push(mem::transmute::<[u8; 8], f64>([buffer[offset], buffer[offset+1], buffer[offset+2], buffer[offset+3], buffer[offset+4], buffer[offset+5], buffer[offset+6], buffer[offset+7]]));
-                        offset += 8;
-                        // read the RGB data
-                        let mut rgb: RgbData = Default::default();
-                        rgb.red = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        offset += 2;
-                        rgb.green = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        offset += 2;
-                        rgb.blue = mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset+1]]);
-                        self.rgb_data.push(rgb);
-                    }
-                } else if self.header.point_format == 4 {
-
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    self.colour_data.push(rgb);
+                }
+            } else if self.header.point_format == 3 {
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the RGB data
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    self.colour_data.push(rgb);
+                }
+            } else if self.header.point_format == 4 {
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the waveform data
+                    let mut wfp: WaveformPacket = Default::default();
+                    wfp.packet_descriptor_index = bor.read_u8();
+                    wfp.offset_to_waveform_data = bor.read_u64();
+                    wfp.waveform_packet_size = bor.read_u32();
+                    wfp.ret_point_waveform_loc = bor.read_f32();
+                    wfp.xt = bor.read_f32();
+                    wfp.yt = bor.read_f32();
+                    wfp.zt = bor.read_f32();
+                    self.waveform_data.push(wfp);
+                }
+            } else if self.header.point_format == 5 {
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.scan_angle = bor.read_i8() as i16;
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the RGB data
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    self.colour_data.push(rgb);
+                    // read the waveform data
+                    let mut wfp: WaveformPacket = Default::default();
+                    wfp.packet_descriptor_index = bor.read_u8();
+                    wfp.offset_to_waveform_data = bor.read_u64();
+                    wfp.waveform_packet_size = bor.read_u32();
+                    wfp.ret_point_waveform_loc = bor.read_f32();
+                    wfp.xt = bor.read_f32();
+                    wfp.yt = bor.read_f32();
+                    wfp.zt = bor.read_f32();
+                    self.waveform_data.push(wfp);
+                }
+            } else if self.header.point_format == 6 { // 64-bit
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.is_64bit = true;
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.classification = bor.read_u8();
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.scan_angle = bor.read_i16();
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                }
+            } else if self.header.point_format == 7 { // 64-bit
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.is_64bit = true;
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.classification = bor.read_u8();
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.scan_angle = bor.read_i16();
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the RGB data
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    self.colour_data.push(rgb);
+                }
+            } else if self.header.point_format == 8 { // 64-bit
+                // adds a NIR band to Point Format 7
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.is_64bit = true;
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.classification = bor.read_u8();
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.scan_angle = bor.read_i16();
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the RGBNIR data
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    rgb.nir = bor.read_u16();
+                    self.colour_data.push(rgb);
+                }
+            } else if self.header.point_format == 9 { // 64-bit
+                // adds waveform packets to Point Format 6
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.is_64bit = true;
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.classification = bor.read_u8();
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.scan_angle = bor.read_i16();
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the waveform data
+                    let mut wfp: WaveformPacket = Default::default();
+                    wfp.packet_descriptor_index = bor.read_u8();
+                    wfp.offset_to_waveform_data = bor.read_u64();
+                    wfp.waveform_packet_size = bor.read_u32();
+                    wfp.ret_point_waveform_loc = bor.read_f32();
+                    wfp.xt = bor.read_f32();
+                    wfp.yt = bor.read_f32();
+                    wfp.zt = bor.read_f32();
+                    self.waveform_data.push(wfp);
+                }
+            } else if self.header.point_format == 10 { // 64-bit
+                // Everythin in one record
+                for i in 0..self.header.number_of_points {
+                    bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
+                    let mut p: PointData = Default::default();
+                    p.is_64bit = true;
+                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    if self.use_point_intensity { p.intensity = bor.read_u16(); }
+                    p.point_bit_field = bor.read_u8();
+                    p.class_bit_field = bor.read_u8();
+                    p.classification = bor.read_u8();
+                    if self.use_point_userdata { p.user_data = bor.read_u8(); }
+                    p.scan_angle = bor.read_i16();
+                    p.point_source_id = bor.read_u16();
+                    self.point_data.push(p);
+                    // read the GPS data
+                    self.gps_data.push(bor.read_f64());
+                    // read the RGBNIR data
+                    let mut rgb: ColourData = Default::default();
+                    rgb.red = bor.read_u16();
+                    rgb.green = bor.read_u16();
+                    rgb.blue = bor.read_u16();
+                    rgb.nir = bor.read_u16();
+                    self.colour_data.push(rgb);
+                    // read the waveform data
+                    let mut wfp: WaveformPacket = Default::default();
+                    wfp.packet_descriptor_index = bor.read_u8();
+                    wfp.offset_to_waveform_data = bor.read_u64();
+                    wfp.waveform_packet_size = bor.read_u32();
+                    wfp.ret_point_waveform_loc = bor.read_f32();
+                    wfp.xt = bor.read_f32();
+                    wfp.yt = bor.read_f32();
+                    wfp.zt = bor.read_f32();
+                    self.waveform_data.push(wfp);
                 }
             }
-
         }
 
         Ok(())
@@ -625,7 +930,7 @@ impl LasFile {
         u16_bytes = unsafe { mem::transmute(self.header.file_creation_year) };
         writer.write_all(&u16_bytes)?;
         
-        self.header.header_size = 235;
+        self.header.header_size = 235; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
         u16_bytes = unsafe { mem::transmute(self.header.header_size) };
         writer.write_all(&u16_bytes)?;
     
@@ -634,12 +939,47 @@ impl LasFile {
         for i in 0..(self.header.number_of_vlrs as usize) {
             total_vlr_size += self.vlr_data[i].record_length_after_header as u32;
         }
-        self.header.offset_to_points = 235 + total_vlr_size;
+        self.header.offset_to_points = 235 + total_vlr_size; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
         u32_bytes = unsafe { mem::transmute(self.header.offset_to_points) };
         writer.write_all(&u32_bytes)?;
         
         u32_bytes = unsafe { mem::transmute(self.header.number_of_vlrs) };
         writer.write_all(&u32_bytes)?;
+
+        ////////////////////////////////////////////////////////////////////////
+        // THIS NEEDS TO BE REMOVED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING //
+        ////////////////////////////////////////////////////////////////////////
+        self.header.point_format = match self.header.point_format {
+            0u8 => 0u8,
+            1u8 => 1u8,
+            2u8 => 2u8,
+            3u8 => 3u8,
+            4u8 => { 
+                println!("Warning: Point Format 4 is not supported for output. Some data will be lost."); 
+                1u8
+            }, 
+            5u8 => { 
+                println!("Warning: Point Format 5 is not supported for output. Some data will be lost."); 
+                3u8
+            }, 
+            6u8 => 1u8,
+            7u8 => 3u8,
+            8u8 => { 
+                println!("Warning: Point Format 8 is not supported for output. Some data will be lost."); 
+                3u8
+            },  
+            9u8 => { 
+                println!("Warning: Point Format 9 is not supported for output. Some data will be lost."); 
+                1u8
+            }, 
+            10u8 => { 
+                println!("Warning: Point Format 10 is not supported for output. Some data will be lost."); 
+                3u8
+            },  
+            _ => { 
+                return Err(Error::new(ErrorKind::Other, "Unsupported point format")); 
+            },
+        };
         
         u8_bytes = unsafe {mem::transmute(self.header.point_format)};
         writer.write_all(&u8_bytes)?;
@@ -664,11 +1004,16 @@ impl LasFile {
         u16_bytes = unsafe { mem::transmute(self.header.point_record_length) };
         writer.write_all(&u16_bytes)?;
         
-        u32_bytes = unsafe { mem::transmute(self.header.number_of_points) };
+        if self.header.number_of_points <= u32::max_value() as u64 {
+            self.header.number_of_points_old = self.header.number_of_points as u32; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
+        } else {
+            return Err(Error::new(ErrorKind::Other, "The number of points in this file requires a 64-bit format. Currently LAS 1.4 files cannot be written.")); 
+        }
+        u32_bytes = unsafe { mem::transmute(self.header.number_of_points_old) };
         writer.write_all(&u32_bytes)?;
         
-        for i in 0..5 {
-            u32_bytes = unsafe { mem::transmute(self.header.number_of_points_by_return[i]) };
+        for i in 0..5 { // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
+            u32_bytes = unsafe { mem::transmute(self.header.number_of_points_by_return[i] as u32) };
             writer.write_all(&u32_bytes)?;
         }
 
@@ -760,13 +1105,13 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].point_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle as i8)};
                     writer.write_all(&u8_bytes)?;
                     
                     if self.use_point_userdata {
@@ -797,13 +1142,13 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].point_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle as i8)};
                     writer.write_all(&u8_bytes)?;
                     
                     if self.use_point_userdata {
@@ -837,13 +1182,13 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].point_bit_field)};
                     writer.write_all(&u8_bytes)?;
 
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle as i8)};
                     writer.write_all(&u8_bytes)?;
                     
                     if self.use_point_userdata {
@@ -854,13 +1199,13 @@ impl LasFile {
                     u16_bytes = unsafe { mem::transmute(self.point_data[i].point_source_id) };
                     writer.write_all(&u16_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].red) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].red) };
                     writer.write_all(&u16_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].green) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].green) };
                     writer.write_all(&u16_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].blue) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].blue) };
                     writer.write_all(&u16_bytes)?;
                 }
             },
@@ -883,13 +1228,13 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].point_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field.value)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].class_bit_field)};
                     writer.write_all(&u8_bytes)?;
                     
-                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle)};
+                    u8_bytes = unsafe {mem::transmute(self.point_data[i].scan_angle as i8)};
                     writer.write_all(&u8_bytes)?;
                     
                     if self.use_point_userdata {
@@ -903,13 +1248,13 @@ impl LasFile {
                     u64_bytes = unsafe { mem::transmute(self.gps_data[i]) };
                     writer.write_all(&u64_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].red) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].red) };
                     writer.write_all(&u16_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].green) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].green) };
                     writer.write_all(&u16_bytes)?;
                     
-                    u16_bytes = unsafe { mem::transmute(self.rgb_data[i].blue) };
+                    u16_bytes = unsafe { mem::transmute(self.colour_data[i].blue) };
                     writer.write_all(&u16_bytes)?;
                 }
             },
@@ -1017,12 +1362,19 @@ pub enum CoordinateReferenceSystem {
 pub enum LidarPointRecord {
     PointRecord0 { point_data: PointData },
     PointRecord1 { point_data: PointData, gps_data: f64 },
-    PointRecord2 { point_data: PointData, rgb_data: RgbData },
-    PointRecord3 { point_data: PointData, gps_data: f64, rgb_data: RgbData }
+    PointRecord2 { point_data: PointData, colour_data: ColourData },
+    PointRecord3 { point_data: PointData, gps_data: f64, colour_data: ColourData },
+    PointRecord4 { point_data: PointData, gps_data: f64, wave_packet: WaveformPacket },
+    PointRecord5 { point_data: PointData, gps_data: f64, colour_data: ColourData, wave_packet: WaveformPacket },
+    PointRecord6 { point_data: PointData, gps_data: f64 },
+    PointRecord7 { point_data: PointData, gps_data: f64, colour_data: ColourData },
+    PointRecord8 { point_data: PointData, gps_data: f64, colour_data: ColourData },
+    PointRecord9 { point_data: PointData, gps_data: f64, wave_packet: WaveformPacket },
+    PointRecord10 { point_data: PointData, gps_data: f64, colour_data: ColourData, wave_packet: WaveformPacket }
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord0 {
+pub struct PointRecord0 {
     pub point_data: PointData,
 }
 
@@ -1033,7 +1385,7 @@ impl PointRecord0 {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord1 {
+pub struct PointRecord1 {
     pub point_data: PointData,
     pub gps_data: f64,
 }
@@ -1045,9 +1397,9 @@ impl PointRecord1 {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord2 {
+pub struct PointRecord2 {
     pub point_data: PointData,
-    pub rgb_data: RgbData,
+    pub colour_data: ColourData,
 }
 
 impl PointRecord2 {
@@ -1057,10 +1409,10 @@ impl PointRecord2 {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord3 {
+pub struct PointRecord3 {
     pub point_data: PointData,
     pub gps_data: f64,
-    pub rgb_data: RgbData,
+    pub colour_data: ColourData,
 }
 
 impl PointRecord3 {
@@ -1070,7 +1422,7 @@ impl PointRecord3 {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord4 {
+pub struct PointRecord4 {
     pub point_data: PointData,
     pub gps_data: f64,
     pub wave_packet: WaveformPacket,
@@ -1083,16 +1435,81 @@ impl PointRecord4 {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct  PointRecord5 {
+pub struct PointRecord5 {
     pub point_data: PointData,
     pub gps_data: f64,
-    pub rgb_data: RgbData,
+    pub colour_data: ColourData,
     pub wave_packet: WaveformPacket,
 }
 
 impl PointRecord5 {
     pub fn get_format(&self) -> u8 {
         5u8
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug)]
+pub struct PointRecord6 {
+    pub point_data: PointData,
+    pub gps_data: f64,
+}
+
+impl PointRecord6 {
+    pub fn get_format(&self) -> u8 {
+        6u8
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug)]
+pub struct PointRecord7 {
+    pub point_data: PointData,
+    pub gps_data: f64,
+    pub colour_data: ColourData,
+}
+
+impl PointRecord7 {
+    pub fn get_format(&self) -> u8 {
+        7u8
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug)]
+pub struct PointRecord8 {
+    pub point_data: PointData,
+    pub gps_data: f64,
+    pub colour_data: ColourData,
+}
+
+impl PointRecord8 {
+    pub fn get_format(&self) -> u8 {
+        8u8
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug)]
+pub struct PointRecord9 {
+    pub point_data: PointData,
+    pub gps_data: f64,
+    pub wave_packet: WaveformPacket,
+}
+
+impl PointRecord9 {
+    pub fn get_format(&self) -> u8 {
+        9u8
+    }
+}
+
+#[derive(Default, Copy, Clone, Debug)]
+pub struct PointRecord10 {
+    pub point_data: PointData,
+    pub gps_data: f64,
+    pub colour_data: ColourData,
+    pub wave_packet: WaveformPacket,
+}
+
+impl PointRecord10 {
+    pub fn get_format(&self) -> u8 {
+        10u8
     }
 }
 

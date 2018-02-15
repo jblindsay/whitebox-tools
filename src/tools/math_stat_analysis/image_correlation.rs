@@ -180,7 +180,7 @@ impl WhiteboxTool for ImageCorrelation {
             extension.push_str(ext);
             output_file = files_vec[0].replace(&extension, ".html");
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -189,7 +189,7 @@ impl WhiteboxTool for ImageCorrelation {
             let value = files_vec[a];
             if !value.trim().is_empty() {
                 let mut input_file = value.trim().to_owned();
-                if !input_file.contains(&sep) {
+                if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
                 file_names.push(input_file);

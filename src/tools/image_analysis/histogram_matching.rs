@@ -169,13 +169,13 @@ impl WhiteboxTool for HistogramMatching {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !histo_file.contains(&sep) {
+        if !histo_file.contains(&sep) && !histo_file.contains("/") {
             histo_file = format!("{}{}", working_directory, histo_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

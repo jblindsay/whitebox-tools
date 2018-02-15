@@ -138,10 +138,10 @@ impl WhiteboxTool for FindFlightlineEdgePoints {
         }
 
         let sep = path::MAIN_SEPARATOR;
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(sep) {
+        if !output_file.contains(sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -163,7 +163,7 @@ impl WhiteboxTool for FindFlightlineEdgePoints {
         
         let mut num_output_points = 0;
         for i in 0..input.header.number_of_points as usize {
-            if input.get_point_info(i).bit_field.edge_of_flightline_flag() {
+            if input.get_point_info(i).edge_of_flightline_flag() {
                 output.add_point_record(input.get_record(i));
                 num_output_points += 1;
             }

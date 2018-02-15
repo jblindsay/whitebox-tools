@@ -149,10 +149,10 @@ impl WhiteboxTool for ElevAbovePit {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !dem_file.contains(&sep) {
+        if !dem_file.contains(&sep) && !dem_file.contains("/") {
             dem_file = format!("{}{}", working_directory, dem_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

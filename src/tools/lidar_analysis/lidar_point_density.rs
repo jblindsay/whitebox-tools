@@ -2,8 +2,13 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 10, 2017
-Last Modified: Feb. 6, 2018
+Last Modified: Feb. 15, 2018
 License: MIT
+
+NOTES:
+1. This tool is designed to work either by specifying a single input and output file or
+   a working directory containing multiple input LAS files.
+2. Need to add the ability to exclude points based on max scan angle divation.
 */
 extern crate time;
 extern crate num_cpus;
@@ -13,11 +18,12 @@ use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 use std::thread;
 use lidar::*;
 use raster::*;
+use structures::BoundingBox;
 use structures::FixedRadiusSearch2D;
 use tools::*;
 
@@ -278,32 +284,13 @@ impl WhiteboxTool for LidarPointDensity {
             }
         }
 
-        let start = time::now();
-
-        let mut inputs = vec![];
-        let mut outputs = vec![];
-        if input_file.is_empty() {
-            if working_directory.is_empty() {
-                return Err(Error::new(ErrorKind::InvalidInput,
-                    "This tool must be run by specifying either an individual input file or a working directory."));
-            }
-            match fs::read_dir(working_directory) {
-                Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(inputs[inputs.len()-1].replace(".las", ".tif").replace(".LAS", ".tif"))
-                    }
-                },
-            }
-        } else {
-            inputs.push(input_file.clone());
-            if output_file.is_empty() {
-                output_file = input_file.clone().replace(".las", ".tif").replace(".LAS", ".tif");
-            }
-            outputs.push(output_file);
+        if verbose {
+            println!("***************{}", "*".repeat(self.get_tool_name().len()));
+            println!("* Welcome to {} *", self.get_tool_name());
+            println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
+
+        let start = time::now();
 
         let (all_returns, late_returns, early_returns): (bool, bool, bool);
         if return_type.contains("last") {
@@ -321,158 +308,261 @@ impl WhiteboxTool for LidarPointDensity {
             early_returns = false;
         }
 
-        if verbose {
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
-            println!("* Welcome to {} *", self.get_tool_name());
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
-        }
-
-        for k in 0..inputs.len() {
-            input_file = inputs[k].replace("\"", "").clone();
-            output_file = outputs[k].replace("\"", "").clone();
-
-            if verbose && inputs.len() > 1 {
-                println!("Gridding {} of {} ({})", k+1, inputs.len(), input_file.clone());
+        let mut inputs = vec![];
+        let mut outputs = vec![];
+        if input_file.is_empty() {
+            if working_directory.is_empty() {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                    "This tool must be run by specifying either an individual input file or a working directory."));
             }
-
-            if !input_file.contains(path::MAIN_SEPARATOR) {
+            match fs::read_dir(working_directory) {
+                Err(why) => println!("! {:?}", why.kind()),
+                Ok(paths) => for path in paths {
+                    let s = format!("{:?}", path.unwrap().path());
+                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                        outputs.push(inputs[inputs.len()-1].replace(".las", ".tif").replace(".LAS", ".tif"))
+                    } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                        outputs.push(inputs[inputs.len()-1].replace(".zip", ".tif").replace(".ZIP", ".tif"))
+                    }
+                },
+            }
+        } else {
+            if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
                 input_file = format!("{}{}", working_directory, input_file);
             }
-            if !output_file.contains(path::MAIN_SEPARATOR) {
-                output_file = format!("{}{}", working_directory, output_file);
+            inputs.push(input_file.clone());
+            if output_file.is_empty() {
+                output_file = input_file.clone().replace(".las", ".tif").replace(".LAS", ".tif");
             }
+            outputs.push(output_file);
+        }
 
-            if verbose && inputs.len() == 1 {
-                println!("Reading input LAS file...");
-            }
-            let input = match LasFile::new(&input_file, "r") {
-                Ok(lf) => lf,
-                Err(err) => panic!("Error reading file {}: {}", input_file, err),
-            };
+        /*
+        If multiple files are being interpolated, we will need to know their bounding boxes,
+        in order to retrieve points from adjacent tiles. This is so that there are no edge
+        effects.
+        */
+        let mut bounding_boxes = vec![];
+        for in_file in &inputs {
+            let header = LasHeader::read_las_header(&in_file.replace("\"", ""))?;
+            bounding_boxes.push(BoundingBox{
+                min_x: header.min_x,
+                max_x: header.max_x,
+                min_y: header.min_y,
+                max_y: header.max_y
+            });
+        }
 
-            let start_run = time::now();
+        if verbose {
+            println!("Performing analysis...");
+        }
 
-            if verbose && inputs.len() == 1 {
-                println!("Performing analysis...");
-            }
+        let num_tiles = inputs.len();
+        let tile_list = Arc::new(Mutex::new(0..num_tiles));
+        let inputs = Arc::new(inputs);
+        let outputs = Arc::new(outputs);
+        let bounding_boxes = Arc::new(bounding_boxes);
+        let num_procs2 = num_cpus::get() as isize;
+        let (tx2, rx2) = mpsc::channel();
+        for _ in 0..num_procs2 {
+            let inputs = inputs.clone();
+            let outputs = outputs.clone();
+            let bounding_boxes = bounding_boxes.clone();
+            let tile_list = tile_list.clone();
+            // copy over the string parameters
+            let palette = palette.clone();
+            let return_type = return_type.clone();
+            let tool_name = self.get_tool_name();
+            let exclude_cls_str = exclude_cls_str.clone();
+            let include_class_vals = include_class_vals.clone();
+            let tx2 = tx2.clone();
+            thread::spawn(move || {
+                let mut tile = 0;
+                while tile < num_tiles {
+                    // Get the next tile up for interpolation
+                    tile = match tile_list.lock().unwrap().next() {
+                        Some(val) => val, 
+                        None => break, // There are no more tiles to interpolate
+                    };
+                    let start_run = time::now();
 
-            let n_points = input.header.number_of_points as usize;
-            let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+                    let input_file = inputs[tile].replace("\"", "").clone();
+                    let output_file = outputs[tile].replace("\"", "").clone();
 
-            let mut progress: i32;
-            let mut old_progress: i32 = -1;
-            let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius);
-            for i in 0..n_points {
-                let p: PointData = input[i];
-                if !p.class_bit_field.withheld() {
-                    if all_returns || (p.is_late_return() & late_returns) ||
-                    (p.is_early_return() & early_returns) {
-                        if include_class_vals[p.classification() as usize] {
-                            if p.z >= min_z && p.z <= max_z {
-                                frs.insert(p.x, p.y, i);
+                    // Expand the bounding box to include the areas of overlap
+                    let bb = BoundingBox{
+                        min_x: bounding_boxes[tile].min_x - search_radius,
+                        max_x: bounding_boxes[tile].max_x + search_radius,
+                        min_y: bounding_boxes[tile].min_y - search_radius,
+                        max_y: bounding_boxes[tile].max_y + search_radius
+                    };
+
+                    let mut frs: FixedRadiusSearch2D<u8> = FixedRadiusSearch2D::new(search_radius);
+                    
+                    if verbose && inputs.len() == 1 {
+                        println!("Reading input LAS file...");
+                    }
+
+                    let mut progress: i32;
+                    let mut old_progress: i32 = -1;
+
+                    for m in 0..inputs.len() {
+                        if bounding_boxes[m].overlaps(bb) {
+                            let input = match LasFile::new(&inputs[m].replace("\"", "").clone(), "r") {
+                                Ok(lf) => lf,
+                                Err(err) => panic!("Error reading file {}: {}", inputs[m].replace("\"", ""), err),
+                            };
+                        
+                            let n_points = input.header.number_of_points as usize;
+                            let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+
+                            for i in 0..n_points {
+                                let p: PointData = input[i];
+                                if !p.withheld() {
+                                    if all_returns || (p.is_late_return() & late_returns) ||
+                                    (p.is_early_return() & early_returns) {
+                                        if include_class_vals[p.classification() as usize] {
+                                            if bb.is_point_in_box(p.x, p.y) && p.z >= min_z && p.z <= max_z {
+                                                frs.insert(p.x, p.y, 1u8);
+                                            }
+                                        }
+                                    }
+                                }
+                                if verbose && inputs.len() == 1 {
+                                    progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                    if progress != old_progress {
+                                        println!("Binning points: {}%", progress);
+                                        old_progress = progress;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-                if verbose {
-                    progress = (100.0_f64 * i as f64 / num_points) as i32;
-                    if progress != old_progress {
-                        println!("Binning points: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
 
-            let west: f64 = input.header.min_x;
-            let north: f64 = input.header.max_y;
-            let rows: isize = (((north - input.header.min_y) / grid_res).ceil()) as isize;
-            let columns: isize = (((input.header.max_x - west) / grid_res).ceil()) as isize;
-            let south: f64 = north - rows as f64 * grid_res;
-            let east = west + columns as f64 * grid_res;
-            let nodata = -32768.0f64;
+                    let west: f64 = bounding_boxes[tile].min_x;
+                    let north: f64 = bounding_boxes[tile].max_y;
+                    let rows: isize = (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
+                    let columns: isize = (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
+                    let south: f64 = north - rows as f64 * grid_res;
+                    let east = west + columns as f64 * grid_res;
+                    let nodata = -32768.0f64;
 
-            let mut configs = RasterConfigs { ..Default::default() };
-            configs.rows = rows as usize;
-            configs.columns = columns as usize;
-            configs.north = north;
-            configs.south = south;
-            configs.east = east;
-            configs.west = west;
-            configs.resolution_x = grid_res;
-            configs.resolution_y = grid_res;
-            configs.nodata = nodata;
-            configs.data_type = DataType::F64;
-            configs.photometric_interp = PhotometricInterpretation::Continuous;
-            configs.palette = palette.clone();
+                    let mut configs = RasterConfigs { ..Default::default() };
+                    configs.rows = rows as usize;
+                    configs.columns = columns as usize;
+                    configs.north = north;
+                    configs.south = south;
+                    configs.east = east;
+                    configs.west = west;
+                    configs.resolution_x = grid_res;
+                    configs.resolution_y = grid_res;
+                    configs.nodata = nodata;
+                    configs.data_type = DataType::F64;
+                    configs.photometric_interp = PhotometricInterpretation::Continuous;
+                    configs.palette = palette.clone();
 
-            let mut output = Raster::initialize_using_config(&output_file, &configs);
+                    let mut output = Raster::initialize_using_config(&output_file, &configs);
 
-            let frs = Arc::new(frs); // wrap FRS in an Arc
-            let search_area = f64::consts::PI * search_radius * search_radius;
-            let num_procs = num_cpus::get() as isize;
-            let (tx, rx) = mpsc::channel();
-            for tid in 0..num_procs {
-                let frs = frs.clone();
-                let tx1 = tx.clone();
-                thread::spawn(move || {
-                    let (mut x, mut y): (f64, f64);
-                    for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        let mut data = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            x = west + col as f64 * grid_res + 0.5;
-                            y = north - row as f64 * grid_res - 0.5;
-                            let ret = frs.search(x, y);
-                            if ret.len() > 0 {
-                                data[col as usize] = ret.len() as f64 / search_area;
+                    let search_area = f64::consts::PI * search_radius * search_radius;
+
+                    if num_tiles > 1 {
+                        let (mut x, mut y): (f64, f64);
+                        for row in 0..rows {
+                            for col in 0..columns {
+                                x = west + col as f64 * grid_res + 0.5;
+                                y = north - row as f64 * grid_res - 0.5;
+                                let ret = frs.search(x, y);
+                                output.set_value(row, col, ret.len() as f64 / search_area);
+                            }
+                            if verbose && inputs.len() == 1 {
+                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                if progress != old_progress {
+                                    println!("Progress: {}%", progress);
+                                    old_progress = progress;
+                                }
                             }
                         }
-                        tx1.send((row, data)).unwrap();
-                    }
-                });
-            }
+                    } else { // there's only one tile, so use all cores to interpolate this one tile.
+                        let frs = Arc::new(frs); // wrap FRS in an Arc
+                        let num_procs = num_cpus::get() as isize;
+                        let (tx, rx) = mpsc::channel();
+                        for tid in 0..num_procs {
+                            let frs = frs.clone();
+                            let tx1 = tx.clone();
+                            thread::spawn(move || {
+                                let (mut x, mut y): (f64, f64);
+                                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                                    let mut data = vec![nodata; columns as usize];
+                                    for col in 0..columns {
+                                        x = west + col as f64 * grid_res + 0.5;
+                                        y = north - row as f64 * grid_res - 0.5;
+                                        let ret = frs.search(x, y);
+                                        data[col as usize] = ret.len() as f64 / search_area;
+                                    }
+                                    tx1.send((row, data)).unwrap();
+                                }
+                            });
+                        }
 
-            for row in 0..rows {
-                let data = rx.recv().unwrap();
-                output.set_row_data(data.0, data.1);
-                if verbose {
-                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                    if progress != old_progress {
-                        println!("Progress: {}%", progress);
-                        old_progress = progress;
+                        for row in 0..rows {
+                            let data = rx.recv().unwrap();
+                            output.set_row_data(data.0, data.1);
+                            if verbose {
+                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                if progress != old_progress {
+                                    println!("Progress: {}%", progress);
+                                    old_progress = progress;
+                                }
+                            }
+                        }
                     }
+
+                    let end_run = time::now();
+                    let elapsed_time_run = end_run - start_run;  
+
+                    output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
+                    output.add_metadata_entry(format!("Input file: {}", input_file));
+                    output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                    output.add_metadata_entry(format!("Search radius: {}", search_radius));
+                    output.add_metadata_entry(format!("Returns: {}", return_type));
+                    output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
+                    output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time_run).replace("PT", ""));
+
+                    if verbose && inputs.len() == 1 {
+                        println!("Saving data...")
+                    };
+
+                    let _ = output.write().unwrap();
+
+                    tx2.send(tile).unwrap();
                 }
-            }
+            });
+        }
 
-            let end_run = time::now();
-            let elapsed_time_run = end_run - start_run;  
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                            self.get_tool_name()));
-            output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-            output.add_metadata_entry(format!("Search radius: {}", search_radius));
-            output.add_metadata_entry(format!("Returns: {}", return_type));
-            output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                        .replace("PT", ""));
-
+        let mut progress: i32;
+        let mut old_progress: i32 = -1;
+        for tile in 0..inputs.len() {
+            let tile_completed = rx2.recv().unwrap();
             if verbose {
-                println!("Saving data...")
-            };
-            let _ = match output.write() {
-                Ok(_) => {
-                    if verbose {
-                        println!("Output file written")
-                    }
+                    println!("Finished interpolating {} ({} of {})", inputs[tile_completed].replace("\"", "").replace(working_directory, "").replace(".las", ""), tile+1, inputs.len());
+            }
+            if verbose {
+                progress = (100.0_f64 * tile as f64 / (inputs.len() - 1) as f64) as i32;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
                 }
-                Err(e) => return Err(e),
-            };
+            }
         }
 
         let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = end - start;    
 
-        println!("{}",
-                 &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

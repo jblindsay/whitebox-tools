@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 5/12/2017, 2017
-Last Modified: 15/12/2017, 2017
+Created: 5/12/2017
+Last Modified: 14/02/2018
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -203,10 +203,10 @@ impl WhiteboxTool for LidarSegmentation {
         }
 
         let sep = path::MAIN_SEPARATOR;
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(sep) {
+        if !output_file.contains(sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -374,8 +374,8 @@ impl WhiteboxTool for LidarSegmentation {
         for point_num in 0..n_points {
             let p: PointData = input[point_num];
             let seg_val = segment_id[point_num];
-            let rgb: RgbData = RgbData{ red: clrs[seg_val].0, green: clrs[seg_val].1, blue: clrs[seg_val].2 };
-            let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
+            let rgb: ColourData = ColourData{ red: clrs[seg_val].0, green: clrs[seg_val].1, blue: clrs[seg_val].2, nir: 0u16 };
+            let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 { point_data: p, colour_data: rgb };
             output.add_point_record(lpr);
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;

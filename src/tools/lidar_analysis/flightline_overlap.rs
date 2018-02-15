@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
-Last Modified: Feb. 6, 2018
+Last Modified: February 14, 2018
 License: MIT
 
 NOTES: This tool needs to be parallelized.
@@ -222,10 +222,10 @@ impl WhiteboxTool for FlightlineOverlap {
                 println!("Gridding {} of {} ({})", k+1, inputs.len(), input_file.clone());
             }
 
-            if !input_file.contains(path::MAIN_SEPARATOR) {
+            if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
                 input_file = format!("{}{}", working_directory, input_file);
             }
-            if !output_file.contains(path::MAIN_SEPARATOR) {
+            if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
                 output_file = format!("{}{}", working_directory, output_file);
             }
 
@@ -270,12 +270,12 @@ impl WhiteboxTool for FlightlineOverlap {
                     LidarPointRecord::PointRecord3 {
                         point_data,
                         gps_data,
-                        rgb_data,
+                        colour_data,
                     } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
-                        let _ = rgb_data; // just to kill the 'unused variable' warning
+                        let _ = colour_data; // just to kill the 'unused variable' warning
                     }
                     _ => {
                         panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");

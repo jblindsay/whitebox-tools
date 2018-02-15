@@ -183,10 +183,10 @@ impl WhiteboxTool for SobelFilter {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

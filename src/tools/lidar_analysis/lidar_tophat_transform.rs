@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: January 21, 2018
+Last Modified: February 14, 2018
 License: MIT
 */
 extern crate time;
@@ -159,10 +159,10 @@ impl WhiteboxTool for LidarTophatTransform {
         }
 
         let sep = path::MAIN_SEPARATOR;
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(sep) {
+        if !output_file.contains(sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -301,14 +301,49 @@ impl WhiteboxTool for LidarTophatTransform {
                     point_data.z = residuals[i];
                     pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
                 },
-                LidarPointRecord::PointRecord2 { mut point_data, rgb_data } => {
+                LidarPointRecord::PointRecord2 { mut point_data, colour_data } => {
                     point_data.z = residuals[i];
-                    pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data };
+                    pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, colour_data: colour_data };
                 },
-                LidarPointRecord::PointRecord3 { mut point_data, gps_data, rgb_data } => {
+                LidarPointRecord::PointRecord3 { mut point_data, gps_data, colour_data } => {
                     point_data.z = residuals[i];
                     pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
-                        gps_data: gps_data, rgb_data: rgb_data};
+                        gps_data: gps_data, colour_data: colour_data};
+                },
+                LidarPointRecord::PointRecord4 { mut point_data, gps_data, wave_packet } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord4 { point_data: point_data,
+                        gps_data: gps_data, wave_packet: wave_packet};
+                },
+                LidarPointRecord::PointRecord5 { mut point_data, gps_data, colour_data, wave_packet } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord5 { point_data: point_data,
+                        gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
+                },
+                LidarPointRecord::PointRecord6 { mut point_data, gps_data } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord6 { point_data: point_data,
+                        gps_data: gps_data};
+                },
+                LidarPointRecord::PointRecord7 { mut point_data, gps_data, colour_data } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord7 { point_data: point_data,
+                        gps_data: gps_data, colour_data: colour_data};
+                },
+                LidarPointRecord::PointRecord8 { mut point_data, gps_data, colour_data } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord8 { point_data: point_data,
+                        gps_data: gps_data, colour_data: colour_data};
+                },
+                LidarPointRecord::PointRecord9 { mut point_data, gps_data, wave_packet } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord9 { point_data: point_data,
+                        gps_data: gps_data, wave_packet: wave_packet};
+                },
+                LidarPointRecord::PointRecord10 { mut point_data, gps_data, colour_data, wave_packet } => {
+                    point_data.z = residuals[i];
+                    pr2 = LidarPointRecord::PointRecord10 { point_data: point_data,
+                        gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
                 },
             }
             output.add_point_record(pr2);

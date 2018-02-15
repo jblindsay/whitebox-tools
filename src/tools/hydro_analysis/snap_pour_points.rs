@@ -171,13 +171,13 @@ impl WhiteboxTool for SnapPourPoints {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !pourpts_file.contains(&sep) {
+        if !pourpts_file.contains(&sep) && !pourpts_file.contains("/") {
             pourpts_file = format!("{}{}", working_directory, pourpts_file);
         }
-        if !flow_accum_file.contains(&sep) {
+        if !flow_accum_file.contains(&sep) && !flow_accum_file.contains("/") {
             flow_accum_file = format!("{}{}", working_directory, flow_accum_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

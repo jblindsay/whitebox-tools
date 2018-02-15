@@ -179,13 +179,13 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !seed_file.contains(&sep) {
+        if !seed_file.contains(&sep) && !seed_file.contains("/") {
             seed_file = format!("{}{}", working_directory, seed_file);
         }
-        if !flowdir_file.contains(&sep) {
+        if !flowdir_file.contains(&sep) && !flowdir_file.contains("/") {
             flowdir_file = format!("{}{}", working_directory, flowdir_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
         

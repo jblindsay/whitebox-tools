@@ -51,6 +51,29 @@ for more details.
 
 Release Notes:
 
+Version 0.3.1 ()
+
+- No new tools have been added to this release. Instead the focus was on improving and enhancing
+  LAS file support and fixing a numbe of bugs. These include the following:
+- Support has been added in the LAS file reader for handling Point Record Formats 4-11 in the 
+  LAS 1.4 specificiations. This includes enhanced support for 64-bit LAS files. This change 
+  resulted in cascading changes throughout the LiDAR infrastructure and LiDAR tools. Future 
+  work will focus on writing LAS files in 1.4 format, instead of the current 1.3 format that is
+  saved.
+- The LidarIdwInterpolation, LidarNearestNeighbourGridding, and LidarPointDensity tools have each
+  been modified to enhance the granularity of parallelism when operating in multi-file mode. This 
+  has resulted in large improvements in performance when interpolating entire directories of 
+  LAS files.
+- The LasHeader object now has the ability to read a LAS header directly. This allows 
+  interrogation of a LAS file without the need to create a full LAS object.
+- There was a bug with the WhiteboxTools Runner that had issue with the use of a forward-slash (/) 
+  in file paths on Windows. These have been fixed now. I also fixed every tool such that the use
+  of a forward slash for file paths on Windows won't result in an additional working directory 
+  being appended to file names. This one resulted in many files being slightly modified.
+- Added the ability to select the working directory in WhiteboxTools Runner. This is a useful
+  feature because some of the LiDAR tools now allow for no specified input files, in which case 
+  they operate on all of the LAS files contained within the working directory.
+
 Version 0.3 (07-02-2018)
 
 - Added the following tools:
@@ -67,7 +90,7 @@ Version 0.3 (07-02-2018)
   working directory when an input file name is not specified.
 - Added first draft of a pdf user manual for WhiteboxTools.
 
-Version 0.2 (12-02-2018)
+Version 0.2 (12-01-2018)
 
 - Added the following tools:
     KSTestForNormality

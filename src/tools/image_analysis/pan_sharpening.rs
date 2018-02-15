@@ -251,22 +251,22 @@ impl WhiteboxTool for PanchromaticSharpening {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !red_file.contains(&sep) {
+        if !red_file.contains(&sep) && !red_file.contains("/") {
             red_file = format!("{}{}", working_directory, red_file);
         }
-        if !green_file.contains(&sep) {
+        if !green_file.contains(&sep) && !green_file.contains("/") {
             green_file = format!("{}{}", working_directory, green_file);
         }
-        if !blue_file.contains(&sep) {
+        if !blue_file.contains(&sep) && !blue_file.contains("/") {
             blue_file = format!("{}{}", working_directory, blue_file);
         }
-        if !composite_file.contains(&sep) {
+        if !composite_file.contains(&sep) && !composite_file.contains("/") {
             composite_file = format!("{}{}", working_directory, composite_file);
         }
-        if !pan_file.contains(&sep) {
+        if !pan_file.contains(&sep) && !pan_file.contains("/") {
             pan_file = format!("{}{}", working_directory, pan_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

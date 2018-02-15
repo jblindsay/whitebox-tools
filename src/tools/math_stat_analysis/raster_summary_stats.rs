@@ -132,7 +132,7 @@ impl WhiteboxTool for RasterSummaryStats {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
 

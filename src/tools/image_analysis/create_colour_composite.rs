@@ -214,21 +214,21 @@ impl WhiteboxTool for CreateColourComposite {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input1_file.contains(&sep) {
+        if !input1_file.contains(&sep) && !input1_file.contains("/") {
             input1_file = format!("{}{}", working_directory, input1_file);
         }
-        if !input2_file.contains(&sep) {
+        if !input2_file.contains(&sep) && !input2_file.contains("/") {
             input2_file = format!("{}{}", working_directory, input2_file);
         }
-        if !input3_file.contains(&sep) {
+        if !input3_file.contains(&sep) && !input3_file.contains("/") {
             input3_file = format!("{}{}", working_directory, input3_file);
         }
         if input4_used {
-            if !input4_file.contains(&sep) {
+            if !input4_file.contains(&sep) && !input4_file.contains("/") {
                 input4_file = format!("{}{}", working_directory, input4_file);
             }
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

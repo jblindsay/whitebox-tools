@@ -172,16 +172,16 @@ impl WhiteboxTool for CostDistance {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !source_file.contains(&sep) {
+        if !source_file.contains(&sep) && !source_file.contains("/") {
             source_file = format!("{}{}", working_directory, source_file);
         }
-        if !cost_file.contains(&sep) {
+        if !cost_file.contains(&sep) && !cost_file.contains("/") {
             cost_file = format!("{}{}", working_directory, cost_file);
         }
-        if !accum_file.contains(&sep) {
+        if !accum_file.contains(&sep) && !accum_file.contains("/") {
             accum_file = format!("{}{}", working_directory, accum_file);
         }
-        if !backlink_file.contains(&sep) {
+        if !backlink_file.contains(&sep) && !backlink_file.contains("/") {
             backlink_file = format!("{}{}", working_directory, backlink_file);
         }
 

@@ -1,57 +1,35 @@
 ---
-fontsize: 11pt
+fontsize: 12pt
 mainfont: 'Open Sans'
 header-includes:
     - \usepackage[vmargin=1in,hmargin=1in]{geometry}
+    - \usepackage{fancyhdr}
+    - \fancyhf{}
+    - \pagestyle{fancy}
+    - \fancyhead[CE]{\textit{WhiteboxTools User Manual}}
+    - \fancyhead[CO]{\textit{J.B. Lindsay}}
+    - \fancyhead[LE,RO]{\thepage}
+    - \fancyfoot[C]{}
+    - \renewcommand{\headrulewidth}{0pt}
+    - \usepackage{caption}
+    - \captionsetup[figure]{labelformat=empty}
 ---
   
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-![](./img/WhiteboxToolsLogoBlue.png)
+  \thispagestyle{empty}
 
-*Bringing the power of Whitebox GAT to the world at large*  
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
-  \
+![*Bringing the power of Whitebox GAT to the world at large*](./img/WhiteboxToolsLogoBlue.png)  
 
-WhiteboxTools Version 0.3  \
-Dr. John Lindsay &#169; Feb. 2018  \
+<!-- \begin{center}
+\textit{Bringing the power of Whitebox GAT to the world at large}  
+\end{center} -->
+
+\newpage
+
+WhiteboxTools Version 0.3.1  \
+Dr. John B. Lindsay &#169; Feb. 15, 2018  \
 *Geomorphometry and Hydrogeomatics Research Group*  \
 *The University of Guelph*  \
+Guelph, Canada \
 
 \newpage
 
@@ -67,8 +45,9 @@ WhiteboxTools User Manual
 5. [Supported Data Formats](#supported-data-formats)
 6. [Contributing](#contributing)
 7. [License](#license)
-8. [Known Issues](#known-issues)
-9. [Frequently Asked Questions](#frequently-asked-questions)
+8. [Reporting Bugs](#reporting-bugs)
+9. [Known Issues](#known-issues)
+10. [Frequently Asked Questions](#frequently-asked-questions)
     * [Do I need Whitebox GAT to use WhiteboxTools?](#do-i-need-whitebox-gat-to-use-whiteboxtools)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
     * [Can WhiteboxTools be incorporated into other software and open-source GIS projects?](#can-whiteboxtools-be-incorporated-into-other-software-and-open-source-gis-projects)
@@ -83,7 +62,9 @@ WhiteboxTools User Manual
 
 ## 1. Description
 
-**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger Whitebox GAT project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 400 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
+**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common GIS analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-point can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package. 
+
+Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [Usage](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
 
 The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded
 the *GoSpatial* project, having subsumed all of its functionality.
@@ -6944,14 +6925,18 @@ If you would like to contribute financial support for the project, please contac
 
 The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt), a permissive open-source (free software) license.
 
-## 8. Known Issues
+## 8. Reporting Bugs
+
+WhiteboxTools is distributed as is and without warranty of suitability for application. If you encounter flaws with the software (i.e. bugs) please report the issue. Providing a detailed description of the conditions under which the bug occurred will help to identify the bug. *Use the Issues tracker on GitHub to report issues with the software and to request feature enchancements.* Please do not email Dr. Lindsay directly with bugs.
+
+## 9. Known Issues
 
 - There is limited support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
 - The LAZ compressed LiDAR data format is currently unsupported although zipped LAS files (.zip) are.
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
 - The Python scripts included with **WhiteboxTools** require Python 3. They will not work with Python 2, which is frequently the default Python version installed on many systems.
 
-## 9. Frequently Asked Questions
+## 10. Frequently Asked Questions
 
 ### Do I need Whitebox GAT to use WhiteboxTools?
 

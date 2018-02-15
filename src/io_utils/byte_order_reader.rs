@@ -24,6 +24,12 @@ impl ByteOrderReader {
         self.buffer.len()
     }
 
+    pub fn read_utf8(&mut self, length: usize) -> String {
+        let val = String::from_utf8_lossy(&self.buffer[self.pos..self.pos+length]).to_string();
+        self.pos += length;
+        val
+    }
+
     pub fn read_u8(&mut self) -> u8 {
         // There's really no need for endian issues when reading single bytes.
         let val = self.buffer[self.pos];

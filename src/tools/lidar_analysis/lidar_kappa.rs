@@ -165,13 +165,13 @@ impl WhiteboxTool for LidarKappaIndex {
         let mut progress: i32;
         let mut old_progress: i32 = -1;
 
-        if !input_file1.contains(&sep) {
+        if !input_file1.contains(&sep) && !input_file1.contains("/") {
             input_file1 = format!("{}{}", working_directory, input_file1);
         }
-        if !input_file2.contains(&sep) {
+        if !input_file2.contains(&sep) && !input_file2.contains("/") {
             input_file2 = format!("{}{}", working_directory, input_file2);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
         if !output_file.ends_with(".html") {

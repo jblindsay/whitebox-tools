@@ -195,19 +195,19 @@ impl WhiteboxTool for DInfMassFlux {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !loading_file.contains(&sep) {
+        if !loading_file.contains(&sep) && !loading_file.contains("/") {
             loading_file = format!("{}{}", working_directory, loading_file);
         }
-        if !efficiency_file.contains(&sep) {
+        if !efficiency_file.contains(&sep) && !efficiency_file.contains("/") {
             efficiency_file = format!("{}{}", working_directory, efficiency_file);
         }
-        if !absorption_file.contains(&sep) {
+        if !absorption_file.contains(&sep) && !absorption_file.contains("/") {
             absorption_file = format!("{}{}", working_directory, absorption_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

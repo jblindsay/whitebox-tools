@@ -197,13 +197,13 @@ impl WhiteboxTool for Viewshed {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !stations_file.contains(&sep) {
+        if !stations_file.contains(&sep) && !stations_file.contains("/") {
             stations_file = format!("{}{}", working_directory, stations_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

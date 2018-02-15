@@ -176,7 +176,7 @@ impl WhiteboxTool for Resample {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !destination_file.contains(&sep) {
+        if !destination_file.contains(&sep) && !destination_file.contains("/") {
             destination_file = format!("{}{}", working_directory, destination_file);
         }
 
@@ -214,7 +214,7 @@ impl WhiteboxTool for Resample {
             let value = input_vec[i];
             if !value.trim().is_empty() {
                 let mut input_file = value.trim().to_owned();
-                if !input_file.contains(&sep) {
+                if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
                 inputs.push(Raster::new(&input_file, "r")?);

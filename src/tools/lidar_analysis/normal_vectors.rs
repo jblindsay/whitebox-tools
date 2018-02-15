@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: January 21, 2018
+Last Modified: Feb. 14, 2018
 License: MIT
 */
 extern crate time;
@@ -161,10 +161,10 @@ impl WhiteboxTool for NormalVectors {
         }
 
         let sep = path::MAIN_SEPARATOR;
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(sep) {
+        if !output_file.contains(sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -245,8 +245,8 @@ impl WhiteboxTool for NormalVectors {
             g = ((1.0 + normal_values[i].y) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].y) / 2.0 * 65535.0) as u16;
             b = ((1.0 + normal_values[i].z) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].z) / 2.0 * 65535.0) as u16;
         
-            let rgb: RgbData = RgbData{ red: r, green: g, blue: b };
-            let lpr = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
+            let rgb: ColourData = ColourData{ red: r, green: g, blue: b, nir: 0u16 };
+            let lpr = LidarPointRecord::PointRecord2 { point_data: p, colour_data: rgb };
             output.add_point_record(lpr);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

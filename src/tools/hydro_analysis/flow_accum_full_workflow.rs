@@ -240,16 +240,16 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !outdem_file.contains(&sep) {
+        if !outdem_file.contains(&sep) && !outdem_file.contains("/") {
             outdem_file = format!("{}{}", working_directory, outdem_file);
         }
-        if !pntr_file.contains(&sep) {
+        if !pntr_file.contains(&sep) && !pntr_file.contains("/") {
             pntr_file = format!("{}{}", working_directory, pntr_file);
         }
-        if !accum_file.contains(&sep) {
+        if !accum_file.contains(&sep) && !accum_file.contains("/") {
             accum_file = format!("{}{}", working_directory, accum_file);
         }
 

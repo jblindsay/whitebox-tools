@@ -189,7 +189,7 @@ impl WhiteboxTool for HypsometricAnalysis {
                                 "There is something incorrect about the input DEM files. At least one input DEM is required to operate this tool."));
         }
 
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -219,7 +219,7 @@ impl WhiteboxTool for HypsometricAnalysis {
         if watershed_files_str.is_empty() {
             for i in 0..num_files {
                 let mut input_file = input_files[i].to_string();
-                if !input_file.contains(&sep) {
+                if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
                 let input = Raster::new(&input_file, "r")?;
@@ -296,7 +296,7 @@ impl WhiteboxTool for HypsometricAnalysis {
 
             for i in 0..num_files {
                 let mut input_file = input_files[i].to_string();
-                if !input_file.contains(&sep) {
+                if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
                 let input = Raster::new(&input_file, "r")?;

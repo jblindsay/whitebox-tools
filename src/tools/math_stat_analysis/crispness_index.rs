@@ -178,7 +178,7 @@ impl WhiteboxTool for CrispnessIndex {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
         if output_file.len() == 0 {
@@ -189,7 +189,7 @@ impl WhiteboxTool for CrispnessIndex {
             extension.push_str(ext);
             output_file = input_file.replace(&extension, ".html");
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

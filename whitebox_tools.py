@@ -51,7 +51,7 @@ class WhiteboxTools(object):
     def set_working_dir(self, path_str):
         ''' Sets the working directory.
         '''
-        self.wkdir = path_str
+        self.wkdir = path.normpath(path_str)
 
     def set_verbose_mode(self, val=True):
         ''' Sets verbose mode(i.e. whether a running tool outputs).

@@ -64,7 +64,9 @@ impl GeoKeys {
         let number_of_keys = self.geo_key_directory[3];
 
         let mut ifd_map: HashMap<u16, IfdDirectory> = HashMap::new();
+		// println!("Num geokeys: {}", number_of_keys);
         for i in 0..number_of_keys as usize {
+			//println!("key number {}", i);
             let offset = 4 * (i + 1);
             let key_id = self.geo_key_directory[offset];
 

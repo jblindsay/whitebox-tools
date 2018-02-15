@@ -142,7 +142,7 @@ impl WhiteboxTool for LasToAscii {
         for value in vec {
             if !value.trim().is_empty() {
                 let mut input_file = value.trim().to_owned();
-                if !input_file.contains(sep) {
+                if !input_file.contains(sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
 

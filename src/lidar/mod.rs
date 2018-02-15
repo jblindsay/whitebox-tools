@@ -1,7 +1,3 @@
-// pub mod header;
-// pub mod las;
-// pub mod point_data;
-// pub mod vlr;
 
 // private sub-module defined in other files
 mod header;
@@ -22,10 +18,8 @@ pub use self::las::PointRecord2;
 pub use self::las::PointRecord3;
 pub use self::las::PointRecord4;
 pub use self::las::PointRecord5;
-pub use self::point_data::PointBitField;
-pub use self::point_data::ClassificationBitField;
 pub use self::point_data::PointData;
-pub use self::point_data::RgbData;
+pub use self::point_data::ColourData;
 pub use self::point_data::WaveformPacket;
 pub use self::point_data::convert_class_val_to_class_string;
 pub use self::vlr::Vlr;

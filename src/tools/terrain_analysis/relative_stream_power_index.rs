@@ -180,13 +180,13 @@ impl WhiteboxTool for RelativeStreamPowerIndex {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
-        if !sca_file.contains(&sep) {
+        if !sca_file.contains(&sep) && !sca_file.contains("/") {
             sca_file = format!("{}{}", working_directory, sca_file);
         }
-        if !slope_file.contains(&sep) {
+        if !slope_file.contains(&sep) && !slope_file.contains("/") {
             slope_file = format!("{}{}", working_directory, slope_file);
         }
 

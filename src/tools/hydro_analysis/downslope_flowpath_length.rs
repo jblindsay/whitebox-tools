@@ -183,16 +183,16 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !d8_file.contains(&sep) {
+        if !d8_file.contains(&sep) && !d8_file.contains("/") {
             d8_file = format!("{}{}", working_directory, d8_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
         let use_watersheds: bool;
         if !watersheds_file.is_empty() {
             use_watersheds = true;
-            if !watersheds_file.contains(&sep) {
+            if !watersheds_file.contains(&sep) && !watersheds_file.contains("/") {
                 watersheds_file = format!("{}{}", working_directory, watersheds_file);
             }
         } else {

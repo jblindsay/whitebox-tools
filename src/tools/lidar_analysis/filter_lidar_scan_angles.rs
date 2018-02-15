@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 17, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: February 14, 2018
 License: MIT
 
 NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT tool, which output a Shapefile.
@@ -116,7 +116,7 @@ impl WhiteboxTool for FilterLidarScanAngles {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut threshold = 0i8;
+        let mut threshold = 0i16;
         
         // read the arguments
         if args.len() == 0 {
@@ -143,9 +143,9 @@ impl WhiteboxTool for FilterLidarScanAngles {
                 }
             } else if vec[0].to_lowercase() == "-threshold" || vec[0].to_lowercase() == "--threshold" {
                 if keyval {
-                    threshold = vec[1].to_string().parse::<i8>().unwrap().abs();
+                    threshold = vec[1].to_string().parse::<i16>().unwrap().abs();
                 } else {
-                    threshold = args[i+1].to_string().parse::<i8>().unwrap().abs();
+                    threshold = args[i+1].to_string().parse::<i16>().unwrap().abs();
                 }
             }
         }
@@ -157,10 +157,10 @@ impl WhiteboxTool for FilterLidarScanAngles {
         }
 
         let sep = path::MAIN_SEPARATOR;
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(sep) {
+        if !output_file.contains(sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -186,22 +186,7 @@ impl WhiteboxTool for FilterLidarScanAngles {
 
         for i in 0..n_points {
             if input[i].scan_angle.abs() <= threshold {
-                let pr = input.get_record(i);
-                let pr2 = match pr {
-                    LidarPointRecord::PointRecord0 { point_data }  => {
-                        LidarPointRecord::PointRecord0 { point_data: point_data }
-                    },
-                    LidarPointRecord::PointRecord1 { point_data, gps_data } => {
-                        LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data }
-                    },
-                    LidarPointRecord::PointRecord2 { point_data, rgb_data } => {
-                        LidarPointRecord::PointRecord2 { point_data: point_data, rgb_data: rgb_data }
-                    },
-                    LidarPointRecord::PointRecord3 { point_data, gps_data, rgb_data } => {
-                        LidarPointRecord::PointRecord3 { point_data: point_data, gps_data: gps_data, rgb_data: rgb_data }
-                    },
-                };
-                output.add_point_record(pr2);
+                output.add_point_record(input.get_record(i));
             }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

@@ -203,7 +203,7 @@ impl WhiteboxTool for LidarTile {
 
         let sep = std::path::MAIN_SEPARATOR;
 
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
 

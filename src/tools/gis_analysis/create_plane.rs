@@ -195,10 +195,10 @@ impl WhiteboxTool for CreatePlane {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        if !base_file.contains(&sep) {
+        if !base_file.contains(&sep) && !base_file.contains("/") {
             base_file = format!("{}{}", working_directory, base_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

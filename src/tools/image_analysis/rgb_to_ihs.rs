@@ -233,25 +233,25 @@ impl WhiteboxTool for RgbToIhs {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !red_file.contains(&sep) {
+        if !red_file.contains(&sep) && !red_file.contains("/") {
             red_file = format!("{}{}", working_directory, red_file);
         }
-        if !green_file.contains(&sep) {
+        if !green_file.contains(&sep) && !green_file.contains("/") {
             green_file = format!("{}{}", working_directory, green_file);
         }
-        if !blue_file.contains(&sep) {
+        if !blue_file.contains(&sep) && !blue_file.contains("/") {
             blue_file = format!("{}{}", working_directory, blue_file);
         }
-        if !composite_file.contains(&sep) {
+        if !composite_file.contains(&sep) && !composite_file.contains("/") {
             composite_file = format!("{}{}", working_directory, composite_file);
         }
-        if !intensity_file.contains(&sep) {
+        if !intensity_file.contains(&sep) && !intensity_file.contains("/") {
             intensity_file = format!("{}{}", working_directory, intensity_file);
         }
-        if !hue_file.contains(&sep) {
+        if !hue_file.contains(&sep) && !hue_file.contains("/") {
             hue_file = format!("{}{}", working_directory, hue_file);
         }
-        if !saturation_file.contains(&sep) {
+        if !saturation_file.contains(&sep) && !saturation_file.contains("/") {
             saturation_file = format!("{}{}", working_directory, saturation_file);
         }
 

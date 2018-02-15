@@ -885,9 +885,7 @@ Parameters:\n
 {}
 
 Example usage:
-```
 {}
-```
 ",
                     tool_name,
                     description,

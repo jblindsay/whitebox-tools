@@ -156,13 +156,13 @@ impl WhiteboxTool for CostAllocation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !d8_file.contains(&sep) {
+        if !d8_file.contains(&sep) && !d8_file.contains("/") {
             d8_file = format!("{}{}", working_directory, d8_file);
         }
-        if !pourpts_file.contains(&sep) {
+        if !pourpts_file.contains(&sep) && !pourpts_file.contains("/") {
             pourpts_file = format!("{}{}", working_directory, pourpts_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

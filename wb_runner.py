@@ -90,7 +90,6 @@ class FileSelector(tk.Frame):
     def select_file(self):
         try:
             result = self.value.get()
-            init_dir = self.runner.working_dir
             if self.parameter_type == "Directory":
                 result = filedialog.askdirectory()
             elif "ExistingFile" in self.parameter_type:
@@ -106,11 +105,11 @@ class FileSelector(tk.Frame):
                     ftypes = [("Shapefiles", "*.shp")]
                 elif 'Text' in self.file_type:
                     ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
-                elif 'HTML' in self.file_type:
+                elif 'Html' in self.file_type:
                     ftypes = [("HTML files", "*.html")]
 
                 result = filedialog.askopenfilename(
-                    initialdir=init_dir, title="Select file", filetypes=ftypes)
+                    initialdir=self.runner.working_dir, title="Select file", filetypes=ftypes)
 
             elif "NewFile" in self.parameter_type:
                 result = filedialog.asksaveasfilename()
@@ -130,11 +129,11 @@ class FileSelector(tk.Frame):
             v = self.value.get()
             # Do some quality assurance here.
             # Is there a directory included?
-            if os.sep not in v:
-                v = self.runner.working_dir + os.sep + v
+            if not path.dirname(v):
+                v = path.join(self.runner.working_dir, v)
 
             # What about a file extension?
-            ext = os.path.splitext(v)[-1].lower()
+            ext = os.path.splitext(v)[-1].lower().strip()
             if not ext:
                 ext = ""
                 if 'Raster' in self.file_type:
@@ -145,10 +144,12 @@ class FileSelector(tk.Frame):
                     ext = '.shp'
                 elif 'Text' in self.file_type:
                     ext = '.txt'
-                elif 'HTML' in self.file_type:
+                elif 'Html' in self.file_type:
                     ext = '.html'
 
-                v = v + ext
+                v += ext
+
+            v = path.normpath(v)
 
             return "{}='{}'".format(self.flag, v)
         else:
@@ -235,7 +236,6 @@ class FileOrFloat(tk.Frame):
     def select_file(self):
         try:
             result = self.value.get()
-            init_dir = self.runner.working_dir
             ftypes = [('All files', '*.*')]
             if 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
@@ -248,11 +248,11 @@ class FileOrFloat(tk.Frame):
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
                 ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
-            elif 'HTML' in self.file_type:
+            elif 'Html' in self.file_type:
                 ftypes = [("HTML files", "*.html")]
 
             result = filedialog.askopenfilename(
-                initialdir=init_dir, title="Select file", filetypes=ftypes)
+                initialdir=self.runner.working_dir, title="Select file", filetypes=ftypes)
 
             self.value.set(result)
             # update the working directory
@@ -276,8 +276,8 @@ class FileOrFloat(tk.Frame):
             v = self.value.get()
             # Do some quality assurance here.
             # Is there a directory included?
-            if os.sep not in v:
-                v = self.runner.working_dir + os.sep + v
+            if not path.dirname(v):
+                v = path.join(self.runner.working_dir, v)
 
             # What about a file extension?
             ext = os.path.splitext(v)[-1].lower()
@@ -291,10 +291,12 @@ class FileOrFloat(tk.Frame):
                     ext = '.shp'
                 elif 'Text' in self.file_type:
                     ext = '.txt'
-                elif 'HTML' in self.file_type:
+                elif 'Html' in self.file_type:
                     ext = '.html'
 
                 v = v + ext
+
+            v = path.normpath(v)
 
             return "{}='{}'".format(self.flag, v)
         elif self.value2.get():
@@ -390,7 +392,7 @@ class MultifileSelector(tk.Frame):
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
                 ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
-            elif 'HTML' in self.file_type:
+            elif 'Html' in self.file_type:
                 ftypes = [("HTML files", "*.html")]
 
             result = filedialog.askopenfilenames(
@@ -415,6 +417,9 @@ class MultifileSelector(tk.Frame):
                 s = ""
                 for i in range(0, len(l)):
                     v = l[i]
+                    if not path.dirname(v):
+                        v = path.join(self.runner.working_dir, v)
+                    v = path.normpath(v)
                     if i < len(l) - 1:
                         s += "{};".format(v)
                     else:
@@ -803,9 +808,10 @@ class WbRunner(tk.Frame):
 
         menubar = tk.Menu(self)
         filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Set Working Directory",
+                             command=self.set_directory)
         filemenu.add_command(
             label="Locate WhiteboxTools exe", command=self.select_exe)
-        # filemenu.add_command(label="Set Working Directory", command=self.wd.select_file)
         filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.quit)
@@ -839,6 +845,15 @@ class WbRunner(tk.Frame):
 
     def license(self):
         self.print_to_output(wbt.license())
+
+    def set_directory(self):
+        try:
+            self.working_dir = filedialog.askdirectory(
+                initialdir=self.exe_path)
+            wbt.set_working_dir(self.working_dir)
+        except:
+            messagebox.showinfo(
+                "Warning", "Could not find WhiteboxTools executable file.")
 
     def select_exe(self):
         try:

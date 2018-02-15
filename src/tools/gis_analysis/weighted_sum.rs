@@ -153,7 +153,7 @@ impl WhiteboxTool for WeightedSum {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -213,7 +213,7 @@ impl WhiteboxTool for WeightedSum {
                 if verbose { println!("Reading data...") };
 
                 let mut input_file = value.trim().to_owned();
-                if !input_file.contains(&sep) {
+                if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
                 let input = Raster::new(&input_file, "r")?;

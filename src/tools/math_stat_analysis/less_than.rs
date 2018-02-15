@@ -176,7 +176,7 @@ impl WhiteboxTool for LessThan {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
@@ -190,7 +190,7 @@ impl WhiteboxTool for LessThan {
             Err(_) => false,
         };
         if !input1_is_constant {
-            if !input1.contains(&sep) {
+            if !input1.contains(&sep) && !input1.contains("/") {
                 input1 = format!("{}{}", working_directory, input1);
             }
         }
@@ -204,7 +204,7 @@ impl WhiteboxTool for LessThan {
             Err(_) => false,
         };
         if !input2_is_constant {
-            if !input2.contains(&sep) {
+            if !input2.contains(&sep) && !input2.contains("/") {
                 input2 = format!("{}{}", working_directory, input2);
             }
         }

@@ -195,13 +195,13 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !nir_file.contains(&sep) {
+        if !nir_file.contains(&sep) && !nir_file.contains("/") {
             nir_file = format!("{}{}", working_directory, nir_file);
         }
-        if !red_file.contains(&sep) {
+        if !red_file.contains(&sep) && !red_file.contains("/") {
             red_file = format!("{}{}", working_directory, red_file);
         }
-        if !output_file.contains(&sep) {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 

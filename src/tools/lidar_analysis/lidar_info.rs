@@ -188,7 +188,7 @@ impl WhiteboxTool for LidarInfo {
         //     working_directory.push_str(&(sep.to_string()));
         // }
 
-        if !input_file.contains(sep) {
+        if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
 

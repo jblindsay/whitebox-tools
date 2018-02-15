@@ -215,13 +215,13 @@ impl WhiteboxTool for MaxAnisotropyDev {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) {
+        if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_mag_file.contains(&sep) {
+        if !output_mag_file.contains(&sep) && !output_mag_file.contains("/") {
             output_mag_file = format!("{}{}", working_directory, output_mag_file);
         }
-        if !output_scale_file.contains(&sep) {
+        if !output_scale_file.contains(&sep) && !output_scale_file.contains("/") {
             output_scale_file = format!("{}{}", working_directory, output_scale_file);
         }
 
