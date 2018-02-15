@@ -51,7 +51,7 @@ for more details.
 
 Release Notes:
 
-Version 0.3.1 ()
+Version 0.3.1 (15-02-2018)
 
 - No new tools have been added to this release. Instead the focus was on improving and enhancing
   LAS file support and fixing a numbe of bugs. These include the following:
@@ -65,14 +65,16 @@ Version 0.3.1 ()
   has resulted in large improvements in performance when interpolating entire directories of 
   LAS files.
 - The LasHeader object now has the ability to read a LAS header directly. This allows 
-  interrogation of a LAS file without the need to create a full LAS object.
+  interrogation of a LAS file without the need to create a full LAS object. This was useful 
+  for identifying neighbouring tiles during interpolation, such that a buffer of points 
+  from adjacent tiles can be used, thereby minimizing interpolation edge effects.
 - There was a bug with the WhiteboxTools Runner that had issue with the use of a forward-slash (/) 
   in file paths on Windows. These have been fixed now. I also fixed every tool such that the use
   of a forward slash for file paths on Windows won't result in an additional working directory 
   being appended to file names. This one resulted in many files being slightly modified.
 - Added the ability to select the working directory in WhiteboxTools Runner. This is a useful
-  feature because some of the LiDAR tools now allow for no specified input files, in which case 
-  they operate on all of the LAS files contained within the working directory.
+  feature because some of the LiDAR tools now allow for no specified input/output files, in 
+  which case they operate on all of the LAS files contained within the working directory.
 
 Version 0.3 (07-02-2018)
 

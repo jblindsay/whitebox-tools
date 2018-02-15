@@ -12,5 +12,6 @@ pandoc \
 --pdf-engine=xelatex \
 --variable classoption=twoside \
 --variable papersize=letterpaper \
+--variable urlcolor=blue \
 -s WhiteboxToolsManual.md \
 -o ../WhiteboxToolsManual.pdf

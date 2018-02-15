@@ -282,5 +282,5 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-    println!("whitebox-tools v{}", VERSION.unwrap_or("unknown"));
+    println!("whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2018", VERSION.unwrap_or("unknown"));
 }
