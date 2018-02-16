@@ -234,7 +234,7 @@ impl WhiteboxTool for LidarHillshade {
             }
         }
 
-        let mut normal_values: Vec<Vector3<f64>> = vec![Vector3::<f64>{x: 0.0, y: 0.0, z: 0.0}; n_points];
+        let mut normal_values: Vec<Vector3<f64>> = vec![Vector3::new(0.0, 0.0, 0.0); n_points];
         
         let frs = Arc::new(frs); // wrap FRS in an Arc
         let input = Arc::new(input); // wrap input in an Arc
@@ -253,7 +253,7 @@ impl WhiteboxTool for LidarHillshade {
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
                         let p2: PointData = input.get_point_info(index_n);
-                        data.push(Vector3 { x: p2.x, y: p2.y, z: p2.z });
+                        data.push(Vector3::new(p2.x, p2.y, p2.z));
                     }
                     tx.send((i, plane_from_points(&data))).unwrap();
                 }
@@ -339,10 +339,10 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
     let n = points.len();
     // assert!(n >= 3, "At least three points required");
     if n < 3 {
-        return Vector3 { x: 0f64, y: 0f64, z: 0f64 };
+        return Vector3::new(0f64, 0f64, 0f64);
     }
     
-    let mut sum = Vector3{ x: 0.0, y: 0.0, z: 0.0 };
+    let mut sum = Vector3::new(0.0, 0.0, 0.0);
     for p in points {
         sum = sum + *p;
     }
@@ -374,15 +374,15 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
         if det_max == det_x {
             let a = (xz*yz - xy*zz) / det_x;
             let b = (xy*yz - xz*yy) / det_x;
-            Vector3{ x: 1.0, y: a, z: b }
+            Vector3::new(1.0, a, b)
         } else if det_max == det_y {
             let a = (yz*xz - xy*zz) / det_y;
             let b = (xy*xz - yz*xx) / det_y;
-            Vector3{ x: a, y: 1.0, z: b }
+            Vector3::new(a, 1.0, b)
         } else {
             let a = (yz*xy - xz*yy) / det_z;
             let b = (xz*xy - yz*xx) / det_z;
-            Vector3{ x: a, y: b, z: 1.0 }
+            Vector3::new(a, b, 1.0)
         };
 
     //plane_from_point_and_normal(centroid, normalize(dir))
@@ -392,7 +392,7 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
 #[inline]
 fn normalize(v: Vector3<f64>) -> Vector3<f64> {
     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
-    Vector3 { x: v.x/norm, y: v.y/norm, z: v.z/norm }
+    Vector3::new(v.x/norm, v.y/norm, v.z/norm)
 }
 
 // struct Plane {

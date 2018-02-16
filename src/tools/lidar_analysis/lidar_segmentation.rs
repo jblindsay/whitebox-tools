@@ -264,7 +264,7 @@ impl WhiteboxTool for LidarSegmentation {
                         let pn: PointData = input.get_point_info(index_n);
                         height_diff = (pn.z - p.z).abs();
                         if height_diff < max_z_diff {
-                            data.push(Vector3 { x: pn.x, y: pn.y, z: pn.z });
+                            data.push(Vector3::new(pn.x, pn.y, pn.z));
                         }
                     }
                     tx.send((point_num, plane_from_points(&data))).unwrap();
@@ -462,7 +462,7 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
         return Normal { a: 0f64, b: 0f64, c: 0f64 };
     }
 
-    let mut sum = Vector3{ x: 0.0, y: 0.0, z: 0.0 };
+    let mut sum = Vector3::new(0.0, 0.0, 0.0);
     for p in points {
         sum = sum + *p;
     }
@@ -493,15 +493,15 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
         if det_max == det_x {
             let a = (xz*yz - xy*zz) / det_x;
             let b = (xy*yz - xz*yy) / det_x;
-            Vector3{ x: 1.0, y: a, z: b }
+            Vector3::new(1.0, a, b)
         } else if det_max == det_y {
             let a = (yz*xz - xy*zz) / det_y;
             let b = (xy*xz - yz*xx) / det_y;
-            Vector3{ x: a, y: 1.0, z: b }
+            Vector3::new(a, 1.0, b)
         } else {
             let a = (yz*xy - xz*yy) / det_z;
             let b = (xz*xy - yz*xx) / det_z;
-            Vector3{ x: a, y: b, z: 1.0 }
+            Vector3::new(a, b, 1.0)
         };
 
     normalize(dir)
