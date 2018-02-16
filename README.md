@@ -1,4 +1,4 @@
-![](./img/WhiteboxToolsLogoBlue.png)
+![](./img/WhiteboxToolsLogo.svg)
 
 <!--# WhiteboxTools-->
 
