@@ -144,7 +144,7 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             toolbox = true;
-        } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") {
+        } else if arg.starts_with("-listtools") || arg.starts_with("--listtools") || arg.starts_with("--list_tools") {
             // let mut v = arg.replace("--listtools", "")
             //     .replace("-listtools", "")
             //     .replace("\"", "")

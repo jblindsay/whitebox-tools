@@ -81,7 +81,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 
 Generally, the Unix convention is that single-letter arguments (options) use a single hyphen (e.g. -h) while word-arguments (longer, more descriptive argument names) use double hyphen (e.g. --help). The same rule is used for passing arguments to tools as well. Use the *--toolhelp* argument to print information about a specific tool (e.g. --toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
-For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
+For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file.
 
 In addition to direct command-line and script-based interaction, a very basic user-interface called *WB Runner* can be used to call the tools within the *WhiteboxTools* executable file, providing the required tool arguments.
 
@@ -103,42 +103,47 @@ import os
 import sys
 from whitebox_tools import WhiteboxTools
 
-# Set the WhiteboxTools executable directory
-# Change this to point to where you have the whitebox_tools.exe file!
-wb_dir = os.path.dirname(os.path.abspath(__file__)) + "/target/release/"
 wbt = WhiteboxTools()
-wbt.set_whitebox_dir(wb_dir)
 
-# Prints the WhiteboxTools help...a listing of available commands
-print(wbt.help())
+# If the WhiteboxTools executable file (whitbox_tools.exe) is not in the same
+# directory as this script, its path will need to be set, e.g.:
+wbt.set_whitebox_dir(os.path.dirname(
+    os.path.abspath(__file__)) + "/target/release/")  # or simply wbt.exe_path = ...
 
-# Prints the WhiteboxTools license
-print(wbt.license())
-
-# Prints the WhiteboxTools version
-print("Version information: {}".format(wbt.version()))
-
-# List all available tools in WhiteboxTools
-print(wbt.list_tools())
-
-# Retrieve the help information for running the ElevPercentile tool
-print(wbt.tool_help("ElevPercentile"))
+# Set the working directory. This is the path to the folder containing the data,
+# i.e. files sent to tools as input/output parameters. You don't need to set
+# the working directory if you specify full path names as tool parameters.
+wbt.work_dir = os.path.dirname(os.path.abspath(__file__)) + "/testdata/"
 
 # Sets verbose mode (True or False). Most tools will suppress output (e.g. updating
 # progress) when verbose mode is False. The default is True
-# wbt.set_verbose_mode(False) # uncomment me to suppress tool output
+# wbt.set_verbose_mode(False) # or simply, wbt.verbose = False
 
-# Set the working directory; needed to specify complete file names (with paths) to tools that you run.
-wbt.set_working_dir(os.path.dirname(os.path.abspath(__file__)) + "/testdata/")
+# The most convenient way to run a tool is to use its associated method, e.g.:
+wbt.elev_percentile("DEM.tif", "output.tif", 15, 15)
+# You may also provide an optional custom callback for processing output from the
+# tool. If you don't provide a callback, and verbose is set to True, tool output
+# will simply be printed to the standard output.
 
-tool_name = "ElevPercentile"
-args = ["--input=\"DEM.dep\"",
-        "--output=\"DEV_101.dep\"",
-        "--filter=101"]
+# Prints the whitebox-tools help...a listing of available commands
+print(wbt.help())
 
-# Run the tool and check the return value
-if wbt.run_tool(tool_name, args) != 0:
-    print("ERROR running {}".format(name))
+# Prints the whitebox-tools license
+print(wbt.license())
+
+# Prints the whitebox-tools version
+print("Version information: {}".format(wbt.version()))
+
+# List all available tools in whitebox-tools
+print(wbt.list_tools())
+
+# Lists tools with 'lidar' or 'LAS' in tool name or description.
+print(wbt.list_tools(['lidar', 'LAS']))
+
+# Print the help for a specific tool.
+print(wbt.tool_help("ElevPercentile"))
+# Notice that tool names within WhiteboxTools.exe are CamelCase but
+# you can also use snake_case here, e.g. print(wbt.tool_help("elev_percentile"))
 
 ```
 

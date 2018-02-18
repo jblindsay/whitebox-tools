@@ -115,11 +115,11 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 
 Generally, the Unix convention is that single-letter arguments (options) use a single hyphen (e.g. -h) while word-arguments (longer, more descriptive argument names) use double hyphens (e.g. -\-help). The same rule is used for passing arguments to tools as well. Use the *-\-toolhelp* argument to print information about a specific tool (e.g. -\-toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
-For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file. The *whitebox_tools.py* script calls the executable using subprocesses rather than as a dynamic library. Future versions may compile the library as a dynamic shared object if this is preferred.
+For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file.
 
 In addition to direct command-line and script-based interaction, a very basic user-interface called *WB Runner* can be used to call the tools within the *WhiteboxTools* executable file, providing the required tool arguments.
 
-**Example command prompt:**
+### 3.1 Interacting with *WhiteboxTools* from the command prompt
 
 ```
 >>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' 
@@ -128,56 +128,120 @@ In addition to direct command-line and script-based interaction, a very basic us
 
 Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. The '>>' is shorthand used in this document to denote the command prompt and is not intended to be typed. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
 
-**Example Python script:**
+### 3.2 Interacting with *WhiteboxTools* using Python scripting
 
-The following script relies on the imported functions contained within the whitebox_tools.py script, included within the *WhiteboxTools* distribution folder, and can be run using Python 3. **Please note that all of the scripts included with *WhiteboxTools* assumes the user system is configured with Python 3 and may not run as expected using Python 2**.
+Interacting with *WhiteboxTools* from Python scripts is quite easy. **Please note however that all of the following material assumes the user system is configured with Python 3.** The code snippets below are not guaranteed to work with Python 2. 
+
+To begin, each script must start by importing the *WhiteboxTools* class (the *whitebox_tools.py* and *whitebox_tools.exe* files should be in the same directory) and creating a new object:
 
 ```Python
-import os
-import sys
 from whitebox_tools import WhiteboxTools
+wbt = WhiteboxTools() 
+```
 
-# Set the WhiteboxTools executable directory
-# Change this to point to where you have the whitebox_tools.exe file!
-wb_dir = os.path.dirname(os.path.abspath(__file__)) + "/target/release/"
-wbt = WhiteboxTools()
-wbt.set_whitebox_dir(wb_dir)
+The Python ```WhiteboxTools``` class expects to find the *WhiteboxTools* executable file (*whitebox_tools.exe* on Windows and *whitebox_tools* on other platforms) within the same directory as the *whitebox_tools.py* script. If the binary file is located in a separate directory, you will need to set the executable directory as follows:
 
-# Prints the WhiteboxTools help...a listing of available commands
+```Python
+wbt.set_whitebox_dir('/local/path/to/whitebox/binary/')  
+# Or alternatively...
+wbt.exe_path = '/local/path/to/whitebox/binary/'
+```
+
+Individual tools can be called using the convenience methods provided in the ```WhiteboxTools``` class:
+
+```Python
+# This line performs a 15 x 15 mean filter on 'in_file.tif':
+wbt.mean_filter('in_file.tif', 'out_file.tif', 15, 15)
+```
+
+Each tool has a cooresponding run method. Tools can also be called using the ```run_tool()``` method, specifying the tool name and a list of tool arguments. Notice that while internally, *whitebox_tools.exe* uses CamelCase (e.g. MeanFilter) to denote tool names, the Python interface of *whitebox_tools.py* uses snake_case (e.g. mean_filter), according to Python style conventions. 
+
+An advanced text editor, such as VS Code or Atom, can provide hints and autocomplete for available tool run methods and their parameters, including default values. To print a complete list of available tools:
+
+```Python
+print(wbt.list_tools()) # List all tools in WhiteboxTools
+```
+
+The ```list_tools()``` method will also take an optional keywords list to allow tool searching:
+
+```Python
+# Lists tools with 'lidar' or 'LAS' in tool name or description.
+print(wbt.list_tools(['lidar', 'LAS']))
+```
+
+To retrieve more detailed information for a specific tool, use the ```tool_help()``` method:
+
+```Python
+print(wbt.tool_help("ElevPercentile"))
+# Notice that tool names within WhiteboxTools.exe are CamelCase but
+# you can also use snake_case here, e.g. print(wbt.tool_help("elev_percentile"))
+```
+
+```tool_help()``` prints tool details including a description, tool parameters (and their flags), and example usage at the command line prompt. The above statement prints this report:
+
+```
+> ElevPercentile
+> Description:
+> Calculates the elevation percentile raster from a DEM.
+> Toolbox: Geomorphometric Analysis
+> Parameters:
+> 
+> Flag               Description
+> -----------------  -----------
+> -i, --input, --dem Input raster DEM file.
+> -o, --output       Output raster file.
+> --filterx          Size of the filter kernel in the x-direction.
+> --filtery          Size of the filter kernel in the y-direction.
+> --sig_digits       Number of significant digits.
+> 
+> Example usage:
+> >>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" --dem=DEM.dep -o=output.dep --filterx=25
+````
+
+Tools will frequently print text to the standard output during their execution, including warnings, progress updates and other notifications. Sometimes, when users run many tools in complex workflows and in batch mode, these output messages can be undesirable. Most tools will have their outputs suppressed by setting the 'verbose mode' as follows:
+
+```Python
+wbt.set_verbose_mode(False) 
+# Or, alternatively:
+wbt.verbose = False
+```
+
+Alternatively, it may be helpful to capture the text output of a tool for custom processing. This is achieved by specifying a custom *callback* function to the tool's run method:
+
+```Python
+# This callback function suppresses printing progress updates,
+# which always use the '%' character.
+def my_callback(value):
+    if not "%" in value:
+        print(value)
+
+wbt.slope('DEM.tif', 'slope_raster.tif', callback=my_callback)
+```
+
+The *whitebox_tools.py* provides several other functions for interacting with the *WhiteboxTools* library: 
+
+```Python
+# Print the WhiteboxTools help...a listing of available commands
 print(wbt.help())
 
-# Prints the WhiteboxTools license
+# Print the WhiteboxTools license
 print(wbt.license())
 
-# Prints the WhiteboxTools version
+# Print the WhiteboxTools version
 print("Version information: {}".format(wbt.version()))
 
-# List all available tools in WhiteboxTools
-print(wbt.list_tools())
+# Get the toolbox associated with a tool
+tb = wbt.toolbox('lidar_info')
 
-# Retrieve the help information for running the ElevPercentile tool
-print(wbt.tool_help("ElevPercentile"))
+# Opens a browser and navigates to the tool's source code in the GitHub repository
+view_code('watershed')
 
-# Sets verbose mode (True or False). Most tools will suppress output (e.g. 
-# updating progress) when verbose mode is False. The default is True
-# wbt.set_verbose_mode(False) # uncomment me to suppress tool output
-
-# Set the working directory; needed to specify complete file names (with paths) 
-# to tools that you run.
-wbt.set_working_dir(os.path.dirname(os.path.abspath(__file__)) + "/testdata/")
-
-tool_name = "ElevPercentile"
-args = ["--input=\"DEM.dep\"",
-        "--output=\"DEV_101.dep\"",
-        "--filter=101"]
-
-# Run the tool and check the return value
-if wbt.run_tool(tool_name, args) != 0:
-    print("ERROR running {}".format(name))
+# Retrieve a JSON object of a tool's parameters.
+tp = tool_parameters('raster_histogram')
 
 ```
 
-**WhiteboxTools Runner**
+### 3.3 The WhiteboxTools Runner
 
 There is a Python script contained within the *WhiteboxTools* directory called '*wb_runner.py*'. This script is intended to provide a very basic user-interface for running the tools contained within the *WhiteboxTools* library. The user-interface uses Python's TkInter GUI library and is cross-platform. The user interface is currently experimental and is under heavy testing. Please report any issues that you experience in using it.
 
@@ -189,7 +253,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 269 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 269 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-/-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 1. ***AbsoluteValue***
 
