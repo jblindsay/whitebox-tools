@@ -6,13 +6,18 @@ header-includes:
     - \usepackage{fancyhdr}
     - \fancyhf{}
     - \pagestyle{fancy}
-    - \fancyhead[CE]{\textit{WhiteboxTools User Manual}}
-    - \fancyhead[CO]{\textit{J.B. Lindsay}}
+    - \fancyhead[C]{\textit{WhiteboxTools User Manual / Lindsay}}
     - \fancyhead[LE,RO]{\thepage}
     - \fancyfoot[C]{}
     - \renewcommand{\headrulewidth}{0pt}
     - \usepackage{caption}
     - \captionsetup[figure]{labelformat=empty}
+    - \usepackage{framed}
+    - \usepackage{xcolor}
+    - \let\oldquote=\quote
+    - \let\endoldquote=\endquote
+    - \colorlet{shadecolor}{gray!15}
+    - \renewenvironment{quote}{\begin{shaded*}\begin{oldquote}}{\end{oldquote}\end{shaded*}}
 ---
   
   \thispagestyle{empty}
@@ -25,8 +30,8 @@ header-includes:
 
 \newpage
 
-WhiteboxTools Version 0.3.1  \
-Dr. John B. Lindsay &#169; Feb. 15, 2018  \
+WhiteboxTools Version 0.4  \
+Dr. John B. Lindsay &#169; Feb. 18, 2018  \
 *Geomorphometry and Hydrogeomatics Research Group*  \
 *The University of Guelph*  \
 Guelph, Canada \
@@ -41,6 +46,9 @@ WhiteboxTools User Manual
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Usage](#usage)
+    * 3.1. [Interacting with *WhiteboxTools* from the command prompt](#interacting-with-whiteboxtools-from-the-command-prompt)
+    * 3.2. [Interacting with *WhiteboxTools* using Python scripting](#interacting-with-whiteboxtools-using-python-scripting)
+    * 3.3. [The WhiteboxTools Runner](#the-whiteboxtools-runner)
 4. [Available Tools](#available-tools)
 5. [Supported Data Formats](#supported-data-formats)
 6. [Contributing](#contributing)
@@ -62,12 +70,13 @@ WhiteboxTools User Manual
 
 ## 1. Introduction
 
-**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software (GIS).
+**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
 
 Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [*Usage*](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
 
-The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded
-the *GoSpatial* project, having subsumed all of its functionality.
+> In this manual, *WhiteboxTools* refers to the standalone geospatial analysis library, a collection of tools contained within a compiled binary executable command-line program and the associated Python scripts that are distributed alongside the binary file (e.g. *whitebox_tools.py* and *wb_runner.py*). *Whitebox Geospatial Analysis Tools* and *Whitebox GAT* refer to the complete GIS software, which includes a user-interface (front-end), point-and-click tool interfaces, and cartographic data visualization capabilities.
+
+The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded the *GoSpatial* project, having subsumed all of its functionality.
 
 ## 2. Installation
 
@@ -85,7 +94,7 @@ the *GoSpatial* project, having subsumed all of its functionality.
 >> cd /path/to/folder/whitebox_tools/
 ```
 
-5. Finally, use the rust package manager Cargo, which will be installed along with Rust, to compile the executable:
+5. Finally, use the rust package manager Cargo, which will be installed alongside Rust, to compile the executable:
 
 ```
 >> cargo build --release
@@ -113,7 +122,9 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
  -\-viewcode         Opens the source code of a tool in a web browser; -\-viewcode=\"LidarInfo\".                      
  -\-version          Prints the version information.                                                                   
 
-Generally, the Unix convention is that single-letter arguments (options) use a single hyphen (e.g. -h) while word-arguments (longer, more descriptive argument names) use double hyphens (e.g. -\-help). The same rule is used for passing arguments to tools as well. Use the *-\-toolhelp* argument to print information about a specific tool (e.g. -\-toolhelp=Clump). Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
+Generally, the Unix convention is that single-letter arguments (options) use a single hyphen (e.g. -h) while word-arguments (longer, more descriptive argument names) use double hyphens (e.g. -\-help). The same rule is used for passing arguments to tools as well. Use the *-\-toolhelp* argument to print information about a specific tool (e.g. -\-toolhelp=Clump). 
+
+> Tool names can be specified either using the snake_case or CamelCase convention (e.g. *lidar_info* or *LidarInfo*).
 
 For examples of how to call functions and run tools from *WhiteboxTools*, see the *whitebox_example.py* Python script, which itself uses the *whitebox_tools.py* script as an interface for interacting with the executable file.
 
@@ -121,65 +132,115 @@ In addition to direct command-line and script-based interaction, a very basic us
 
 ### 3.1 Interacting with *WhiteboxTools* from the command prompt
 
+The following is an example of calling the *WhiteboxTools* binary executable file directly from the command prompt: 
+
 ```
+
 >>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' 
 --run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
+
+
 ```
 
 Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. The '>>' is shorthand used in this document to denote the command prompt and is not intended to be typed. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
 
 ### 3.2 Interacting with *WhiteboxTools* using Python scripting
 
-Interacting with *WhiteboxTools* from Python scripts is quite easy. **Please note however that all of the following material assumes the user system is configured with Python 3.** The code snippets below are not guaranteed to work with Python 2. 
+> Note that all of the following material assumes the user system is configured with Python 3. The code snippets below are not guaranteed to work with Python 2. 
 
-To begin, each script must start by importing the *WhiteboxTools* class (the *whitebox_tools.py* and *whitebox_tools.exe* files should be in the same directory) and creating a new object:
+Interacting with *WhiteboxTools* from Python scripts is easy. To begin, each script must start by importing the *WhiteboxTools* class, contained with the *whitebox_tools.py* script, and creating a new object:
 
 ```Python
+
 from whitebox_tools import WhiteboxTools
+
 wbt = WhiteboxTools() 
+
+
 ```
 
-The Python ```WhiteboxTools``` class expects to find the *WhiteboxTools* executable file (*whitebox_tools.exe* on Windows and *whitebox_tools* on other platforms) within the same directory as the *whitebox_tools.py* script. If the binary file is located in a separate directory, you will need to set the executable directory as follows:
+The `WhiteboxTools` class expects to find the *WhiteboxTools* executable file (*whitebox_tools.exe* on Windows and *whitebox_tools* on other platforms) within the same directory as the *whitebox_tools.py* script. If the binary file is located in a separate directory, you will need to set the executable directory as follows:
 
 ```Python
+
 wbt.set_whitebox_dir('/local/path/to/whitebox/binary/')  
 # Or alternatively...
 wbt.exe_path = '/local/path/to/whitebox/binary/'
+
+
 ```
 
-Individual tools can be called using the convenience methods provided in the ```WhiteboxTools``` class:
+Individual tools can be called using the convenience methods provided in the `WhiteboxTools` class:
 
 ```Python
-# This line performs a 15 x 15 mean filter on 'in_file.tif':
-wbt.mean_filter('in_file.tif', 'out_file.tif', 15, 15)
+
+# This line performs a 5 x 5 mean filter on 'inFile.tif':
+wbt.mean_filter('/path/to/file/inFile.tif', '/path/to/file/outFile.tif', 5, 5)
+
+
 ```
 
-Each tool has a cooresponding run method. Tools can also be called using the ```run_tool()``` method, specifying the tool name and a list of tool arguments. Notice that while internally, *whitebox_tools.exe* uses CamelCase (e.g. MeanFilter) to denote tool names, the Python interface of *whitebox_tools.py* uses snake_case (e.g. mean_filter), according to Python style conventions. 
+Each tool has a cooresponding convenience method. Tools can also be called using the `run_tool()` method, specifying the tool name and a list of tool arguments. Each of the tool-specific convenience methods collect their arguments into a properly formated list and then ultimately call the `run_tools()` method. Notice that while internally, *whitebox_tools.exe* uses CamelCase (e.g. MeanFilter) to denote tool names, the Python interface of *whitebox_tools.py* uses snake_case (e.g. mean_filter), according to Python style conventions. The only exceptions are tools with names that clash with Python keywords (e.g. `And()`, `Not()`, and `Or()`).
 
-An advanced text editor, such as VS Code or Atom, can provide hints and autocomplete for available tool run methods and their parameters, including default values. To print a complete list of available tools:
+The return value can be used to check for errors during operation:
 
 ```Python
+
+if wbt.ruggedness_index('/path/DEM.flt', '/path/ruggedness.flt') != 0:
+    # Non-zero returns indicate an error.
+    print('ERROR running ruggedness_index')
+
+
+```
+
+If, like me, your data files tend to be burried deeply in layers of sub-directories, specifying complete file names as input parameters can be tedius. In this case, the best option is setting the working directory:
+
+```Python
+
+from whitebox_tools import WhiteboxTools
+
+wbt = WhiteboxTools() 
+wbt.work_dir = "/path/to/data/" # Sets the Whitebox working directory
+
+# Because the working directory has been set, file arguments can be
+# specified simply using file names, without paths.
+wbt.d_inf_flow_accumulation("DEM.dep", "output.dep", log=True)
+
+
+```
+
+An advanced text editor, such as VS Code or Atom, can provide hints and autocomplete for available tool convenience methods and their parameters, including default values. Sometimes, however, it can be useful to print a complete list of available tools:
+
+```Python
+
 print(wbt.list_tools()) # List all tools in WhiteboxTools
+
+
 ```
 
-The ```list_tools()``` method will also take an optional keywords list to allow tool searching:
+The `list_tools()` method will also take an optional keywords list to search for tools:
 
 ```Python
+
 # Lists tools with 'lidar' or 'LAS' in tool name or description.
 print(wbt.list_tools(['lidar', 'LAS']))
+
+
 ```
 
-To retrieve more detailed information for a specific tool, use the ```tool_help()``` method:
+To retrieve more detailed information for a specific tool, use the `tool_help()` method:
 
 ```Python
-print(wbt.tool_help("ElevPercentile"))
-# Notice that tool names within WhiteboxTools.exe are CamelCase but
-# you can also use snake_case here, e.g. print(wbt.tool_help("elev_percentile"))
-```
 
-```tool_help()``` prints tool details including a description, tool parameters (and their flags), and example usage at the command line prompt. The above statement prints this report:
+print(wbt.tool_help("elev_percentile"))
+
 
 ```
+
+`tool_help()` prints tool details including a description, tool parameters (and their flags), and example usage at the command line prompt. The above statement prints this report:
+
+```
+
 > ElevPercentile
 > Description:
 > Calculates the elevation percentile raster from a DEM.
@@ -195,32 +256,44 @@ print(wbt.tool_help("ElevPercentile"))
 > --sig_digits       Number of significant digits.
 > 
 > Example usage:
-> >>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" --dem=DEM.dep -o=output.dep --filterx=25
+> >>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" --dem=DEM.dep 
+> >>-o=output.dep --filterx=25
+
+
 ````
 
-Tools will frequently print text to the standard output during their execution, including warnings, progress updates and other notifications. Sometimes, when users run many tools in complex workflows and in batch mode, these output messages can be undesirable. Most tools will have their outputs suppressed by setting the 'verbose mode' as follows:
+Tools will frequently print text to the standard output during their execution, including warnings, progress updates and other notifications. Sometimes, when users run many tools in complex workflows and in batch mode, these output messages can be undesirable. Most tools will have their outputs suppressed by setting the *verbose* mode to *False* as follows:
 
 ```Python
+
 wbt.set_verbose_mode(False) 
-# Or, alternatively:
+# Or, alternatively...
 wbt.verbose = False
+
+
 ```
 
 Alternatively, it may be helpful to capture the text output of a tool for custom processing. This is achieved by specifying a custom *callback* function to the tool's run method:
 
 ```Python
+
 # This callback function suppresses printing progress updates,
-# which always use the '%' character.
+# which always use the '%' character. The callback function 
+# approach is flexible and allows for any level of complex
+# interaction with tool outputs.
 def my_callback(value):
     if not "%" in value:
         print(value)
 
 wbt.slope('DEM.tif', 'slope_raster.tif', callback=my_callback)
+
+
 ```
 
-The *whitebox_tools.py* provides several other functions for interacting with the *WhiteboxTools* library: 
+The *whitebox_tools.py* script provides several other functions for interacting with the *WhiteboxTools* library, including: 
 
 ```Python
+
 # Print the WhiteboxTools help...a listing of available commands
 print(wbt.help())
 
@@ -233,11 +306,13 @@ print("Version information: {}".format(wbt.version()))
 # Get the toolbox associated with a tool
 tb = wbt.toolbox('lidar_info')
 
-# Opens a browser and navigates to the tool's source code in the GitHub repository
-view_code('watershed')
-
 # Retrieve a JSON object of a tool's parameters.
 tp = tool_parameters('raster_histogram')
+
+# Opens a browser and navigates to a tool's source code in the 
+# WhiteboxTools GitHub repository
+view_code('watershed')
+
 
 ```
 
@@ -247,13 +322,13 @@ There is a Python script contained within the *WhiteboxTools* directory called '
 
 ![The *WhiteboxTools Runner* user-interface](./img/WBRunner.png)
 
-The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WhiteboxTools Runner*.
+The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WhiteboxTools Runner* and to incorporate toolbox information, rather than one large listing of available tools.
 
 ## 4. Available Tools
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 269 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-/-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 270 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-/-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 1. ***AbsoluteValue***
 
@@ -3678,6 +3753,32 @@ Flag               Description
 --palette=light_quant.plt
 ```
 
+138. ***LidarPointStats***
+
+*Description*:
+Creates several rasters summarizing the distribution of LAS point data.
+
+*Toolbox*: LiDAR Tools
+
+*Parameters*:
+
+Flag               Description
+-----------------  -----------
+-i, --input        Input LiDAR file.
+--resolution       Output raster's grid resolution.
+--num_points       Flag indicating whether or not to output the number of points raster.
+--num_pulses       Flag indicating whether or not to output the number of pulses raster.
+--z_range          Flag indicating whether or not to output the elevation range raster.
+--intensity_range  Flag indicating whether or not to output the intensity range raster.
+--predom_class     Flag indicating whether or not to output the predominant classification raster.
+
+
+*Example usage*:
+```
+>>./whitebox_tools -r=LidarPointStats -v --wd="/path/to/data/" -i=file.las --resolution=1.0 
+--num_points
+```
+
 
 138. ***LidarRemoveOutliers***
 
@@ -6960,7 +7061,7 @@ Flag               Description
 
 
 ## 5. Supported Data Formats
-The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
+The **WhiteboxTools** library can currently support reading/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
 
 At present, there is limited ability in *WhiteboxTools* to read vector geospatial data. Support for Shapefile (and other common vector formats) will be enhanced within the library soon. 
 
@@ -7038,10 +7139,10 @@ Not everything with Rust is perfect however. It is still a very young language a
 
 ### Do I need Rust installed on my computer to run WhiteboxTools?
 
-No, you would only need Rust installed if you were compiling the WhiteboxTools codebase from source files.
+No, you would only need Rust installed if you were compiling the *WhiteboxTools* codebase from source files.
 
 ### How does WhiteboxTools' design philosophy differ?
 
-*Whitebox GAT* is frequently praised for its consistent design and ease of use. Like *Whitebox GAT*, *WhiteboxTools* follows the convention of *one tool for one function*. For example, in *WhiteboxTools* assigning the links in a stream channel network their Horton, Strahler, Shreve, or Hack stream ordering numbers requires running separate tools (i.e. *HortonStreamOrder*, *StrahlerStreamOrder*, *ShreveStreamMagnitude*, and *HackStreamOrder*). By contrast, in GRASS GIS<sup>1</sup> and ArcGIS single tools (i.e. the *r.stream.order* and *Stream Order* tools respectively) can be configured to output different channel ordering schemes. The *WhiteboxTools* design is intended to simplify the user experience and to make it easier to find the right tool for a task. With more specific tool names that are reflective of their specific purposes, users are not as reliant on reading help documentation to identify the tool for the task at hand. Similarly, it is not uncommon for tools in other GIS to have multiple outputs. For example, in GRASS GIS the *r.slope.aspect* tool can be configured to output slope, aspect, profile curvature, plan curvature, and several other common terrain surface derivatives. Based on the *one tool for one function* design approach of *WhiteboxTools*, multiple outputs are indicative that a tool should be split into different, more specific tools. Are you more likely to go to a tool named *r.slope.aspect* or *TangentialCurvature* when you want to create a tangential curvature raster from a DEM? If you're new to the software and are unfamiliar with it, probably the later is more obvious. The *WhiteboxTools* design approach also has the added benefit of simplifying the documentation for tools. The one downside to this design approach, however, is that it results (or will result) in a large number of tools, often with signifcant overlap in function. 
+*Whitebox GAT* is frequently praised for its consistent design and ease of use. Like *Whitebox GAT*, *WhiteboxTools* follows the convention of *one tool for one function*. For example, in *WhiteboxTools* assigning the links in a stream channel network their Horton, Strahler, Shreve, or Hack stream ordering numbers requires running separate tools (i.e. *HortonStreamOrder*, *StrahlerStreamOrder*, *ShreveStreamMagnitude*, and *HackStreamOrder*). By contrast, in GRASS GIS\textsuperscript{1} and ArcGIS single tools (i.e. the *r.stream.order* and *Stream Order* tools respectively) can be configured to output different channel ordering schemes. The *WhiteboxTools* design is intended to simplify the user experience and to make it easier to find the right tool for a task. With more specific tool names that are reflective of their specific purposes, users are not as reliant on reading help documentation to identify the tool for the task at hand. Similarly, it is not uncommon for tools in other GIS to have multiple outputs. For example, in GRASS GIS the *r.slope.aspect* tool can be configured to output slope, aspect, profile curvature, plan curvature, and several other common terrain surface derivatives. Based on the *one tool for one function* design approach of *WhiteboxTools*, multiple outputs are indicative that a tool should be split into different, more specific tools. Are you more likely to go to a tool named *r.slope.aspect* or *TangentialCurvature* when you want to create a tangential curvature raster from a DEM? If you're new to the software and are unfamiliar with it, probably the later is more obvious. The *WhiteboxTools* design approach also has the added benefit of simplifying the documentation for tools. The one downside to this design approach, however, is that it results (or will result) in a large number of tools, often with signifcant overlap in function. 
 
-<sup>1</sup> NOTE: It's not my intent to criticize GRASS GIS, as I deeply respect the work that the GRASS developers have contributed. Rather, I am contrasting the consequences of *WhiteboxTools'* design philosophy to that of other GIS.
+\textsuperscript{1} NOTE: It's not my intent to criticize GRASS GIS, as I deeply respect the work that the GRASS developers have contributed. Rather, I am contrasting the consequences of *WhiteboxTools'* design philosophy to that of other GIS.

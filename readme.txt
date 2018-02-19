@@ -53,6 +53,18 @@ Release Notes:
 
 Version 0.4 (dd-mm-yyyy)
 
+- This release has erognomic improvements for Python scripting with Whitebox. Tools can be called 
+  in Python like this:
+
+  wt = WhiteboxTools()
+  wt.slope(‘DEM.dep’, ‘slope.dep’)
+  
+  There is a convenience method in whitebox_tools.py for each tool in the WhiteboxTools binary executable.
+- Significant improvements have been made to the User Manual, and in particular the section on Python
+  based scripting with WhiteboxTools.
+- Added the following tools:
+    LidarPointStats
+
 Version 0.3.1 (15-02-2018)
 
 - No new tools have been added to this release. Instead the focus was on improving and enhancing

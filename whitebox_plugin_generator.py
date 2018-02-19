@@ -36,7 +36,11 @@ for t in tools.split("\n"):
             tool_snaked = "Not"
         fn_def = "def {}(self, ".format(tool_snaked)
 
+        description = t.strip().split(":")[1].rstrip('.')
+
         arg_append_str = ""
+
+        doc_str = ""
 
         parameters = wbt.tool_parameters(tool)
         j = json.loads(parameters)
@@ -54,6 +58,10 @@ for t in tools.split("\n"):
             flag = p['flags'][len(p['flags']) - 1].replace('-', '')
             if flag == "class":
                 flag = "cls"
+
+            doc_str += "{}{} -- {}. \n".format(st_val,
+                                               flag, p['description'].rstrip('.'))
+
             pt = p['parameter_type']
             if 'Boolean' in pt:
                 if p['default_value'] != None and p['default_value'] != 'false':
@@ -73,11 +81,22 @@ for t in tools.split("\n"):
                     else:
                         default_params.append("{}=\"{}\", ".format(
                             camel_to_snake(flag), p['default_value']))
-                else:
-                    fn_def += "{}, ".format(camel_to_snake(flag))
 
-                arg_append_str += "{}args.append(\"{}='{}'\".format({}))\n".format(
-                    st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+                    arg_append_str += "{}args.append(\"{}={}\".format({}))\n".format(
+                        st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+                else:
+                    if not p['optional']:
+                        fn_def += "{}, ".format(camel_to_snake(flag))
+                        arg_append_str += "{}args.append(\"{}='{}'\".format({}))\n".format(
+                            st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+                    else:
+                        default_params.append(
+                            "{}=None, ".format(camel_to_snake(flag)))
+                        arg_append_str += "{}if {} is not None: args.append(\"{}='{}'\".format({}))\n".format(
+                            st_val, flag, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+
+                    # arg_append_str += "{}args.append(\"{}='{}'\".format({}))\n".format(
+                    #     st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
 
         for d in default_params:
             fn_def += d
@@ -87,7 +106,13 @@ for t in tools.split("\n"):
 
         fn = """
     {}
+        \"\"\"{}.
+        
+        Keyword arguments:
+
+        {}
+        \"\"\"
         args = []
         {}
-        return self.run_tool('{}', args, callback) # returns 1 if error""".format(fn_def, arg_append_str.rstrip(), tool)
+        return self.run_tool('{}', args, callback) # returns 1 if error""".format(fn_def, description, doc_str.rstrip(), arg_append_str.rstrip(), tool)
         print(fn)
