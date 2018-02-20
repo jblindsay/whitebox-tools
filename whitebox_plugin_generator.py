@@ -103,6 +103,8 @@ for t in tools.split("\n"):
 
         # fn_def = fn_def.rstrip(', ')
         fn_def += "callback=default_callback):"
+        doc_str += "{}callback -- Custom functon for handling tool text outputs.".format(
+            st_val)
 
         fn = """
     {}

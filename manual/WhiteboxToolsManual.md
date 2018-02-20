@@ -32,9 +32,11 @@ header-includes:
 
 WhiteboxTools Version 0.4  \
 Dr. John B. Lindsay &#169; Feb. 18, 2018  \
-*Geomorphometry and Hydrogeomatics Research Group*  \
-*The University of Guelph*  \
+Geomorphometry and Hydrogeomatics Research Group  \
+The University of Guelph  \
 Guelph, Canada \
+
+![](./img/GHRGLogoSm.png){width=50% height=50%}
 
 \newpage
 
@@ -54,7 +56,7 @@ WhiteboxTools User Manual
 6. [Contributing](#contributing)
 7. [License](#license)
 8. [Reporting Bugs](#reporting-bugs)
-9. [Known Issues](#known-issues)
+9. [Known Issues and Limitations](#known-issues-and-limitations)
 10. [Frequently Asked Questions](#frequently-asked-questions)
     * [Do I need Whitebox GAT to use WhiteboxTools?](#do-i-need-whitebox-gat-to-use-whiteboxtools)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
@@ -70,13 +72,13 @@ WhiteboxTools User Manual
 
 ## 1. Introduction
 
-**WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
+***WhiteboxTools*** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/index.html) (GHRG). The project began in January 2017 and quickly evolved in terms of its analytical capabilities. *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
 
-Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [*Usage*](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the Whitebox user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
+> In this manual, ***WhiteboxTools*** refers to the standalone geospatial analysis library, a collection of tools contained within a compiled binary executable command-line program and the associated Python scripts that are distributed alongside the binary file (e.g. *whitebox_tools.py* and *wb_runner.py*). ***Whitebox Geospatial Analysis Tools*** and ***Whitebox GAT*** refer to the GIS software, which includes a user-interface (front-end), point-and-click tool interfaces, and cartographic data visualization capabilities.
 
-> In this manual, *WhiteboxTools* refers to the standalone geospatial analysis library, a collection of tools contained within a compiled binary executable command-line program and the associated Python scripts that are distributed alongside the binary file (e.g. *whitebox_tools.py* and *wb_runner.py*). *Whitebox Geospatial Analysis Tools* and *Whitebox GAT* refer to the complete GIS software, which includes a user-interface (front-end), point-and-click tool interfaces, and cartographic data visualization capabilities.
+Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [*Usage*](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the *Whitebox GAT* user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. The current version of *Whitebox GAT* contains many equivelent tools to those found in the *WhiteboxTools* library, although they are developed using the Java programming language. A future version of *Whitebox GAT* will replace these previous tools with the new *WhiteboxTools* backend. This transition will occur over the next several releases. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
 
-The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded the *GoSpatial* project, having subsumed all of its functionality.
+In addition to *Whitebox GAT*, the *WhiteboxTools* project is related to other GHRG software projects including, the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded the *GoSpatial* project, having subsumed all of its functionality. *GoSpatial* users should now transition to *WhiteboxTools*.
 
 ## 2. Installation
 
@@ -84,7 +86,7 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 
 1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
-2. Download the Whitebox GAT [source code](https://github.com/jblindsay/whitebox-geospatial-analysis-tools). Note: WhiteboxTools is currently housed as a sub-repository of the main Whitebox GAT repo. To download the code, click the green Clone or download button on the GitHub repository site.
+2. Download the *Whitebox GAT* [source code](https://github.com/jblindsay/whitebox-geospatial-analysis-tools). Note: *WhiteboxTools* is currently housed as a sub-repository of the main *Whitebox GAT* repo. To download the code, click the green Clone or download button on the GitHub repository site.
 
 3. Decompress the zipped download file.
 
@@ -100,16 +102,18 @@ The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/j
 >> cargo build --release
 ```
 
-Depending on your system, the compilation may take several minutes. When completed, the compiled binary executable file will be contained within the *whitebox_tools/target/release/ folder*. Type *./whitebox_tools --help* at the command prompt (after cd'ing to the containing folder) for information on how to run the executable from the terminal.
+Depending on your system, the compilation may take several minutes. When completed, the compiled binary executable file will be contained within the *whitebox_tools/target/release/ folder*. Type *./whitebox_tools -\-help* at the command prompt (after changing the directory to the containing folder) for information on how to run the executable from the terminal.
 
-Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
+> The '>>' is shorthand used in this document to denote the command prompt and is not intended to be typed. 
+
+Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on Microsoft Windows, you must have a linker installed prior to installing the Rust compiler (*rustc*). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
 
 ## 3. Usage
 
-*WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized by the *WhiteboxTools* library:
+*WhiteboxTools* is a command-line program and can be run either by calling it from a terminal application with appropriate commands and arguments, or, more conveniently, by calling it from a script. The following commands are recognized by the *WhiteboxTools* library:
 
- Command             Description                                                                                       
- ------------------  ------------------------------------------------------------------------------------------------- 
+ **Command**         **Description**                                                                                       
+ ------------------  ----------------------------------------------------------------------------------- 
  -\-cd, -\-wd        Changes the working directory; used in conjunction with -\-run flag.                              
  -h, -\-help         Prints help information.                                                                          
  -l, -\-license      Prints the whitebox-tools license.                                                                
@@ -136,15 +140,18 @@ The following is an example of calling the *WhiteboxTools* binary executable fil
 
 ```
 
->>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' 
---run=DevFromMeanElev --input='DEM clipped.dep' --output='DEV raster.dep' -v
+>>./whitebox_tools --wd='/Users/johnlindsay/Documents/data/' ^
+--run=DevFromMeanElev --input='DEM clipped.dep' ^
+--output='DEV raster.dep' -v
 
 
 ```
 
-Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. The '>>' is shorthand used in this document to denote the command prompt and is not intended to be typed. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
+Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break (^) commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
 
 ### 3.2 Interacting with *WhiteboxTools* using Python scripting
+
+By combining the *WhiteboxTools* library with the a high-level scripting language, such as Python, users are capable of creating powerful stand-alone geospatial applications and workflow automation scripts. In fact, *WhiteboxTools* functionality can be called from many different programming languages. However, given the prevalent use of the Python language in the geospatial field, the library is distributed with several resources specifically aimed at Python scripting. This section focuses on how the Python programming can interact with the *WhiteboxTools* library.
 
 > Note that all of the following material assumes the user system is configured with Python 3. The code snippets below are not guaranteed to work with Python 2. 
 
@@ -209,7 +216,11 @@ wbt.d_inf_flow_accumulation("DEM.dep", "output.dep", log=True)
 
 ```
 
-An advanced text editor, such as VS Code or Atom, can provide hints and autocomplete for available tool convenience methods and their parameters, including default values. Sometimes, however, it can be useful to print a complete list of available tools:
+An advanced text editor, such as VS Code or Atom, can provide hints and autocompletion for available tool convenience methods and their parameters, including default values. 
+
+![Autocompletion in Atom text editor makes calling *WhiteboxTools* functions easier.](./img/wbt_auotcomplete.png)
+
+Sometimes, however, it can be useful to print a complete list of available tools:
 
 ```Python
 
@@ -290,6 +301,22 @@ wbt.slope('DEM.tif', 'slope_raster.tif', callback=my_callback)
 
 ```
 
+Callback functions can also serve as a means of cancelling operations:
+
+```Python
+
+def my_callback(value):
+    if user_selected_cancel_btn: # Assumes a 'Cancel' button on a GUI
+        print('Cancelling operation...')
+        wbt.cancel_op = True
+    else:
+        print(value)
+
+wbt.breach_depressions('DEM.flt', 'DEM_breached.flt', callback=my_callback)
+
+
+```
+
 The *whitebox_tools.py* script provides several other functions for interacting with the *WhiteboxTools* library, including: 
 
 ```Python
@@ -328,9 +355,9 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 270 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-/-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 271 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, *Stream Network Analysis*, and *Terrain Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-\-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
-1. ***AbsoluteValue***
+### ***AbsoluteValue***
 
 *Description*:
 Calculates the absolute value of every cell in a raster.
@@ -348,12 +375,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AbsoluteValue -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=AbsoluteValue -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-2. ***AdaptiveFilter***
+### ***AdaptiveFilter***
 
 *Description*:
 Performs an adaptive filter on an image.
@@ -374,12 +401,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AdaptiveFilter -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=AdaptiveFilter -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep --filter=25 --threshold = 2.0
 ```
 
 
-3. ***Add***
+### ***Add***
 
 *Description*:
 Performs an addition operation on two rasters or a raster and a constant value.
@@ -398,12 +425,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Add -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Add -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-4. ***AggregateRaster***
+### ***AggregateRaster***
 
 *Description*:
 Aggregates a raster to a lower resolution.
@@ -423,12 +450,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AggregateRaster -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=AggregateRaster -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --output_text
 ```
 
 
-5. ***And***
+### ***And***
 
 *Description*:
 Performs a logical AND operator on two Boolean raster images.
@@ -447,12 +474,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=And -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=And -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-6. ***Anova***
+### ***Anova***
 
 *Description*:
 Performs an analysis of variance (ANOVA) test on a raster dataset.
@@ -471,12 +498,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Anova -v --wd="/path/to/data/" -i=data.tif 
+>>./whitebox_tools -r=Anova -v --wd="/path/to/data/" -i=data.tif ^
 --features=classes.tif -o=anova.html
+
 ```
 
 
-7. ***ArcCos***
+### ***ArcCos***
 
 *Description*:
 Returns the inverse cosine (arccos) of each values in a raster.
@@ -494,12 +522,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ArcCos -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ArcCos -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep
 ```
 
 
-8. ***ArcSin***
+### ***ArcSin***
 
 *Description*:
 Returns the inverse sine (arcsin) of each values in a raster.
@@ -517,12 +545,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ArcSin -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ArcSin -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-9. ***ArcTan***
+### ***ArcTan***
 
 *Description*:
 Returns the inverse tangent (arctan) of each values in a raster.
@@ -540,12 +568,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ArcTan -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ArcTan -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-10. ***Aspect***
+### ***Aspect***
 
 *Description*:
 Calculates an aspect raster from an input DEM.
@@ -564,12 +592,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Aspect -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=Aspect -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-11. ***Atan2***
+### ***Atan2***
 
 *Description*:
 Returns the 2-argument inverse tangent (atan2).
@@ -588,12 +616,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Atan2 -v --wd="/path/to/data/" --input_y='in1.dep' 
+>>./whitebox_tools -r=Atan2 -v --wd="/path/to/data/" --input_y='in1.dep' ^
 --input_x='in2.dep' -o=output.dep
 ```
 
 
-12. ***AverageFlowpathSlope***
+### ***AverageFlowpathSlope***
 
 *Description*:
 Measures the average slope gradient from each grid cell to all upslope divide cells.
@@ -611,12 +639,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AverageFlowpathSlope -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=AverageFlowpathSlope -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep
 ```
 
 
-13. ***AverageOverlay***
+### ***AverageOverlay***
 
 *Description*:
 Calculates the average for each grid cell from a group of raster images.
@@ -634,12 +662,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AverageOverlay -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=AverageOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-14. ***AverageUpslopeFlowpathLength***
+### ***AverageUpslopeFlowpathLength***
 
 *Description*:
 Measures the average length of all upslope flowpaths draining each grid cell.
@@ -657,12 +685,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=AverageUpslopeFlowpathLength -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=AverageUpslopeFlowpathLength -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
 ```
 
 
-15. ***BalanceContrastEnhancement***
+### ***BalanceContrastEnhancement***
 
 *Description*:
 Performs a balance contrast enhancement on a colour-composite image of multispectral data.
@@ -681,12 +709,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BalanceContrastEnhancement -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=BalanceContrastEnhancement -v --wd="/path/to/data/" ^
 --input=image.dep -o=output.dep --band_mean=120
 ```
 
 
-16. ***Basins***
+### ***Basins***
 
 *Description*:
 Identifies drainage basins that drain to the DEM edge.
@@ -705,12 +733,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Basins -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' 
+>>./whitebox_tools -r=Basins -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' ^
 -o='output.dep'
 ```
 
 
-17. ***BilateralFilter***
+### ***BilateralFilter***
 
 *Description*:
 A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
@@ -730,12 +758,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BilateralFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=BilateralFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --sigma_dist=2.5 --sigma_int=4.0
 ```
 
 
-18. ***BlockMaximum***
+### ***BlockMaximum***
 
 *Description*:
 Creates a block-maximum raster from an input LAS file.
@@ -754,14 +782,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=2.0"
-./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" -i=file.las 
+./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --palette=light_quant.plt
 ```
 
 
-19. ***BlockMinimum***
+### ***BlockMinimum***
 
 *Description*:
 Creates a block-minimum raster from an input LAS file.
@@ -780,14 +808,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=2.0"
-./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" -i=file.las 
+./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --palette=light_quant.plt
 ```
 
 
-20. ***BreachDepressions***
+### ***BreachDepressions***
 
 *Description*:
 Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
@@ -807,12 +835,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BreachDepressions -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=BreachDepressions -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-21. ***BreachSingleCellPits***
+### ***BreachSingleCellPits***
 
 *Description*:
 Removes single-cell pits from an input DEM by breaching.
@@ -830,12 +858,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=BreachSingleCellPits -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=BreachSingleCellPits -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep
 ```
 
 
-22. ***BufferRaster***
+### ***BufferRaster***
 
 *Description*:
 Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
@@ -859,7 +887,7 @@ Flag               Description
 ```
 
 
-23. ***Ceil***
+### ***Ceil***
 
 *Description*:
 Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
@@ -881,7 +909,7 @@ Flag               Description
 ```
 
 
-24. ***Centroid***
+### ***Centroid***
 
 *Description*:
 Calculates the centroid, or average location, of raster polygon objects.
@@ -900,13 +928,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Centroid -v --wd="/path/to/data/" -i=polygons.dep -o=output.dep
->>./whitebox_tools -r=Centroid -v --wd="/path/to/data/" -i=polygons.dep -o=output.dep 
---text_output
+>>./whitebox_tools -r=Centroid -v --wd="/path/to/data/" -i=polygons.dep ^
+-o=output.dep
+>>./whitebox_tools -r=Centroid -v --wd="/path/to/data/" -i=polygons.dep ^
+-o=output.dep --text_output
 ```
 
 
-25. ***Closing***
+### ***Closing***
 
 *Description*:
 A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
@@ -926,12 +955,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Closing -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=Closing -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-26. ***Clump***
+### ***Clump***
 
 *Description*:
 Groups cells that form physically discrete areas, assigning them unique identifiers.
@@ -951,12 +980,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Clump -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=Clump -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --diag
 ```
 
 
-27. ***ConservativeSmoothingFilter***
+### ***ConservativeSmoothingFilter***
 
 *Description*:
 Performs a conservative-smoothing filter on an image.
@@ -976,12 +1005,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ConservativeSmoothingFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ConservativeSmoothingFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25
 ```
 
 
-28. ***ConvertNodataToZero***
+### ***ConvertNodataToZero***
 
 *Description*:
 Converts nodata values in a raster to zero.
@@ -999,12 +1028,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ConvertNodataToZero -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ConvertNodataToZero -v --wd="/path/to/data/" ^
 --input=in.dep -o=NewRaster.dep
 ```
 
 
-29. ***ConvertRasterFormat***
+### ***ConvertRasterFormat***
 
 *Description*:
 Converts raster data from one format to another.
@@ -1022,12 +1051,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ConvertRasterFormat -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ConvertRasterFormat -v --wd="/path/to/data/" ^
 --input=DEM.dep -o=output.dep
 ```
 
 
-30. ***Cos***
+### ***Cos***
 
 *Description*:
 Returns the cosine (cos) of each values in a raster.
@@ -1045,12 +1074,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Cos -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Cos -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-31. ***Cosh***
+### ***Cosh***
 
 *Description*:
 Returns the hyperbolic cosine (cosh) of each values in a raster.
@@ -1068,12 +1097,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Cosh -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Cosh -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-32. ***CostAllocation***
+### ***CostAllocation***
 
 *Description*:
 Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
@@ -1092,12 +1121,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CostAllocation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=CostAllocation -v --wd="/path/to/data/" ^
 --source='source.dep' --backlink='backlink.dep' -o='output.dep'
 ```
 
 
-33. ***CostDistance***
+### ***CostDistance***
 
 *Description*:
 Performs cost-distance accumulation on a cost surface and a group of source cells.
@@ -1117,12 +1146,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CostDistance -v --wd="/path/to/data/" --source=src.dep 
+>>./whitebox_tools -r=CostDistance -v --wd="/path/to/data/" --source=src.dep ^
 --cost=cost.dep --out_accum=accum.dep --out_backlink=backlink.dep
 ```
 
 
-34. ***CostPathway***
+### ***CostPathway***
 
 *Description*:
 Performs cost-distance pathway analysis using a series of destination grid cells.
@@ -1142,12 +1171,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CostPathway -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=CostPathway -v --wd="/path/to/data/" ^
 --destination=dst.dep --backlink=backlink.dep --output=cost_path.dep
 ```
 
 
-35. ***CreateColourComposite***
+### ***CreateColourComposite***
 
 *Description*:
 Creates a colour-composite image from three bands of multispectral imagery.
@@ -1169,14 +1198,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CreateColourComposite -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=CreateColourComposite -v --wd="/path/to/data/" ^
 --red=band3.dep --green=band2.dep --blue=band1.dep -o=output.dep
->>./whitebox_tools -r=CreateColourComposite -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=CreateColourComposite -v --wd="/path/to/data/" ^
 --red=band3.dep --green=band2.dep --blue=band1.dep --opacity=a.dep -o=output.dep
 ```
 
 
-36. ***CreatePlane***
+### ***CreatePlane***
 
 *Description*:
 Creates a raster image based on the equation for a simple plane.
@@ -1197,12 +1226,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CreatePlane -v --wd="/path/to/data/" --base=base.dep 
+>>./whitebox_tools -r=CreatePlane -v --wd="/path/to/data/" --base=base.dep ^
 -o=NewRaster.dep --gradient=15.0 --aspect=315.0
 ```
 
 
-37. ***CrispnessIndex***
+### ***CrispnessIndex***
 
 *Description*:
 Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
@@ -1225,7 +1254,7 @@ Flag               Description
 ```
 
 
-38. ***CrossTabulation***
+### ***CrossTabulation***
 
 *Description*:
 Performs a cross-tabulation on two categorical images.
@@ -1244,12 +1273,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CrossTabulation -v --wd="/path/to/data/" --i1="file1.tif" 
+>>./whitebox_tools -r=CrossTabulation -v --wd="/path/to/data/" --i1="file1.tif" ^
 --i2="file2.tif" -o=outfile.html
 ```
 
 
-39. ***CumulativeDistribution***
+### ***CumulativeDistribution***
 
 *Description*:
 Converts a raster image to its cumulative distribution function.
@@ -1267,12 +1296,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=CumulativeDistribution -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=CumulativeDistribution -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
 ```
 
 
-40. ***D8FlowAccumulation***
+### ***D8FlowAccumulation***
 
 *Description*:
 Calculates a D8 flow accumulation raster from an input DEM.
@@ -1293,14 +1322,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=D8FlowAccumulation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=D8FlowAccumulation -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --out_type='cells'
->>./whitebox_tools -r=D8FlowAccumulation -v --wd="/path/to/data/" 
---dem=DEM.dep -o=output.dep --out_type='specific catchment area' --log --clip
+>>./whitebox_tools -r=D8FlowAccumulation -v --wd="/path/to/data/" ^
+--dem=DEM.dep -o=output.dep --out_type='specific catchment area' ^
+--log --clip
 ```
 
 
-41. ***D8MassFlux***
+### ***D8MassFlux***
 
 *Description*:
 Performs a D8 mass flux calculation.
@@ -1321,12 +1351,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=D8MassFlux -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=D8MassFlux -v --wd="/path/to/data/" --dem=DEM.dep ^
 --loading=load.dep --efficiency=eff.dep --absorption=abs.dep -o=output.dep
 ```
 
 
-42. ***D8Pointer***
+### ***D8Pointer***
 
 *Description*:
 Calculates a D8 flow pointer raster from an input DEM.
@@ -1345,11 +1375,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=D8Pointer -v --wd="/path/to/data/" --dem=DEM.dep -o=output.dep
+>>./whitebox_tools -r=D8Pointer -v --wd="/path/to/data/" ^
+--dem=DEM.dep -o=output.dep
 ```
 
 
-43. ***DInfFlowAccumulation***
+### ***DInfFlowAccumulation***
 
 *Description*:
 Calculates a D-infinity flow accumulation raster from an input DEM.
@@ -1371,14 +1402,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DInfFlowAccumulation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DInfFlowAccumulation -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --out_type=sca
->>./whitebox_tools -r=DInfFlowAccumulation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DInfFlowAccumulation -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --out_type=sca --threshold=10000 --log --clip
 ```
 
 
-44. ***DInfMassFlux***
+### ***DInfMassFlux***
 
 *Description*:
 Performs a D-infinity mass flux calculation.
@@ -1399,12 +1430,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DInfMassFlux -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=DInfMassFlux -v --wd="/path/to/data/" --dem=DEM.dep ^
 --loading=load.dep --efficiency=eff.dep --absorption=abs.dep -o=output.dep
 ```
 
 
-45. ***DInfPointer***
+### ***DInfPointer***
 
 *Description*:
 Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
@@ -1426,7 +1457,7 @@ Flag               Description
 ```
 
 
-46. ***Decrement***
+### ***Decrement***
 
 *Description*:
 Decreases the values of each grid cell in an input raster by 1.0.
@@ -1444,12 +1475,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Decrement -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Decrement -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-47. ***DepthInSink***
+### ***DepthInSink***
 
 *Description*:
 Measures the depth of sinks (depressions) in a DEM.
@@ -1468,12 +1499,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DepthInSink -v --wd="/path/to/data/" --dem=DEM.dep 
--o=output.dep --zero_background
+>>./whitebox_tools -r=DepthInSink -v --wd="/path/to/data/" ^
+--dem=DEM.dep -o=output.dep --zero_background
 ```
 
 
-48. ***DevFromMeanElev***
+### ***DevFromMeanElev***
 
 *Description*:
 Calculates deviation from mean elevation.
@@ -1493,12 +1524,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DevFromMeanElev -v --wd="/path/to/data/" --dem=DEM.dep 
--o=output.dep --filter=25
+>>./whitebox_tools -r=DevFromMeanElev -v --wd="/path/to/data/" ^
+--dem=DEM.dep -o=output.dep --filter=25
 ```
 
 
-49. ***DiffFromMeanElev***
+### ***DiffFromMeanElev***
 
 *Description*:
 Calculates difference from mean elevation (equivalent to a high-pass filter).
@@ -1518,12 +1549,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DiffFromMeanElev -v --wd="/path/to/data/" --dem=DEM.dep 
--o=output.dep --filter=25
+>>./whitebox_tools -r=DiffFromMeanElev -v --wd="/path/to/data/" ^
+--dem=DEM.dep -o=output.dep --filter=25
 ```
 
 
-50. ***DiffOfGaussianFilter***
+### ***DiffOfGaussianFilter***
 
 *Description*:
 Performs a Difference of Gaussian (DoG) filter on an image.
@@ -1543,12 +1574,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DiffOfGaussianFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DiffOfGaussianFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --sigma1=2.0 --sigma2=4.0
 ```
 
 
-51. ***DirectDecorrelationStretch***
+### ***DirectDecorrelationStretch***
 
 *Description*:
 Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
@@ -1568,12 +1599,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DirectDecorrelationStretch -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DirectDecorrelationStretch -v --wd="/path/to/data/" ^
 --input=image.dep -o=output.dep -k=0.4
 ```
 
 
-52. ***DirectionalRelief***
+### ***DirectionalRelief***
 
 *Description*:
 Calculates relief for cells in an input DEM for a specified direction.
@@ -1593,12 +1624,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DirectionalRelief -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=DirectionalRelief -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --azimuth=315.0
 ```
 
 
-53. ***DistanceToOutlet***
+### ***DistanceToOutlet***
 
 *Description*:
 Calculates the distance of stream grid cells to the channel network outlet cell.
@@ -1619,14 +1650,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DistanceToOutlet -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=DistanceToOutlet -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=DistanceToOutlet -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=DistanceToOutlet -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-54. ***DiversityFilter***
+### ***DiversityFilter***
 
 *Description*:
 Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
@@ -1646,12 +1677,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DiversityFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=DiversityFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-55. ***Divide***
+### ***Divide***
 
 *Description*:
 Performs a division operation on two rasters or a raster and a constant value.
@@ -1670,12 +1701,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Divide -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Divide -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-56. ***DownslopeDistanceToStream***
+### ***DownslopeDistanceToStream***
 
 *Description*:
 Measures distance to the nearest downslope stream cell.
@@ -1694,12 +1725,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DownslopeDistanceToStream -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DownslopeDistanceToStream -v --wd="/path/to/data/" ^
 --dem='dem.dep' --streams='streams.dep' -o='output.dep'
 ```
 
 
-57. ***DownslopeFlowpathLength***
+### ***DownslopeFlowpathLength***
 
 *Description*:
 Calculates the downslope flowpath length from each cell to basin outlet.
@@ -1720,15 +1751,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DownslopeFlowpathLength -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=DownslopeFlowpathLength -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.dep -o=flowpath_len.dep
->>./whitebox_tools -r=DownslopeFlowpathLength -v --wd="/path/to/data/" 
---d8_pntr=pointer.flt --watersheds=basin.flt --weights=weights.flt -o=flowpath_len.flt 
---esri_pntr
+>>./whitebox_tools -r=DownslopeFlowpathLength -v --wd="/path/to/data/" ^
+--d8_pntr=pointer.flt --watersheds=basin.flt --weights=weights.flt 
+-o=flowpath_len.flt --esri_pntr
 ```
 
 
-58. ***DownslopeIndex***
+### ***DownslopeIndex***
 
 *Description*:
 Calculates the Hjerdt et al. (2004) downslope index.
@@ -1748,12 +1779,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=DownslopeIndex -v --wd="/path/to/data/" --dem=pointer.dep 
+>>./whitebox_tools -r=DownslopeIndex -v --wd="/path/to/data/" --dem=pointer.dep ^
 -o=dsi.dep --drop=5.0 --out_type=distance
 ```
 
 
-59. ***EdgeProportion***
+### ***EdgeProportion***
 
 *Description*:
 Calculate the proportion of cells in a raster polygon that are edge cells.
@@ -1772,12 +1803,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=EdgeProportion -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=EdgeProportion -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --output_text
 ```
 
 
-60. ***ElevAbovePit***
+### ***ElevAbovePit***
 
 *Description*:
 Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
@@ -1795,12 +1826,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ElevAbovePit -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=ElevAbovePit -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-61. ***ElevPercentile***
+### ***ElevPercentile***
 
 *Description*:
 Calculates the elevation percentile raster from a DEM.
@@ -1821,12 +1852,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --filter=25
 ```
 
 
-62. ***ElevRelativeToMinMax***
+### ***ElevRelativeToMinMax***
 
 *Description*:
 Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
@@ -1844,12 +1875,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ElevRelativeToMinMax -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ElevRelativeToMinMax -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep
 ```
 
 
-63. ***ElevRelativeToWatershedMinMax***
+### ***ElevRelativeToWatershedMinMax***
 
 *Description*:
 Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
@@ -1868,12 +1899,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ElevRelativeToWatershedMinMax -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=ElevRelativeToWatershedMinMax -v --wd="/path/to/data/" --dem=DEM.dep ^
 --watersheds=watershed.dep -o=output.dep
 ```
 
 
-64. ***ElevationAboveStream***
+### ***ElevationAboveStream***
 
 *Description*:
 Calculates the elevation of cells above the nearest downslope stream cell.
@@ -1892,12 +1923,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ElevationAboveStream -v --wd="/path/to/data/" --dem='dem.dep' 
+>>./whitebox_tools -r=ElevationAboveStream -v --wd="/path/to/data/" --dem='dem.dep' ^
 --streams='streams.dep' -o='output.dep'
 ```
 
 
-65. ***EmbossFilter***
+### ***EmbossFilter***
 
 *Description*:
 Performs an emboss filter on an image, similar to a hillshade operation.
@@ -1917,12 +1948,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=EmbossFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=EmbossFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --direction='s' --clip=1.0
 ```
 
 
-66. ***EqualTo***
+### ***EqualTo***
 
 *Description*:
 Performs a equal-to comparison operation on two rasters or a raster and a constant value.
@@ -1941,12 +1972,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=EqualTo -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=EqualTo -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-67. ***EuclideanAllocation***
+### ***EuclideanAllocation***
 
 *Description*:
 Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
@@ -1964,12 +1995,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=EuclideanAllocation -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=EuclideanAllocation -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep
 ```
 
 
-68. ***EuclideanDistance***
+### ***EuclideanDistance***
 
 *Description*:
 Calculates the Shih and Wu (2004) Euclidean distance transform.
@@ -1987,12 +2018,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=EuclideanDistance -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=EuclideanDistance -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep
 ```
 
 
-69. ***Exp***
+### ***Exp***
 
 *Description*:
 Returns the exponential (base e) of values in a raster.
@@ -2010,11 +2041,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Exp -v --wd="/path/to/data/" -i='input.dep' -o=output.dep
+>>./whitebox_tools -r=Exp -v --wd="/path/to/data/" -i='input.dep' ^
+-o=output.dep
 ```
 
 
-70. ***Exp2***
+### ***Exp2***
 
 *Description*:
 Returns the exponential (base 2) of values in a raster.
@@ -2032,11 +2064,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Exp2 -v --wd="/path/to/data/" -i='input.dep' -o=output.dep
+>>./whitebox_tools -r=Exp2 -v --wd="/path/to/data/" -i='input.dep' ^
+-o=output.dep
 ```
 
 
-71. ***ExtractRasterStatistics***
+### ***ExtractRasterStatistics***
 
 *Description*:
 Extracts descriptive statistics for a group of patches in a raster.
@@ -2064,7 +2097,7 @@ Flag               Description
 ```
 
 
-72. ***ExtractStreams***
+### ***ExtractStreams***
 
 *Description*:
 Extracts stream grid cells from a flow accumulation raster.
@@ -2084,12 +2117,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ExtractStreams -v --wd="/path/to/data/" --flow_accum='d8accum.dep' 
+>>./whitebox_tools -r=ExtractStreams -v --wd="/path/to/data/" --flow_accum='d8accum.dep' ^
 -o='output.dep' --threshold=100.0  --zero_background
 ```
 
 
-73. ***ExtractValleys***
+### ***ExtractValleys***
 
 *Description*:
 Identifies potential valley bottom grid cells based on local topolography alone.
@@ -2110,14 +2143,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ExtractValleys -v --wd="/path/to/data/" --dem=pointer.dep 
+>>./whitebox_tools -r=ExtractValleys -v --wd="/path/to/data/" --dem=pointer.dep ^
 -o=out.dep --variant='JandR' --line_thin
->>./whitebox_tools -r=ExtractValleys -v --wd="/path/to/data/" --dem=pointer.dep 
+>>./whitebox_tools -r=ExtractValleys -v --wd="/path/to/data/" --dem=pointer.dep ^
 -o=out.dep --variant='lq' --filter=7 --line_thin
 ```
 
 
-74. ***FD8FlowAccumulation***
+### ***FD8FlowAccumulation***
 
 *Description*:
 Calculates an FD8 flow accumulation raster from an input DEM.
@@ -2140,14 +2173,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FD8FlowAccumulation -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FD8FlowAccumulation -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --out_type='cells'
->>./whitebox_tools -r=FD8FlowAccumulation -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FD8FlowAccumulation -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --out_type='catchment area' --exponent=1.5 --threshold=10000 --log --clip
 ```
 
 
-75. ***FD8Pointer***
+### ***FD8Pointer***
 
 *Description*:
 Calculates an FD8 flow pointer raster from an input DEM.
@@ -2165,12 +2198,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FD8Pointer -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FD8Pointer -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-76. ***FarthestChannelHead***
+### ***FarthestChannelHead***
 
 *Description*:
 Calculates the distance to the furthest upstream channel head for each stream cell.
@@ -2191,14 +2224,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FarthestChannelHead -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=FarthestChannelHead -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=FarthestChannelHead -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=FarthestChannelHead -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-77. ***FeaturePreservingDenoise***
+### ***FeaturePreservingDenoise***
 
 *Description*:
 Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
@@ -2220,12 +2253,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FeaturePreservingDenoise -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=FeaturePreservingDenoise -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep
 ```
 
 
-78. ***FetchAnalysis***
+### ***FetchAnalysis***
 
 *Description*:
 Performs an analysis of fetch or upwind distance to an obstacle.
@@ -2245,12 +2278,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FetchAnalysis -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=FetchAnalysis -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --azimuth=315.0
 ```
 
 
-79. ***FillDepressions***
+### ***FillDepressions***
 
 *Description*:
 Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
@@ -2269,12 +2302,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FillDepressions -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FillDepressions -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --fix_flats
 ```
 
 
-80. ***FillMissingData***
+### ***FillMissingData***
 
 *Description*:
 Fills nodata holes in a DEM.
@@ -2293,12 +2326,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FillMissingData -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=FillMissingData -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep --filter=25
 ```
 
 
-81. ***FillSingleCellPits***
+### ***FillSingleCellPits***
 
 *Description*:
 Raises pit cells to the elevation of their lowest neighbour.
@@ -2316,12 +2349,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FillSingleCellPits -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FillSingleCellPits -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=NewRaster.dep
 ```
 
 
-82. ***FilterLidarScanAngles***
+### ***FilterLidarScanAngles***
 
 *Description*:
 Removes points in a LAS file with scan angles greater than a threshold.
@@ -2340,12 +2373,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FilterLidarScanAngles -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=FilterLidarScanAngles -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --threshold=10.0
 ```
 
 
-83. ***FindFlightlineEdgePoints***
+### ***FindFlightlineEdgePoints***
 
 *Description*:
 Identifies points along a flightline's edge in a LAS file.
@@ -2363,12 +2396,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindFlightlineEdgePoints -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=FindFlightlineEdgePoints -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las"
 ```
 
 
-84. ***FindMainStem***
+### ***FindMainStem***
 
 *Description*:
 Finds the main stem, based on stream lengths, of each stream network.
@@ -2389,14 +2422,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindMainStem -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=FindMainStem -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=FindMainStem -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=FindMainStem -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-85. ***FindNoFlowCells***
+### ***FindNoFlowCells***
 
 *Description*:
 Finds grid cells with no downslope neighbours.
@@ -2414,12 +2447,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindNoFlowCells -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FindNoFlowCells -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=NewRaster.dep
 ```
 
 
-86. ***FindParallelFlow***
+### ***FindParallelFlow***
 
 *Description*:
 Finds areas of parallel flow in D8 flow direction rasters.
@@ -2438,14 +2471,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindParallelFlow -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=FindParallelFlow -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.dep -o=out.dep
->>./whitebox_tools -r=FindParallelFlow -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=FindParallelFlow -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.dep -o=out.dep --streams='streams.dep'
 ```
 
 
-87. ***FindPatchOrClassEdgeCells***
+### ***FindPatchOrClassEdgeCells***
 
 *Description*:
 Finds all cells located on the edge of patch or class features.
@@ -2463,12 +2496,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindPatchOrClassEdgeCells -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=FindPatchOrClassEdgeCells -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep
 ```
 
 
-88. ***FindRidges***
+### ***FindRidges***
 
 *Description*:
 Identifies potential ridge and peak grid cells.
@@ -2487,12 +2520,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FindRidges -v --wd="/path/to/data/" --dem=pointer.dep -o=out.dep 
+>>./whitebox_tools -r=FindRidges -v --wd="/path/to/data/" --dem=pointer.dep -o=out.dep ^
 --line_thin
 ```
 
 
-89. ***FlightlineOverlap***
+### ***FlightlineOverlap***
 
 *Description*:
 Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
@@ -2511,14 +2544,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FlightlineOverlap -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=FlightlineOverlap -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=2.0"
-./whitebox_tools -r=FlightlineOverlap -v --wd="/path/to/data/" -i=file.las 
+./whitebox_tools -r=FlightlineOverlap -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --palette=light_quant.plt
 ```
 
 
-90. ***FlipImage***
+### ***FlipImage***
 
 *Description*:
 Reflects an image in the vertical or horizontal axis.
@@ -2537,12 +2570,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FlipImage -v --wd="/path/to/data/" --input=in.dep 
+>>./whitebox_tools -r=FlipImage -v --wd="/path/to/data/" --input=in.dep ^
 -o=out.dep --direction=h
 ```
 
 
-91. ***FloodOrder***
+### ***FloodOrder***
 
 *Description*:
 Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
@@ -2560,12 +2593,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FloodOrder -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=FloodOrder -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-92. ***Floor***
+### ***Floor***
 
 *Description*:
 Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
@@ -2583,12 +2616,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Floor -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Floor -v --wd="/path/to/data/" -i='input.dep' ^
 -o='output.dep'
 ```
 
 
-93. ***FlowAccumulationFullWorkflow***
+### ***FlowAccumulationFullWorkflow***
 
 *Description*:
 Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
@@ -2612,13 +2645,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FlowAccumulationFullWorkflow -v --wd="/path/to/data/" 
---dem='DEM.dep' --out_dem='DEM_filled.dep' --out_pntr='pointer.dep'
+>>./whitebox_tools -r=FlowAccumulationFullWorkflow -v --wd="/path/to/data/" ^ 
+--dem='DEM.dep' --out_dem='DEM_filled.dep' --out_pntr='pointer.dep' ^
  --out_accum='accum.dep' --out_type=sca --log --clip
 ```
 
 
-94. ***FlowLengthDiff***
+### ***FlowLengthDiff***
 
 *Description*:
 Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
@@ -2637,12 +2670,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=FlowLengthDiff -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=FlowLengthDiff -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.dep -o=output.dep
 ```
 
 
-95. ***GammaCorrection***
+### ***GammaCorrection***
 
 *Description*:
 Performs a sigmoidal contrast stretch on input images.
@@ -2661,12 +2694,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=GammaCorrection -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=GammaCorrection -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --gamma=0.5
 ```
 
 
-96. ***GaussianFilter***
+### ***GaussianFilter***
 
 *Description*:
 Performs a Gaussian filter on an image.
@@ -2685,12 +2718,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=GaussianFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=GaussianFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --sigma=2.0
 ```
 
 
-97. ***GreaterThan***
+### ***GreaterThan***
 
 *Description*:
 Performs a greater-than comparison operation on two rasters or a raster and a constant value.
@@ -2710,12 +2743,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=GreaterThan -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=GreaterThan -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep --incl_equals
 ```
 
 
-98. ***HackStreamOrder***
+### ***HackStreamOrder***
 
 *Description*:
 Assigns the Hack stream order to each tributary in a stream network.
@@ -2736,14 +2769,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HackStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=HackStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=HackStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=HackStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-99. ***HighPassFilter***
+### ***HighPassFilter***
 
 *Description*:
 Performs a high-pass filter on an input image.
@@ -2763,12 +2796,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HighPassFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=HighPassFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-100. ***HighestPosition***
+### ***HighestPosition***
 
 *Description*:
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
@@ -2786,12 +2819,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HighestPosition -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=HighestPosition -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-101. ***Hillshade***
+### ***Hillshade***
 
 *Description*:
 Calculates a hillshade raster from an input DEM.
@@ -2812,12 +2845,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Hillshade -v --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+>>./whitebox_tools -r=Hillshade -v --wd="/path/to/data/" -i=DEM.dep -o=output.dep ^
 --azimuth=315.0 --altitude=30.0
 ```
 
 
-102. ***Hillslopes***
+### ***Hillslopes***
 
 *Description*:
 Identifies the individual hillslopes draining to each link in a stream network.
@@ -2837,12 +2870,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Hillslopes -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' 
+>>./whitebox_tools -r=Hillslopes -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' ^
 --streams='streams.dep' -o='output.dep'
 ```
 
 
-103. ***HistogramEqualization***
+### ***HistogramEqualization***
 
 *Description*:
 Performs a histogram equalization contrast enhancment on an image.
@@ -2861,12 +2894,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HistogramEqualization -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=HistogramEqualization -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --num_tones=1024
 ```
 
 
-104. ***HistogramMatching***
+### ***HistogramMatching***
 
 *Description*:
 Alters the statistical distribution of a raster image matching it to a specified PDF.
@@ -2885,12 +2918,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HistogramMatching -v --wd="/path/to/data/" -i=input1.dep 
+>>./whitebox_tools -r=HistogramMatching -v --wd="/path/to/data/" -i=input1.dep ^
 --histo_file=histo.txt -o=output.dep
 ```
 
 
-105. ***HistogramMatchingTwoImages***
+### ***HistogramMatchingTwoImages***
 
 *Description*:
 This tool alters the cumulative distribution function of a raster image to that of another image.
@@ -2909,12 +2942,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HistogramMatchingTwoImages -v --wd="/path/to/data/" --i1=input1.dep 
---i2=input2.dep -o=output.dep
+>>./whitebox_tools -r=HistogramMatchingTwoImages -v --wd="/path/to/data/" ^
+--i1=input1.dep --i2=input2.dep -o=output.dep
 ```
 
 
-106. ***HorizonAngle***
+### ***HorizonAngle***
 
 *Description*:
 Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
@@ -2934,12 +2967,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HorizonAngle -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=HorizonAngle -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --azimuth=315.0
 ```
 
 
-107. ***HortonStreamOrder***
+### ***HortonStreamOrder***
 
 *Description*:
 Assigns the Horton stream order to each tributary in a stream network.
@@ -2960,14 +2993,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HortonStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=HortonStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=HortonStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=HortonStreamOrder -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-108. ***HypsometricAnalysis***
+### ***HypsometricAnalysis***
 
 *Description*:
 Calculates a hypsometric curve for one or more DEMs.
@@ -2986,12 +3019,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=HypsometricAnalysis -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=HypsometricAnalysis -v --wd="/path/to/data/" ^
 -i="DEM1.tif;DEM2.tif" --watershed="ws1.tif;ws2.tif" -o=outfile.html
 ```
 
 
-109. ***ImageAutocorrelation***
+### ***ImageAutocorrelation***
 
 *Description*:
 Performs Moran's I analysis on two or more input images.
@@ -3010,12 +3043,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ImageAutocorrelation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ImageAutocorrelation -v --wd="/path/to/data/" ^
 -i="file1.tif, file2.tif, file3.tif" -o=outfile.html --contiguity=Bishops
 ```
 
 
-110. ***ImageCorrelation***
+### ***ImageCorrelation***
 
 *Description*:
 Performs image correlation on two or more input images.
@@ -3033,12 +3066,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ImageCorrelation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ImageCorrelation -v --wd="/path/to/data/" ^
 -i="file1.tif, file2.tif, file3.tif" -o=outfile.html
 ```
 
 
-111. ***ImageRegression***
+### ***ImageRegression***
 
 *Description*:
 Performs image regression analysis on two input images.
@@ -3059,12 +3092,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ImageRegression -v --wd="/path/to/data/" --i1='file1.tif' 
+>>./whitebox_tools -r=ImageRegression -v --wd="/path/to/data/" --i1='file1.tif' ^
 --i2='file2.tif' -o='outfile.html' --out_residuals='residuals.tif' --standardize
 ```
 
 
-112. ***Increment***
+### ***Increment***
 
 *Description*:
 Increases the values of each grid cell in an input raster by 1.0.
@@ -3082,12 +3115,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Increment -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Increment -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-113. ***IntegerDivision***
+### ***IntegerDivision***
 
 *Description*:
 Performs an integer division operation on two rasters or a raster and a constant value.
@@ -3106,12 +3139,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=IntegerDivision -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=IntegerDivision -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-114. ***IntegralImage***
+### ***IntegralImage***
 
 *Description*:
 Transforms an input image (summed area table) into its integral image equivalent.
@@ -3129,12 +3162,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=IntegralImage -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=IntegralImage -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep
 ```
 
 
-115. ***IsNoData***
+### ***IsNoData***
 
 *Description*:
 Identifies NoData valued pixels in an image.
@@ -3152,12 +3185,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=IsNoData -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=IsNoData -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-116. ***Isobasins***
+### ***Isobasins***
 
 *Description*:
 Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
@@ -3176,12 +3209,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Isobasins -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=Isobasins -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --size=1000
 ```
 
 
-117. ***JensonSnapPourPoints***
+### ***JensonSnapPourPoints***
 
 *Description*:
 Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
@@ -3201,13 +3234,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=JensonSnapPourPoints -v --wd="/path/to/data/" 
---pour_pts='pour_pts.dep' --streams='streams.dep' -o='output.dep' 
+>>./whitebox_tools -r=JensonSnapPourPoints -v --wd="/path/to/data/" ^
+--pour_pts='pour_pts.dep' --streams='streams.dep' -o='output.dep' ^
 --snap_dist=15.0
 ```
 
 
-118. ***KMeansClustering***
+### ***KMeansClustering***
 
 *Description*:
 Performs a k-means clustering operation on a multi-spectral dataset.
@@ -3232,13 +3265,13 @@ Flag               Description
 *Example usage*:
 ```
 >>./whitebox_tools -r=KMeansClustering -v --wd='/path/to/data/' 
--i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html 
---classes=15 --max_iterations=25 --class_change=1.5 --initialize='random' 
+-i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html ^
+--classes=15 --max_iterations=25 --class_change=1.5 --initialize='random' ^
 --min_class_size=500
 ```
 
 
-119. ***KNearestMeanFilter***
+### ***KNearestMeanFilter***
 
 *Description*:
 A k-nearest mean filter is a type of edge-preserving smoothing filter.
@@ -3259,14 +3292,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=KNearestMeanFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=KNearestMeanFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=9 -k=5
->>./whitebox_tools -r=KNearestMeanFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=KNearestMeanFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filtery=7 --filtery=9  -k=5
 ```
 
 
-120. ***KSTestForNormality***
+### ***KSTestForNormality***
 
 *Description*:
 Evaluates whether the values in a raster are normally distributed.
@@ -3285,14 +3318,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=KSTestForNormality -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=KSTestForNormality -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.html --num_samples=1000
->>./whitebox_tools -r=KSTestForNormality -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=KSTestForNormality -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.html
 ```
 
 
-121. ***KappaIndex***
+### ***KappaIndex***
 
 *Description*:
 Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
@@ -3311,12 +3344,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=KappaIndex -v --wd="/path/to/data/" --i1=class.tif 
+>>./whitebox_tools -r=KappaIndex -v --wd="/path/to/data/" --i1=class.tif ^
 --i2=reference.tif -o=kia.html
 ```
 
 
-122. ***LaplacianFilter***
+### ***LaplacianFilter***
 
 *Description*:
 Performs a Laplacian filter on an image.
@@ -3336,12 +3369,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LaplacianFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=LaplacianFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --variant='3x3(1)' --clip=1.0
 ```
 
 
-123. ***LaplacianOfGaussianFilter***
+### ***LaplacianOfGaussianFilter***
 
 *Description*:
 Performs a Laplacian-of-Gaussian (LoG) filter on an image.
@@ -3360,12 +3393,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LaplacianOfGaussianFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LaplacianOfGaussianFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --sigma=2.0
 ```
 
 
-124. ***LasToAscii***
+### ***LasToAscii***
 
 *Description*:
 Converts one or more LAS files into ASCII text files.
@@ -3382,12 +3415,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LasToAscii -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LasToAscii -v --wd="/path/to/data/" ^
 -i="file1.las, file2.las, file3.las" -o=outfile.las"
 ```
 
 
-125. ***LeeFilter***
+### ***LeeFilter***
 
 *Description*:
 Performs a Lee (Sigma) smoothing filter on an image.
@@ -3409,14 +3442,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=9 --sigma=10.0 -m=5
->>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filtery=7 --filtery=9 --sigma=10.0  -m=5
 ```
 
 
-126. ***LengthOfUpstreamChannels***
+### ***LengthOfUpstreamChannels***
 
 *Description*:
 Calculates the total length of channels upstream.
@@ -3437,15 +3470,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LengthOfUpstreamChannels -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LengthOfUpstreamChannels -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=LengthOfUpstreamChannels -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=LengthOfUpstreamChannels -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-127. ***LessThan***
+### ***LessThan***
 
 *Description*:
 Performs a less-than comparison operation on two rasters or a raster and a constant value.
@@ -3465,12 +3498,35 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LessThan -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=LessThan -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep --incl_equals
 ```
 
 
-128. ***LidarElevationSlice***
+### ***LidarColourize***
+
+*Description*:
+Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
+
+*Toolbox*: LiDAR Tools
+
+*Parameters*:
+
+Flag               Description
+-----------------  -----------
+--in_lidar         Input LiDAR file.
+--in_image         Input colour image file.
+-o, --output       Output LiDAR file.
+
+
+*Example usage*:
+```
+>>./whitebox_tools -r=LidarColourize -v --wd="/path/to/data/" --in_lidar="input.las" ^ 
+--in_image="image.dep" -o="output.las" 
+```
+
+
+### ***LidarElevationSlice***
 
 *Description*:
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
@@ -3493,17 +3549,17 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarElevationSlice -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarElevationSlice -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --minz=100.0 --maxz=250.0
->>./whitebox_tools -r=LidarElevationSlice -v -i="/path/to/data/input.las" 
+>>./whitebox_tools -r=LidarElevationSlice -v -i="/path/to/data/input.las" ^
 -o="/path/to/data/output.las" --minz=100.0 --maxz=250.0 --class
->>./whitebox_tools -r=LidarElevationSlice -v -i="/path/to/data/input.las" 
--o="/path/to/data/output.las" --minz=100.0 --maxz=250.0 --inclassval=1 
+>>./whitebox_tools -r=LidarElevationSlice -v -i="/path/to/data/input.las" ^
+-o="/path/to/data/output.las" --minz=100.0 --maxz=250.0 --inclassval=1 ^
 --outclassval=0
 ```
 
 
-129. ***LidarGroundPointFilter***
+### ***LidarGroundPointFilter***
 
 *Description*:
 Identifies ground points within LiDAR dataset using a slope-based method.
@@ -3524,12 +3580,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarGroundPointFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LidarGroundPointFilter -v --wd="/path/to/data/" ^
 -i="input.las" -o="output.las" --radius=10.0
 ```
 
 
-130. ***LidarHillshade***
+### ***LidarHillshade***
 
 *Description*:
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
@@ -3550,14 +3606,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarHillshade -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarHillshade -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --radius=10.0
->>./whitebox_tools -r=LidarHillshade -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarHillshade -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --azimuth=180.0 --altitude=20.0 --radius=1.0
 ```
 
 
-131. ***LidarHistogram***
+### ***LidarHistogram***
 
 *Description*:
 Creates a histogram from LiDAR data.
@@ -3577,12 +3633,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarHistogram -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LidarHistogram -v --wd="/path/to/data/" ^
 -i="file1.tif, file2.tif, file3.tif" -o=outfile.htm --contiguity=Bishopsl
 ```
 
 
-132. ***LidarIdwInterpolation***
+### ***LidarIdwInterpolation***
 
 *Description*:
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
@@ -3608,15 +3664,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarIdwInterpolation -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=LidarIdwInterpolation -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=2.0 --radius=5.0"
-./whitebox_tools -r=LidarIdwInterpolation --wd="/path/to/data/" -i=file.las 
--o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 
+>>./whitebox_tools -r=LidarIdwInterpolation --wd="/path/to/data/" -i=file.las ^
+-o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 ^
 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt
 ```
 
 
-133. ***LidarInfo***
+### ***LidarInfo***
 
 *Description*:
 Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
@@ -3636,13 +3692,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarInfo -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=LidarInfo -v --wd="/path/to/data/" -i=file.las ^
 --vlr --geokeys"
 ./whitebox_tools -r=LidarInfo --wd="/path/to/data/" -i=file.las
 ```
 
 
-134. ***LidarJoin***
+### ***LidarJoin***
 
 *Description*:
 Joins multiple LiDAR (LAS) files into a single LAS file.
@@ -3660,12 +3716,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarJoin -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LidarJoin -v --wd="/path/to/data/" ^
 -i="file1.las, file2.las, file3.las" -o=outfile.las"
 ```
 
 
-135. ***LidarKappaIndex***
+### ***LidarKappaIndex***
 
 *Description*:
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
@@ -3684,12 +3740,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarKappaIndex -v --wd="/path/to/data/" --i1=class.tif 
+>>./whitebox_tools -r=LidarKappaIndex -v --wd="/path/to/data/" --i1=class.tif ^
 --i2=reference.tif -o=kia.html
 ```
 
 
-136. ***LidarNearestNeighbourGridding***
+### ***LidarNearestNeighbourGridding***
 
 *Description*:
 Grids LAS files using nearest-neighbour scheme.
@@ -3714,15 +3770,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarNearestNeighbourGridding -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=LidarNearestNeighbourGridding -v --wd="/path/to/data/" ^
 -i=file.las -o=outfile.dep --resolution=2.0 --radius=5.0"
-./whitebox_tools -r=LidarNearestNeighbourGridding --wd="/path/to/data/" 
--i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 
+./whitebox_tools -r=LidarNearestNeighbourGridding --wd="/path/to/data/" ^
+-i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 ^
 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt
 ```
 
 
-137. ***LidarPointDensity***
+### ***LidarPointDensity***
 
 *Description*:
 Calculates the spatial pattern of point density for a LiDAR data set.
@@ -3746,14 +3802,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarPointDensity -v --wd="/path/to/data/" -i=file.las 
+>>./whitebox_tools -r=LidarPointDensity -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=2.0 --radius=5.0"
-./whitebox_tools -r=LidarPointDensity -v --wd="/path/to/data/" -i=file.las 
--o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' 
+./whitebox_tools -r=LidarPointDensity -v --wd="/path/to/data/" -i=file.las ^
+-o=outfile.dep --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' ^
 --palette=light_quant.plt
 ```
 
-138. ***LidarPointStats***
+### ***LidarPointStats***
 
 *Description*:
 Creates several rasters summarizing the distribution of LAS point data.
@@ -3775,12 +3831,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarPointStats -v --wd="/path/to/data/" -i=file.las --resolution=1.0 
---num_points
+>>./whitebox_tools -r=LidarPointStats -v --wd="/path/to/data/" -i=file.las ^
+--resolution=1.0 --num_points
 ```
 
 
-138. ***LidarRemoveOutliers***
+### ***LidarRemoveOutliers***
 
 *Description*:
 Removes outliers (high and low points) in a LiDAR point cloud.
@@ -3800,12 +3856,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarRemoveOutliers -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarRemoveOutliers -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --radius=10.0 --elev_diff=25.0
 ```
 
 
-139. ***LidarSegmentation***
+### ***LidarSegmentation***
 
 *Description*:
 Segments a LiDAR point cloud based on normal vectors.
@@ -3826,12 +3882,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarSegmentation -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarSegmentation -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75
 ```
 
 
-140. ***LidarSegmentationBasedFilter***
+### ***LidarSegmentationBasedFilter***
 
 *Description*:
 Identifies ground points within LiDAR point clouds using a segmentation based approach.
@@ -3853,13 +3909,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarSegmentationBasedFilter -v --wd="/path/to/data/" 
--i="input.las" -o="output.las" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 
+>>./whitebox_tools -r=LidarSegmentationBasedFilter -v --wd="/path/to/data/" ^
+-i="input.las" -o="output.las" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 ^
 --classify
 ```
 
 
-141. ***LidarTile***
+### ***LidarTile***
 
 *Description*:
 Tiles a LiDAR LAS file into multiple LAS files.
@@ -3881,12 +3937,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarTile -v -i=/path/to/data/input.las --width_x=1000.0 
+>>./whitebox_tools -r=LidarTile -v -i=/path/to/data/input.las --width_x=1000.0 ^
 --width_y=2500.0 -=min_points=100
 ```
 
 
-142. ***LidarTophatTransform***
+### ***LidarTophatTransform***
 
 *Description*:
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy
@@ -3905,12 +3961,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=LidarTophatTransform -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --radius=10.0
 ```
 
 
-143. ***LineDetectionFilter***
+### ***LineDetectionFilter***
 
 *Description*:
 Performs a line-detection filter on an image.
@@ -3931,12 +3987,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LineDetectionFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=LineDetectionFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --variant=h --clip=1.0
 ```
 
 
-144. ***LineThinning***
+### ***LineThinning***
 
 *Description*:
 Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
@@ -3954,12 +4010,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LineThinning -v --wd="/path/to/data/" --input=DEM.dep 
+>>./whitebox_tools -r=LineThinning -v --wd="/path/to/data/" --input=DEM.dep ^
 -o=output.dep
 ```
 
 
-145. ***Ln***
+### ***Ln***
 
 *Description*:
 Returns the natural logarithm of values in a raster.
@@ -3981,7 +4037,7 @@ Flag               Description
 ```
 
 
-146. ***Log10***
+### ***Log10***
 
 *Description*:
 Returns the base-10 logarithm of values in a raster.
@@ -4003,7 +4059,7 @@ Flag               Description
 ```
 
 
-147. ***Log2***
+### ***Log2***
 
 *Description*:
 Returns the base-2 logarithm of values in a raster.
@@ -4025,7 +4081,7 @@ Flag               Description
 ```
 
 
-148. ***LowestPosition***
+### ***LowestPosition***
 
 *Description*:
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
@@ -4043,12 +4099,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=LowestPosition -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=LowestPosition -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-149. ***MajorityFilter***
+### ***MajorityFilter***
 
 *Description*:
 Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
@@ -4068,12 +4124,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MajorityFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=MajorityFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-150. ***Max***
+### ***Max***
 
 *Description*:
 Performs a MAX operation on two rasters or a raster and a constant value.
@@ -4092,11 +4148,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Max -v --wd="/path/to/data/" --input1='in1.dep' --input2='in2.dep' -o=output.dep
+>>./whitebox_tools -r=Max -v --wd="/path/to/data/" --input1='in1.dep' ^
+--input2='in2.dep' -o=output.dep
 ```
 
 
-151. ***MaxAbsoluteOverlay***
+### ***MaxAbsoluteOverlay***
 
 *Description*:
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
@@ -4114,12 +4171,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxAbsoluteOverlay -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=MaxAbsoluteOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-152. ***MaxAnisotropyDev***
+### ***MaxAnisotropyDev***
 
 *Description*:
 Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
@@ -4141,12 +4198,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxAnisotropyDev -v --wd="/path/to/data/" --dem=DEM.dep 
--out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 --step=5
+>>./whitebox_tools -r=MaxAnisotropyDev -v --wd="/path/to/data/" --dem=DEM.dep ^
+-out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 ^
+--max_scale=1000 --step=5
 ```
 
 
-153. ***MaxBranchLength***
+### ***MaxBranchLength***
 
 *Description*:
 Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
@@ -4165,12 +4223,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxBranchLength -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=MaxBranchLength -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-154. ***MaxDownslopeElevChange***
+### ***MaxDownslopeElevChange***
 
 *Description*:
 Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
@@ -4188,12 +4246,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxDownslopeElevChange -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=MaxDownslopeElevChange -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=out.dep
 ```
 
 
-155. ***MaxElevationDeviation***
+### ***MaxElevationDeviation***
 
 *Description*:
 Calculates the maximum elevation deviation over a range of spatial scales.
@@ -4215,13 +4273,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxElevationDeviation -v --wd="/path/to/data/" 
---dem=DEM.dep -out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 
+>>./whitebox_tools -r=MaxElevationDeviation -v --wd="/path/to/data/" ^
+--dem=DEM.dep -out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 ^
 --max_scale=1000 --step=5
 ```
 
 
-156. ***MaxOverlay***
+### ***MaxOverlay***
 
 *Description*:
 Evaluates the maximum value for each grid cell from a stack of input rasters.
@@ -4239,12 +4297,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxOverlay -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=MaxOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-157. ***MaxUpslopeFlowpathLength***
+### ***MaxUpslopeFlowpathLength***
 
 *Description*:
 Measures the maximum length of all upslope flowpaths draining each grid cell.
@@ -4262,14 +4320,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaxUpslopeFlowpathLength -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=MaxUpslopeFlowpathLength -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
->>./whitebox_tools -r=MaxUpslopeFlowpathLength -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=MaxUpslopeFlowpathLength -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --log --clip
 ```
 
 
-158. ***MaximumFilter***
+### ***MaximumFilter***
 
 *Description*:
 Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
@@ -4289,12 +4347,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MaximumFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=MaximumFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-159. ***MeanFilter***
+### ***MeanFilter***
 
 *Description*:
 Performs a mean filter (low-pass filter) on an input image.
@@ -4314,12 +4372,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MeanFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=MeanFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filterx=25 --filtery=25
 ```
 
 
-160. ***MedianFilter***
+### ***MedianFilter***
 
 *Description*:
 Performs a median filter on an input image.
@@ -4340,12 +4398,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MedianFilter -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=MedianFilter -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --filter=25
 ```
 
 
-161. ***Min***
+### ***Min***
 
 *Description*:
 Performs a MIN operation on two rasters or a raster and a constant value.
@@ -4364,12 +4422,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Min -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Min -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-162. ***MinAbsoluteOverlay***
+### ***MinAbsoluteOverlay***
 
 *Description*:
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
@@ -4387,12 +4445,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MinAbsoluteOverlay -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=MinAbsoluteOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-163. ***MinDownslopeElevChange***
+### ***MinDownslopeElevChange***
 
 *Description*:
 Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
@@ -4410,12 +4468,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MinDownslopeElevChange -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=MinDownslopeElevChange -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=out.dep
 ```
 
 
-164. ***MinMaxContrastStretch***
+### ***MinMaxContrastStretch***
 
 *Description*:
 Performs a min-max contrast stretch on an input greytone image.
@@ -4436,12 +4494,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MinMaxContrastStretch -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=MinMaxContrastStretch -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --min_val=45.0 --max_val=200.0 --num_tones=1024
 ```
 
 
-165. ***MinOverlay***
+### ***MinOverlay***
 
 *Description*:
 Evaluates the minimum value for each grid cell from a stack of input rasters.
@@ -4459,12 +4517,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MinOverlay -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=MinOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-166. ***MinimumFilter***
+### ***MinimumFilter***
 
 *Description*:
 Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
@@ -4484,12 +4542,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MinimumFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=MinimumFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-167. ***ModifiedKMeansClustering***
+### ***ModifiedKMeansClustering***
 
 *Description*:
 Performs a modified k-means clustering operation on a multi-spectral dataset.
@@ -4512,13 +4570,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ModifiedKMeansClustering -v --wd='/path/to/data/' 
--i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html 
+>>./whitebox_tools -r=ModifiedKMeansClustering -v --wd='/path/to/data/' ^
+-i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html ^
 --start_clusters=100 --merger_dist=30.0 --max_iterations=25 --class_change=1.5
 ```
 
 
-168. ***Modulo***
+### ***Modulo***
 
 *Description*:
 Performs a modulo operation on two rasters or a raster and a constant value.
@@ -4537,12 +4595,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Modulo -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Modulo -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-169. ***Mosaic***
+### ***Mosaic***
 
 *Description*:
 Mosaics two or more images together.
@@ -4561,12 +4619,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Mosaic -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=Mosaic -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=dest.dep --method='cc
 ```
 
 
-170. ***Multiply***
+### ***Multiply***
 
 *Description*:
 Performs a multiplication operation on two rasters or a raster and a constant value.
@@ -4585,12 +4643,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Multiply -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Multiply -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-171. ***MultiscaleTopographicPositionImage***
+### ***MultiscaleTopographicPositionImage***
 
 *Description*:
 Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
@@ -4611,13 +4669,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=MultiscaleTopographicPositionImage -v --wd="/path/to/data/" 
---local=DEV_local.dep --meso=DEV_meso.dep --broad=DEV_broad.dep -o=output.dep 
+>>./whitebox_tools -r=MultiscaleTopographicPositionImage -v --wd="/path/to/data/" ^
+--local=DEV_local.dep --meso=DEV_meso.dep --broad=DEV_broad.dep -o=output.dep ^
 --lightness=1.5
 ```
 
 
-172. ***Negate***
+### ***Negate***
 
 *Description*:
 Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
@@ -4635,12 +4693,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Negate -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Negate -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-173. ***NewRasterFromBase***
+### ***NewRasterFromBase***
 
 *Description*:
 Creates a new raster using a base image.
@@ -4660,14 +4718,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NewRasterFromBase -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=NewRasterFromBase -v --wd="/path/to/data/" ^
 --base=base.dep -o=NewRaster.dep --value=0.0 --data_type=integer
->>./whitebox_tools -r=NewRasterFromBase -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=NewRasterFromBase -v --wd="/path/to/data/" ^
 --base=base.dep -o=NewRaster.dep --value=nodata
 ```
 
 
-174. ***NormalVectors***
+### ***NormalVectors***
 
 *Description*:
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
@@ -4686,12 +4744,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NormalVectors -v --wd="/path/to/data/" -i="input.las" 
+>>./whitebox_tools -r=NormalVectors -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --radius=10.0
 ```
 
 
-175. ***NormalizedDifferenceVegetationIndex***
+### ***NormalizedDifferenceVegetationIndex***
 
 *Description*:
 Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
@@ -4712,15 +4770,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NormalizedDifferenceVegetationIndex -v 
+>>./whitebox_tools -r=NormalizedDifferenceVegetationIndex -v ^
 --wd="/path/to/data/" --nir=band4.dep --red=band3.dep -o=output.dep
->>./whitebox_tools -r=NormalizedDifferenceVegetationIndex -v 
---wd="/path/to/data/" --nir=band4.dep --red=band3.dep -o=output.dep 
+>>./whitebox_tools -r=NormalizedDifferenceVegetationIndex -v ^
+--wd="/path/to/data/" --nir=band4.dep --red=band3.dep -o=output.dep ^
 --clip=1.0 --osavi
 ```
 
 
-176. ***Not***
+### ***Not***
 
 *Description*:
 Performs a logical NOT operator on two Boolean raster images.
@@ -4739,12 +4797,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Not -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Not -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-177. ***NotEqualTo***
+### ***NotEqualTo***
 
 *Description*:
 Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
@@ -4763,12 +4821,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NotEqualTo -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=NotEqualTo -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-178. ***NumDownslopeNeighbours***
+### ***NumDownslopeNeighbours***
 
 *Description*:
 Calculates the number of downslope neighbours to each grid cell in a DEM.
@@ -4786,12 +4844,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NumDownslopeNeighbours -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=NumDownslopeNeighbours -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
 ```
 
 
-179. ***NumInflowingNeighbours***
+### ***NumInflowingNeighbours***
 
 *Description*:
 Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
@@ -4809,12 +4867,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NumInflowingNeighbours -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=NumInflowingNeighbours -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
 ```
 
 
-180. ***NumUpslopeNeighbours***
+### ***NumUpslopeNeighbours***
 
 *Description*:
 Calculates the number of upslope neighbours to each grid cell in a DEM.
@@ -4832,12 +4890,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=NumUpslopeNeighbours -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=NumUpslopeNeighbours -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep
 ```
 
 
-181. ***OlympicFilter***
+### ***OlympicFilter***
 
 *Description*:
 Performs an olympic smoothing filter on an image.
@@ -4857,12 +4915,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=OlympicFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=OlympicFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25
 ```
 
 
-182. ***Opening***
+### ***Opening***
 
 *Description*:
 An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
@@ -4882,12 +4940,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Opening -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=Opening -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-183. ***Or***
+### ***Or***
 
 *Description*:
 Performs a logical OR operator on two Boolean raster images.
@@ -4906,12 +4964,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Or -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Or -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-184. ***PanchromaticSharpening***
+### ***PanchromaticSharpening***
 
 *Description*:
 Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
@@ -4934,15 +4992,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PanchromaticSharpening -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=PanchromaticSharpening -v --wd="/path/to/data/" ^
 --red=red.dep --green=green.dep --blue=blue.dep --pan=pan.dep 
 --output=pan_sharp.dep --method='brovey'
->>./whitebox_tools -r=PanchromaticSharpening -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=PanchromaticSharpening -v --wd="/path/to/data/" ^
 --composite=image.dep --pan=pan.dep --output=pan_sharp.dep --method='ihs'
 ```
 
 
-185. ***PennockLandformClass***
+### ***PennockLandformClass***
 
 *Description*:
 Classifies hillslope zones based on slope, profile curvature, and plan curvature.
@@ -4964,12 +5022,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PennockLandformClass -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=PennockLandformClass -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --slope=3.0 --prof=0.1 --plan=0.0
 ```
 
 
-186. ***PercentElevRange***
+### ***PercentElevRange***
 
 *Description*:
 Calculates percent of elevation range from a DEM.
@@ -4989,12 +5047,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentElevRange -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=PercentElevRange -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep --filter=25
 ```
 
 
-187. ***PercentEqualTo***
+### ***PercentEqualTo***
 
 *Description*:
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
@@ -5013,12 +5071,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentEqualTo -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=PercentEqualTo -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' -o='output.dep'
 ```
 
 
-188. ***PercentGreaterThan***
+### ***PercentGreaterThan***
 
 *Description*:
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
@@ -5037,12 +5095,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentGreaterThan -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=PercentGreaterThan -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' -o='output.dep'
 ```
 
 
-189. ***PercentLessThan***
+### ***PercentLessThan***
 
 *Description*:
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
@@ -5061,12 +5119,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentLessThan -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=PercentLessThan -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' -o='output.dep'
 ```
 
 
-190. ***PercentageContrastStretch***
+### ***PercentageContrastStretch***
 
 *Description*:
 Performs a percentage linear contrast stretch on input images.
@@ -5087,12 +5145,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentageContrastStretch -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=PercentageContrastStretch -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --clip=2.0 --tail='both' --num_tones=1024
 ```
 
 
-191. ***PercentileFilter***
+### ***PercentileFilter***
 
 *Description*:
 Performs a percentile filter on an input image.
@@ -5113,12 +5171,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PercentileFilter -v --wd="/path/to/data/" -i=input.dep 
+>>./whitebox_tools -r=PercentileFilter -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --filter=25
 ```
 
 
-192. ***PickFromList***
+### ***PickFromList***
 
 *Description*:
 Outputs the value from a raster stack specified by a position raster.
@@ -5137,12 +5195,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PickFromList -v --wd='/path/to/data/' --pos_input=position.dep 
+>>./whitebox_tools -r=PickFromList -v --wd='/path/to/data/' --pos_input=position.dep ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep
 ```
 
 
-193. ***PlanCurvature***
+### ***PlanCurvature***
 
 *Description*:
 Calculates a plan (contour) curvature raster from an input DEM.
@@ -5161,12 +5219,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PlanCurvature -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=PlanCurvature -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-194. ***Power***
+### ***Power***
 
 *Description*:
 Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
@@ -5185,12 +5243,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Power -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Power -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-195. ***PrewittFilter***
+### ***PrewittFilter***
 
 *Description*:
 Performs a Prewitt edge-detection filter on an image.
@@ -5209,12 +5267,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=PrewittFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=PrewittFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --clip=1.0
 ```
 
 
-196. ***ProfileCurvature***
+### ***ProfileCurvature***
 
 *Description*:
 Calculates a profile curvature raster from an input DEM.
@@ -5233,12 +5291,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ProfileCurvature -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=ProfileCurvature -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-197. ***Quantiles***
+### ***Quantiles***
 
 *Description*:
 Transforms raster values into quantiles.
@@ -5257,12 +5315,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Quantiles -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=Quantiles -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep --num_quantiles=5
 ```
 
 
-198. ***RadiusOfGyration***
+### ***RadiusOfGyration***
 
 *Description*:
 Calculates the distance of cells from their polygon's centroid.
@@ -5281,12 +5339,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RadiusOfGyration -v --wd="/path/to/data/" -i=polygons.dep 
+>>./whitebox_tools -r=RadiusOfGyration -v --wd="/path/to/data/" -i=polygons.dep ^
 -o=output.dep --text_output
 ```
 
 
-199. ***RandomField***
+### ***RandomField***
 
 *Description*:
 Creates an image containing random values.
@@ -5304,12 +5362,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RandomField -v --wd="/path/to/data/" --base=in.dep 
+>>./whitebox_tools -r=RandomField -v --wd="/path/to/data/" --base=in.dep ^
 -o=out.dep
 ```
 
 
-200. ***RandomSample***
+### ***RandomSample***
 
 *Description*:
 Creates an image containing randomly located sample grid cells with unique IDs.
@@ -5328,12 +5386,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RandomSample -v --wd="/path/to/data/" --base=in.dep 
+>>./whitebox_tools -r=RandomSample -v --wd="/path/to/data/" --base=in.dep ^
 -o=out.dep --num_samples=1000
 ```
 
 
-201. ***RangeFilter***
+### ***RangeFilter***
 
 *Description*:
 Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
@@ -5353,12 +5411,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RangeFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=RangeFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-202. ***RasterCellAssignment***
+### ***RasterCellAssignment***
 
 *Description*:
 Assign row or column number to cells.
@@ -5377,12 +5435,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RasterCellAssignment -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=RasterCellAssignment -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --assign='column'
 ```
 
 
-203. ***RasterHistogram***
+### ***RasterHistogram***
 
 *Description*:
 Creates a histogram from raster values.
@@ -5400,12 +5458,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RasterHistogram -v --wd="/path/to/data/" -i="file1.tif" 
+>>./whitebox_tools -r=RasterHistogram -v --wd="/path/to/data/" -i="file1.tif" ^
 -o=outfile.html
 ```
 
 
-204. ***RasterSummaryStats***
+### ***RasterSummaryStats***
 
 *Description*:
 Measures a rasters average, standard deviation, num. non-nodata cells, and total.
@@ -5426,7 +5484,7 @@ Flag               Description
 ```
 
 
-205. ***Reciprocal***
+### ***Reciprocal***
 
 *Description*:
 Returns the reciprocal (i.e. 1 / z) of values in a raster.
@@ -5444,12 +5502,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Reciprocal -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Reciprocal -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-206. ***Reclass***
+### ***Reclass***
 
 *Description*:
 Reclassifies the values in a raster image.
@@ -5469,14 +5527,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Reclass -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Reclass -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
->>./whitebox_tools -r=Reclass -v --wd="/path/to/data/" -i='input.dep'
+>>./whitebox_tools -r=Reclass -v --wd="/path/to/data/" -i='input.dep' ^
  -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' --assign_mode 
 ```
 
 
-207. ***ReclassEqualInterval***
+### ***ReclassEqualInterval***
 
 *Description*:
 Reclassifies the values in a raster image based on equal-ranges.
@@ -5497,12 +5555,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ReclassEqualInterval -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ReclassEqualInterval -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --interval=10.0 --start_val=0.0
 ```
 
 
-208. ***ReclassFromFile***
+### ***ReclassFromFile***
 
 *Description*:
 Reclassifies the values in a raster image using reclass ranges in a text file.
@@ -5521,12 +5579,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ReclassFromFile -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ReclassFromFile -v --wd="/path/to/data/" -i='input.dep' ^
 --reclass_file='reclass.txt' -o=output.dep
 ```
 
 
-209. ***RelativeAspect***
+### ***RelativeAspect***
 
 *Description*:
 Calculates relative aspect (relative to a user-specified direction) from an input DEM.
@@ -5546,12 +5604,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RelativeAspect -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=RelativeAspect -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --azimuth=180.0
 ```
 
 
-210. ***RelativeStreamPowerIndex***
+### ***RelativeStreamPowerIndex***
 
 *Description*:
 Calculates the relative stream power index.
@@ -5571,12 +5629,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RelativeStreamPowerIndex -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=RelativeStreamPowerIndex -v --wd="/path/to/data/" ^
 --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --exponent=1.1
 ```
 
 
-211. ***RelativeTopographicPosition***
+### ***RelativeTopographicPosition***
 
 *Description*:
 Calculates the relative topographic position index from a DEM.
@@ -5596,12 +5654,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RelativeTopographicPosition -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=RelativeTopographicPosition -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --filter=25
 ```
 
 
-212. ***RemoveOffTerrainObjects***
+### ***RemoveOffTerrainObjects***
 
 *Description*:
 Removes off-terrain objects from a raster digital elevation model (DEM).
@@ -5621,12 +5679,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RemoveOffTerrainObjects -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=RemoveOffTerrainObjects -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=bare_earth_DEM.dep --filter=25 --slope=10.0
 ```
 
 
-213. ***RemoveShortStreams***
+### ***RemoveShortStreams***
 
 *Description*:
 Removes short first-order streams from a stream network.
@@ -5647,12 +5705,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RemoveShortStreams -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=RemoveShortStreams -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
 ```
 
 
-214. ***RemoveSpurs***
+### ***RemoveSpurs***
 
 *Description*:
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
@@ -5671,12 +5729,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RemoveSpurs -v --wd="/path/to/data/" --input=DEM.dep 
+>>./whitebox_tools -r=RemoveSpurs -v --wd="/path/to/data/" --input=DEM.dep ^
 -o=output.dep --iterations=10
 ```
 
 
-215. ***Resample***
+### ***Resample***
 
 *Description*:
 Resamples one or more input images into a destination image.
@@ -5695,12 +5753,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Resample -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=Resample -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --destination=dest.dep --method='cc
 ```
 
 
-216. ***RescaleValueRange***
+### ***RescaleValueRange***
 
 *Description*:
 Performs a min-max contrast stretch on an input greytone image.
@@ -5722,15 +5780,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RescaleValueRange -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=RescaleValueRange -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0
->>./whitebox_tools -r=RescaleValueRange -v --wd="/path/to/data/" 
--i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 
+>>./whitebox_tools -r=RescaleValueRange -v --wd="/path/to/data/" ^
+-i=input.dep -o=output.dep --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 ^
 --clip_max=200.0 
 ```
 
 
-217. ***RgbToIhs***
+### ***RgbToIhs***
 
 *Description*:
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
@@ -5753,15 +5811,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RgbToIhs -v --wd="/path/to/data/" --red=band3.dep 
---green=band2.dep --blue=band1.dep --intensity=intensity.dep --hue=hue.dep 
+>>./whitebox_tools -r=RgbToIhs -v --wd="/path/to/data/" --red=band3.dep ^
+--green=band2.dep --blue=band1.dep --intensity=intensity.dep --hue=hue.dep ^
 --saturation=saturation.dep
->>./whitebox_tools -r=RgbToIhs -v --wd="/path/to/data/" --composite=image.dep 
+>>./whitebox_tools -r=RgbToIhs -v --wd="/path/to/data/" --composite=image.dep ^
 --intensity=intensity.dep --hue=hue.dep --saturation=saturation.dep
 ```
 
 
-218. ***Rho8Pointer***
+### ***Rho8Pointer***
 
 *Description*:
 Calculates a stochastic Rho8 flow pointer raster from an input DEM.
@@ -5780,12 +5838,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Rho8Pointer -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=Rho8Pointer -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-219. ***RobertsCrossFilter***
+### ***RobertsCrossFilter***
 
 *Description*:
 Performs a Robert's cross edge-detection filter on an image.
@@ -5804,12 +5862,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RobertsCrossFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=RobertsCrossFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --clip=1.0
 ```
 
 
-220. ***RootMeanSquareError***
+### ***RootMeanSquareError***
 
 *Description*:
 Calculates the RMSE and other accuracy statistics.
@@ -5831,7 +5889,7 @@ Flag               Description
 ```
 
 
-221. ***Round***
+### ***Round***
 
 *Description*:
 Rounds the values in an input raster to the nearest integer value.
@@ -5849,12 +5907,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Round -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Round -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-222. ***RuggednessIndex***
+### ***RuggednessIndex***
 
 *Description*:
 Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
@@ -5873,12 +5931,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=RuggednessIndex -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=RuggednessIndex -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-223. ***ScharrFilter***
+### ***ScharrFilter***
 
 *Description*:
 Performs a Scharr edge-detection filter on an image.
@@ -5897,12 +5955,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ScharrFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=ScharrFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --clip=1.0
 ```
 
 
-224. ***SedimentTransportIndex***
+### ***SedimentTransportIndex***
 
 *Description*:
 Calculates the sediment transport index.
@@ -5923,13 +5981,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SedimentTransportIndex -v --wd="/path/to/data/" 
---sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 
+>>./whitebox_tools -r=SedimentTransportIndex -v --wd="/path/to/data/" ^
+--sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --sca_exponent=0.5 ^
 --slope_exponent=1.0
 ```
 
 
-225. ***SetNodataValue***
+### ***SetNodataValue***
 
 *Description*:
 Assign a specified value in an input image to the NoData value.
@@ -5948,12 +6006,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SetNodataValue -v --wd="/path/to/data/" -i=in.dep 
+>>./whitebox_tools -r=SetNodataValue -v --wd="/path/to/data/" -i=in.dep ^
 -o=newRaster.dep --back_value=1.0
 ```
 
 
-226. ***ShreveStreamMagnitude***
+### ***ShreveStreamMagnitude***
 
 *Description*:
 Assigns the Shreve stream magnitude to each link in a stream network.
@@ -5974,14 +6032,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ShreveStreamMagnitude -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ShreveStreamMagnitude -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=ShreveStreamMagnitude -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ShreveStreamMagnitude -v --wd="/path/to/data/" ^
 --d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-227. ***SigmoidalContrastStretch***
+### ***SigmoidalContrastStretch***
 
 *Description*:
 Performs a sigmoidal contrast stretch on input images.
@@ -6002,12 +6060,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SigmoidalContrastStretch -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=SigmoidalContrastStretch -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --cutoff=0.1 --gain=2.0 --num_tones=1024
 ```
 
 
-228. ***Sin***
+### ***Sin***
 
 *Description*:
 Returns the sine (sin) of each values in a raster.
@@ -6025,12 +6083,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Sin -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Sin -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-229. ***Sinh***
+### ***Sinh***
 
 *Description*:
 Returns the hyperbolic sine (sinh) of each values in a raster.
@@ -6048,12 +6106,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Sinh -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Sinh -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-230. ***Sink***
+### ***Sink***
 
 *Description*:
 Identifies the depressions in a DEM, giving each feature a unique identifier.
@@ -6072,12 +6130,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Sink -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=Sink -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep --zero_background
 ```
 
 
-231. ***Slope***
+### ***Slope***
 
 *Description*:
 Calculates a slope raster from an input DEM.
@@ -6096,12 +6154,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Slope -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=Slope -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-232. ***SlopeVsElevationPlot***
+### ***SlopeVsElevationPlot***
 
 *Description*:
 Creates a slope vs. elevation plot for one or more DEMs.
@@ -6120,12 +6178,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SlopeVsElevationPlot -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=SlopeVsElevationPlot -v --wd="/path/to/data/" ^
 -i="DEM1.tif;DEM2.tif" --watershed="ws1.tif;ws2.tif" -o=outfile.html
 ```
 
 
-233. ***SnapPourPoints***
+### ***SnapPourPoints***
 
 *Description*:
 Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
@@ -6145,13 +6203,13 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SnapPourPoints -v --wd="/path/to/data/" 
---pour_pts='pour_pts.dep' --flow_accum='d8accum.dep' -o='output.dep' 
+>>./whitebox_tools -r=SnapPourPoints -v --wd="/path/to/data/" ^
+--pour_pts='pour_pts.dep' --flow_accum='d8accum.dep' -o='output.dep' ^
 --snap_dist=15.0
 ```
 
 
-234. ***SobelFilter***
+### ***SobelFilter***
 
 *Description*:
 Performs a Sobel edge-detection filter on an image.
@@ -6171,12 +6229,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SobelFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=SobelFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --variant=5x5 --clip=1.0
 ```
 
 
-235. ***SplitColourComposite***
+### ***SplitColourComposite***
 
 *Description*:
 This tool splits an RGB colour composite image into seperate multispectral images.
@@ -6194,12 +6252,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SplitColourComposite -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=SplitColourComposite -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep
 ```
 
 
-236. ***Square***
+### ***Square***
 
 *Description*:
 Squares the values in a raster.
@@ -6217,12 +6275,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Square -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Square -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-237. ***SquareRoot***
+### ***SquareRoot***
 
 *Description*:
 Returns the square root of the values in a raster.
@@ -6240,12 +6298,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=SquareRoot -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=SquareRoot -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-238. ***StandardDeviationContrastStretch***
+### ***StandardDeviationContrastStretch***
 
 *Description*:
 Performs a standard-deviation contrast stretch on input images.
@@ -6265,12 +6323,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StandardDeviationContrastStretch -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StandardDeviationContrastStretch -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --stdev=2.0 --num_tones=1024
 ```
 
 
-239. ***StandardDeviationFilter***
+### ***StandardDeviationFilter***
 
 *Description*:
 Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
@@ -6290,12 +6348,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StandardDeviationFilter -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StandardDeviationFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25
 ```
 
 
-240. ***StrahlerOrderBasins***
+### ***StrahlerOrderBasins***
 
 *Description*:
 Identifies Strahler-order basins from an input stream network.
@@ -6315,12 +6373,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StrahlerOrderBasins -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StrahlerOrderBasins -v --wd="/path/to/data/" ^
 --d8_pntr='d8pntr.dep' --streams='streams.dep' -o='output.dep'
 ```
 
 
-241. ***StrahlerStreamOrder***
+### ***StrahlerStreamOrder***
 
 *Description*:
 Assigns the Strahler stream order to each link in a stream network.
@@ -6341,15 +6399,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StrahlerStreamOrder -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StrahlerStreamOrder -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=StrahlerStreamOrder -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=StrahlerStreamOrder -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-242. ***StreamLinkClass***
+### ***StreamLinkClass***
 
 *Description*:
 Identifies the exterior/interior links and nodes in a stream network.
@@ -6370,15 +6428,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StreamLinkClass -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StreamLinkClass -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=StreamLinkClass -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=StreamLinkClass -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-243. ***StreamLinkIdentifier***
+### ***StreamLinkIdentifier***
 
 *Description*:
 Assigns a unique identifier to each link in a stream network.
@@ -6399,15 +6457,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StreamLinkIdentifier -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=StreamLinkIdentifier -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=StreamLinkIdentifier -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=StreamLinkIdentifier -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-244. ***StreamLinkLength***
+### ***StreamLinkLength***
 
 *Description*:
 Estimates the length of each link (or tributary) in a stream network.
@@ -6428,14 +6486,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StreamLinkLength -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=StreamLinkLength -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --linkid=streamsID.dep --dem=dem.dep -o=output.dep
->>./whitebox_tools -r=StreamLinkLength -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=StreamLinkLength -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-245. ***StreamLinkSlope***
+### ***StreamLinkSlope***
 
 *Description*:
 Estimates the average slope of each link (or tributary) in a stream network.
@@ -6457,14 +6515,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StreamLinkSlope -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=StreamLinkSlope -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --linkid=streamsID.dep --dem=dem.dep -o=output.dep
->>./whitebox_tools -r=StreamLinkSlope -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=StreamLinkSlope -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-246. ***StreamSlopeContinuous***
+### ***StreamSlopeContinuous***
 
 *Description*:
 Estimates the slope of each grid cell in a stream network.
@@ -6486,14 +6544,14 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=StreamSlopeContinuous -v --wd="/path/to/data/" --d8_pntr=D8.dep 
+>>./whitebox_tools -r=StreamSlopeContinuous -v --wd="/path/to/data/" --d8_pntr=D8.dep ^
 --linkid=streamsID.dep --dem=dem.dep -o=output.dep
->>./whitebox_tools -r=StreamSlopeContinuous -v --wd="/path/to/data/" --d8_pntr=D8.flt 
+>>./whitebox_tools -r=StreamSlopeContinuous -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --streams=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background
 ```
 
 
-247. ***Subbasins***
+### ***Subbasins***
 
 *Description*:
 Identifies the catchments, or sub-basin, draining to each link in a stream network.
@@ -6513,12 +6571,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Subbasins -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' 
+>>./whitebox_tools -r=Subbasins -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' ^
 --streams='streams.dep' -o='output.dep'
 ```
 
 
-248. ***Subtract***
+### ***Subtract***
 
 *Description*:
 Performs a differencing operation on two rasters or a raster and a constant value.
@@ -6537,12 +6595,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Subtract -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Subtract -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-249. ***Tan***
+### ***Tan***
 
 *Description*:
 Returns the tangent (tan) of each values in a raster.
@@ -6560,12 +6618,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Tan -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Tan -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-250. ***TangentialCurvature***
+### ***TangentialCurvature***
 
 *Description*:
 Calculates a tangential curvature raster from an input DEM.
@@ -6584,12 +6642,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TangentialCurvature -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=TangentialCurvature -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep
 ```
 
 
-251. ***Tanh***
+### ***Tanh***
 
 *Description*:
 Returns the hyperbolic tangent (tanh) of each values in a raster.
@@ -6607,12 +6665,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Tanh -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Tanh -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-252. ***ThickenRasterLine***
+### ***ThickenRasterLine***
 
 *Description*:
 Thickens single-cell wide lines within a raster image.
@@ -6630,12 +6688,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ThickenRasterLine -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=ThickenRasterLine -v --wd="/path/to/data/" ^
 --input=DEM.dep -o=output.dep
 ```
 
 
-253. ***ToDegrees***
+### ***ToDegrees***
 
 *Description*:
 Converts a raster from radians to degrees.
@@ -6653,12 +6711,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ToDegrees -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ToDegrees -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-254. ***ToRadians***
+### ***ToRadians***
 
 *Description*:
 Converts a raster from degrees to radians.
@@ -6676,12 +6734,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ToRadians -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=ToRadians -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep
 ```
 
 
-255. ***TophatTransform***
+### ***TophatTransform***
 
 *Description*:
 Performs either a white or black top-hat transform on an input image.
@@ -6702,12 +6760,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TophatTransform -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=TophatTransform -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-256. ***TopologicalStreamOrder***
+### ***TopologicalStreamOrder***
 
 *Description*:
 Assigns each link in a stream network its topological order.
@@ -6728,15 +6786,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TopologicalStreamOrder -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=TopologicalStreamOrder -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=TopologicalStreamOrder -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=TopologicalStreamOrder -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-257. ***TotalCurvature***
+### ***TotalCurvature***
 
 *Description*:
 Calculates a total curvature raster from an input DEM.
@@ -6755,12 +6813,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TotalCurvature -v --wd="/path/to/data/" --dem=DEM.dep 
+>>./whitebox_tools -r=TotalCurvature -v --wd="/path/to/data/" --dem=DEM.dep ^
 -o=output.dep
 ```
 
 
-258. ***TotalFilter***
+### ***TotalFilter***
 
 *Description*:
 Performs a total filter on an input image.
@@ -6780,12 +6838,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TotalFilter -v --wd="/path/to/data/" -i=image.dep 
+>>./whitebox_tools -r=TotalFilter -v --wd="/path/to/data/" -i=image.dep ^
 -o=output.dep --filter=25
 ```
 
 
-259. ***TraceDownslopeFlowpaths***
+### ***TraceDownslopeFlowpaths***
 
 *Description*:
 Traces downslope flowpaths from one or more target sites (i.e. seed points).
@@ -6806,12 +6864,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TraceDownslopeFlowpaths -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=TraceDownslopeFlowpaths -v --wd="/path/to/data/" ^
 --seed_pts=seeds.dep --flow_dir=flow_directions.dep --output=flow_paths.dep
 ```
 
 
-260. ***TributaryIdentifier***
+### ***TributaryIdentifier***
 
 *Description*:
 Assigns a unique identifier to each tributary in a stream network.
@@ -6832,15 +6890,15 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TributaryIdentifier -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=TributaryIdentifier -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep -o=output.dep
->>./whitebox_tools -r=TributaryIdentifier -v --wd="/path/to/data/" 
---d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr 
+>>./whitebox_tools -r=TributaryIdentifier -v --wd="/path/to/data/" ^
+--d8_pntr=D8.flt --streams=streams.flt -o=output.flt --esri_pntr ^
 --zero_background
 ```
 
 
-261. ***Truncate***
+### ***Truncate***
 
 *Description*:
 Truncates the values in a raster to the desired number of decimal places.
@@ -6859,12 +6917,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Truncate -v --wd="/path/to/data/" -i='input.dep' 
+>>./whitebox_tools -r=Truncate -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --num_decimals=2
 ```
 
 
-262. ***TurningBandsSimulation***
+### ***TurningBandsSimulation***
 
 *Description*:
 Creates an image containing random values based on a turning-bands simulation.
@@ -6884,12 +6942,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=TurningBandsSimulation -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=TurningBandsSimulation -v --wd="/path/to/data/" ^
 --base=in.dep -o=out.dep --range=850.0 --iterations=2500
 ```
 
 
-263. ***Viewshed***
+### ***Viewshed***
 
 *Description*:
 Identifies the viewshed for a point or set of points.
@@ -6909,12 +6967,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Viewshed -v --wd="/path/to/data/" --dem='dem.dep' 
+>>./whitebox_tools -r=Viewshed -v --wd="/path/to/data/" --dem='dem.dep' ^
 --stations='stations.dep' -o=output.dep --height=10.0
 ```
 
 
-264. ***Watershed***
+### ***Watershed***
 
 *Description*:
 Identifies the watershed, or drainage basin, draining to a set of target cells.
@@ -6934,12 +6992,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Watershed -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' 
+>>./whitebox_tools -r=Watershed -v --wd="/path/to/data/" --d8_pntr='d8pntr.dep' ^
 --pour_pts='pour_pts.dep' -o='output.dep'
 ```
 
 
-265. ***WeightedSum***
+### ***WeightedSum***
 
 *Description*:
 Performs a weighted-sum overlay on multiple input raster images.
@@ -6958,12 +7016,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=WeightedSum -v --wd='/path/to/data/' 
+>>./whitebox_tools -r=WeightedSum -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep --weights='0.3;0.2;0.5'
 ```
 
 
-266. ***WetnessIndex***
+### ***WetnessIndex***
 
 *Description*:
 Calculates the topographic wetness index, Ln(A / tan(slope)).
@@ -6982,12 +7040,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=WetnessIndex -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=WetnessIndex -v --wd="/path/to/data/" ^
 --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep
 ```
 
 
-267. ***WriteFunctionMemoryInsertion***
+### ***WriteFunctionMemoryInsertion***
 
 *Description*:
 Performs a write function memory insertion for single-band multi-date change detection.
@@ -7007,12 +7065,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=WriteFunctionMemoryInsertion -v --wd="/path/to/data/" 
+>>./whitebox_tools -r=WriteFunctionMemoryInsertion -v --wd="/path/to/data/" ^
 -i1=input1.dep -i2=input2.dep -o=output.dep
 ```
 
 
-268. ***Xor***
+### ***Xor***
 
 *Description*:
 Performs a logical XOR operator on two Boolean raster images.
@@ -7031,12 +7089,12 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=Xor -v --wd="/path/to/data/" --input1='in1.dep' 
+>>./whitebox_tools -r=Xor -v --wd="/path/to/data/" --input1='in1.dep' ^
 --input2='in2.dep' -o=output.dep
 ```
 
 
-269. ***ZScores***
+### ***ZScores***
 
 *Description*:
 Standardizes the values in an input raster by converting to z-scores.
@@ -7054,7 +7112,7 @@ Flag               Description
 
 *Example usage*:
 ```
->>./whitebox_tools -r=ZScores -v --wd="/path/to/data/" -i=DEM.dep 
+>>./whitebox_tools -r=ZScores -v --wd="/path/to/data/" -i=DEM.dep ^
 -o=output.dep
 ```
 
@@ -7092,14 +7150,37 @@ If you would like to contribute financial support for the project, please contac
 
 The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt), a permissive open-source (free software) license.
 
+> The MIT License (MIT)
+> 
+> Copyright (c) 2017-2018 John Lindsay
+> 
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+> 
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+> 
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+
 ## 8. Reporting Bugs
 
 WhiteboxTools is distributed as is and without warranty of suitability for application. If you encounter flaws with the software (i.e. bugs) please report the issue. Providing a detailed description of the conditions under which the bug occurred will help to identify the bug. *Use the Issues tracker on GitHub to report issues with the software and to request feature enchancements.* Please do not email Dr. Lindsay directly with bugs.
 
-## 9. Known Issues
+## 9. Known Issues and Limitations
 
 - There is limited support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
 - The LAZ compressed LiDAR data format is currently unsupported although zipped LAS files (.zip) are.
+- There is no support for reading waveform data contained within or associated with LAS files.
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
 - The Python scripts included with **WhiteboxTools** require Python 3. They will not work with Python 2, which is frequently the default Python version installed on many systems.
 

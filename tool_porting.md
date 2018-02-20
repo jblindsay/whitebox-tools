@@ -1,6 +1,6 @@
 (Updated 02-18-2018)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **270 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **162 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **271 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **162 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -448,6 +448,7 @@ Tools that are new in *WhiteboxTools*
 | GammaCorrection                                   |                                                                                                                                                                |
 | HortonStreamOrder                                 |                                                                                                                                                                |
 | HypsometricAnalysis                               |                                                                                                                                                                |
+| LidarColourize                                    |                                                                                                                                                                |
 | LidarHillshade                                    |                                                                                                                                                                |
 | LidarKappaIndex                                   |                                                                                                                                                                |
 | LidarPointStats                                   |                                                                                                                                                                |

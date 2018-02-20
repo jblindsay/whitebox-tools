@@ -260,7 +260,8 @@ pub fn read_geotiff<'a>(file_name: &'a String,
             3 => IM_RGB, //ImageMode::RGB,
             4 => {
                 match extra_samples {
-                    1 => IM_RGBA, // ImageMode::RGBA,
+                    // Not sure why, but some GeoTIFFs have extra samples = 0 even though they are clearly RGBA
+                    0 | 1 => IM_RGBA, // ImageMode::RGBA,
                     2 => IM_NRGBA, //ImageMode::NRGBA,
                     _ => {
                         return Err(Error::new(ErrorKind::InvalidData,

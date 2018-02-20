@@ -63,6 +63,7 @@ Version 0.4 (dd-mm-yyyy)
 - Significant improvements have been made to the User Manual, and in particular the section on Python
   based scripting with WhiteboxTools.
 - Added the following tools:
+    LidarColourize
     LidarPointStats
 
 Version 0.3.1 (15-02-2018)
