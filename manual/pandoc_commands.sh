@@ -14,4 +14,6 @@ pandoc \
 --variable papersize=letterpaper \
 --variable urlcolor=blue \
 -s WhiteboxToolsManual.md \
+--toc \
+--toc-depth=4 \
 -o ../WhiteboxToolsManual.pdf

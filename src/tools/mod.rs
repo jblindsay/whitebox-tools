@@ -258,6 +258,8 @@ impl ToolManager {
         tool_names.push("HackStreamOrder".to_string());
         tool_names.push("HortonStreamOrder".to_string());
         tool_names.push("LengthOfUpstreamChannels".to_string());
+        tool_names.push("LongProfile".to_string());
+        tool_names.push("LongProfileFromPoints".to_string());
         tool_names.push("RemoveShortStreams".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
@@ -621,6 +623,8 @@ impl ToolManager {
             "lengthofupstreamchannels" => {
                 Some(Box::new(tools::stream_network_analysis::LengthOfUpstreamChannels::new()))
             }
+            "longprofile" => Some(Box::new(tools::stream_network_analysis::LongProfile::new())),
+            "longprofilefrompoints" => Some(Box::new(tools::stream_network_analysis::LongProfileFromPoints::new())),
             "removeshortstreams" => {
                 Some(Box::new(tools::stream_network_analysis::RemoveShortStreams::new()))
             }
@@ -945,8 +949,16 @@ enum ParameterFileType {
     Any,
     Lidar,
     Raster,
-    Vector,
-    RasterAndVector,
+    Vector(VectorGeometryType),
+    RasterAndVector(VectorGeometryType),
     Text,
     Html,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+enum VectorGeometryType {
+    Any,
+    Point,
+    Line,
+    Polygon,
 }

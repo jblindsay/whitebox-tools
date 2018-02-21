@@ -44,7 +44,7 @@ impl Watershed {
             name: "Input Pour Points (Outlet) File".to_owned(), 
             flags: vec!["--pour_pts".to_owned()], 
             description: "Input vector pour points (outlet) file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
             default_value: None,
             optional: false
         });
@@ -53,7 +53,7 @@ impl Watershed {
             name: "Output File".to_owned(), 
             flags: vec!["-o".to_owned(), "--output".to_owned()], 
             description: "Output raster file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::RasterAndVector),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
         });

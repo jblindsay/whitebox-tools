@@ -354,7 +354,7 @@ impl WhiteboxTool for StrahlerStreamOrder {
             }
         }
 
-        println!("Max stream order: {}", max_stream_order);
+        if verbose { println!("Max stream order: {}", max_stream_order); }
 
         let end = time::now();
         let elapsed_time = end - start;

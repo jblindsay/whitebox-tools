@@ -23,6 +23,16 @@ wbt = WhiteboxTools()
 # Set the directory containing the whitebox_tools.exe file
 wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/target/release/'
 
+toolboxes = wbt.toolbox('')
+tb_set = set()
+for tb in toolboxes.split('\n'):
+    if tb.strip():
+        tb_set.add(tb.strip().split(':')[1].strip())
+
+tb_dict = {}
+for tb in sorted(tb_set):
+    tb_dict[tb] = []
+
 tools = wbt.list_tools()
 for t in tools.split("\n"):
     if t.strip() and "Available Tools" not in t:
@@ -41,7 +51,7 @@ for t in tools.split("\n"):
         arg_append_str = ""
 
         doc_str = ""
-
+        toolbox = wbt.toolbox(tool).strip()
         parameters = wbt.tool_parameters(tool)
         j = json.loads(parameters)
         param_num = 0
@@ -117,4 +127,16 @@ for t in tools.split("\n"):
         args = []
         {}
         return self.run_tool('{}', args, callback) # returns 1 if error""".format(fn_def, description, doc_str.rstrip(), arg_append_str.rstrip(), tool)
-        print(fn)
+        # print(fn)
+        tb_dict[toolbox].append(fn)
+
+f = open("/Users/johnlindsay/Documents/deleteme.txt", 'w')
+for key, value in sorted(tb_dict.items()):
+    f.write("\n    {}\n".format('#' * (len(key) + 4)))
+    f.write("    # {} #\n".format(key))
+    f.write("    {}\n".format('#' * (len(key) + 4)))
+    for v in value:
+        # print(v)
+        f.write("{}\n".format(v))
+
+f.close()

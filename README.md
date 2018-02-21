@@ -157,9 +157,9 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 ## 4. Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
+Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 271 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 273 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -167,6 +167,49 @@ The library currently contains the following 271 tools, which are each grouped b
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
+
+**Geomorphometric Analysis**
+
+- ***Aspect***: Calculates an aspect raster from an input DEM.
+- ***DevFromMeanElev***: Calculates deviation from mean elevation.
+- ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
+- ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
+- ***DownslopeIndex***: Calculates the Hjerdt et al. (2004) downslope index.
+- ***ElevAbovePit***: Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
+- ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
+- ***ElevRelativeToMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
+- ***ElevRelativeToWatershedMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
+- ***FeaturePreservingDenoise***: Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
+- ***FetchAnalysis***: Performs an analysis of fetch or upwind distance to an obstacle.
+- ***FillMissingData***: Fills nodata holes in a DEM.
+- ***FindRidges***: Identifies potential ridge and peak grid cells.
+- ***Hillshade***: Calculates a hillshade raster from an input DEM.
+- ***HypsometricAnalysis***: Calculates a hypsometric curve for one or more DEMs.
+- ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
+- ***MaxBranchLength***: Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
+- ***MaxDownslopeElevChange***: Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
+- ***MaxElevationDeviation***: Calculates the maximum elevation deviation over a range of spatial scales.
+- ***MinDownslopeElevChange***: Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
+- ***MultiscaleTopographicPositionImage***: Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
+- ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
+- ***NumDownslopeNeighbours***: Calculates the number of downslope neighbours to each grid cell in a DEM.
+- ***NumUpslopeNeighbours***: Calculates the number of upslope neighbours to each grid cell in a DEM.
+- ***PennockLandformClass***: Classifies hillslope zones based on slope, profile curvature, and plan curvature.
+- ***PercentElevRange***: Calculates percent of elevation range from a DEM.
+- ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
+- ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
+- ***RelativeAspect***: Calculates relative aspect (relative to a user-specified direction) from an input DEM.
+- ***RelativeStreamPowerIndex***: Calculates the relative stream power index.
+- ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
+- ***RuggednessIndex***: Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
+- ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).
+- ***SedimentTransportIndex***: Calculates the sediment transport index.
+- ***Slope***: Calculates a slope raster from an input DEM.
+- ***SlopeVsElevationPlot***: Creates a slope vs. elevation plot for one or more DEMs.
+- ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
+- ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
+- ***Viewshed***: Identifies the viewshed for a point or set of points.
+- ***WetnessIndex***: Calculates the topographic wetness index, Ln(A / tan(slope)).
 
 **GIS Analysis**
 
@@ -402,6 +445,9 @@ The library currently contains the following 271 tools, which are each grouped b
 - ***FindMainStem***: Finds the main stem, based on stream lengths, of each stream network.
 - ***HackStreamOrder***: Assigns the Hack stream order to each link in a stream network.
 - ***HortonStreamOrder***: Assigns the Horton stream order to each link in a stream network.
+- ***LengthOfUpstreamChannels***: Calculates the total length of channels upstream.
+- ***LongProfile***: Plots the stream longitudinal profiles for one or more rivers.
+- ***LongProfileFromPoints***: Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 - ***RemoveShortStreams***: Removes short first-order streams from a stream network.
 - ***ShreveStreamMagnitude***: Assigns the Shreve stream magnitude to each link in a stream network.
 - ***StrahlerStreamOrder***: Assigns the Strahler stream order to each link in a stream network.
@@ -411,51 +457,7 @@ The library currently contains the following 271 tools, which are each grouped b
 - ***StreamLinkSlope***: Estimates the average slope of each link (or tributary) in a stream network.
 - ***StreamSlopeContinuous***: Estimates the slope of each grid cell in a stream network.
 - ***TopologicalStreamOrder***: Assigns each link in a stream network its topological order.
-- ***TotalLengthOfUpstreamChannels***: Calculates the total length of channels upstream.
 - ***TributaryIdentifier***: Assigns a unique identifier to each tributary in a stream network.
-
-**Terrain Analysis**
-
-- ***Aspect***: Calculates an aspect raster from an input DEM.
-- ***DevFromMeanElev***: Calculates deviation from mean elevation.
-- ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
-- ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
-- ***DownslopeIndex***: Calculates the Hjerdt et al. (2004) downslope index.
-- ***ElevAbovePit***: Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
-- ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
-- ***ElevRelativeToMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
-- ***ElevRelativeToWatershedMinMax***: Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
-- ***FeaturePreservingDenoise***: Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
-- ***FetchAnalysis***: Performs an analysis of fetch or upwind distance to an obstacle.
-- ***FillMissingData***: Fills nodata holes in a DEM.
-- ***FindRidges***: Identifies potential ridge and peak grid cells.
-- ***Hillshade***: Calculates a hillshade raster from an input DEM.
-- ***HypsometricAnalysis***: Calculates a hypsometric curve for one or more DEMs.
-- ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
-- ***MaxBranchLength***: Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
-- ***MaxDownslopeElevChange***: Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
-- ***MaxElevationDeviation***: Calculates the maximum elevation deviation over a range of spatial scales.
-- ***MinDownslopeElevChange***: Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
-- ***MultiscaleTopographicPositionImage***: Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
-- ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
-- ***NumDownslopeNeighbours***: Calculates the number of downslope neighbours to each grid cell in a DEM.
-- ***NumUpslopeNeighbours***: Calculates the number of upslope neighbours to each grid cell in a DEM.
-- ***PennockLandformClass***: Classifies hillslope zones based on slope, profile curvature, and plan curvature.
-- ***PercentElevRange***: Calculates percent of elevation range from a DEM.
-- ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
-- ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
-- ***RelativeAspect***: Calculates relative aspect (relative to a user-specified direction) from an input DEM.
-- ***RelativeStreamPowerIndex***: Calculates the relative stream power index.
-- ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
-- ***RuggednessIndex***: Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
-- ***RemoveOffTerrainObjects***: Removes off-terrain objects from a raster digital elevation model (DEM).
-- ***SedimentTransportIndex***: Calculates the sediment transport index.
-- ***Slope***: Calculates a slope raster from an input DEM.
-- ***SlopeVsElevationPlot***: Creates a slope vs. elevation plot for one or more DEMs.
-- ***TangentialCurvature***: Calculates a tangential curvature raster from an input DEM.
-- ***TotalCurvature***: Calculates a total curvature raster from an input DEM.
-- ***Viewshed***: Identifies the viewshed for a point or set of points.
-- ***WetnessIndex***: Calculates the topographic wetness index, Ln(A / tan(slope)).
 
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 

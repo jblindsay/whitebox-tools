@@ -65,6 +65,7 @@ Version 0.4 (dd-mm-yyyy)
 - Added the following tools:
     LidarColourize
     LidarPointStats
+    LongProfile
 
 Version 0.3.1 (15-02-2018)
 

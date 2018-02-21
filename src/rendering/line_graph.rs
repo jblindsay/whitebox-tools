@@ -69,6 +69,11 @@ impl LineGraph {
         var tickLen = 8.0;
         var minorTickLen = tickLen * 0.65;
 
+        // If there are no series labels, treat it as one series.
+        if (plot.seriesLabels.length === 0) {
+					plot.drawLegend = false;
+				}
+
         // colors
         var lineColor = '#47a3ff'; //'#377eb8'; // '#729ece'; // '#1f77b4'; //'#47a3ff'; //'rgb(2,145,205)';
         var highlightColor = '#ff7f00';
@@ -217,6 +222,10 @@ impl LineGraph {
         var s;
         for (s = 0; s < numSeries; s++) {
           var clrNum = s % tableau20.length;
+          if (plot.seriesLabels.length === 0) {
+            // If there are no series labels, treat it as one series.
+						clrNum = 0;
+					}
           let clr = `rgb(${tableau20[clrNum][0]},${tableau20[clrNum][1]},${tableau20[clrNum][2]})`;
 
           styleString += `
@@ -667,17 +676,19 @@ impl LineGraph {
         }, false);
         list.appendChild(gridlineBtn);
 
-        var legendBtn = document.createElement("li");
-        var verb = plot.drawLegend ? "Hide " : "Show ";
-        legendBtn.innerHTML = verb + "Legend";
-        legendBtn.addEventListener('click', function() {
-          plot.drawLegend = !plot.drawLegend;
-          // update the context menu label
+        if (plot.seriesLabels.length > 0) {
+          var legendBtn = document.createElement("li");
           var verb = plot.drawLegend ? "Hide " : "Show ";
           legendBtn.innerHTML = verb + "Legend";
-          update(svg);
-        }, false);
-        list.appendChild(legendBtn);
+          legendBtn.addEventListener('click', function() {
+            plot.drawLegend = !plot.drawLegend;
+            // update the context menu label
+            var verb = plot.drawLegend ? "Hide " : "Show ";
+            legendBtn.innerHTML = verb + "Legend";
+            update(svg);
+          }, false);
+          list.appendChild(legendBtn);
+        }
 
         var pointsBtn = document.createElement("li");
         var verb = plot.drawPoints ? "Hide " : "Show ";
