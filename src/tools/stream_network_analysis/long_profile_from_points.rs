@@ -6,7 +6,6 @@ Last Modified: February 21, 2018
 License: MIT
 */
 extern crate time;
-// extern crate num_cpus;
 
 use std::io::BufWriter;
 use std::fs::File;
@@ -15,11 +14,8 @@ use std::process::Command;
 use std::env;
 use std::path;
 use std::f64;
-// use std::sync::Arc;
-// use std::sync::mpsc;
-// use std::thread;
 use raster::*;
-use vector::Shapefile;
+use vector::{Shapefile, ShapeType};
 use std::io::{Error, ErrorKind};
 use tools::*;
 use rendering::LineGraph;
@@ -232,6 +228,12 @@ impl WhiteboxTool for LongProfileFromPoints {
         if dem.configs.rows != pntr.configs.rows || dem.configs.columns != pntr.configs.columns {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "The input files must have the same number of rows and columns and spatial extent."));
+        }
+
+        // make sure the input vector file is of points type
+        if points.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type."));
         }
 
         let cell_size_x = pntr.configs.resolution_x;

@@ -62,10 +62,12 @@ Version 0.4 (dd-mm-yyyy)
   There is a convenience method in whitebox_tools.py for each tool in the WhiteboxTools binary executable.
 - Significant improvements have been made to the User Manual, and in particular the section on Python
   based scripting with WhiteboxTools.
-- Added the following tools:
+- The following tools have been added to the library:
     LidarColourize
     LidarPointStats
     LongProfile
+    LongProfileFromPoints
+    Profile
 
 Version 0.3.1 (15-02-2018)
 

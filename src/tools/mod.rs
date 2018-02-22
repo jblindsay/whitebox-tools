@@ -300,6 +300,7 @@ impl ToolManager {
         tool_names.push("PercentElevRange".to_string());
         tool_names.push("PlanCurvature".to_string());
         tool_names.push("ProfileCurvature".to_string());
+        tool_names.push("Profile".to_string());
         tool_names.push("RelativeAspect".to_string());
         tool_names.push("RelativeStreamPowerIndex".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
@@ -691,6 +692,7 @@ impl ToolManager {
             "percentelevrange" => Some(Box::new(tools::terrain_analysis::PercentElevRange::new())),
             "plancurvature" => Some(Box::new(tools::terrain_analysis::PlanCurvature::new())),
             "profilecurvature" => Some(Box::new(tools::terrain_analysis::ProfileCurvature::new())),
+            "profile" => Some(Box::new(tools::terrain_analysis::Profile::new())),
             "relativeaspect" => Some(Box::new(tools::terrain_analysis::RelativeAspect::new())),
             "relativestreampowerindex" => {
                 Some(Box::new(tools::terrain_analysis::RelativeStreamPowerIndex::new()))

@@ -2,7 +2,6 @@
 title: 'WhiteboxTools User Manual'
 subtitle: 'Bringing the power of Whitebox GAT to the world at large'
 author: John B. Lindsay, University of Guelph
-# date: '21/02/2018'
 fontsize: 12pt
 mainfont: 'Open Sans'
 documentclass: report
@@ -43,7 +42,7 @@ Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
 
-![](./img/GHRGLogoSm.png){width=50% height=50%}
+![](./img/GHRGLogoSm.png){width=54% height=54%}
 
 \newpage
 
@@ -54,7 +53,7 @@ Guelph, Canada \
 
 > In this manual, ***WhiteboxTools*** refers to the standalone geospatial analysis library, a collection of tools contained within a compiled binary executable command-line program and the associated Python scripts that are distributed alongside the binary file (e.g. *whitebox_tools.py* and *wb_runner.py*). ***Whitebox Geospatial Analysis Tools*** and ***Whitebox GAT*** refer to the GIS software, which includes a user-interface (front-end), point-and-click tool interfaces, and cartographic data visualization capabilities.
 
-Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [*Usage*](#usage) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the *Whitebox GAT* user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. The current version of *Whitebox GAT* contains many equivelent tools to those found in the *WhiteboxTools* library, although they are developed using the Java programming language. A future version of *Whitebox GAT* will replace these previous tools with the new *WhiteboxTools* backend. This transition will occur over the next several releases. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
+Although *WhiteboxTools* is intended to serve as a source of plugin tools for the [*Whitebox Geospatial Analysis Tools (GAT)*](http://www.uoguelph.ca/~hydrogeo/Whitebox/) open-source GIS project, the tools contained in the library are stand-alone and can run outside of the larger *Whitebox GAT* project. See [*Interacting With *WhiteboxTools* From the Command Prompt*](#interacting-with-whiteboxtools-from-the-command-prompt) for further details. There have been a large number of requests to call *Whitebox GAT* tools and functionality from outside of the *Whitebox GAT* user-interface (e.g. from Python automation scripts). *WhiteboxTools* is intended to meet these usage requirements. The current version of *Whitebox GAT* contains many equivelent tools to those found in the *WhiteboxTools* library, although they are developed using the Java programming language. A future version of *Whitebox GAT* will replace these previous tools with the new *WhiteboxTools* backend. This transition will occur over the next several releases. Eventually most of the approximately 450 tools contained within *Whitebox GAT* [will be ported](tool_porting.md) to *WhiteboxTools*. In addition to separating the processing capabilities and the user-interface (and thereby reducing the reliance on Java), this migration should significantly improve processing efficiency. This is because [Rust](https://www.rust-lang.org/en-US/), the programming language used to develop *WhiteboxTools*, is generally [faster than the equivalent Java code](http://benchmarksgame.alioth.debian.org/u64q/compare.php?lang=rust&lang2=java) and because many of the *WhiteboxTools* functions are designed to process data in parallel wherever possible. In contrast, the older Java codebase included largely single-threaded applications.
 
 In addition to *Whitebox GAT*, the *WhiteboxTools* project is related to other GHRG software projects including, the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded the *GoSpatial* project, having subsumed all of its functionality. *GoSpatial* users should now transition to *WhiteboxTools*.
 
@@ -332,7 +331,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 272 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-\-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 274 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-\-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 
 
@@ -1672,7 +1671,28 @@ Calculates a plan (contour) curvature raster from an input DEM
 --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.28 ProfileCurvature
+#### 6.7.28 Profile
+
+*Description*: 
+Plots profiles from digital elevation models
+
+*Toolbox*: Geomorphometric Analysis
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-lines             Input vector points file
+-\-surface           Input raster surface file
+-o, -\-output        Output HTML file
+
+*Example Usage*:
+```
+>>./whitebox_tools -r=Profile -v --wd="/path/to/data/" ^
+--lines=profile.shp --surface=dem.dep -o=profile.html 
+```
+
+#### 6.7.29 ProfileCurvature
 
 *Description*: 
 Calculates a profile curvature raster from an input DEM
@@ -1693,7 +1713,7 @@ Calculates a profile curvature raster from an input DEM
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.29 RelativeAspect
+#### 6.7.30 RelativeAspect
 
 *Description*: 
 Calculates relative aspect (relative to a user-specified direction) from an input DEM
@@ -1715,7 +1735,7 @@ Calculates relative aspect (relative to a user-specified direction) from an inpu
 --dem=DEM.dep -o=output.dep --azimuth=180.0 
 ```
 
-#### 6.7.30 RelativeStreamPowerIndex
+#### 6.7.31 RelativeStreamPowerIndex
 
 *Description*: 
 Calculates the relative stream power index
@@ -1738,7 +1758,7 @@ Calculates the relative stream power index
 --slope='slope.dep' -o=output.dep --exponent=1.1 
 ```
 
-#### 6.7.31 RelativeTopographicPosition
+#### 6.7.32 RelativeTopographicPosition
 
 *Description*: 
 Calculates the relative topographic position index from a DEM
@@ -1761,7 +1781,7 @@ Calculates the relative topographic position index from a DEM
 --filter=25 
 ```
 
-#### 6.7.32 RemoveOffTerrainObjects
+#### 6.7.33 RemoveOffTerrainObjects
 
 *Description*: 
 Removes off-terrain objects from a raster digital elevation model (DEM)
@@ -1784,7 +1804,7 @@ Removes off-terrain objects from a raster digital elevation model (DEM)
 --filter=25 --slope=10.0 
 ```
 
-#### 6.7.33 RuggednessIndex
+#### 6.7.34 RuggednessIndex
 
 *Description*: 
 Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
@@ -1805,7 +1825,7 @@ Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.34 SedimentTransportIndex
+#### 6.7.35 SedimentTransportIndex
 
 *Description*: 
 Calculates the sediment transport index
@@ -1830,7 +1850,7 @@ Calculates the sediment transport index
 --slope_exponent=1.0 
 ```
 
-#### 6.7.35 Slope
+#### 6.7.36 Slope
 
 *Description*: 
 Calculates a slope raster from an input DEM
@@ -1851,7 +1871,7 @@ Calculates a slope raster from an input DEM
 --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.36 SlopeVsElevationPlot
+#### 6.7.37 SlopeVsElevationPlot
 
 *Description*: 
 Creates a slope vs. elevation plot for one or more DEMs
@@ -1873,7 +1893,7 @@ Creates a slope vs. elevation plot for one or more DEMs
 --watershed="ws1.tif;ws2.tif" -o=outfile.html 
 ```
 
-#### 6.7.37 TangentialCurvature
+#### 6.7.38 TangentialCurvature
 
 *Description*: 
 Calculates a tangential curvature raster from an input DEM
@@ -1894,7 +1914,7 @@ Calculates a tangential curvature raster from an input DEM
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.38 TotalCurvature
+#### 6.7.39 TotalCurvature
 
 *Description*: 
 Calculates a total curvature raster from an input DEM
@@ -1915,7 +1935,7 @@ Calculates a total curvature raster from an input DEM
 --dem=DEM.dep -o=output.dep 
 ```
 
-#### 6.7.39 Viewshed
+#### 6.7.40 Viewshed
 
 *Description*: 
 Identifies the viewshed for a point or set of points
@@ -1938,7 +1958,7 @@ Identifies the viewshed for a point or set of points
 --height=10.0 
 ```
 
-#### 6.7.40 WetnessIndex
+#### 6.7.41 WetnessIndex
 
 *Description*: 
 Calculates the topographic wetness index, Ln(A / tan(slope))
@@ -6570,6 +6590,8 @@ Assigns a unique identifier to each tributary in a stream network
 
 
 
+
+
 ## 7. Supported Data Formats
 The **WhiteboxTools** library can currently support reading/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
 
@@ -6640,7 +6662,7 @@ The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt
 
 ### 12.1 Do I need Whitebox GAT to use WhiteboxTools?
 
-No you do not. You can call the tools contained within *WhiteboxTools* completely independent from the *Whitebox GAT* user interface using a Remote Procedure Call (RPC) approach. In fact, you can interact with the tools using Python scripting or directly, using a terminal application (command prompt). See [Usage](#usage) for further details.
+No you do not. You can call the tools contained within *WhiteboxTools* completely independent from the *Whitebox GAT* user interface using a Remote Procedure Call (RPC) approach. In fact, you can interact with the tools using Python scripting or directly, using a terminal application (command prompt). See [*Interacting With *WhiteboxTools* From the Command Prompt*](#interacting-with-whiteboxtools-from-the-command-prompt) for further details.
 
 ### 12.2 How do I request a tool be added?
 

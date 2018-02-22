@@ -16,3 +16,4 @@ mod shapefile;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::shapefile::Shapefile;
+pub use self::shapefile::ShapeType;

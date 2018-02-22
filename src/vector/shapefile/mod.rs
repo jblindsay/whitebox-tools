@@ -456,7 +456,7 @@ impl fmt::Display for Point2D {
 }
 
 #[repr(u16)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum ShapeType { 
     Null = 0,
     Point = 1, 
@@ -490,6 +490,16 @@ impl ShapeType {
             25 => return ShapeType::PolygonM,
             28 => return ShapeType::MultiPointM,
             _ => panic!("Unrecognized ShapeType")
+        }
+    }
+
+    pub fn base_shape_type(&self) -> ShapeType {
+        match self {
+            &ShapeType::Null => ShapeType::Null,
+            &ShapeType::Point | &ShapeType::PointZ | &ShapeType::PointM => ShapeType::Point,
+            &ShapeType::PolyLine | &ShapeType::PolyLineZ | &ShapeType::PolyLineM => ShapeType::PolyLine,
+            &ShapeType::Polygon | &ShapeType::PolygonZ | &ShapeType::PolygonM => ShapeType::Polygon,
+            &ShapeType::MultiPoint | &ShapeType::MultiPointZ | &ShapeType::MultiPointM => ShapeType::MultiPoint,
         }
     }
 }
