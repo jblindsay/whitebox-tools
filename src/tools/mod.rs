@@ -291,8 +291,11 @@ impl ToolManager {
         tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxBranchLength".to_string());
         tool_names.push("MaxDownslopeElevChange".to_string());
+        tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
+        tool_names.push("MultiscaleRoughness".to_string());
+        tool_names.push("MultiscaleRoughnessSignature".to_string());
         tool_names.push("MultiscaleTopographicPositionImage".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
         tool_names.push("NumUpslopeNeighbours".to_string());
@@ -680,7 +683,10 @@ impl ToolManager {
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
             "maxdownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MaxDownslopeElevChange::new())),
             "maxelevationdeviation" => Some(Box::new(tools::terrain_analysis::MaxElevationDeviation::new())),
+            "maxelevdevsignature" => Some(Box::new(tools::terrain_analysis::MaxElevDevSignature::new())),
             "mindownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MinDownslopeElevChange::new())),
+            "multiscaleroughness" => Some(Box::new(tools::terrain_analysis::MultiscaleRoughness::new())),
+            "multiscaleroughnesssignature" => Some(Box::new(tools::terrain_analysis::MultiscaleRoughnessSignature::new())),
             "multiscaletopographicpositionimage" => Some(Box::new(tools::terrain_analysis::MultiscaleTopographicPositionImage::new())),
             "numdownslopeneighbours" => {
                 Some(Box::new(tools::terrain_analysis::NumDownslopeNeighbours::new()))

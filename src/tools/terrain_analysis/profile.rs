@@ -33,14 +33,14 @@ impl Profile {
     pub fn new() -> Profile { // public constructor
         let name = "Profile".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Plots profiles from digital elevation models.".to_string();
+        let description = "Plots profiles from digital surface models.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input Vector Line File".to_owned(), 
             flags: vec!["--lines".to_owned()], 
-            description: "Input vector points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            description: "Input vector line file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Line)),
             default_value: None,
             optional: false
         });

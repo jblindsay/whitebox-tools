@@ -117,8 +117,6 @@ for t in tools.split("\n"):
 *Description*: 
 {}
 
-*Toolbox*: {}
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -127,7 +125,7 @@ for t in tools.split("\n"):
 *Example Usage*:
 ```
 {}
-```""".format(tool, description, toolbox, doc_str, example)
+```""".format(tool, description, doc_str, example)
         # print(fn)
         tb_dict[toolbox].append(fn)
 

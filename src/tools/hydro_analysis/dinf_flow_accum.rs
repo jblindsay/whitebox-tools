@@ -314,7 +314,6 @@ impl WhiteboxTool for DInfFlowAccumulation {
                             }
 
                             if max_slope > 0f64 {
-                                // dir = Math.round((dir * (180 / Math.PI)) * 10) / 10;
                                 dir = 360.0 - dir.to_degrees() + 90.0;
                                 if dir > 360.0 { dir = dir - 360.0; }
                                 data[col as usize] = dir;

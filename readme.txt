@@ -67,8 +67,11 @@ Version 0.4 (dd-mm-yyyy)
     LidarPointStats
     LongProfile
     LongProfileFromPoints
+    MaxElevDevSignature
+    MultiscaleRoughness
+    MultiscaleRoughnessSignature
     Profile
-
+    
 Version 0.3.1 (15-02-2018)
 
 - No new tools have been added to this release. Instead the focus was on improving and enhancing

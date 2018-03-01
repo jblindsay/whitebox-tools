@@ -49,7 +49,7 @@ Guelph, Canada \
 
 ## 1. Introduction
 
-***WhiteboxTools*** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/index.html) (GHRG). The project began in January 2017 and quickly evolved in terms of its analytical capabilities. *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
+***WhiteboxTools*** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [Geomorphometry and Hydrogeomatics Research Group](http://www.uoguelph.ca/~hydrogeo/index.html) (GHRG). The project began in January 2017 and quickly evolved in terms of its analytical capabilities. *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means clustering), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
 
 > In this manual, ***WhiteboxTools*** refers to the standalone geospatial analysis library, a collection of tools contained within a compiled binary executable command-line program and the associated Python scripts that are distributed alongside the binary file (e.g. *whitebox_tools.py* and *wb_runner.py*). ***Whitebox Geospatial Analysis Tools*** and ***Whitebox GAT*** refer to the GIS software, which includes a user-interface (front-end), point-and-click tool interfaces, and cartographic data visualization capabilities.
 
@@ -345,8 +345,6 @@ The library currently contains the following 274 tools, which are each grouped b
 *Description*: 
 Converts nodata values in a raster to zero
 
-*Toolbox*: Data Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -365,8 +363,6 @@ Converts nodata values in a raster to zero
 *Description*: 
 Converts raster data from one format to another
 
-*Toolbox*: Data Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -384,8 +380,6 @@ Converts raster data from one format to another
 
 *Description*: 
 Creates a new raster using a base image
-
-*Toolbox*: Data Tools
 
 *Parameters*:
 
@@ -412,8 +406,6 @@ Creates a new raster using a base image
 *Description*: 
 Assign a specified value in an input image to the NoData value
 
-*Toolbox*: Data Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -433,8 +425,6 @@ Assign a specified value in an input image to the NoData value
 
 *Description*: 
 Aggregates a raster to a lower resolution
-
-*Toolbox*: GIS Analysis
 
 *Parameters*:
 
@@ -456,8 +446,6 @@ Aggregates a raster to a lower resolution
 
 *Description*: 
 Calculates the centroid, or average location, of raster polygon objects
-
-*Toolbox*: GIS Analysis
 
 *Parameters*:
 
@@ -481,8 +469,6 @@ Calculates the centroid, or average location, of raster polygon objects
 *Description*: 
 Groups cells that form physically discrete areas, assigning them unique identifiers
 
-*Toolbox*: GIS Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -502,8 +488,6 @@ Groups cells that form physically discrete areas, assigning them unique identifi
 
 *Description*: 
 Creates a raster image based on the equation for a simple plane
-
-*Toolbox*: GIS Analysis
 
 *Parameters*:
 
@@ -527,8 +511,6 @@ Creates a raster image based on the equation for a simple plane
 *Description*: 
 Calculates the distance of cells from their polygon's centroid
 
-*Toolbox*: GIS Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -548,8 +530,6 @@ Calculates the distance of cells from their polygon's centroid
 
 *Description*: 
 Assign row or column number to cells
-
-*Toolbox*: GIS Analysis
 
 *Parameters*:
 
@@ -573,8 +553,6 @@ Assign row or column number to cells
 *Description*: 
 Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image
 
-*Toolbox*: GIS Analysis/Distance Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -596,8 +574,6 @@ Maps a distance-based buffer around each non-background (non-zero/non-nodata) gr
 *Description*: 
 Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis
 
-*Toolbox*: GIS Analysis/Distance Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -617,8 +593,6 @@ Identifies the source cell to which each grid cell is connected by a least-cost 
 
 *Description*: 
 Performs cost-distance accumulation on a cost surface and a group of source cells
-
-*Toolbox*: GIS Analysis/Distance Tools
 
 *Parameters*:
 
@@ -641,8 +615,6 @@ Performs cost-distance accumulation on a cost surface and a group of source cell
 *Description*: 
 Performs cost-distance pathway analysis using a series of destination grid cells
 
-*Toolbox*: GIS Analysis/Distance Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -664,8 +636,6 @@ Performs cost-distance pathway analysis using a series of destination grid cells
 *Description*: 
 Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform
 
-*Toolbox*: GIS Analysis/Distance Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -683,8 +653,6 @@ Assigns grid cells in the output raster the value of the nearest target cell in 
 
 *Description*: 
 Calculates the Shih and Wu (2004) Euclidean distance transform
-
-*Toolbox*: GIS Analysis/Distance Tools
 
 *Parameters*:
 
@@ -705,8 +673,6 @@ Calculates the Shih and Wu (2004) Euclidean distance transform
 *Description*: 
 Calculates the average for each grid cell from a group of raster images
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -724,8 +690,6 @@ Calculates the average for each grid cell from a group of raster images
 
 *Description*: 
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -746,8 +710,6 @@ Identifies the stack position of the maximum value within a raster stack on a ce
 *Description*: 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -765,8 +727,6 @@ Identifies the stack position of the minimum value within a raster stack on a ce
 
 *Description*: 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -787,8 +747,6 @@ Evaluates the maximum absolute value for each grid cell from a stack of input ra
 *Description*: 
 Evaluates the maximum value for each grid cell from a stack of input rasters
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -806,8 +764,6 @@ Evaluates the maximum value for each grid cell from a stack of input rasters
 
 *Description*: 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -828,8 +784,6 @@ Evaluates the minimum absolute value for each grid cell from a stack of input ra
 *Description*: 
 Evaluates the minimum value for each grid cell from a stack of input rasters
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -847,8 +801,6 @@ Evaluates the minimum value for each grid cell from a stack of input rasters
 
 *Description*: 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -870,8 +822,6 @@ Calculates the percentage of a raster stack that have cell values equal to an in
 *Description*: 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -891,8 +841,6 @@ Calculates the percentage of a raster stack that have cell values greather than 
 
 *Description*: 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -914,8 +862,6 @@ Calculates the percentage of a raster stack that have cell values less than an i
 *Description*: 
 Outputs the value from a raster stack specified by a position raster
 
-*Toolbox*: GIS Analysis/Overlay Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -935,8 +881,6 @@ Outputs the value from a raster stack specified by a position raster
 
 *Description*: 
 Performs a weighted-sum overlay on multiple input raster images
-
-*Toolbox*: GIS Analysis/Overlay Tools
 
 *Parameters*:
 
@@ -959,8 +903,6 @@ Performs a weighted-sum overlay on multiple input raster images
 *Description*: 
 Calculate the proportion of cells in a raster polygon that are edge cells
 
-*Toolbox*: GIS Analysis/Patch Shape Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -980,8 +922,6 @@ Calculate the proportion of cells in a raster polygon that are edge cells
 *Description*: 
 Finds all cells located on the edge of patch or class features
 
-*Toolbox*: GIS Analysis/Patch Shape Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1000,8 +940,6 @@ Finds all cells located on the edge of patch or class features
 
 *Description*: 
 Reclassifies the values in a raster image
-
-*Toolbox*: GIS Analysis/Reclass Tools
 
 *Parameters*:
 
@@ -1030,8 +968,6 @@ Reclassifies the values in a raster image
 *Description*: 
 Reclassifies the values in a raster image based on equal-ranges
 
-*Toolbox*: GIS Analysis/Reclass Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1054,8 +990,6 @@ Reclassifies the values in a raster image based on equal-ranges
 *Description*: 
 Reclassifies the values in a raster image using reclass ranges in a text file
 
-*Toolbox*: GIS Analysis/Reclass Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1077,8 +1011,6 @@ Reclassifies the values in a raster image using reclass ranges in a text file
 *Description*: 
 Calculates an aspect raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1097,8 +1029,6 @@ Calculates an aspect raster from an input DEM
 
 *Description*: 
 Calculates deviation from mean elevation
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1121,8 +1051,6 @@ Calculates deviation from mean elevation
 *Description*: 
 Calculates difference from mean elevation (equivalent to a high-pass filter)
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1143,8 +1071,6 @@ Calculates difference from mean elevation (equivalent to a high-pass filter)
 
 *Description*: 
 Calculates relief for cells in an input DEM for a specified direction
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1167,8 +1093,6 @@ Calculates relief for cells in an input DEM for a specified direction
 *Description*: 
 Calculates the Hjerdt et al. (2004) downslope index
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1190,8 +1114,6 @@ Calculates the Hjerdt et al. (2004) downslope index
 *Description*: 
 Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1209,8 +1131,6 @@ Calculate the elevation of each grid cell above the nearest downstream pit cell 
 
 *Description*: 
 Calculates the elevation percentile raster from a DEM
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1233,8 +1153,6 @@ Calculates the elevation percentile raster from a DEM
 *Description*: 
 Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1252,8 +1170,6 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 
 *Description*: 
 Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1274,8 +1190,6 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 
 *Description*: 
 Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1299,8 +1213,6 @@ Reduces short-scale variation in an input DEM using a modified Sun et al. (2007)
 *Description*: 
 Performs an analysis of fetch or upwind distance to an obstacle
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1321,8 +1233,6 @@ Performs an analysis of fetch or upwind distance to an obstacle
 *Description*: 
 Fills nodata holes in a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1341,8 +1251,6 @@ Fills nodata holes in a DEM
 
 *Description*: 
 Identifies potential ridge and peak grid cells
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1363,8 +1271,6 @@ Identifies potential ridge and peak grid cells
 
 *Description*: 
 Calculates a hillshade raster from an input DEM
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1387,8 +1293,6 @@ Calculates a hillshade raster from an input DEM
 *Description*: 
 Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1409,8 +1313,6 @@ Calculates horizon angle (maximum upwind slope) for each grid cell in an input D
 *Description*: 
 Calculates a hypsometric curve for one or more DEMs
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1430,8 +1332,6 @@ Calculates a hypsometric curve for one or more DEMs
 
 *Description*: 
 Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1457,8 +1357,6 @@ Calculates the maximum anisotropy (directionality) in elevation deviation over a
 *Description*: 
 Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1478,8 +1376,6 @@ Lindsay and Seibert's (2013) branch length index is used to map drainage divides
 *Description*: 
 Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1497,8 +1393,6 @@ Calculates the maximum downslope change in elevation between a grid cell and its
 
 *Description*: 
 Calculates the maximum elevation deviation over a range of spatial scales
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1524,8 +1418,6 @@ Calculates the maximum elevation deviation over a range of spatial scales
 *Description*: 
 Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1543,8 +1435,6 @@ Calculates the minimum downslope change in elevation between a grid cell and its
 
 *Description*: 
 Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1568,8 +1458,6 @@ Creates a multiscale topographic position image from three DEVmax rasters of dif
 *Description*: 
 Calculates the number of downslope neighbours to each grid cell in a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1588,8 +1476,6 @@ Calculates the number of downslope neighbours to each grid cell in a DEM
 *Description*: 
 Calculates the number of upslope neighbours to each grid cell in a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1607,8 +1493,6 @@ Calculates the number of upslope neighbours to each grid cell in a DEM
 
 *Description*: 
 Classifies hillslope zones based on slope, profile curvature, and plan curvature
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1633,8 +1517,6 @@ Classifies hillslope zones based on slope, profile curvature, and plan curvature
 *Description*: 
 Calculates percent of elevation range from a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1655,8 +1537,6 @@ Calculates percent of elevation range from a DEM
 *Description*: 
 Calculates a plan (contour) curvature raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1675,8 +1555,6 @@ Calculates a plan (contour) curvature raster from an input DEM
 
 *Description*: 
 Plots profiles from digital elevation models
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1697,8 +1575,6 @@ Plots profiles from digital elevation models
 *Description*: 
 Calculates a profile curvature raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1717,8 +1593,6 @@ Calculates a profile curvature raster from an input DEM
 
 *Description*: 
 Calculates relative aspect (relative to a user-specified direction) from an input DEM
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1739,8 +1613,6 @@ Calculates relative aspect (relative to a user-specified direction) from an inpu
 
 *Description*: 
 Calculates the relative stream power index
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1763,8 +1635,6 @@ Calculates the relative stream power index
 *Description*: 
 Calculates the relative topographic position index from a DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1785,8 +1655,6 @@ Calculates the relative topographic position index from a DEM
 
 *Description*: 
 Removes off-terrain objects from a raster digital elevation model (DEM)
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1809,8 +1677,6 @@ Removes off-terrain objects from a raster digital elevation model (DEM)
 *Description*: 
 Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1829,8 +1695,6 @@ Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
 
 *Description*: 
 Calculates the sediment transport index
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1855,8 +1719,6 @@ Calculates the sediment transport index
 *Description*: 
 Calculates a slope raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1875,8 +1737,6 @@ Calculates a slope raster from an input DEM
 
 *Description*: 
 Creates a slope vs. elevation plot for one or more DEMs
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1898,8 +1758,6 @@ Creates a slope vs. elevation plot for one or more DEMs
 *Description*: 
 Calculates a tangential curvature raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1919,8 +1777,6 @@ Calculates a tangential curvature raster from an input DEM
 *Description*: 
 Calculates a total curvature raster from an input DEM
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1939,8 +1795,6 @@ Calculates a total curvature raster from an input DEM
 
 *Description*: 
 Identifies the viewshed for a point or set of points
-
-*Toolbox*: Geomorphometric Analysis
 
 *Parameters*:
 
@@ -1963,8 +1817,6 @@ Identifies the viewshed for a point or set of points
 *Description*: 
 Calculates the topographic wetness index, Ln(A / tan(slope))
 
-*Toolbox*: Geomorphometric Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -1985,8 +1837,6 @@ Calculates the topographic wetness index, Ln(A / tan(slope))
 *Description*: 
 Measures the average slope gradient from each grid cell to all upslope divide cells
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2004,8 +1854,6 @@ Measures the average slope gradient from each grid cell to all upslope divide ce
 
 *Description*: 
 Measures the average length of all upslope flowpaths draining each grid cell
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2025,8 +1873,6 @@ Measures the average length of all upslope flowpaths draining each grid cell
 *Description*: 
 Identifies drainage basins that drain to the DEM edge
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2045,8 +1891,6 @@ Identifies drainage basins that drain to the DEM edge
 
 *Description*: 
 Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2068,8 +1912,6 @@ Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This 
 *Description*: 
 Removes single-cell pits from an input DEM by breaching
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2087,8 +1929,6 @@ Removes single-cell pits from an input DEM by breaching
 
 *Description*: 
 Calculates a D8 flow accumulation raster from an input DEM
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2116,8 +1956,6 @@ Calculates a D8 flow accumulation raster from an input DEM
 *Description*: 
 Performs a D8 mass flux calculation
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2140,8 +1978,6 @@ Performs a D8 mass flux calculation
 *Description*: 
 Calculates a D8 flow pointer raster from an input DEM
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2160,8 +1996,6 @@ Calculates a D8 flow pointer raster from an input DEM
 
 *Description*: 
 Calculates a D-infinity flow accumulation raster from an input DEM
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2189,8 +2023,6 @@ Calculates a D-infinity flow accumulation raster from an input DEM
 *Description*: 
 Performs a D-infinity mass flux calculation
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2213,8 +2045,6 @@ Performs a D-infinity mass flux calculation
 *Description*: 
 Calculates a D-infinity flow pointer (flow direction) raster from an input DEM
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2232,8 +2062,6 @@ Calculates a D-infinity flow pointer (flow direction) raster from an input DEM
 
 *Description*: 
 Measures the depth of sinks (depressions) in a DEM
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2254,8 +2082,6 @@ Measures the depth of sinks (depressions) in a DEM
 *Description*: 
 Measures distance to the nearest downslope stream cell
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2275,8 +2101,6 @@ Measures distance to the nearest downslope stream cell
 
 *Description*: 
 Calculates the downslope flowpath length from each cell to basin outlet
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2304,8 +2128,6 @@ Calculates the downslope flowpath length from each cell to basin outlet
 *Description*: 
 Calculates the elevation of cells above the nearest downslope stream cell
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2325,8 +2147,6 @@ Calculates the elevation of cells above the nearest downslope stream cell
 
 *Description*: 
 Calculates an FD8 flow accumulation raster from an input DEM
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2357,8 +2177,6 @@ Calculates an FD8 flow accumulation raster from an input DEM
 *Description*: 
 Calculates an FD8 flow pointer raster from an input DEM
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2376,8 +2194,6 @@ Calculates an FD8 flow pointer raster from an input DEM
 
 *Description*: 
 Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2399,8 +2215,6 @@ Fills all of the depressions in a DEM. Depression breaching should be preferred 
 *Description*: 
 Raises pit cells to the elevation of their lowest neighbour
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2419,8 +2233,6 @@ Raises pit cells to the elevation of their lowest neighbour
 *Description*: 
 Finds grid cells with no downslope neighbours
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2438,8 +2250,6 @@ Finds grid cells with no downslope neighbours
 
 *Description*: 
 Finds areas of parallel flow in D8 flow direction rasters
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2464,8 +2274,6 @@ Finds areas of parallel flow in D8 flow direction rasters
 *Description*: 
 Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2483,8 +2291,6 @@ Assigns each DEM grid cell its order in the sequence of inundations that are enc
 
 *Description*: 
 Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2512,8 +2318,6 @@ Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-a
 *Description*: 
 Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2532,8 +2336,6 @@ Calculates the local maximum absolute difference in downslope flowpath length, u
 
 *Description*: 
 Identifies the individual hillslopes draining to each link in a stream network
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2556,8 +2358,6 @@ Identifies the individual hillslopes draining to each link in a stream network
 *Description*: 
 Divides a landscape into nearly equal sized drainage basins (i.e. watersheds)
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2576,8 +2376,6 @@ Divides a landscape into nearly equal sized drainage basins (i.e. watersheds)
 
 *Description*: 
 Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2599,8 +2397,6 @@ Moves outlet points used to specify points of interest in a watershedding operat
 
 *Description*: 
 Measures the maximum length of all upslope flowpaths draining each grid cell
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2624,8 +2420,6 @@ Measures the maximum length of all upslope flowpaths draining each grid cell
 *Description*: 
 Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2643,8 +2437,6 @@ Computes the number of inflowing neighbours to each cell in an input DEM based o
 
 *Description*: 
 Calculates a stochastic Rho8 flow pointer raster from an input DEM
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2665,8 +2457,6 @@ Calculates a stochastic Rho8 flow pointer raster from an input DEM
 *Description*: 
 Identifies the depressions in a DEM, giving each feature a unique identifier
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2685,8 +2475,6 @@ Identifies the depressions in a DEM, giving each feature a unique identifier
 
 *Description*: 
 Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2709,8 +2497,6 @@ Moves outlet points used to specify points of interest in a watershedding operat
 *Description*: 
 Identifies Strahler-order basins from an input stream network
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2732,8 +2518,6 @@ Identifies Strahler-order basins from an input stream network
 *Description*: 
 Identifies the catchments, or sub-basin, draining to each link in a stream network
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2754,8 +2538,6 @@ Identifies the catchments, or sub-basin, draining to each link in a stream netwo
 
 *Description*: 
 Traces downslope flowpaths from one or more target sites (i.e. seed points)
-
-*Toolbox*: Hydrological Analysis
 
 *Parameters*:
 
@@ -2779,8 +2561,6 @@ Traces downslope flowpaths from one or more target sites (i.e. seed points)
 *Description*: 
 Identifies the watershed, or drainage basin, draining to a set of target cells
 
-*Toolbox*: Hydrological Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2803,8 +2583,6 @@ Identifies the watershed, or drainage basin, draining to a set of target cells
 *Description*: 
 A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2824,8 +2602,6 @@ A closing is a mathematical morphology operating involving an erosion (min filte
 
 *Description*: 
 Creates a colour-composite image from three bands of multispectral imagery
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -2854,8 +2630,6 @@ Creates a colour-composite image from three bands of multispectral imagery
 *Description*: 
 Reflects an image in the vertical or horizontal axis
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2876,8 +2650,6 @@ Reflects an image in the vertical or horizontal axis
 *Description*: 
 Transforms an input image (summed area table) into its integral image equivalent
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2895,8 +2667,6 @@ Transforms an input image (summed area table) into its integral image equivalent
 
 *Description*: 
 Performs a k-means clustering operation on a multi-spectral dataset
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -2925,8 +2695,6 @@ Performs a k-means clustering operation on a multi-spectral dataset
 *Description*: 
 Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2944,8 +2712,6 @@ Performs line thinning a on Boolean raster image; intended to be used with the R
 
 *Description*: 
 Performs a modified k-means clustering operation on a multi-spectral dataset
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -2972,8 +2738,6 @@ Performs a modified k-means clustering operation on a multi-spectral dataset
 *Description*: 
 Mosaics two or more images together
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -2993,8 +2757,6 @@ Mosaics two or more images together
 
 *Description*: 
 Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -3023,8 +2785,6 @@ Calculates the normalized difference vegetation index (NDVI) from near-infrared 
 *Description*: 
 An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3045,8 +2805,6 @@ An opening is a mathematical morphology operating involving a dilation (max filt
 *Description*: 
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3065,8 +2823,6 @@ Removes the spurs (pruning operation) from a Boolean line image.; intended to be
 
 *Description*: 
 Resamples one or more input images into a destination image
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -3087,8 +2843,6 @@ Resamples one or more input images into a destination image
 
 *Description*: 
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -3123,8 +2877,6 @@ Converts red, green, and blue (RGB) images into intensity, hue, and saturation (
 *Description*: 
 This tool splits an RGB colour composite image into seperate multispectral images
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3143,8 +2895,6 @@ This tool splits an RGB colour composite image into seperate multispectral image
 *Description*: 
 Thickens single-cell wide lines within a raster image
 
-*Toolbox*: Image Processing Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3162,8 +2912,6 @@ Thickens single-cell wide lines within a raster image
 
 *Description*: 
 Performs either a white or black top-hat transform on an input image
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -3185,8 +2933,6 @@ Performs either a white or black top-hat transform on an input image
 
 *Description*: 
 Performs a write function memory insertion for single-band multi-date change detection
-
-*Toolbox*: Image Processing Tools
 
 *Parameters*:
 
@@ -3210,8 +2956,6 @@ Performs a write function memory insertion for single-band multi-date change det
 *Description*: 
 Performs an adaptive filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3232,8 +2976,6 @@ Performs an adaptive filter on an image
 
 *Description*: 
 A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998)
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3256,8 +2998,6 @@ A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi a
 *Description*: 
 Performs a conservative-smoothing filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3277,8 +3017,6 @@ Performs a conservative-smoothing filter on an image
 
 *Description*: 
 Performs a Difference of Gaussian (DoG) filter on an image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3301,8 +3039,6 @@ Performs a Difference of Gaussian (DoG) filter on an image
 *Description*: 
 Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3322,8 +3058,6 @@ Assigns each cell in the output grid the number of different values in a moving 
 
 *Description*: 
 Performs an emboss filter on an image, similar to a hillshade operation
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3346,8 +3080,6 @@ Performs an emboss filter on an image, similar to a hillshade operation
 *Description*: 
 Performs a Gaussian filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3366,8 +3098,6 @@ Performs a Gaussian filter on an image
 
 *Description*: 
 Performs a high-pass filter on an input image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3388,8 +3118,6 @@ Performs a high-pass filter on an input image
 
 *Description*: 
 A k-nearest mean filter is a type of edge-preserving smoothing filter
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3416,8 +3144,6 @@ A k-nearest mean filter is a type of edge-preserving smoothing filter
 *Description*: 
 Performs a Laplacian filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3440,8 +3166,6 @@ Performs a Laplacian filter on an image
 *Description*: 
 Performs a Laplacian-of-Gaussian (LoG) filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3460,8 +3184,6 @@ Performs a Laplacian-of-Gaussian (LoG) filter on an image
 
 *Description*: 
 Performs a Lee (Sigma) smoothing filter on an image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3491,8 +3213,6 @@ Performs a Lee (Sigma) smoothing filter on an image
 *Description*: 
 Performs a line-detection filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3516,8 +3236,6 @@ Performs a line-detection filter on an image
 *Description*: 
 Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3537,8 +3255,6 @@ Assigns each cell in the output grid the most frequently occurring value (mode) 
 
 *Description*: 
 Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3560,8 +3276,6 @@ Assigns each cell in the output grid the maximum value in a moving window centre
 *Description*: 
 Performs a mean filter (low-pass filter) on an input image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3581,8 +3295,6 @@ Performs a mean filter (low-pass filter) on an input image
 
 *Description*: 
 Performs a median filter on an input image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3605,8 +3317,6 @@ Performs a median filter on an input image
 *Description*: 
 Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3627,8 +3337,6 @@ Assigns each cell in the output grid the minimum value in a moving window centre
 *Description*: 
 Performs an olympic smoothing filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3648,8 +3356,6 @@ Performs an olympic smoothing filter on an image
 
 *Description*: 
 Performs a percentile filter on an input image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3672,8 +3378,6 @@ Performs a percentile filter on an input image
 *Description*: 
 Performs a Prewitt edge-detection filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3692,8 +3396,6 @@ Performs a Prewitt edge-detection filter on an image
 
 *Description*: 
 Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3715,8 +3417,6 @@ Assigns each cell in the output grid the range of values in a moving window cent
 *Description*: 
 Performs a Robert's cross edge-detection filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3736,8 +3436,6 @@ Performs a Robert's cross edge-detection filter on an image
 *Description*: 
 Performs a Scharr edge-detection filter on an image
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3756,8 +3454,6 @@ Performs a Scharr edge-detection filter on an image
 
 *Description*: 
 Performs a Sobel edge-detection filter on an image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3779,8 +3475,6 @@ Performs a Sobel edge-detection filter on an image
 *Description*: 
 Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster
 
-*Toolbox*: Image Processing Tools/Filters
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3800,8 +3494,6 @@ Assigns each cell in the output grid the standard deviation of values in a movin
 
 *Description*: 
 Performs a total filter on an input image
-
-*Toolbox*: Image Processing Tools/Filters
 
 *Parameters*:
 
@@ -3824,8 +3516,6 @@ Performs a total filter on an input image
 *Description*: 
 Performs a balance contrast enhancement on a colour-composite image of multispectral data
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3845,8 +3535,6 @@ Performs a balance contrast enhancement on a colour-composite image of multispec
 
 *Description*: 
 Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data
-
-*Toolbox*: Image Processing Tools/Image Enhancement
 
 *Parameters*:
 
@@ -3869,8 +3557,6 @@ Performs a direct decorrelation stretch enhancement on a colour-composite image 
 *Description*: 
 Performs a sigmoidal contrast stretch on input images
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3889,8 +3575,6 @@ Performs a sigmoidal contrast stretch on input images
 
 *Description*: 
 Performs a histogram equalization contrast enhancment on an image
-
-*Toolbox*: Image Processing Tools/Image Enhancement
 
 *Parameters*:
 
@@ -3912,8 +3596,6 @@ Performs a histogram equalization contrast enhancment on an image
 *Description*: 
 Alters the statistical distribution of a raster image matching it to a specified PDF
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3934,8 +3616,6 @@ Alters the statistical distribution of a raster image matching it to a specified
 *Description*: 
 This tool alters the cumulative distribution function of a raster image to that of another image
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -3955,8 +3635,6 @@ This tool alters the cumulative distribution function of a raster image to that 
 
 *Description*: 
 Performs a min-max contrast stretch on an input greytone image
-
-*Toolbox*: Image Processing Tools/Image Enhancement
 
 *Parameters*:
 
@@ -3979,8 +3657,6 @@ Performs a min-max contrast stretch on an input greytone image
 
 *Description*: 
 Increases the spatial resolution of image data by combining multispectral bands with panchromatic data
-
-*Toolbox*: Image Processing Tools/Image Enhancement
 
 *Parameters*:
 
@@ -4014,8 +3690,6 @@ Increases the spatial resolution of image data by combining multispectral bands 
 *Description*: 
 Performs a percentage linear contrast stretch on input images
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4039,8 +3713,6 @@ Performs a percentage linear contrast stretch on input images
 *Description*: 
 Performs a sigmoidal contrast stretch on input images
 
-*Toolbox*: Image Processing Tools/Image Enhancement
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4062,8 +3734,6 @@ Performs a sigmoidal contrast stretch on input images
 
 *Description*: 
 Performs a standard-deviation contrast stretch on input images
-
-*Toolbox*: Image Processing Tools/Image Enhancement
 
 *Parameters*:
 
@@ -4087,8 +3757,6 @@ Performs a standard-deviation contrast stretch on input images
 *Description*: 
 Creates a block-maximum raster from an input LAS file
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4110,8 +3778,6 @@ Creates a block-maximum raster from an input LAS file
 
 *Description*: 
 Creates a block-minimum raster from an input LAS file
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4135,8 +3801,6 @@ Creates a block-minimum raster from an input LAS file
 *Description*: 
 Removes points in a LAS file with scan angles greater than a threshold
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4157,8 +3821,6 @@ Removes points in a LAS file with scan angles greater than a threshold
 *Description*: 
 Identifies points along a flightline's edge in a LAS file
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4176,8 +3838,6 @@ Identifies points along a flightline's edge in a LAS file
 
 *Description*: 
 Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4202,8 +3862,6 @@ Reads a LiDAR (LAS) point file and outputs a raster containing the number of ove
 *Description*: 
 Converts one or more LAS files into ASCII text files
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4220,8 +3878,6 @@ Converts one or more LAS files into ASCII text files
 
 *Description*: 
 Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4242,8 +3898,6 @@ Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input im
 
 *Description*: 
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4279,8 +3933,6 @@ Outputs all of the points within a LiDAR (LAS) point file that lie between a spe
 *Description*: 
 Identifies ground points within LiDAR dataset using a slope-based method
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4302,8 +3954,6 @@ Identifies ground points within LiDAR dataset using a slope-based method
 
 *Description*: 
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4329,8 +3979,6 @@ Calculates a hillshade value for points within a LAS file and stores these data 
 *Description*: 
 Creates a histogram from LiDAR data
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4351,8 +3999,6 @@ Creates a histogram from LiDAR data
 
 *Description*: 
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4387,8 +4033,6 @@ Interpolates LAS files using an inverse-distance weighted (IDW) scheme
 *Description*: 
 Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4411,8 +4055,6 @@ Prints information about a LiDAR (LAS) dataset, including header, point return f
 *Description*: 
 Joins multiple LiDAR (LAS) files into a single LAS file
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4430,8 +4072,6 @@ Joins multiple LiDAR (LAS) files into a single LAS file
 
 *Description*: 
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4452,8 +4092,6 @@ Performs a kappa index of agreement (KIA) analysis on the classifications of two
 
 *Description*: 
 Grids LAS files using nearest-neighbour scheme
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4487,8 +4125,6 @@ Grids LAS files using nearest-neighbour scheme
 *Description*: 
 Calculates the spatial pattern of point density for a LiDAR data set
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4519,8 +4155,6 @@ Calculates the spatial pattern of point density for a LiDAR data set
 *Description*: 
 Creates several rasters summarizing the distribution of LAS point data
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4545,8 +4179,6 @@ Creates several rasters summarizing the distribution of LAS point data
 *Description*: 
 Removes outliers (high and low points) in a LiDAR point cloud
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4567,8 +4199,6 @@ Removes outliers (high and low points) in a LiDAR point cloud
 
 *Description*: 
 Segments a LiDAR point cloud based on normal vectors
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4592,8 +4222,6 @@ Segments a LiDAR point cloud based on normal vectors
 
 *Description*: 
 Identifies ground points within LiDAR point clouds using a segmentation based approach
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4619,8 +4247,6 @@ Identifies ground points within LiDAR point clouds using a segmentation based ap
 *Description*: 
 Tiles a LiDAR LAS file into multiple LAS files
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4643,8 +4269,6 @@ Tiles a LiDAR LAS file into multiple LAS files
 *Description*: 
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy
 
-*Toolbox*: LiDAR Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4664,8 +4288,6 @@ Performs a white top-hat transform on a Lidar dataset; as an estimate of height 
 
 *Description*: 
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field
-
-*Toolbox*: LiDAR Tools
 
 *Parameters*:
 
@@ -4687,8 +4309,6 @@ Calculates normal vectors for points within a LAS file and stores these data (XY
 *Description*: 
 Calculates the absolute value of every cell in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4706,8 +4326,6 @@ Calculates the absolute value of every cell in a raster
 
 *Description*: 
 Performs an addition operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4728,8 +4346,6 @@ Performs an addition operation on two rasters or a raster and a constant value
 *Description*: 
 Performs a logical AND operator on two Boolean raster images
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4748,8 +4364,6 @@ Performs a logical AND operator on two Boolean raster images
 
 *Description*: 
 Performs an analysis of variance (ANOVA) test on a raster dataset
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4770,8 +4384,6 @@ Performs an analysis of variance (ANOVA) test on a raster dataset
 *Description*: 
 Returns the inverse cosine (arccos) of each values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4789,8 +4401,6 @@ Returns the inverse cosine (arccos) of each values in a raster
 
 *Description*: 
 Returns the inverse sine (arcsin) of each values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4810,8 +4420,6 @@ Returns the inverse sine (arcsin) of each values in a raster
 *Description*: 
 Returns the inverse tangent (arctan) of each values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4829,8 +4437,6 @@ Returns the inverse tangent (arctan) of each values in a raster
 
 *Description*: 
 Returns the 2-argument inverse tangent (atan2)
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4851,8 +4457,6 @@ Returns the 2-argument inverse tangent (atan2)
 *Description*: 
 Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4870,8 +4474,6 @@ Returns the smallest (closest to negative infinity) value that is greater than o
 
 *Description*: 
 Returns the cosine (cos) of each values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4891,8 +4493,6 @@ Returns the cosine (cos) of each values in a raster
 *Description*: 
 Returns the hyperbolic cosine (cosh) of each values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4910,8 +4510,6 @@ Returns the hyperbolic cosine (cosh) of each values in a raster
 
 *Description*: 
 Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -4934,8 +4532,6 @@ Calculates the Crispness Index, which is used to quantify how crisp (or converse
 *Description*: 
 Performs a cross-tabulation on two categorical images
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4956,8 +4552,6 @@ Performs a cross-tabulation on two categorical images
 *Description*: 
 Converts a raster image to its cumulative distribution function
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4976,8 +4570,6 @@ Converts a raster image to its cumulative distribution function
 *Description*: 
 Decreases the values of each grid cell in an input raster by 1.0
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -4995,8 +4587,6 @@ Decreases the values of each grid cell in an input raster by 1.0
 
 *Description*: 
 Performs a division operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5017,8 +4607,6 @@ Performs a division operation on two rasters or a raster and a constant value
 *Description*: 
 Performs a equal-to comparison operation on two rasters or a raster and a constant value
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5038,8 +4626,6 @@ Performs a equal-to comparison operation on two rasters or a raster and a consta
 *Description*: 
 Returns the exponential (base e) of values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5058,8 +4644,6 @@ Returns the exponential (base e) of values in a raster
 *Description*: 
 Returns the exponential (base 2) of values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5077,8 +4661,6 @@ Returns the exponential (base 2) of values in a raster
 
 *Description*: 
 Extracts descriptive statistics for a group of patches in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5106,8 +4688,6 @@ Extracts descriptive statistics for a group of patches in a raster
 *Description*: 
 Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5125,8 +4705,6 @@ Returns the largest (closest to positive infinity) value that is less than or eq
 
 *Description*: 
 Performs a greater-than comparison operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5149,8 +4727,6 @@ Performs a greater-than comparison operation on two rasters or a raster and a co
 *Description*: 
 Performs Moran's I analysis on two or more input images
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5171,8 +4747,6 @@ Performs Moran's I analysis on two or more input images
 *Description*: 
 Performs image correlation on two or more input images
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5191,8 +4765,6 @@ Performs image correlation on two or more input images
 
 *Description*: 
 Performs image regression analysis on two input images
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5217,8 +4789,6 @@ Performs image regression analysis on two input images
 *Description*: 
 Increases the values of each grid cell in an input raster by 1.0
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5236,8 +4806,6 @@ Increases the values of each grid cell in an input raster by 1.0
 
 *Description*: 
 Performs an integer division operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5259,8 +4827,6 @@ Performs an integer division operation on two rasters or a raster and a constant
 *Description*: 
 Identifies NoData valued pixels in an image
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5278,8 +4844,6 @@ Identifies NoData valued pixels in an image
 
 *Description*: 
 Evaluates whether the values in a raster are normally distributed
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5303,8 +4867,6 @@ Evaluates whether the values in a raster are normally distributed
 *Description*: 
 Performs a kappa index of agreement (KIA) analysis on two categorical raster files
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5323,8 +4885,6 @@ Performs a kappa index of agreement (KIA) analysis on two categorical raster fil
 
 *Description*: 
 Performs a less-than comparison operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5347,8 +4907,6 @@ Performs a less-than comparison operation on two rasters or a raster and a const
 *Description*: 
 Returns the natural logarithm of values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5366,8 +4924,6 @@ Returns the natural logarithm of values in a raster
 
 *Description*: 
 Returns the base-10 logarithm of values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5387,8 +4943,6 @@ Returns the base-10 logarithm of values in a raster
 *Description*: 
 Returns the base-2 logarithm of values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5406,8 +4960,6 @@ Returns the base-2 logarithm of values in a raster
 
 *Description*: 
 Performs a MAX operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5428,8 +4980,6 @@ Performs a MAX operation on two rasters or a raster and a constant value
 *Description*: 
 Performs a MIN operation on two rasters or a raster and a constant value
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5448,8 +4998,6 @@ Performs a MIN operation on two rasters or a raster and a constant value
 
 *Description*: 
 Performs a modulo operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5470,8 +5018,6 @@ Performs a modulo operation on two rasters or a raster and a constant value
 *Description*: 
 Performs a multiplication operation on two rasters or a raster and a constant value
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5491,8 +5037,6 @@ Performs a multiplication operation on two rasters or a raster and a constant va
 *Description*: 
 Changes the sign of values in a raster or the 0-1 values of a Boolean raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5510,8 +5054,6 @@ Changes the sign of values in a raster or the 0-1 values of a Boolean raster
 
 *Description*: 
 Performs a logical NOT operator on two Boolean raster images
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5532,8 +5074,6 @@ Performs a logical NOT operator on two Boolean raster images
 *Description*: 
 Performs a not-equal-to comparison operation on two rasters or a raster and a constant value
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5552,8 +5092,6 @@ Performs a not-equal-to comparison operation on two rasters or a raster and a co
 
 *Description*: 
 Performs a logical OR operator on two Boolean raster images
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5574,8 +5112,6 @@ Performs a logical OR operator on two Boolean raster images
 *Description*: 
 Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5594,8 +5130,6 @@ Raises the values in grid cells of one rasters, or a constant value, by values i
 
 *Description*: 
 Transforms raster values into quantiles
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5616,8 +5150,6 @@ Transforms raster values into quantiles
 *Description*: 
 Creates an image containing random values
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5635,8 +5167,6 @@ Creates an image containing random values
 
 *Description*: 
 Creates an image containing randomly located sample grid cells with unique IDs
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5657,8 +5187,6 @@ Creates an image containing randomly located sample grid cells with unique IDs
 *Description*: 
 Creates a histogram from raster values
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5677,8 +5205,6 @@ Creates a histogram from raster values
 *Description*: 
 Measures a rasters average, standard deviation, num. non-nodata cells, and total
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5695,8 +5221,6 @@ Measures a rasters average, standard deviation, num. non-nodata cells, and total
 
 *Description*: 
 Returns the reciprocal (i.e. 1 / z) of values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5715,8 +5239,6 @@ Returns the reciprocal (i.e. 1 / z) of values in a raster
 
 *Description*: 
 Performs a min-max contrast stretch on an input greytone image
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5745,8 +5267,6 @@ Performs a min-max contrast stretch on an input greytone image
 *Description*: 
 Calculates the RMSE and other accuracy statistics
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5764,8 +5284,6 @@ Calculates the RMSE and other accuracy statistics
 
 *Description*: 
 Rounds the values in an input raster to the nearest integer value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5785,8 +5303,6 @@ Rounds the values in an input raster to the nearest integer value
 *Description*: 
 Returns the sine (sin) of each values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5804,8 +5320,6 @@ Returns the sine (sin) of each values in a raster
 
 *Description*: 
 Returns the hyperbolic sine (sinh) of each values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5825,8 +5339,6 @@ Returns the hyperbolic sine (sinh) of each values in a raster
 *Description*: 
 Squares the values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5845,8 +5357,6 @@ Squares the values in a raster
 *Description*: 
 Returns the square root of the values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5864,8 +5374,6 @@ Returns the square root of the values in a raster
 
 *Description*: 
 Performs a differencing operation on two rasters or a raster and a constant value
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5886,8 +5394,6 @@ Performs a differencing operation on two rasters or a raster and a constant valu
 *Description*: 
 Returns the tangent (tan) of each values in a raster
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5905,8 +5411,6 @@ Returns the tangent (tan) of each values in a raster
 
 *Description*: 
 Returns the hyperbolic tangent (tanh) of each values in a raster
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5926,8 +5430,6 @@ Returns the hyperbolic tangent (tanh) of each values in a raster
 *Description*: 
 Converts a raster from radians to degrees
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5945,8 +5447,6 @@ Converts a raster from radians to degrees
 
 *Description*: 
 Converts a raster from degrees to radians
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -5966,8 +5466,6 @@ Converts a raster from degrees to radians
 *Description*: 
 Truncates the values in a raster to the desired number of decimal places
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -5986,8 +5484,6 @@ Truncates the values in a raster to the desired number of decimal places
 
 *Description*: 
 Creates an image containing random values based on a turning-bands simulation
-
-*Toolbox*: Math and Stats Tools
 
 *Parameters*:
 
@@ -6010,8 +5506,6 @@ Creates an image containing random values based on a turning-bands simulation
 *Description*: 
 Performs a logical XOR operator on two Boolean raster images
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6031,8 +5525,6 @@ Performs a logical XOR operator on two Boolean raster images
 *Description*: 
 Standardizes the values in an input raster by converting to z-scores
 
-*Toolbox*: Math and Stats Tools
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6051,8 +5543,6 @@ Standardizes the values in an input raster by converting to z-scores
 
 *Description*: 
 Calculates the distance of stream grid cells to the channel network outlet cell
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6079,8 +5569,6 @@ Calculates the distance of stream grid cells to the channel network outlet cell
 *Description*: 
 Extracts stream grid cells from a flow accumulation raster
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6101,8 +5589,6 @@ Extracts stream grid cells from a flow accumulation raster
 
 *Description*: 
 Identifies potential valley bottom grid cells based on local topolography alone
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6132,8 +5618,6 @@ Identifies potential valley bottom grid cells based on local topolography alone
 *Description*: 
 Calculates the distance to the furthest upstream channel head for each stream cell
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6158,8 +5642,6 @@ Calculates the distance to the furthest upstream channel head for each stream ce
 
 *Description*: 
 Finds the main stem, based on stream lengths, of each stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6186,8 +5668,6 @@ Finds the main stem, based on stream lengths, of each stream network
 *Description*: 
 Assigns the Hack stream order to each tributary in a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6212,8 +5692,6 @@ Assigns the Hack stream order to each tributary in a stream network
 
 *Description*: 
 Assigns the Horton stream order to each tributary in a stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6240,8 +5718,6 @@ Assigns the Horton stream order to each tributary in a stream network
 *Description*: 
 Calculates the total length of channels upstream
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6267,8 +5743,6 @@ Calculates the total length of channels upstream
 *Description*: 
 Plots the stream longitudinal profiles for one or more rivers
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6290,8 +5764,6 @@ Plots the stream longitudinal profiles for one or more rivers
 
 *Description*: 
 Plots the longitudinal profiles from flow-paths initiating from a set of vector points
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6315,8 +5787,6 @@ Plots the longitudinal profiles from flow-paths initiating from a set of vector 
 *Description*: 
 Removes short first-order streams from a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6338,8 +5808,6 @@ Removes short first-order streams from a stream network
 
 *Description*: 
 Assigns the Shreve stream magnitude to each link in a stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6366,8 +5834,6 @@ Assigns the Shreve stream magnitude to each link in a stream network
 *Description*: 
 Assigns the Strahler stream order to each link in a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6392,8 +5858,6 @@ Assigns the Strahler stream order to each link in a stream network
 
 *Description*: 
 Identifies the exterior/interior links and nodes in a stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6420,8 +5884,6 @@ Identifies the exterior/interior links and nodes in a stream network
 *Description*: 
 Assigns a unique identifier to each link in a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6446,8 +5908,6 @@ Assigns a unique identifier to each link in a stream network
 
 *Description*: 
 Estimates the length of each link (or tributary) in a stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6474,8 +5934,6 @@ Estimates the length of each link (or tributary) in a stream network
 
 *Description*: 
 Estimates the average slope of each link (or tributary) in a stream network
-
-*Toolbox*: Stream Network Analysis
 
 *Parameters*:
 
@@ -6504,8 +5962,6 @@ Estimates the average slope of each link (or tributary) in a stream network
 *Description*: 
 Estimates the slope of each grid cell in a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6533,8 +5989,6 @@ Estimates the slope of each grid cell in a stream network
 *Description*: 
 Assigns each link in a stream network its topological order
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6560,8 +6014,6 @@ Assigns each link in a stream network its topological order
 *Description*: 
 Assigns a unique identifier to each tributary in a stream network
 
-*Toolbox*: Stream Network Analysis
-
 *Parameters*:
 
 **Flag**             **Description**
@@ -6581,6 +6033,7 @@ Assigns a unique identifier to each tributary in a stream network
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
 ```
+
 
 
 

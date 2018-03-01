@@ -95,7 +95,7 @@ impl MaxElevationDeviation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep -out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep --out_mag=DEVmax_mag.dep --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
     
         MaxElevationDeviation { 
             name: name, 
@@ -290,7 +290,7 @@ impl WhiteboxTool for MaxElevationDeviation {
         
         let num_loops = (max_scale - min_scale) / step;
         let mut loop_num = 0;
-        for midpoint in (min_scale..max_scale).filter(|s| s % step == 0) { // .step_by(step) { once step_by is stabilized
+        for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) { // .step_by(step) { once step_by is stabilized
             loop_num += 1;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -310,14 +310,8 @@ impl WhiteboxTool for MaxElevationDeviation {
                         if y1 < 0 {
                             y1 = 0;
                         }
-                        if y1 >= rows {
-                            y1 = rows - 1;
-                        }
 
                         y2 = row + midpoint;
-                        if y2 < 0 {
-                            y2 = 0;
-                        }
                         if y2 >= rows {
                             y2 = rows - 1;
                         }
@@ -329,14 +323,8 @@ impl WhiteboxTool for MaxElevationDeviation {
                                 if x1 < 0 {
                                     x1 = 0;
                                 }
-                                if x1 >= columns {
-                                    x1 = columns - 1;
-                                }
 
                                 x2 = col + midpoint;
-                                if x2 < 0 {
-                                    x2 = 0;
-                                }
                                 if x2 >= columns {
                                     x2 = columns - 1;
                                 }

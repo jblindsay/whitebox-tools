@@ -210,7 +210,7 @@ impl WhiteboxTool for FillMissingData {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Finding OTO edge cells: {}%", progress);
+                    println!("Finding edge cells: {}%", progress);
                     old_progress = progress;
                 }
             }

@@ -159,7 +159,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 274 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 277 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -189,7 +189,10 @@ The library currently contains the following 274 tools, which are each grouped b
 - ***MaxBranchLength***: Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
 - ***MaxDownslopeElevChange***: Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
 - ***MaxElevationDeviation***: Calculates the maximum elevation deviation over a range of spatial scales.
+- ***MaxElevDevSignature***: Calculates the maximum elevation deviation over a range of spatial scales and for a set of points.
 - ***MinDownslopeElevChange***: Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
+- ***MultiscaleRoughness***: Calculates surface roughness over a range of spatial scales.
+- ***MultiscaleRoughnessSignature***: Calculates the surface roughness for points over a range of spatial scales.
 - ***MultiscaleTopographicPositionImage***: Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 - ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 - ***NumDownslopeNeighbours***: Calculates the number of downslope neighbours to each grid cell in a DEM.
@@ -198,7 +201,7 @@ The library currently contains the following 274 tools, which are each grouped b
 - ***PercentElevRange***: Calculates percent of elevation range from a DEM.
 - ***PlanCurvature***: Calculates a plan (contour) curvature raster from an input DEM.
 - ***ProfileCurvature***: Calculates a profile curvature raster from an input DEM.
-- ***Profile***: Plots profiles from digital elevation models.
+- ***Profile***: Plots profiles from digital surface models.
 - ***RelativeAspect***: Calculates relative aspect (relative to a user-specified direction) from an input DEM.
 - ***RelativeStreamPowerIndex***: Calculates the relative stream power index.
 - ***RelativeTopographicPosition***: Calculates the relative topographic position index from a DEM.
