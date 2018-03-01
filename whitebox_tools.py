@@ -1250,6 +1250,29 @@ class WhiteboxTools(object):
         # returns 1 if error
         return self.run_tool('MaxDownslopeElevChange', args, callback)
 
+    def max_elev_dev_signature(self, dem, points, output, min_scale, max_scale, step=10, callback=default_callback):
+        """ Calculates the maximum elevation deviation over a range of spatial scales and for a set of points.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        points -- Input vector points file. 
+        output -- Output HTML file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        max_scale -- Maximum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--points='{}'".format(points))
+        args.append("--output='{}'".format(output))
+        args.append("--min_scale='{}'".format(min_scale))
+        args.append("--max_scale='{}'".format(max_scale))
+        args.append("--step={}".format(step))
+        # returns 1 if error
+        return self.run_tool('MaxElevDevSignature', args, callback)
+
     def max_elevation_deviation(self, dem, out_mag, out_scale, min_scale, max_scale, step=10, callback=default_callback):
         """ Calculates the maximum elevation deviation over a range of spatial scales.
 
@@ -1287,6 +1310,52 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         # returns 1 if error
         return self.run_tool('MinDownslopeElevChange', args, callback)
+
+    def multiscale_roughness(self, dem, out_mag, out_scale, max_scale, min_scale=1, step=1, callback=default_callback):
+        """ Calculates surface roughness over a range of spatial scales.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        out_mag -- Output raster roughness magnitude file. 
+        out_scale -- Output raster roughness scale file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        max_scale -- Maximum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--out_mag='{}'".format(out_mag))
+        args.append("--out_scale='{}'".format(out_scale))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--max_scale='{}'".format(max_scale))
+        args.append("--step={}".format(step))
+        # returns 1 if error
+        return self.run_tool('MultiscaleRoughness', args, callback)
+
+    def multiscale_roughness_signature(self, dem, points, output, max_scale, min_scale=1, step=1, callback=default_callback):
+        """ Calculates the surface roughness for points over a range of spatial scales.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        points -- Input vector points file. 
+        output -- Output HTML file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        max_scale -- Maximum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--points='{}'".format(points))
+        args.append("--output='{}'".format(output))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--max_scale='{}'".format(max_scale))
+        args.append("--step={}".format(step))
+        # returns 1 if error
+        return self.run_tool('MultiscaleRoughnessSignature', args, callback)
 
     def multiscale_topographic_position_image(self, local, meso, broad, output, lightness=1.2, callback=default_callback):
         """ Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
@@ -1398,19 +1467,19 @@ class WhiteboxTools(object):
         # returns 1 if error
         return self.run_tool('PlanCurvature', args, callback)
 
-    def profile(self, lines, dem, output, callback=default_callback):
-        """ Plots profiles from digital elevation models.
+    def profile(self, lines, surface, output, callback=default_callback):
+        """ Plots profiles from digital surface models.
 
         Keyword arguments:
 
-        lines -- Input vector points file. 
+        lines -- Input vector line file. 
         surface -- Input raster surface file. 
         output -- Output HTML file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--lines='{}'".format(lines))
-        args.append("--surface='{}'".format(dem))
+        args.append("--surface='{}'".format(surface))
         args.append("--output='{}'".format(output))
         return self.run_tool('Profile', args, callback)  # returns 1 if error
 
@@ -3500,7 +3569,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         inputs -- Input LiDAR files. 
-callback -- Custom functon for handling tool text outputs.
+        callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--inputs='{}'".format(inputs))
@@ -3797,6 +3866,24 @@ callback -- Custom functon for handling tool text outputs.
             args.append("--predom_class")
         # returns 1 if error
         return self.run_tool('LidarPointStats', args, callback)
+
+    def lidar_remove_duplicates(self, input, output, include_z=False, callback=default_callback):
+        """ Removes duplicate points from a LiDAR data set.
+
+        Keyword arguments:
+
+        input -- Input LiDAR file. 
+        output -- Output LiDAR file. 
+        include_z -- Include z-values in point comparison?. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(input))
+        args.append("--output='{}'".format(output))
+        if include_z:
+            args.append("--include_z")
+        # returns 1 if error
+        return self.run_tool('LidarRemoveDuplicates', args, callback)
 
     def lidar_remove_outliers(self, input, output, radius=2.0, elev_diff=50.0, callback=default_callback):
         """ Removes outliers (high and low points) in a LiDAR point cloud.
@@ -4673,7 +4760,7 @@ callback -- Custom functon for handling tool text outputs.
         Keyword arguments:
 
         input -- Input raster file. 
-callback -- Custom functon for handling tool text outputs.
+        callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(input))

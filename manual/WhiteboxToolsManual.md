@@ -342,8 +342,7 @@ The library currently contains the following 274 tools, which are each grouped b
 
 #### 6.1.1 ConvertNodataToZero
 
-*Description*: 
-Converts nodata values in a raster to zero
+Converts nodata values in a raster to zero.
 
 *Parameters*:
 
@@ -352,16 +351,20 @@ Converts nodata values in a raster to zero
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ConvertNodataToZero -v ^
 --wd="/path/to/data/" --input=in.dep -o=NewRaster.dep 
+
+
 ```
+
+*Python Function Name*: ```convert_nodata_to_zero```
+
 
 #### 6.1.2 ConvertRasterFormat
 
-*Description*: 
-Converts raster data from one format to another
+Converts raster data from one format to another.
 
 *Parameters*:
 
@@ -370,16 +373,20 @@ Converts raster data from one format to another
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ConvertRasterFormat -v ^
 --wd="/path/to/data/" --input=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```convert_raster_format```
+
 
 #### 6.1.3 NewRasterFromBase
 
-*Description*: 
-Creates a new raster using a base image
+Creates a new raster using a base image.
 
 *Parameters*:
 
@@ -391,7 +398,7 @@ Creates a new raster using a base image
 -\-data_type         Output raster data type; options include 'double' (64-bit), 'float' (32-bit), 
                      and 'integer' (signed 16-bit) (default is 'float') 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NewRasterFromBase -v ^
 --wd="/path/to/data/" --base=base.dep -o=NewRaster.dep ^
@@ -399,12 +406,16 @@ Creates a new raster using a base image
 >>./whitebox_tools ^
 -r=NewRasterFromBase -v --wd="/path/to/data/" --base=base.dep ^
 -o=NewRaster.dep --value=nodata 
+
+
 ```
+
+*Python Function Name*: ```new_raster_from_base```
+
 
 #### 6.1.4 SetNodataValue
 
-*Description*: 
-Assign a specified value in an input image to the NoData value
+Assign a specified value in an input image to the NoData value.
 
 *Parameters*:
 
@@ -414,17 +425,21 @@ Assign a specified value in an input image to the NoData value
 -o, -\-output        Output raster file
 -\-back_value        Background value to set to nodata
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SetNodataValue -v --wd="/path/to/data/" ^
 -i=in.dep -o=newRaster.dep --back_value=1.0 
+
+
 ```
+
+*Python Function Name*: ```set_nodata_value```
+
 ### 6.2 GIS Analysis
 
 #### 6.2.1 AggregateRaster
 
-*Description*: 
-Aggregates a raster to a lower resolution
+Aggregates a raster to a lower resolution.
 
 *Parameters*:
 
@@ -435,17 +450,21 @@ Aggregates a raster to a lower resolution
 -\-agg_factor        Aggregation factor, in pixels
 -\-type              Statistic used to fill output pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AggregateRaster -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep ^
 --output_text 
+
+
 ```
+
+*Python Function Name*: ```aggregate_raster```
+
 
 #### 6.2.2 Centroid
 
-*Description*: 
-Calculates the centroid, or average location, of raster polygon objects
+Calculates the centroid, or average location, of raster polygon objects.
 
 *Parameters*:
 
@@ -455,19 +474,23 @@ Calculates the centroid, or average location, of raster polygon objects
 -o, -\-output        Output raster file
 -\-text_output       Optional text output
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Centroid -v --wd="/path/to/data/" ^
 -i=polygons.dep -o=output.dep
 >>./whitebox_tools -r=Centroid ^
 -v --wd="/path/to/data/" -i=polygons.dep -o=output.dep ^
 --text_output 
+
+
 ```
+
+*Python Function Name*: ```centroid```
+
 
 #### 6.2.3 Clump
 
-*Description*: 
-Groups cells that form physically discrete areas, assigning them unique identifiers
+Groups cells that form physically discrete areas, assigning them unique identifiers.
 
 *Parameters*:
 
@@ -478,16 +501,20 @@ Groups cells that form physically discrete areas, assigning them unique identifi
 -\-diag              Flag indicating whether diagonal connections should be considered
 -\-zero_back         Flag indicating whether zero values should be treated as a background
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Clump -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --diag 
+
+
 ```
+
+*Python Function Name*: ```clump```
+
 
 #### 6.2.4 CreatePlane
 
-*Description*: 
-Creates a raster image based on the equation for a simple plane
+Creates a raster image based on the equation for a simple plane.
 
 *Parameters*:
 
@@ -499,17 +526,21 @@ Creates a raster image based on the equation for a simple plane
 -\-aspect            Aspect (direction) in degrees clockwise from north (0.0-360.0)
 -\-constant          Constant value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CreatePlane -v --wd="/path/to/data/" ^
 --base=base.dep -o=NewRaster.dep --gradient=15.0 ^
 --aspect=315.0 
+
+
 ```
+
+*Python Function Name*: ```create_plane```
+
 
 #### 6.2.5 RadiusOfGyration
 
-*Description*: 
-Calculates the distance of cells from their polygon's centroid
+Calculates the distance of cells from their polygon's centroid.
 
 *Parameters*:
 
@@ -519,17 +550,21 @@ Calculates the distance of cells from their polygon's centroid
 -o, -\-output        Output raster file
 -\-text_output       Optional text output
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RadiusOfGyration -v ^
 --wd="/path/to/data/" -i=polygons.dep -o=output.dep ^
 --text_output 
+
+
 ```
+
+*Python Function Name*: ```radius_of_gyration```
+
 
 #### 6.2.6 RasterCellAssignment
 
-*Description*: 
-Assign row or column number to cells
+Assign row or column number to cells.
 
 *Parameters*:
 
@@ -540,18 +575,22 @@ Assign row or column number to cells
 -a, -\-assign        Which variable would you like to assign to grid cells? Options include 
                      'column', 'row', 'x', and 'y' 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RasterCellAssignment -v ^
 --wd="/path/to/data/" -i='input.dep' -o=output.dep ^
 --assign='column' 
+
+
 ```
+
+*Python Function Name*: ```raster_cell_assignment```
+
 ### 6.3 GIS Analysis => Distance Tools
 
 #### 6.3.1 BufferRaster
 
-*Description*: 
-Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image
+Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 
 *Parameters*:
 
@@ -563,16 +602,20 @@ Maps a distance-based buffer around each non-background (non-zero/non-nodata) gr
 -\-gridcells         Optional flag to indicate that the 'size' threshold should be measured in grid 
                      cells instead of the default map units 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BufferRaster -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```buffer_raster```
+
 
 #### 6.3.2 CostAllocation
 
-*Description*: 
-Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis
+Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
 
 *Parameters*:
 
@@ -582,17 +625,21 @@ Identifies the source cell to which each grid cell is connected by a least-cost 
 -\-backlink          Input backlink raster file generated by the cost-distance tool
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CostAllocation -v --wd="/path/to/data/" ^
 --source='source.dep' --backlink='backlink.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```cost_allocation```
+
 
 #### 6.3.3 CostDistance
 
-*Description*: 
-Performs cost-distance accumulation on a cost surface and a group of source cells
+Performs cost-distance accumulation on a cost surface and a group of source cells.
 
 *Parameters*:
 
@@ -603,17 +650,21 @@ Performs cost-distance accumulation on a cost surface and a group of source cell
 -\-out_accum         Output cost accumulation raster file
 -\-out_backlink      Output backlink raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CostDistance -v --wd="/path/to/data/" ^
 --source=src.dep --cost=cost.dep --out_accum=accum.dep ^
 --out_backlink=backlink.dep 
+
+
 ```
+
+*Python Function Name*: ```cost_distance```
+
 
 #### 6.3.4 CostPathway
 
-*Description*: 
-Performs cost-distance pathway analysis using a series of destination grid cells
+Performs cost-distance pathway analysis using a series of destination grid cells.
 
 *Parameters*:
 
@@ -624,17 +675,21 @@ Performs cost-distance pathway analysis using a series of destination grid cells
 -o, -\-output        Output cost pathway raster file
 -\-zero_background   Flag indicating whether zero values should be treated as a background
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CostPathway -v --wd="/path/to/data/" ^
 --destination=dst.dep --backlink=backlink.dep ^
 --output=cost_path.dep 
+
+
 ```
+
+*Python Function Name*: ```cost_pathway```
+
 
 #### 6.3.5 EuclideanAllocation
 
-*Description*: 
-Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform
+Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 
 *Parameters*:
 
@@ -643,16 +698,20 @@ Assigns grid cells in the output raster the value of the nearest target cell in 
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=EuclideanAllocation -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```euclidean_allocation```
+
 
 #### 6.3.6 EuclideanDistance
 
-*Description*: 
-Calculates the Shih and Wu (2004) Euclidean distance transform
+Calculates the Shih and Wu (2004) Euclidean distance transform.
 
 *Parameters*:
 
@@ -661,17 +720,21 @@ Calculates the Shih and Wu (2004) Euclidean distance transform
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=EuclideanDistance -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```euclidean_distance```
+
 ### 6.4 GIS Analysis => Overlay Tools
 
 #### 6.4.1 AverageOverlay
 
-*Description*: 
-Calculates the average for each grid cell from a group of raster images
+Calculates the average for each grid cell from a group of raster images.
 
 *Parameters*:
 
@@ -680,16 +743,20 @@ Calculates the average for each grid cell from a group of raster images
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AverageOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```average_overlay```
+
 
 #### 6.4.2 HighestPosition
 
-*Description*: 
-Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis
+Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 
 *Parameters*:
 
@@ -698,17 +765,21 @@ Identifies the stack position of the maximum value within a raster stack on a ce
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HighestPosition -v ^
 --wd='/path/to/data/' -i='image1.dep;image2.dep;image3.dep' ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```highest_position```
+
 
 #### 6.4.3 LowestPosition
 
-*Description*: 
-Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis
+Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
 *Parameters*:
 
@@ -717,16 +788,20 @@ Identifies the stack position of the minimum value within a raster stack on a ce
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LowestPosition -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```lowest_position```
+
 
 #### 6.4.4 MaxAbsoluteOverlay
 
-*Description*: 
-Evaluates the maximum absolute value for each grid cell from a stack of input rasters
+Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
 *Parameters*:
 
@@ -735,17 +810,21 @@ Evaluates the maximum absolute value for each grid cell from a stack of input ra
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxAbsoluteOverlay -v ^
 --wd='/path/to/data/' -i='image1.dep;image2.dep;image3.dep' ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```max_absolute_overlay```
+
 
 #### 6.4.5 MaxOverlay
 
-*Description*: 
-Evaluates the maximum value for each grid cell from a stack of input rasters
+Evaluates the maximum value for each grid cell from a stack of input rasters.
 
 *Parameters*:
 
@@ -754,16 +833,20 @@ Evaluates the maximum value for each grid cell from a stack of input rasters
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```max_overlay```
+
 
 #### 6.4.6 MinAbsoluteOverlay
 
-*Description*: 
-Evaluates the minimum absolute value for each grid cell from a stack of input rasters
+Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
 *Parameters*:
 
@@ -772,17 +855,21 @@ Evaluates the minimum absolute value for each grid cell from a stack of input ra
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MinAbsoluteOverlay -v ^
 --wd='/path/to/data/' -i='image1.dep;image2.dep;image3.dep' ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```min_absolute_overlay```
+
 
 #### 6.4.7 MinOverlay
 
-*Description*: 
-Evaluates the minimum value for each grid cell from a stack of input rasters
+Evaluates the minimum value for each grid cell from a stack of input rasters.
 
 *Parameters*:
 
@@ -791,16 +878,20 @@ Evaluates the minimum value for each grid cell from a stack of input rasters
 -i, -\-inputs        Input raster files
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MinOverlay -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```min_overlay```
+
 
 #### 6.4.8 PercentEqualTo
 
-*Description*: 
-Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis
+Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
 *Parameters*:
 
@@ -810,17 +901,21 @@ Calculates the percentage of a raster stack that have cell values equal to an in
 -\-comparison        Input comparison raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentEqualTo -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```percent_equal_to```
+
 
 #### 6.4.9 PercentGreaterThan
 
-*Description*: 
-Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis
+Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
 *Parameters*:
 
@@ -830,17 +925,21 @@ Calculates the percentage of a raster stack that have cell values greather than 
 -\-comparison        Input comparison raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentGreaterThan -v ^
 --wd='/path/to/data/' -i='image1.dep;image2.dep;image3.dep' ^
 --comparison='comp.dep' -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```percent_greater_than```
+
 
 #### 6.4.10 PercentLessThan
 
-*Description*: 
-Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis
+Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
 *Parameters*:
 
@@ -850,17 +949,21 @@ Calculates the percentage of a raster stack that have cell values less than an i
 -\-comparison        Input comparison raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentLessThan -v ^
 --wd='/path/to/data/' -i='image1.dep;image2.dep;image3.dep' ^
 --comparison='comp.dep' -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```percent_less_than```
+
 
 #### 6.4.11 PickFromList
 
-*Description*: 
-Outputs the value from a raster stack specified by a position raster
+Outputs the value from a raster stack specified by a position raster.
 
 *Parameters*:
 
@@ -870,17 +973,21 @@ Outputs the value from a raster stack specified by a position raster
 -\-pos_input         Input position raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PickFromList -v --wd='/path/to/data/' ^
 --pos_input=position.dep -i='image1.dep;image2.dep;image3.dep' ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```pick_from_list```
+
 
 #### 6.4.12 WeightedSum
 
-*Description*: 
-Performs a weighted-sum overlay on multiple input raster images
+Performs a weighted-sum overlay on multiple input raster images.
 
 *Parameters*:
 
@@ -890,18 +997,22 @@ Performs a weighted-sum overlay on multiple input raster images
 -o, -\-output        Output raster file
 -w, -\-weights       Weight values, contained in quotes and separated by commas or semicolons
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=WeightedSum -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=output.dep ^
 --weights='0.3;0.2;0.5' 
+
+
 ```
+
+*Python Function Name*: ```weighted_sum```
+
 ### 6.5 GIS Analysis => Patch Shape Tools
 
 #### 6.5.1 EdgeProportion
 
-*Description*: 
-Calculate the proportion of cells in a raster polygon that are edge cells
+Calculate the proportion of cells in a raster polygon that are edge cells.
 
 *Parameters*:
 
@@ -911,16 +1022,20 @@ Calculate the proportion of cells in a raster polygon that are edge cells
 -o, -\-output        Output raster file
 -\-output_text       flag indicating whether a text report should also be output
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=EdgeProportion -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --output_text 
+
+
 ```
+
+*Python Function Name*: ```edge_proportion```
+
 
 #### 6.5.2 FindPatchOrClassEdgeCells
 
-*Description*: 
-Finds all cells located on the edge of patch or class features
+Finds all cells located on the edge of patch or class features.
 
 *Parameters*:
 
@@ -929,17 +1044,21 @@ Finds all cells located on the edge of patch or class features
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindPatchOrClassEdgeCells -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```find_patch_or_class_edge_cells```
+
 ### 6.6 GIS Analysis => Reclass Tools
 
 #### 6.6.1 Reclass
 
-*Description*: 
-Reclassifies the values in a raster image
+Reclassifies the values in a raster image.
 
 *Parameters*:
 
@@ -952,7 +1071,7 @@ Reclassifies the values in a raster image
 -\-assign_mode       Optional Boolean flag indicating whether to operate in assign mode, 
                      reclass_vals values are interpreted as new value; old value pairs 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Reclass -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep ^
@@ -961,12 +1080,16 @@ Reclassifies the values in a raster image
 -r=Reclass -v --wd="/path/to/data/" -i='input.dep' ^
 -o=output.dep --reclass_vals='10;1;20;2;30;3;40;4' ^
 --assign_mode 
+
+
 ```
+
+*Python Function Name*: ```reclass```
+
 
 #### 6.6.2 ReclassEqualInterval
 
-*Description*: 
-Reclassifies the values in a raster image based on equal-ranges
+Reclassifies the values in a raster image based on equal-ranges.
 
 *Parameters*:
 
@@ -978,17 +1101,21 @@ Reclassifies the values in a raster image based on equal-ranges
 -\-start_val         Optional starting value (default is input minimum value)
 -\-end_val           Optional ending value (default is input maximum value)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ReclassEqualInterval -v ^
 --wd="/path/to/data/" -i='input.dep' -o=output.dep ^
 --interval=10.0 --start_val=0.0 
+
+
 ```
+
+*Python Function Name*: ```reclass_equal_interval```
+
 
 #### 6.6.3 ReclassFromFile
 
-*Description*: 
-Reclassifies the values in a raster image using reclass ranges in a text file
+Reclassifies the values in a raster image using reclass ranges in a text file.
 
 *Parameters*:
 
@@ -998,18 +1125,22 @@ Reclassifies the values in a raster image using reclass ranges in a text file
 -\-reclass_file      Input text file containing reclass ranges
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ReclassFromFile -v ^
 --wd="/path/to/data/" -i='input.dep' ^
 --reclass_file='reclass.txt' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```reclass_from_file```
+
 ### 6.7 Geomorphometric Analysis
 
 #### 6.7.1 Aspect
 
-*Description*: 
-Calculates an aspect raster from an input DEM
+Calculates an aspect raster from an input DEM.
 
 *Parameters*:
 
@@ -1019,16 +1150,20 @@ Calculates an aspect raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Aspect -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```aspect```
+
 
 #### 6.7.2 DevFromMeanElev
 
-*Description*: 
-Calculates deviation from mean elevation
+Calculates deviation from mean elevation.
 
 *Parameters*:
 
@@ -1039,17 +1174,21 @@ Calculates deviation from mean elevation
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DevFromMeanElev -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --filter=25 
+
+
 ```
+
+*Python Function Name*: ```dev_from_mean_elev```
+
 
 #### 6.7.3 DiffFromMeanElev
 
-*Description*: 
-Calculates difference from mean elevation (equivalent to a high-pass filter)
+Calculates difference from mean elevation (equivalent to a high-pass filter).
 
 *Parameters*:
 
@@ -1060,17 +1199,21 @@ Calculates difference from mean elevation (equivalent to a high-pass filter)
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DiffFromMeanElev -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --filter=25 
+
+
 ```
+
+*Python Function Name*: ```diff_from_mean_elev```
+
 
 #### 6.7.4 DirectionalRelief
 
-*Description*: 
-Calculates relief for cells in an input DEM for a specified direction
+Calculates relief for cells in an input DEM for a specified direction.
 
 *Parameters*:
 
@@ -1081,17 +1224,21 @@ Calculates relief for cells in an input DEM for a specified direction
 -\-azimuth           Wind azimuth in degrees
 -\-max_dist          Optional maximum search distance (unspecified if none; in xy units)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DirectionalRelief -v ^
 --wd="/path/to/data/" -i='input.dep' -o=output.dep ^
 --azimuth=315.0 
+
+
 ```
+
+*Python Function Name*: ```directional_relief```
+
 
 #### 6.7.5 DownslopeIndex
 
-*Description*: 
-Calculates the Hjerdt et al. (2004) downslope index
+Calculates the Hjerdt et al. (2004) downslope index.
 
 *Parameters*:
 
@@ -1103,16 +1250,20 @@ Calculates the Hjerdt et al. (2004) downslope index
 -\-out_type          Output type, options include 'tangent', 'degrees', 'radians', 'distance' 
                      (default is 'tangent') 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DownslopeIndex -v --wd="/path/to/data/" ^
 --dem=pointer.dep -o=dsi.dep --drop=5.0 --out_type=distance 
+
+
 ```
+
+*Python Function Name*: ```downslope_index```
+
 
 #### 6.7.6 ElevAbovePit
 
-*Description*: 
-Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell
+Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
 
 *Parameters*:
 
@@ -1121,16 +1272,20 @@ Calculate the elevation of each grid cell above the nearest downstream pit cell 
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ElevAbovePit -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```elev_above_pit```
+
 
 #### 6.7.7 ElevPercentile
 
-*Description*: 
-Calculates the elevation percentile raster from a DEM
+Calculates the elevation percentile raster from a DEM.
 
 *Parameters*:
 
@@ -1142,16 +1297,20 @@ Calculates the elevation percentile raster from a DEM
 -\-filtery           Size of the filter kernel in the y-direction
 -\-sig_digits        Number of significant digits
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ElevPercentile -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```elev_percentile```
+
 
 #### 6.7.8 ElevRelativeToMinMax
 
-*Description*: 
-Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM
+Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
 
 *Parameters*:
 
@@ -1160,16 +1319,20 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ElevRelativeToMinMax -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```elev_relative_to_min_max```
+
 
 #### 6.7.9 ElevRelativeToWatershedMinMax
 
-*Description*: 
-Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed
+Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
 
 *Parameters*:
 
@@ -1179,17 +1342,21 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 -\-watersheds        Input raster watersheds file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ElevRelativeToWatershedMinMax -v ^
 --wd="/path/to/data/" --dem=DEM.dep --watersheds=watershed.dep ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```elev_relative_to_watershed_min_max```
+
 
 #### 6.7.10 FeaturePreservingDenoise
 
-*Description*: 
-Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm
+Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
 *Parameters*:
 
@@ -1202,16 +1369,20 @@ Reduces short-scale variation in an input DEM using a modified Sun et al. (2007)
 -\-num_iter          Number of iterations
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FeaturePreservingDenoise -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```feature_preserving_denoise```
+
 
 #### 6.7.11 FetchAnalysis
 
-*Description*: 
-Performs an analysis of fetch or upwind distance to an obstacle
+Performs an analysis of fetch or upwind distance to an obstacle.
 
 *Parameters*:
 
@@ -1222,16 +1393,20 @@ Performs an analysis of fetch or upwind distance to an obstacle
 -\-azimuth           Wind azimuth in degrees in degrees
 -\-hgt_inc           Height increment value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FetchAnalysis -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep --azimuth=315.0 
+
+
 ```
+
+*Python Function Name*: ```fetch_analysis```
+
 
 #### 6.7.12 FillMissingData
 
-*Description*: 
-Fills nodata holes in a DEM
+Fills nodata holes in a DEM.
 
 *Parameters*:
 
@@ -1241,16 +1416,20 @@ Fills nodata holes in a DEM
 -o, -\-output        Output raster file
 -\-filter            Filter size (cells)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FillMissingData -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```fill_missing_data```
+
 
 #### 6.7.13 FindRidges
 
-*Description*: 
-Identifies potential ridge and peak grid cells
+Identifies potential ridge and peak grid cells.
 
 *Parameters*:
 
@@ -1261,16 +1440,20 @@ Identifies potential ridge and peak grid cells
 -\-line_thin         Optional flag indicating whether post-processing line-thinning should be 
                      performed 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindRidges -v --wd="/path/to/data/" ^
 --dem=pointer.dep -o=out.dep --line_thin 
+
+
 ```
+
+*Python Function Name*: ```find_ridges```
+
 
 #### 6.7.14 Hillshade
 
-*Description*: 
-Calculates a hillshade raster from an input DEM
+Calculates a hillshade raster from an input DEM.
 
 *Parameters*:
 
@@ -1282,16 +1465,20 @@ Calculates a hillshade raster from an input DEM
 -\-altitude          Illumination source altitude in degrees
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Hillshade -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep --azimuth=315.0 --altitude=30.0 
+
+
 ```
+
+*Python Function Name*: ```hillshade```
+
 
 #### 6.7.15 HorizonAngle
 
-*Description*: 
-Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM
+Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 
 *Parameters*:
 
@@ -1302,16 +1489,20 @@ Calculates horizon angle (maximum upwind slope) for each grid cell in an input D
 -\-azimuth           Wind azimuth in degrees
 -\-max_dist          Optional maximum search distance (unspecified if none; in xy units)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HorizonAngle -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep --azimuth=315.0 
+
+
 ```
+
+*Python Function Name*: ```horizon_angle```
+
 
 #### 6.7.16 HypsometricAnalysis
 
-*Description*: 
-Calculates a hypsometric curve for one or more DEMs
+Calculates a hypsometric curve for one or more DEMs.
 
 *Parameters*:
 
@@ -1321,17 +1512,21 @@ Calculates a hypsometric curve for one or more DEMs
 -\-watershed         Input watershed files (optional)
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HypsometricAnalysis -v ^
 --wd="/path/to/data/" -i="DEM1.tif;DEM2.tif" ^
 --watershed="ws1.tif;ws2.tif" -o=outfile.html 
+
+
 ```
+
+*Python Function Name*: ```hypsometric_analysis```
+
 
 #### 6.7.17 MaxAnisotropyDev
 
-*Description*: 
-Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales
+Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 
 *Parameters*:
 
@@ -1344,18 +1539,22 @@ Calculates the maximum anisotropy (directionality) in elevation deviation over a
 -\-max_scale         Maximum search neighbourhood radius in grid cells
 -\-step              Step size as any positive non-zero integer
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxAnisotropyDev -v ^
---wd="/path/to/data/" --dem=DEM.dep -out_mag=DEVmax_mag.dep ^
+--wd="/path/to/data/" --dem=DEM.dep --out_mag=DEVmax_mag.dep ^
 --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 ^
 --step=5 
+
+
 ```
+
+*Python Function Name*: ```max_anisotropy_dev```
+
 
 #### 6.7.18 MaxBranchLength
 
-*Description*: 
-Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines
+Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
 
 *Parameters*:
 
@@ -1365,16 +1564,20 @@ Lindsay and Seibert's (2013) branch length index is used to map drainage divides
 -o, -\-output        Output raster file
 -\-log               Optional flag to request the output be log-transformed
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxBranchLength -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```max_branch_length```
+
 
 #### 6.7.19 MaxDownslopeElevChange
 
-*Description*: 
-Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors
+Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
 
 *Parameters*:
 
@@ -1383,16 +1586,48 @@ Calculates the maximum downslope change in elevation between a grid cell and its
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxDownslopeElevChange -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=out.dep 
+
+
 ```
 
-#### 6.7.20 MaxElevationDeviation
+*Python Function Name*: ```max_downslope_elev_change```
 
-*Description*: 
-Calculates the maximum elevation deviation over a range of spatial scales
+
+#### 6.7.20 MaxElevDevSignature
+
+Calculates the maximum elevation deviation over a range of spatial scales and for a set of points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-\-points            Input vector points file
+-o, -\-output        Output HTML file
+-\-min_scale         Minimum search neighbourhood radius in grid cells
+-\-max_scale         Maximum search neighbourhood radius in grid cells
+-\-step              Step size as any positive non-zero integer
+
+*Command-line Interface*:
+```
+>>./whitebox_tools -r=MaxElevDevSignature -v ^
+--wd="/path/to/data/" --dem=DEM.dep --points=sites.shp ^
+--output=topo_position.html --min_scale=1 --max_scale=1000 ^
+--step=5 
+
+
+```
+
+*Python Function Name*: ```max_elev_dev_signature```
+
+
+#### 6.7.21 MaxElevationDeviation
+
+Calculates the maximum elevation deviation over a range of spatial scales.
 
 *Parameters*:
 
@@ -1405,18 +1640,22 @@ Calculates the maximum elevation deviation over a range of spatial scales
 -\-max_scale         Maximum search neighbourhood radius in grid cells
 -\-step              Step size as any positive non-zero integer
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxElevationDeviation -v ^
---wd="/path/to/data/" --dem=DEM.dep -out_mag=DEVmax_mag.dep ^
+--wd="/path/to/data/" --dem=DEM.dep --out_mag=DEVmax_mag.dep ^
 --out_scale=DEVmax_scale.dep --min_scale=1 --max_scale=1000 ^
 --step=5 
+
+
 ```
 
-#### 6.7.21 MinDownslopeElevChange
+*Python Function Name*: ```max_elevation_deviation```
 
-*Description*: 
-Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors
+
+#### 6.7.22 MinDownslopeElevChange
+
+Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
 
 *Parameters*:
 
@@ -1425,16 +1664,76 @@ Calculates the minimum downslope change in elevation between a grid cell and its
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MinDownslopeElevChange -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=out.dep 
+
+
 ```
 
-#### 6.7.22 MultiscaleTopographicPositionImage
+*Python Function Name*: ```min_downslope_elev_change```
 
-*Description*: 
-Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges
+
+#### 6.7.23 MultiscaleRoughness
+
+Calculates surface roughness over a range of spatial scales.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-\-out_mag           Output raster roughness magnitude file
+-\-out_scale         Output raster roughness scale file
+-\-min_scale         Minimum search neighbourhood radius in grid cells
+-\-max_scale         Maximum search neighbourhood radius in grid cells
+-\-step              Step size as any positive non-zero integer
+
+*Command-line Interface*:
+```
+>>./whitebox_tools -r=MultiscaleRoughness -v ^
+--wd="/path/to/data/" --dem=DEM.dep --out_mag=roughness_mag.dep ^
+--out_scale=roughness_scale.dep --min_scale=1 --max_scale=1000 ^
+--step=5 
+
+
+```
+
+*Python Function Name*: ```multiscale_roughness```
+
+
+#### 6.7.24 MultiscaleRoughnessSignature
+
+Calculates the surface roughness for points over a range of spatial scales.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-\-points            Input vector points file
+-o, -\-output        Output HTML file
+-\-min_scale         Minimum search neighbourhood radius in grid cells
+-\-max_scale         Maximum search neighbourhood radius in grid cells
+-\-step              Step size as any positive non-zero integer
+
+*Command-line Interface*:
+```
+>>./whitebox_tools -r=MultiscaleRoughnessSignature -v ^
+--wd="/path/to/data/" --dem=DEM.dep --points=sites.shp ^
+--output=roughness.html --min_scale=1 --max_scale=1000 ^
+--step=5 
+
+
+```
+
+*Python Function Name*: ```multiscale_roughness_signature```
+
+
+#### 6.7.25 MultiscaleTopographicPositionImage
+
+Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 
 *Parameters*:
 
@@ -1446,17 +1745,21 @@ Creates a multiscale topographic position image from three DEVmax rasters of dif
 -o, -\-output        Output raster file
 -\-lightness         Image lightness value (default is 1.2)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MultiscaleTopographicPositionImage -v ^
 --wd="/path/to/data/" --local=DEV_local.dep --meso=DEV_meso.dep ^
 --broad=DEV_broad.dep -o=output.dep --lightness=1.5 
+
+
 ```
 
-#### 6.7.23 NumDownslopeNeighbours
+*Python Function Name*: ```multiscale_topographic_position_image```
 
-*Description*: 
-Calculates the number of downslope neighbours to each grid cell in a DEM
+
+#### 6.7.26 NumDownslopeNeighbours
+
+Calculates the number of downslope neighbours to each grid cell in a DEM.
 
 *Parameters*:
 
@@ -1465,16 +1768,20 @@ Calculates the number of downslope neighbours to each grid cell in a DEM
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NumDownslopeNeighbours -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.24 NumUpslopeNeighbours
+*Python Function Name*: ```num_downslope_neighbours```
 
-*Description*: 
-Calculates the number of upslope neighbours to each grid cell in a DEM
+
+#### 6.7.27 NumUpslopeNeighbours
+
+Calculates the number of upslope neighbours to each grid cell in a DEM.
 
 *Parameters*:
 
@@ -1483,16 +1790,20 @@ Calculates the number of upslope neighbours to each grid cell in a DEM
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NumUpslopeNeighbours -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.25 PennockLandformClass
+*Python Function Name*: ```num_upslope_neighbours```
 
-*Description*: 
-Classifies hillslope zones based on slope, profile curvature, and plan curvature
+
+#### 6.7.28 PennockLandformClass
+
+Classifies hillslope zones based on slope, profile curvature, and plan curvature.
 
 *Parameters*:
 
@@ -1505,17 +1816,21 @@ Classifies hillslope zones based on slope, profile curvature, and plan curvature
 -\-plan              Plan curvature threshold value (default is 0.0)
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PennockLandformClass -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep --slope=3.0 ^
 --prof=0.1 --plan=0.0 
+
+
 ```
 
-#### 6.7.26 PercentElevRange
+*Python Function Name*: ```pennock_landform_class```
 
-*Description*: 
-Calculates percent of elevation range from a DEM
+
+#### 6.7.29 PercentElevRange
+
+Calculates percent of elevation range from a DEM.
 
 *Parameters*:
 
@@ -1526,16 +1841,20 @@ Calculates percent of elevation range from a DEM
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentElevRange -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep --filter=25 
+
+
 ```
 
-#### 6.7.27 PlanCurvature
+*Python Function Name*: ```percent_elev_range```
 
-*Description*: 
-Calculates a plan (contour) curvature raster from an input DEM
+
+#### 6.7.30 PlanCurvature
+
+Calculates a plan (contour) curvature raster from an input DEM.
 
 *Parameters*:
 
@@ -1545,35 +1864,43 @@ Calculates a plan (contour) curvature raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PlanCurvature -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.28 Profile
+*Python Function Name*: ```plan_curvature```
 
-*Description*: 
-Plots profiles from digital elevation models
+
+#### 6.7.31 Profile
+
+Plots profiles from digital surface models.
 
 *Parameters*:
 
 **Flag**             **Description**
 -------------------  ---------------
--\-lines             Input vector points file
+-\-lines             Input vector line file
 -\-surface           Input raster surface file
 -o, -\-output        Output HTML file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Profile -v --wd="/path/to/data/" ^
 --lines=profile.shp --surface=dem.dep -o=profile.html 
+
+
 ```
 
-#### 6.7.29 ProfileCurvature
+*Python Function Name*: ```profile```
 
-*Description*: 
-Calculates a profile curvature raster from an input DEM
+
+#### 6.7.32 ProfileCurvature
+
+Calculates a profile curvature raster from an input DEM.
 
 *Parameters*:
 
@@ -1583,16 +1910,20 @@ Calculates a profile curvature raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ProfileCurvature -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.30 RelativeAspect
+*Python Function Name*: ```profile_curvature```
 
-*Description*: 
-Calculates relative aspect (relative to a user-specified direction) from an input DEM
+
+#### 6.7.33 RelativeAspect
+
+Calculates relative aspect (relative to a user-specified direction) from an input DEM.
 
 *Parameters*:
 
@@ -1603,16 +1934,20 @@ Calculates relative aspect (relative to a user-specified direction) from an inpu
 -\-azimuth           Illumination source azimuth
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RelativeAspect -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --azimuth=180.0 
+
+
 ```
 
-#### 6.7.31 RelativeStreamPowerIndex
+*Python Function Name*: ```relative_aspect```
 
-*Description*: 
-Calculates the relative stream power index
+
+#### 6.7.34 RelativeStreamPowerIndex
+
+Calculates the relative stream power index.
 
 *Parameters*:
 
@@ -1623,17 +1958,21 @@ Calculates the relative stream power index
 -o, -\-output        Output raster file
 -\-exponent          SCA exponent value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RelativeStreamPowerIndex -v ^
 --wd="/path/to/data/" --sca='flow_accum.dep' ^
 --slope='slope.dep' -o=output.dep --exponent=1.1 
+
+
 ```
 
-#### 6.7.32 RelativeTopographicPosition
+*Python Function Name*: ```relative_stream_power_index```
 
-*Description*: 
-Calculates the relative topographic position index from a DEM
+
+#### 6.7.35 RelativeTopographicPosition
+
+Calculates the relative topographic position index from a DEM.
 
 *Parameters*:
 
@@ -1644,17 +1983,21 @@ Calculates the relative topographic position index from a DEM
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RelativeTopographicPosition -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --filter=25 
+
+
 ```
 
-#### 6.7.33 RemoveOffTerrainObjects
+*Python Function Name*: ```relative_topographic_position```
 
-*Description*: 
-Removes off-terrain objects from a raster digital elevation model (DEM)
+
+#### 6.7.36 RemoveOffTerrainObjects
+
+Removes off-terrain objects from a raster digital elevation model (DEM).
 
 *Parameters*:
 
@@ -1665,17 +2008,21 @@ Removes off-terrain objects from a raster digital elevation model (DEM)
 -\-filter            Filter size (cells)
 -\-slope             Slope threshold value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RemoveOffTerrainObjects -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=bare_earth_DEM.dep ^
 --filter=25 --slope=10.0 
+
+
 ```
 
-#### 6.7.34 RuggednessIndex
+*Python Function Name*: ```remove_off_terrain_objects```
 
-*Description*: 
-Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
+
+#### 6.7.37 RuggednessIndex
+
+Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 
 *Parameters*:
 
@@ -1685,16 +2032,20 @@ Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RuggednessIndex -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.35 SedimentTransportIndex
+*Python Function Name*: ```ruggedness_index```
 
-*Description*: 
-Calculates the sediment transport index
+
+#### 6.7.38 SedimentTransportIndex
+
+Calculates the sediment transport index.
 
 *Parameters*:
 
@@ -1706,18 +2057,22 @@ Calculates the sediment transport index
 -\-sca_exponent      SCA exponent value
 -\-slope_exponent    Slope exponent value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SedimentTransportIndex -v ^
 --wd="/path/to/data/" --sca='flow_accum.dep' ^
 --slope='slope.dep' -o=output.dep --sca_exponent=0.5 ^
 --slope_exponent=1.0 
+
+
 ```
 
-#### 6.7.36 Slope
+*Python Function Name*: ```sediment_transport_index```
 
-*Description*: 
-Calculates a slope raster from an input DEM
+
+#### 6.7.39 Slope
+
+Calculates a slope raster from an input DEM.
 
 *Parameters*:
 
@@ -1727,16 +2082,20 @@ Calculates a slope raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Slope -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.37 SlopeVsElevationPlot
+*Python Function Name*: ```slope```
 
-*Description*: 
-Creates a slope vs. elevation plot for one or more DEMs
+
+#### 6.7.40 SlopeVsElevationPlot
+
+Creates a slope vs. elevation plot for one or more DEMs.
 
 *Parameters*:
 
@@ -1746,17 +2105,21 @@ Creates a slope vs. elevation plot for one or more DEMs
 -\-watershed         Input watershed files (optional)
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SlopeVsElevationPlot -v ^
 --wd="/path/to/data/" -i="DEM1.tif;DEM2.tif" ^
 --watershed="ws1.tif;ws2.tif" -o=outfile.html 
+
+
 ```
 
-#### 6.7.38 TangentialCurvature
+*Python Function Name*: ```slope_vs_elevation_plot```
 
-*Description*: 
-Calculates a tangential curvature raster from an input DEM
+
+#### 6.7.41 TangentialCurvature
+
+Calculates a tangential curvature raster from an input DEM.
 
 *Parameters*:
 
@@ -1766,16 +2129,20 @@ Calculates a tangential curvature raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TangentialCurvature -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.39 TotalCurvature
+*Python Function Name*: ```tangential_curvature```
 
-*Description*: 
-Calculates a total curvature raster from an input DEM
+
+#### 6.7.42 TotalCurvature
+
+Calculates a total curvature raster from an input DEM.
 
 *Parameters*:
 
@@ -1785,16 +2152,20 @@ Calculates a total curvature raster from an input DEM
 -o, -\-output        Output raster file
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TotalCurvature -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
 
-#### 6.7.40 Viewshed
+*Python Function Name*: ```total_curvature```
 
-*Description*: 
-Identifies the viewshed for a point or set of points
+
+#### 6.7.43 Viewshed
+
+Identifies the viewshed for a point or set of points.
 
 *Parameters*:
 
@@ -1805,17 +2176,21 @@ Identifies the viewshed for a point or set of points
 -o, -\-output        Output raster file
 -\-height            Viewing station height, in z units
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Viewshed -v --wd="/path/to/data/" ^
 --dem='dem.dep' --stations='stations.dep' -o=output.dep ^
 --height=10.0 
+
+
 ```
 
-#### 6.7.41 WetnessIndex
+*Python Function Name*: ```viewshed```
 
-*Description*: 
-Calculates the topographic wetness index, Ln(A / tan(slope))
+
+#### 6.7.44 WetnessIndex
+
+Calculates the topographic wetness index, Ln(A / tan(slope)).
 
 *Parameters*:
 
@@ -1825,17 +2200,21 @@ Calculates the topographic wetness index, Ln(A / tan(slope))
 -\-slope             Input raster slope file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=WetnessIndex -v --wd="/path/to/data/" ^
 --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```wetness_index```
+
 ### 6.8 Hydrological Analysis
 
 #### 6.8.1 AverageFlowpathSlope
 
-*Description*: 
-Measures the average slope gradient from each grid cell to all upslope divide cells
+Measures the average slope gradient from each grid cell to all upslope divide cells.
 
 *Parameters*:
 
@@ -1844,16 +2223,20 @@ Measures the average slope gradient from each grid cell to all upslope divide ce
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AverageFlowpathSlope -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```average_flowpath_slope```
+
 
 #### 6.8.2 AverageUpslopeFlowpathLength
 
-*Description*: 
-Measures the average length of all upslope flowpaths draining each grid cell
+Measures the average length of all upslope flowpaths draining each grid cell.
 
 *Parameters*:
 
@@ -1862,16 +2245,20 @@ Measures the average length of all upslope flowpaths draining each grid cell
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AverageUpslopeFlowpathLength -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```average_upslope_flowpath_length```
+
 
 #### 6.8.3 Basins
 
-*Description*: 
-Identifies drainage basins that drain to the DEM edge
+Identifies drainage basins that drain to the DEM edge.
 
 *Parameters*:
 
@@ -1881,16 +2268,20 @@ Identifies drainage basins that drain to the DEM edge
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Basins -v --wd="/path/to/data/" ^
 --d8_pntr='d8pntr.dep' -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```basins```
+
 
 #### 6.8.4 BreachDepressions
 
-*Description*: 
-Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases
+Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
 
 *Parameters*:
 
@@ -1901,16 +2292,20 @@ Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This 
 -\-max_depth         Optional maximum breach depth (default is Inf)
 -\-max_length        Optional maximum breach channel length (in grid cells; default is Inf)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BreachDepressions -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```breach_depressions```
+
 
 #### 6.8.5 BreachSingleCellPits
 
-*Description*: 
-Removes single-cell pits from an input DEM by breaching
+Removes single-cell pits from an input DEM by breaching.
 
 *Parameters*:
 
@@ -1919,16 +2314,20 @@ Removes single-cell pits from an input DEM by breaching
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BreachSingleCellPits -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```breach_single_cell_pits```
+
 
 #### 6.8.6 D8FlowAccumulation
 
-*Description*: 
-Calculates a D8 flow accumulation raster from an input DEM
+Calculates a D8 flow accumulation raster from an input DEM.
 
 *Parameters*:
 
@@ -1941,7 +2340,7 @@ Calculates a D8 flow accumulation raster from an input DEM
 -\-log               Optional flag to request the output be log-transformed
 -\-clip              Optional flag to request clipping the display max by 1%
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=D8FlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
@@ -1949,12 +2348,16 @@ Calculates a D8 flow accumulation raster from an input DEM
 >>./whitebox_tools -r=D8FlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --out_type='specific catchment area' --log --clip 
+
+
 ```
+
+*Python Function Name*: ```d8_flow_accumulation```
+
 
 #### 6.8.7 D8MassFlux
 
-*Description*: 
-Performs a D8 mass flux calculation
+Performs a D8 mass flux calculation.
 
 *Parameters*:
 
@@ -1966,17 +2369,21 @@ Performs a D8 mass flux calculation
 -\-absorption        Input absorption raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=D8MassFlux -v --wd="/path/to/data/" ^
 --dem=DEM.dep --loading=load.dep --efficiency=eff.dep ^
 --absorption=abs.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```d8_mass_flux```
+
 
 #### 6.8.8 D8Pointer
 
-*Description*: 
-Calculates a D8 flow pointer raster from an input DEM
+Calculates a D8 flow pointer raster from an input DEM.
 
 *Parameters*:
 
@@ -1986,16 +2393,20 @@ Calculates a D8 flow pointer raster from an input DEM
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=D8Pointer -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```d8_pointer```
+
 
 #### 6.8.9 DInfFlowAccumulation
 
-*Description*: 
-Calculates a D-infinity flow accumulation raster from an input DEM
+Calculates a D-infinity flow accumulation raster from an input DEM.
 
 *Parameters*:
 
@@ -2008,7 +2419,7 @@ Calculates a D-infinity flow accumulation raster from an input DEM
 -\-log               Optional flag to request the output be log-transformed
 -\-clip              Optional flag to request clipping the display max by 1%
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DInfFlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
@@ -2016,12 +2427,16 @@ Calculates a D-infinity flow accumulation raster from an input DEM
 >>./whitebox_tools -r=DInfFlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --out_type=sca --threshold=10000 --log --clip 
+
+
 ```
+
+*Python Function Name*: ```d_inf_flow_accumulation```
+
 
 #### 6.8.10 DInfMassFlux
 
-*Description*: 
-Performs a D-infinity mass flux calculation
+Performs a D-infinity mass flux calculation.
 
 *Parameters*:
 
@@ -2033,17 +2448,21 @@ Performs a D-infinity mass flux calculation
 -\-absorption        Input absorption raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DInfMassFlux -v --wd="/path/to/data/" ^
 --dem=DEM.dep --loading=load.dep --efficiency=eff.dep ^
 --absorption=abs.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```d_inf_mass_flux```
+
 
 #### 6.8.11 DInfPointer
 
-*Description*: 
-Calculates a D-infinity flow pointer (flow direction) raster from an input DEM
+Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 
 *Parameters*:
 
@@ -2052,16 +2471,20 @@ Calculates a D-infinity flow pointer (flow direction) raster from an input DEM
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DInfPointer -v --wd="/path/to/data/" ^
 --dem=DEM.dep 
+
+
 ```
+
+*Python Function Name*: ```d_inf_pointer```
+
 
 #### 6.8.12 DepthInSink
 
-*Description*: 
-Measures the depth of sinks (depressions) in a DEM
+Measures the depth of sinks (depressions) in a DEM.
 
 *Parameters*:
 
@@ -2071,16 +2494,20 @@ Measures the depth of sinks (depressions) in a DEM
 -o, -\-output        Output raster file
 -\-zero_background   Flag indicating whether the background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DepthInSink -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --zero_background 
+
+
 ```
+
+*Python Function Name*: ```depth_in_sink```
+
 
 #### 6.8.13 DownslopeDistanceToStream
 
-*Description*: 
-Measures distance to the nearest downslope stream cell
+Measures distance to the nearest downslope stream cell.
 
 *Parameters*:
 
@@ -2090,17 +2517,21 @@ Measures distance to the nearest downslope stream cell
 -\-streams           Input raster streams file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DownslopeDistanceToStream -v ^
 --wd="/path/to/data/" --dem='dem.dep' --streams='streams.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```downslope_distance_to_stream```
+
 
 #### 6.8.14 DownslopeFlowpathLength
 
-*Description*: 
-Calculates the downslope flowpath length from each cell to basin outlet
+Calculates the downslope flowpath length from each cell to basin outlet.
 
 *Parameters*:
 
@@ -2112,7 +2543,7 @@ Calculates the downslope flowpath length from each cell to basin outlet
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DownslopeFlowpathLength -v ^
 --wd="/path/to/data/" --d8_pntr=pointer.dep ^
@@ -2121,12 +2552,16 @@ Calculates the downslope flowpath length from each cell to basin outlet
 -r=DownslopeFlowpathLength -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.flt --watersheds=basin.flt ^
 --weights=weights.flt -o=flowpath_len.flt --esri_pntr 
+
+
 ```
+
+*Python Function Name*: ```downslope_flowpath_length```
+
 
 #### 6.8.15 ElevationAboveStream
 
-*Description*: 
-Calculates the elevation of cells above the nearest downslope stream cell
+Calculates the elevation of cells above the nearest downslope stream cell.
 
 *Parameters*:
 
@@ -2136,17 +2571,21 @@ Calculates the elevation of cells above the nearest downslope stream cell
 -\-streams           Input raster streams file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ElevationAboveStream -v ^
 --wd="/path/to/data/" --dem='dem.dep' --streams='streams.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```elevation_above_stream```
+
 
 #### 6.8.16 FD8FlowAccumulation
 
-*Description*: 
-Calculates an FD8 flow accumulation raster from an input DEM
+Calculates an FD8 flow accumulation raster from an input DEM.
 
 *Parameters*:
 
@@ -2161,7 +2600,7 @@ Calculates an FD8 flow accumulation raster from an input DEM
 -\-log               Optional flag to request the output be log-transformed
 -\-clip              Optional flag to request clipping the display max by 1%
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FD8FlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
@@ -2170,12 +2609,16 @@ Calculates an FD8 flow accumulation raster from an input DEM
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --out_type='catchment area' --exponent=1.5 --threshold=10000 ^
 --log --clip 
+
+
 ```
+
+*Python Function Name*: ```fd8_flow_accumulation```
+
 
 #### 6.8.17 FD8Pointer
 
-*Description*: 
-Calculates an FD8 flow pointer raster from an input DEM
+Calculates an FD8 flow pointer raster from an input DEM.
 
 *Parameters*:
 
@@ -2184,16 +2627,20 @@ Calculates an FD8 flow pointer raster from an input DEM
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FD8Pointer -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```fd8_pointer```
+
 
 #### 6.8.18 FillDepressions
 
-*Description*: 
-Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases
+Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 
 *Parameters*:
 
@@ -2203,17 +2650,21 @@ Fills all of the depressions in a DEM. Depression breaching should be preferred 
 -o, -\-output        Output raster file
 -\-fix_flats         Optional flag indicating whether flat areas should have a small gradient applied
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FillDepressions -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep ^
 --fix_flats 
+
+
 ```
+
+*Python Function Name*: ```fill_depressions```
+
 
 #### 6.8.19 FillSingleCellPits
 
-*Description*: 
-Raises pit cells to the elevation of their lowest neighbour
+Raises pit cells to the elevation of their lowest neighbour.
 
 *Parameters*:
 
@@ -2222,16 +2673,20 @@ Raises pit cells to the elevation of their lowest neighbour
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FillSingleCellPits -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=NewRaster.dep 
+
+
 ```
+
+*Python Function Name*: ```fill_single_cell_pits```
+
 
 #### 6.8.20 FindNoFlowCells
 
-*Description*: 
-Finds grid cells with no downslope neighbours
+Finds grid cells with no downslope neighbours.
 
 *Parameters*:
 
@@ -2240,16 +2695,20 @@ Finds grid cells with no downslope neighbours
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindNoFlowCells -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=NewRaster.dep 
+
+
 ```
+
+*Python Function Name*: ```find_no_flow_cells```
+
 
 #### 6.8.21 FindParallelFlow
 
-*Description*: 
-Finds areas of parallel flow in D8 flow direction rasters
+Finds areas of parallel flow in D8 flow direction rasters.
 
 *Parameters*:
 
@@ -2259,7 +2718,7 @@ Finds areas of parallel flow in D8 flow direction rasters
 -\-streams           Input raster streams file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindParallelFlow -v ^
 --wd="/path/to/data/" --d8_pntr=pointer.dep ^
@@ -2267,12 +2726,16 @@ Finds areas of parallel flow in D8 flow direction rasters
 >>./whitebox_tools -r=FindParallelFlow -v ^
 --wd="/path/to/data/" --d8_pntr=pointer.dep -o=out.dep ^
 --streams='streams.dep' 
+
+
 ```
+
+*Python Function Name*: ```find_parallel_flow```
+
 
 #### 6.8.22 FloodOrder
 
-*Description*: 
-Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations
+Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
 
 *Parameters*:
 
@@ -2281,16 +2744,20 @@ Assigns each DEM grid cell its order in the sequence of inundations that are enc
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FloodOrder -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```flood_order```
+
 
 #### 6.8.23 FlowAccumulationFullWorkflow
 
-*Description*: 
-Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster
+Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
 
 *Parameters*:
 
@@ -2305,18 +2772,22 @@ Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-a
 -\-clip              Optional flag to request clipping the display max by 1%
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FlowAccumulationFullWorkflow -v ^
 --wd="/path/to/data/" --dem='DEM.dep' ^
 --out_dem='DEM_filled.dep' --out_pntr='pointer.dep' ^
 --out_accum='accum.dep' --out_type=sca --log --clip 
+
+
 ```
+
+*Python Function Name*: ```flow_accumulation_full_workflow```
+
 
 #### 6.8.24 FlowLengthDiff
 
-*Description*: 
-Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges
+Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
 
 *Parameters*:
 
@@ -2326,16 +2797,20 @@ Calculates the local maximum absolute difference in downslope flowpath length, u
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FlowLengthDiff -v --wd="/path/to/data/" ^
 --d8_pntr=pointer.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```flow_length_diff```
+
 
 #### 6.8.25 Hillslopes
 
-*Description*: 
-Identifies the individual hillslopes draining to each link in a stream network
+Identifies the individual hillslopes draining to each link in a stream network.
 
 *Parameters*:
 
@@ -2346,17 +2821,21 @@ Identifies the individual hillslopes draining to each link in a stream network
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Hillslopes -v --wd="/path/to/data/" ^
 --d8_pntr='d8pntr.dep' --streams='streams.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```hillslopes```
+
 
 #### 6.8.26 Isobasins
 
-*Description*: 
-Divides a landscape into nearly equal sized drainage basins (i.e. watersheds)
+Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 
 *Parameters*:
 
@@ -2366,16 +2845,20 @@ Divides a landscape into nearly equal sized drainage basins (i.e. watersheds)
 -o, -\-output        Output raster file
 -\-size              Target basin size, in grid cells
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Isobasins -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --size=1000 
+
+
 ```
+
+*Python Function Name*: ```isobasins```
+
 
 #### 6.8.27 JensonSnapPourPoints
 
-*Description*: 
-Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell
+Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 
 *Parameters*:
 
@@ -2386,17 +2869,21 @@ Moves outlet points used to specify points of interest in a watershedding operat
 -o, -\-output        Output raster file
 -\-snap_dist         Maximum snap distance in map units
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=JensonSnapPourPoints -v ^
 --wd="/path/to/data/" --pour_pts='pour_pts.dep' ^
 --streams='streams.dep' -o='output.dep' --snap_dist=15.0 
+
+
 ```
+
+*Python Function Name*: ```jenson_snap_pour_points```
+
 
 #### 6.8.28 MaxUpslopeFlowpathLength
 
-*Description*: 
-Measures the maximum length of all upslope flowpaths draining each grid cell
+Measures the maximum length of all upslope flowpaths draining each grid cell.
 
 *Parameters*:
 
@@ -2405,7 +2892,7 @@ Measures the maximum length of all upslope flowpaths draining each grid cell
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaxUpslopeFlowpathLength -v ^
 --wd="/path/to/data/" -i=DEM.dep ^
@@ -2413,12 +2900,16 @@ Measures the maximum length of all upslope flowpaths draining each grid cell
 >>./whitebox_tools -r=MaxUpslopeFlowpathLength -v ^
 --wd="/path/to/data/" --dem=DEM.dep -o=output.dep --log ^
 --clip 
+
+
 ```
+
+*Python Function Name*: ```max_upslope_flowpath_length```
+
 
 #### 6.8.29 NumInflowingNeighbours
 
-*Description*: 
-Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm
+Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 
 *Parameters*:
 
@@ -2427,16 +2918,20 @@ Computes the number of inflowing neighbours to each cell in an input DEM based o
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NumInflowingNeighbours -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```num_inflowing_neighbours```
+
 
 #### 6.8.30 Rho8Pointer
 
-*Description*: 
-Calculates a stochastic Rho8 flow pointer raster from an input DEM
+Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
 *Parameters*:
 
@@ -2446,16 +2941,20 @@ Calculates a stochastic Rho8 flow pointer raster from an input DEM
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Rho8Pointer -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```rho8_pointer```
+
 
 #### 6.8.31 Sink
 
-*Description*: 
-Identifies the depressions in a DEM, giving each feature a unique identifier
+Identifies the depressions in a DEM, giving each feature a unique identifier.
 
 *Parameters*:
 
@@ -2465,16 +2964,20 @@ Identifies the depressions in a DEM, giving each feature a unique identifier
 -o, -\-output        Output raster file
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Sink -v --wd="/path/to/data/" ^
 --dem=DEM.dep -o=output.dep --zero_background 
+
+
 ```
+
+*Python Function Name*: ```sink```
+
 
 #### 6.8.32 SnapPourPoints
 
-*Description*: 
-Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood
+Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
 
 *Parameters*:
 
@@ -2485,17 +2988,21 @@ Moves outlet points used to specify points of interest in a watershedding operat
 -o, -\-output        Output raster file
 -\-snap_dist         Maximum snap distance in map units
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SnapPourPoints -v --wd="/path/to/data/" ^
 --pour_pts='pour_pts.dep' --flow_accum='d8accum.dep' ^
 -o='output.dep' --snap_dist=15.0 
+
+
 ```
+
+*Python Function Name*: ```snap_pour_points```
+
 
 #### 6.8.33 StrahlerOrderBasins
 
-*Description*: 
-Identifies Strahler-order basins from an input stream network
+Identifies Strahler-order basins from an input stream network.
 
 *Parameters*:
 
@@ -2506,17 +3013,21 @@ Identifies Strahler-order basins from an input stream network
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StrahlerOrderBasins -v ^
 --wd="/path/to/data/" --d8_pntr='d8pntr.dep' ^
 --streams='streams.dep' -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```strahler_order_basins```
+
 
 #### 6.8.34 Subbasins
 
-*Description*: 
-Identifies the catchments, or sub-basin, draining to each link in a stream network
+Identifies the catchments, or sub-basin, draining to each link in a stream network.
 
 *Parameters*:
 
@@ -2527,17 +3038,21 @@ Identifies the catchments, or sub-basin, draining to each link in a stream netwo
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Subbasins -v --wd="/path/to/data/" ^
 --d8_pntr='d8pntr.dep' --streams='streams.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```subbasins```
+
 
 #### 6.8.35 TraceDownslopeFlowpaths
 
-*Description*: 
-Traces downslope flowpaths from one or more target sites (i.e. seed points)
+Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
 *Parameters*:
 
@@ -2549,17 +3064,21 @@ Traces downslope flowpaths from one or more target sites (i.e. seed points)
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TraceDownslopeFlowpaths -v ^
 --wd="/path/to/data/" --seed_pts=seeds.dep ^
 --flow_dir=flow_directions.dep --output=flow_paths.dep 
+
+
 ```
+
+*Python Function Name*: ```trace_downslope_flowpaths```
+
 
 #### 6.8.36 Watershed
 
-*Description*: 
-Identifies the watershed, or drainage basin, draining to a set of target cells
+Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 *Parameters*:
 
@@ -2570,18 +3089,22 @@ Identifies the watershed, or drainage basin, draining to a set of target cells
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Watershed -v --wd="/path/to/data/" ^
 --d8_pntr='d8pntr.dep' --pour_pts='pour_pts.dep' ^
 -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```watershed```
+
 ### 6.9 Image Processing Tools
 
 #### 6.9.1 Closing
 
-*Description*: 
-A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set
+A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 
 *Parameters*:
 
@@ -2592,16 +3115,20 @@ A closing is a mathematical morphology operating involving an erosion (min filte
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Closing -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```closing```
+
 
 #### 6.9.2 CreateColourComposite
 
-*Description*: 
-Creates a colour-composite image from three bands of multispectral imagery
+Creates a colour-composite image from three bands of multispectral imagery.
 
 *Parameters*:
 
@@ -2614,7 +3141,7 @@ Creates a colour-composite image from three bands of multispectral imagery
 -o, -\-output        Output colour composite file
 -\-enhance           Optional flag indicating whether a balance contrast enhancement is performed
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CreateColourComposite -v ^
 --wd="/path/to/data/" --red=band3.dep --green=band2.dep ^
@@ -2623,12 +3150,16 @@ Creates a colour-composite image from three bands of multispectral imagery
 -r=CreateColourComposite -v --wd="/path/to/data/" ^
 --red=band3.dep --green=band2.dep --blue=band1.dep ^
 --opacity=a.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```create_colour_composite```
+
 
 #### 6.9.3 FlipImage
 
-*Description*: 
-Reflects an image in the vertical or horizontal axis
+Reflects an image in the vertical or horizontal axis.
 
 *Parameters*:
 
@@ -2639,16 +3170,20 @@ Reflects an image in the vertical or horizontal axis
 -\-direction         Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 
                      'b' (both) 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FlipImage -v --wd="/path/to/data/" ^
 --input=in.dep -o=out.dep --direction=h 
+
+
 ```
+
+*Python Function Name*: ```flip_image```
+
 
 #### 6.9.4 IntegralImage
 
-*Description*: 
-Transforms an input image (summed area table) into its integral image equivalent
+Transforms an input image (summed area table) into its integral image equivalent.
 
 *Parameters*:
 
@@ -2657,16 +3192,20 @@ Transforms an input image (summed area table) into its integral image equivalent
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=IntegralImage -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```integral_image```
+
 
 #### 6.9.5 KMeansClustering
 
-*Description*: 
-Performs a k-means clustering operation on a multi-spectral dataset
+Performs a k-means clustering operation on a multi-spectral dataset.
 
 *Parameters*:
 
@@ -2681,19 +3220,23 @@ Performs a k-means clustering operation on a multi-spectral dataset
 -\-initialize        How to initialize cluster centres?
 -\-min_class_size    Minimum class size, in pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=KMeansClustering -v ^
 --wd='/path/to/data/' -i='image1.tif;image2.tif;image3.tif' ^
 -o=output.tif --out_html=report.html --classes=15 ^
 --max_iterations=25 --class_change=1.5 --initialize='random' ^
 --min_class_size=500 
+
+
 ```
+
+*Python Function Name*: ```k_means_clustering```
+
 
 #### 6.9.6 LineThinning
 
-*Description*: 
-Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool
+Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 
 *Parameters*:
 
@@ -2702,16 +3245,20 @@ Performs line thinning a on Boolean raster image; intended to be used with the R
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LineThinning -v --wd="/path/to/data/" ^
 --input=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```line_thinning```
+
 
 #### 6.9.7 ModifiedKMeansClustering
 
-*Description*: 
-Performs a modified k-means clustering operation on a multi-spectral dataset
+Performs a modified k-means clustering operation on a multi-spectral dataset.
 
 *Parameters*:
 
@@ -2725,18 +3272,22 @@ Performs a modified k-means clustering operation on a multi-spectral dataset
 -\-max_iterations    Maximum number of iterations
 -\-class_change      Minimum percent of cells changed between iterations before completion
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ModifiedKMeansClustering -v ^
 --wd='/path/to/data/' -i='image1.tif;image2.tif;image3.tif' ^
 -o=output.tif --out_html=report.html --start_clusters=100 ^
 --merger_dist=30.0 --max_iterations=25 --class_change=1.5 
+
+
 ```
+
+*Python Function Name*: ```modified_k_means_clustering```
+
 
 #### 6.9.8 Mosaic
 
-*Description*: 
-Mosaics two or more images together
+Mosaics two or more images together.
 
 *Parameters*:
 
@@ -2746,17 +3297,21 @@ Mosaics two or more images together
 -o, -\-output        Output raster file
 -\-method            Resampling method
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Mosaic -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' -o=dest.dep ^
 --method='cc 
+
+
 ```
+
+*Python Function Name*: ```mosaic```
+
 
 #### 6.9.9 NormalizedDifferenceVegetationIndex
 
-*Description*: 
-Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery
+Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 
 *Parameters*:
 
@@ -2769,7 +3324,7 @@ Calculates the normalized difference vegetation index (NDVI) from near-infrared 
 -\-osavi             Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) 
                      should be used 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NormalizedDifferenceVegetationIndex -v ^
 --wd="/path/to/data/" --nir=band4.dep --red=band3.dep ^
@@ -2778,12 +3333,16 @@ Calculates the normalized difference vegetation index (NDVI) from near-infrared 
 -r=NormalizedDifferenceVegetationIndex -v --wd="/path/to/data/" ^
 --nir=band4.dep --red=band3.dep -o=output.dep --clip=1.0 ^
 --osavi 
+
+
 ```
+
+*Python Function Name*: ```normalized_difference_vegetation_index```
+
 
 #### 6.9.10 Opening
 
-*Description*: 
-An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set
+An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 
 *Parameters*:
 
@@ -2794,16 +3353,20 @@ An opening is a mathematical morphology operating involving a dilation (max filt
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Opening -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```opening```
+
 
 #### 6.9.11 RemoveSpurs
 
-*Description*: 
-Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool
+Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
 *Parameters*:
 
@@ -2813,16 +3376,20 @@ Removes the spurs (pruning operation) from a Boolean line image.; intended to be
 -o, -\-output        Output raster file
 -\-iterations        Maximum number of iterations
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RemoveSpurs -v --wd="/path/to/data/" ^
 --input=DEM.dep -o=output.dep --iterations=10 
+
+
 ```
+
+*Python Function Name*: ```remove_spurs```
+
 
 #### 6.9.12 Resample
 
-*Description*: 
-Resamples one or more input images into a destination image
+Resamples one or more input images into a destination image.
 
 *Parameters*:
 
@@ -2832,17 +3399,21 @@ Resamples one or more input images into a destination image
 -\-destination       Destination raster file
 -\-method            Resampling method
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Resample -v --wd='/path/to/data/' ^
 -i='image1.dep;image2.dep;image3.dep' --destination=dest.dep ^
 --method='cc 
+
+
 ```
+
+*Python Function Name*: ```resample```
+
 
 #### 6.9.13 RgbToIhs
 
-*Description*: 
-Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images
+Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 
 *Parameters*:
 
@@ -2860,7 +3431,7 @@ Converts red, green, and blue (RGB) images into intensity, hue, and saturation (
 -\-hue               Output hue raster file
 -\-saturation        Output saturation raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RgbToIhs -v --wd="/path/to/data/" ^
 --red=band3.dep --green=band2.dep --blue=band1.dep ^
@@ -2870,12 +3441,16 @@ Converts red, green, and blue (RGB) images into intensity, hue, and saturation (
 --wd="/path/to/data/" --composite=image.dep ^
 --intensity=intensity.dep --hue=hue.dep ^
 --saturation=saturation.dep 
+
+
 ```
+
+*Python Function Name*: ```rgb_to_ihs```
+
 
 #### 6.9.14 SplitColourComposite
 
-*Description*: 
-This tool splits an RGB colour composite image into seperate multispectral images
+This tool splits an RGB colour composite image into seperate multispectral images.
 
 *Parameters*:
 
@@ -2884,16 +3459,20 @@ This tool splits an RGB colour composite image into seperate multispectral image
 -i, -\-input         Input colour composite image file
 -o, -\-output        Output raster file (suffixes of '_r', '_g', and '_b' will be appended)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SplitColourComposite -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```split_colour_composite```
+
 
 #### 6.9.15 ThickenRasterLine
 
-*Description*: 
-Thickens single-cell wide lines within a raster image
+Thickens single-cell wide lines within a raster image.
 
 *Parameters*:
 
@@ -2902,16 +3481,20 @@ Thickens single-cell wide lines within a raster image
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ThickenRasterLine -v ^
 --wd="/path/to/data/" --input=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```thicken_raster_line```
+
 
 #### 6.9.16 TophatTransform
 
-*Description*: 
-Performs either a white or black top-hat transform on an input image
+Performs either a white or black top-hat transform on an input image.
 
 *Parameters*:
 
@@ -2923,16 +3506,20 @@ Performs either a white or black top-hat transform on an input image
 -\-filtery           Size of the filter kernel in the y-direction
 -\-variant           Optional variant value. Options include 'white' and 'black'
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TophatTransform -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```tophat_transform```
+
 
 #### 6.9.17 WriteFunctionMemoryInsertion
 
-*Description*: 
-Performs a write function memory insertion for single-band multi-date change detection
+Performs a write function memory insertion for single-band multi-date change detection.
 
 *Parameters*:
 
@@ -2943,18 +3530,22 @@ Performs a write function memory insertion for single-band multi-date change det
 -\-i3, -\-input3     Optional input raster file associated with the third date
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=WriteFunctionMemoryInsertion -v ^
 --wd="/path/to/data/" -i1=input1.dep -i2=input2.dep ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```write_function_memory_insertion```
+
 ### 6.10 Image Processing Tools => Filters
 
 #### 6.10.1 AdaptiveFilter
 
-*Description*: 
-Performs an adaptive filter on an image
+Performs an adaptive filter on an image.
 
 *Parameters*:
 
@@ -2966,16 +3557,20 @@ Performs an adaptive filter on an image
 -\-filtery           Size of the filter kernel in the y-direction
 -\-threshold         Difference from mean threshold, in standard deviations
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AdaptiveFilter -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep --filter=25 --threshold = 2.0 
+
+
 ```
+
+*Python Function Name*: ```adaptive_filter```
+
 
 #### 6.10.2 BilateralFilter
 
-*Description*: 
-A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998)
+A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
 
 *Parameters*:
 
@@ -2986,17 +3581,21 @@ A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi a
 -\-sigma_dist        Standard deviation in distance in pixels
 -\-sigma_int         Standard deviation in intensity in pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BilateralFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep ^
 --sigma_dist=2.5 --sigma_int=4.0 
+
+
 ```
+
+*Python Function Name*: ```bilateral_filter```
+
 
 #### 6.10.3 ConservativeSmoothingFilter
 
-*Description*: 
-Performs a conservative-smoothing filter on an image
+Performs a conservative-smoothing filter on an image.
 
 *Parameters*:
 
@@ -3007,16 +3606,20 @@ Performs a conservative-smoothing filter on an image
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ConservativeSmoothingFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```conservative_smoothing_filter```
+
 
 #### 6.10.4 DiffOfGaussianFilter
 
-*Description*: 
-Performs a Difference of Gaussian (DoG) filter on an image
+Performs a Difference of Gaussian (DoG) filter on an image.
 
 *Parameters*:
 
@@ -3027,17 +3630,21 @@ Performs a Difference of Gaussian (DoG) filter on an image
 -\-sigma1            Standard deviation distance in pixels
 -\-sigma2            Standard deviation distance in pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DiffOfGaussianFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --sigma1=2.0 ^
 --sigma2=4.0 
+
+
 ```
+
+*Python Function Name*: ```diff_of_gaussian_filter```
+
 
 #### 6.10.5 DiversityFilter
 
-*Description*: 
-Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3048,16 +3655,20 @@ Assigns each cell in the output grid the number of different values in a moving 
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DiversityFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```diversity_filter```
+
 
 #### 6.10.6 EmbossFilter
 
-*Description*: 
-Performs an emboss filter on an image, similar to a hillshade operation
+Performs an emboss filter on an image, similar to a hillshade operation.
 
 *Parameters*:
 
@@ -3069,16 +3680,20 @@ Performs an emboss filter on an image, similar to a hillshade operation
                      'sw' 
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=EmbossFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --direction='s' --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```emboss_filter```
+
 
 #### 6.10.7 GaussianFilter
 
-*Description*: 
-Performs a Gaussian filter on an image
+Performs a Gaussian filter on an image.
 
 *Parameters*:
 
@@ -3088,16 +3703,20 @@ Performs a Gaussian filter on an image
 -o, -\-output        Output raster file
 -\-sigma             Standard deviation distance in pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=GaussianFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --sigma=2.0 
+
+
 ```
+
+*Python Function Name*: ```gaussian_filter```
+
 
 #### 6.10.8 HighPassFilter
 
-*Description*: 
-Performs a high-pass filter on an input image
+Performs a high-pass filter on an input image.
 
 *Parameters*:
 
@@ -3108,16 +3727,20 @@ Performs a high-pass filter on an input image
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HighPassFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```high_pass_filter```
+
 
 #### 6.10.9 KNearestMeanFilter
 
-*Description*: 
-A k-nearest mean filter is a type of edge-preserving smoothing filter
+A k-nearest mean filter is a type of edge-preserving smoothing filter.
 
 *Parameters*:
 
@@ -3129,7 +3752,7 @@ A k-nearest mean filter is a type of edge-preserving smoothing filter
 -\-filtery           Size of the filter kernel in the y-direction
 -k                   k-value in pixels; this is the number of nearest-valued neighbours to use
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=KNearestMeanFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filter=9 ^
@@ -3137,12 +3760,16 @@ A k-nearest mean filter is a type of edge-preserving smoothing filter
 >>./whitebox_tools -r=KNearestMeanFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filtery=7 ^
 --filtery=9 -k=5 
+
+
 ```
+
+*Python Function Name*: ```k_nearest_mean_filter```
+
 
 #### 6.10.10 LaplacianFilter
 
-*Description*: 
-Performs a Laplacian filter on an image
+Performs a Laplacian filter on an image.
 
 *Parameters*:
 
@@ -3154,17 +3781,21 @@ Performs a Laplacian filter on an image
                      and 5x5(2) (default is 3x3(1)) 
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LaplacianFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep ^
 --variant='3x3(1)' --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```laplacian_filter```
+
 
 #### 6.10.11 LaplacianOfGaussianFilter
 
-*Description*: 
-Performs a Laplacian-of-Gaussian (LoG) filter on an image
+Performs a Laplacian-of-Gaussian (LoG) filter on an image.
 
 *Parameters*:
 
@@ -3174,16 +3805,20 @@ Performs a Laplacian-of-Gaussian (LoG) filter on an image
 -o, -\-output        Output raster file
 -\-sigma             Standard deviation in pixels
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LaplacianOfGaussianFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --sigma=2.0 
+
+
 ```
+
+*Python Function Name*: ```laplacian_of_gaussian_filter```
+
 
 #### 6.10.12 LeeFilter
 
-*Description*: 
-Performs a Lee (Sigma) smoothing filter on an image
+Performs a Lee (Sigma) smoothing filter on an image.
 
 *Parameters*:
 
@@ -3198,7 +3833,7 @@ Performs a Lee (Sigma) smoothing filter on an image
 -m                   M-threshold value the minimum allowable number of pixels within the intensity 
                      range 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=9 --sigma=10.0 ^
@@ -3206,12 +3841,16 @@ Performs a Lee (Sigma) smoothing filter on an image
 >>./whitebox_tools -r=LeeFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filtery=7 --filtery=9 ^
 --sigma=10.0 -m=5 
+
+
 ```
+
+*Python Function Name*: ```lee_filter```
+
 
 #### 6.10.13 LineDetectionFilter
 
-*Description*: 
-Performs a line-detection filter on an image
+Performs a line-detection filter on an image.
 
 *Parameters*:
 
@@ -3224,17 +3863,21 @@ Performs a line-detection filter on an image
 -\-absvals           Optional flag indicating whether outputs should be absolute values
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LineDetectionFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --variant=h ^
 --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```line_detection_filter```
+
 
 #### 6.10.14 MajorityFilter
 
-*Description*: 
-Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3245,16 +3888,20 @@ Assigns each cell in the output grid the most frequently occurring value (mode) 
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MajorityFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```majority_filter```
+
 
 #### 6.10.15 MaximumFilter
 
-*Description*: 
-Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3265,16 +3912,20 @@ Assigns each cell in the output grid the maximum value in a moving window centre
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MaximumFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```maximum_filter```
+
 
 #### 6.10.16 MeanFilter
 
-*Description*: 
-Performs a mean filter (low-pass filter) on an input image
+Performs a mean filter (low-pass filter) on an input image.
 
 *Parameters*:
 
@@ -3285,16 +3936,20 @@ Performs a mean filter (low-pass filter) on an input image
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MeanFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filterx=25 --filtery=25 
+
+
 ```
+
+*Python Function Name*: ```mean_filter```
+
 
 #### 6.10.17 MedianFilter
 
-*Description*: 
-Performs a median filter on an input image
+Performs a median filter on an input image.
 
 *Parameters*:
 
@@ -3306,16 +3961,20 @@ Performs a median filter on an input image
 -\-filtery           Size of the filter kernel in the y-direction
 -\-sig_digits        Number of significant digits
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MedianFilter -v --wd="/path/to/data/" ^
 -i=input.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```median_filter```
+
 
 #### 6.10.18 MinimumFilter
 
-*Description*: 
-Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3326,16 +3985,20 @@ Assigns each cell in the output grid the minimum value in a moving window centre
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MinimumFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```minimum_filter```
+
 
 #### 6.10.19 OlympicFilter
 
-*Description*: 
-Performs an olympic smoothing filter on an image
+Performs an olympic smoothing filter on an image.
 
 *Parameters*:
 
@@ -3346,16 +4009,20 @@ Performs an olympic smoothing filter on an image
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=OlympicFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```olympic_filter```
+
 
 #### 6.10.20 PercentileFilter
 
-*Description*: 
-Performs a percentile filter on an input image
+Performs a percentile filter on an input image.
 
 *Parameters*:
 
@@ -3367,16 +4034,20 @@ Performs a percentile filter on an input image
 -\-filtery           Size of the filter kernel in the y-direction
 -\-sig_digits        Number of significant digits
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentileFilter -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```percentile_filter```
+
 
 #### 6.10.21 PrewittFilter
 
-*Description*: 
-Performs a Prewitt edge-detection filter on an image
+Performs a Prewitt edge-detection filter on an image.
 
 *Parameters*:
 
@@ -3386,16 +4057,20 @@ Performs a Prewitt edge-detection filter on an image
 -o, -\-output        Output raster file
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PrewittFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```prewitt_filter```
+
 
 #### 6.10.22 RangeFilter
 
-*Description*: 
-Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3406,16 +4081,20 @@ Assigns each cell in the output grid the range of values in a moving window cent
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RangeFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```range_filter```
+
 
 #### 6.10.23 RobertsCrossFilter
 
-*Description*: 
-Performs a Robert's cross edge-detection filter on an image
+Performs a Robert's cross edge-detection filter on an image.
 
 *Parameters*:
 
@@ -3425,16 +4104,20 @@ Performs a Robert's cross edge-detection filter on an image
 -o, -\-output        Output raster file
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RobertsCrossFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```roberts_cross_filter```
+
 
 #### 6.10.24 ScharrFilter
 
-*Description*: 
-Performs a Scharr edge-detection filter on an image
+Performs a Scharr edge-detection filter on an image.
 
 *Parameters*:
 
@@ -3444,16 +4127,20 @@ Performs a Scharr edge-detection filter on an image
 -o, -\-output        Output raster file
 -\-clip              Optional amount to clip the distribution tails by, in percent
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ScharrFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```scharr_filter```
+
 
 #### 6.10.25 SobelFilter
 
-*Description*: 
-Performs a Sobel edge-detection filter on an image
+Performs a Sobel edge-detection filter on an image.
 
 *Parameters*:
 
@@ -3464,16 +4151,20 @@ Performs a Sobel edge-detection filter on an image
 -\-variant           Optional variant value. Options include 3x3 and 5x5 (default is 3x3)
 -\-clip              Optional amount to clip the distribution tails by, in percent (default is 0.0)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SobelFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --variant=5x5 --clip=1.0 
+
+
 ```
+
+*Python Function Name*: ```sobel_filter```
+
 
 #### 6.10.26 StandardDeviationFilter
 
-*Description*: 
-Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster
+Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 
 *Parameters*:
 
@@ -3484,16 +4175,20 @@ Assigns each cell in the output grid the standard deviation of values in a movin
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StandardDeviationFilter -v ^
 --wd="/path/to/data/" -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```standard_deviation_filter```
+
 
 #### 6.10.27 TotalFilter
 
-*Description*: 
-Performs a total filter on an input image
+Performs a total filter on an input image.
 
 *Parameters*:
 
@@ -3504,17 +4199,21 @@ Performs a total filter on an input image
 -\-filterx           Size of the filter kernel in the x-direction
 -\-filtery           Size of the filter kernel in the y-direction
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TotalFilter -v --wd="/path/to/data/" ^
 -i=image.dep -o=output.dep --filter=25 
+
+
 ```
+
+*Python Function Name*: ```total_filter```
+
 ### 6.11 Image Processing Tools => Image Enhancement
 
 #### 6.11.1 BalanceContrastEnhancement
 
-*Description*: 
-Performs a balance contrast enhancement on a colour-composite image of multispectral data
+Performs a balance contrast enhancement on a colour-composite image of multispectral data.
 
 *Parameters*:
 
@@ -3524,17 +4223,21 @@ Performs a balance contrast enhancement on a colour-composite image of multispec
 -o, -\-output        Output raster file
 -\-band_mean         Band mean value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BalanceContrastEnhancement -v ^
 --wd="/path/to/data/" --input=image.dep -o=output.dep ^
 --band_mean=120 
+
+
 ```
+
+*Python Function Name*: ```balance_contrast_enhancement```
+
 
 #### 6.11.2 DirectDecorrelationStretch
 
-*Description*: 
-Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data
+Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 
 *Parameters*:
 
@@ -3546,16 +4249,20 @@ Performs a direct decorrelation stretch enhancement on a colour-composite image 
                      stretch), although typical values range from 0.3 to 0.7 
 -\-clip              Optional percent to clip the upper tail by during the stretch
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DirectDecorrelationStretch -v ^
 --wd="/path/to/data/" --input=image.dep -o=output.dep -k=0.4 
+
+
 ```
+
+*Python Function Name*: ```direct_decorrelation_stretch```
+
 
 #### 6.11.3 GammaCorrection
 
-*Description*: 
-Performs a sigmoidal contrast stretch on input images
+Performs a sigmoidal contrast stretch on input images.
 
 *Parameters*:
 
@@ -3565,16 +4272,20 @@ Performs a sigmoidal contrast stretch on input images
 -o, -\-output        Output raster file
 -\-gamma             Gamma value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=GammaCorrection -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep --gamma=0.5 
+
+
 ```
+
+*Python Function Name*: ```gamma_correction```
+
 
 #### 6.11.4 HistogramEqualization
 
-*Description*: 
-Performs a histogram equalization contrast enhancment on an image
+Performs a histogram equalization contrast enhancment on an image.
 
 *Parameters*:
 
@@ -3584,17 +4295,21 @@ Performs a histogram equalization contrast enhancment on an image
 -o, -\-output        Output raster file
 -\-num_tones         Number of tones in the output image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HistogramEqualization -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep ^
 --num_tones=1024 
+
+
 ```
+
+*Python Function Name*: ```histogram_equalization```
+
 
 #### 6.11.5 HistogramMatching
 
-*Description*: 
-Alters the statistical distribution of a raster image matching it to a specified PDF
+Alters the statistical distribution of a raster image matching it to a specified PDF.
 
 *Parameters*:
 
@@ -3604,17 +4319,21 @@ Alters the statistical distribution of a raster image matching it to a specified
 -\-histo_file        Input reference probability distribution function (pdf) text file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HistogramMatching -v ^
 --wd="/path/to/data/" -i=input1.dep --histo_file=histo.txt ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```histogram_matching```
+
 
 #### 6.11.6 HistogramMatchingTwoImages
 
-*Description*: 
-This tool alters the cumulative distribution function of a raster image to that of another image
+This tool alters the cumulative distribution function of a raster image to that of another image.
 
 *Parameters*:
 
@@ -3624,17 +4343,21 @@ This tool alters the cumulative distribution function of a raster image to that 
 -\-i2, -\-input2     Input reference raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HistogramMatchingTwoImages -v ^
 --wd="/path/to/data/" --i1=input1.dep --i2=input2.dep ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```histogram_matching_two_images```
+
 
 #### 6.11.7 MinMaxContrastStretch
 
-*Description*: 
-Performs a min-max contrast stretch on an input greytone image
+Performs a min-max contrast stretch on an input greytone image.
 
 *Parameters*:
 
@@ -3646,17 +4369,21 @@ Performs a min-max contrast stretch on an input greytone image
 -\-max_val           Upper tail clip value
 -\-num_tones         Number of tones in the output image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=MinMaxContrastStretch -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep ^
 --min_val=45.0 --max_val=200.0 --num_tones=1024 
+
+
 ```
+
+*Python Function Name*: ```min_max_contrast_stretch```
+
 
 #### 6.11.8 PanchromaticSharpening
 
-*Description*: 
-Increases the spatial resolution of image data by combining multispectral bands with panchromatic data
+Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
 
 *Parameters*:
 
@@ -3674,7 +4401,7 @@ Increases the spatial resolution of image data by combining multispectral bands 
 -o, -\-output        Output colour composite file
 -\-method            Options include 'brovey' (default) and 'ihs'
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PanchromaticSharpening -v ^
 --wd="/path/to/data/" --red=red.dep --green=green.dep ^
@@ -3683,12 +4410,16 @@ Increases the spatial resolution of image data by combining multispectral bands 
 >>./whitebox_tools -r=PanchromaticSharpening ^
 -v --wd="/path/to/data/" --composite=image.dep --pan=pan.dep ^
 --output=pan_sharp.dep --method='ihs' 
+
+
 ```
+
+*Python Function Name*: ```panchromatic_sharpening```
+
 
 #### 6.11.9 PercentageContrastStretch
 
-*Description*: 
-Performs a percentage linear contrast stretch on input images
+Performs a percentage linear contrast stretch on input images.
 
 *Parameters*:
 
@@ -3701,17 +4432,21 @@ Performs a percentage linear contrast stretch on input images
                      (default is 'both') 
 -\-num_tones         Number of tones in the output image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=PercentageContrastStretch -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep --clip=2.0 ^
 --tail='both' --num_tones=1024 
+
+
 ```
+
+*Python Function Name*: ```percentage_contrast_stretch```
+
 
 #### 6.11.10 SigmoidalContrastStretch
 
-*Description*: 
-Performs a sigmoidal contrast stretch on input images
+Performs a sigmoidal contrast stretch on input images.
 
 *Parameters*:
 
@@ -3723,17 +4458,21 @@ Performs a sigmoidal contrast stretch on input images
 -\-gain              Gain value
 -\-num_tones         Number of tones in the output image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SigmoidalContrastStretch -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep --cutoff=0.1 ^
 --gain=2.0 --num_tones=1024 
+
+
 ```
+
+*Python Function Name*: ```sigmoidal_contrast_stretch```
+
 
 #### 6.11.11 StandardDeviationContrastStretch
 
-*Description*: 
-Performs a standard-deviation contrast stretch on input images
+Performs a standard-deviation contrast stretch on input images.
 
 *Parameters*:
 
@@ -3744,18 +4483,22 @@ Performs a standard-deviation contrast stretch on input images
 -\-clip, -\-stdev    Standard deviation clip value
 -\-num_tones         Number of tones in the output image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StandardDeviationContrastStretch -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep --stdev=2.0 ^
 --num_tones=1024 
+
+
 ```
+
+*Python Function Name*: ```standard_deviation_contrast_stretch```
+
 ### 6.12 LiDAR Tools
 
 #### 6.12.1 BlockMaximum
 
-*Description*: 
-Creates a block-maximum raster from an input LAS file
+Creates a block-maximum raster from an input LAS file.
 
 *Parameters*:
 
@@ -3765,19 +4508,23 @@ Creates a block-maximum raster from an input LAS file
 -o, -\-output        Output file
 -\-resolution        Output raster's grid resolution
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" ^
 -i=file.las -o=outfile.dep --resolution=2.0"
 ./whitebox_tools ^
 -r=BlockMaximum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```block_maximum```
+
 
 #### 6.12.2 BlockMinimum
 
-*Description*: 
-Creates a block-minimum raster from an input LAS file
+Creates a block-minimum raster from an input LAS file.
 
 *Parameters*:
 
@@ -3787,19 +4534,23 @@ Creates a block-minimum raster from an input LAS file
 -o, -\-output        Output file
 -\-resolution        Output raster's grid resolution
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" ^
 -i=file.las -o=outfile.dep --resolution=2.0"
 ./whitebox_tools ^
 -r=BlockMinimum -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```block_minimum```
+
 
 #### 6.12.3 FilterLidarScanAngles
 
-*Description*: 
-Removes points in a LAS file with scan angles greater than a threshold
+Removes points in a LAS file with scan angles greater than a threshold.
 
 *Parameters*:
 
@@ -3809,17 +4560,21 @@ Removes points in a LAS file with scan angles greater than a threshold
 -o, -\-output        Output LiDAR file
 -\-threshold         Scan angle threshold
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FilterLidarScanAngles -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --threshold=10.0 
+
+
 ```
+
+*Python Function Name*: ```filter_lidar_scan_angles```
+
 
 #### 6.12.4 FindFlightlineEdgePoints
 
-*Description*: 
-Identifies points along a flightline's edge in a LAS file
+Identifies points along a flightline's edge in a LAS file.
 
 *Parameters*:
 
@@ -3828,16 +4583,20 @@ Identifies points along a flightline's edge in a LAS file
 -i, -\-input         Input LiDAR file
 -o, -\-output        Output file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindFlightlineEdgePoints -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" 
+
+
 ```
+
+*Python Function Name*: ```find_flightline_edge_points```
+
 
 #### 6.12.5 FlightlineOverlap
 
-*Description*: 
-Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell
+Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 
 *Parameters*:
 
@@ -3847,7 +4606,7 @@ Reads a LiDAR (LAS) point file and outputs a raster containing the number of ove
 -o, -\-output        Output file
 -\-resolution        Output raster's grid resolution
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FlightlineOverlap -v ^
 --wd="/path/to/data/" -i=file.las -o=outfile.dep ^
@@ -3855,12 +4614,16 @@ Reads a LiDAR (LAS) point file and outputs a raster containing the number of ove
 ./whitebox_tools -r=FlightlineOverlap -v ^
 --wd="/path/to/data/" -i=file.las -o=outfile.dep ^
 --resolution=5.0 --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```flightline_overlap```
+
 
 #### 6.12.6 LasToAscii
 
-*Description*: 
-Converts one or more LAS files into ASCII text files
+Converts one or more LAS files into ASCII text files.
 
 *Parameters*:
 
@@ -3868,16 +4631,20 @@ Converts one or more LAS files into ASCII text files
 -------------------  ---------------
 -i, -\-inputs        Input LiDAR files
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LasToAscii -v --wd="/path/to/data/" ^
 -i="file1.las, file2.las, file3.las" -o=outfile.las" 
+
+
 ```
+
+*Python Function Name*: ```las_to_ascii```
+
 
 #### 6.12.7 LidarColourize
 
-*Description*: 
-Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image
+Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
 *Parameters*:
 
@@ -3887,17 +4654,21 @@ Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input im
 -\-in_image          Input colour image file
 -o, -\-output        Output LiDAR file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarColourize -v --wd="/path/to/data/" ^
 --in_lidar="input.las" --in_image="image.dep" ^
 -o="output.las" 
+
+
 ```
+
+*Python Function Name*: ```lidar_colourize```
+
 
 #### 6.12.8 LidarElevationSlice
 
-*Description*: 
-Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range
+Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
 *Parameters*:
 
@@ -3914,7 +4685,7 @@ Outputs all of the points within a LiDAR (LAS) point file that lie between a spe
 -\-outclassval       Optional parameter specifying the class value assigned to points within the 
                      slice 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarElevationSlice -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
@@ -3926,12 +4697,16 @@ Outputs all of the points within a LiDAR (LAS) point file that lie between a spe
 >>./whitebox_tools -r=LidarElevationSlice -v ^
 -i="/path/to/data/input.las" -o="/path/to/data/output.las" ^
 --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0 
+
+
 ```
+
+*Python Function Name*: ```lidar_elevation_slice```
+
 
 #### 6.12.9 LidarGroundPointFilter
 
-*Description*: 
-Identifies ground points within LiDAR dataset using a slope-based method
+Identifies ground points within LiDAR dataset using a slope-based method.
 
 *Parameters*:
 
@@ -3943,17 +4718,21 @@ Identifies ground points within LiDAR dataset using a slope-based method
 -\-slope_threshold   Maximum inter-point slope to be considered an off-terrain point
 -\-height_threshold  Inter-point height difference to be considered an off-terrain point
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarGroundPointFilter -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --radius=10.0 
+
+
 ```
+
+*Python Function Name*: ```lidar_ground_point_filter```
+
 
 #### 6.12.10 LidarHillshade
 
-*Description*: 
-Calculates a hillshade value for points within a LAS file and stores these data in the RGB field
+Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
 *Parameters*:
 
@@ -3965,19 +4744,23 @@ Calculates a hillshade value for points within a LAS file and stores these data 
 -\-altitude          Illumination source altitude in degrees
 -\-radius            Search Radius
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarHillshade -v --wd="/path/to/data/" ^
 -i="input.las" -o="output.las" --radius=10.0
 >>./whitebox_tools ^
 -r=LidarHillshade -v --wd="/path/to/data/" -i="input.las" ^
 -o="output.las" --azimuth=180.0 --altitude=20.0 --radius=1.0 
+
+
 ```
+
+*Python Function Name*: ```lidar_hillshade```
+
 
 #### 6.12.11 LidarHistogram
 
-*Description*: 
-Creates a histogram from LiDAR data
+Creates a histogram from LiDAR data.
 
 *Parameters*:
 
@@ -3988,17 +4771,21 @@ Creates a histogram from LiDAR data
 -\-parameter         Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class
 -\-clip              Amount to clip distribution tails (in percent)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarHistogram -v --wd="/path/to/data/" ^
 -i="file1.tif, file2.tif, file3.tif" -o=outfile.htm ^
 --contiguity=Bishopsl 
+
+
 ```
+
+*Python Function Name*: ```lidar_histogram```
+
 
 #### 6.12.12 LidarIdwInterpolation
 
-*Description*: 
-Interpolates LAS files using an inverse-distance weighted (IDW) scheme
+Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
 
 *Parameters*:
 
@@ -4017,7 +4804,7 @@ Interpolates LAS files using an inverse-distance weighted (IDW) scheme
 -\-minz              Optional minimum elevation for inclusion in interpolation
 -\-maxz              Optional maximum elevation for inclusion in interpolation
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarIdwInterpolation -v ^
 --wd="/path/to/data/" -i=file.las -o=outfile.dep ^
@@ -4026,12 +4813,16 @@ Interpolates LAS files using an inverse-distance weighted (IDW) scheme
 -r=LidarIdwInterpolation --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --weight=2.0 --radius=2.0 ^
 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```lidar_idw_interpolation```
+
 
 #### 6.12.13 LidarInfo
 
-*Description*: 
-Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys
+Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
 *Parameters*:
 
@@ -4042,18 +4833,22 @@ Prints information about a LiDAR (LAS) dataset, including header, point return f
 -\-vlr               Flag indicating whether or not to print the variable length records (VLRs)
 -\-geokeys           Flag indicating whether or not to print the geokeys
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarInfo -v --wd="/path/to/data/" ^
 -i=file.las --vlr --geokeys"
 ./whitebox_tools -r=LidarInfo ^
 --wd="/path/to/data/" -i=file.las 
+
+
 ```
+
+*Python Function Name*: ```lidar_info```
+
 
 #### 6.12.14 LidarJoin
 
-*Description*: 
-Joins multiple LiDAR (LAS) files into a single LAS file
+Joins multiple LiDAR (LAS) files into a single LAS file.
 
 *Parameters*:
 
@@ -4062,16 +4857,20 @@ Joins multiple LiDAR (LAS) files into a single LAS file
 -i, -\-inputs        Input LiDAR files
 -o, -\-output        Output LiDAR file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarJoin -v --wd="/path/to/data/" ^
 -i="file1.las, file2.las, file3.las" -o=outfile.las" 
+
+
 ```
+
+*Python Function Name*: ```lidar_join```
+
 
 #### 6.12.15 LidarKappaIndex
 
-*Description*: 
-Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files
+Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
 *Parameters*:
 
@@ -4081,17 +4880,21 @@ Performs a kappa index of agreement (KIA) analysis on the classifications of two
 -\-i2, -\-input2     Input LiDAR reference file
 -o, -\-output        Output HTML file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarKappaIndex -v ^
 --wd="/path/to/data/" --i1=class.tif --i2=reference.tif ^
 -o=kia.html 
+
+
 ```
+
+*Python Function Name*: ```lidar_kappa_index```
+
 
 #### 6.12.16 LidarNearestNeighbourGridding
 
-*Description*: 
-Grids LAS files using nearest-neighbour scheme
+Grids LAS files using nearest-neighbour scheme.
 
 *Parameters*:
 
@@ -4109,7 +4912,7 @@ Grids LAS files using nearest-neighbour scheme
 -\-minz              Optional minimum elevation for inclusion in interpolation
 -\-maxz              Optional maximum elevation for inclusion in interpolation
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarNearestNeighbourGridding -v ^
 --wd="/path/to/data/" -i=file.las -o=outfile.dep ^
@@ -4118,12 +4921,16 @@ Grids LAS files using nearest-neighbour scheme
 -r=LidarNearestNeighbourGridding --wd="/path/to/data/" ^
 -i=file.las -o=outfile.dep --resolution=5.0 --radius=2.0 ^
 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```lidar_nearest_neighbour_gridding```
+
 
 #### 6.12.17 LidarPointDensity
 
-*Description*: 
-Calculates the spatial pattern of point density for a LiDAR data set
+Calculates the spatial pattern of point density for a LiDAR data set.
 
 *Parameters*:
 
@@ -4139,7 +4946,7 @@ Calculates the spatial pattern of point density for a LiDAR data set
 -\-minz              Optional minimum elevation for inclusion in interpolation
 -\-maxz              Optional maximum elevation for inclusion in interpolation
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarPointDensity -v ^
 --wd="/path/to/data/" -i=file.las -o=outfile.dep ^
@@ -4148,12 +4955,16 @@ Calculates the spatial pattern of point density for a LiDAR data set
 -r=LidarPointDensity -v --wd="/path/to/data/" -i=file.las ^
 -o=outfile.dep --resolution=5.0 --radius=2.0 ^
 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt 
+
+
 ```
+
+*Python Function Name*: ```lidar_point_density```
+
 
 #### 6.12.18 LidarPointStats
 
-*Description*: 
-Creates several rasters summarizing the distribution of LAS point data
+Creates several rasters summarizing the distribution of LAS point data.
 
 *Parameters*:
 
@@ -4167,17 +4978,44 @@ Creates several rasters summarizing the distribution of LAS point data
 -\-intensity_range   Flag indicating whether or not to output the intensity range raster
 -\-predom_class      Flag indicating whether or not to output the predominant classification raster
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarPointStats -v ^
 --wd="/path/to/data/" -i=file.las --resolution=1.0 ^
 --num_points 
+
+
 ```
 
-#### 6.12.19 LidarRemoveOutliers
+*Python Function Name*: ```lidar_point_stats```
 
-*Description*: 
-Removes outliers (high and low points) in a LiDAR point cloud
+
+#### 6.12.19 LidarRemoveDuplicates
+
+Removes duplicate points from a LiDAR data set.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-o, -\-output        Output LiDAR file
+-\-include_z         Include z-values in point comparison?
+
+*Command-line Interface*:
+```
+>>./whitebox_tools -r=LidarRemoveDuplicates -v ^
+--wd="/path/to/data/" -i="input.las" -o="output.las" 
+
+
+```
+
+*Python Function Name*: ```lidar_remove_duplicates```
+
+
+#### 6.12.20 LidarRemoveOutliers
+
+Removes outliers (high and low points) in a LiDAR point cloud.
 
 *Parameters*:
 
@@ -4188,17 +5026,21 @@ Removes outliers (high and low points) in a LiDAR point cloud
 -\-radius            Search Radius
 -\-elev_diff         Max. elevation difference
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarRemoveOutliers -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --radius=10.0 --elev_diff=25.0 
+
+
 ```
 
-#### 6.12.20 LidarSegmentation
+*Python Function Name*: ```lidar_remove_outliers```
 
-*Description*: 
-Segments a LiDAR point cloud based on normal vectors
+
+#### 6.12.21 LidarSegmentation
+
+Segments a LiDAR point cloud based on normal vectors.
 
 *Parameters*:
 
@@ -4211,17 +5053,21 @@ Segments a LiDAR point cloud based on normal vectors
 -\-maxzdiff          Maximum difference in elevation (z units) between neighbouring points of the 
                      same segment 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarSegmentation -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 
+
+
 ```
 
-#### 6.12.21 LidarSegmentationBasedFilter
+*Python Function Name*: ```lidar_segmentation```
 
-*Description*: 
-Identifies ground points within LiDAR point clouds using a segmentation based approach
+
+#### 6.12.22 LidarSegmentationBasedFilter
+
+Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
 *Parameters*:
 
@@ -4235,17 +5081,21 @@ Identifies ground points within LiDAR point clouds using a segmentation based ap
                      same segment 
 -\-classify          Classify points as ground (2) or off-ground (1)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarSegmentationBasedFilter -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classify 
+
+
 ```
 
-#### 6.12.22 LidarTile
+*Python Function Name*: ```lidar_segmentation_based_filter```
 
-*Description*: 
-Tiles a LiDAR LAS file into multiple LAS files
+
+#### 6.12.23 LidarTile
+
+Tiles a LiDAR LAS file into multiple LAS files.
 
 *Parameters*:
 
@@ -4258,16 +5108,20 @@ Tiles a LiDAR LAS file into multiple LAS files
 -\-origin_y          Origin point Y coordinate for tile grid
 -\-min_points        Minimum number of points contained in a tile for it to be saved
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarTile -v -i=/path/to/data/input.las ^
 --width_x=1000.0 --width_y=2500.0 -=min_points=100 
+
+
 ```
 
-#### 6.12.23 LidarTophatTransform
+*Python Function Name*: ```lidar_tile```
 
-*Description*: 
-Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy
+
+#### 6.12.24 LidarTophatTransform
+
+Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
 *Parameters*:
 
@@ -4277,17 +5131,21 @@ Performs a white top-hat transform on a Lidar dataset; as an estimate of height 
 -o, -\-output        Output LiDAR file
 -\-radius            Search Radius
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LidarTophatTransform -v ^
 --wd="/path/to/data/" -i="input.las" -o="output.las" ^
 --radius=10.0 
+
+
 ```
 
-#### 6.12.24 NormalVectors
+*Python Function Name*: ```lidar_tophat_transform```
 
-*Description*: 
-Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field
+
+#### 6.12.25 NormalVectors
+
+Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
 *Parameters*:
 
@@ -4297,17 +5155,21 @@ Calculates normal vectors for points within a LAS file and stores these data (XY
 -o, -\-output        Output LiDAR file
 -\-radius            Search Radius
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NormalVectors -v --wd="/path/to/data/" ^
 -i="input.las" -o="output.las" --radius=10.0 
+
+
 ```
+
+*Python Function Name*: ```normal_vectors```
+
 ### 6.13 Math and Stats Tools
 
 #### 6.13.1 AbsoluteValue
 
-*Description*: 
-Calculates the absolute value of every cell in a raster
+Calculates the absolute value of every cell in a raster.
 
 *Parameters*:
 
@@ -4316,16 +5178,20 @@ Calculates the absolute value of every cell in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=AbsoluteValue -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```absolute_value```
+
 
 #### 6.13.2 Add
 
-*Description*: 
-Performs an addition operation on two rasters or a raster and a constant value
+Performs an addition operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4335,16 +5201,20 @@ Performs an addition operation on two rasters or a raster and a constant value
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Add -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```add```
+
 
 #### 6.13.3 And
 
-*Description*: 
-Performs a logical AND operator on two Boolean raster images
+Performs a logical AND operator on two Boolean raster images.
 
 *Parameters*:
 
@@ -4354,16 +5224,20 @@ Performs a logical AND operator on two Boolean raster images
 -\-input2            Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=And -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```And```
+
 
 #### 6.13.4 Anova
 
-*Description*: 
-Performs an analysis of variance (ANOVA) test on a raster dataset
+Performs an analysis of variance (ANOVA) test on a raster dataset.
 
 *Parameters*:
 
@@ -4373,16 +5247,20 @@ Performs an analysis of variance (ANOVA) test on a raster dataset
 -\-features          Feature definition (or class) raster
 -o, -\-output        Output HTML file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Anova -v --wd="/path/to/data/" ^
 -i=data.tif --features=classes.tif -o=anova.html 
+
+
 ```
+
+*Python Function Name*: ```anova```
+
 
 #### 6.13.5 ArcCos
 
-*Description*: 
-Returns the inverse cosine (arccos) of each values in a raster
+Returns the inverse cosine (arccos) of each values in a raster.
 
 *Parameters*:
 
@@ -4391,16 +5269,20 @@ Returns the inverse cosine (arccos) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ArcCos -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```arc_cos```
+
 
 #### 6.13.6 ArcSin
 
-*Description*: 
-Returns the inverse sine (arcsin) of each values in a raster
+Returns the inverse sine (arcsin) of each values in a raster.
 
 *Parameters*:
 
@@ -4409,16 +5291,20 @@ Returns the inverse sine (arcsin) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ArcSin -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```arc_sin```
+
 
 #### 6.13.7 ArcTan
 
-*Description*: 
-Returns the inverse tangent (arctan) of each values in a raster
+Returns the inverse tangent (arctan) of each values in a raster.
 
 *Parameters*:
 
@@ -4427,16 +5313,20 @@ Returns the inverse tangent (arctan) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ArcTan -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```arc_tan```
+
 
 #### 6.13.8 Atan2
 
-*Description*: 
-Returns the 2-argument inverse tangent (atan2)
+Returns the 2-argument inverse tangent (atan2).
 
 *Parameters*:
 
@@ -4446,16 +5336,20 @@ Returns the 2-argument inverse tangent (atan2)
 -\-input_x           Input x raster file or constant value (run)
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Atan2 -v --wd="/path/to/data/" ^
 --input_y='in1.dep' --input_x='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```atan2```
+
 
 #### 6.13.9 Ceil
 
-*Description*: 
-Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster
+Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 
 *Parameters*:
 
@@ -4464,16 +5358,20 @@ Returns the smallest (closest to negative infinity) value that is greater than o
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Ceil -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```ceil```
+
 
 #### 6.13.10 Cos
 
-*Description*: 
-Returns the cosine (cos) of each values in a raster
+Returns the cosine (cos) of each values in a raster.
 
 *Parameters*:
 
@@ -4482,16 +5380,20 @@ Returns the cosine (cos) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Cos -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```cos```
+
 
 #### 6.13.11 Cosh
 
-*Description*: 
-Returns the hyperbolic cosine (cosh) of each values in a raster
+Returns the hyperbolic cosine (cosh) of each values in a raster.
 
 *Parameters*:
 
@@ -4500,16 +5402,20 @@ Returns the hyperbolic cosine (cosh) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Cosh -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```cosh```
+
 
 #### 6.13.12 CrispnessIndex
 
-*Description*: 
-Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is
+Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
 
 *Parameters*:
 
@@ -4519,18 +5425,22 @@ Calculates the Crispness Index, which is used to quantify how crisp (or converse
 -o, -\-output        Optional output html file (default name will be based on input file if 
                      unspecified) 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CrispnessIndex -v --wd="/path/to/data/" ^
 -i=input.dep
 >>./whitebox_tools -r=CrispnessIndex -v ^
 --wd="/path/to/data/" -o=crispness.html 
+
+
 ```
+
+*Python Function Name*: ```crispness_index```
+
 
 #### 6.13.13 CrossTabulation
 
-*Description*: 
-Performs a cross-tabulation on two categorical images
+Performs a cross-tabulation on two categorical images.
 
 *Parameters*:
 
@@ -4540,17 +5450,21 @@ Performs a cross-tabulation on two categorical images
 -\-i2, -\-input2     Input raster file 1
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CrossTabulation -v ^
 --wd="/path/to/data/" --i1="file1.tif" --i2="file2.tif" ^
 -o=outfile.html 
+
+
 ```
+
+*Python Function Name*: ```cross_tabulation```
+
 
 #### 6.13.14 CumulativeDistribution
 
-*Description*: 
-Converts a raster image to its cumulative distribution function
+Converts a raster image to its cumulative distribution function.
 
 *Parameters*:
 
@@ -4559,16 +5473,20 @@ Converts a raster image to its cumulative distribution function
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=CumulativeDistribution -v ^
 --wd="/path/to/data/" -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```cumulative_distribution```
+
 
 #### 6.13.15 Decrement
 
-*Description*: 
-Decreases the values of each grid cell in an input raster by 1.0
+Decreases the values of each grid cell in an input raster by 1.0.
 
 *Parameters*:
 
@@ -4577,16 +5495,20 @@ Decreases the values of each grid cell in an input raster by 1.0
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Decrement -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```decrement```
+
 
 #### 6.13.16 Divide
 
-*Description*: 
-Performs a division operation on two rasters or a raster and a constant value
+Performs a division operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4596,16 +5518,20 @@ Performs a division operation on two rasters or a raster and a constant value
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Divide -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```divide```
+
 
 #### 6.13.17 EqualTo
 
-*Description*: 
-Performs a equal-to comparison operation on two rasters or a raster and a constant value
+Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4615,16 +5541,20 @@ Performs a equal-to comparison operation on two rasters or a raster and a consta
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=EqualTo -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```equal_to```
+
 
 #### 6.13.18 Exp
 
-*Description*: 
-Returns the exponential (base e) of values in a raster
+Returns the exponential (base e) of values in a raster.
 
 *Parameters*:
 
@@ -4633,16 +5563,20 @@ Returns the exponential (base e) of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Exp -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```exp```
+
 
 #### 6.13.19 Exp2
 
-*Description*: 
-Returns the exponential (base 2) of values in a raster
+Returns the exponential (base 2) of values in a raster.
 
 *Parameters*:
 
@@ -4651,16 +5585,20 @@ Returns the exponential (base 2) of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Exp2 -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```exp2```
+
 
 #### 6.13.20 ExtractRasterStatistics
 
-*Description*: 
-Extracts descriptive statistics for a group of patches in a raster
+Extracts descriptive statistics for a group of patches in a raster.
 
 *Parameters*:
 
@@ -4672,7 +5610,7 @@ Extracts descriptive statistics for a group of patches in a raster
 -\-stat              Statistic to extract
 -\-out_table         Output HTML Table file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ExtractRasterStatistics -v ^
 --wd="/path/to/data/" -i='input.dep' --features='groups.dep' ^
@@ -4681,12 +5619,16 @@ Extracts descriptive statistics for a group of patches in a raster
 -r=ExtractRasterStatistics -v --wd="/path/to/data/" ^
 -i='input.dep' --features='groups.dep' ^
 --out_table='output.html' 
+
+
 ```
+
+*Python Function Name*: ```extract_raster_statistics```
+
 
 #### 6.13.21 Floor
 
-*Description*: 
-Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster
+Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
 
 *Parameters*:
 
@@ -4695,16 +5637,20 @@ Returns the largest (closest to positive infinity) value that is less than or eq
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Floor -v --wd="/path/to/data/" ^
 -i='input.dep' -o='output.dep' 
+
+
 ```
+
+*Python Function Name*: ```floor```
+
 
 #### 6.13.22 GreaterThan
 
-*Description*: 
-Performs a greater-than comparison operation on two rasters or a raster and a constant value
+Performs a greater-than comparison operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4715,17 +5661,21 @@ Performs a greater-than comparison operation on two rasters or a raster and a co
 -o, -\-output        Output raster file
 -\-incl_equals       Perform a greater-than-or-equal-to operation
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=GreaterThan -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep ^
 --incl_equals 
+
+
 ```
+
+*Python Function Name*: ```greater_than```
+
 
 #### 6.13.23 ImageAutocorrelation
 
-*Description*: 
-Performs Moran's I analysis on two or more input images
+Performs Moran's I analysis on two or more input images.
 
 *Parameters*:
 
@@ -4735,17 +5685,21 @@ Performs Moran's I analysis on two or more input images
 -\-contiguity        Contiguity type
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ImageAutocorrelation -v ^
 --wd="/path/to/data/" -i="file1.tif, file2.tif, file3.tif" ^
 -o=outfile.html --contiguity=Bishops 
+
+
 ```
+
+*Python Function Name*: ```image_autocorrelation```
+
 
 #### 6.13.24 ImageCorrelation
 
-*Description*: 
-Performs image correlation on two or more input images
+Performs image correlation on two or more input images.
 
 *Parameters*:
 
@@ -4754,17 +5708,21 @@ Performs image correlation on two or more input images
 -i, -\-inputs        Input raster files
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ImageCorrelation -v ^
 --wd="/path/to/data/" -i="file1.tif, file2.tif, file3.tif" ^
 -o=outfile.html 
+
+
 ```
+
+*Python Function Name*: ```image_correlation```
+
 
 #### 6.13.25 ImageRegression
 
-*Description*: 
-Performs image regression analysis on two input images
+Performs image regression analysis on two input images.
 
 *Parameters*:
 
@@ -4776,18 +5734,22 @@ Performs image regression analysis on two input images
 -\-out_residuals     Output raster regression resdidual file
 -\-standardize       Optional flag indicating whether to standardize the residuals map
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ImageRegression -v ^
 --wd="/path/to/data/" --i1='file1.tif' --i2='file2.tif' ^
 -o='outfile.html' --out_residuals='residuals.tif' ^
 --standardize 
+
+
 ```
+
+*Python Function Name*: ```image_regression```
+
 
 #### 6.13.26 Increment
 
-*Description*: 
-Increases the values of each grid cell in an input raster by 1.0
+Increases the values of each grid cell in an input raster by 1.0.
 
 *Parameters*:
 
@@ -4796,16 +5758,20 @@ Increases the values of each grid cell in an input raster by 1.0
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Increment -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```increment```
+
 
 #### 6.13.27 IntegerDivision
 
-*Description*: 
-Performs an integer division operation on two rasters or a raster and a constant value
+Performs an integer division operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4815,17 +5781,21 @@ Performs an integer division operation on two rasters or a raster and a constant
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=IntegerDivision -v ^
 --wd="/path/to/data/" --input1='in1.dep' --input2='in2.dep' ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```integer_division```
+
 
 #### 6.13.28 IsNoData
 
-*Description*: 
-Identifies NoData valued pixels in an image
+Identifies NoData valued pixels in an image.
 
 *Parameters*:
 
@@ -4834,16 +5804,20 @@ Identifies NoData valued pixels in an image
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=IsNoData -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```is_no_data```
+
 
 #### 6.13.29 KSTestForNormality
 
-*Description*: 
-Evaluates whether the values in a raster are normally distributed
+Evaluates whether the values in a raster are normally distributed.
 
 *Parameters*:
 
@@ -4853,19 +5827,23 @@ Evaluates whether the values in a raster are normally distributed
 -o, -\-output        Output HTML file
 -\-num_samples       Number of samples. Leave blank to use whole image
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=KSTestForNormality -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.html ^
 --num_samples=1000
 >>./whitebox_tools -r=KSTestForNormality -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.html 
+
+
 ```
+
+*Python Function Name*: ```ks_test_for_normality```
+
 
 #### 6.13.30 KappaIndex
 
-*Description*: 
-Performs a kappa index of agreement (KIA) analysis on two categorical raster files
+Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
 
 *Parameters*:
 
@@ -4875,16 +5853,20 @@ Performs a kappa index of agreement (KIA) analysis on two categorical raster fil
 -\-i2, -\-input2     Input reference raster file
 -o, -\-output        Output HTML file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=KappaIndex -v --wd="/path/to/data/" ^
 --i1=class.tif --i2=reference.tif -o=kia.html 
+
+
 ```
+
+*Python Function Name*: ```kappa_index```
+
 
 #### 6.13.31 LessThan
 
-*Description*: 
-Performs a less-than comparison operation on two rasters or a raster and a constant value
+Performs a less-than comparison operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4895,17 +5877,21 @@ Performs a less-than comparison operation on two rasters or a raster and a const
 -o, -\-output        Output raster file
 -\-incl_equals       Perform a less-than-or-equal-to operation
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LessThan -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep ^
 --incl_equals 
+
+
 ```
+
+*Python Function Name*: ```less_than```
+
 
 #### 6.13.32 Ln
 
-*Description*: 
-Returns the natural logarithm of values in a raster
+Returns the natural logarithm of values in a raster.
 
 *Parameters*:
 
@@ -4914,16 +5900,20 @@ Returns the natural logarithm of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Ln -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```ln```
+
 
 #### 6.13.33 Log10
 
-*Description*: 
-Returns the base-10 logarithm of values in a raster
+Returns the base-10 logarithm of values in a raster.
 
 *Parameters*:
 
@@ -4932,16 +5922,20 @@ Returns the base-10 logarithm of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Log10 -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```log10```
+
 
 #### 6.13.34 Log2
 
-*Description*: 
-Returns the base-2 logarithm of values in a raster
+Returns the base-2 logarithm of values in a raster.
 
 *Parameters*:
 
@@ -4950,16 +5944,20 @@ Returns the base-2 logarithm of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Log2 -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```log2```
+
 
 #### 6.13.35 Max
 
-*Description*: 
-Performs a MAX operation on two rasters or a raster and a constant value
+Performs a MAX operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4969,16 +5967,20 @@ Performs a MAX operation on two rasters or a raster and a constant value
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Max -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```max```
+
 
 #### 6.13.36 Min
 
-*Description*: 
-Performs a MIN operation on two rasters or a raster and a constant value
+Performs a MIN operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -4988,16 +5990,20 @@ Performs a MIN operation on two rasters or a raster and a constant value
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Min -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```min```
+
 
 #### 6.13.37 Modulo
 
-*Description*: 
-Performs a modulo operation on two rasters or a raster and a constant value
+Performs a modulo operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -5007,16 +6013,20 @@ Performs a modulo operation on two rasters or a raster and a constant value
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Modulo -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```modulo```
+
 
 #### 6.13.38 Multiply
 
-*Description*: 
-Performs a multiplication operation on two rasters or a raster and a constant value
+Performs a multiplication operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -5026,16 +6036,20 @@ Performs a multiplication operation on two rasters or a raster and a constant va
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Multiply -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```multiply```
+
 
 #### 6.13.39 Negate
 
-*Description*: 
-Changes the sign of values in a raster or the 0-1 values of a Boolean raster
+Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
 *Parameters*:
 
@@ -5044,16 +6058,20 @@ Changes the sign of values in a raster or the 0-1 values of a Boolean raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Negate -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```negate```
+
 
 #### 6.13.40 Not
 
-*Description*: 
-Performs a logical NOT operator on two Boolean raster images
+Performs a logical NOT operator on two Boolean raster images.
 
 *Parameters*:
 
@@ -5063,16 +6081,20 @@ Performs a logical NOT operator on two Boolean raster images
 -\-input2            Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Not -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```Not```
+
 
 #### 6.13.41 NotEqualTo
 
-*Description*: 
-Performs a not-equal-to comparison operation on two rasters or a raster and a constant value
+Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -5082,16 +6104,20 @@ Performs a not-equal-to comparison operation on two rasters or a raster and a co
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=NotEqualTo -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```not_equal_to```
+
 
 #### 6.13.42 Or
 
-*Description*: 
-Performs a logical OR operator on two Boolean raster images
+Performs a logical OR operator on two Boolean raster images.
 
 *Parameters*:
 
@@ -5101,16 +6127,20 @@ Performs a logical OR operator on two Boolean raster images
 -\-input2            Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Or -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```Or```
+
 
 #### 6.13.43 Power
 
-*Description*: 
-Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value
+Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 
 *Parameters*:
 
@@ -5120,16 +6150,20 @@ Raises the values in grid cells of one rasters, or a constant value, by values i
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Power -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```power```
+
 
 #### 6.13.44 Quantiles
 
-*Description*: 
-Transforms raster values into quantiles
+Transforms raster values into quantiles.
 
 *Parameters*:
 
@@ -5139,16 +6173,20 @@ Transforms raster values into quantiles
 -o, -\-output        Output raster file
 -\-num_quantiles     Number of quantiles
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Quantiles -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep --num_quantiles=5 
+
+
 ```
+
+*Python Function Name*: ```quantiles```
+
 
 #### 6.13.45 RandomField
 
-*Description*: 
-Creates an image containing random values
+Creates an image containing random values.
 
 *Parameters*:
 
@@ -5157,16 +6195,20 @@ Creates an image containing random values
 -i, -\-base          Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RandomField -v --wd="/path/to/data/" ^
 --base=in.dep -o=out.dep 
+
+
 ```
+
+*Python Function Name*: ```random_field```
+
 
 #### 6.13.46 RandomSample
 
-*Description*: 
-Creates an image containing randomly located sample grid cells with unique IDs
+Creates an image containing randomly located sample grid cells with unique IDs.
 
 *Parameters*:
 
@@ -5176,16 +6218,20 @@ Creates an image containing randomly located sample grid cells with unique IDs
 -o, -\-output        Output raster file
 -\-num_samples       Number of samples
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RandomSample -v --wd="/path/to/data/" ^
 --base=in.dep -o=out.dep --num_samples=1000 
+
+
 ```
+
+*Python Function Name*: ```random_sample```
+
 
 #### 6.13.47 RasterHistogram
 
-*Description*: 
-Creates a histogram from raster values
+Creates a histogram from raster values.
 
 *Parameters*:
 
@@ -5194,16 +6240,20 @@ Creates a histogram from raster values
 -i, -\-input         Input raster file
 -o, -\-output        Output HTML file (default name will be based on input file if unspecified)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RasterHistogram -v ^
 --wd="/path/to/data/" -i="file1.tif" -o=outfile.html 
+
+
 ```
+
+*Python Function Name*: ```raster_histogram```
+
 
 #### 6.13.48 RasterSummaryStats
 
-*Description*: 
-Measures a rasters average, standard deviation, num. non-nodata cells, and total
+Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 
 *Parameters*:
 
@@ -5211,16 +6261,20 @@ Measures a rasters average, standard deviation, num. non-nodata cells, and total
 -------------------  ---------------
 -i, -\-input         Input raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RasterSummaryStats -v ^
 --wd="/path/to/data/" -i=DEM.dep 
+
+
 ```
+
+*Python Function Name*: ```raster_summary_stats```
+
 
 #### 6.13.49 Reciprocal
 
-*Description*: 
-Returns the reciprocal (i.e. 1 / z) of values in a raster
+Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
 *Parameters*:
 
@@ -5229,16 +6283,20 @@ Returns the reciprocal (i.e. 1 / z) of values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Reciprocal -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```reciprocal```
+
 
 #### 6.13.50 RescaleValueRange
 
-*Description*: 
-Performs a min-max contrast stretch on an input greytone image
+Performs a min-max contrast stretch on an input greytone image.
 
 *Parameters*:
 
@@ -5251,7 +6309,7 @@ Performs a min-max contrast stretch on an input greytone image
 -\-clip_min          Optional lower tail clip value
 -\-clip_max          Optional upper tail clip value
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RescaleValueRange -v ^
 --wd="/path/to/data/" -i=input.dep -o=output.dep ^
@@ -5260,12 +6318,16 @@ Performs a min-max contrast stretch on an input greytone image
 -r=RescaleValueRange -v --wd="/path/to/data/" -i=input.dep ^
 -o=output.dep --out_min_val=0.0 --out_max_val=1.0 ^
 --clip_min=45.0 --clip_max=200.0 
+
+
 ```
+
+*Python Function Name*: ```rescale_value_range```
+
 
 #### 6.13.51 RootMeanSquareError
 
-*Description*: 
-Calculates the RMSE and other accuracy statistics
+Calculates the RMSE and other accuracy statistics.
 
 *Parameters*:
 
@@ -5274,16 +6336,20 @@ Calculates the RMSE and other accuracy statistics
 -i, -\-input         Input raster file
 -\-base              Input base raster file used for comparison
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RootMeanSquareError -v ^
 --wd="/path/to/data/" -i=DEM.dep 
+
+
 ```
+
+*Python Function Name*: ```root_mean_square_error```
+
 
 #### 6.13.52 Round
 
-*Description*: 
-Rounds the values in an input raster to the nearest integer value
+Rounds the values in an input raster to the nearest integer value.
 
 *Parameters*:
 
@@ -5292,16 +6358,20 @@ Rounds the values in an input raster to the nearest integer value
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Round -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```round```
+
 
 #### 6.13.53 Sin
 
-*Description*: 
-Returns the sine (sin) of each values in a raster
+Returns the sine (sin) of each values in a raster.
 
 *Parameters*:
 
@@ -5310,16 +6380,20 @@ Returns the sine (sin) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Sin -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```sin```
+
 
 #### 6.13.54 Sinh
 
-*Description*: 
-Returns the hyperbolic sine (sinh) of each values in a raster
+Returns the hyperbolic sine (sinh) of each values in a raster.
 
 *Parameters*:
 
@@ -5328,16 +6402,20 @@ Returns the hyperbolic sine (sinh) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Sinh -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```sinh```
+
 
 #### 6.13.55 Square
 
-*Description*: 
-Squares the values in a raster
+Squares the values in a raster.
 
 *Parameters*:
 
@@ -5346,16 +6424,20 @@ Squares the values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Square -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```square```
+
 
 #### 6.13.56 SquareRoot
 
-*Description*: 
-Returns the square root of the values in a raster
+Returns the square root of the values in a raster.
 
 *Parameters*:
 
@@ -5364,16 +6446,20 @@ Returns the square root of the values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=SquareRoot -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```square_root```
+
 
 #### 6.13.57 Subtract
 
-*Description*: 
-Performs a differencing operation on two rasters or a raster and a constant value
+Performs a differencing operation on two rasters or a raster and a constant value.
 
 *Parameters*:
 
@@ -5383,16 +6469,20 @@ Performs a differencing operation on two rasters or a raster and a constant valu
 -\-input2            Input raster file or constant value
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Subtract -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```subtract```
+
 
 #### 6.13.58 Tan
 
-*Description*: 
-Returns the tangent (tan) of each values in a raster
+Returns the tangent (tan) of each values in a raster.
 
 *Parameters*:
 
@@ -5401,16 +6491,20 @@ Returns the tangent (tan) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Tan -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```tan```
+
 
 #### 6.13.59 Tanh
 
-*Description*: 
-Returns the hyperbolic tangent (tanh) of each values in a raster
+Returns the hyperbolic tangent (tanh) of each values in a raster.
 
 *Parameters*:
 
@@ -5419,16 +6513,20 @@ Returns the hyperbolic tangent (tanh) of each values in a raster
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Tanh -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```tanh```
+
 
 #### 6.13.60 ToDegrees
 
-*Description*: 
-Converts a raster from radians to degrees
+Converts a raster from radians to degrees.
 
 *Parameters*:
 
@@ -5437,16 +6535,20 @@ Converts a raster from radians to degrees
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ToDegrees -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```to_degrees```
+
 
 #### 6.13.61 ToRadians
 
-*Description*: 
-Converts a raster from degrees to radians
+Converts a raster from degrees to radians.
 
 *Parameters*:
 
@@ -5455,16 +6557,20 @@ Converts a raster from degrees to radians
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ToRadians -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```to_radians```
+
 
 #### 6.13.62 Truncate
 
-*Description*: 
-Truncates the values in a raster to the desired number of decimal places
+Truncates the values in a raster to the desired number of decimal places.
 
 *Parameters*:
 
@@ -5474,16 +6580,20 @@ Truncates the values in a raster to the desired number of decimal places
 -o, -\-output        Output raster file
 -\-num_decimals      Number of decimals left after truncation (default is zero)
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Truncate -v --wd="/path/to/data/" ^
 -i='input.dep' -o=output.dep --num_decimals=2 
+
+
 ```
+
+*Python Function Name*: ```truncate```
+
 
 #### 6.13.63 TurningBandsSimulation
 
-*Description*: 
-Creates an image containing random values based on a turning-bands simulation
+Creates an image containing random values based on a turning-bands simulation.
 
 *Parameters*:
 
@@ -5494,17 +6604,21 @@ Creates an image containing random values based on a turning-bands simulation
 -\-range             The field's range, in xy-units, related to the extent of spatial autocorrelation
 -\-iterations        The number of iterations
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TurningBandsSimulation -v ^
 --wd="/path/to/data/" --base=in.dep -o=out.dep --range=850.0 ^
 --iterations=2500 
+
+
 ```
+
+*Python Function Name*: ```turning_bands_simulation```
+
 
 #### 6.13.64 Xor
 
-*Description*: 
-Performs a logical XOR operator on two Boolean raster images
+Performs a logical XOR operator on two Boolean raster images.
 
 *Parameters*:
 
@@ -5514,16 +6628,20 @@ Performs a logical XOR operator on two Boolean raster images
 -\-input2            Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=Xor -v --wd="/path/to/data/" ^
 --input1='in1.dep' --input2='in2.dep' -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```xor```
+
 
 #### 6.13.65 ZScores
 
-*Description*: 
-Standardizes the values in an input raster by converting to z-scores
+Standardizes the values in an input raster by converting to z-scores.
 
 *Parameters*:
 
@@ -5532,17 +6650,21 @@ Standardizes the values in an input raster by converting to z-scores
 -i, -\-input         Input raster file
 -o, -\-output        Output raster file
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ZScores -v --wd="/path/to/data/" ^
 -i=DEM.dep -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```z_scores```
+
 ### 6.14 Stream Network Analysis
 
 #### 6.14.1 DistanceToOutlet
 
-*Description*: 
-Calculates the distance of stream grid cells to the channel network outlet cell
+Calculates the distance of stream grid cells to the channel network outlet cell.
 
 *Parameters*:
 
@@ -5554,7 +6676,7 @@ Calculates the distance of stream grid cells to the channel network outlet cell
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=DistanceToOutlet -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5562,12 +6684,16 @@ Calculates the distance of stream grid cells to the channel network outlet cell
 >>./whitebox_tools -r=DistanceToOutlet -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```distance_to_outlet```
+
 
 #### 6.14.2 ExtractStreams
 
-*Description*: 
-Extracts stream grid cells from a flow accumulation raster
+Extracts stream grid cells from a flow accumulation raster.
 
 *Parameters*:
 
@@ -5578,17 +6704,21 @@ Extracts stream grid cells from a flow accumulation raster
 -\-threshold         Threshold in flow accumulation values for channelization
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ExtractStreams -v --wd="/path/to/data/" ^
 --flow_accum='d8accum.dep' -o='output.dep' --threshold=100.0 ^
 --zero_background 
+
+
 ```
+
+*Python Function Name*: ```extract_streams```
+
 
 #### 6.14.3 ExtractValleys
 
-*Description*: 
-Identifies potential valley bottom grid cells based on local topolography alone
+Identifies potential valley bottom grid cells based on local topolography alone.
 
 *Parameters*:
 
@@ -5603,7 +6733,7 @@ Identifies potential valley bottom grid cells based on local topolography alone
 -\-filter            Optional argument (only used when variant='lq') providing the filter size, in 
                      grid cells, used for lq-filtering (default is 5) 
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ExtractValleys -v --wd="/path/to/data/" ^
 --dem=pointer.dep -o=out.dep --variant='JandR' ^
@@ -5611,12 +6741,16 @@ Identifies potential valley bottom grid cells based on local topolography alone
 >>./whitebox_tools -r=ExtractValleys -v ^
 --wd="/path/to/data/" --dem=pointer.dep -o=out.dep ^
 --variant='lq' --filter=7 --line_thin 
+
+
 ```
+
+*Python Function Name*: ```extract_valleys```
+
 
 #### 6.14.4 FarthestChannelHead
 
-*Description*: 
-Calculates the distance to the furthest upstream channel head for each stream cell
+Calculates the distance to the furthest upstream channel head for each stream cell.
 
 *Parameters*:
 
@@ -5628,7 +6762,7 @@ Calculates the distance to the furthest upstream channel head for each stream ce
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FarthestChannelHead -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5636,12 +6770,16 @@ Calculates the distance to the furthest upstream channel head for each stream ce
 >>./whitebox_tools -r=FarthestChannelHead -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```farthest_channel_head```
+
 
 #### 6.14.5 FindMainStem
 
-*Description*: 
-Finds the main stem, based on stream lengths, of each stream network
+Finds the main stem, based on stream lengths, of each stream network.
 
 *Parameters*:
 
@@ -5653,7 +6791,7 @@ Finds the main stem, based on stream lengths, of each stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=FindMainStem -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5661,12 +6799,16 @@ Finds the main stem, based on stream lengths, of each stream network
 >>./whitebox_tools -r=FindMainStem -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```find_main_stem```
+
 
 #### 6.14.6 HackStreamOrder
 
-*Description*: 
-Assigns the Hack stream order to each tributary in a stream network
+Assigns the Hack stream order to each tributary in a stream network.
 
 *Parameters*:
 
@@ -5678,7 +6820,7 @@ Assigns the Hack stream order to each tributary in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HackStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5686,12 +6828,16 @@ Assigns the Hack stream order to each tributary in a stream network
 >>./whitebox_tools -r=HackStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```hack_stream_order```
+
 
 #### 6.14.7 HortonStreamOrder
 
-*Description*: 
-Assigns the Horton stream order to each tributary in a stream network
+Assigns the Horton stream order to each tributary in a stream network.
 
 *Parameters*:
 
@@ -5703,7 +6849,7 @@ Assigns the Horton stream order to each tributary in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=HortonStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5711,12 +6857,16 @@ Assigns the Horton stream order to each tributary in a stream network
 >>./whitebox_tools -r=HortonStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```horton_stream_order```
+
 
 #### 6.14.8 LengthOfUpstreamChannels
 
-*Description*: 
-Calculates the total length of channels upstream
+Calculates the total length of channels upstream.
 
 *Parameters*:
 
@@ -5728,7 +6878,7 @@ Calculates the total length of channels upstream
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LengthOfUpstreamChannels -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5736,12 +6886,16 @@ Calculates the total length of channels upstream
 >>./whitebox_tools -r=LengthOfUpstreamChannels -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```length_of_upstream_channels```
+
 
 #### 6.14.9 LongProfile
 
-*Description*: 
-Plots the stream longitudinal profiles for one or more rivers
+Plots the stream longitudinal profiles for one or more rivers.
 
 *Parameters*:
 
@@ -5753,17 +6907,21 @@ Plots the stream longitudinal profiles for one or more rivers
 -o, -\-output        Output HTML file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LongProfile -v --wd="/path/to/data/" ^
 --d8_pntr=D8.dep --streams=streams.dep --dem=dem.dep ^
 -o=output.html --esri_pntr 
+
+
 ```
+
+*Python Function Name*: ```long_profile```
+
 
 #### 6.14.10 LongProfileFromPoints
 
-*Description*: 
-Plots the longitudinal profiles from flow-paths initiating from a set of vector points
+Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 
 *Parameters*:
 
@@ -5775,17 +6933,21 @@ Plots the longitudinal profiles from flow-paths initiating from a set of vector 
 -o, -\-output        Output HTML file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=LongProfileFromPoints -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --points=stream_head.shp ^
 --dem=dem.dep -o=output.html --esri_pntr 
+
+
 ```
+
+*Python Function Name*: ```long_profile_from_points```
+
 
 #### 6.14.11 RemoveShortStreams
 
-*Description*: 
-Removes short first-order streams from a stream network
+Removes short first-order streams from a stream network.
 
 *Parameters*:
 
@@ -5797,17 +6959,21 @@ Removes short first-order streams from a stream network
 -\-min_length        Minimum tributary length (in map units) used for network prunning
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=RemoveShortStreams -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
 -o=output.dep 
+
+
 ```
+
+*Python Function Name*: ```remove_short_streams```
+
 
 #### 6.14.12 ShreveStreamMagnitude
 
-*Description*: 
-Assigns the Shreve stream magnitude to each link in a stream network
+Assigns the Shreve stream magnitude to each link in a stream network.
 
 *Parameters*:
 
@@ -5819,7 +6985,7 @@ Assigns the Shreve stream magnitude to each link in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=ShreveStreamMagnitude -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5827,12 +6993,16 @@ Assigns the Shreve stream magnitude to each link in a stream network
 >>./whitebox_tools -r=ShreveStreamMagnitude -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```shreve_stream_magnitude```
+
 
 #### 6.14.13 StrahlerStreamOrder
 
-*Description*: 
-Assigns the Strahler stream order to each link in a stream network
+Assigns the Strahler stream order to each link in a stream network.
 
 *Parameters*:
 
@@ -5844,7 +7014,7 @@ Assigns the Strahler stream order to each link in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StrahlerStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5852,12 +7022,16 @@ Assigns the Strahler stream order to each link in a stream network
 >>./whitebox_tools -r=StrahlerStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```strahler_stream_order```
+
 
 #### 6.14.14 StreamLinkClass
 
-*Description*: 
-Identifies the exterior/interior links and nodes in a stream network
+Identifies the exterior/interior links and nodes in a stream network.
 
 *Parameters*:
 
@@ -5869,7 +7043,7 @@ Identifies the exterior/interior links and nodes in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StreamLinkClass -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5877,12 +7051,16 @@ Identifies the exterior/interior links and nodes in a stream network
 >>./whitebox_tools -r=StreamLinkClass -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```stream_link_class```
+
 
 #### 6.14.15 StreamLinkIdentifier
 
-*Description*: 
-Assigns a unique identifier to each link in a stream network
+Assigns a unique identifier to each link in a stream network.
 
 *Parameters*:
 
@@ -5894,7 +7072,7 @@ Assigns a unique identifier to each link in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StreamLinkIdentifier -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -5902,12 +7080,16 @@ Assigns a unique identifier to each link in a stream network
 >>./whitebox_tools -r=StreamLinkIdentifier -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```stream_link_identifier```
+
 
 #### 6.14.16 StreamLinkLength
 
-*Description*: 
-Estimates the length of each link (or tributary) in a stream network
+Estimates the length of each link (or tributary) in a stream network.
 
 *Parameters*:
 
@@ -5919,7 +7101,7 @@ Estimates the length of each link (or tributary) in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StreamLinkLength -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --linkid=streamsID.dep ^
@@ -5928,12 +7110,16 @@ Estimates the length of each link (or tributary) in a stream network
 -r=StreamLinkLength -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr ^
 --zero_background 
+
+
 ```
+
+*Python Function Name*: ```stream_link_length```
+
 
 #### 6.14.17 StreamLinkSlope
 
-*Description*: 
-Estimates the average slope of each link (or tributary) in a stream network
+Estimates the average slope of each link (or tributary) in a stream network.
 
 *Parameters*:
 
@@ -5946,7 +7132,7 @@ Estimates the average slope of each link (or tributary) in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StreamLinkSlope -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --linkid=streamsID.dep ^
@@ -5955,12 +7141,16 @@ Estimates the average slope of each link (or tributary) in a stream network
 -r=StreamLinkSlope -v --wd="/path/to/data/" --d8_pntr=D8.flt ^
 --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr ^
 --zero_background 
+
+
 ```
+
+*Python Function Name*: ```stream_link_slope```
+
 
 #### 6.14.18 StreamSlopeContinuous
 
-*Description*: 
-Estimates the slope of each grid cell in a stream network
+Estimates the slope of each grid cell in a stream network.
 
 *Parameters*:
 
@@ -5973,7 +7163,7 @@ Estimates the slope of each grid cell in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=StreamSlopeContinuous -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --linkid=streamsID.dep ^
@@ -5982,12 +7172,16 @@ Estimates the slope of each grid cell in a stream network
 -r=StreamSlopeContinuous -v --wd="/path/to/data/" ^
 --d8_pntr=D8.flt --streams=streamsID.flt --dem=dem.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```stream_slope_continuous```
+
 
 #### 6.14.19 TopologicalStreamOrder
 
-*Description*: 
-Assigns each link in a stream network its topological order
+Assigns each link in a stream network its topological order.
 
 *Parameters*:
 
@@ -5999,7 +7193,7 @@ Assigns each link in a stream network its topological order
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TopologicalStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -6007,12 +7201,16 @@ Assigns each link in a stream network its topological order
 >>./whitebox_tools -r=TopologicalStreamOrder -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```topological_stream_order```
+
 
 #### 6.14.20 TributaryIdentifier
 
-*Description*: 
-Assigns a unique identifier to each tributary in a stream network
+Assigns a unique identifier to each tributary in a stream network.
 
 *Parameters*:
 
@@ -6024,7 +7222,7 @@ Assigns a unique identifier to each tributary in a stream network
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 -\-zero_background   Flag indicating whether a background value of zero should be used
 
-*Example Usage*:
+*Command-line Interface*:
 ```
 >>./whitebox_tools -r=TributaryIdentifier -v ^
 --wd="/path/to/data/" --d8_pntr=D8.dep --streams=streams.dep ^
@@ -6032,7 +7230,13 @@ Assigns a unique identifier to each tributary in a stream network
 >>./whitebox_tools -r=TributaryIdentifier -v ^
 --wd="/path/to/data/" --d8_pntr=D8.flt --streams=streams.flt ^
 -o=output.flt --esri_pntr --zero_background 
+
+
 ```
+
+*Python Function Name*: ```tributary_identifier```
+
+
 
 
 

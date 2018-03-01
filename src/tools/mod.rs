@@ -175,13 +175,14 @@ impl ToolManager {
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarPointStats".to_string());
+        tool_names.push("LidarRemoveDuplicates".to_string());
         tool_names.push("LidarRemoveOutliers".to_string());
         tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
-
+        
         // mathematical and statistical_analysis
         tool_names.push("AbsoluteValue".to_string());
         tool_names.push("Add".to_string());
@@ -530,6 +531,7 @@ impl ToolManager {
             }
             "lidarpointdensity" => Some(Box::new(tools::lidar_analysis::LidarPointDensity::new())),
             "lidarpointstats" => Some(Box::new(tools::lidar_analysis::LidarPointStats::new())),
+            "lidarremoveduplicates" => Some(Box::new(tools::lidar_analysis::LidarRemoveDuplicates::new())),
             "lidarremoveoutliers" => Some(Box::new(tools::lidar_analysis::LidarRemoveOutliers::new())),
             "lidarsegmentation" => Some(Box::new(tools::lidar_analysis::LidarSegmentation::new())),
             "lidarsegmentationbasedfilter" => Some(Box::new(tools::lidar_analysis::LidarSegmentationBasedFilter::new())),
@@ -538,7 +540,7 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
             }
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
-
+            
             // mathematical and statistical_analysis
             "absolutevalue" => Some(Box::new(tools::math_stat_analysis::AbsoluteValue::new())),
             "add" => Some(Box::new(tools::math_stat_analysis::Add::new())),

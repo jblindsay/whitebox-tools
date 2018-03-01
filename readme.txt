@@ -65,6 +65,7 @@ Version 0.4 (dd-mm-yyyy)
 - The following tools have been added to the library:
     LidarColourize
     LidarPointStats
+    LidarRemoveDuplicates
     LongProfile
     LongProfileFromPoints
     MaxElevDevSignature

@@ -159,7 +159,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 277 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 278 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -365,6 +365,7 @@ The library currently contains the following 277 tools, which are each grouped b
 - ***LidarNearestNeighbourGridding***: Grids LAS files using nearest-neighbour scheme.
 - ***LidarPointDensity***: Calculates the spatial pattern of point density for a LiDAR data set.
 - ***LidarPointStats***: Creates several rasters summarizing the distribution of LAS point data.
+- ***LidarRemoveDuplicates***: Removes duplicate points from a LiDAR data set.
 - ***LidarRemoveOutliers***: Removes outliers (high and low points) in a LiDAR point cloud.
 - ***LidarSegmentation***: Segments a LiDAR point cloud based on normal vectors.
 - ***LidarSegmentationBasedFilter***: Identifies ground points within LiDAR point clouds using a segmentation based approach.

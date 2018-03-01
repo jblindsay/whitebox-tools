@@ -23,6 +23,7 @@ mod lidar_segmentation_based_filter;
 mod lidar_tile;
 mod lidar_tophat_transform;
 mod normal_vectors;
+mod remove_duplicates;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::block_maximum::BlockMaximum;
@@ -49,3 +50,4 @@ pub use self::lidar_segmentation_based_filter::LidarSegmentationBasedFilter;
 pub use self::lidar_tile::LidarTile;
 pub use self::lidar_tophat_transform::LidarTophatTransform;
 pub use self::normal_vectors::NormalVectors;
+pub use self::remove_duplicates::LidarRemoveDuplicates;

@@ -111,21 +111,33 @@ for t in tools.split("\n"):
             doc_str += "{}{}{}\n".format(flag_str, ' ' * (21 - len(flag_str)),
                                          desc)
 
+        tool_snaked = camel_to_snake(tool)
+        if tool_snaked == "and":
+            tool_snaked = "And"
+        if tool_snaked == "or":
+            tool_snaked = "Or"
+        if tool_snaked == "not":
+            tool_snaked = "Not"
+
         fn = """
 #### insertNumHere {}
 
-*Description*: 
-{}
+{}.
 
 *Parameters*:
 
 **Flag**             **Description**
 -------------------  ---------------
 {}
-*Example Usage*:
+*Command-line Interface*:
 ```
 {}
-```""".format(tool, description, doc_str, example)
+
+
+```
+
+*Python Function Name*: ```{}```
+""".format(tool, description, doc_str, example, tool_snaked)
         # print(fn)
         tb_dict[toolbox].append(fn)
 
