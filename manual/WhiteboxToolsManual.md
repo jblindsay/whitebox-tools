@@ -37,7 +37,7 @@ header-includes:
 <!-- ![*Bringing the power of Whitebox GAT to the world at large*](./img/WhiteboxToolsLogoBlue.png)   -->
 
 WhiteboxTools Version 0.4  \
-Dr. John B. Lindsay &#169; Feb. 21, 2018  \
+Dr. John B. Lindsay &#169; March 2, 2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
@@ -331,7 +331,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 274 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-\-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 279 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the *-\-toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 
 
@@ -359,7 +359,7 @@ Converts nodata values in a raster to zero.
 
 ```
 
-*Python Function Name*: ```convert_nodata_to_zero```
+*Python function name*: ```convert_nodata_to_zero```
 
 
 #### 6.1.2 ConvertRasterFormat
@@ -381,7 +381,7 @@ Converts raster data from one format to another.
 
 ```
 
-*Python Function Name*: ```convert_raster_format```
+*Python function name*: ```convert_raster_format```
 
 
 #### 6.1.3 NewRasterFromBase
@@ -410,10 +410,31 @@ Creates a new raster using a base image.
 
 ```
 
-*Python Function Name*: ```new_raster_from_base```
+*Python function name*: ```new_raster_from_base```
 
 
-#### 6.1.4 SetNodataValue
+#### 6.1.4 PrintGeoTiffTags
+
+Prints the tags within a GeoTIFF.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input GeoTIFF file
+
+*Command-line Interface*:
+```
+>>./whitebox_tools -r=PrintGeoTiffTags -v ^
+--wd="/path/to/data/" --input=DEM.tiff 
+
+
+```
+
+*Python function name*: ```print_geo_tiff_tags```
+
+
+#### 6.1.5 SetNodataValue
 
 Assign a specified value in an input image to the NoData value.
 
@@ -433,7 +454,7 @@ Assign a specified value in an input image to the NoData value.
 
 ```
 
-*Python Function Name*: ```set_nodata_value```
+*Python function name*: ```set_nodata_value```
 
 ### 6.2 GIS Analysis
 
@@ -459,7 +480,7 @@ Aggregates a raster to a lower resolution.
 
 ```
 
-*Python Function Name*: ```aggregate_raster```
+*Python function name*: ```aggregate_raster```
 
 
 #### 6.2.2 Centroid
@@ -485,7 +506,7 @@ Calculates the centroid, or average location, of raster polygon objects.
 
 ```
 
-*Python Function Name*: ```centroid```
+*Python function name*: ```centroid```
 
 
 #### 6.2.3 Clump
@@ -509,7 +530,7 @@ Groups cells that form physically discrete areas, assigning them unique identifi
 
 ```
 
-*Python Function Name*: ```clump```
+*Python function name*: ```clump```
 
 
 #### 6.2.4 CreatePlane
@@ -535,7 +556,7 @@ Creates a raster image based on the equation for a simple plane.
 
 ```
 
-*Python Function Name*: ```create_plane```
+*Python function name*: ```create_plane```
 
 
 #### 6.2.5 RadiusOfGyration
@@ -559,7 +580,7 @@ Calculates the distance of cells from their polygon's centroid.
 
 ```
 
-*Python Function Name*: ```radius_of_gyration```
+*Python function name*: ```radius_of_gyration```
 
 
 #### 6.2.6 RasterCellAssignment
@@ -584,7 +605,7 @@ Assign row or column number to cells.
 
 ```
 
-*Python Function Name*: ```raster_cell_assignment```
+*Python function name*: ```raster_cell_assignment```
 
 ### 6.3 GIS Analysis => Distance Tools
 
@@ -610,7 +631,7 @@ Maps a distance-based buffer around each non-background (non-zero/non-nodata) gr
 
 ```
 
-*Python Function Name*: ```buffer_raster```
+*Python function name*: ```buffer_raster```
 
 
 #### 6.3.2 CostAllocation
@@ -634,7 +655,7 @@ Identifies the source cell to which each grid cell is connected by a least-cost 
 
 ```
 
-*Python Function Name*: ```cost_allocation```
+*Python function name*: ```cost_allocation```
 
 
 #### 6.3.3 CostDistance
@@ -659,7 +680,7 @@ Performs cost-distance accumulation on a cost surface and a group of source cell
 
 ```
 
-*Python Function Name*: ```cost_distance```
+*Python function name*: ```cost_distance```
 
 
 #### 6.3.4 CostPathway
@@ -684,7 +705,7 @@ Performs cost-distance pathway analysis using a series of destination grid cells
 
 ```
 
-*Python Function Name*: ```cost_pathway```
+*Python function name*: ```cost_pathway```
 
 
 #### 6.3.5 EuclideanAllocation
@@ -706,7 +727,7 @@ Assigns grid cells in the output raster the value of the nearest target cell in 
 
 ```
 
-*Python Function Name*: ```euclidean_allocation```
+*Python function name*: ```euclidean_allocation```
 
 
 #### 6.3.6 EuclideanDistance
@@ -728,7 +749,7 @@ Calculates the Shih and Wu (2004) Euclidean distance transform.
 
 ```
 
-*Python Function Name*: ```euclidean_distance```
+*Python function name*: ```euclidean_distance```
 
 ### 6.4 GIS Analysis => Overlay Tools
 
@@ -751,7 +772,7 @@ Calculates the average for each grid cell from a group of raster images.
 
 ```
 
-*Python Function Name*: ```average_overlay```
+*Python function name*: ```average_overlay```
 
 
 #### 6.4.2 HighestPosition
@@ -774,7 +795,7 @@ Identifies the stack position of the maximum value within a raster stack on a ce
 
 ```
 
-*Python Function Name*: ```highest_position```
+*Python function name*: ```highest_position```
 
 
 #### 6.4.3 LowestPosition
@@ -796,7 +817,7 @@ Identifies the stack position of the minimum value within a raster stack on a ce
 
 ```
 
-*Python Function Name*: ```lowest_position```
+*Python function name*: ```lowest_position```
 
 
 #### 6.4.4 MaxAbsoluteOverlay
@@ -819,7 +840,7 @@ Evaluates the maximum absolute value for each grid cell from a stack of input ra
 
 ```
 
-*Python Function Name*: ```max_absolute_overlay```
+*Python function name*: ```max_absolute_overlay```
 
 
 #### 6.4.5 MaxOverlay
@@ -841,7 +862,7 @@ Evaluates the maximum value for each grid cell from a stack of input rasters.
 
 ```
 
-*Python Function Name*: ```max_overlay```
+*Python function name*: ```max_overlay```
 
 
 #### 6.4.6 MinAbsoluteOverlay
@@ -864,7 +885,7 @@ Evaluates the minimum absolute value for each grid cell from a stack of input ra
 
 ```
 
-*Python Function Name*: ```min_absolute_overlay```
+*Python function name*: ```min_absolute_overlay```
 
 
 #### 6.4.7 MinOverlay
@@ -886,7 +907,7 @@ Evaluates the minimum value for each grid cell from a stack of input rasters.
 
 ```
 
-*Python Function Name*: ```min_overlay```
+*Python function name*: ```min_overlay```
 
 
 #### 6.4.8 PercentEqualTo
@@ -910,7 +931,7 @@ Calculates the percentage of a raster stack that have cell values equal to an in
 
 ```
 
-*Python Function Name*: ```percent_equal_to```
+*Python function name*: ```percent_equal_to```
 
 
 #### 6.4.9 PercentGreaterThan
@@ -934,7 +955,7 @@ Calculates the percentage of a raster stack that have cell values greather than 
 
 ```
 
-*Python Function Name*: ```percent_greater_than```
+*Python function name*: ```percent_greater_than```
 
 
 #### 6.4.10 PercentLessThan
@@ -958,7 +979,7 @@ Calculates the percentage of a raster stack that have cell values less than an i
 
 ```
 
-*Python Function Name*: ```percent_less_than```
+*Python function name*: ```percent_less_than```
 
 
 #### 6.4.11 PickFromList
@@ -982,7 +1003,7 @@ Outputs the value from a raster stack specified by a position raster.
 
 ```
 
-*Python Function Name*: ```pick_from_list```
+*Python function name*: ```pick_from_list```
 
 
 #### 6.4.12 WeightedSum
@@ -1006,7 +1027,7 @@ Performs a weighted-sum overlay on multiple input raster images.
 
 ```
 
-*Python Function Name*: ```weighted_sum```
+*Python function name*: ```weighted_sum```
 
 ### 6.5 GIS Analysis => Patch Shape Tools
 
@@ -1030,7 +1051,7 @@ Calculate the proportion of cells in a raster polygon that are edge cells.
 
 ```
 
-*Python Function Name*: ```edge_proportion```
+*Python function name*: ```edge_proportion```
 
 
 #### 6.5.2 FindPatchOrClassEdgeCells
@@ -1052,7 +1073,7 @@ Finds all cells located on the edge of patch or class features.
 
 ```
 
-*Python Function Name*: ```find_patch_or_class_edge_cells```
+*Python function name*: ```find_patch_or_class_edge_cells```
 
 ### 6.6 GIS Analysis => Reclass Tools
 
@@ -1084,7 +1105,7 @@ Reclassifies the values in a raster image.
 
 ```
 
-*Python Function Name*: ```reclass```
+*Python function name*: ```reclass```
 
 
 #### 6.6.2 ReclassEqualInterval
@@ -1110,7 +1131,7 @@ Reclassifies the values in a raster image based on equal-ranges.
 
 ```
 
-*Python Function Name*: ```reclass_equal_interval```
+*Python function name*: ```reclass_equal_interval```
 
 
 #### 6.6.3 ReclassFromFile
@@ -1134,7 +1155,7 @@ Reclassifies the values in a raster image using reclass ranges in a text file.
 
 ```
 
-*Python Function Name*: ```reclass_from_file```
+*Python function name*: ```reclass_from_file```
 
 ### 6.7 Geomorphometric Analysis
 
@@ -1158,7 +1179,7 @@ Calculates an aspect raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```aspect```
+*Python function name*: ```aspect```
 
 
 #### 6.7.2 DevFromMeanElev
@@ -1183,7 +1204,7 @@ Calculates deviation from mean elevation.
 
 ```
 
-*Python Function Name*: ```dev_from_mean_elev```
+*Python function name*: ```dev_from_mean_elev```
 
 
 #### 6.7.3 DiffFromMeanElev
@@ -1208,7 +1229,7 @@ Calculates difference from mean elevation (equivalent to a high-pass filter).
 
 ```
 
-*Python Function Name*: ```diff_from_mean_elev```
+*Python function name*: ```diff_from_mean_elev```
 
 
 #### 6.7.4 DirectionalRelief
@@ -1233,7 +1254,7 @@ Calculates relief for cells in an input DEM for a specified direction.
 
 ```
 
-*Python Function Name*: ```directional_relief```
+*Python function name*: ```directional_relief```
 
 
 #### 6.7.5 DownslopeIndex
@@ -1258,7 +1279,7 @@ Calculates the Hjerdt et al. (2004) downslope index.
 
 ```
 
-*Python Function Name*: ```downslope_index```
+*Python function name*: ```downslope_index```
 
 
 #### 6.7.6 ElevAbovePit
@@ -1280,7 +1301,7 @@ Calculate the elevation of each grid cell above the nearest downstream pit cell 
 
 ```
 
-*Python Function Name*: ```elev_above_pit```
+*Python function name*: ```elev_above_pit```
 
 
 #### 6.7.7 ElevPercentile
@@ -1305,7 +1326,7 @@ Calculates the elevation percentile raster from a DEM.
 
 ```
 
-*Python Function Name*: ```elev_percentile```
+*Python function name*: ```elev_percentile```
 
 
 #### 6.7.8 ElevRelativeToMinMax
@@ -1327,7 +1348,7 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 
 ```
 
-*Python Function Name*: ```elev_relative_to_min_max```
+*Python function name*: ```elev_relative_to_min_max```
 
 
 #### 6.7.9 ElevRelativeToWatershedMinMax
@@ -1351,7 +1372,7 @@ Calculates the elevation of a location relative to the minimum and maximum eleva
 
 ```
 
-*Python Function Name*: ```elev_relative_to_watershed_min_max```
+*Python function name*: ```elev_relative_to_watershed_min_max```
 
 
 #### 6.7.10 FeaturePreservingDenoise
@@ -1377,7 +1398,7 @@ Reduces short-scale variation in an input DEM using a modified Sun et al. (2007)
 
 ```
 
-*Python Function Name*: ```feature_preserving_denoise```
+*Python function name*: ```feature_preserving_denoise```
 
 
 #### 6.7.11 FetchAnalysis
@@ -1401,7 +1422,7 @@ Performs an analysis of fetch or upwind distance to an obstacle.
 
 ```
 
-*Python Function Name*: ```fetch_analysis```
+*Python function name*: ```fetch_analysis```
 
 
 #### 6.7.12 FillMissingData
@@ -1424,7 +1445,7 @@ Fills nodata holes in a DEM.
 
 ```
 
-*Python Function Name*: ```fill_missing_data```
+*Python function name*: ```fill_missing_data```
 
 
 #### 6.7.13 FindRidges
@@ -1448,7 +1469,7 @@ Identifies potential ridge and peak grid cells.
 
 ```
 
-*Python Function Name*: ```find_ridges```
+*Python function name*: ```find_ridges```
 
 
 #### 6.7.14 Hillshade
@@ -1473,7 +1494,7 @@ Calculates a hillshade raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```hillshade```
+*Python function name*: ```hillshade```
 
 
 #### 6.7.15 HorizonAngle
@@ -1497,7 +1518,7 @@ Calculates horizon angle (maximum upwind slope) for each grid cell in an input D
 
 ```
 
-*Python Function Name*: ```horizon_angle```
+*Python function name*: ```horizon_angle```
 
 
 #### 6.7.16 HypsometricAnalysis
@@ -1521,7 +1542,7 @@ Calculates a hypsometric curve for one or more DEMs.
 
 ```
 
-*Python Function Name*: ```hypsometric_analysis```
+*Python function name*: ```hypsometric_analysis```
 
 
 #### 6.7.17 MaxAnisotropyDev
@@ -1549,7 +1570,7 @@ Calculates the maximum anisotropy (directionality) in elevation deviation over a
 
 ```
 
-*Python Function Name*: ```max_anisotropy_dev```
+*Python function name*: ```max_anisotropy_dev```
 
 
 #### 6.7.18 MaxBranchLength
@@ -1572,7 +1593,7 @@ Lindsay and Seibert's (2013) branch length index is used to map drainage divides
 
 ```
 
-*Python Function Name*: ```max_branch_length```
+*Python function name*: ```max_branch_length```
 
 
 #### 6.7.19 MaxDownslopeElevChange
@@ -1594,7 +1615,7 @@ Calculates the maximum downslope change in elevation between a grid cell and its
 
 ```
 
-*Python Function Name*: ```max_downslope_elev_change```
+*Python function name*: ```max_downslope_elev_change```
 
 
 #### 6.7.20 MaxElevDevSignature
@@ -1622,7 +1643,7 @@ Calculates the maximum elevation deviation over a range of spatial scales and fo
 
 ```
 
-*Python Function Name*: ```max_elev_dev_signature```
+*Python function name*: ```max_elev_dev_signature```
 
 
 #### 6.7.21 MaxElevationDeviation
@@ -1650,7 +1671,7 @@ Calculates the maximum elevation deviation over a range of spatial scales.
 
 ```
 
-*Python Function Name*: ```max_elevation_deviation```
+*Python function name*: ```max_elevation_deviation```
 
 
 #### 6.7.22 MinDownslopeElevChange
@@ -1672,7 +1693,7 @@ Calculates the minimum downslope change in elevation between a grid cell and its
 
 ```
 
-*Python Function Name*: ```min_downslope_elev_change```
+*Python function name*: ```min_downslope_elev_change```
 
 
 #### 6.7.23 MultiscaleRoughness
@@ -1700,7 +1721,7 @@ Calculates surface roughness over a range of spatial scales.
 
 ```
 
-*Python Function Name*: ```multiscale_roughness```
+*Python function name*: ```multiscale_roughness```
 
 
 #### 6.7.24 MultiscaleRoughnessSignature
@@ -1728,7 +1749,7 @@ Calculates the surface roughness for points over a range of spatial scales.
 
 ```
 
-*Python Function Name*: ```multiscale_roughness_signature```
+*Python function name*: ```multiscale_roughness_signature```
 
 
 #### 6.7.25 MultiscaleTopographicPositionImage
@@ -1754,7 +1775,7 @@ Creates a multiscale topographic position image from three DEVmax rasters of dif
 
 ```
 
-*Python Function Name*: ```multiscale_topographic_position_image```
+*Python function name*: ```multiscale_topographic_position_image```
 
 
 #### 6.7.26 NumDownslopeNeighbours
@@ -1776,7 +1797,7 @@ Calculates the number of downslope neighbours to each grid cell in a DEM.
 
 ```
 
-*Python Function Name*: ```num_downslope_neighbours```
+*Python function name*: ```num_downslope_neighbours```
 
 
 #### 6.7.27 NumUpslopeNeighbours
@@ -1798,7 +1819,7 @@ Calculates the number of upslope neighbours to each grid cell in a DEM.
 
 ```
 
-*Python Function Name*: ```num_upslope_neighbours```
+*Python function name*: ```num_upslope_neighbours```
 
 
 #### 6.7.28 PennockLandformClass
@@ -1825,7 +1846,7 @@ Classifies hillslope zones based on slope, profile curvature, and plan curvature
 
 ```
 
-*Python Function Name*: ```pennock_landform_class```
+*Python function name*: ```pennock_landform_class```
 
 
 #### 6.7.29 PercentElevRange
@@ -1849,7 +1870,7 @@ Calculates percent of elevation range from a DEM.
 
 ```
 
-*Python Function Name*: ```percent_elev_range```
+*Python function name*: ```percent_elev_range```
 
 
 #### 6.7.30 PlanCurvature
@@ -1872,7 +1893,7 @@ Calculates a plan (contour) curvature raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```plan_curvature```
+*Python function name*: ```plan_curvature```
 
 
 #### 6.7.31 Profile
@@ -1895,7 +1916,7 @@ Plots profiles from digital surface models.
 
 ```
 
-*Python Function Name*: ```profile```
+*Python function name*: ```profile```
 
 
 #### 6.7.32 ProfileCurvature
@@ -1918,7 +1939,7 @@ Calculates a profile curvature raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```profile_curvature```
+*Python function name*: ```profile_curvature```
 
 
 #### 6.7.33 RelativeAspect
@@ -1942,7 +1963,7 @@ Calculates relative aspect (relative to a user-specified direction) from an inpu
 
 ```
 
-*Python Function Name*: ```relative_aspect```
+*Python function name*: ```relative_aspect```
 
 
 #### 6.7.34 RelativeStreamPowerIndex
@@ -1967,7 +1988,7 @@ Calculates the relative stream power index.
 
 ```
 
-*Python Function Name*: ```relative_stream_power_index```
+*Python function name*: ```relative_stream_power_index```
 
 
 #### 6.7.35 RelativeTopographicPosition
@@ -1992,7 +2013,7 @@ Calculates the relative topographic position index from a DEM.
 
 ```
 
-*Python Function Name*: ```relative_topographic_position```
+*Python function name*: ```relative_topographic_position```
 
 
 #### 6.7.36 RemoveOffTerrainObjects
@@ -2017,7 +2038,7 @@ Removes off-terrain objects from a raster digital elevation model (DEM).
 
 ```
 
-*Python Function Name*: ```remove_off_terrain_objects```
+*Python function name*: ```remove_off_terrain_objects```
 
 
 #### 6.7.37 RuggednessIndex
@@ -2040,7 +2061,7 @@ Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 
 ```
 
-*Python Function Name*: ```ruggedness_index```
+*Python function name*: ```ruggedness_index```
 
 
 #### 6.7.38 SedimentTransportIndex
@@ -2067,7 +2088,7 @@ Calculates the sediment transport index.
 
 ```
 
-*Python Function Name*: ```sediment_transport_index```
+*Python function name*: ```sediment_transport_index```
 
 
 #### 6.7.39 Slope
@@ -2090,7 +2111,7 @@ Calculates a slope raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```slope```
+*Python function name*: ```slope```
 
 
 #### 6.7.40 SlopeVsElevationPlot
@@ -2114,7 +2135,7 @@ Creates a slope vs. elevation plot for one or more DEMs.
 
 ```
 
-*Python Function Name*: ```slope_vs_elevation_plot```
+*Python function name*: ```slope_vs_elevation_plot```
 
 
 #### 6.7.41 TangentialCurvature
@@ -2137,7 +2158,7 @@ Calculates a tangential curvature raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```tangential_curvature```
+*Python function name*: ```tangential_curvature```
 
 
 #### 6.7.42 TotalCurvature
@@ -2160,7 +2181,7 @@ Calculates a total curvature raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```total_curvature```
+*Python function name*: ```total_curvature```
 
 
 #### 6.7.43 Viewshed
@@ -2185,7 +2206,7 @@ Identifies the viewshed for a point or set of points.
 
 ```
 
-*Python Function Name*: ```viewshed```
+*Python function name*: ```viewshed```
 
 
 #### 6.7.44 WetnessIndex
@@ -2208,7 +2229,7 @@ Calculates the topographic wetness index, Ln(A / tan(slope)).
 
 ```
 
-*Python Function Name*: ```wetness_index```
+*Python function name*: ```wetness_index```
 
 ### 6.8 Hydrological Analysis
 
@@ -2231,7 +2252,7 @@ Measures the average slope gradient from each grid cell to all upslope divide ce
 
 ```
 
-*Python Function Name*: ```average_flowpath_slope```
+*Python function name*: ```average_flowpath_slope```
 
 
 #### 6.8.2 AverageUpslopeFlowpathLength
@@ -2253,7 +2274,7 @@ Measures the average length of all upslope flowpaths draining each grid cell.
 
 ```
 
-*Python Function Name*: ```average_upslope_flowpath_length```
+*Python function name*: ```average_upslope_flowpath_length```
 
 
 #### 6.8.3 Basins
@@ -2276,7 +2297,7 @@ Identifies drainage basins that drain to the DEM edge.
 
 ```
 
-*Python Function Name*: ```basins```
+*Python function name*: ```basins```
 
 
 #### 6.8.4 BreachDepressions
@@ -2300,7 +2321,7 @@ Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This 
 
 ```
 
-*Python Function Name*: ```breach_depressions```
+*Python function name*: ```breach_depressions```
 
 
 #### 6.8.5 BreachSingleCellPits
@@ -2322,7 +2343,7 @@ Removes single-cell pits from an input DEM by breaching.
 
 ```
 
-*Python Function Name*: ```breach_single_cell_pits```
+*Python function name*: ```breach_single_cell_pits```
 
 
 #### 6.8.6 D8FlowAccumulation
@@ -2352,7 +2373,7 @@ Calculates a D8 flow accumulation raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```d8_flow_accumulation```
+*Python function name*: ```d8_flow_accumulation```
 
 
 #### 6.8.7 D8MassFlux
@@ -2378,7 +2399,7 @@ Performs a D8 mass flux calculation.
 
 ```
 
-*Python Function Name*: ```d8_mass_flux```
+*Python function name*: ```d8_mass_flux```
 
 
 #### 6.8.8 D8Pointer
@@ -2401,7 +2422,7 @@ Calculates a D8 flow pointer raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```d8_pointer```
+*Python function name*: ```d8_pointer```
 
 
 #### 6.8.9 DInfFlowAccumulation
@@ -2431,7 +2452,7 @@ Calculates a D-infinity flow accumulation raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```d_inf_flow_accumulation```
+*Python function name*: ```d_inf_flow_accumulation```
 
 
 #### 6.8.10 DInfMassFlux
@@ -2457,7 +2478,7 @@ Performs a D-infinity mass flux calculation.
 
 ```
 
-*Python Function Name*: ```d_inf_mass_flux```
+*Python function name*: ```d_inf_mass_flux```
 
 
 #### 6.8.11 DInfPointer
@@ -2479,7 +2500,7 @@ Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```d_inf_pointer```
+*Python function name*: ```d_inf_pointer```
 
 
 #### 6.8.12 DepthInSink
@@ -2502,7 +2523,7 @@ Measures the depth of sinks (depressions) in a DEM.
 
 ```
 
-*Python Function Name*: ```depth_in_sink```
+*Python function name*: ```depth_in_sink```
 
 
 #### 6.8.13 DownslopeDistanceToStream
@@ -2526,7 +2547,7 @@ Measures distance to the nearest downslope stream cell.
 
 ```
 
-*Python Function Name*: ```downslope_distance_to_stream```
+*Python function name*: ```downslope_distance_to_stream```
 
 
 #### 6.8.14 DownslopeFlowpathLength
@@ -2556,7 +2577,7 @@ Calculates the downslope flowpath length from each cell to basin outlet.
 
 ```
 
-*Python Function Name*: ```downslope_flowpath_length```
+*Python function name*: ```downslope_flowpath_length```
 
 
 #### 6.8.15 ElevationAboveStream
@@ -2580,7 +2601,7 @@ Calculates the elevation of cells above the nearest downslope stream cell.
 
 ```
 
-*Python Function Name*: ```elevation_above_stream```
+*Python function name*: ```elevation_above_stream```
 
 
 #### 6.8.16 FD8FlowAccumulation
@@ -2613,7 +2634,7 @@ Calculates an FD8 flow accumulation raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```fd8_flow_accumulation```
+*Python function name*: ```fd8_flow_accumulation```
 
 
 #### 6.8.17 FD8Pointer
@@ -2635,7 +2656,7 @@ Calculates an FD8 flow pointer raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```fd8_pointer```
+*Python function name*: ```fd8_pointer```
 
 
 #### 6.8.18 FillDepressions
@@ -2659,7 +2680,7 @@ Fills all of the depressions in a DEM. Depression breaching should be preferred 
 
 ```
 
-*Python Function Name*: ```fill_depressions```
+*Python function name*: ```fill_depressions```
 
 
 #### 6.8.19 FillSingleCellPits
@@ -2681,7 +2702,7 @@ Raises pit cells to the elevation of their lowest neighbour.
 
 ```
 
-*Python Function Name*: ```fill_single_cell_pits```
+*Python function name*: ```fill_single_cell_pits```
 
 
 #### 6.8.20 FindNoFlowCells
@@ -2703,7 +2724,7 @@ Finds grid cells with no downslope neighbours.
 
 ```
 
-*Python Function Name*: ```find_no_flow_cells```
+*Python function name*: ```find_no_flow_cells```
 
 
 #### 6.8.21 FindParallelFlow
@@ -2730,7 +2751,7 @@ Finds areas of parallel flow in D8 flow direction rasters.
 
 ```
 
-*Python Function Name*: ```find_parallel_flow```
+*Python function name*: ```find_parallel_flow```
 
 
 #### 6.8.22 FloodOrder
@@ -2752,7 +2773,7 @@ Assigns each DEM grid cell its order in the sequence of inundations that are enc
 
 ```
 
-*Python Function Name*: ```flood_order```
+*Python function name*: ```flood_order```
 
 
 #### 6.8.23 FlowAccumulationFullWorkflow
@@ -2782,7 +2803,7 @@ Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-a
 
 ```
 
-*Python Function Name*: ```flow_accumulation_full_workflow```
+*Python function name*: ```flow_accumulation_full_workflow```
 
 
 #### 6.8.24 FlowLengthDiff
@@ -2805,7 +2826,7 @@ Calculates the local maximum absolute difference in downslope flowpath length, u
 
 ```
 
-*Python Function Name*: ```flow_length_diff```
+*Python function name*: ```flow_length_diff```
 
 
 #### 6.8.25 Hillslopes
@@ -2830,7 +2851,7 @@ Identifies the individual hillslopes draining to each link in a stream network.
 
 ```
 
-*Python Function Name*: ```hillslopes```
+*Python function name*: ```hillslopes```
 
 
 #### 6.8.26 Isobasins
@@ -2853,7 +2874,7 @@ Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 
 ```
 
-*Python Function Name*: ```isobasins```
+*Python function name*: ```isobasins```
 
 
 #### 6.8.27 JensonSnapPourPoints
@@ -2878,7 +2899,7 @@ Moves outlet points used to specify points of interest in a watershedding operat
 
 ```
 
-*Python Function Name*: ```jenson_snap_pour_points```
+*Python function name*: ```jenson_snap_pour_points```
 
 
 #### 6.8.28 MaxUpslopeFlowpathLength
@@ -2904,7 +2925,7 @@ Measures the maximum length of all upslope flowpaths draining each grid cell.
 
 ```
 
-*Python Function Name*: ```max_upslope_flowpath_length```
+*Python function name*: ```max_upslope_flowpath_length```
 
 
 #### 6.8.29 NumInflowingNeighbours
@@ -2926,7 +2947,7 @@ Computes the number of inflowing neighbours to each cell in an input DEM based o
 
 ```
 
-*Python Function Name*: ```num_inflowing_neighbours```
+*Python function name*: ```num_inflowing_neighbours```
 
 
 #### 6.8.30 Rho8Pointer
@@ -2949,7 +2970,7 @@ Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
 ```
 
-*Python Function Name*: ```rho8_pointer```
+*Python function name*: ```rho8_pointer```
 
 
 #### 6.8.31 Sink
@@ -2972,7 +2993,7 @@ Identifies the depressions in a DEM, giving each feature a unique identifier.
 
 ```
 
-*Python Function Name*: ```sink```
+*Python function name*: ```sink```
 
 
 #### 6.8.32 SnapPourPoints
@@ -2997,7 +3018,7 @@ Moves outlet points used to specify points of interest in a watershedding operat
 
 ```
 
-*Python Function Name*: ```snap_pour_points```
+*Python function name*: ```snap_pour_points```
 
 
 #### 6.8.33 StrahlerOrderBasins
@@ -3022,7 +3043,7 @@ Identifies Strahler-order basins from an input stream network.
 
 ```
 
-*Python Function Name*: ```strahler_order_basins```
+*Python function name*: ```strahler_order_basins```
 
 
 #### 6.8.34 Subbasins
@@ -3047,7 +3068,7 @@ Identifies the catchments, or sub-basin, draining to each link in a stream netwo
 
 ```
 
-*Python Function Name*: ```subbasins```
+*Python function name*: ```subbasins```
 
 
 #### 6.8.35 TraceDownslopeFlowpaths
@@ -3073,7 +3094,7 @@ Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
 ```
 
-*Python Function Name*: ```trace_downslope_flowpaths```
+*Python function name*: ```trace_downslope_flowpaths```
 
 
 #### 6.8.36 Watershed
@@ -3098,7 +3119,7 @@ Identifies the watershed, or drainage basin, draining to a set of target cells.
 
 ```
 
-*Python Function Name*: ```watershed```
+*Python function name*: ```watershed```
 
 ### 6.9 Image Processing Tools
 
@@ -3123,7 +3144,7 @@ A closing is a mathematical morphology operating involving an erosion (min filte
 
 ```
 
-*Python Function Name*: ```closing```
+*Python function name*: ```closing```
 
 
 #### 6.9.2 CreateColourComposite
@@ -3154,7 +3175,7 @@ Creates a colour-composite image from three bands of multispectral imagery.
 
 ```
 
-*Python Function Name*: ```create_colour_composite```
+*Python function name*: ```create_colour_composite```
 
 
 #### 6.9.3 FlipImage
@@ -3178,7 +3199,7 @@ Reflects an image in the vertical or horizontal axis.
 
 ```
 
-*Python Function Name*: ```flip_image```
+*Python function name*: ```flip_image```
 
 
 #### 6.9.4 IntegralImage
@@ -3200,7 +3221,7 @@ Transforms an input image (summed area table) into its integral image equivalent
 
 ```
 
-*Python Function Name*: ```integral_image```
+*Python function name*: ```integral_image```
 
 
 #### 6.9.5 KMeansClustering
@@ -3231,7 +3252,7 @@ Performs a k-means clustering operation on a multi-spectral dataset.
 
 ```
 
-*Python Function Name*: ```k_means_clustering```
+*Python function name*: ```k_means_clustering```
 
 
 #### 6.9.6 LineThinning
@@ -3253,7 +3274,7 @@ Performs line thinning a on Boolean raster image; intended to be used with the R
 
 ```
 
-*Python Function Name*: ```line_thinning```
+*Python function name*: ```line_thinning```
 
 
 #### 6.9.7 ModifiedKMeansClustering
@@ -3282,7 +3303,7 @@ Performs a modified k-means clustering operation on a multi-spectral dataset.
 
 ```
 
-*Python Function Name*: ```modified_k_means_clustering```
+*Python function name*: ```modified_k_means_clustering```
 
 
 #### 6.9.8 Mosaic
@@ -3306,7 +3327,7 @@ Mosaics two or more images together.
 
 ```
 
-*Python Function Name*: ```mosaic```
+*Python function name*: ```mosaic```
 
 
 #### 6.9.9 NormalizedDifferenceVegetationIndex
@@ -3337,7 +3358,7 @@ Calculates the normalized difference vegetation index (NDVI) from near-infrared 
 
 ```
 
-*Python Function Name*: ```normalized_difference_vegetation_index```
+*Python function name*: ```normalized_difference_vegetation_index```
 
 
 #### 6.9.10 Opening
@@ -3361,7 +3382,7 @@ An opening is a mathematical morphology operating involving a dilation (max filt
 
 ```
 
-*Python Function Name*: ```opening```
+*Python function name*: ```opening```
 
 
 #### 6.9.11 RemoveSpurs
@@ -3384,7 +3405,7 @@ Removes the spurs (pruning operation) from a Boolean line image.; intended to be
 
 ```
 
-*Python Function Name*: ```remove_spurs```
+*Python function name*: ```remove_spurs```
 
 
 #### 6.9.12 Resample
@@ -3408,7 +3429,7 @@ Resamples one or more input images into a destination image.
 
 ```
 
-*Python Function Name*: ```resample```
+*Python function name*: ```resample```
 
 
 #### 6.9.13 RgbToIhs
@@ -3445,7 +3466,7 @@ Converts red, green, and blue (RGB) images into intensity, hue, and saturation (
 
 ```
 
-*Python Function Name*: ```rgb_to_ihs```
+*Python function name*: ```rgb_to_ihs```
 
 
 #### 6.9.14 SplitColourComposite
@@ -3467,7 +3488,7 @@ This tool splits an RGB colour composite image into seperate multispectral image
 
 ```
 
-*Python Function Name*: ```split_colour_composite```
+*Python function name*: ```split_colour_composite```
 
 
 #### 6.9.15 ThickenRasterLine
@@ -3489,7 +3510,7 @@ Thickens single-cell wide lines within a raster image.
 
 ```
 
-*Python Function Name*: ```thicken_raster_line```
+*Python function name*: ```thicken_raster_line```
 
 
 #### 6.9.16 TophatTransform
@@ -3514,7 +3535,7 @@ Performs either a white or black top-hat transform on an input image.
 
 ```
 
-*Python Function Name*: ```tophat_transform```
+*Python function name*: ```tophat_transform```
 
 
 #### 6.9.17 WriteFunctionMemoryInsertion
@@ -3539,7 +3560,7 @@ Performs a write function memory insertion for single-band multi-date change det
 
 ```
 
-*Python Function Name*: ```write_function_memory_insertion```
+*Python function name*: ```write_function_memory_insertion```
 
 ### 6.10 Image Processing Tools => Filters
 
@@ -3565,7 +3586,7 @@ Performs an adaptive filter on an image.
 
 ```
 
-*Python Function Name*: ```adaptive_filter```
+*Python function name*: ```adaptive_filter```
 
 
 #### 6.10.2 BilateralFilter
@@ -3590,7 +3611,7 @@ A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi a
 
 ```
 
-*Python Function Name*: ```bilateral_filter```
+*Python function name*: ```bilateral_filter```
 
 
 #### 6.10.3 ConservativeSmoothingFilter
@@ -3614,7 +3635,7 @@ Performs a conservative-smoothing filter on an image.
 
 ```
 
-*Python Function Name*: ```conservative_smoothing_filter```
+*Python function name*: ```conservative_smoothing_filter```
 
 
 #### 6.10.4 DiffOfGaussianFilter
@@ -3639,7 +3660,7 @@ Performs a Difference of Gaussian (DoG) filter on an image.
 
 ```
 
-*Python Function Name*: ```diff_of_gaussian_filter```
+*Python function name*: ```diff_of_gaussian_filter```
 
 
 #### 6.10.5 DiversityFilter
@@ -3663,7 +3684,7 @@ Assigns each cell in the output grid the number of different values in a moving 
 
 ```
 
-*Python Function Name*: ```diversity_filter```
+*Python function name*: ```diversity_filter```
 
 
 #### 6.10.6 EmbossFilter
@@ -3688,7 +3709,7 @@ Performs an emboss filter on an image, similar to a hillshade operation.
 
 ```
 
-*Python Function Name*: ```emboss_filter```
+*Python function name*: ```emboss_filter```
 
 
 #### 6.10.7 GaussianFilter
@@ -3711,7 +3732,7 @@ Performs a Gaussian filter on an image.
 
 ```
 
-*Python Function Name*: ```gaussian_filter```
+*Python function name*: ```gaussian_filter```
 
 
 #### 6.10.8 HighPassFilter
@@ -3735,7 +3756,7 @@ Performs a high-pass filter on an input image.
 
 ```
 
-*Python Function Name*: ```high_pass_filter```
+*Python function name*: ```high_pass_filter```
 
 
 #### 6.10.9 KNearestMeanFilter
@@ -3764,7 +3785,7 @@ A k-nearest mean filter is a type of edge-preserving smoothing filter.
 
 ```
 
-*Python Function Name*: ```k_nearest_mean_filter```
+*Python function name*: ```k_nearest_mean_filter```
 
 
 #### 6.10.10 LaplacianFilter
@@ -3790,7 +3811,7 @@ Performs a Laplacian filter on an image.
 
 ```
 
-*Python Function Name*: ```laplacian_filter```
+*Python function name*: ```laplacian_filter```
 
 
 #### 6.10.11 LaplacianOfGaussianFilter
@@ -3813,7 +3834,7 @@ Performs a Laplacian-of-Gaussian (LoG) filter on an image.
 
 ```
 
-*Python Function Name*: ```laplacian_of_gaussian_filter```
+*Python function name*: ```laplacian_of_gaussian_filter```
 
 
 #### 6.10.12 LeeFilter
@@ -3845,7 +3866,7 @@ Performs a Lee (Sigma) smoothing filter on an image.
 
 ```
 
-*Python Function Name*: ```lee_filter```
+*Python function name*: ```lee_filter```
 
 
 #### 6.10.13 LineDetectionFilter
@@ -3872,7 +3893,7 @@ Performs a line-detection filter on an image.
 
 ```
 
-*Python Function Name*: ```line_detection_filter```
+*Python function name*: ```line_detection_filter```
 
 
 #### 6.10.14 MajorityFilter
@@ -3896,7 +3917,7 @@ Assigns each cell in the output grid the most frequently occurring value (mode) 
 
 ```
 
-*Python Function Name*: ```majority_filter```
+*Python function name*: ```majority_filter```
 
 
 #### 6.10.15 MaximumFilter
@@ -3920,7 +3941,7 @@ Assigns each cell in the output grid the maximum value in a moving window centre
 
 ```
 
-*Python Function Name*: ```maximum_filter```
+*Python function name*: ```maximum_filter```
 
 
 #### 6.10.16 MeanFilter
@@ -3944,7 +3965,7 @@ Performs a mean filter (low-pass filter) on an input image.
 
 ```
 
-*Python Function Name*: ```mean_filter```
+*Python function name*: ```mean_filter```
 
 
 #### 6.10.17 MedianFilter
@@ -3969,7 +3990,7 @@ Performs a median filter on an input image.
 
 ```
 
-*Python Function Name*: ```median_filter```
+*Python function name*: ```median_filter```
 
 
 #### 6.10.18 MinimumFilter
@@ -3993,7 +4014,7 @@ Assigns each cell in the output grid the minimum value in a moving window centre
 
 ```
 
-*Python Function Name*: ```minimum_filter```
+*Python function name*: ```minimum_filter```
 
 
 #### 6.10.19 OlympicFilter
@@ -4017,7 +4038,7 @@ Performs an olympic smoothing filter on an image.
 
 ```
 
-*Python Function Name*: ```olympic_filter```
+*Python function name*: ```olympic_filter```
 
 
 #### 6.10.20 PercentileFilter
@@ -4042,7 +4063,7 @@ Performs a percentile filter on an input image.
 
 ```
 
-*Python Function Name*: ```percentile_filter```
+*Python function name*: ```percentile_filter```
 
 
 #### 6.10.21 PrewittFilter
@@ -4065,7 +4086,7 @@ Performs a Prewitt edge-detection filter on an image.
 
 ```
 
-*Python Function Name*: ```prewitt_filter```
+*Python function name*: ```prewitt_filter```
 
 
 #### 6.10.22 RangeFilter
@@ -4089,7 +4110,7 @@ Assigns each cell in the output grid the range of values in a moving window cent
 
 ```
 
-*Python Function Name*: ```range_filter```
+*Python function name*: ```range_filter```
 
 
 #### 6.10.23 RobertsCrossFilter
@@ -4112,7 +4133,7 @@ Performs a Robert's cross edge-detection filter on an image.
 
 ```
 
-*Python Function Name*: ```roberts_cross_filter```
+*Python function name*: ```roberts_cross_filter```
 
 
 #### 6.10.24 ScharrFilter
@@ -4135,7 +4156,7 @@ Performs a Scharr edge-detection filter on an image.
 
 ```
 
-*Python Function Name*: ```scharr_filter```
+*Python function name*: ```scharr_filter```
 
 
 #### 6.10.25 SobelFilter
@@ -4159,7 +4180,7 @@ Performs a Sobel edge-detection filter on an image.
 
 ```
 
-*Python Function Name*: ```sobel_filter```
+*Python function name*: ```sobel_filter```
 
 
 #### 6.10.26 StandardDeviationFilter
@@ -4183,7 +4204,7 @@ Assigns each cell in the output grid the standard deviation of values in a movin
 
 ```
 
-*Python Function Name*: ```standard_deviation_filter```
+*Python function name*: ```standard_deviation_filter```
 
 
 #### 6.10.27 TotalFilter
@@ -4207,7 +4228,7 @@ Performs a total filter on an input image.
 
 ```
 
-*Python Function Name*: ```total_filter```
+*Python function name*: ```total_filter```
 
 ### 6.11 Image Processing Tools => Image Enhancement
 
@@ -4232,7 +4253,7 @@ Performs a balance contrast enhancement on a colour-composite image of multispec
 
 ```
 
-*Python Function Name*: ```balance_contrast_enhancement```
+*Python function name*: ```balance_contrast_enhancement```
 
 
 #### 6.11.2 DirectDecorrelationStretch
@@ -4257,7 +4278,7 @@ Performs a direct decorrelation stretch enhancement on a colour-composite image 
 
 ```
 
-*Python Function Name*: ```direct_decorrelation_stretch```
+*Python function name*: ```direct_decorrelation_stretch```
 
 
 #### 6.11.3 GammaCorrection
@@ -4280,7 +4301,7 @@ Performs a sigmoidal contrast stretch on input images.
 
 ```
 
-*Python Function Name*: ```gamma_correction```
+*Python function name*: ```gamma_correction```
 
 
 #### 6.11.4 HistogramEqualization
@@ -4304,7 +4325,7 @@ Performs a histogram equalization contrast enhancment on an image.
 
 ```
 
-*Python Function Name*: ```histogram_equalization```
+*Python function name*: ```histogram_equalization```
 
 
 #### 6.11.5 HistogramMatching
@@ -4328,7 +4349,7 @@ Alters the statistical distribution of a raster image matching it to a specified
 
 ```
 
-*Python Function Name*: ```histogram_matching```
+*Python function name*: ```histogram_matching```
 
 
 #### 6.11.6 HistogramMatchingTwoImages
@@ -4352,7 +4373,7 @@ This tool alters the cumulative distribution function of a raster image to that 
 
 ```
 
-*Python Function Name*: ```histogram_matching_two_images```
+*Python function name*: ```histogram_matching_two_images```
 
 
 #### 6.11.7 MinMaxContrastStretch
@@ -4378,7 +4399,7 @@ Performs a min-max contrast stretch on an input greytone image.
 
 ```
 
-*Python Function Name*: ```min_max_contrast_stretch```
+*Python function name*: ```min_max_contrast_stretch```
 
 
 #### 6.11.8 PanchromaticSharpening
@@ -4414,7 +4435,7 @@ Increases the spatial resolution of image data by combining multispectral bands 
 
 ```
 
-*Python Function Name*: ```panchromatic_sharpening```
+*Python function name*: ```panchromatic_sharpening```
 
 
 #### 6.11.9 PercentageContrastStretch
@@ -4441,7 +4462,7 @@ Performs a percentage linear contrast stretch on input images.
 
 ```
 
-*Python Function Name*: ```percentage_contrast_stretch```
+*Python function name*: ```percentage_contrast_stretch```
 
 
 #### 6.11.10 SigmoidalContrastStretch
@@ -4467,7 +4488,7 @@ Performs a sigmoidal contrast stretch on input images.
 
 ```
 
-*Python Function Name*: ```sigmoidal_contrast_stretch```
+*Python function name*: ```sigmoidal_contrast_stretch```
 
 
 #### 6.11.11 StandardDeviationContrastStretch
@@ -4492,7 +4513,7 @@ Performs a standard-deviation contrast stretch on input images.
 
 ```
 
-*Python Function Name*: ```standard_deviation_contrast_stretch```
+*Python function name*: ```standard_deviation_contrast_stretch```
 
 ### 6.12 LiDAR Tools
 
@@ -4519,7 +4540,7 @@ Creates a block-maximum raster from an input LAS file.
 
 ```
 
-*Python Function Name*: ```block_maximum```
+*Python function name*: ```block_maximum```
 
 
 #### 6.12.2 BlockMinimum
@@ -4545,7 +4566,7 @@ Creates a block-minimum raster from an input LAS file.
 
 ```
 
-*Python Function Name*: ```block_minimum```
+*Python function name*: ```block_minimum```
 
 
 #### 6.12.3 FilterLidarScanAngles
@@ -4569,7 +4590,7 @@ Removes points in a LAS file with scan angles greater than a threshold.
 
 ```
 
-*Python Function Name*: ```filter_lidar_scan_angles```
+*Python function name*: ```filter_lidar_scan_angles```
 
 
 #### 6.12.4 FindFlightlineEdgePoints
@@ -4591,7 +4612,7 @@ Identifies points along a flightline's edge in a LAS file.
 
 ```
 
-*Python Function Name*: ```find_flightline_edge_points```
+*Python function name*: ```find_flightline_edge_points```
 
 
 #### 6.12.5 FlightlineOverlap
@@ -4618,7 +4639,7 @@ Reads a LiDAR (LAS) point file and outputs a raster containing the number of ove
 
 ```
 
-*Python Function Name*: ```flightline_overlap```
+*Python function name*: ```flightline_overlap```
 
 
 #### 6.12.6 LasToAscii
@@ -4639,7 +4660,7 @@ Converts one or more LAS files into ASCII text files.
 
 ```
 
-*Python Function Name*: ```las_to_ascii```
+*Python function name*: ```las_to_ascii```
 
 
 #### 6.12.7 LidarColourize
@@ -4663,7 +4684,7 @@ Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input im
 
 ```
 
-*Python Function Name*: ```lidar_colourize```
+*Python function name*: ```lidar_colourize```
 
 
 #### 6.12.8 LidarElevationSlice
@@ -4701,7 +4722,7 @@ Outputs all of the points within a LiDAR (LAS) point file that lie between a spe
 
 ```
 
-*Python Function Name*: ```lidar_elevation_slice```
+*Python function name*: ```lidar_elevation_slice```
 
 
 #### 6.12.9 LidarGroundPointFilter
@@ -4727,7 +4748,7 @@ Identifies ground points within LiDAR dataset using a slope-based method.
 
 ```
 
-*Python Function Name*: ```lidar_ground_point_filter```
+*Python function name*: ```lidar_ground_point_filter```
 
 
 #### 6.12.10 LidarHillshade
@@ -4755,7 +4776,7 @@ Calculates a hillshade value for points within a LAS file and stores these data 
 
 ```
 
-*Python Function Name*: ```lidar_hillshade```
+*Python function name*: ```lidar_hillshade```
 
 
 #### 6.12.11 LidarHistogram
@@ -4780,7 +4801,7 @@ Creates a histogram from LiDAR data.
 
 ```
 
-*Python Function Name*: ```lidar_histogram```
+*Python function name*: ```lidar_histogram```
 
 
 #### 6.12.12 LidarIdwInterpolation
@@ -4817,7 +4838,7 @@ Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
 
 ```
 
-*Python Function Name*: ```lidar_idw_interpolation```
+*Python function name*: ```lidar_idw_interpolation```
 
 
 #### 6.12.13 LidarInfo
@@ -4843,7 +4864,7 @@ Prints information about a LiDAR (LAS) dataset, including header, point return f
 
 ```
 
-*Python Function Name*: ```lidar_info```
+*Python function name*: ```lidar_info```
 
 
 #### 6.12.14 LidarJoin
@@ -4865,7 +4886,7 @@ Joins multiple LiDAR (LAS) files into a single LAS file.
 
 ```
 
-*Python Function Name*: ```lidar_join```
+*Python function name*: ```lidar_join```
 
 
 #### 6.12.15 LidarKappaIndex
@@ -4889,7 +4910,7 @@ Performs a kappa index of agreement (KIA) analysis on the classifications of two
 
 ```
 
-*Python Function Name*: ```lidar_kappa_index```
+*Python function name*: ```lidar_kappa_index```
 
 
 #### 6.12.16 LidarNearestNeighbourGridding
@@ -4925,7 +4946,7 @@ Grids LAS files using nearest-neighbour scheme.
 
 ```
 
-*Python Function Name*: ```lidar_nearest_neighbour_gridding```
+*Python function name*: ```lidar_nearest_neighbour_gridding```
 
 
 #### 6.12.17 LidarPointDensity
@@ -4959,7 +4980,7 @@ Calculates the spatial pattern of point density for a LiDAR data set.
 
 ```
 
-*Python Function Name*: ```lidar_point_density```
+*Python function name*: ```lidar_point_density```
 
 
 #### 6.12.18 LidarPointStats
@@ -4987,7 +5008,7 @@ Creates several rasters summarizing the distribution of LAS point data.
 
 ```
 
-*Python Function Name*: ```lidar_point_stats```
+*Python function name*: ```lidar_point_stats```
 
 
 #### 6.12.19 LidarRemoveDuplicates
@@ -5010,7 +5031,7 @@ Removes duplicate points from a LiDAR data set.
 
 ```
 
-*Python Function Name*: ```lidar_remove_duplicates```
+*Python function name*: ```lidar_remove_duplicates```
 
 
 #### 6.12.20 LidarRemoveOutliers
@@ -5035,7 +5056,7 @@ Removes outliers (high and low points) in a LiDAR point cloud.
 
 ```
 
-*Python Function Name*: ```lidar_remove_outliers```
+*Python function name*: ```lidar_remove_outliers```
 
 
 #### 6.12.21 LidarSegmentation
@@ -5062,7 +5083,7 @@ Segments a LiDAR point cloud based on normal vectors.
 
 ```
 
-*Python Function Name*: ```lidar_segmentation```
+*Python function name*: ```lidar_segmentation```
 
 
 #### 6.12.22 LidarSegmentationBasedFilter
@@ -5090,7 +5111,7 @@ Identifies ground points within LiDAR point clouds using a segmentation based ap
 
 ```
 
-*Python Function Name*: ```lidar_segmentation_based_filter```
+*Python function name*: ```lidar_segmentation_based_filter```
 
 
 #### 6.12.23 LidarTile
@@ -5116,7 +5137,7 @@ Tiles a LiDAR LAS file into multiple LAS files.
 
 ```
 
-*Python Function Name*: ```lidar_tile```
+*Python function name*: ```lidar_tile```
 
 
 #### 6.12.24 LidarTophatTransform
@@ -5140,7 +5161,7 @@ Performs a white top-hat transform on a Lidar dataset; as an estimate of height 
 
 ```
 
-*Python Function Name*: ```lidar_tophat_transform```
+*Python function name*: ```lidar_tophat_transform```
 
 
 #### 6.12.25 NormalVectors
@@ -5163,7 +5184,7 @@ Calculates normal vectors for points within a LAS file and stores these data (XY
 
 ```
 
-*Python Function Name*: ```normal_vectors```
+*Python function name*: ```normal_vectors```
 
 ### 6.13 Math and Stats Tools
 
@@ -5186,7 +5207,7 @@ Calculates the absolute value of every cell in a raster.
 
 ```
 
-*Python Function Name*: ```absolute_value```
+*Python function name*: ```absolute_value```
 
 
 #### 6.13.2 Add
@@ -5209,7 +5230,7 @@ Performs an addition operation on two rasters or a raster and a constant value.
 
 ```
 
-*Python Function Name*: ```add```
+*Python function name*: ```add```
 
 
 #### 6.13.3 And
@@ -5232,7 +5253,7 @@ Performs a logical AND operator on two Boolean raster images.
 
 ```
 
-*Python Function Name*: ```And```
+*Python function name*: ```And```
 
 
 #### 6.13.4 Anova
@@ -5255,7 +5276,7 @@ Performs an analysis of variance (ANOVA) test on a raster dataset.
 
 ```
 
-*Python Function Name*: ```anova```
+*Python function name*: ```anova```
 
 
 #### 6.13.5 ArcCos
@@ -5277,7 +5298,7 @@ Returns the inverse cosine (arccos) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```arc_cos```
+*Python function name*: ```arc_cos```
 
 
 #### 6.13.6 ArcSin
@@ -5299,7 +5320,7 @@ Returns the inverse sine (arcsin) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```arc_sin```
+*Python function name*: ```arc_sin```
 
 
 #### 6.13.7 ArcTan
@@ -5321,7 +5342,7 @@ Returns the inverse tangent (arctan) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```arc_tan```
+*Python function name*: ```arc_tan```
 
 
 #### 6.13.8 Atan2
@@ -5344,7 +5365,7 @@ Returns the 2-argument inverse tangent (atan2).
 
 ```
 
-*Python Function Name*: ```atan2```
+*Python function name*: ```atan2```
 
 
 #### 6.13.9 Ceil
@@ -5366,7 +5387,7 @@ Returns the smallest (closest to negative infinity) value that is greater than o
 
 ```
 
-*Python Function Name*: ```ceil```
+*Python function name*: ```ceil```
 
 
 #### 6.13.10 Cos
@@ -5388,7 +5409,7 @@ Returns the cosine (cos) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```cos```
+*Python function name*: ```cos```
 
 
 #### 6.13.11 Cosh
@@ -5410,7 +5431,7 @@ Returns the hyperbolic cosine (cosh) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```cosh```
+*Python function name*: ```cosh```
 
 
 #### 6.13.12 CrispnessIndex
@@ -5435,7 +5456,7 @@ Calculates the Crispness Index, which is used to quantify how crisp (or converse
 
 ```
 
-*Python Function Name*: ```crispness_index```
+*Python function name*: ```crispness_index```
 
 
 #### 6.13.13 CrossTabulation
@@ -5459,7 +5480,7 @@ Performs a cross-tabulation on two categorical images.
 
 ```
 
-*Python Function Name*: ```cross_tabulation```
+*Python function name*: ```cross_tabulation```
 
 
 #### 6.13.14 CumulativeDistribution
@@ -5481,7 +5502,7 @@ Converts a raster image to its cumulative distribution function.
 
 ```
 
-*Python Function Name*: ```cumulative_distribution```
+*Python function name*: ```cumulative_distribution```
 
 
 #### 6.13.15 Decrement
@@ -5503,7 +5524,7 @@ Decreases the values of each grid cell in an input raster by 1.0.
 
 ```
 
-*Python Function Name*: ```decrement```
+*Python function name*: ```decrement```
 
 
 #### 6.13.16 Divide
@@ -5526,7 +5547,7 @@ Performs a division operation on two rasters or a raster and a constant value.
 
 ```
 
-*Python Function Name*: ```divide```
+*Python function name*: ```divide```
 
 
 #### 6.13.17 EqualTo
@@ -5549,7 +5570,7 @@ Performs a equal-to comparison operation on two rasters or a raster and a consta
 
 ```
 
-*Python Function Name*: ```equal_to```
+*Python function name*: ```equal_to```
 
 
 #### 6.13.18 Exp
@@ -5571,7 +5592,7 @@ Returns the exponential (base e) of values in a raster.
 
 ```
 
-*Python Function Name*: ```exp```
+*Python function name*: ```exp```
 
 
 #### 6.13.19 Exp2
@@ -5593,7 +5614,7 @@ Returns the exponential (base 2) of values in a raster.
 
 ```
 
-*Python Function Name*: ```exp2```
+*Python function name*: ```exp2```
 
 
 #### 6.13.20 ExtractRasterStatistics
@@ -5623,7 +5644,7 @@ Extracts descriptive statistics for a group of patches in a raster.
 
 ```
 
-*Python Function Name*: ```extract_raster_statistics```
+*Python function name*: ```extract_raster_statistics```
 
 
 #### 6.13.21 Floor
@@ -5645,7 +5666,7 @@ Returns the largest (closest to positive infinity) value that is less than or eq
 
 ```
 
-*Python Function Name*: ```floor```
+*Python function name*: ```floor```
 
 
 #### 6.13.22 GreaterThan
@@ -5670,7 +5691,7 @@ Performs a greater-than comparison operation on two rasters or a raster and a co
 
 ```
 
-*Python Function Name*: ```greater_than```
+*Python function name*: ```greater_than```
 
 
 #### 6.13.23 ImageAutocorrelation
@@ -5694,7 +5715,7 @@ Performs Moran's I analysis on two or more input images.
 
 ```
 
-*Python Function Name*: ```image_autocorrelation```
+*Python function name*: ```image_autocorrelation```
 
 
 #### 6.13.24 ImageCorrelation
@@ -5717,7 +5738,7 @@ Performs image correlation on two or more input images.
 
 ```
 
-*Python Function Name*: ```image_correlation```
+*Python function name*: ```image_correlation```
 
 
 #### 6.13.25 ImageRegression
@@ -5744,7 +5765,7 @@ Performs image regression analysis on two input images.
 
 ```
 
-*Python Function Name*: ```image_regression```
+*Python function name*: ```image_regression```
 
 
 #### 6.13.26 Increment
@@ -5766,7 +5787,7 @@ Increases the values of each grid cell in an input raster by 1.0.
 
 ```
 
-*Python Function Name*: ```increment```
+*Python function name*: ```increment```
 
 
 #### 6.13.27 IntegerDivision
@@ -5790,7 +5811,7 @@ Performs an integer division operation on two rasters or a raster and a constant
 
 ```
 
-*Python Function Name*: ```integer_division```
+*Python function name*: ```integer_division```
 
 
 #### 6.13.28 IsNoData
@@ -5812,7 +5833,7 @@ Identifies NoData valued pixels in an image.
 
 ```
 
-*Python Function Name*: ```is_no_data```
+*Python function name*: ```is_no_data```
 
 
 #### 6.13.29 KSTestForNormality
@@ -5838,7 +5859,7 @@ Evaluates whether the values in a raster are normally distributed.
 
 ```
 
-*Python Function Name*: ```ks_test_for_normality```
+*Python function name*: ```ks_test_for_normality```
 
 
 #### 6.13.30 KappaIndex
@@ -5861,7 +5882,7 @@ Performs a kappa index of agreement (KIA) analysis on two categorical raster fil
 
 ```
 
-*Python Function Name*: ```kappa_index```
+*Python function name*: ```kappa_index```
 
 
 #### 6.13.31 LessThan
@@ -5886,7 +5907,7 @@ Performs a less-than comparison operation on two rasters or a raster and a const
 
 ```
 
-*Python Function Name*: ```less_than```
+*Python function name*: ```less_than```
 
 
 #### 6.13.32 Ln
@@ -5908,7 +5929,7 @@ Returns the natural logarithm of values in a raster.
 
 ```
 
-*Python Function Name*: ```ln```
+*Python function name*: ```ln```
 
 
 #### 6.13.33 Log10
@@ -5930,7 +5951,7 @@ Returns the base-10 logarithm of values in a raster.
 
 ```
 
-*Python Function Name*: ```log10```
+*Python function name*: ```log10```
 
 
 #### 6.13.34 Log2
@@ -5952,7 +5973,7 @@ Returns the base-2 logarithm of values in a raster.
 
 ```
 
-*Python Function Name*: ```log2```
+*Python function name*: ```log2```
 
 
 #### 6.13.35 Max
@@ -5975,7 +5996,7 @@ Performs a MAX operation on two rasters or a raster and a constant value.
 
 ```
 
-*Python Function Name*: ```max```
+*Python function name*: ```max```
 
 
 #### 6.13.36 Min
@@ -5998,7 +6019,7 @@ Performs a MIN operation on two rasters or a raster and a constant value.
 
 ```
 
-*Python Function Name*: ```min```
+*Python function name*: ```min```
 
 
 #### 6.13.37 Modulo
@@ -6021,7 +6042,7 @@ Performs a modulo operation on two rasters or a raster and a constant value.
 
 ```
 
-*Python Function Name*: ```modulo```
+*Python function name*: ```modulo```
 
 
 #### 6.13.38 Multiply
@@ -6044,7 +6065,7 @@ Performs a multiplication operation on two rasters or a raster and a constant va
 
 ```
 
-*Python Function Name*: ```multiply```
+*Python function name*: ```multiply```
 
 
 #### 6.13.39 Negate
@@ -6066,7 +6087,7 @@ Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
 ```
 
-*Python Function Name*: ```negate```
+*Python function name*: ```negate```
 
 
 #### 6.13.40 Not
@@ -6089,7 +6110,7 @@ Performs a logical NOT operator on two Boolean raster images.
 
 ```
 
-*Python Function Name*: ```Not```
+*Python function name*: ```Not```
 
 
 #### 6.13.41 NotEqualTo
@@ -6112,7 +6133,7 @@ Performs a not-equal-to comparison operation on two rasters or a raster and a co
 
 ```
 
-*Python Function Name*: ```not_equal_to```
+*Python function name*: ```not_equal_to```
 
 
 #### 6.13.42 Or
@@ -6135,7 +6156,7 @@ Performs a logical OR operator on two Boolean raster images.
 
 ```
 
-*Python Function Name*: ```Or```
+*Python function name*: ```Or```
 
 
 #### 6.13.43 Power
@@ -6158,7 +6179,7 @@ Raises the values in grid cells of one rasters, or a constant value, by values i
 
 ```
 
-*Python Function Name*: ```power```
+*Python function name*: ```power```
 
 
 #### 6.13.44 Quantiles
@@ -6181,7 +6202,7 @@ Transforms raster values into quantiles.
 
 ```
 
-*Python Function Name*: ```quantiles```
+*Python function name*: ```quantiles```
 
 
 #### 6.13.45 RandomField
@@ -6203,7 +6224,7 @@ Creates an image containing random values.
 
 ```
 
-*Python Function Name*: ```random_field```
+*Python function name*: ```random_field```
 
 
 #### 6.13.46 RandomSample
@@ -6226,7 +6247,7 @@ Creates an image containing randomly located sample grid cells with unique IDs.
 
 ```
 
-*Python Function Name*: ```random_sample```
+*Python function name*: ```random_sample```
 
 
 #### 6.13.47 RasterHistogram
@@ -6248,7 +6269,7 @@ Creates a histogram from raster values.
 
 ```
 
-*Python Function Name*: ```raster_histogram```
+*Python function name*: ```raster_histogram```
 
 
 #### 6.13.48 RasterSummaryStats
@@ -6269,7 +6290,7 @@ Measures a rasters average, standard deviation, num. non-nodata cells, and total
 
 ```
 
-*Python Function Name*: ```raster_summary_stats```
+*Python function name*: ```raster_summary_stats```
 
 
 #### 6.13.49 Reciprocal
@@ -6291,7 +6312,7 @@ Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
 ```
 
-*Python Function Name*: ```reciprocal```
+*Python function name*: ```reciprocal```
 
 
 #### 6.13.50 RescaleValueRange
@@ -6322,7 +6343,7 @@ Performs a min-max contrast stretch on an input greytone image.
 
 ```
 
-*Python Function Name*: ```rescale_value_range```
+*Python function name*: ```rescale_value_range```
 
 
 #### 6.13.51 RootMeanSquareError
@@ -6344,7 +6365,7 @@ Calculates the RMSE and other accuracy statistics.
 
 ```
 
-*Python Function Name*: ```root_mean_square_error```
+*Python function name*: ```root_mean_square_error```
 
 
 #### 6.13.52 Round
@@ -6366,7 +6387,7 @@ Rounds the values in an input raster to the nearest integer value.
 
 ```
 
-*Python Function Name*: ```round```
+*Python function name*: ```round```
 
 
 #### 6.13.53 Sin
@@ -6388,7 +6409,7 @@ Returns the sine (sin) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```sin```
+*Python function name*: ```sin```
 
 
 #### 6.13.54 Sinh
@@ -6410,7 +6431,7 @@ Returns the hyperbolic sine (sinh) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```sinh```
+*Python function name*: ```sinh```
 
 
 #### 6.13.55 Square
@@ -6432,7 +6453,7 @@ Squares the values in a raster.
 
 ```
 
-*Python Function Name*: ```square```
+*Python function name*: ```square```
 
 
 #### 6.13.56 SquareRoot
@@ -6454,7 +6475,7 @@ Returns the square root of the values in a raster.
 
 ```
 
-*Python Function Name*: ```square_root```
+*Python function name*: ```square_root```
 
 
 #### 6.13.57 Subtract
@@ -6477,7 +6498,7 @@ Performs a differencing operation on two rasters or a raster and a constant valu
 
 ```
 
-*Python Function Name*: ```subtract```
+*Python function name*: ```subtract```
 
 
 #### 6.13.58 Tan
@@ -6499,7 +6520,7 @@ Returns the tangent (tan) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```tan```
+*Python function name*: ```tan```
 
 
 #### 6.13.59 Tanh
@@ -6521,7 +6542,7 @@ Returns the hyperbolic tangent (tanh) of each values in a raster.
 
 ```
 
-*Python Function Name*: ```tanh```
+*Python function name*: ```tanh```
 
 
 #### 6.13.60 ToDegrees
@@ -6543,7 +6564,7 @@ Converts a raster from radians to degrees.
 
 ```
 
-*Python Function Name*: ```to_degrees```
+*Python function name*: ```to_degrees```
 
 
 #### 6.13.61 ToRadians
@@ -6565,7 +6586,7 @@ Converts a raster from degrees to radians.
 
 ```
 
-*Python Function Name*: ```to_radians```
+*Python function name*: ```to_radians```
 
 
 #### 6.13.62 Truncate
@@ -6588,7 +6609,7 @@ Truncates the values in a raster to the desired number of decimal places.
 
 ```
 
-*Python Function Name*: ```truncate```
+*Python function name*: ```truncate```
 
 
 #### 6.13.63 TurningBandsSimulation
@@ -6613,7 +6634,7 @@ Creates an image containing random values based on a turning-bands simulation.
 
 ```
 
-*Python Function Name*: ```turning_bands_simulation```
+*Python function name*: ```turning_bands_simulation```
 
 
 #### 6.13.64 Xor
@@ -6636,7 +6657,7 @@ Performs a logical XOR operator on two Boolean raster images.
 
 ```
 
-*Python Function Name*: ```xor```
+*Python function name*: ```xor```
 
 
 #### 6.13.65 ZScores
@@ -6658,7 +6679,7 @@ Standardizes the values in an input raster by converting to z-scores.
 
 ```
 
-*Python Function Name*: ```z_scores```
+*Python function name*: ```z_scores```
 
 ### 6.14 Stream Network Analysis
 
@@ -6688,7 +6709,7 @@ Calculates the distance of stream grid cells to the channel network outlet cell.
 
 ```
 
-*Python Function Name*: ```distance_to_outlet```
+*Python function name*: ```distance_to_outlet```
 
 
 #### 6.14.2 ExtractStreams
@@ -6713,7 +6734,7 @@ Extracts stream grid cells from a flow accumulation raster.
 
 ```
 
-*Python Function Name*: ```extract_streams```
+*Python function name*: ```extract_streams```
 
 
 #### 6.14.3 ExtractValleys
@@ -6745,7 +6766,7 @@ Identifies potential valley bottom grid cells based on local topolography alone.
 
 ```
 
-*Python Function Name*: ```extract_valleys```
+*Python function name*: ```extract_valleys```
 
 
 #### 6.14.4 FarthestChannelHead
@@ -6774,7 +6795,7 @@ Calculates the distance to the furthest upstream channel head for each stream ce
 
 ```
 
-*Python Function Name*: ```farthest_channel_head```
+*Python function name*: ```farthest_channel_head```
 
 
 #### 6.14.5 FindMainStem
@@ -6803,7 +6824,7 @@ Finds the main stem, based on stream lengths, of each stream network.
 
 ```
 
-*Python Function Name*: ```find_main_stem```
+*Python function name*: ```find_main_stem```
 
 
 #### 6.14.6 HackStreamOrder
@@ -6832,7 +6853,7 @@ Assigns the Hack stream order to each tributary in a stream network.
 
 ```
 
-*Python Function Name*: ```hack_stream_order```
+*Python function name*: ```hack_stream_order```
 
 
 #### 6.14.7 HortonStreamOrder
@@ -6861,7 +6882,7 @@ Assigns the Horton stream order to each tributary in a stream network.
 
 ```
 
-*Python Function Name*: ```horton_stream_order```
+*Python function name*: ```horton_stream_order```
 
 
 #### 6.14.8 LengthOfUpstreamChannels
@@ -6890,7 +6911,7 @@ Calculates the total length of channels upstream.
 
 ```
 
-*Python Function Name*: ```length_of_upstream_channels```
+*Python function name*: ```length_of_upstream_channels```
 
 
 #### 6.14.9 LongProfile
@@ -6916,7 +6937,7 @@ Plots the stream longitudinal profiles for one or more rivers.
 
 ```
 
-*Python Function Name*: ```long_profile```
+*Python function name*: ```long_profile```
 
 
 #### 6.14.10 LongProfileFromPoints
@@ -6942,7 +6963,7 @@ Plots the longitudinal profiles from flow-paths initiating from a set of vector 
 
 ```
 
-*Python Function Name*: ```long_profile_from_points```
+*Python function name*: ```long_profile_from_points```
 
 
 #### 6.14.11 RemoveShortStreams
@@ -6968,7 +6989,7 @@ Removes short first-order streams from a stream network.
 
 ```
 
-*Python Function Name*: ```remove_short_streams```
+*Python function name*: ```remove_short_streams```
 
 
 #### 6.14.12 ShreveStreamMagnitude
@@ -6997,7 +7018,7 @@ Assigns the Shreve stream magnitude to each link in a stream network.
 
 ```
 
-*Python Function Name*: ```shreve_stream_magnitude```
+*Python function name*: ```shreve_stream_magnitude```
 
 
 #### 6.14.13 StrahlerStreamOrder
@@ -7026,7 +7047,7 @@ Assigns the Strahler stream order to each link in a stream network.
 
 ```
 
-*Python Function Name*: ```strahler_stream_order```
+*Python function name*: ```strahler_stream_order```
 
 
 #### 6.14.14 StreamLinkClass
@@ -7055,7 +7076,7 @@ Identifies the exterior/interior links and nodes in a stream network.
 
 ```
 
-*Python Function Name*: ```stream_link_class```
+*Python function name*: ```stream_link_class```
 
 
 #### 6.14.15 StreamLinkIdentifier
@@ -7084,7 +7105,7 @@ Assigns a unique identifier to each link in a stream network.
 
 ```
 
-*Python Function Name*: ```stream_link_identifier```
+*Python function name*: ```stream_link_identifier```
 
 
 #### 6.14.16 StreamLinkLength
@@ -7114,7 +7135,7 @@ Estimates the length of each link (or tributary) in a stream network.
 
 ```
 
-*Python Function Name*: ```stream_link_length```
+*Python function name*: ```stream_link_length```
 
 
 #### 6.14.17 StreamLinkSlope
@@ -7145,7 +7166,7 @@ Estimates the average slope of each link (or tributary) in a stream network.
 
 ```
 
-*Python Function Name*: ```stream_link_slope```
+*Python function name*: ```stream_link_slope```
 
 
 #### 6.14.18 StreamSlopeContinuous
@@ -7176,7 +7197,7 @@ Estimates the slope of each grid cell in a stream network.
 
 ```
 
-*Python Function Name*: ```stream_slope_continuous```
+*Python function name*: ```stream_slope_continuous```
 
 
 #### 6.14.19 TopologicalStreamOrder
@@ -7205,7 +7226,7 @@ Assigns each link in a stream network its topological order.
 
 ```
 
-*Python Function Name*: ```topological_stream_order```
+*Python function name*: ```topological_stream_order```
 
 
 #### 6.14.20 TributaryIdentifier
@@ -7234,7 +7255,7 @@ Assigns a unique identifier to each tributary in a stream network.
 
 ```
 
-*Python Function Name*: ```tributary_identifier```
+*Python function name*: ```tributary_identifier```
 
 
 

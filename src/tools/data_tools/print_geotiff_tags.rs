@@ -1,27 +1,22 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
-Last Modified: November 14, 2017
+Created: March 2, 2018
+Last Modified: March 2, 2018
 License: MIT
-
-NOTE: At the moment this tool determines input/output raster formats based on extensions, but due to file 
-extension naming collisions, it would be good to add user hints. For example, the extension 'grd' could
-belong to a SurferAscii or a Surfer7Binary. This is more important for distinguishing output 
-files since input files can be read and distiguishing features idenfitied from the file structure.
 */
 extern crate time;
 
 use std::env;
 use std::path;
 use std::io::{Error, ErrorKind};
-use raster::*;
+use raster::geotiff::*;
 use tools::*;
 use tools::ToolParameter;
 use tools::ParameterType;
 use tools::ParameterFileType;
 
-pub struct ConvertRasterFormat {
+pub struct PrintGeoTiffTags {
     name: String,
     description: String,
     toolbox: String,
@@ -29,34 +24,31 @@ pub struct ConvertRasterFormat {
     example_usage: String,
 }
 
-impl ConvertRasterFormat {
-    pub fn new() -> ConvertRasterFormat {
+impl PrintGeoTiffTags {
+    pub fn new() -> PrintGeoTiffTags {
         // public constructor
-        let name = "ConvertRasterFormat".to_string();
+        let name = "PrintGeoTiffTags".to_string();
         let toolbox = "Data Tools".to_string();
-        let description = "Converts raster data from one format to another.".to_string();
-
-        // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output  Output raster file.\n");
+        let description = "Prints the tags within a GeoTIFF.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
+            name: "Input GeoTIFF Raster File".to_owned(), 
             flags: vec!["-i".to_owned(), "--input".to_owned()], 
-            description: "Input raster file.".to_owned(),
+            description: "Input GeoTIFF file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output raster file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
-            default_value: None,
-            optional: false
-        });
+        // parameters.push(ToolParameter{
+        //     name: "Output HTML File".to_owned(), 
+        //     flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        //     description: "Output HTML file.".to_owned(),
+        //     parameter_type: ParameterType::NewFile(ParameterFileType::Html),
+        //     default_value: None,
+        //     optional: false
+        // });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -68,12 +60,12 @@ impl ConvertRasterFormat {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep",
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tiff",
                             short_exe,
                             name)
                 .replace("*", &sep);
 
-        ConvertRasterFormat {
+        PrintGeoTiffTags {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -83,7 +75,7 @@ impl ConvertRasterFormat {
     }
 }
 
-impl WhiteboxTool for ConvertRasterFormat {
+impl WhiteboxTool for PrintGeoTiffTags {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -117,7 +109,7 @@ impl WhiteboxTool for ConvertRasterFormat {
                verbose: bool)
                -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut output_file = String::new();
+        // let mut output_file = String::new();
 
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -138,12 +130,12 @@ impl WhiteboxTool for ConvertRasterFormat {
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
-                } else {
-                    output_file = args[i + 1].to_string();
-                }
+            // } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            //     if keyval {
+            //         output_file = vec[1].to_string();
+            //     } else {
+            //         output_file = args[i + 1].to_string();
+            //     }
             }
         }
 
@@ -158,58 +150,19 @@ impl WhiteboxTool for ConvertRasterFormat {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(&sep) && !output_file.contains("/") {
-            output_file = format!("{}{}", working_directory, output_file);
-        }
-
-        if verbose {
-            println!("Reading data...")
-        };
-
-        let input = Raster::new(&input_file, "r")?;
-
-        // println!("config info {:?}", input.configs);
-
-        let start = time::now();
-
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        println!("Initializing the output raster...");
-        match output.set_data_from_raster(&input) {
-            Ok(_) => (), // do nothings
-            Err(err) => return Err(err),
-        }
-        // for row in 0..input.configs.rows as isize {
-        //     for col in 0..input.configs.columns as isize {
-        //         output[(row, col)] = input[(row, col)];
-        //         if row % 1000 == 0 && col % 1000 == 0 {
-        //             println!("cell({}, {}) = {}", row, col, input[(row, col)]);
-        //         }
-        //     }
+        // if !output_file.contains(&sep) && !output_file.contains("/") {
+        //     output_file = format!("{}{}", working_directory, output_file);
         // }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        // make sure that it is a tiff file
+        if !input_file.to_lowercase().ends_with(".tiff") && !input_file.to_lowercase().ends_with(".tif") {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                                  "The input file must be in a GeoTIFF format."));
+        }
 
-        if verbose {
-            println!("Saving data...")
-        };
-        let _ = match output.write() {
-            Ok(_) => {
-                if verbose {
-                    println!("Output file written")
-                }
-            }
+        match print_tags(&input_file) {
+            Ok(_) => return Ok(()),
             Err(e) => return Err(e),
-        };
-
-        println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
-        Ok(())
+        }
     }
 }

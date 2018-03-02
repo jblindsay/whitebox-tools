@@ -357,6 +357,19 @@ class WhiteboxTools(object):
         # returns 1 if error
         return self.run_tool('NewRasterFromBase', args, callback)
 
+    def print_geo_tiff_tags(self, input, callback=default_callback):
+        """ Prints the tags within a GeoTIFF.
+
+        Keyword arguments:
+
+        input -- Input GeoTIFF file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(input))
+        # returns 1 if error
+        return self.run_tool('PrintGeoTiffTags', args, callback)
+
     def set_nodata_value(self, input, output, back_value=0.0, callback=default_callback):
         """ Assign a specified value in an input image to the NoData value.
 
@@ -3569,7 +3582,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         inputs -- Input LiDAR files. 
-        callback -- Custom functon for handling tool text outputs.
+callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--inputs='{}'".format(inputs))
@@ -4760,7 +4773,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         input -- Input raster file. 
-        callback -- Custom functon for handling tool text outputs.
+callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(input))

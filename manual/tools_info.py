@@ -136,7 +136,7 @@ for t in tools.split("\n"):
 
 ```
 
-*Python Function Name*: ```{}```
+*Python function name*: ```{}```
 """.format(tool, description, doc_str, example, tool_snaked)
         # print(fn)
         tb_dict[toolbox].append(fn)

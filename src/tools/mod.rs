@@ -28,6 +28,7 @@ impl ToolManager {
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("NewRasterFromBase".to_string());
+        tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("SetNodataValue".to_string());
 
         // gis_analysis
@@ -334,6 +335,7 @@ impl ToolManager {
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
+            "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
 
             // gis_analysis

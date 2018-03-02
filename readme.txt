@@ -71,6 +71,7 @@ Version 0.4 (dd-mm-yyyy)
     MaxElevDevSignature
     MultiscaleRoughness
     MultiscaleRoughnessSignature
+    PrintGeoTiffTags
     Profile
     
 Version 0.3.1 (15-02-2018)

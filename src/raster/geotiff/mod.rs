@@ -20,6 +20,131 @@ use raster::geotiff::tiff_consts::*;
 use io_utils::{ByteOrderReader, Endianness};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 
+pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
+    let mut f = File::open(file_name.clone())?;
+    let metadata = fs::metadata(file_name.clone())?;
+    let file_size: usize = metadata.len() as usize;
+    let mut buffer = vec![0; file_size];
+
+    // read the file's bytes into a buffer
+    f.read(&mut buffer)?;
+
+    //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
+    let endian = match &buffer[0..2] { 
+        b"II" => Endianness::LittleEndian,
+        b"MM" => Endianness::BigEndian,
+        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
+    };
+
+    let mut th = ByteOrderReader::new(buffer, endian);
+    th.seek(2);
+
+    match th.read_u16() {
+        42 => (), // do nothing
+        43 => {
+            return Err(Error::new(ErrorKind::InvalidData,
+                                  "The BigTiff format is not currently supported."))
+        }
+        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
+    }
+
+    let mut ifd_offset = th.read_u32() as usize;
+
+    let mut ifd_map = HashMap::new();
+
+    let mut geokeys: GeoKeys = Default::default();
+    let mut cur_pos: usize;
+
+    println!("TIFF Tags:");
+
+    while ifd_offset > 0 {
+        th.seek(ifd_offset);
+        let num_directories = th.read_u16();
+        
+        for _ in 0..num_directories {
+            let tag_id = th.read_u16();
+            let field_type = th.read_u16();
+
+            let num_values = th.read_u32();
+            let value_offset = th.read_u32();
+            let data_size = match field_type {
+                1u16 | 2u16 | 6u16 | 7u16 => 1,
+                3u16 | 8u16 => 2,
+                4u16 | 9u16 | 11u16 => 4,
+                5u16 | 10u16 | 12u16 => 8,
+                _ => return Err(Error::new(ErrorKind::InvalidInput, "Error reading the IFDs.")),
+            };
+
+            // read the tag data
+            let mut data: Vec<u8> = vec![];
+            if (data_size * num_values) > 4 {
+                // the values are stored at the offset location
+                cur_pos = th.pos;
+                th.seek(value_offset as usize);
+                for _ in 0..num_values * data_size {
+                    data.push(th.read_u8());
+                }
+                th.seek(cur_pos);
+            } else {
+                // the value(s) are contained in the offset
+                cur_pos = th.pos;
+                th.seek(cur_pos - 4);
+                for _ in 0..num_values * data_size {
+                    data.push(th.read_u8());
+                }
+                th.seek(cur_pos);
+            }
+
+            let ifd = IfdDirectory::new(tag_id,
+                                        field_type,
+                                        num_values,
+                                        value_offset,
+                                        data,
+                                        endian);
+            ifd_map.insert(tag_id, ifd.clone());
+
+            println!("{}", ifd);
+
+        }
+        ifd_offset = th.read_u32() as usize;
+    }
+
+    match ifd_map.get(&34735) {
+        Some(ifd) => geokeys.add_key_directory(&ifd.data),
+        _ => {
+            return Err(Error::new(ErrorKind::InvalidData,
+                                  "The TIFF file does not contain geokeys"))
+        }
+    };
+
+    match ifd_map.get(&34736) {
+        Some(ifd) => geokeys.add_double_params(&ifd.data),
+        _ => {}
+    };
+
+    match ifd_map.get(&34737) {
+        Some(ifd) => geokeys.add_ascii_params(&ifd.data),
+        _ => {}
+    };
+
+    // let geokeys_map = geokeys.get_ifd_map(endian);
+
+    // let model_tiepoints = match ifd_map.get(&33922) {
+    //     Some(ifd) => ifd.interpret_as_f64(),
+    //     _ => vec![0.0],
+    // };
+
+    // let model_pixel_scale = match ifd_map.get(&33550) {
+    //     Some(ifd) => ifd.interpret_as_f64(),
+    //     _ => vec![0.0],
+    // };
+
+    println!("\nGeoKeys:\n");
+    println!("{}", geokeys.interpret_geokeys());
+
+    Ok(())
+}
+
 pub fn read_geotiff<'a>(file_name: &'a String,
                         configs: &'a mut RasterConfigs,
                         data: &'a mut Vec<f64>)
@@ -2815,8 +2940,14 @@ impl fmt::Display for IfdDirectory {
         let mut s = format!("\nTag {}", tag_map[&self.tag]);
         s = s + &format!("\nIFD_type: {} ({})", ft_map[&self.ifd_type], self.ifd_type);
         s = s + &format!("\nNum_values: {}", self.num_values);
-        s = s + &format!("\nOffset: {}", self.offset);
-        s = s + &format!("\nData: {}", self.interpret_data());
+        if self.num_values > 1 || self.ifd_type > 3 {
+            s = s + &format!("\nOffset: {}", self.offset);
+        }
+        if self.ifd_type != 2 {
+            s = s + &format!("\nData: {}", self.interpret_data());
+        } else {
+            s = s + &format!("\nData: {}", self.interpret_data().replace("\0", ""));
+        }
         write!(f, "{}", s)
     }
 }
