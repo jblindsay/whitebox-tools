@@ -11,7 +11,7 @@ use std::env;
 use std::path;
 use std::f64;
 use raster::*;
-// use vector::*;
+use vector::*;
 use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
@@ -133,25 +133,26 @@ impl WhiteboxTool for Watershed {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-d8_pntr" || vec[0].to_lowercase() == "--d8_pntr" {
-                if keyval {
-                    d8_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-d8_pntr" {
+                d8_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    d8_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-pour_pts" || vec[0].to_lowercase() == "--pour_pts" {
-                if keyval {
-                    pourpts_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-pour_pts" {
+                pourpts_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    pourpts_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
             }
         }
@@ -181,32 +182,55 @@ impl WhiteboxTool for Watershed {
 
         let pntr = Raster::new(&d8_file, "r")?;
         
-        let pourpts = Raster::new(&pourpts_file, "r")?;
-        // let pourpts = Shapefile::new(&pourpts_file, "r")?;
+        // let pourpts = Raster::new(&pourpts_file, "r")?;
+        let pourpts = Shapefile::new(&pourpts_file, "r")?;
+
+        // make sure the input vector file is of points type
+        if pourpts.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type."));
+        }
 
         let start = time::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
-        let nodata = pourpts.configs.nodata;
+        let nodata = -32768f64; //pour_pts.configs.nodata;
         let pntr_nodata = pntr.configs.nodata;
-        let palette = pourpts.configs.palette.clone();
+        // let palette = pourpts.configs.palette.clone();
 
-        // make sure the input files have the same size
-        if pourpts.configs.rows != pntr.configs.rows || pourpts.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
-        }
+        // // make sure the input files have the same size
+        // if pourpts.configs.rows != pntr.configs.rows || pourpts.configs.columns != pntr.configs.columns {
+        //     return Err(Error::new(ErrorKind::InvalidInput,
+        //                         "The input files must have the same number of rows and columns and spatial extent."));
+        // }
 
         let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
         
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
-        let mut output = Raster::initialize_using_file(&output_file, &pourpts);
-        output.configs.palette = palette;
-        output.configs.photometric_interp = pourpts.configs.photometric_interp;
+        let mut output = Raster::initialize_using_file(&output_file, &pntr);
+        output.configs.nodata = nodata;
+        output.configs.data_type = DataType::I32;
+        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output.configs.palette = "qual.pal".to_string(); //palette;
         let low_value = f64::MIN;
         output.reinitialize_values(low_value);
+
+        for record_num in 0..pourpts.num_records {
+            let record = pourpts.get_record(record_num);
+            let row = pntr.get_row_from_y(record.points[0].y);
+            let col = pntr.get_column_from_x(record.points[0].x);
+            output.set_value(row, col, (record_num+1) as f64);
+
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Locating pour points: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
@@ -250,10 +274,10 @@ impl WhiteboxTool for Watershed {
                 } else {
                     output[(row, col)] = nodata;
                 }
-                z = pourpts[(row, col)];
-                if z != nodata && z > 0.0 {
-                    output[(row, col)] = z;
-                }
+                // z = pourpts[(row, col)];
+                // if z != nodata && z > 0.0 {
+                //     output[(row, col)] = z;
+                // }
             }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

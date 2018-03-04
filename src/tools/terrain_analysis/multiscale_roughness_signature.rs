@@ -533,7 +533,7 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                     n = i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)] - i_n[(y2, x1)];
                     if n > 0 {
                         sum = i_diff_nv[(y2, x2)] + i_diff_nv[(y1, x1)] - i_diff_nv[(y1, x2)] - i_diff_nv[(y2, x1)];
-                        xdata[s].push(midpoint as f64);
+                        xdata[s].push((midpoint * 2 + 1) as f64);
                         ydata[s].push(sum / n as f64);
                     }
                 }
@@ -562,9 +562,7 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
         writer.write_all((format!("<p><strong>Input DEM</strong>: {}<br>", input.get_short_filename())).as_bytes())?;
         
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
-
+        
         let multiples = xdata.len() > 2 && xdata.len() < 12;
 
         let graph = LineGraph {
@@ -574,8 +572,8 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: series_names.clone(), 
-            x_axis_label: "Filter Radius".to_string(),
-            y_axis_label: "Roughness".to_string(),
+            x_axis_label: "Filter Size (cells)".to_string(),
+            y_axis_label: "Roughness (degrees)".to_string(),
             draw_points: false,
             draw_gridlines: true,
             draw_legend: multiples,
@@ -587,8 +585,6 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
-
-        if verbose { println!("\n{}",  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

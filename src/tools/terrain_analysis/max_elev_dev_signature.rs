@@ -365,14 +365,14 @@ impl WhiteboxTool for MaxElevDevSignature {
                         if v > 0f64 {
                             s = v.sqrt();
                             mean = sum / n as f64;
-                            xdata[site].push(midpoint as f64);
+                            xdata[site].push((midpoint * 2 + 1) as f64);
                             ydata[site].push((z - mean) / s);
                         } else {
-                            xdata[site].push(midpoint as f64);
+                            xdata[site].push((midpoint * 2 + 1) as f64);
                             ydata[site].push(0f64);
                         }
                     } else {
-                        xdata[site].push(midpoint as f64);
+                        xdata[site].push((midpoint * 2 + 1) as f64);
                         ydata[site].push(0f64);
                     }
                 }
@@ -413,7 +413,7 @@ impl WhiteboxTool for MaxElevDevSignature {
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: series_names.clone(), 
-            x_axis_label: "Filter Radius".to_string(),
+            x_axis_label: "Filter Size (cells)".to_string(),
             y_axis_label: "DEV".to_string(),
             draw_points: false,
             draw_gridlines: true,

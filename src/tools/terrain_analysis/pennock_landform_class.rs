@@ -57,7 +57,7 @@ impl PennockLandformClass {
             name: "Slope Threshold (degrees)".to_owned(), 
             flags: vec!["--slope".to_owned()], 
             description: "Slope threshold value, in degrees (default is 3.0)".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::Float,
             default_value: Some("3.0".to_owned()),
             optional: false
         });
@@ -66,7 +66,7 @@ impl PennockLandformClass {
             name: "Profile Curvature Threshold".to_owned(), 
             flags: vec!["--prof".to_owned()], 
             description: "Profile curvature threshold value (default is 0.1)".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::Float,
             default_value: Some("0.1".to_owned()),
             optional: false
         });
@@ -75,7 +75,7 @@ impl PennockLandformClass {
             name: "Plan Curvature Threshold".to_owned(), 
             flags: vec!["--plan".to_owned()], 
             description: "Plan curvature threshold value (default is 0.0).".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
             optional: false
         });
@@ -246,7 +246,11 @@ impl WhiteboxTool for PennockLandformClass {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-                
+        output.configs.nodata = -128f64;
+        output.configs.data_type = DataType::I8;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous; //Categorical;
+        // output.configs.palette = "qual.plt".to_string();
+               
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -265,7 +269,7 @@ impl WhiteboxTool for PennockLandformClass {
                 let mut plan: f64;
                 let mut prof: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![-128f64; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
@@ -316,8 +320,6 @@ impl WhiteboxTool for PennockLandformClass {
                                 } else if slope <= slope_threshold {
                                     //Level
                                     data[col as usize] = 7f64;
-                                } else {
-                                    data[col as usize] = nodata;
                                 }
                             }
                         }
@@ -341,8 +343,6 @@ impl WhiteboxTool for PennockLandformClass {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
