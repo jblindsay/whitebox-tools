@@ -582,8 +582,9 @@ impl WhiteboxTool for KMeansClustering {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
-
-        println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
         if !output_html_file.trim().is_empty() {
             let f = File::create(output_html_file.clone())?;

@@ -447,10 +447,12 @@ impl WhiteboxTool for PercentageContrastStretch {
                 }
             }
             Err(e) => return Err(e),
-        };
+        }; 
 
-        println!("{}",
+        if verbose {
+            println!("{}",
                  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

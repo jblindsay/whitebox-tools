@@ -74,7 +74,7 @@ impl Watershed {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --pour_pts='pour_pts.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.dep' --pour_pts='pour_pts.shp' -o='output.dep'", short_exe, name).replace("*", &sep);
     
         Watershed { 
             name: name, 
@@ -224,7 +224,7 @@ impl WhiteboxTool for Watershed {
             output.set_value(row, col, (record_num+1) as f64);
 
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * record_num as f64 / (pourpts.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Locating pour points: {}%", progress);
                     old_progress = progress;
@@ -362,8 +362,9 @@ impl WhiteboxTool for Watershed {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
         Ok(())
     }

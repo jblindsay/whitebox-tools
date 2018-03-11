@@ -676,6 +676,10 @@ class WbRunner(tk.Frame):
         self.grid()
         self.tool_name = tool_name
         self.master.title("WhiteboxTools Runner")
+        # widthpixels = 800
+        # heightpixels = 600
+        # self.master.geometry('{}x{}'.format(widthpixels, heightpixels))
+        # self.master.resizable(0, 0)
         # self.master.lift()
         if _platform == "darwin":
             os.system(

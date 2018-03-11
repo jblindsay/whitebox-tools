@@ -492,8 +492,9 @@ impl WhiteboxTool for KappaIndex {
 
         let end = time::now();
         let elapsed_time = end - start;
-
-        println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

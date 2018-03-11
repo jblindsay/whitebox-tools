@@ -259,9 +259,10 @@ impl WhiteboxTool for EqualTo {
             let _ = match output.write() {
                 Ok(_) => if verbose { println!("Output file written") },
                 Err(e) => return Err(e),
-            };
-
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            };  
+            if verbose {
+                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            }
         } else if !input1_is_constant && input2_is_constant {
             if verbose { println!("Reading data...") };
             let in1 = Arc::new(Raster::new(&input1, "r")?);
@@ -320,8 +321,9 @@ impl WhiteboxTool for EqualTo {
                 Ok(_) => if verbose { println!("Output file written") },
                 Err(e) => return Err(e),
             };
-
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            if verbose {
+                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            }
         } else { // !input1_is_constant && !input2_is_constant
             if verbose { println!("Reading data...") };
             let in1 = Arc::new(Raster::new(&input1, "r")?);
@@ -391,8 +393,9 @@ impl WhiteboxTool for EqualTo {
                 Ok(_) => if verbose { println!("Output file written") },
                 Err(e) => return Err(e),
             };
-
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            if verbose {
+                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            }
 
         }
         

@@ -198,6 +198,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
+        // let mut lakes_file: String = "".to_string();
         let mut interp_parameter = "elevation".to_string();
         let mut return_type = "all".to_string();
         let mut grid_res: f64 = 1.0;
@@ -207,7 +208,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         let mut exclude_cls_str = String::new();
         let mut max_z = f64::INFINITY;
         let mut min_z = f64::NEG_INFINITY;
-
+        
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -370,6 +371,31 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 max_y: header.max_y
             });
         }
+
+        /* If a vector lakes file has been specified then figure out what the elevation of
+           each lake is.
+        */
+        // if !lakes_file.is_empty() {
+        //     // make sure the lakes file name has a complete path
+        //     if !lakes_file.contains(path::MAIN_SEPARATOR) && !lakes_file.contains("/") {
+        //         lakes_file = format!("{}{}", working_directory, lakes_file);
+        //     }
+            
+        //     let lakes = Shapefile::new(&lakes_file, "r")?;
+
+        //     // which las files overlap with the bounding box of the lakes file?
+        //     let mut lakes_bb = vec![];
+        //     for record_num in 0..profile_data.num_records {
+        //         let header = LasHeader::read_las_header(&in_file.replace("\"", ""))?;
+        //         bounding_boxes.push(BoundingBox{
+        //             min_x: header.min_x,
+        //             max_x: header.max_x,
+        //             min_y: header.min_y,
+        //             max_y: header.max_y
+        //         });
+        //     }
+
+        // }
 
         if verbose {
             println!("Performing interpolation...");

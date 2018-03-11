@@ -254,8 +254,10 @@ impl WhiteboxTool for RandomSample {
             },
             Err(e) => return Err(e),
         };
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         Ok(())
     }
 }

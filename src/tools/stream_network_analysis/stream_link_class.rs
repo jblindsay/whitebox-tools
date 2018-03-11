@@ -374,9 +374,9 @@ impl WhiteboxTool for StreamLinkClass {
         println!("3      Source node (headwater)");
         println!("4      Link node (confluence)");
         println!("5      Sink node (outlet)");
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         Ok(())
     }
 }

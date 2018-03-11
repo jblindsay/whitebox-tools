@@ -559,10 +559,11 @@ impl WhiteboxTool for ExtractRasterStatistics {
             }
 
         }
-
-        let end = time::now();
-        let elapsed_time = end - start;
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            let end = time::now();
+            let elapsed_time = end - start;
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
         Ok(())
     }

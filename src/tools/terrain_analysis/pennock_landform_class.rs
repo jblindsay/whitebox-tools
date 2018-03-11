@@ -365,18 +365,20 @@ impl WhiteboxTool for PennockLandformClass {
             Err(e) => return Err(e),
         };
 
-        println!("CLASSIFICATION KEY");
-        println!("Value  Class");
-        println!("1      Convergent Footslope");
-        println!("2      Divergent Footslope");
-        println!("3      Convergent Shoulder");
-        println!("4      Divergent Shoulder");
-        println!("5      Convergent Backslope");
-        println!("6      Divergent Backslope");
-        println!("7      Level");
+        if verbose {
+            println!("CLASSIFICATION KEY");
+            println!("Value  Class");
+            println!("1      Convergent Footslope");
+            println!("2      Divergent Footslope");
+            println!("3      Convergent Shoulder");
+            println!("4      Divergent Shoulder");
+            println!("5      Convergent Backslope");
+            println!("6      Divergent Backslope");
+            println!("7      Level");
+            
         
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

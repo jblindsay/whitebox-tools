@@ -413,8 +413,9 @@ impl WhiteboxTool for LidarSegmentation {
             Ok(_) => println!("Complete!"),
             Err(e) => println!("error while writing: {:?}", e),
         };
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

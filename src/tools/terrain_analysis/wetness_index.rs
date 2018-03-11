@@ -252,8 +252,9 @@ impl WhiteboxTool for WetnessIndex {
             println!("WARNING: The input SCA data layer contained only low values. It is likely that it has been
             log-transformed. This tool requires non-transformed SCA as an input.")
         }
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
         Ok(())
     }

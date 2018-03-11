@@ -421,8 +421,9 @@ impl WhiteboxTool for IhsToRgb {
                 Ok(_) => if verbose { println!("Output file written") },
                 Err(e) => return Err(e),
             };
-
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            if verbose {
+                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            }
         }
 
         Ok(())

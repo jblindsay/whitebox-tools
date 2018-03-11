@@ -669,8 +669,9 @@ impl WhiteboxTool for ImageRegression {
 
                 let _ = output.stdout;
             }
-
-            println!("Complete! Please see {} for output.", output_file);
+            if verbose {
+                println!("Complete! Please see {} for output.", output_file);
+            }
         }
 
         Ok(())

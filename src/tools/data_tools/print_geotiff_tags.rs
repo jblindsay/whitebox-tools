@@ -150,10 +150,7 @@ impl WhiteboxTool for PrintGeoTiffTags {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        // if !output_file.contains(&sep) && !output_file.contains("/") {
-        //     output_file = format!("{}{}", working_directory, output_file);
-        // }
-
+    
         // make sure that it is a tiff file
         if !input_file.to_lowercase().ends_with(".tiff") && !input_file.to_lowercase().ends_with(".tif") {
             return Err(Error::new(ErrorKind::InvalidInput,

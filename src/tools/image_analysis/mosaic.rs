@@ -524,8 +524,9 @@ impl WhiteboxTool for Mosaic {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
-
-        println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

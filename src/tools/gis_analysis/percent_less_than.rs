@@ -256,7 +256,9 @@ impl WhiteboxTool for PercentLessThan {
             Err(e) => return Err(e),
         };
 
-        println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

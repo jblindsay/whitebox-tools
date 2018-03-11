@@ -28,6 +28,7 @@ use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
+use vector::*;
 use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::*;
@@ -58,10 +59,10 @@ impl Viewshed {
         });
 
         parameters.push(ToolParameter{
-            name: "Viewing Station Raster File".to_owned(), 
+            name: "Viewing Station Vector File".to_owned(), 
             flags: vec!["--stations".to_owned()], 
-            description: "Input viewing station raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            description: "Input viewing station vector file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)), //ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
         });
@@ -91,7 +92,7 @@ impl Viewshed {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.dep' --stations='stations.dep' -o=output.dep --height=10.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.dep' --stations='stations.shp' -o=output.dep --height=10.0", short_exe, name).replace("*", &sep);
     
         Viewshed { 
             name: name, 
@@ -222,27 +223,48 @@ impl WhiteboxTool for Viewshed {
         let nodata = dem.configs.nodata;
 
         // let stations = Arc::new(Raster::new(&stations_file, "r")?);
-        let stations = Raster::new(&stations_file, "r")?;
+        // let stations = Raster::new(&stations_file, "r")?;
+        let stations = Shapefile::new(&stations_file, "r")?;
+
+        // make sure the input vector file is of points type
+        if stations.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type."));
+        }
 
         let mut output = Raster::initialize_using_file(&output_file, &dem);
 
         // scan the stations raster and place each non-zero grid cell into Vecs
-        let mut z: f64;
+        // let mut z: f64;
         let mut station_x = vec![];
         let mut station_y = vec![];
-        for row in 0..rows {
-            for col in 0..columns {
-                z = stations.get_value(row, col);
-                if z > 0f64 && dem.get_value(row, col) != nodata {
-                    station_x.push(stations.get_x_from_column(col));
-                    station_y.push(stations.get_y_from_row(row));
-                }
-            }
+        // for row in 0..rows {
+        //     for col in 0..columns {
+        //         z = stations.get_value(row, col);
+        //         if z > 0f64 && dem.get_value(row, col) != nodata {
+        //             station_x.push(stations.get_x_from_column(col));
+        //             station_y.push(stations.get_y_from_row(row));
+        //         }
+        //     }
+
+        //     if verbose {
+        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Locating stations: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
+
+        for record_num in 0..stations.num_records {
+            let record = stations.get_record(record_num);
+            station_y.push(record.points[0].y);
+            station_x.push(record.points[0].x);
 
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * record_num as f64 / (stations.num_records - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Locating stations: {}%", progress);
+                    println!("Locating view stations: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -620,8 +642,9 @@ impl WhiteboxTool for Viewshed {
             Ok(_) => if verbose { println!("Output file written") },
             Err(e) => return Err(e),
         };
-
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
         Ok(())
     }

@@ -8,12 +8,12 @@ and type the following at the command prompt:
 ./whitebox_tools --help
 
 The following commands are recognized:
-
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
 -h, --help       Prints help information.
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r="LidarInfo".
+--toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.
 --toolhelp       Prints the help associated with a tool; --toolhelp="LidarInfo".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters="LidarInfo".
 -v               Verbose mode. Without this flag, tool outputs will not be printed.
@@ -21,18 +21,21 @@ The following commands are recognized:
 --version        Prints the version information.
 
 Example Usage:
-
-./whitebox-tools -r=lidar_info --cd="/path/to/data/" -i=input.las --vlr --geokeys
+>> ./whitebox-tools -r=lidar_info --cd="/path/to/data/" -i=input.las --vlr --geokeys
 
 
 The WhiteboxTools library may also be called from Python automation scripts. The 
 whitebox_tools.py script can be used as an easy way of interfacing with the various 
-commands. To use this script, simply use the following import:
+commands. See the user manual for more deails. To use this script, simply use the 
+following import:
 
 from whitebox_tools import WhiteboxTools
 
-See the whitebox_example.py script for more details on how to interface with WhiteboxTools 
-from Python.
+wbt = WhiteboxTools() 
+wbt.work_dir = "/path/to/data/" # Sets the Whitebox working directory
+
+wbt.d_inf_flow_accumulation("DEM.dep", "output.dep", log=True)
+
 
 Additionally, included in this directory is the WhiteboxTools Runner, a simple Tkinter 
 user-interface that allows users to run the WhiteboxTools tools, with convenience for 
@@ -51,7 +54,11 @@ for more details.
 
 Release Notes:
 
-Version 0.4 (dd-mm-yyyy)
+Version 0.X.X (DD-MM-YYYY)
+
+- Updated tools so that the reporting of elapsed time respects verbose mode.
+
+Version 0.4.0 (04-03-2018)
 
 - This release has erognomic improvements for Python scripting with Whitebox. Tools can be called 
   in Python like this:
@@ -59,9 +66,11 @@ Version 0.4 (dd-mm-yyyy)
   wt = WhiteboxTools()
   wt.slope(‘DEM.dep’, ‘slope.dep’)
   
-  There is a convenience method in whitebox_tools.py for each tool in the WhiteboxTools binary executable.
-- Significant improvements have been made to the User Manual, and in particular the section on Python
-  based scripting with WhiteboxTools.
+- There is a convenience method in whitebox_tools.py for each tool in the WhiteboxTools binary 
+  executable. This makes it far easier to call tools from a Python script. See the User Manual
+  for details.
+- Significant improvements and revisions have been made to the User Manual, and in particular 
+  the section on Python based scripting with WhiteboxTools.
 - The following tools have been added to the library:
     LidarColourize
     LidarPointStats
@@ -73,7 +82,10 @@ Version 0.4 (dd-mm-yyyy)
     MultiscaleRoughnessSignature
     PrintGeoTiffTags
     Profile
-    
+- Updated Watershed and Viewshed tools to take vector point inputs.
+- PennockLandformClass tool modified to have int8 output data type. Also fixed a bug in the input
+  parameters.
+
 Version 0.3.1 (15-02-2018)
 
 - No new tools have been added to this release. Instead the focus was on improving and enhancing

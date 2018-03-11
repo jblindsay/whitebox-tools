@@ -11,6 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::fmt;
 use io_utils::{ByteOrderReader, Endianness};
+use vector::Point2D;
 
 // 100 bytes in size
 #[derive(Default, Clone)]
@@ -438,19 +439,6 @@ m_array: {:?}",
             self.m_min,
             self.m_max,
             self.m_array);
-        write!(f, "{}", s)
-    }
-}
-
-#[derive(Default, Clone, Debug)]
-pub struct Point2D {
-    pub x: f64,
-    pub y: f64,
-}
-
-impl fmt::Display for Point2D {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("(x: {}, y: {})", self.x, self.y);
         write!(f, "{}", s)
     }
 }

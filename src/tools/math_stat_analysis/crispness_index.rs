@@ -305,9 +305,10 @@ ranging from 0-1. The input image contains values outside this range.");
         // println!("SSmp: {}", total_dev);
         // println!("SSb: {}", denominator);
         // println!("Crispness index: {}", crispness);
-
-        println!("\n{}",
+        if verbose {
+            println!("\n{}",
                  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
 
         let f = File::create(output_file.clone())?;
@@ -440,8 +441,9 @@ ranging from 0-1. The input image contains values outside this range. <em>Theref
 
                 let _ = output.stdout;
             }
-
-            println!("Complete! Please see {} for output.", output_file);
+            if verbose {
+                println!("Complete! Please see {} for output.", output_file);
+            }
         }
 
         Ok(())

@@ -455,8 +455,10 @@ impl WhiteboxTool for KSTestForNormality {
         
         let end = time::now();
         let elapsed_time = end - start;
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
         
-        println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         Ok(())
     }
 }

@@ -200,7 +200,7 @@ impl Raster {
         output.configs.xy_units = input.configs.xy_units.clone();
         output.configs.z_units = input.configs.z_units.clone();
         output.configs.endian = input.configs.endian.clone();
-        output.configs.palette_nonlinearity = input.configs.palette_nonlinearity;
+        // output.configs.palette_nonlinearity = input.configs.palette_nonlinearity;
         output.configs.pixel_is_area = input.configs.pixel_is_area;
         output.configs.epsg_code = input.configs.epsg_code;
         output.configs.coordinate_ref_system_wkt = input.configs.coordinate_ref_system_wkt.clone();

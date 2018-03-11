@@ -204,8 +204,9 @@ impl WhiteboxTool for RasterSummaryStats {
         println!("Image average: {}", mean);
         println!("Image variance: {}", variance);
         println!("Image standard deviation: {}", std_dev);
-
-        println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

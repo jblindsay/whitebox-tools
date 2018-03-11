@@ -188,9 +188,11 @@ impl WhiteboxTool for LasToAscii {
             i += 1;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        println!("{}", &format!("Elapsed Time: {}", elapsed_time).replace("PT", ""));
+        if verbose {
+            let end = time::now();
+            let elapsed_time = end - start;
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time).replace("PT", ""));
+        }
 
         Ok(())
     }

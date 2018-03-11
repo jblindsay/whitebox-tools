@@ -339,9 +339,10 @@ impl WhiteboxTool for BlockMinimum {
 
         let end = time::now();
         let elapsed_time = end - start;
-
-        println!("{}",
+        if verbose {
+            println!("{}",
                  &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        }
 
 
         Ok(())

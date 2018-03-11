@@ -79,10 +79,11 @@ class WhiteboxTools(object):
             if self.verbose:
                 args2.append("-v")
 
-            cl = ""
-            for v in args2:
-                cl += v + " "
-            callback(cl.strip() + "\n")
+            if self.verbose:
+                cl = ""
+                for v in args2:
+                    cl += v + " "
+                callback(cl.strip() + "\n")
 
             proc = Popen(args2, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -363,7 +364,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         input -- Input GeoTIFF file. 
-        callback -- Custom functon for handling tool text outputs.
+callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(input))
@@ -1701,7 +1702,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         dem -- Input raster DEM file. 
-        stations -- Input viewing station raster file. 
+        stations -- Input viewing station vector file. 
         output -- Output raster file. 
         height -- Viewing station height, in z units. 
         callback -- Custom functon for handling tool text outputs.
