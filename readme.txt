@@ -56,6 +56,9 @@ Release Notes:
 
 Version 0.X.X (DD-MM-YYYY)
 
+- The following tools have been added:
+    ElevationAboveStreamEuclidean
+    
 - Updated tools so that the reporting of elapsed time respects verbose mode.
 
 Version 0.4.0 (04-03-2018)

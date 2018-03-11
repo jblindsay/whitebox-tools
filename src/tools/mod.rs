@@ -78,6 +78,7 @@ impl ToolManager {
         tool_names.push("DownslopeDistanceToStream".to_string());
         tool_names.push("DownslopeFlowpathLength".to_string());
         tool_names.push("ElevationAboveStream".to_string());
+        tool_names.push("ElevationAboveStreamEuclidean".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FD8Pointer".to_string());
         tool_names.push("FillDepressions".to_string());
@@ -402,6 +403,7 @@ impl ToolManager {
             "elevationabovestream" => {
                 Some(Box::new(tools::hydro_analysis::ElevationAboveStream::new()))
             }
+            "elevationabovestreameuclidean" => Some(Box::new(tools::hydro_analysis::ElevationAboveStreamEuclidean::new())),
             "fd8flowaccumulation" => {
                 Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new()))
             }

@@ -1,6 +1,6 @@
-(Updated 02-03-2018)
+(Updated 11-03-2018)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **279 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **155 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **280 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **155 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -439,6 +439,7 @@ Tools that are new in *WhiteboxTools*
 | BlockMaximum                                      |                                                                                                                                                                |
 | BlockMinimum                                      |                                                                                                                                                                |
 | ConvertRasterFormat                               | An amalgamation of all previous import/export tools within Whitebox GAT.                                                                                       |
+| ElevationAboveStreamEuclidean                     |                                                                                                                                                                |
 | Exp2                                              |                                                                                                                                                                |
 | FeaturePreservingDenoise                          |                                                                                                                                                                |
 | FlightLineOverlap                                 |                                                                                                                                                                |
