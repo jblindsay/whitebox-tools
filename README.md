@@ -4,22 +4,22 @@
 
 *Bringing the power of Whitebox GAT to the world at large*
 
-  \
+
 
 *This page is related to the stand-alone command-line program and Python scripting API for geospatial analysis, **WhiteboxTools**. If you are instead interested in the open-source GIS, **Whitebox GAT**, please see this [link](https://github.com/jblindsay/whitebox-geospatial-analysis-tools).*
 
 **Contents**
 
-1. [Description](#description)
-2. [Downloads and Installation](#downloads-and-installation)
-3. [Usage](#usage)
-4. [Available Tools](#available-tools)
-5. [Supported Data Formats](#supported-data-formats)
-6. [Contributing](#contributing)
-7. [License](#license)
-8. [Reporting Bugs](#reporting-bugs)
-9. [Known Issues](#known-issues)
-10. [Frequently Asked Questions](#frequently-asked-questions)
+1. [Description](#1-description)
+2. [Downloads and Installation](#2-downloads-and-installation)
+3. [Usage](#3-usage)
+4. [Available Tools](#4-available-tools)
+5. [Supported Data Formats](#5-supported-data-formats)
+6. [Contributing](#6-contributing)
+7. [License](#7-license)
+8. [Reporting Bugs](#8-reporting-bugs)
+9. [Known Issues](#9-known-issues)
+10. [Frequently Asked Questions](#10-frequently-asked-questions)
     * [Do I need Whitebox GAT to use WhiteboxTools?](#do-i-need-whitebox-gat-to-use-whiteboxtools)
     * [How do I request a tool be added?](#how-do-i-request-a-tool-be-added)
     * [Can WhiteboxTools be incorporated into other software and open-source GIS projects?](#can-whiteboxtools-be-incorporated-into-other-software-and-open-source-gis-projects)
@@ -30,7 +30,7 @@
     * [Do I need Rust installed on my computer to run WhiteboxTools?](#do-i-need-rust-installed-on-my-computer-to-run-whiteboxtools)
     * [How does WhiteboxTools' design philosophy differ?](#how-does-whiteboxtools-design-philosophy-differ)
     
-## Description
+## 1 Description
 
 **WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
 
@@ -39,7 +39,7 @@ Although *WhiteboxTools* is intended to serve as a source of plugin tools for th
 The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded
 the *GoSpatial* project, having subsumed all of its functionality.
 
-## Downloads and Installation
+## 2 Downloads and Installation
 
 *WhiteboxTools* is a stand-alone executable command-line program with no actual installation. If you intend to use the Python programming interface for *WhiteboxTools* you will need to have Python 3 (or higher) installed. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures than the distributed binary files. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
@@ -65,7 +65,7 @@ Depending on your system, the compilation may take several minutes. When complet
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
 
-## 3. Usage
+## 3 Usage
 
 *WhiteboxTools* is a command-line program and can be run either by calling it, with appropriate commands and arguments, from a terminal application, or, more conveniently, by calling it from a script. The following commands are recognized by the *WhiteboxTools* library:
 
@@ -159,7 +159,7 @@ There is a Python script contained within the *WhiteboxTools* directory called '
 
 The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at all and can therefore be used indepedent of the larger project. The script must be run from a directory that also contains the '*whitebox_tools.py*' Python script and the '*whitebox_tools*' executable file. There are plans to link tool help documentation in *WhiteboxTools Runner*.
 
-## 4. Available Tools
+## 4 Available Tools
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
@@ -473,7 +473,7 @@ The library currently contains the following 281 tools, which are each grouped b
 
 To retrieve detailed information about a tool's input arguments and example usage, either use the *--toolhelp* command from the terminal, or the *tool_help('tool_name')* function from the *whitebox_tools.py* script.
 
-## 5. Supported Data Formats
+## 5 Supported Data Formats
 The **WhiteboxTools** library can currently support read/writing raster data in [*Whitebox GAT*](http://www.uoguelph.ca/~hydrogeo/Whitebox/), GeoTIFF, ESRI (ArcGIS) ASCII and binary (.flt & .hdr), GRASS GIS, Idrisi, SAGA GIS (binary and ASCII), and Surfer 7 data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase. 
 
 At present, there is limited ability in *WhiteboxTools* to read vector geospatial data. Support for Shapefile (and other common vector formats) will be enhanced within the library soon. 
@@ -487,7 +487,7 @@ LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committ
 
 Note that the double extensions (.las.zip) in the above command are not necessary and are only used for convenience of keeping track of LiDAR data sets (i.e. .zip extensions work too). The extra work of decoding/encoding compressed files does add additional processing time, although the Rust compression library that is used is highly efficient and usually only adds a few seconds to tool run times. Zipping LAS files frequently results 40-60% smaller binary files, making the additional processing time worthwhile for larger LAS file data sets with massive storage requirements. 
 
-## 6. Contributing
+## 6 Contributing
 
 If you would like to contribute to the project as a developer, follow these instructions to get started:
 
@@ -501,15 +501,15 @@ Unless explicitly stated otherwise, any contribution intentionally submitted for
 
 If you would like to contribute financial support for the project, please contact [John Lindsay](http://www.uoguelph.ca/~hydrogeo/index.html). We also welcome contributions in the form of media exposure. If you have written an article or blog about *WhiteboxTools* please let us know about it.
 
-## 7. License
+## 7 License
 
 The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt), a permissive open-source (free software) license.
 
-## 8. Reporting Bugs
+## 8 Reporting Bugs
 
 WhiteboxTools is distributed as is and without warranty of suitability for application. If you encounter flaws with the software (i.e. bugs) please report the issue. Providing a detailed description of the conditions under which the bug occurred will help to identify the bug. *Use the Issues tracker on GitHub to report issues with the software and to request feature enchancements.* Please do not email Dr. Lindsay directly with bugs. 
 
-## 9. Known Issues
+## 9 Known Issues
 
 - Given the extreme complexity of the GeoTIFF file format, and the fact that the project uses a custom, stand-alone GeoTIFF library, it is likely that some users will encounter limitations (e.g. the BigTIFF format is currently unsupported) or bugs.
 - There is limited support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
@@ -517,7 +517,7 @@ WhiteboxTools is distributed as is and without warranty of suitability for appli
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
 - The Python scripts included with **WhiteboxTools** require Python 3. They will not work with Python 2, which is frequently the default Python version installed on many systems.
 
-## 10. Frequently Asked Questions
+## 10 Frequently Asked Questions
 
 ### Do I need Whitebox GAT to use WhiteboxTools?
 
