@@ -1,4 +1,6 @@
-#[derive(Clone, Copy, Debug)]
+use std::f64;
+
+#[derive(Clone, Copy, Debug, Default)]
 pub struct BoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -25,6 +27,14 @@ impl BoundingBox {
             max_y: y2
         }
     }
+
+    pub fn initialize_to_inf(&mut self) {
+        self.min_x = f64::INFINITY;
+        self.max_x = f64::NEG_INFINITY;
+        self.min_y = f64::INFINITY;
+        self.max_y = f64::NEG_INFINITY;
+    }
+
     pub fn get_height(&self) -> f64 {
         self.max_y - self.min_y
     }

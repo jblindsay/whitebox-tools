@@ -322,7 +322,7 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
 
         let end = time::now();
         let elapsed_time = end - start;
-        allocation.configs.palette = input.configs.palette;
+        allocation.configs.palette = dem.configs.palette;
         allocation.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         allocation.add_metadata_entry(format!("Input DEM file: {}", dem_file));
         allocation.add_metadata_entry(format!("Input streams file: {}", streams_file));

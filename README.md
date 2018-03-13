@@ -4,10 +4,14 @@
 
 *Bringing the power of Whitebox GAT to the world at large*
 
+  \
+
+*This page is related to the stand-alone command-line program and Python scripting API for geospatial analysis, **WhiteboxTools**. If you are instead interested in the open-source GIS, **Whitebox GAT**, please see this [link](https://github.com/jblindsay/whitebox-geospatial-analysis-tools).*
+
 **Contents**
 
 1. [Description](#description)
-2. [Installation](#installation)
+2. [Downloads and Installation](#downloads-and-installation)
 3. [Usage](#usage)
 4. [Available Tools](#available-tools)
 5. [Supported Data Formats](#supported-data-formats)
@@ -26,7 +30,7 @@
     * [Do I need Rust installed on my computer to run WhiteboxTools?](#do-i-need-rust-installed-on-my-computer-to-run-whiteboxtools)
     * [How does WhiteboxTools' design philosophy differ?](#how-does-whiteboxtools-design-philosophy-differ)
     
-## 1. Description
+## Description
 
 **WhiteboxTools** is an advanced geospatial data analysis engine developed by Prof. John Lindsay ([webpage](http://www.uoguelph.ca/~hydrogeo/index.html); [jblindsay](https://github.com/jblindsay)) at the [University of Guelph's](http://www.uoguelph.ca) [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/index.html). *WhiteboxTools* can be used to perform common geographical information systems (GIS) analysis operations, such as cost-distance analysis, distance buffering, and raster reclassification. Remote sensing and image processing tasks include image enhancement (e.g. panchromatic sharpening, contrast adjustments), image mosaicing, numerous filtering operations, simple classification (k-means), and common image transformations. *WhiteboxTools* also contains advanced tooling for spatial hydrological analysis (e.g. flow-accumulation, watershed delineation, stream network analysis, sink removal), terrain analysis (e.g. common terrain indices such as slope, curvatures, wetness index, hillshading; hypsometric analysis; multi-scale topographic position analysis), and LiDAR data processing. LiDAR point clouds can be interrogated (LidarInfo, LidarHistogram), segmented, tiled and joined, analyized for outliers, interpolated to rasters (DEMs, intensity images), and ground-points can be classified or filtered. *WhiteboxTools* is not a cartographic or spatial data visualization package; instead it is meant to serve as an analytical backend for other data visualization software, mainly GIS.
 
@@ -35,9 +39,9 @@ Although *WhiteboxTools* is intended to serve as a source of plugin tools for th
 The *WhiteboxTools* project is related to the [*GoSpatial*](https://github.com/jblindsay/go-spatial) project, which has similar goals but is designed using the Go programming language instead of Rust. *WhiteboxTools* has however superseded
 the *GoSpatial* project, having subsumed all of its functionality.
 
-## 2. Installation
+## Downloads and Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. If you intend to use the Python programming interface for *WhiteboxTools* you will need to have Python 3 (or higher) installed. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/software.shtml#WhiteboxTools) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures than the distributed binary files. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
 1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
@@ -159,7 +163,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 280 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 281 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -455,6 +459,7 @@ The library currently contains the following 280 tools, which are each grouped b
 - ***LengthOfUpstreamChannels***: Calculates the total length of channels upstream.
 - ***LongProfile***: Plots the stream longitudinal profiles for one or more rivers.
 - ***LongProfileFromPoints***: Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
+- ***RasterizeStreams***: Rasterizes vector streams based on Lindsay (2016) method.
 - ***RemoveShortStreams***: Removes short first-order streams from a stream network.
 - ***ShreveStreamMagnitude***: Assigns the Shreve stream magnitude to each link in a stream network.
 - ***StrahlerStreamOrder***: Assigns the Strahler stream order to each link in a stream network.

@@ -446,7 +446,10 @@ impl Raster {
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {
-        self.configs.west - self.configs.resolution_x / 2f64 +
+        // self.configs.west - self.configs.resolution_x / 2f64 +
+        // column as f64 * self.configs.resolution_x
+        // Not sure why it must be + 1/2 resolution rather than minus
+        self.configs.west + self.configs.resolution_x / 2f64 + 
         column as f64 * self.configs.resolution_x
     }
 
