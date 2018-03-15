@@ -58,6 +58,7 @@ Version 0.5.0 (DD-MM-YYYY)
 
 - The following tools have been added:
     ElevationAboveStreamEuclidean
+    ImageStackProfile
     RasterizeStreams
     
 - Updated tools so that the reporting of elapsed time respects verbose mode.
