@@ -5,8 +5,8 @@ Created: Dec. 19, 2017
 Last Modified: Dec. 19, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;

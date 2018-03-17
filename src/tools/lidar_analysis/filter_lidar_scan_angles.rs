@@ -8,8 +8,8 @@ License: MIT
 NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT tool, which output a Shapefile.
        2. It would be good to add the ability to input multiple LAS files.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::f64;
 use std::path;

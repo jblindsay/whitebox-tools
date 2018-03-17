@@ -17,9 +17,9 @@ image is created that represents the bounding rectangle of each of the two or mo
 images. Grid cells in the output image that do not overlap with any of the input images 
 will be assigned the NoData value.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

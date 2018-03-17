@@ -7,8 +7,8 @@ License: MIT
 
 NOTES: This tool is essentially the same as the TraceDownslopeFlowpaths tool in functionality.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::f64;

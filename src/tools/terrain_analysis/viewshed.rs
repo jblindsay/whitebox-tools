@@ -18,9 +18,9 @@ analysis is a very computationally intensive task. Depending on the size of the 
 DEM grid and the number of viewing stations, this operation may take considerable time 
 to complete.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

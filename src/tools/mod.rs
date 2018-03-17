@@ -231,6 +231,7 @@ impl ToolManager {
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
         tool_names.push("Power".to_string());
+        tool_names.push("PrincipalComponentAnalysis".to_string());
         tool_names.push("Quantiles".to_string());
         tool_names.push("RandomField".to_string());
         tool_names.push("RandomSample".to_string());
@@ -594,6 +595,7 @@ impl ToolManager {
             "notequalto" => Some(Box::new(tools::math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(tools::math_stat_analysis::Or::new())),
             "power" => Some(Box::new(tools::math_stat_analysis::Power::new())),
+            "principalcomponentanalysis" => Some(Box::new(tools::math_stat_analysis::PrincipalComponentAnalysis::new())),
             "quantiles" => Some(Box::new(tools::math_stat_analysis::Quantiles::new())),
             "randomfield" => Some(Box::new(tools::math_stat_analysis::RandomField::new())),
             "randomsample" => Some(Box::new(tools::math_stat_analysis::RandomSample::new())),

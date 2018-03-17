@@ -9,9 +9,9 @@ Notes: This tool will filter out points from a LiDAR point cloud if the absolute
 difference between a point and the averge elevation of its neighbourhood, calculated
 without the point, exceeds a threshold (elev_diff).
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::path;

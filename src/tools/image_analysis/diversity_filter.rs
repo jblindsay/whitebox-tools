@@ -7,9 +7,9 @@ License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

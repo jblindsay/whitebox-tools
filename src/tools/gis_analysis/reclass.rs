@@ -5,9 +5,9 @@ Created: September 9, 2017
 Last Modified: December 14, 2017
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::collections::HashMap;
 use std::env;
 use std::path;

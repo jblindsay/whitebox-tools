@@ -7,9 +7,9 @@ License: MIT
 
 NOTES: This tool should be updated to incorporate the option for an area-slope based threshold.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

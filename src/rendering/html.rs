@@ -8,6 +8,13 @@ pub fn get_css() -> String {
                 text-align: center;
                 font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
             }
+            h2 {
+                font-size: 12pt;
+                margin-left: 15px;
+                margin-right: 15px;
+                text-align: center;
+                font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
+            }
             p {
                 font-size: 12pt;
                 font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
@@ -34,6 +41,9 @@ pub fn get_css() -> String {
             }
             tr:nth-child(even) {
                 background-color: #dddddd;
+            }
+            tr:hover {
+                background-color: lightyellow;
             }
             .numberCell {
                 text-align: right;

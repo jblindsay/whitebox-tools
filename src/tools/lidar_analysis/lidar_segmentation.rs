@@ -10,11 +10,11 @@ Notes: The 3D space-filling nature of point clouds under heavy forest cover do n
        this tool will not work satisfactory under dense forest cover. Tree cover
        should first be removed using the LidarGroundPointRemoval or similar tool.
 */
-extern crate time;
-extern crate nalgebra as na;
-extern crate num_cpus;
-extern crate rand;
 
+use time;
+use na;
+use num_cpus;
+use rand;
 use std::cmp;
 use std::env;
 use std::f64;

@@ -9,9 +9,9 @@ NOTES: 1. The tool should be updated to take multiple file inputs.
        2. Unlike the original Whitebox GAT tool that this is based on, 
           this tool will operate on RGB images in addition to greyscale images.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

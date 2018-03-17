@@ -5,10 +5,10 @@ Created: Dec. 16, 2017
 Last Modified: Dec. 16, 2017
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
-extern crate statrs;
 
+use time;
+use num_cpus;
+use statrs;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;

@@ -7,9 +7,9 @@ License: MIT
 
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

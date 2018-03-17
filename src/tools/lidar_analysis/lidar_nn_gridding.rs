@@ -10,9 +10,9 @@ NOTES:
    a working directory containing multiple input LAS files.
 2. Need to add the ability to exclude points based on max scan angle divation.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::fs;

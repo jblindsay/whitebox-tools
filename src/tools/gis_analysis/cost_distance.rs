@@ -7,8 +7,8 @@ License: MIT
 
 NOTES: Add anisotropy option.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::i32;

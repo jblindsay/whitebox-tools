@@ -5,8 +5,8 @@ Created: June 27, 2017
 Last Modified: Dec. 15, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::cmp::Ordering::Equal;
 use std::env;
 use std::path;

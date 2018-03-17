@@ -9,9 +9,9 @@ Notes: Compared with the original Whitebox GAT tool, this will output a table
 with each of the mean, min, max, range, std dev, and total. The output raster can
 only represent one statistic, given by the --stat flag.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;

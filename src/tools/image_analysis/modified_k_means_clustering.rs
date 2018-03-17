@@ -13,10 +13,10 @@ of classes and then merges classes that have cluster centres that are separated 
 than a user-defined threshold. The main difference between this algorithm and the ISODATA 
 technique is that clusters can not be broken apart into two smaller clusters.
 */
-extern crate time;
-extern crate rand;
-extern crate num_cpus;
 
+use time;
+use rand;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

@@ -9,10 +9,9 @@ NOTES: This tool implements a highly modified form of the algorithm described by
         Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving 
         mesh denoising
 */
-extern crate time;
-extern crate nalgebra as na;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

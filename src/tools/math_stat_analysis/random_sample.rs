@@ -14,9 +14,9 @@ statistical analyses on raster images when you wish to obtain a random sample of
 
 Only valid, non-nodata, cells in the base raster will be sampled.
 */
-extern crate time;
-extern crate rand;
 
+use time;
+use rand;
 use std::env;
 use std::path;
 use std::f64;

@@ -10,8 +10,8 @@ extension naming collisions, it would be good to add user hints. For example, th
 belong to a SurferAscii or a Surfer7Binary. This is more important for distinguishing output 
 files since input files can be read and distiguishing features idenfitied from the file structure.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::io::{Error, ErrorKind};

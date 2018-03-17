@@ -9,6 +9,11 @@ License: MIT
 extern crate byteorder;
 extern crate serde;
 extern crate serde_json;
+extern crate nalgebra as na;
+extern crate time;
+extern crate num_cpus;
+extern crate rand;
+extern crate statrs;
 
 pub mod io_utils;
 pub mod lidar;

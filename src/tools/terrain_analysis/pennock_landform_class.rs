@@ -7,9 +7,9 @@ License: MIT
 
 Notes: Some degree of DEM smoothing is likely required to get reasonable results.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

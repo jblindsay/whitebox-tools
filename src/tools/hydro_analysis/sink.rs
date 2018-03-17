@@ -5,8 +5,8 @@ Created: July 1, 2017
 Last Modified: Dec. 14, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
 use std::cmp::Ordering;

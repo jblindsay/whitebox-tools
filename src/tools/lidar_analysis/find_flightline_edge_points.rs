@@ -5,8 +5,8 @@ Created: June 14, 2017
 Last Modified: Dec. 15, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::f64;
 use std::path;

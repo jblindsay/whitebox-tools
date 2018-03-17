@@ -10,8 +10,8 @@ Notes: This tool uses the algorithm described in:
 Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes 
 and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::f64;

@@ -8,9 +8,9 @@ License: MIT
 NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating 
 the D8 pointer raster and finally the D8 flow accumulation operation. 
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;

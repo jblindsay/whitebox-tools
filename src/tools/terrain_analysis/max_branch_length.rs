@@ -9,9 +9,9 @@ Notes: Based on Lindsay JB, Seibert J. 2013. Measuring the significance of a div
 to local drainage patterns. International Journal of Geographical Information Science, 
 27: 1453-1468. DOI: 10.1080/13658816.2012.705289
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

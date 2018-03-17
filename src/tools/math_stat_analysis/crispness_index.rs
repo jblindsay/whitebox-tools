@@ -19,9 +19,9 @@ instead of the original:
 
 ∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;

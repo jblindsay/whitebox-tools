@@ -7,8 +7,8 @@ License: MIT
 
 NOTES: This tool should be updated to take vector pour points as inputs/outputs when vector support has been added.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::f64;

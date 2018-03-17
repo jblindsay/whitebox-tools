@@ -5,9 +5,9 @@ Created: July 2, 2017
 Last Modified: Feb. 6, 2018
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::fs;

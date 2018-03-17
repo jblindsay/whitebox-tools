@@ -7,8 +7,8 @@ License: MIT
 
 NOTES: Add support for vector seed points.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::f64;

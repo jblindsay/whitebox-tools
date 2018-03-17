@@ -5,8 +5,8 @@ Created: September 24, 2017
 Last Modified: December 15, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;

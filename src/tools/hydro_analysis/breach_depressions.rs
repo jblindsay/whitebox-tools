@@ -9,8 +9,8 @@ Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling s
 methods for flow path enforcement in digital elevation models. Hydrological Processes, 
 30(6): 846–857. DOI: 10.1002/hyp.10648
 */
-extern crate time;
 
+use time;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
 use std::cmp::Ordering;

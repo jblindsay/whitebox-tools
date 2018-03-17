@@ -8,9 +8,9 @@ License: MIT
 Notes: Assumes that each of the three input rasters have the same number of rows and 
        columns and that any nodata cells present are the same among each of the inputs.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

@@ -5,10 +5,10 @@ Created: Dec. 27, 2017
 Last Modified: Dec. 27, 2017
 License: MIT
 */
-extern crate time;
-extern crate rand;
-extern crate num_cpus;
 
+use time;
+use rand;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

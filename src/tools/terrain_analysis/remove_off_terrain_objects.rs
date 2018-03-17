@@ -7,8 +7,8 @@ License: MIT
 
 Note: This algorithm could be parallelized
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;

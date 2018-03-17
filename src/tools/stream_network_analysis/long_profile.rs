@@ -5,9 +5,9 @@ Created: February 20, 2018
 Last Modified: February 20, 2018
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;

@@ -5,10 +5,10 @@ Created: 5/12/2017, 2017
 Last Modified: February 14, 2018
 License: MIT
 */
-extern crate time;
-extern crate nalgebra as na;
-extern crate num_cpus;
 
+use time;
+use na;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::f64::NEG_INFINITY;

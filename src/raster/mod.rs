@@ -699,18 +699,6 @@ impl Raster {
             }
         }
 
-        // for val in &self.data {
-        //     let v = *val;
-        //     if v != self.configs.nodata {
-        //         if v < self.configs.minimum {
-        //             self.configs.minimum = v;
-        //         }
-        //         if v > self.configs.maximum {
-        //             self.configs.maximum = v;
-        //         }
-        //     }
-        // }
-
         if self.configs.display_min == f64::INFINITY {
             self.configs.display_min = self.configs.minimum;
         }
@@ -723,44 +711,65 @@ impl Raster {
         self.configs.rows * self.configs.columns
     }
 
+    pub fn num_valid_cells(&self) -> usize {
+        if self.data.len() == 0 {
+            return 0usize;
+        }
+        let nodata = self.configs.nodata;
+        let values = Arc::new(self.data.clone());
+        let num_procs = num_cpus::get();
+        let num_cells = self.num_cells();
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let values = values.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut count = 0usize;
+                for i in (0..num_cells).filter(|r| r % num_procs == tid) {
+                    if values[i] != nodata {
+                        count += 1;
+                    }
+                }
+                tx.send(count).unwrap();
+            });
+        }
+
+        let mut count = 0usize;
+        for _ in 0..num_procs {
+            count += rx.recv().unwrap();
+        }
+
+        count
+    }
+
     pub fn calculate_mean(&self) -> f64 {
         if self.data.len() == 0 {
             return 0.0;
         }
         let nodata = self.configs.nodata;
         let values = Arc::new(self.data.clone());
-        let mut starting_idx;
-        let mut ending_idx = 0;
         let num_procs = num_cpus::get();
         let num_cells = self.num_cells();
-        let block_size = num_cells / num_procs;
         let (tx, rx) = mpsc::channel();
-        let mut id = 0;
-        while ending_idx < num_cells {
+        for tid in 0..num_procs {
             let values = values.clone();
-            starting_idx = id * block_size;
-            ending_idx = starting_idx + block_size;
-            if ending_idx > num_cells {
-                ending_idx = num_cells;
-            }
-            id += 1;
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut sum = 0.0f64;
                 let mut count = 0.0f64;
-                for i in starting_idx..ending_idx {
+                for i in (0..num_cells).filter(|r| r % num_procs == tid) {
                     if values[i] != nodata {
                         sum += values[i];
                         count += 1.0;
                     }
-                    tx.send((sum, count)).unwrap();
                 }
+                tx.send((sum, count)).unwrap();
             });
         }
 
         let mut sum = 0.0f64;
         let mut count = 0.0f64;
-        for _ in 0..num_cells {
+        for _ in 0..num_procs {
             let (s, c) = rx.recv().unwrap();
             sum += s;
             count += c;

@@ -7,8 +7,8 @@ License: MIT
 
 NOTES: This tool needs to be parallelized.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::f64;
 use std::fs;

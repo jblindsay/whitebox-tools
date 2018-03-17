@@ -8,9 +8,9 @@ License: MIT
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
 and written to during the same loop. Doing so would involve using a mutex.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;

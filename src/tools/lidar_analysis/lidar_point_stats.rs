@@ -14,9 +14,9 @@ Notes:
 3. The default output raster format is GeoTIFF.
 4. The memory requirements of this tool are high.
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::fs;

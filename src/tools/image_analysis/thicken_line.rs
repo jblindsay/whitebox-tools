@@ -8,8 +8,8 @@ License: MIT
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
 and written to during the same loop.
 */
-extern crate time;
 
+use time;
 use std::env;
 use std::path;
 use std::f64;

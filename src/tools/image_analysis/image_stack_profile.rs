@@ -5,8 +5,8 @@ Created: March 15, 2018
 Last Modified: March 15, 2018
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;
@@ -270,9 +270,9 @@ impl WhiteboxTool for ImageStackProfile {
         <body>
             <h1>Image Stack Profile</h1>"#.as_bytes())?;
         
-        writer.write_all(("Inputs:<br>").as_bytes())?;
+        writer.write_all(("<p>Inputs:<br>").as_bytes())?;
         for i in 0..num_files {
-            writer.write_all((format!("<p><strong>Image {}</strong>: {}<br>", i+1, file_names[i])).as_bytes())?;
+            writer.write_all((format!("<strong>Image {}</strong>: {}<br>", i+1, file_names[i])).as_bytes())?;
         }
         
         writer.write_all(("</p>").as_bytes())?;
@@ -348,7 +348,7 @@ impl WhiteboxTool for ImageStackProfile {
                 let _ = output.stdout;
             }
 
-            if verbose { println!("Complete! Please see {} for output.", output_file); }
+            println!("Complete! Please see {} for output.", output_file);
         }
 
         Ok(())

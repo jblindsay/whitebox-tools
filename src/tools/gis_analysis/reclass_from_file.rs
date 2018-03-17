@@ -5,9 +5,9 @@ Created: September 10, 2017
 Last Modified: December 14, 2017
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
 
+use time;
+use num_cpus;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::fs::File;

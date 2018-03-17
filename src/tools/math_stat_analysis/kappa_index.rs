@@ -5,8 +5,8 @@ Created: September 24, 2017
 Last Modified: Dec. 15, 2017
 License: MIT
 */
-extern crate time;
 
+use time;
 use std::cmp::min;
 use std::cmp::max;
 use std::fs::File;

@@ -14,9 +14,9 @@ important to keep in mind that given a sufficiently large sample, extremely smal
 non-notable differences can be found to be statistically significant. Furthermore 
 statistical significance says nothing about the practical significance of a difference.
 */
-extern crate time;
-extern crate rand;
 
+use time;
+use rand;
 use std::env;
 use std::path;
 use std::f64;

@@ -5,10 +5,9 @@ Created: February 26, 2018
 Last Modified: February 26, 2018
 License: MIT
 */
-extern crate time;
-extern crate num_cpus;
-extern crate nalgebra as na;
 
+use time;
+use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
