@@ -436,14 +436,14 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         writer.write_all("<h2>Scree Plot</h2>".as_bytes())?;
         let graph = LineGraph {
             parent_id: "graph".to_string(),
-            width: 450f64,
+            width: 500f64,
             height: 450f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: series_names.clone(), 
             x_axis_label: "Component".to_string(),
             y_axis_label: "Explained Variance (%)".to_string(),
-            draw_points: false,
+            draw_points: true,
             draw_gridlines: true,
             draw_legend: false,
             draw_grey_background: false,
@@ -526,95 +526,6 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         if verbose {
             println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
         }
-        
-        // if !output_html_file.trim().is_empty() {
-        //     
-        //     /////////////////////////////
-        //     // Cluster Centroid Vector //
-        //     /////////////////////////////
-        //     writer.write_all("<p><table>".as_bytes())?;
-        //     writer.write_all("<caption>Cluster Centroid Vector</caption>".as_bytes())?;
-            
-        //     let mut s = String::from("<tr><th>Cluster</th>");
-        //     for i in 0..num_files {
-        //         s.push_str(&format!("<th>Image {}</th>", i+1));
-        //     }
-        //     s.push_str("</tr>");
-        //     writer.write_all(s.as_bytes())?;
-            
-        //     for a in 0..num_classes {
-        //         let mut s = format!("<tr><td>{}</td>", a+1);
-        //         for i in 0..num_files {
-        //             s.push_str(&format!("<td class=\"numberCell\">{:.3}</td>", class_centres[a][i]));
-        //         }
-        //         s.push_str("</tr>");
-        //         writer.write_all(s.as_bytes())?;
-        //     }
-        //     writer.write_all("</table></p>".as_bytes())?;
-
-        //     ////////////////////////////////////////
-        //     // Cluster Centroid Distance Analysis //
-        //     ////////////////////////////////////////
-        //     writer.write_all("<p><table>".as_bytes())?;
-        //     writer.write_all("<caption>Cluster Centroid Distance Analysis</caption>".as_bytes())?;
-        //     let mut s = String::from("<tr><th></th>");
-        //     for a in 0..num_classes {
-        //         s.push_str(&format!("<th>Cluster {}</th>", a+1));
-        //     }
-        //     s.push_str("</tr>");
-        //     writer.write_all(s.as_bytes())?;
-            
-        //     for a in 0..num_classes {
-        //         let mut s = format!("<tr><td class=\"header\">Cluster {}</td>", a+1);
-        //         for b in 0..num_classes {
-        //             if b >= a {
-        //                 let mut dist = 0f64;
-        //                 for i in 0..num_files {
-        //                     dist += (class_centres[a][i] - class_centres[b][i]) * (class_centres[a][i] - class_centres[b][i]);
-        //                 }
-        //                 s.push_str(&format!("<td class=\"numberCell\">{:.3}</td>", dist.sqrt()));
-        //             } else {
-        //                 s.push_str("<td></td>");
-        //             }
-        //         }
-        //         s.push_str("</tr>");
-        //         writer.write_all(s.as_bytes())?;
-        //     }
-        //     writer.write_all("</table></p>".as_bytes())?;
-
-        //     writer.write_all("</body>".as_bytes())?;
-        //     writer.write_all("</html>".as_bytes())?;
-
-        //     let _ = writer.flush();
-
-        //     if verbose {
-        //         if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
-        //             let output = Command::new("open")
-        //                 .arg(output_html_file.clone())
-        //                 .output()
-        //                 .expect("failed to execute process");
-
-        //             let _ = output.stdout;
-        //         } else if cfg!(target_os = "windows") {
-        //             // let output = Command::new("cmd /c start")
-        //             let output = Command::new("explorer.exe")
-        //                 .arg(output_html_file.clone())
-        //                 .output()
-        //                 .expect("failed to execute process");
-
-        //             let _ = output.stdout;
-        //         } else if cfg!(target_os = "linux") {
-        //             let output = Command::new("xdg-open")
-        //                 .arg(output_html_file.clone())
-        //                 .output()
-        //                 .expect("failed to execute process");
-
-        //             let _ = output.stdout;
-        //         }
-
-        //         println!("Complete! Please see {} for output.", output_html_file);
-        //     }
-        // }
 
         Ok(())
     }

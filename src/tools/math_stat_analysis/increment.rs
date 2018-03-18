@@ -31,7 +31,7 @@ impl Increment {
     pub fn new() -> Increment { 
         let name = "Increment".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Increases the values of each grid cell in an input raster by 1.0.".to_string();
+        let description = "Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd)".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{

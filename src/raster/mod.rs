@@ -112,7 +112,7 @@ impl Raster {
             raster_type: get_raster_type_from_file(file_name.to_string(), fm.clone()),
             ..Default::default()
         };
-        if r.file_mode.contains("r") {
+        // if r.file_mode.contains("r") {
             match get_raster_type_from_file(file_name.to_string(), fm) {
                 RasterType::ArcBinary => {
                     let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data).unwrap();
@@ -156,10 +156,10 @@ impl Raster {
                     return Err(Error::new(ErrorKind::Other, "Unrecognized raster type"));
                 }
             }
-        } else {
-            // write
-            return Ok(r);
-        }
+        // } else {
+        //     // write
+        //     return Ok(r);
+        // }
         // Err(Error::new(ErrorKind::Other, "Error creating raster"))
     }
 
@@ -659,6 +659,8 @@ impl Raster {
     }
 
     pub fn update_min_max(&mut self) {
+        self.configs.minimum = f64::INFINITY;
+        self.configs.maximum = f64::NEG_INFINITY;
         let num_procs = num_cpus::get();
         let nodata = self.configs.nodata;
         let values = Arc::new(self.data.clone());
@@ -705,6 +707,11 @@ impl Raster {
         if self.configs.display_max == f64::NEG_INFINITY {
             self.configs.display_max = self.configs.maximum;
         }
+    }
+
+    pub fn update_display_min_max(&mut self) {
+        self.configs.display_min = self.configs.minimum;
+        self.configs.display_max = self.configs.maximum;
     }
 
     pub fn num_cells(&self) -> usize {
@@ -848,6 +855,9 @@ impl Raster {
     }
 
     pub fn write(&mut self) -> Result<(), Error> {
+        if !self.file_mode.contains("w") {
+            return Err(Error::new(ErrorKind::Other, "Cannot write raster that is not created in write mmode ('w')."));
+        }
         match self.raster_type {
             RasterType::ArcAscii => {
                 let _ = match write_arcascii(self) {

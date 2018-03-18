@@ -214,6 +214,10 @@ impl ToolManager {
         tool_names.push("ImageCorrelation".to_string());
         tool_names.push("ImageRegression".to_string());
         tool_names.push("Increment".to_string());
+        tool_names.push("InPlaceAdd".to_string());
+        tool_names.push("InPlaceDivide".to_string());
+        tool_names.push("InPlaceMulitply".to_string());
+        tool_names.push("InPlaceSubtract".to_string());
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
         tool_names.push("KappaIndex".to_string());
@@ -578,6 +582,10 @@ impl ToolManager {
             "imagecorrelation" => Some(Box::new(tools::math_stat_analysis::ImageCorrelation::new())),
             "imageregression" => Some(Box::new(tools::math_stat_analysis::ImageRegression::new())),
             "increment" => Some(Box::new(tools::math_stat_analysis::Increment::new())),
+            "inplaceadd" => Some(Box::new(tools::math_stat_analysis::InPlaceAdd::new())),
+            "inplacedivide" => Some(Box::new(tools::math_stat_analysis::InPlaceDivide::new())),
+            "inplacemultiply" => Some(Box::new(tools::math_stat_analysis::InPlaceMultiply::new())),
+            "inplacesubtract" => Some(Box::new(tools::math_stat_analysis::InPlaceSubtract::new())),
             "integerdivision" => Some(Box::new(tools::math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(tools::math_stat_analysis::IsNoData::new())),
             "kappaindex" => Some(Box::new(tools::math_stat_analysis::KappaIndex::new())),

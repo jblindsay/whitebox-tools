@@ -59,6 +59,10 @@ Version 0.5.0 (DD-MM-YYYY)
 - The following tools have been added:
     ElevationAboveStreamEuclidean
     ImageStackProfile
+    InPlaceAdd
+    InPlaceDivide
+    InPlaceMultiply
+    InPlaceSubtract
     PrincipalComponentAnalysis
     RasterizeStreams
     
