@@ -431,10 +431,25 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write(&u32_bytes)?;
             }
         }
-        DataType::I32 | DataType::U16 | DataType::RGBA32 => {
+        DataType::I32 | DataType::U16 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
                 writer.write(&u32_bytes)?;
+            }
+        }
+        DataType::RGBA32 => {
+            let mut i: usize;
+            let mut bytes: [u8; 4] = [0u8; 4];
+            for row in 0..r.configs.rows {
+                for col in 0..r.configs.columns {
+                    i = row * r.configs.columns + col;
+                    let val = r.data[i] as u32;
+                    bytes[0] = ((val >> 16u32) & 0xFF) as u8; // blue
+                    bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
+                    bytes[2] = (val & 0xFF) as u8; // red
+                    bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
+                    writer.write(&bytes)?;
+                }
             }
         }
         DataType::RGB24 => {

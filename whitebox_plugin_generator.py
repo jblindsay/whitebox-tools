@@ -119,7 +119,7 @@ for t in tools.split("\n"):
         fn = """
     {}
         \"\"\"{}.
-        
+
         Keyword arguments:
 
         {}

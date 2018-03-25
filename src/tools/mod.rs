@@ -111,6 +111,7 @@ impl ToolManager {
         tool_names.push("DirectDecorrelationStretch".to_string());
         tool_names.push("DiversityFilter".to_string());
         tool_names.push("DiffOfGaussianFilter".to_string());
+        tool_names.push("EdgePreservingMeanFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
         tool_names.push("FlipImage".to_string());
         tool_names.push("GammaCorrection".to_string());
@@ -216,7 +217,7 @@ impl ToolManager {
         tool_names.push("Increment".to_string());
         tool_names.push("InPlaceAdd".to_string());
         tool_names.push("InPlaceDivide".to_string());
-        tool_names.push("InPlaceMulitply".to_string());
+        tool_names.push("InPlaceMultiply".to_string());
         tool_names.push("InPlaceSubtract".to_string());
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
@@ -459,6 +460,7 @@ impl ToolManager {
             "diffofgaussianfilter" => {
                 Some(Box::new(tools::image_analysis::DiffOfGaussianFilter::new()))
             }
+            "edgepreservingmeanfilter" => Some(Box::new(tools::image_analysis::EdgePreservingMeanFilter::new())),
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
             "flipimage" => Some(Box::new(tools::image_analysis::FlipImage::new())),
             "gammacorrection" => Some(Box::new(tools::image_analysis::GammaCorrection::new())),
@@ -828,7 +830,6 @@ impl ToolManager {
         for i in 0..tool_details.len() {
             ret.push_str(&format!("{}: {}\n\n", tool_details[i].0, tool_details[i].1));
         }
-
         println!("{}", ret);
     }
 

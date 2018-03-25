@@ -52,11 +52,14 @@ At the command prompt (after cd'ing to this folder, which contains the script).
 WhiteboxTools is distributed under a permissive MIT open-source license. See LICENSE.txt 
 for more details.
 
-Release Notes:
+******************
+* Release Notes: *
+******************
 
 Version 0.5.0 (DD-MM-YYYY)
 
 - The following tools have been added:
+    EdgePreservingMeanFilter
     ElevationAboveStreamEuclidean
     ImageStackProfile
     InPlaceAdd
@@ -67,6 +70,10 @@ Version 0.5.0 (DD-MM-YYYY)
     RasterizeStreams
     
 - Updated tools so that the reporting of elapsed time respects verbose mode.
+- Raster now allows for opening an existing raster in write mode ('w'), needed 
+  for the in-place math operators (e.g. InPlaceAdd).
+- Added update_display_min_max function to Raster.
+- Output tables now highlight rows when the mouse hovers.
 
 Version 0.4.0 (04-03-2018)
 

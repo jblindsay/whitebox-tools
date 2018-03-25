@@ -295,8 +295,6 @@ impl WhiteboxTool for CreateColourComposite {
                                   "The input files must have the same number of rows and columns and spatial extent."));
         }
 
-
-
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -505,8 +503,7 @@ impl WhiteboxTool for CreateColourComposite {
                         g_out = g_outf as u32;
                         b_out = b_outf as u32;
 
-                        output[(row, col)] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as
-                                             f64
+                        output[(row, col)] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64
                     }
                 }
                 if verbose {
