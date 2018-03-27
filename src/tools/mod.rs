@@ -301,6 +301,7 @@ impl ToolManager {
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
         tool_names.push("MaxAnisotropyDev".to_string());
+        tool_names.push("MaxAnisotropyDevSignature".to_string());
         tool_names.push("MaxBranchLength".to_string());
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevDevSignature".to_string());
@@ -704,6 +705,7 @@ impl ToolManager {
             "horizonangle" => Some(Box::new(tools::terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(tools::terrain_analysis::HypsometricAnalysis::new())),
             "maxanisotropydev" => Some(Box::new(tools::terrain_analysis::MaxAnisotropyDev::new())),
+            "maxanisotropydevsignature" => Some(Box::new(tools::terrain_analysis::MaxAnisotropyDevSignature::new())),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
             "maxdownslopeelevchange" => Some(Box::new(tools::terrain_analysis::MaxDownslopeElevChange::new())),
             "maxelevationdeviation" => Some(Box::new(tools::terrain_analysis::MaxElevationDeviation::new())),

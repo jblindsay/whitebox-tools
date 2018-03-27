@@ -66,6 +66,7 @@ Version 0.5.0 (DD-MM-YYYY)
     InPlaceDivide
     InPlaceMultiply
     InPlaceSubtract
+    MaxAnisotropyDevSignature
     PrincipalComponentAnalysis
     RasterizeStreams
     
