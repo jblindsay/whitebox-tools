@@ -244,7 +244,6 @@ impl WhiteboxTool for RasterizeStreams {
         let mut end_point_in_part: usize;
         for record_num in 0..streams.num_records {
             let record = streams.get_record(record_num);
-            // println!("Record num: {}", record_num);
             for part in 0..record.num_parts as usize {
                 start_point_in_part = record.parts[part] as usize;
                 if part < record.num_parts as usize - 1 {

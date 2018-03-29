@@ -42,6 +42,7 @@ impl ToolManager {
         tool_names.push("CostPathway".to_string());
         tool_names.push("CreatePlane".to_string());
         tool_names.push("EdgeProportion".to_string());
+        tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
         tool_names.push("FindPatchOrClassEdgeCells".to_string());
@@ -85,6 +86,7 @@ impl ToolManager {
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FindParallelFlow".to_string());
+        tool_names.push("FlattenLakes".to_string());
         tool_names.push("FloodOrder".to_string());
         tool_names.push("FlowAccumulationFullWorkflow".to_string());
         tool_names.push("FlowLengthDiff".to_string());
@@ -360,6 +362,7 @@ impl ToolManager {
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
             "createplane" => Some(Box::new(tools::gis_analysis::CreatePlane::new())),
             "edgeproportion" => Some(Box::new(tools::gis_analysis::EdgeProportion::new())),
+            "erasepolygonfromraster" => Some(Box::new(tools::gis_analysis::ErasePolygonFromRaster::new())),
             "euclideanallocation" => {
                 Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
             }
@@ -422,6 +425,7 @@ impl ToolManager {
             "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
+            "flattenlakes" => Some(Box::new(tools::terrain_analysis::FlattenLakes::new())),
             "floodorder" => Some(Box::new(tools::hydro_analysis::FloodOrder::new())),
             "flowaccumulationfullworkflow" => Some(Box::new(tools::hydro_analysis::FlowAccumulationFullWorkflow::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),

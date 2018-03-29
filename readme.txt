@@ -61,6 +61,8 @@ Version 0.5.0 (DD-MM-YYYY)
 - The following tools have been added:
     EdgePreservingMeanFilter
     ElevationAboveStreamEuclidean
+    ErasePolygonFromRaster
+    FlattenLakes
     ImageStackProfile
     InPlaceAdd
     InPlaceDivide

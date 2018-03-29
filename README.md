@@ -161,7 +161,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 290 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 292 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -231,6 +231,7 @@ The library currently contains the following 290 tools, which are each grouped b
 - ***CostPathway***: Performs cost-distance pathway analysis using a series of destination grid cells.
 - ***CreatePlane***: Creates a raster image based on the equation for a simple plane.
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
+- ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
 - ***FindPatchOrClassEdgeCells***: Finds all cells located on the edge of patch or class features.
@@ -271,6 +272,7 @@ The library currently contains the following 290 tools, which are each grouped b
 - ***ElevationAboveStreamEuclidean***: Calculates the elevation of cells above the nearest (Euclidean distance) stream cell.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
 - ***FD8Pointer***: Calculates an FD8 flow pointer raster from an input DEM.
+- ***FlattenLakes***: Flattens lakes polygons in a raster DEM.
 - ***FloodOrder***: Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
 - ***FlowAccumulationFullWorkflow***: Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
 - ***FlowLengthDiff***: Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.

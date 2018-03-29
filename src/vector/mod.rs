@@ -33,6 +33,12 @@ impl fmt::Display for Point2D {
     }
 }
 
+impl PartialEq for Point2D {
+    fn eq(&self, other: &Point2D) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // The following is based on http://geomalgorithms.com/a03-_inclusion.html //
@@ -52,7 +58,10 @@ pub fn is_left(p0: &Point2D, p1: &Point2D, p2: &Point2D) -> f64 {
 //    Input:   p = a point,
 //             v[] = vertex points of a polygon v[n+1] with v[n]=v[0]
 //    Return:  wn = the winding number (=0 only when p is outside)
-pub fn point_in_poly(p: &Point2D, v: &Vec<Point2D>) -> bool {
+pub fn point_in_poly(p: &Point2D, v: &[Point2D]) -> bool {
+    if v[0] != v[v.len()-1] {
+        panic!("Warning, point squence do not form a closed polygon.");
+    }
     let mut wn = 0i32;
     // loop through all edges of the polygon
     for i in 0..v.len()-1 { // edge from v[i] to v[i+1]
@@ -70,5 +79,6 @@ pub fn point_in_poly(p: &Point2D, v: &Vec<Point2D>) -> bool {
             }
         }
     }
-    wn > 0i32
+    wn != 0i32
 }
+

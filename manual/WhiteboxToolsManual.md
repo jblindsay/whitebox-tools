@@ -285,7 +285,7 @@ def my_callback(value):
     else:
         print(value)
 
-wbt.breach_depressions('DEM.flt', 'DEM_breached.flt', callback=my_callback)
+wbt.breach_depressions('DEM.tif', 'DEM_breached.tif', callback=my_callback)
 
 
 ```
@@ -311,7 +311,7 @@ tp = tool_parameters('raster_histogram')
 
 # Opens a browser and navigates to a tool's source code in the 
 # WhiteboxTools GitHub repository
-view_code('watershed')
+wbt.view_code('watershed')
 
 
 ```

@@ -385,6 +385,117 @@ pub struct ShapefileGeometry {
   pub m_array: Vec<f64>,
 }
 
+impl ShapefileGeometry {
+    pub fn is_hole(&self, part_num: i32) -> bool {
+        // see if it's a polygon
+        if self.shape_type.base_shape_type() != ShapeType::Polygon {
+            // it's not a polygon
+            return false;
+        }
+        // it is a polygon
+
+        if part_num < 0 || part_num > self.num_parts - 1 {
+            // it's not a real part
+            return false;
+        }
+        
+        // Note: holes are polygons that have verticies in counter-clockwise order
+
+        // This approach is based on the method described by Paul Bourke, March 1998
+        // http://paulbourke.net/geometry/clockwise/index.html
+
+        let (mut x0, mut y0, mut x1, mut y1, mut x2, mut y2): (f64, f64, f64, f64, f64, f64);
+        let mut n1: usize; 
+        let mut n2: usize;
+        let mut n3: usize;
+
+        let st_point = self.parts[part_num as usize] as usize;
+
+        let end_point = if part_num < self.num_parts - 2 {
+            // remember, the last point in each part is the same as the first...it's not a legitemate point.
+            (self.parts[part_num as usize] - 2i32) as usize
+        } else {
+            (self.num_points - 2i32) as usize
+        };
+
+        let num_points_in_part = end_point - st_point + 1;
+
+        if num_points_in_part < 3 {
+            return false;
+        } // something's wrong!
+
+        // first see if it is a convex or concave polygon
+        // calculate the cross product for each adjacent edge.
+
+        let mut crossproducts = vec![0f64; num_points_in_part];
+        for j in 0..num_points_in_part {
+            n2 = st_point + j;
+            if j == 0 {
+                n1 = st_point + num_points_in_part - 1;
+                n3 = st_point + j + 1;
+            } else if j == num_points_in_part - 1 {
+                n1 = st_point + j - 1;
+                n3 = st_point;
+            } else {
+                n1 = st_point + j - 1;
+                n3 = st_point + j + 1;
+            }
+            x0 = self.points[n1].x;
+            y0 = self.points[n1].y;
+            x1 = self.points[n2].x;
+            y1 = self.points[n2].y;
+            x2 = self.points[n3].x;
+            y2 = self.points[n3].y;
+            crossproducts[j] = (x1 - x0) * (y2 - y1) - (y1 - y0) * (x2 - x1);
+        }
+
+        let test_sign = crossproducts[0] >= 0f64;
+        let mut is_convex = true;
+        for j in 1..num_points_in_part {
+            if crossproducts[j] >= 0f64 && !test_sign {
+                is_convex = false;
+                break;
+            } else if crossproducts[j] < 0f64 && test_sign {
+                is_convex = false;
+                break;
+            }
+        }
+
+        // now see if it is clockwise or counter-clockwise
+        if is_convex {
+            if test_sign { // positive means counter-clockwise
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            // calculate the polygon area. If it is positive is is in clockwise order, else counter-clockwise.
+            let mut area = 0f64;
+            for j in 0..num_points_in_part {
+                n1 = st_point + j;
+                if j < num_points_in_part - 1 {
+                    n2 = st_point + j + 1;
+                } else {
+                    n2 = st_point;
+                }
+                x1 = self.points[n1].x;
+                y1 = self.points[n1].y;
+                x2 = self.points[n2].x;
+                y2 = self.points[n2].y;
+
+                area += (x1 * y2) - (x2 * y1);
+            }
+            area /= 2.0;
+
+            if area < 0f64 { // a positive area indicates counter-clockwise order
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+}
+
 impl Default for ShapefileGeometry {
     fn default() -> ShapefileGeometry { 
         ShapefileGeometry {
