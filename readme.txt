@@ -62,6 +62,7 @@ Version 0.5.0 (DD-MM-YYYY)
     EdgePreservingMeanFilter
     ElevationAboveStreamEuclidean
     ErasePolygonFromRaster
+    FillBurn
     FlattenLakes
     ImageStackProfile
     InPlaceAdd

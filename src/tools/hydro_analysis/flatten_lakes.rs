@@ -35,7 +35,7 @@ impl FlattenLakes {
     pub fn new() -> FlattenLakes { 
         let name = "FlattenLakes".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Flattens lakes polygons in a raster DEM.".to_string();
+        let description = "Flattens lake polygons in a raster DEM.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -312,7 +312,6 @@ impl WhiteboxTool for FlattenLakes {
         for record_num in 0..polygons.num_records {
             let record = polygons.get_record(record_num);
             
-            let mut part_num = 1;
             for part in 0..record.num_parts as usize {
                 if !record.is_hole(part as i32) {
                     // erase cells from this part
@@ -354,7 +353,6 @@ impl WhiteboxTool for FlattenLakes {
                             }
                         }
                     }
-                    part_num += 1;
                 }
             }
 
@@ -399,7 +397,6 @@ impl WhiteboxTool for FlattenLakes {
                             }
                         }
                     }
-                    part_num += 1;
                 }
             }
         }

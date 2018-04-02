@@ -161,7 +161,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 292 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 293 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -272,14 +272,15 @@ The library currently contains the following 292 tools, which are each grouped b
 - ***ElevationAboveStreamEuclidean***: Calculates the elevation of cells above the nearest (Euclidean distance) stream cell.
 - ***FD8FlowAccumulation***: Calculates a FD8 flow accumulation raster from an input DEM.
 - ***FD8Pointer***: Calculates an FD8 flow pointer raster from an input DEM.
-- ***FlattenLakes***: Flattens lakes polygons in a raster DEM.
-- ***FloodOrder***: Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
-- ***FlowAccumulationFullWorkflow***: Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
-- ***FlowLengthDiff***: Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
+- ***FillBurn***: Burns streams into a DEM using the FillBurn (Saunders, 1999) method.
 - ***FillDepressions***: Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 - ***FillSingleCellPits***: Raises pit cells to the elevation of their lowest neighbour.
 - ***FindNoFlowCells***: Finds grid cells with no downslope neighbours.
 - ***FindParallelFlow***: Finds areas of parallel flow in D8 flow direction rasters.
+- ***FlattenLakes***: Flattens lake polygons in a raster DEM.
+- ***FloodOrder***: Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
+- ***FlowAccumulationFullWorkflow***: Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
+- ***FlowLengthDiff***: Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
 - ***Hillslopes***: Identifies the individual hillslopes draining to each link in a stream network.
 - ***Isobasins***: Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 - ***JensonSnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.

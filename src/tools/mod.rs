@@ -82,6 +82,7 @@ impl ToolManager {
         tool_names.push("ElevationAboveStreamEuclidean".to_string());
         tool_names.push("FD8FlowAccumulation".to_string());
         tool_names.push("FD8Pointer".to_string());
+        tool_names.push("FillBurn".to_string());
         tool_names.push("FillDepressions".to_string());
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
@@ -421,11 +422,12 @@ impl ToolManager {
                 Some(Box::new(tools::hydro_analysis::FD8FlowAccumulation::new()))
             }
             "fd8pointer" => Some(Box::new(tools::hydro_analysis::FD8Pointer::new())),
+            "fillburn" => Some(Box::new(tools::hydro_analysis::FillBurn::new())),
             "filldepressions" => Some(Box::new(tools::hydro_analysis::FillDepressions::new())),
             "fillsinglecellpits" => Some(Box::new(tools::hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(tools::hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(tools::hydro_analysis::FindParallelFlow::new())),
-            "flattenlakes" => Some(Box::new(tools::terrain_analysis::FlattenLakes::new())),
+            "flattenlakes" => Some(Box::new(tools::hydro_analysis::FlattenLakes::new())),
             "floodorder" => Some(Box::new(tools::hydro_analysis::FloodOrder::new())),
             "flowaccumulationfullworkflow" => Some(Box::new(tools::hydro_analysis::FlowAccumulationFullWorkflow::new())),
             "flowlengthdiff" => Some(Box::new(tools::hydro_analysis::FlowLengthDiff::new())),

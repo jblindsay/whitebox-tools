@@ -88,7 +88,7 @@ impl RasterizeStreams {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.shp --base=raster.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         RasterizeStreams { 
             name: name, 
