@@ -55,8 +55,8 @@ impl InPlaceSubtract {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.dep' --input2='in2.dep'\"
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.dep' --input2=10.5'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif'\"
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2=10.5'", short_exe, name).replace("*", &sep);
     
         InPlaceSubtract { 
             name: name, 

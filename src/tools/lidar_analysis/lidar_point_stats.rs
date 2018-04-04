@@ -43,7 +43,7 @@ impl LidarPointStats {
         // public constructor
         let name = "LidarPointStats".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Creates several rasters summarizing the distribution of LAS point data.".to_string();
+        let description = "Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{

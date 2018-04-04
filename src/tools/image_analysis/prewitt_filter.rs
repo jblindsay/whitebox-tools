@@ -67,7 +67,7 @@ impl PrewittFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --clip=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --clip=1.0", short_exe, name).replace("*", &sep);
     
         PrewittFilter { 
             name: name, 

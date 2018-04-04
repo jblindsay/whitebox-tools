@@ -98,7 +98,7 @@ impl MaxElevDevSignature {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep --points=sites.shp --output=topo_position.html --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --points=sites.tif --output=topo_position.html --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
     
         MaxElevDevSignature { 
             name: name, 

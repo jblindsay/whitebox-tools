@@ -109,8 +109,8 @@ impl PanchromaticSharpening {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=red.dep --green=green.dep --blue=blue.dep --pan=pan.dep --output=pan_sharp.dep --method='brovey'
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --composite=image.dep --pan=pan.dep --output=pan_sharp.dep --method='ihs'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=red.tif --green=green.tif --blue=blue.tif --pan=pan.tif --output=pan_sharp.tif --method='brovey'
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --composite=image.tif --pan=pan.tif --output=pan_sharp.tif --method='ihs'", short_exe, name).replace("*", &sep);
 
         PanchromaticSharpening {
             name: name,

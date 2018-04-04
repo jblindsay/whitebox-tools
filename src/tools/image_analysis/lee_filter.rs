@@ -94,8 +94,8 @@ impl LeeFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filter=9 --sigma=10.0 -m=5
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep --filtery=7 --filtery=9 --sigma=10.0  -m=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=9 --sigma=10.0 -m=5
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filtery=7 --filtery=9 --sigma=10.0  -m=5", short_exe, name).replace("*", &sep);
     
         LeeFilter { 
             name: name, 

@@ -101,8 +101,8 @@ impl CreateColourComposite {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.dep --green=band2.dep --blue=band1.dep -o=output.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.dep --green=band2.dep --blue=band1.dep --opacity=a.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif -o=output.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif --opacity=a.tif -o=output.tif", short_exe, name).replace("*", &sep);
 
         CreateColourComposite {
             name: name,

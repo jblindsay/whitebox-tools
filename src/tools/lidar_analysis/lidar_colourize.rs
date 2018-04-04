@@ -68,7 +68,7 @@ impl LidarColourize {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --in_lidar=\"input.las\" --in_image=\"image.dep\" -o=\"output.las\" ", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --in_lidar=\"input.las\" --in_image=\"image.tif\" -o=\"output.las\" ", short_exe, name).replace("*", &sep);
     
         LidarColourize { 
             name: name, 

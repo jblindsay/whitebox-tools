@@ -86,7 +86,7 @@ impl ReclassEqualInterval {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' -o=output.dep --interval=10.0 --start_val=0.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif --interval=10.0 --start_val=0.0", short_exe, name).replace("*", &sep);
     
         ReclassEqualInterval { 
             name: name, 

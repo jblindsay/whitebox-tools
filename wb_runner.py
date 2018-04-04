@@ -137,7 +137,7 @@ class FileSelector(tk.Frame):
             if not ext:
                 ext = ""
                 if 'Raster' in self.file_type:
-                    ext = '.dep'
+                    ext = '.tif'
                 elif 'Lidar' in self.file_type:
                     ext = '.las'
                 elif 'Vector' in self.file_type:
@@ -284,7 +284,7 @@ class FileOrFloat(tk.Frame):
             if not ext:
                 ext = ""
                 if 'Raster' in self.file_type:
-                    ext = '.dep'
+                    ext = '.tif'
                 elif 'Lidar' in self.file_type:
                     ext = '.las'
                 elif 'Vector' in self.file_type:

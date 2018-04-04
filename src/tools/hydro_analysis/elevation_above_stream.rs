@@ -68,7 +68,7 @@ impl ElevationAboveStream {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.dep' --streams='streams.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.tif' --streams='streams.tif' -o='output.tif'", short_exe, name).replace("*", &sep);
     
         ElevationAboveStream { 
             name: name, 

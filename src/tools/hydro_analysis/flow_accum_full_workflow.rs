@@ -120,7 +120,7 @@ impl FlowAccumulationFullWorkflow {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.dep' --out_dem='DEM_filled.dep' --out_pntr='pointer.dep' --out_accum='accum.dep' --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.tif' --out_dem='DEM_filled.tif' --out_pntr='pointer.tif' --out_accum='accum.tif' --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
     
         FlowAccumulationFullWorkflow { 
             name: name, 

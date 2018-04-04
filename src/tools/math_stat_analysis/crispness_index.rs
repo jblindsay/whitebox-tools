@@ -80,7 +80,7 @@ impl CrispnessIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -o=crispness.html",
                             short_exe,
                             name)

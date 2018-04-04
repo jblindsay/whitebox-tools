@@ -82,7 +82,7 @@ impl DirectDecorrelationStretch {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.dep -o=output.dep -k=0.4",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif -k=0.4",
                             short_exe,
                             name)
                 .replace("*", &sep);

@@ -63,7 +63,7 @@ impl WeightedSum {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' -o=output.dep --weights='0.3;0.2;0.5'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=output.tif --weights='0.3;0.2;0.5'", short_exe, name).replace("*", &sep);
     
         WeightedSum { 
             name: name, 

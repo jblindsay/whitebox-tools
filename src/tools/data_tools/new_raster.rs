@@ -84,8 +84,8 @@ impl NewRasterFromBase {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.dep -o=NewRaster.dep --value=0.0 --data_type=integer
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.dep -o=NewRaster.dep --value=nodata", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.tif -o=NewRaster.tif --value=0.0 --data_type=integer
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.tif -o=NewRaster.tif --value=nodata", short_exe, name).replace("*", &sep);
 
         NewRasterFromBase {
             name: name,

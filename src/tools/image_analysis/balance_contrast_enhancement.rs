@@ -73,7 +73,7 @@ impl BalanceContrastEnhancement {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.dep -o=output.dep --band_mean=120", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif --band_mean=120", short_exe, name).replace("*", &sep);
 
         BalanceContrastEnhancement {
             name: name,

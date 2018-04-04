@@ -306,6 +306,15 @@ class WhiteboxTools(object):
     ########################################################################
 
     
+
+
+
+
+
+
+
+    
+    
     ##############
     # Data Tools #
     ##############
@@ -611,6 +620,22 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('AverageOverlay', args, callback) # returns 1 if error
+
+    def erase_polygon_from_raster(self, input, polygons, output, callback=default_callback):
+        """ Erases (cuts out) a vector polygon from a raster.
+
+        Keyword arguments:
+
+        input -- Input raster file. 
+        polygons -- Input vector polygons file. 
+        output -- Output raster file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(input))
+        args.append("--polygons='{}'".format(polygons))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('ErasePolygonFromRaster', args, callback) # returns 1 if error
 
     def highest_position(self, inputs, output, callback=default_callback):
         """ Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
@@ -1171,6 +1196,28 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--max_scale='{}'".format(max_scale))
         args.append("--step={}".format(step))
         return self.run_tool('MaxAnisotropyDev', args, callback) # returns 1 if error
+
+    def max_anisotropy_dev_signature(self, dem, points, output, max_scale, min_scale=1, step=1, callback=default_callback):
+        """ Calculates the anisotropy in deviation from mean for points over a range of spatial scales.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        points -- Input vector points file. 
+        output -- Output HTML file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        max_scale -- Maximum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--points='{}'".format(points))
+        args.append("--output='{}'".format(output))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--max_scale='{}'".format(max_scale))
+        args.append("--step={}".format(step))
+        return self.run_tool('MaxAnisotropyDevSignature', args, callback) # returns 1 if error
 
     def max_branch_length(self, dem, output, log=False, callback=default_callback):
         """ Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
@@ -1960,6 +2007,22 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('FD8Pointer', args, callback) # returns 1 if error
 
+    def fill_burn(self, dem, streams, output, callback=default_callback):
+        """ Burns streams into a DEM using the FillBurn (Saunders, 1999) method.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        streams -- Input vector streams file. 
+        output -- Output raster file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--streams='{}'".format(streams))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('FillBurn', args, callback) # returns 1 if error
+
     def fill_depressions(self, dem, output, fix_flats=True, callback=default_callback):
         """ Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 
@@ -2019,6 +2082,22 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--streams='{}'".format(streams))
         args.append("--output='{}'".format(output))
         return self.run_tool('FindParallelFlow', args, callback) # returns 1 if error
+
+    def flatten_lakes(self, dem, lakes, output, callback=default_callback):
+        """ Flattens lake polygons in a raster DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        lakes -- Input lakes vector polygons file. 
+        output -- Output raster file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--lakes='{}'".format(lakes))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('FlattenLakes', args, callback) # returns 1 if error
 
     def flood_order(self, dem, output, callback=default_callback):
         """ Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
@@ -2747,6 +2826,24 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('DiversityFilter', args, callback) # returns 1 if error
+
+    def edge_preserving_mean_filter(self, input, output, threshold, filter=11, callback=default_callback):
+        """ Performs a simple edge-preserving mean filter on an input image.
+
+        Keyword arguments:
+
+        input -- Input raster file. 
+        output -- Output raster file. 
+        filter -- Size of the filter kernel. 
+        threshold -- Maximum difference in values. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(input))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        args.append("--threshold='{}'".format(threshold))
+        return self.run_tool('EdgePreservingMeanFilter', args, callback) # returns 1 if error
 
     def emboss_filter(self, input, output, direction="n", clip=0.0, callback=default_callback):
         """ Performs an emboss filter on an image, similar to a hillshade operation.
@@ -4039,7 +4136,7 @@ callback -- Custom functon for handling tool text outputs.
         return self.run_tool('CumulativeDistribution', args, callback) # returns 1 if error
 
     def decrement(self, input, output, callback=default_callback):
-        """ Decreases the values of each grid cell in an input raster by 1.0.
+        """ Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
 
         Keyword arguments:
 

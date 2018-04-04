@@ -64,7 +64,7 @@ impl RandomField {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.dep -o=out.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.tif -o=out.tif", short_exe, name).replace("*", &sep);
 
         RandomField {
             name: name,

@@ -106,8 +106,8 @@ impl RgbToIhs {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.dep --green=band2.dep --blue=band1.dep --intensity=intensity.dep --hue=hue.dep --saturation=saturation.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --composite=image.dep --intensity=intensity.dep --hue=hue.dep --saturation=saturation.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif --intensity=intensity.tif --hue=hue.tif --saturation=saturation.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --composite=image.tif --intensity=intensity.tif --hue=hue.tif --saturation=saturation.tif", short_exe, name).replace("*", &sep);
     
         RgbToIhs { 
             name: name, 

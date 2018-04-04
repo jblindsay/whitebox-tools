@@ -63,7 +63,7 @@ impl PickFromList {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' --pos_input=position.dep -i='image1.dep;image2.dep;image3.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' --pos_input=position.tif -i='image1.tif;image2.tif;image3.tif' -o=output.tif", short_exe, name).replace("*", &sep);
     
         PickFromList { 
             name: name, 

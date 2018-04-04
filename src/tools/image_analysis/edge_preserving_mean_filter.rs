@@ -75,7 +75,7 @@ impl EdgePreservingMeanFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=image.dep -o=output.dep --filter=5 --threshold=20", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif --filter=5 --threshold=20", short_exe, name).replace("*", &sep);
     
         EdgePreservingMeanFilter { 
             name: name, 

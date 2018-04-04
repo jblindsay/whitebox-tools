@@ -63,7 +63,7 @@ impl FindNoFlowCells {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=NewRaster.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=NewRaster.tif", short_exe, name).replace("*", &sep);
 
         FindNoFlowCells {
             name: name,

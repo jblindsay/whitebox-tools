@@ -78,7 +78,7 @@ impl SetNodataValue {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=in.dep -o=newRaster.dep --back_value=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=in.tif -o=newRaster.tif --back_value=1.0", short_exe, name).replace("*", &sep);
 
         SetNodataValue {
             name: name,

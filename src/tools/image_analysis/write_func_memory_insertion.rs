@@ -79,7 +79,7 @@ impl WriteFunctionMemoryInsertion {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i1=input1.dep -i2=input2.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i1=input1.tif -i2=input2.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         WriteFunctionMemoryInsertion { 
             name: name, 

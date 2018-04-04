@@ -92,7 +92,7 @@ impl Viewshed {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.dep' --stations='stations.shp' -o=output.dep --height=10.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='dem.tif' --stations='stations.shp' -o=output.tif --height=10.0", short_exe, name).replace("*", &sep);
     
         Viewshed { 
             name: name, 

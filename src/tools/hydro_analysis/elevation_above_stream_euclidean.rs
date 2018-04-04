@@ -64,7 +64,7 @@ impl ElevationAboveStreamEuclidean {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.dep --streams=streams.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif --streams=streams.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         ElevationAboveStreamEuclidean { 
             name: name, 

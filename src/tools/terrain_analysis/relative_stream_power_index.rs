@@ -76,7 +76,7 @@ impl RelativeStreamPowerIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --sca='flow_accum.dep' --slope='slope.dep' -o=output.dep --exponent=1.1", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --sca='flow_accum.tif' --slope='slope.tif' -o=output.tif --exponent=1.1", short_exe, name).replace("*", &sep);
     
         RelativeStreamPowerIndex { 
             name: name, 

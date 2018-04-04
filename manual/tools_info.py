@@ -80,7 +80,20 @@ for t in tools.split("\n"):
         parameters = wbt.tool_parameters(tool)
         j = json.loads(parameters)
         param_num = 0
+
+        tool_snaked = camel_to_snake(tool)
+        if tool_snaked == "and":
+            tool_snaked = "And"
+        if tool_snaked == "or":
+            tool_snaked = "Or"
+        if tool_snaked == "not":
+            tool_snaked = "Not"
+
+        fn_def = "{}(".format(tool_snaked)
         default_params = []
+        arg_append_str = ""
+        # parameter_num = 1
+
         for p in j['parameters']:
             st = r"{}"
             st_val = '        '
@@ -111,13 +124,61 @@ for t in tools.split("\n"):
             doc_str += "{}{}{}\n".format(flag_str, ' ' * (21 - len(flag_str)),
                                          desc)
 
-        tool_snaked = camel_to_snake(tool)
-        if tool_snaked == "and":
-            tool_snaked = "And"
-        if tool_snaked == "or":
-            tool_snaked = "Or"
-        if tool_snaked == "not":
-            tool_snaked = "Not"
+            flag = p['flags'][len(p['flags']) - 1].replace('-', '')
+            if flag == "class":
+                flag = "cls"
+
+            pt = p['parameter_type']
+            if 'Boolean' in pt:
+                if p['default_value'] != None and p['default_value'] != 'false':
+                    default_params.append(
+                        "{}=True, ".format(camel_to_snake(flag)))
+                else:
+                    default_params.append(
+                        "{}=False, ".format(camel_to_snake(flag)))
+
+                arg_append_str += "{}if {}: args.append(\"{}\")\n".format(
+                    st_val, camel_to_snake(flag), p['flags'][len(p['flags']) - 1])
+            else:
+                if p['default_value'] != None:
+                    if p['default_value'].replace('.', '', 1).isdigit():
+                        default_params.append("{}={}, ".format(
+                            camel_to_snake(flag), p['default_value']))
+                    else:
+                        default_params.append("{}=\"{}\", ".format(
+                            camel_to_snake(flag), p['default_value']))
+
+                    arg_append_str += "{}args.append(\"{}={}\".format({}))\n".format(
+                        st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+                else:
+                    if not p['optional']:
+                        # if parameter_num == 1:
+                        #     fn_def += "{}, ".format(camel_to_snake(flag))
+                        # else:
+                        fn_def += "\n    {}, ".format(camel_to_snake(flag))
+
+                        # parameter_num += 1
+
+                        arg_append_str += "{}args.append(\"{}='{}'\".format({}))\n".format(
+                            st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+                    else:
+                        default_params.append(
+                            "{}=None, ".format(camel_to_snake(flag)))
+                        arg_append_str += "{}if {} is not None: args.append(\"{}='{}'\".format({}))\n".format(
+                            st_val, flag, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+
+                    # arg_append_str += "{}args.append(\"{}='{}'\".format({}))\n".format(
+                    #     st_val, p['flags'][len(p['flags']) - 1], st, camel_to_snake(flag))
+
+        for d in default_params:
+            # if parameter_num == 1:
+            #     fn_def += d
+            # else:
+            fn_def += '\n    ' + d
+
+            # parameter_num += 1
+
+        fn_def += "\n    callback=default_callback)"
 
         fn = """
 #### insertNumHere {}
@@ -129,15 +190,20 @@ for t in tools.split("\n"):
 **Flag**             **Description**
 -------------------  ---------------
 {}
+
+*Python function*:
+```Python
+{}
+
+
+```
 *Command-line Interface*:
 ```
 {}
 
 
 ```
-
-*Python function name*: ```{}```
-""".format(tool, description, doc_str, example, tool_snaked)
+""".format(tool, description, doc_str, fn_def, example)
         # print(fn)
         tb_dict[toolbox].append(fn)
 
@@ -145,14 +211,14 @@ f = open("/Users/johnlindsay/Documents/deleteme2.txt", 'w')
 num1 = 1
 num2 = 1
 for key, value in sorted(tb_dict.items()):
-    f.write("### 6.{} {}\n".format(num1, key.replace("/", " => ")))
+    f.write("### 7.{} {}\n".format(num1, key.replace("/", " => ")))
     # print("* 6.{} [{}](#{})".format(num1, key.replace("/", " = "),
     #                                 key.replace("/", " = ").lower().replace(" ", "-")))
     num2 = 1
     for v in value:
         # print(v)
         f.write("{}\n".format(
-            v.replace("insertNumHere", "6.{}.{}".format(num1, num2))))
+            v.replace("insertNumHere", "7.{}.{}".format(num1, num2))))
         num2 += 1
 
     num1 += 1

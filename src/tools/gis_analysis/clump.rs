@@ -72,7 +72,7 @@ impl Clump {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --diag", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --diag", short_exe, name).replace("*", &sep);
     
         Clump { 
             name: name, 

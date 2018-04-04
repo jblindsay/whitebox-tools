@@ -79,7 +79,7 @@ impl RandomSample {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.dep -o=out.dep --num_samples=1000", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.tif -o=out.tif --num_samples=1000", short_exe, name).replace("*", &sep);
 
         RandomSample {
             name: name,

@@ -63,7 +63,7 @@ impl MinDownslopeElevChange {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=out.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif", short_exe, name).replace("*", &sep);
 
         MinDownslopeElevChange {
             name: name,

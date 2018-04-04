@@ -96,7 +96,7 @@ impl PennockLandformClass {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --slope=3.0 --prof=0.1 --plan=0.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --slope=3.0 --prof=0.1 --plan=0.0", short_exe, name).replace("*", &sep);
     
         PennockLandformClass { 
             name: name, 

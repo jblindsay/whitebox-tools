@@ -72,7 +72,7 @@ impl FlattenLakes {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.dep' --lakes='lakes.shp' -o='output.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.tif' --lakes='lakes.shp' -o='output.tif'", short_exe, name).replace("*", &sep);
     
         FlattenLakes { 
             name: name, 

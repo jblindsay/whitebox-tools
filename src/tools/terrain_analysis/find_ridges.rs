@@ -72,7 +72,7 @@ impl FindRidges {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.dep -o=out.dep --line_thin", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.tif -o=out.tif --line_thin", short_exe, name).replace("*", &sep);
 
         FindRidges {
             name: name,

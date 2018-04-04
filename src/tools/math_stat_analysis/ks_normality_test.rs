@@ -84,8 +84,8 @@ impl KSTestForNormality {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.html --num_samples=1000
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.html", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.html --num_samples=1000
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.html", short_exe, name).replace("*", &sep);
 
         KSTestForNormality {
             name: name,

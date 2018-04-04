@@ -92,7 +92,7 @@ impl LongProfile {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.dep --streams=streams.dep --dem=dem.dep -o=output.html --esri_pntr", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --streams=streams.tif --dem=dem.tif -o=output.html --esri_pntr", short_exe, name).replace("*", &sep);
     
         LongProfile { 
             name: name, 

@@ -85,8 +85,8 @@ impl NormalizedDifferenceVegetationIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.dep --red=band3.dep -o=output.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.dep --red=band3.dep -o=output.dep --clip=1.0 --osavi", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif --clip=1.0 --osavi", short_exe, name).replace("*", &sep);
     
         NormalizedDifferenceVegetationIndex { 
             name: name, 

@@ -57,7 +57,7 @@ impl ThickenRasterLine {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         ThickenRasterLine { 
             name: name, 

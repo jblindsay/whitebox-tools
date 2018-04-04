@@ -64,7 +64,7 @@ impl PercentGreaterThan {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' --comparison='comp.dep' -o='output.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --comparison='comp.tif' -o='output.tif'", short_exe, name).replace("*", &sep);
     
         PercentGreaterThan { 
             name: name, 

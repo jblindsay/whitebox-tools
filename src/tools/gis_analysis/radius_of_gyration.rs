@@ -80,7 +80,7 @@ impl RadiusOfGyration {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=polygons.dep -o=output.dep --text_output", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=polygons.tif -o=output.tif --text_output", short_exe, name).replace("*", &sep);
     
         RadiusOfGyration { 
             name: name, 

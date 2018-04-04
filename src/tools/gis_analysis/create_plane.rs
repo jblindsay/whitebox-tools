@@ -89,7 +89,7 @@ impl CreatePlane {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.dep -o=NewRaster.dep --gradient=15.0 --aspect=315.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=base.tif -o=NewRaster.tif --gradient=15.0 --aspect=315.0", short_exe, name).replace("*", &sep);
 
         CreatePlane {
             name: name,

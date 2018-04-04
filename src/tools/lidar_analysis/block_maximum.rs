@@ -33,7 +33,7 @@ impl BlockMaximum {
         // public constructor
         let name = "BlockMaximum".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Creates a block-maximum raster from an input LAS file.".to_string();
+        let description = "Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -82,8 +82,8 @@ impl BlockMaximum {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=2.0\"
-.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.dep --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0\"
+.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
         BlockMaximum {
             name: name,

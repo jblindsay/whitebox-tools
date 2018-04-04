@@ -95,7 +95,7 @@ impl PercentageContrastStretch {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --clip=2.0 --tail='both' --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --clip=2.0 --tail='both' --num_tones=1024", short_exe, name).replace("*", &sep);
 
         PercentageContrastStretch {
             name: name,

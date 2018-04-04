@@ -90,7 +90,7 @@ impl SigmoidalContrastStretch {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.dep -o=output.dep --cutoff=0.1 --gain=2.0 --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --cutoff=0.1 --gain=2.0 --num_tones=1024", short_exe, name).replace("*", &sep);
     
         SigmoidalContrastStretch { 
             name: name, 

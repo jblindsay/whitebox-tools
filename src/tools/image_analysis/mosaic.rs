@@ -85,7 +85,7 @@ impl Mosaic {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' -o=dest.dep --method='cc", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=dest.tif --method='cc", short_exe, name).replace("*", &sep);
     
         Mosaic { 
             name: name, 

@@ -77,7 +77,7 @@ impl DownslopeIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.dep -o=dsi.dep --drop=5.0 --out_type=distance", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.tif -o=dsi.tif --drop=5.0 --out_type=distance", short_exe, name).replace("*", &sep);
     
         DownslopeIndex { 
             name: name, 

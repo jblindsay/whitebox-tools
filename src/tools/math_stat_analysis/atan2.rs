@@ -67,7 +67,7 @@ impl Atan2 {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input_y='in1.dep' --input_x='in2.dep' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input_y='in1.tif' --input_x='in2.tif' -o=output.tif", short_exe, name).replace("*", &sep);
     
         Atan2 { 
             name: name, 

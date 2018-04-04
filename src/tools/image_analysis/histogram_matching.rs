@@ -75,7 +75,7 @@ impl HistogramMatching {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input1.dep --histo_file=histo.txt -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input1.tif --histo_file=histo.txt -o=output.tif", short_exe, name).replace("*", &sep);
 
         HistogramMatching {
             name: name,

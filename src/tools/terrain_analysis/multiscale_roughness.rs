@@ -97,7 +97,7 @@ impl MultiscaleRoughness {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep --out_mag=roughness_mag.dep --out_scale=roughness_scale.dep --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --out_mag=roughness_mag.tif --out_scale=roughness_scale.tif --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
     
         MultiscaleRoughness { 
             name: name, 

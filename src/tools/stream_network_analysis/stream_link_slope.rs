@@ -91,8 +91,8 @@ impl StreamLinkSlope {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.dep --linkid=streamsID.dep --dem=dem.dep -o=output.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.flt --linkid=streamsID.flt --dem=dem.flt -o=output.flt --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --linkid=streamsID.tif --dem=dem.tif -o=output.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --linkid=streamsID.tif --dem=dem.tif -o=output.tif --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
     
         StreamLinkSlope { 
             name: name, 

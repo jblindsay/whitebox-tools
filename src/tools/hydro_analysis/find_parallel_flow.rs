@@ -73,8 +73,8 @@ impl FindParallelFlow {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=out.dep
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.dep -o=out.dep --streams='streams.dep'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif --streams='streams.tif'", short_exe, name).replace("*", &sep);
 
         FindParallelFlow {
             name: name,

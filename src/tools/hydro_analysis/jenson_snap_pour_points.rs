@@ -75,7 +75,7 @@ impl JensonSnapPourPoints {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --pour_pts='pour_pts.dep' --streams='streams.dep' -o='output.dep' --snap_dist=15.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --pour_pts='pour_pts.tif' --streams='streams.tif' -o='output.tif' --snap_dist=15.0", short_exe, name).replace("*", &sep);
     
         JensonSnapPourPoints { 
             name: name, 

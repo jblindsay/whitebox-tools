@@ -90,7 +90,7 @@ impl DInfMassFlux {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.dep --loading=load.dep --efficiency=eff.dep --absorption=abs.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif --loading=load.tif --efficiency=eff.tif --absorption=abs.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         DInfMassFlux { 
             name: name, 

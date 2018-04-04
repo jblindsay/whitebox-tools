@@ -75,7 +75,7 @@ impl CostDistance {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --source=src.dep --cost=cost.dep --out_accum=accum.dep --out_backlink=backlink.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --source=src.tif --cost=cost.tif --out_accum=accum.tif --out_backlink=backlink.tif", short_exe, name).replace("*", &sep);
     
         CostDistance { 
             name: name, 

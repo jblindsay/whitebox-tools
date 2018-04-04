@@ -88,7 +88,7 @@ impl MultiscaleTopographicPositionImage {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --local=DEV_local.dep --meso=DEV_meso.dep --broad=DEV_broad.dep -o=output.dep --lightness=1.5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --local=DEV_local.tif --meso=DEV_meso.tif --broad=DEV_broad.tif -o=output.tif --lightness=1.5", short_exe, name).replace("*", &sep);
     
         MultiscaleTopographicPositionImage { 
             name: name, 

@@ -76,7 +76,7 @@ impl RelativeAspect {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.dep -o=output.dep --azimuth=180.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --azimuth=180.0", short_exe, name).replace("*", &sep);
     
         RelativeAspect { 
             name: name, 

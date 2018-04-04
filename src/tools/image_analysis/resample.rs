@@ -79,7 +79,7 @@ impl Resample {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.dep' --destination=dest.dep --method='cc", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --destination=dest.tif --method='cc", short_exe, name).replace("*", &sep);
     
         Resample { 
             name: name, 

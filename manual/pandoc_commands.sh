@@ -8,6 +8,9 @@ cd "$BASEDIR"
 #   cd $DIR
 # fi
 
+# pandoc --print-highlight-style tango # tango haddock zenburn
+# pandoc --list-highlight-languages
+
 pandoc \
 --pdf-engine=xelatex \
 --variable classoption=twoside \
@@ -16,4 +19,5 @@ pandoc \
 -s WhiteboxToolsManual.md \
 --toc \
 --toc-depth=4 \
+--highlight-style=my_style.theme \
 -o ../WhiteboxToolsManual.pdf

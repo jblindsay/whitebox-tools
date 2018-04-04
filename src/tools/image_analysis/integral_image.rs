@@ -54,7 +54,7 @@ impl IntegralImage {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.dep -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif", short_exe, name).replace("*", &sep);
     
         IntegralImage { 
             name: name, 

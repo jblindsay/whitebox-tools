@@ -72,7 +72,7 @@ impl ReclassFromFile {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.dep' --reclass_file='reclass.txt' -o=output.dep", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' --reclass_file='reclass.txt' -o=output.tif", short_exe, name).replace("*", &sep);
     
         ReclassFromFile { 
             name: name, 
