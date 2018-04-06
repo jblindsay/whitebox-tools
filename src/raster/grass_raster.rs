@@ -20,9 +20,9 @@ pub fn read_grass_raster(file_name: &String, configs: &mut RasterConfigs, data: 
         let line_split = line_unwrapped.split(":");
         let vec = line_split.collect::<Vec<&str>>();
         if vec[0].to_lowercase().contains("rows") {
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("cols") {
-            configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("north") {
             configs.north = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("south") {

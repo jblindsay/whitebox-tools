@@ -173,9 +173,9 @@ impl WhiteboxTool for TurningBandsSimulation {
                 }
             } else if vec[0].to_lowercase() == "-iterations" || vec[0].to_lowercase() == "--iterations" {
                 if keyval {
-                    iterations = vec[1].to_string().parse::<usize>().unwrap();
+                    iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    iterations = args[i+1].to_string().parse::<usize>().unwrap();
+                    iterations = args[i+1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }

@@ -24,9 +24,9 @@ pub fn read_whitebox(file_name: &String,
         let line_split = line_unwrapped.split(":");
         let vec = line_split.collect::<Vec<&str>>();
         if vec[0].to_lowercase().contains("rows") {
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("col") {
-            configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("stacks") {
             configs.bands = vec[1].trim().to_string().parse::<u8>().unwrap();
         } else if vec[0].to_lowercase().contains("north") {

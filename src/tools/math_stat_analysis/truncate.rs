@@ -147,9 +147,9 @@ impl WhiteboxTool for Truncate {
                 }
             } else if vec[0].to_lowercase() == "-num_decimals" || vec[0].to_lowercase() == "--num_decimals" {
                 if keyval {
-                    num_decimals = vec[1].to_string().parse::<usize>().unwrap();
+                    num_decimals = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    num_decimals = args[i+1].to_string().parse::<usize>().unwrap();
+                    num_decimals = args[i+1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }

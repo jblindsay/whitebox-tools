@@ -8,7 +8,8 @@ cd "$BASEDIR"
 #   cd $DIR
 # fi
 
-# pandoc --print-highlight-style tango # tango haddock zenburn
+# pandoc --print-highlight-style tango # tango haddock zenburn kate breezedark espresso pygments
+# pandoc --list-highlight-styles
 # pandoc --list-highlight-languages
 
 pandoc \

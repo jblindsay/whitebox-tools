@@ -160,28 +160,28 @@ impl WhiteboxTool for KNearestMeanFilter {
                 }
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<usize>().unwrap();
+                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<usize>().unwrap();
+                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
                 filter_size_y = filter_size_x;
             } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<usize>().unwrap();
+                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<usize>().unwrap();
+                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
                 if keyval {
-                    filter_size_y = vec[1].to_string().parse::<usize>().unwrap();
+                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<usize>().unwrap();
+                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if vec[0].to_lowercase() == "-k" || vec[0].to_lowercase() == "--k" {
                 if keyval {
-                    k = vec[1].to_string().parse::<usize>().unwrap();
+                    k = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    k = args[i + 1].to_string().parse::<usize>().unwrap();
+                    k = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }

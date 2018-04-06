@@ -31,7 +31,7 @@ impl Reclass {
     /// public constructor
     pub fn new() -> Reclass { 
         let name = "Reclass".to_string();
-        let toolbox = "GIS Analysis/Reclass Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Reclassifies the values in a raster image.".to_string();
         
         let mut parameters = vec![];

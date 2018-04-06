@@ -164,13 +164,18 @@ impl Raster {
     }
 
     pub fn initialize_using_config<'a>(file_name: &'a str, configs: &'a RasterConfigs) -> Raster {
+        let new_file_name = if file_name.contains(".") {
+            file_name.to_string()
+        } else { // likely no extension provided; default to .tif
+            format!("{}.tif", file_name)
+        };
         let mut output = Raster {
-            file_name: file_name.to_string(),
+            file_name: new_file_name.clone(),
             configs: configs.clone(),
             ..Default::default()
         };
         output.file_mode = "w".to_string();
-        output.raster_type = get_raster_type_from_file(file_name.to_string(), "w".to_string());
+        output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
 
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
 
@@ -178,12 +183,17 @@ impl Raster {
     }
 
     pub fn initialize_using_file<'a>(file_name: &'a str, input: &'a Raster) -> Raster {
+        let new_file_name = if file_name.contains(".") {
+            file_name.to_string()
+        } else { // likely no extension provided; default to .tif
+            format!("{}.tif", file_name)
+        };
         let mut output = Raster {
-            file_name: file_name.to_string(),
+            file_name: new_file_name.clone(),
             ..Default::default()
         };
         output.file_mode = "w".to_string();
-        output.raster_type = get_raster_type_from_file(file_name.to_string(), "w".to_string());
+        output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
         output.configs.rows = input.configs.rows;
         output.configs.columns = input.configs.columns;
         output.configs.north = input.configs.north;

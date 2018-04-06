@@ -36,8 +36,8 @@ pub fn read_surfer_ascii_raster(file_name: &String, configs: &mut RasterConfigs,
             if vec.len() != 2 {
                 return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
             }
-            configs.columns = vec[0].trim().to_string().parse::<usize>().unwrap();
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[0].trim().parse::<f32>().unwrap() as usize;
+            configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
             row = configs.rows - 1; // files are stored row major, bottom-to-top
             num_cells = configs.rows * configs.columns;
             data.clear();

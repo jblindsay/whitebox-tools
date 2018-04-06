@@ -203,15 +203,15 @@ impl WhiteboxTool for KMeansClustering {
                 }
             } else if flag_val == "-classes" {
                 if keyval {
-                    num_classes = vec[1].to_string().parse::<usize>().unwrap();
+                    num_classes = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    num_classes = args[i + 1].to_string().parse::<usize>().unwrap();
+                    num_classes = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if flag_val == "-max_iterations" {
                 if keyval {
-                    max_iterations = vec[1].to_string().parse::<usize>().unwrap();
+                    max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    max_iterations = args[i + 1].to_string().parse::<usize>().unwrap();
+                    max_iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if flag_val == "-class_change" {
                 if keyval {
@@ -231,9 +231,9 @@ impl WhiteboxTool for KMeansClustering {
                 }
             } else if flag_val == "-min_class_size" {
                 if keyval {
-                    min_class_size = vec[1].to_string().parse::<usize>().unwrap();
+                    min_class_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    min_class_size = args[i + 1].to_string().parse::<usize>().unwrap();
+                    min_class_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }

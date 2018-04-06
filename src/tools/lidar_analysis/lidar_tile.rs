@@ -188,9 +188,9 @@ impl WhiteboxTool for LidarTile {
                 }
             } else if vec[0].to_lowercase() == "-min_points" || vec[0].to_lowercase() == "--min_points" {
                 if keyval {
-                    min_points = vec[1].to_string().parse::<usize>().unwrap();
+                    min_points = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    min_points = args[i+1].to_string().parse::<usize>().unwrap();
+                    min_points = args[i+1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }

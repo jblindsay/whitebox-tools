@@ -313,37 +313,38 @@ class WhiteboxTools(object):
 
 
 
+
     
     
     ##############
     # Data Tools #
     ##############
 
-    def convert_nodata_to_zero(self, input, output, callback=default_callback):
+    def convert_nodata_to_zero(self, i, output, callback=default_callback):
         """ Converts nodata values in a raster to zero.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ConvertNodataToZero', args, callback) # returns 1 if error
 
-    def convert_raster_format(self, input, output, callback=default_callback):
+    def convert_raster_format(self, i, output, callback=default_callback):
         """ Converts raster data from one format to another.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ConvertRasterFormat', args, callback) # returns 1 if error
 
@@ -365,30 +366,30 @@ class WhiteboxTools(object):
         args.append("--data_type={}".format(data_type))
         return self.run_tool('NewRasterFromBase', args, callback) # returns 1 if error
 
-    def print_geo_tiff_tags(self, input, callback=default_callback):
+    def print_geo_tiff_tags(self, i, callback=default_callback):
         """ Prints the tags within a GeoTIFF.
 
         Keyword arguments:
 
-        input -- Input GeoTIFF file. 
+        i -- Input GeoTIFF file. 
 callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         return self.run_tool('PrintGeoTiffTags', args, callback) # returns 1 if error
 
-    def set_nodata_value(self, input, output, back_value=0.0, callback=default_callback):
+    def set_nodata_value(self, i, output, back_value=0.0, callback=default_callback):
         """ Assign a specified value in an input image to the NoData value.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         back_value -- Background value to set to nodata. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--back_value={}".format(back_value))
         return self.run_tool('SetNodataValue', args, callback) # returns 1 if error
@@ -397,53 +398,53 @@ callback -- Custom functon for handling tool text outputs.
     # GIS Analysis #
     ################
 
-    def aggregate_raster(self, input, output, agg_factor=2, type="mean", callback=default_callback):
+    def aggregate_raster(self, i, output, agg_factor=2, type="mean", callback=default_callback):
         """ Aggregates a raster to a lower resolution.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         agg_factor -- Aggregation factor, in pixels. 
         type -- Statistic used to fill output pixels. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--agg_factor={}".format(agg_factor))
         args.append("--type={}".format(type))
         return self.run_tool('AggregateRaster', args, callback) # returns 1 if error
 
-    def centroid(self, input, output, text_output=False, callback=default_callback):
+    def centroid(self, i, output, text_output=False, callback=default_callback):
         """ Calculates the centroid, or average location, of raster polygon objects.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         text_output -- Optional text output. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if text_output: args.append("--text_output")
         return self.run_tool('Centroid', args, callback) # returns 1 if error
 
-    def clump(self, input, output, diag=True, zero_back=False, callback=default_callback):
+    def clump(self, i, output, diag=True, zero_back=False, callback=default_callback):
         """ Groups cells that form physically discrete areas, assigning them unique identifiers.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         diag -- Flag indicating whether diagonal connections should be considered. 
         zero_back -- Flag indicating whether zero values should be treated as a background. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if diag: args.append("--diag")
         if zero_back: args.append("--zero_back")
@@ -469,55 +470,93 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--constant={}".format(constant))
         return self.run_tool('CreatePlane', args, callback) # returns 1 if error
 
-    def radius_of_gyration(self, input, output, text_output=False, callback=default_callback):
-        """ Calculates the distance of cells from their polygon's centroid.
-
-        Keyword arguments:
-
-        input -- Input raster file. 
-        output -- Output raster file. 
-        text_output -- Optional text output. 
-        callback -- Custom functon for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(input))
-        args.append("--output='{}'".format(output))
-        if text_output: args.append("--text_output")
-        return self.run_tool('RadiusOfGyration', args, callback) # returns 1 if error
-
-    def raster_cell_assignment(self, input, output, assign="column", callback=default_callback):
+    def raster_cell_assignment(self, i, output, assign="column", callback=default_callback):
         """ Assign row or column number to cells.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         assign -- Which variable would you like to assign to grid cells? Options include 'column', 'row', 'x', and 'y'. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--assign={}".format(assign))
         return self.run_tool('RasterCellAssignment', args, callback) # returns 1 if error
+
+    def reclass(self, i, output, reclass_vals, assign_mode=False, callback=default_callback):
+        """ Reclassifies the values in a raster image.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        reclass_vals -- Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'. 
+        assign_mode -- Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--reclass_vals='{}'".format(reclass_vals))
+        if assign_mode: args.append("--assign_mode")
+        return self.run_tool('Reclass', args, callback) # returns 1 if error
+
+    def reclass_equal_interval(self, i, output, interval=10.0, start_val=None, end_val=None, callback=default_callback):
+        """ Reclassifies the values in a raster image based on equal-ranges.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        interval -- Class interval size. 
+        start_val -- Optional starting value (default is input minimum value). 
+        end_val -- Optional ending value (default is input maximum value). 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--interval={}".format(interval))
+        if start_val is not None: args.append("--start_val='{}'".format(start_val))
+        if end_val is not None: args.append("--end_val='{}'".format(end_val))
+        return self.run_tool('ReclassEqualInterval', args, callback) # returns 1 if error
+
+    def reclass_from_file(self, i, reclass_file, output, callback=default_callback):
+        """ Reclassifies the values in a raster image using reclass ranges in a text file.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        reclass_file -- Input text file containing reclass ranges. 
+        output -- Output raster file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--reclass_file='{}'".format(reclass_file))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('ReclassFromFile', args, callback) # returns 1 if error
 
     ###############################
     # GIS Analysis/Distance Tools #
     ###############################
 
-    def buffer_raster(self, input, output, size, gridcells=False, callback=default_callback):
+    def buffer_raster(self, i, output, size, gridcells=False, callback=default_callback):
         """ Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         size -- Buffer size. 
         gridcells -- Optional flag to indicate that the 'size' threshold should be measured in grid cells instead of the default map units. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--size='{}'".format(size))
         if gridcells: args.append("--gridcells")
@@ -575,31 +614,31 @@ callback -- Custom functon for handling tool text outputs.
         if zero_background: args.append("--zero_background")
         return self.run_tool('CostPathway', args, callback) # returns 1 if error
 
-    def euclidean_allocation(self, input, output, callback=default_callback):
+    def euclidean_allocation(self, i, output, callback=default_callback):
         """ Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('EuclideanAllocation', args, callback) # returns 1 if error
 
-    def euclidean_distance(self, input, output, callback=default_callback):
+    def euclidean_distance(self, i, output, callback=default_callback):
         """ Calculates the Shih and Wu (2004) Euclidean distance transform.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('EuclideanDistance', args, callback) # returns 1 if error
 
@@ -621,18 +660,18 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('AverageOverlay', args, callback) # returns 1 if error
 
-    def erase_polygon_from_raster(self, input, polygons, output, callback=default_callback):
+    def erase_polygon_from_raster(self, i, polygons, output, callback=default_callback):
         """ Erases (cuts out) a vector polygon from a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         polygons -- Input vector polygons file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--polygons='{}'".format(polygons))
         args.append("--output='{}'".format(output))
         return self.run_tool('ErasePolygonFromRaster', args, callback) # returns 1 if error
@@ -805,93 +844,51 @@ callback -- Custom functon for handling tool text outputs.
     # GIS Analysis/Patch Shape Tools #
     ##################################
 
-    def edge_proportion(self, input, output, output_text=False, callback=default_callback):
+    def edge_proportion(self, i, output, output_text=False, callback=default_callback):
         """ Calculate the proportion of cells in a raster polygon that are edge cells.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         output_text -- flag indicating whether a text report should also be output. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if output_text: args.append("--output_text")
         return self.run_tool('EdgeProportion', args, callback) # returns 1 if error
 
-    def find_patch_or_class_edge_cells(self, input, output, callback=default_callback):
+    def find_patch_or_class_edge_cells(self, i, output, callback=default_callback):
         """ Finds all cells located on the edge of patch or class features.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('FindPatchOrClassEdgeCells', args, callback) # returns 1 if error
 
-    ##############################
-    # GIS Analysis/Reclass Tools #
-    ##############################
-
-    def reclass(self, input, output, reclass_vals, assign_mode=False, callback=default_callback):
-        """ Reclassifies the values in a raster image.
+    def radius_of_gyration(self, i, output, text_output=False, callback=default_callback):
+        """ Calculates the distance of cells from their polygon's centroid.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
-        reclass_vals -- Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'. 
-        assign_mode -- Optional Boolean flag indicating whether to operate in assign mode, reclass_vals values are interpreted as new value; old value pairs. 
+        text_output -- Optional text output. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
-        args.append("--reclass_vals='{}'".format(reclass_vals))
-        if assign_mode: args.append("--assign_mode")
-        return self.run_tool('Reclass', args, callback) # returns 1 if error
-
-    def reclass_equal_interval(self, input, output, interval=10.0, start_val=None, end_val=None, callback=default_callback):
-        """ Reclassifies the values in a raster image based on equal-ranges.
-
-        Keyword arguments:
-
-        input -- Input raster file. 
-        output -- Output raster file. 
-        interval -- Class interval size. 
-        start_val -- Optional starting value (default is input minimum value). 
-        end_val -- Optional ending value (default is input maximum value). 
-        callback -- Custom functon for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(input))
-        args.append("--output='{}'".format(output))
-        args.append("--interval={}".format(interval))
-        if start_val is not None: args.append("--start_val='{}'".format(start_val))
-        if end_val is not None: args.append("--end_val='{}'".format(end_val))
-        return self.run_tool('ReclassEqualInterval', args, callback) # returns 1 if error
-
-    def reclass_from_file(self, input, reclass_file, output, callback=default_callback):
-        """ Reclassifies the values in a raster image using reclass ranges in a text file.
-
-        Keyword arguments:
-
-        input -- Input raster file. 
-        reclass_file -- Input text file containing reclass ranges. 
-        output -- Output raster file. 
-        callback -- Custom functon for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(input))
-        args.append("--reclass_file='{}'".format(reclass_file))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('ReclassFromFile', args, callback) # returns 1 if error
+        if text_output: args.append("--text_output")
+        return self.run_tool('RadiusOfGyration', args, callback) # returns 1 if error
 
     ############################
     # Geomorphometric Analysis #
@@ -1089,18 +1086,18 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--hgt_inc={}".format(hgt_inc))
         return self.run_tool('FetchAnalysis', args, callback) # returns 1 if error
 
-    def fill_missing_data(self, input, output, filter=11, callback=default_callback):
+    def fill_missing_data(self, i, output, filter=11, callback=default_callback):
         """ Fills nodata holes in a DEM.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filter -- Filter size (cells). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filter={}".format(filter))
         return self.run_tool('FillMissingData', args, callback) # returns 1 if error
@@ -2363,19 +2360,19 @@ callback -- Custom functon for handling tool text outputs.
     # Image Processing Tools #
     ##########################
 
-    def closing(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def closing(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
@@ -2403,18 +2400,18 @@ callback -- Custom functon for handling tool text outputs.
         if enhance: args.append("--enhance")
         return self.run_tool('CreateColourComposite', args, callback) # returns 1 if error
 
-    def flip_image(self, input, output, direction="vertical", callback=default_callback):
+    def flip_image(self, i, output, direction="vertical", callback=default_callback):
         """ Reflects an image in the vertical or horizontal axis.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         direction -- Direction of reflection; options include 'v' (vertical), 'h' (horizontal), and 'b' (both). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--direction={}".format(direction))
         return self.run_tool('FlipImage', args, callback) # returns 1 if error
@@ -2459,17 +2456,17 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('ImageStackProfile', args, callback) # returns 1 if error
 
-    def integral_image(self, input, output, callback=default_callback):
+    def integral_image(self, i, output, callback=default_callback):
         """ Transforms an input image (summed area table) into its integral image equivalent.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('IntegralImage', args, callback) # returns 1 if error
 
@@ -2499,17 +2496,17 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--min_class_size={}".format(min_class_size))
         return self.run_tool('KMeansClustering', args, callback) # returns 1 if error
 
-    def line_thinning(self, input, output, callback=default_callback):
+    def line_thinning(self, i, output, callback=default_callback):
         """ Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('LineThinning', args, callback) # returns 1 if error
 
@@ -2573,19 +2570,19 @@ callback -- Custom functon for handling tool text outputs.
         if osavi: args.append("--osavi")
         return self.run_tool('NormalizedDifferenceVegetationIndex', args, callback) # returns 1 if error
 
-    def opening(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def opening(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
@@ -2609,18 +2606,18 @@ callback -- Custom functon for handling tool text outputs.
         if standardized: args.append("--standardized")
         return self.run_tool('PrincipalComponentAnalysis', args, callback) # returns 1 if error
 
-    def remove_spurs(self, input, output, iterations=10, callback=default_callback):
+    def remove_spurs(self, i, output, iterations=10, callback=default_callback):
         """ Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         iterations -- Maximum number of iterations. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--iterations={}".format(iterations))
         return self.run_tool('RemoveSpurs', args, callback) # returns 1 if error
@@ -2665,40 +2662,40 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--saturation='{}'".format(saturation))
         return self.run_tool('RgbToIhs', args, callback) # returns 1 if error
 
-    def split_colour_composite(self, input, output, callback=default_callback):
+    def split_colour_composite(self, i, output, callback=default_callback):
         """ This tool splits an RGB colour composite image into seperate multispectral images.
 
         Keyword arguments:
 
-        input -- Input colour composite image file. 
+        i -- Input colour composite image file. 
         output -- Output raster file (suffixes of '_r', '_g', and '_b' will be appended). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('SplitColourComposite', args, callback) # returns 1 if error
 
-    def thicken_raster_line(self, input, output, callback=default_callback):
+    def thicken_raster_line(self, i, output, callback=default_callback):
         """ Thickens single-cell wide lines within a raster image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ThickenRasterLine', args, callback) # returns 1 if error
 
-    def tophat_transform(self, input, output, filterx=11, filtery=11, variant="white", callback=default_callback):
+    def tophat_transform(self, i, output, filterx=11, filtery=11, variant="white", callback=default_callback):
         """ Performs either a white or black top-hat transform on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -2706,7 +2703,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
@@ -2735,12 +2732,12 @@ callback -- Custom functon for handling tool text outputs.
     # Image Processing Tools/Filters #
     ##################################
 
-    def adaptive_filter(self, input, output, filterx=11, filtery=11, threshold=2.0, callback=default_callback):
+    def adaptive_filter(self, i, output, filterx=11, filtery=11, threshold=2.0, callback=default_callback):
         """ Performs an adaptive filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -2748,161 +2745,161 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         args.append("--threshold={}".format(threshold))
         return self.run_tool('AdaptiveFilter', args, callback) # returns 1 if error
 
-    def bilateral_filter(self, input, output, sigma_dist=0.75, sigma_int=1.0, callback=default_callback):
+    def bilateral_filter(self, i, output, sigma_dist=0.75, sigma_int=1.0, callback=default_callback):
         """ A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         sigma_dist -- Standard deviation in distance in pixels. 
         sigma_int -- Standard deviation in intensity in pixels. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--sigma_dist={}".format(sigma_dist))
         args.append("--sigma_int={}".format(sigma_int))
         return self.run_tool('BilateralFilter', args, callback) # returns 1 if error
 
-    def conservative_smoothing_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def conservative_smoothing_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Performs a conservative-smoothing filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('ConservativeSmoothingFilter', args, callback) # returns 1 if error
 
-    def diff_of_gaussian_filter(self, input, output, sigma1=2.0, sigma2=4.0, callback=default_callback):
+    def diff_of_gaussian_filter(self, i, output, sigma1=2.0, sigma2=4.0, callback=default_callback):
         """ Performs a Difference of Gaussian (DoG) filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         sigma1 -- Standard deviation distance in pixels. 
         sigma2 -- Standard deviation distance in pixels. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--sigma1={}".format(sigma1))
         args.append("--sigma2={}".format(sigma2))
         return self.run_tool('DiffOfGaussianFilter', args, callback) # returns 1 if error
 
-    def diversity_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def diversity_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('DiversityFilter', args, callback) # returns 1 if error
 
-    def edge_preserving_mean_filter(self, input, output, threshold, filter=11, callback=default_callback):
+    def edge_preserving_mean_filter(self, i, output, threshold, filter=11, callback=default_callback):
         """ Performs a simple edge-preserving mean filter on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filter -- Size of the filter kernel. 
         threshold -- Maximum difference in values. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filter={}".format(filter))
         args.append("--threshold='{}'".format(threshold))
         return self.run_tool('EdgePreservingMeanFilter', args, callback) # returns 1 if error
 
-    def emboss_filter(self, input, output, direction="n", clip=0.0, callback=default_callback):
+    def emboss_filter(self, i, output, direction="n", clip=0.0, callback=default_callback):
         """ Performs an emboss filter on an image, similar to a hillshade operation.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         direction -- Direction of reflection; options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw'. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--direction={}".format(direction))
         args.append("--clip={}".format(clip))
         return self.run_tool('EmbossFilter', args, callback) # returns 1 if error
 
-    def gaussian_filter(self, input, output, sigma=0.75, callback=default_callback):
+    def gaussian_filter(self, i, output, sigma=0.75, callback=default_callback):
         """ Performs a Gaussian filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         sigma -- Standard deviation distance in pixels. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--sigma={}".format(sigma))
         return self.run_tool('GaussianFilter', args, callback) # returns 1 if error
 
-    def high_pass_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def high_pass_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Performs a high-pass filter on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('HighPassFilter', args, callback) # returns 1 if error
 
-    def k_nearest_mean_filter(self, input, output, filterx=11, filtery=11, k=5, callback=default_callback):
+    def k_nearest_mean_filter(self, i, output, filterx=11, filtery=11, k=5, callback=default_callback):
         """ A k-nearest mean filter is a type of edge-preserving smoothing filter.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -2910,53 +2907,53 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         args.append("-k={}".format(k))
         return self.run_tool('KNearestMeanFilter', args, callback) # returns 1 if error
 
-    def laplacian_filter(self, input, output, variant="3x3(1)", clip=0.0, callback=default_callback):
+    def laplacian_filter(self, i, output, variant="3x3(1)", clip=0.0, callback=default_callback):
         """ Performs a Laplacian filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         variant -- Optional variant value. Options include 3x3(1), 3x3(2), 3x3(3), 3x3(4), 5x5(1), and 5x5(2) (default is 3x3(1)). 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--variant={}".format(variant))
         args.append("--clip={}".format(clip))
         return self.run_tool('LaplacianFilter', args, callback) # returns 1 if error
 
-    def laplacian_of_gaussian_filter(self, input, output, sigma=0.75, callback=default_callback):
+    def laplacian_of_gaussian_filter(self, i, output, sigma=0.75, callback=default_callback):
         """ Performs a Laplacian-of-Gaussian (LoG) filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         sigma -- Standard deviation in pixels. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--sigma={}".format(sigma))
         return self.run_tool('LaplacianOfGaussianFilter', args, callback) # returns 1 if error
 
-    def lee_filter(self, input, output, filterx=11, filtery=11, sigma=10.0, m=5.0, callback=default_callback):
+    def lee_filter(self, i, output, filterx=11, filtery=11, sigma=10.0, m=5.0, callback=default_callback):
         """ Performs a Lee (Sigma) smoothing filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -2965,7 +2962,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
@@ -2973,12 +2970,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("-m={}".format(m))
         return self.run_tool('LeeFilter', args, callback) # returns 1 if error
 
-    def line_detection_filter(self, input, output, variant="vertical", absvals=False, clip=0.0, callback=default_callback):
+    def line_detection_filter(self, i, output, variant="vertical", absvals=False, clip=0.0, callback=default_callback):
         """ Performs a line-detection filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         variant -- Optional variant value. Options include 'v' (vertical), 'h' (horizontal), '45', and '135' (default is 'v'). 
         absvals -- Optional flag indicating whether outputs should be absolute values. 
@@ -2986,73 +2983,73 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--variant={}".format(variant))
         if absvals: args.append("--absvals")
         args.append("--clip={}".format(clip))
         return self.run_tool('LineDetectionFilter', args, callback) # returns 1 if error
 
-    def majority_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def majority_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('MajorityFilter', args, callback) # returns 1 if error
 
-    def maximum_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def maximum_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('MaximumFilter', args, callback) # returns 1 if error
 
-    def mean_filter(self, input, output, filterx=3, filtery=3, callback=default_callback):
+    def mean_filter(self, i, output, filterx=3, filtery=3, callback=default_callback):
         """ Performs a mean filter (low-pass filter) on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('MeanFilter', args, callback) # returns 1 if error
 
-    def median_filter(self, input, output, filterx=11, filtery=11, sig_digits=2, callback=default_callback):
+    def median_filter(self, i, output, filterx=11, filtery=11, sig_digits=2, callback=default_callback):
         """ Performs a median filter on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -3060,55 +3057,55 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         args.append("--sig_digits={}".format(sig_digits))
         return self.run_tool('MedianFilter', args, callback) # returns 1 if error
 
-    def minimum_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def minimum_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('MinimumFilter', args, callback) # returns 1 if error
 
-    def olympic_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def olympic_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Performs an olympic smoothing filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('OlympicFilter', args, callback) # returns 1 if error
 
-    def percentile_filter(self, input, output, filterx=11, filtery=11, sig_digits=2, callback=default_callback):
+    def percentile_filter(self, i, output, filterx=11, filtery=11, sig_digits=2, callback=default_callback):
         """ Performs a percentile filter on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
@@ -3116,128 +3113,128 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         args.append("--sig_digits={}".format(sig_digits))
         return self.run_tool('PercentileFilter', args, callback) # returns 1 if error
 
-    def prewitt_filter(self, input, output, clip=0.0, callback=default_callback):
+    def prewitt_filter(self, i, output, clip=0.0, callback=default_callback):
         """ Performs a Prewitt edge-detection filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--clip={}".format(clip))
         return self.run_tool('PrewittFilter', args, callback) # returns 1 if error
 
-    def range_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def range_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('RangeFilter', args, callback) # returns 1 if error
 
-    def roberts_cross_filter(self, input, output, clip=0.0, callback=default_callback):
+    def roberts_cross_filter(self, i, output, clip=0.0, callback=default_callback):
         """ Performs a Robert's cross edge-detection filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--clip={}".format(clip))
         return self.run_tool('RobertsCrossFilter', args, callback) # returns 1 if error
 
-    def scharr_filter(self, input, output, clip=0.0, callback=default_callback):
+    def scharr_filter(self, i, output, clip=0.0, callback=default_callback):
         """ Performs a Scharr edge-detection filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--clip={}".format(clip))
         return self.run_tool('ScharrFilter', args, callback) # returns 1 if error
 
-    def sobel_filter(self, input, output, variant="3x3", clip=0.0, callback=default_callback):
+    def sobel_filter(self, i, output, variant="3x3", clip=0.0, callback=default_callback):
         """ Performs a Sobel edge-detection filter on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         variant -- Optional variant value. Options include 3x3 and 5x5 (default is 3x3). 
         clip -- Optional amount to clip the distribution tails by, in percent (default is 0.0). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--variant={}".format(variant))
         args.append("--clip={}".format(clip))
         return self.run_tool('SobelFilter', args, callback) # returns 1 if error
 
-    def standard_deviation_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def standard_deviation_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('StandardDeviationFilter', args, callback) # returns 1 if error
 
-    def total_filter(self, input, output, filterx=11, filtery=11, callback=default_callback):
+    def total_filter(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ Performs a total filter on an input image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
@@ -3247,84 +3244,84 @@ callback -- Custom functon for handling tool text outputs.
     # Image Processing Tools/Image Enhancement #
     ############################################
 
-    def balance_contrast_enhancement(self, input, output, band_mean=100.0, callback=default_callback):
+    def balance_contrast_enhancement(self, i, output, band_mean=100.0, callback=default_callback):
         """ Performs a balance contrast enhancement on a colour-composite image of multispectral data.
 
         Keyword arguments:
 
-        input -- Input colour composite image file. 
+        i -- Input colour composite image file. 
         output -- Output raster file. 
         band_mean -- Band mean value. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--band_mean={}".format(band_mean))
         return self.run_tool('BalanceContrastEnhancement', args, callback) # returns 1 if error
 
-    def direct_decorrelation_stretch(self, input, output, k=0.5, clip=1.0, callback=default_callback):
+    def direct_decorrelation_stretch(self, i, output, k=0.5, clip=1.0, callback=default_callback):
         """ Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 
         Keyword arguments:
 
-        input -- Input colour composite image file. 
+        i -- Input colour composite image file. 
         output -- Output raster file. 
         k -- Achromatic factor (k) ranges between 0 (no effect) and 1 (full saturation stretch), although typical values range from 0.3 to 0.7. 
         clip -- Optional percent to clip the upper tail by during the stretch. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("-k={}".format(k))
         args.append("--clip={}".format(clip))
         return self.run_tool('DirectDecorrelationStretch', args, callback) # returns 1 if error
 
-    def gamma_correction(self, input, output, gamma=0.5, callback=default_callback):
+    def gamma_correction(self, i, output, gamma=0.5, callback=default_callback):
         """ Performs a sigmoidal contrast stretch on input images.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         gamma -- Gamma value. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--gamma={}".format(gamma))
         return self.run_tool('GammaCorrection', args, callback) # returns 1 if error
 
-    def histogram_equalization(self, input, output, num_tones=256, callback=default_callback):
+    def histogram_equalization(self, i, output, num_tones=256, callback=default_callback):
         """ Performs a histogram equalization contrast enhancment on an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         num_tones -- Number of tones in the output image. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--num_tones={}".format(num_tones))
         return self.run_tool('HistogramEqualization', args, callback) # returns 1 if error
 
-    def histogram_matching(self, input, histo_file, output, callback=default_callback):
+    def histogram_matching(self, i, histo_file, output, callback=default_callback):
         """ Alters the statistical distribution of a raster image matching it to a specified PDF.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         histo_file -- Input reference probability distribution function (pdf) text file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--histo_file='{}'".format(histo_file))
         args.append("--output='{}'".format(output))
         return self.run_tool('HistogramMatching', args, callback) # returns 1 if error
@@ -3345,12 +3342,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('HistogramMatchingTwoImages', args, callback) # returns 1 if error
 
-    def min_max_contrast_stretch(self, input, output, min_val, max_val, num_tones=256, callback=default_callback):
+    def min_max_contrast_stretch(self, i, output, min_val, max_val, num_tones=256, callback=default_callback):
         """ Performs a min-max contrast stretch on an input greytone image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         min_val -- Lower tail clip value. 
         max_val -- Upper tail clip value. 
@@ -3358,7 +3355,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--min_val='{}'".format(min_val))
         args.append("--max_val='{}'".format(max_val))
@@ -3389,12 +3386,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--method={}".format(method))
         return self.run_tool('PanchromaticSharpening', args, callback) # returns 1 if error
 
-    def percentage_contrast_stretch(self, input, output, clip=0.0, tail="both", num_tones=256, callback=default_callback):
+    def percentage_contrast_stretch(self, i, output, clip=0.0, tail="both", num_tones=256, callback=default_callback):
         """ Performs a percentage linear contrast stretch on input images.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
         tail -- Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both'). 
@@ -3402,19 +3399,19 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--clip={}".format(clip))
         args.append("--tail={}".format(tail))
         args.append("--num_tones={}".format(num_tones))
         return self.run_tool('PercentageContrastStretch', args, callback) # returns 1 if error
 
-    def sigmoidal_contrast_stretch(self, input, output, cutoff=0.0, gain=1.0, num_tones=256, callback=default_callback):
+    def sigmoidal_contrast_stretch(self, i, output, cutoff=0.0, gain=1.0, num_tones=256, callback=default_callback):
         """ Performs a sigmoidal contrast stretch on input images.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         cutoff -- Cutoff value between 0.0 and 0.95. 
         gain -- Gain value. 
@@ -3422,26 +3419,26 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--cutoff={}".format(cutoff))
         args.append("--gain={}".format(gain))
         args.append("--num_tones={}".format(num_tones))
         return self.run_tool('SigmoidalContrastStretch', args, callback) # returns 1 if error
 
-    def standard_deviation_contrast_stretch(self, input, output, stdev=2.0, num_tones=256, callback=default_callback):
+    def standard_deviation_contrast_stretch(self, i, output, stdev=2.0, num_tones=256, callback=default_callback):
         """ Performs a standard-deviation contrast stretch on input images.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         stdev -- Standard deviation clip value. 
         num_tones -- Number of tones in the output image. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--stdev={}".format(stdev))
         args.append("--num_tones={}".format(num_tones))
@@ -3451,80 +3448,80 @@ callback -- Custom functon for handling tool text outputs.
     # LiDAR Tools #
     ###############
 
-    def block_maximum(self, input=None, output=None, resolution=1.0, callback=default_callback):
-        """ Creates a block-maximum raster from an input LAS file.
+    def block_maximum(self, i=None, output=None, resolution=1.0, callback=default_callback):
+        """ Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         resolution -- Output raster's grid resolution. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--resolution={}".format(resolution))
         return self.run_tool('BlockMaximum', args, callback) # returns 1 if error
 
-    def block_minimum(self, input=None, output=None, resolution=1.0, callback=default_callback):
-        """ Creates a block-minimum raster from an input LAS file.
+    def block_minimum(self, i=None, output=None, resolution=1.0, callback=default_callback):
+        """ Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         resolution -- Output raster's grid resolution. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--resolution={}".format(resolution))
         return self.run_tool('BlockMinimum', args, callback) # returns 1 if error
 
-    def filter_lidar_scan_angles(self, input, output, threshold, callback=default_callback):
+    def filter_lidar_scan_angles(self, i, output, threshold, callback=default_callback):
         """ Removes points in a LAS file with scan angles greater than a threshold.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         threshold -- Scan angle threshold. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--threshold='{}'".format(threshold))
         return self.run_tool('FilterLidarScanAngles', args, callback) # returns 1 if error
 
-    def find_flightline_edge_points(self, input, output, callback=default_callback):
+    def find_flightline_edge_points(self, i, output, callback=default_callback):
         """ Identifies points along a flightline's edge in a LAS file.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('FindFlightlineEdgePoints', args, callback) # returns 1 if error
 
-    def flightline_overlap(self, input=None, output=None, resolution=1.0, callback=default_callback):
+    def flightline_overlap(self, i=None, output=None, resolution=1.0, callback=default_callback):
         """ Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         resolution -- Output raster's grid resolution. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--resolution={}".format(resolution))
         return self.run_tool('FlightlineOverlap', args, callback) # returns 1 if error
@@ -3557,12 +3554,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('LidarColourize', args, callback) # returns 1 if error
 
-    def lidar_elevation_slice(self, input, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=default_callback):
+    def lidar_elevation_slice(self, i, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=default_callback):
         """ Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         minz -- Minimum elevation value (optional). 
         maxz -- Maximum elevation value (optional). 
@@ -3572,7 +3569,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if minz is not None: args.append("--minz='{}'".format(minz))
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
@@ -3581,12 +3578,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--outclassval={}".format(outclassval))
         return self.run_tool('LidarElevationSlice', args, callback) # returns 1 if error
 
-    def lidar_ground_point_filter(self, input, output, radius=2.0, slope_threshold=45.0, height_threshold=1.0, callback=default_callback):
+    def lidar_ground_point_filter(self, i, output, radius=2.0, slope_threshold=45.0, height_threshold=1.0, callback=default_callback):
         """ Identifies ground points within LiDAR dataset using a slope-based method.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
         slope_threshold -- Maximum inter-point slope to be considered an off-terrain point. 
@@ -3594,19 +3591,19 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         args.append("--slope_threshold={}".format(slope_threshold))
         args.append("--height_threshold={}".format(height_threshold))
         return self.run_tool('LidarGroundPointFilter', args, callback) # returns 1 if error
 
-    def lidar_hillshade(self, input, output, azimuth=315.0, altitude=30.0, radius=1.0, callback=default_callback):
+    def lidar_hillshade(self, i, output, azimuth=315.0, altitude=30.0, radius=1.0, callback=default_callback):
         """ Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         azimuth -- Illumination source azimuth in degrees. 
         altitude -- Illumination source altitude in degrees. 
@@ -3614,37 +3611,37 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--azimuth={}".format(azimuth))
         args.append("--altitude={}".format(altitude))
         args.append("--radius={}".format(radius))
         return self.run_tool('LidarHillshade', args, callback) # returns 1 if error
 
-    def lidar_histogram(self, input, output, parameter="elevation", clip=1.0, callback=default_callback):
+    def lidar_histogram(self, i, output, parameter="elevation", clip=1.0, callback=default_callback):
         """ Creates a histogram from LiDAR data.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
         parameter -- Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class. 
         clip -- Amount to clip distribution tails (in percent). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--parameter={}".format(parameter))
         args.append("--clip={}".format(clip))
         return self.run_tool('LidarHistogram', args, callback) # returns 1 if error
 
-    def lidar_idw_interpolation(self, input=None, output=None, parameter="elevation", returns="all", resolution=1.0, weight=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
-        """ Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
+    def lidar_idw_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, weight=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
+        """ Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file (including extension). 
+        i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
         parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
@@ -3657,7 +3654,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--parameter={}".format(parameter))
         args.append("--returns={}".format(returns))
@@ -3669,19 +3666,19 @@ callback -- Custom functon for handling tool text outputs.
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('LidarIdwInterpolation', args, callback) # returns 1 if error
 
-    def lidar_info(self, input, output=None, vlr=False, geokeys=False, callback=default_callback):
+    def lidar_info(self, i, output=None, vlr=False, geokeys=False, callback=default_callback):
         """ Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output HTML file for regression summary report. 
         vlr -- Flag indicating whether or not to print the variable length records (VLRs). 
         geokeys -- Flag indicating whether or not to print the geokeys. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         if vlr: args.append("--vlr")
         if geokeys: args.append("--geokeys")
@@ -3717,12 +3714,12 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('LidarKappaIndex', args, callback) # returns 1 if error
 
-    def lidar_nearest_neighbour_gridding(self, input=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
-        """ Grids LAS files using nearest-neighbour scheme.
+    def lidar_nearest_neighbour_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
+        """ Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file (including extension). 
+        i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
         parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
@@ -3734,7 +3731,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--parameter={}".format(parameter))
         args.append("--returns={}".format(returns))
@@ -3745,12 +3742,12 @@ callback -- Custom functon for handling tool text outputs.
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('LidarNearestNeighbourGridding', args, callback) # returns 1 if error
 
-    def lidar_point_density(self, input=None, output=None, returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
-        """ Calculates the spatial pattern of point density for a LiDAR data set.
+    def lidar_point_density(self, i=None, output=None, returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=default_callback):
+        """ Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file (including extension). 
+        i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
         resolution -- Output raster's grid resolution. 
@@ -3761,7 +3758,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--returns={}".format(returns))
         args.append("--resolution={}".format(resolution))
@@ -3771,12 +3768,12 @@ callback -- Custom functon for handling tool text outputs.
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('LidarPointDensity', args, callback) # returns 1 if error
 
-    def lidar_point_stats(self, input=None, resolution=1.0, num_points=False, num_pulses=False, z_range=False, intensity_range=False, predom_class=False, callback=default_callback):
-        """ Creates several rasters summarizing the distribution of LAS point data.
+    def lidar_point_stats(self, i=None, resolution=1.0, num_points=False, num_pulses=False, z_range=False, intensity_range=False, predom_class=False, callback=default_callback):
+        """ Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         resolution -- Output raster's grid resolution. 
         num_points -- Flag indicating whether or not to output the number of points raster. 
         num_pulses -- Flag indicating whether or not to output the number of pulses raster. 
@@ -3786,7 +3783,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        if input is not None: args.append("--input='{}'".format(input))
+        if i is not None: args.append("--input='{}'".format(i))
         args.append("--resolution={}".format(resolution))
         if num_points: args.append("--num_points")
         if num_pulses: args.append("--num_pulses")
@@ -3795,46 +3792,46 @@ callback -- Custom functon for handling tool text outputs.
         if predom_class: args.append("--predom_class")
         return self.run_tool('LidarPointStats', args, callback) # returns 1 if error
 
-    def lidar_remove_duplicates(self, input, output, include_z=False, callback=default_callback):
+    def lidar_remove_duplicates(self, i, output, include_z=False, callback=default_callback):
         """ Removes duplicate points from a LiDAR data set.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         include_z -- Include z-values in point comparison?. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if include_z: args.append("--include_z")
         return self.run_tool('LidarRemoveDuplicates', args, callback) # returns 1 if error
 
-    def lidar_remove_outliers(self, input, output, radius=2.0, elev_diff=50.0, callback=default_callback):
+    def lidar_remove_outliers(self, i, output, radius=2.0, elev_diff=50.0, callback=default_callback):
         """ Removes outliers (high and low points) in a LiDAR point cloud.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
         elev_diff -- Max. elevation difference. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         args.append("--elev_diff={}".format(elev_diff))
         return self.run_tool('LidarRemoveOutliers', args, callback) # returns 1 if error
 
-    def lidar_segmentation(self, input, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, callback=default_callback):
+    def lidar_segmentation(self, i, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, callback=default_callback):
         """ Segments a LiDAR point cloud based on normal vectors.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         radius -- Search Radius. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
@@ -3842,19 +3839,19 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--maxzdiff={}".format(maxzdiff))
         return self.run_tool('LidarSegmentation', args, callback) # returns 1 if error
 
-    def lidar_segmentation_based_filter(self, input, output, radius=5.0, norm_diff=2.0, maxzdiff=1.0, classify=False, callback=default_callback):
+    def lidar_segmentation_based_filter(self, i, output, radius=5.0, norm_diff=2.0, maxzdiff=1.0, classify=False, callback=default_callback):
         """ Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output file. 
         radius -- Search Radius. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
@@ -3863,7 +3860,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         args.append("--norm_diff={}".format(norm_diff))
@@ -3871,12 +3868,12 @@ callback -- Custom functon for handling tool text outputs.
         if classify: args.append("--classify")
         return self.run_tool('LidarSegmentationBasedFilter', args, callback) # returns 1 if error
 
-    def lidar_tile(self, input, width_x=1000.0, width_y=1000.0, origin_x=0.0, origin_y=0.0, min_points=0, callback=default_callback):
+    def lidar_tile(self, i, width_x=1000.0, width_y=1000.0, origin_x=0.0, origin_y=0.0, min_points=0, callback=default_callback):
         """ Tiles a LiDAR LAS file into multiple LAS files.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         width_x -- Width of tiles in the X dimension; default 1000.0. 
         width_y -- Width of tiles in the Y dimension. 
         origin_x -- Origin point X coordinate for tile grid. 
@@ -3885,7 +3882,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--width_x={}".format(width_x))
         args.append("--width_y={}".format(width_y))
         args.append("--origin_x={}".format(origin_x))
@@ -3893,34 +3890,34 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--min_points={}".format(min_points))
         return self.run_tool('LidarTile', args, callback) # returns 1 if error
 
-    def lidar_tophat_transform(self, input, output, radius=1.0, callback=default_callback):
+    def lidar_tophat_transform(self, i, output, radius=1.0, callback=default_callback):
         """ Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         return self.run_tool('LidarTophatTransform', args, callback) # returns 1 if error
 
-    def normal_vectors(self, input, output, radius=1.0, callback=default_callback):
+    def normal_vectors(self, i, output, radius=1.0, callback=default_callback):
         """ Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
         Keyword arguments:
 
-        input -- Input LiDAR file. 
+        i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         return self.run_tool('NormalVectors', args, callback) # returns 1 if error
@@ -3929,17 +3926,17 @@ callback -- Custom functon for handling tool text outputs.
     # Math and Stats Tools #
     ########################
 
-    def absolute_value(self, input, output, callback=default_callback):
+    def absolute_value(self, i, output, callback=default_callback):
         """ Calculates the absolute value of every cell in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('AbsoluteValue', args, callback) # returns 1 if error
 
@@ -3975,61 +3972,61 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('And', args, callback) # returns 1 if error
 
-    def anova(self, input, features, output, callback=default_callback):
+    def anova(self, i, features, output, callback=default_callback):
         """ Performs an analysis of variance (ANOVA) test on a raster dataset.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         features -- Feature definition (or class) raster. 
         output -- Output HTML file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--features='{}'".format(features))
         args.append("--output='{}'".format(output))
         return self.run_tool('Anova', args, callback) # returns 1 if error
 
-    def arc_cos(self, input, output, callback=default_callback):
+    def arc_cos(self, i, output, callback=default_callback):
         """ Returns the inverse cosine (arccos) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ArcCos', args, callback) # returns 1 if error
 
-    def arc_sin(self, input, output, callback=default_callback):
+    def arc_sin(self, i, output, callback=default_callback):
         """ Returns the inverse sine (arcsin) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ArcSin', args, callback) # returns 1 if error
 
-    def arc_tan(self, input, output, callback=default_callback):
+    def arc_tan(self, i, output, callback=default_callback):
         """ Returns the inverse tangent (arctan) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ArcTan', args, callback) # returns 1 if error
 
@@ -4049,59 +4046,59 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Atan2', args, callback) # returns 1 if error
 
-    def ceil(self, input, output, callback=default_callback):
+    def ceil(self, i, output, callback=default_callback):
         """ Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Ceil', args, callback) # returns 1 if error
 
-    def cos(self, input, output, callback=default_callback):
+    def cos(self, i, output, callback=default_callback):
         """ Returns the cosine (cos) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Cos', args, callback) # returns 1 if error
 
-    def cosh(self, input, output, callback=default_callback):
+    def cosh(self, i, output, callback=default_callback):
         """ Returns the hyperbolic cosine (cosh) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Cosh', args, callback) # returns 1 if error
 
-    def crispness_index(self, input, output=None, callback=default_callback):
+    def crispness_index(self, i, output=None, callback=default_callback):
         """ Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Optional output html file (default name will be based on input file if unspecified). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         return self.run_tool('CrispnessIndex', args, callback) # returns 1 if error
 
@@ -4121,31 +4118,31 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('CrossTabulation', args, callback) # returns 1 if error
 
-    def cumulative_distribution(self, input, output, callback=default_callback):
+    def cumulative_distribution(self, i, output, callback=default_callback):
         """ Converts a raster image to its cumulative distribution function.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('CumulativeDistribution', args, callback) # returns 1 if error
 
-    def decrement(self, input, output, callback=default_callback):
+    def decrement(self, i, output, callback=default_callback):
         """ Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Decrement', args, callback) # returns 1 if error
 
@@ -4181,40 +4178,40 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('EqualTo', args, callback) # returns 1 if error
 
-    def exp(self, input, output, callback=default_callback):
+    def exp(self, i, output, callback=default_callback):
         """ Returns the exponential (base e) of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Exp', args, callback) # returns 1 if error
 
-    def exp2(self, input, output, callback=default_callback):
+    def exp2(self, i, output, callback=default_callback):
         """ Returns the exponential (base 2) of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Exp2', args, callback) # returns 1 if error
 
-    def extract_raster_statistics(self, input, features, output=None, stat="average", out_table=None, callback=default_callback):
+    def extract_raster_statistics(self, i, features, output=None, stat="average", out_table=None, callback=default_callback):
         """ Extracts descriptive statistics for a group of patches in a raster.
 
         Keyword arguments:
 
-        input -- Input data raster file. 
+        i -- Input data raster file. 
         features -- Input feature definition raster file. 
         output -- Output raster file. 
         stat -- Statistic to extract. 
@@ -4222,24 +4219,24 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--features='{}'".format(features))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--stat={}".format(stat))
         if out_table is not None: args.append("--out_table='{}'".format(out_table))
         return self.run_tool('ExtractRasterStatistics', args, callback) # returns 1 if error
 
-    def floor(self, input, output, callback=default_callback):
+    def floor(self, i, output, callback=default_callback):
         """ Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Floor', args, callback) # returns 1 if error
 
@@ -4367,17 +4364,17 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--input2='{}'".format(input2))
         return self.run_tool('InPlaceSubtract', args, callback) # returns 1 if error
 
-    def increment(self, input, output, callback=default_callback):
+    def increment(self, i, output, callback=default_callback):
         """ Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd).
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Increment', args, callback) # returns 1 if error
 
@@ -4397,32 +4394,32 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('IntegerDivision', args, callback) # returns 1 if error
 
-    def is_no_data(self, input, output, callback=default_callback):
+    def is_no_data(self, i, output, callback=default_callback):
         """ Identifies NoData valued pixels in an image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('IsNoData', args, callback) # returns 1 if error
 
-    def ks_test_for_normality(self, input, output, num_samples=None, callback=default_callback):
+    def ks_test_for_normality(self, i, output, num_samples=None, callback=default_callback):
         """ Evaluates whether the values in a raster are normally distributed.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output HTML file. 
         num_samples -- Number of samples. Leave blank to use whole image. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if num_samples is not None: args.append("--num_samples='{}'".format(num_samples))
         return self.run_tool('KSTestForNormality', args, callback) # returns 1 if error
@@ -4461,45 +4458,45 @@ callback -- Custom functon for handling tool text outputs.
         if incl_equals: args.append("--incl_equals")
         return self.run_tool('LessThan', args, callback) # returns 1 if error
 
-    def ln(self, input, output, callback=default_callback):
+    def ln(self, i, output, callback=default_callback):
         """ Returns the natural logarithm of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Ln', args, callback) # returns 1 if error
 
-    def log10(self, input, output, callback=default_callback):
+    def log10(self, i, output, callback=default_callback):
         """ Returns the base-10 logarithm of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Log10', args, callback) # returns 1 if error
 
-    def log2(self, input, output, callback=default_callback):
+    def log2(self, i, output, callback=default_callback):
         """ Returns the base-2 logarithm of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Log2', args, callback) # returns 1 if error
 
@@ -4567,17 +4564,17 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Multiply', args, callback) # returns 1 if error
 
-    def negate(self, input, output, callback=default_callback):
+    def negate(self, i, output, callback=default_callback):
         """ Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Negate', args, callback) # returns 1 if error
 
@@ -4645,18 +4642,18 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Power', args, callback) # returns 1 if error
 
-    def quantiles(self, input, output, num_quantiles=4, callback=default_callback):
+    def quantiles(self, i, output, num_quantiles=4, callback=default_callback):
         """ Transforms raster values into quantiles.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         num_quantiles -- Number of quantiles. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--num_quantiles={}".format(num_quantiles))
         return self.run_tool('Quantiles', args, callback) # returns 1 if error
@@ -4691,52 +4688,52 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--num_samples={}".format(num_samples))
         return self.run_tool('RandomSample', args, callback) # returns 1 if error
 
-    def raster_histogram(self, input, output, callback=default_callback):
+    def raster_histogram(self, i, output, callback=default_callback):
         """ Creates a histogram from raster values.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('RasterHistogram', args, callback) # returns 1 if error
 
-    def raster_summary_stats(self, input, callback=default_callback):
+    def raster_summary_stats(self, i, callback=default_callback):
         """ Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
 callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         return self.run_tool('RasterSummaryStats', args, callback) # returns 1 if error
 
-    def reciprocal(self, input, output, callback=default_callback):
+    def reciprocal(self, i, output, callback=default_callback):
         """ Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Reciprocal', args, callback) # returns 1 if error
 
-    def rescale_value_range(self, input, output, out_min_val, out_max_val, clip_min=None, clip_max=None, callback=default_callback):
+    def rescale_value_range(self, i, output, out_min_val, out_max_val, clip_min=None, clip_max=None, callback=default_callback):
         """ Performs a min-max contrast stretch on an input greytone image.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         out_min_val -- New minimum value in output image. 
         out_max_val -- New maximum value in output image. 
@@ -4745,7 +4742,7 @@ callback -- Custom functon for handling tool text outputs.
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--out_min_val='{}'".format(out_min_val))
         args.append("--out_max_val='{}'".format(out_max_val))
@@ -4753,87 +4750,87 @@ callback -- Custom functon for handling tool text outputs.
         if clip_max is not None: args.append("--clip_max='{}'".format(clip_max))
         return self.run_tool('RescaleValueRange', args, callback) # returns 1 if error
 
-    def root_mean_square_error(self, input, base, callback=default_callback):
+    def root_mean_square_error(self, i, base, callback=default_callback):
         """ Calculates the RMSE and other accuracy statistics.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         base -- Input base raster file used for comparison. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--base='{}'".format(base))
         return self.run_tool('RootMeanSquareError', args, callback) # returns 1 if error
 
-    def round(self, input, output, callback=default_callback):
+    def round(self, i, output, callback=default_callback):
         """ Rounds the values in an input raster to the nearest integer value.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Round', args, callback) # returns 1 if error
 
-    def sin(self, input, output, callback=default_callback):
+    def sin(self, i, output, callback=default_callback):
         """ Returns the sine (sin) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Sin', args, callback) # returns 1 if error
 
-    def sinh(self, input, output, callback=default_callback):
+    def sinh(self, i, output, callback=default_callback):
         """ Returns the hyperbolic sine (sinh) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Sinh', args, callback) # returns 1 if error
 
-    def square(self, input, output, callback=default_callback):
+    def square(self, i, output, callback=default_callback):
         """ Squares the values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Square', args, callback) # returns 1 if error
 
-    def square_root(self, input, output, callback=default_callback):
+    def square_root(self, i, output, callback=default_callback):
         """ Returns the square root of the values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('SquareRoot', args, callback) # returns 1 if error
 
@@ -4853,74 +4850,74 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Subtract', args, callback) # returns 1 if error
 
-    def tan(self, input, output, callback=default_callback):
+    def tan(self, i, output, callback=default_callback):
         """ Returns the tangent (tan) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Tan', args, callback) # returns 1 if error
 
-    def tanh(self, input, output, callback=default_callback):
+    def tanh(self, i, output, callback=default_callback):
         """ Returns the hyperbolic tangent (tanh) of each values in a raster.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('Tanh', args, callback) # returns 1 if error
 
-    def to_degrees(self, input, output, callback=default_callback):
+    def to_degrees(self, i, output, callback=default_callback):
         """ Converts a raster from radians to degrees.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ToDegrees', args, callback) # returns 1 if error
 
-    def to_radians(self, input, output, callback=default_callback):
+    def to_radians(self, i, output, callback=default_callback):
         """ Converts a raster from degrees to radians.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ToRadians', args, callback) # returns 1 if error
 
-    def truncate(self, input, output, num_decimals=None, callback=default_callback):
+    def truncate(self, i, output, num_decimals=None, callback=default_callback):
         """ Truncates the values in a raster to the desired number of decimal places.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         num_decimals -- Number of decimals left after truncation (default is zero). 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if num_decimals is not None: args.append("--num_decimals='{}'".format(num_decimals))
         return self.run_tool('Truncate', args, callback) # returns 1 if error
@@ -4959,17 +4956,17 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Xor', args, callback) # returns 1 if error
 
-    def z_scores(self, input, output, callback=default_callback):
+    def z_scores(self, i, output, callback=default_callback):
         """ Standardizes the values in an input raster by converting to z-scores.
 
         Keyword arguments:
 
-        input -- Input raster file. 
+        i -- Input raster file. 
         output -- Output raster file. 
         callback -- Custom functon for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(input))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ZScores', args, callback) # returns 1 if error
 

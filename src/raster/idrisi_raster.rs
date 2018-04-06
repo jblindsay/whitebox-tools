@@ -49,10 +49,10 @@ pub fn read_idrisi(file_name: &String,
             configs.west = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("columns") &&
                   !vec[0].to_lowercase().contains("lineage") {
-            configs.columns = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("rows") &&
                   !vec[0].to_lowercase().contains("lineage") {
-            configs.rows = vec[1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("data type") &&
                   !vec[0].to_lowercase().contains("lineage") {
             if vec[1]

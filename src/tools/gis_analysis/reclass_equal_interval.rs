@@ -30,7 +30,7 @@ impl ReclassEqualInterval {
     /// public constructor
     pub fn new() -> ReclassEqualInterval { 
         let name = "ReclassEqualInterval".to_string();
-        let toolbox = "GIS Analysis/Reclass Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Reclassifies the values in a raster image based on equal-ranges.".to_string();
         
         let mut parameters = vec![];

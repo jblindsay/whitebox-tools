@@ -127,6 +127,8 @@ for t in tools.split("\n"):
             flag = p['flags'][len(p['flags']) - 1].replace('-', '')
             if flag == "class":
                 flag = "cls"
+            if flag == "input":
+                flag = "i"
 
             pt = p['parameter_type']
             if 'Boolean' in pt:
@@ -192,12 +194,13 @@ for t in tools.split("\n"):
 {}
 
 *Python function*:
-```Python
+
+~~~~{{.python}}
 {}
+~~~~
 
-
-```
 *Command-line Interface*:
+
 ```
 {}
 

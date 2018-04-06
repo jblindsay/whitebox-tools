@@ -68,6 +68,8 @@ for t in tools.split("\n"):
             flag = p['flags'][len(p['flags']) - 1].replace('-', '')
             if flag == "class":
                 flag = "cls"
+            if flag == "input":
+                flag = "i"
 
             doc_str += "{}{} -- {}. \n".format(st_val,
                                                flag, p['description'].rstrip('.'))

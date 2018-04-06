@@ -183,9 +183,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 }
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
-                    filter_size = vec[1].to_string().parse::<usize>().unwrap();
+                    filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    filter_size = args[i+1].to_string().parse::<usize>().unwrap();
+                    filter_size = args[i+1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if vec[0].to_lowercase() == "-norm_diff" || vec[0].to_lowercase() == "--norm_diff" {
                 if keyval {
@@ -195,9 +195,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 }
             } else if vec[0].to_lowercase() == "-num_iter" || vec[0].to_lowercase() == "--num_iter" {
                 if keyval {
-                    num_iter = vec[1].to_string().parse::<usize>().unwrap();
+                    num_iter = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    num_iter = args[i+1].to_string().parse::<usize>().unwrap();
+                    num_iter = args[i+1].to_string().parse::<f32>().unwrap() as usize;
                 }
             } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
                 if keyval {

@@ -42,7 +42,7 @@ pub struct RadiusOfGyration {
 impl RadiusOfGyration {
     pub fn new() -> RadiusOfGyration { // public constructor
         let name = "RadiusOfGyration".to_string();
-        let toolbox = "GIS Analysis".to_string();
+        let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
         let description = "Calculates the distance of cells from their polygon's centroid.".to_string();
         
         let mut parameters = vec![];

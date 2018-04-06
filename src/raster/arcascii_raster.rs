@@ -25,9 +25,9 @@ pub fn read_arcascii(file_name: &String, configs: &mut RasterConfigs, data: &mut
             vec = line_split.collect::<Vec<&str>>();
         }
         if vec[0].to_lowercase().contains("nrows") {
-            configs.rows = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
+            configs.rows = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("ncols") {
-            configs.columns = vec[vec.len()-1].trim().to_string().parse::<usize>().unwrap();
+            configs.columns = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("xllcorner") {
             xllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("yllcorner") {

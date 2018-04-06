@@ -149,9 +149,9 @@ impl WhiteboxTool for RemoveSpurs {
                 }
             } else if vec[0].to_lowercase() == "-iterations" || vec[0].to_lowercase() == "--iterations" {
                 if keyval {
-                    max_iterations = vec[1].to_string().parse::<usize>().unwrap();
+                    max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    max_iterations = args[i + 1].to_string().parse::<usize>().unwrap();
+                    max_iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }
