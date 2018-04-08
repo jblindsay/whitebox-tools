@@ -36,7 +36,7 @@ pub struct PrincipalComponentAnalysis {
 impl PrincipalComponentAnalysis {
     pub fn new() -> PrincipalComponentAnalysis { // public constructor
         let name = "PrincipalComponentAnalysis".to_string();
-        let toolbox = "Image Processing Tools".to_string();
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs a principal component analysis (PCA) on a multi-spectral dataset.".to_string();
         
         let mut parameters = vec![];
@@ -157,9 +157,9 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 };
             } else if flag_val == "-num_comp" {
                 num_comp = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<f64>().unwrap() as usize
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
                 };
             } else if flag_val == "-standardized" {
                 standardized = true;

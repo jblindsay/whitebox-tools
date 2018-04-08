@@ -56,7 +56,21 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.5.0 (DD-MM-YYYY)
+Version 0.6.0 (DD--MM-YYYY)
+- The following tools have been added:
+  VisibilityIndex
+  
+- Modified tools with integer parameter inputs to parse strings 
+  representations of floating point numbers. Previously, feeding
+  a tool 'filter_size=3.0' would cause a fatal error.
+- Changed Raster so that when a filename with no extension is provided
+  as a parameter input to a tool, it defaults to a GeoTIFF.
+- Added a new section to the User Manual titled, 'An Example WhiteboxTools 
+  Python Project'. This addition provides a demonstration of how to
+  set-up a WhiteboxTools Python project, including the file structure
+  needed to import the library.
+
+Version 0.5.0 (04-04-2018)
 
 - The following tools have been added:
     EdgePreservingMeanFilter

@@ -1,10 +1,10 @@
 
 [package]
 name = "whitebox_tools"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 description = "A library for analyzing geospatial data."
-keywords = ["geospatial", "GIS", "geomatics", "lidar", "spatial analysis"]
+keywords = ["geospatial", "GIS", "remote sensing", "geomatics", "image processing", "lidar", "spatial analysis"]
 readme = "README.md"
 repository = "https://github.com/jblindsay/whitebox-geospatial-analysis-tools/whitebox_tools/"
 license = "MIT"

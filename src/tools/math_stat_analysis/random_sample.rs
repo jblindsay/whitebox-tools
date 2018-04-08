@@ -163,9 +163,9 @@ impl WhiteboxTool for RandomSample {
                 };
             } else if flag_val == "-num_samples" {
                 num_samples = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<f64>().unwrap() as usize
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
                 };
             }
         }

@@ -8,15 +8,13 @@ License: MIT
 Help: This tool can be used to calculate the viewshed (i.e. the visible area) from a 
 location (i.e. viewing station) or group of locations based on the topography defined 
 by an input digital elevation model (DEM). The user must specify the name of the input 
-DEM, a viewing station input raster file, the output file name, and the viewing height. 
-Viewing station locations will be inferred from all non-zero, non-NoData grid cells in
-the viewing station raster. The output image will be a Boolean raster, containing 1's 
-and 0's, where 1's imply that the grid cell is visible from at least one viewing station. 
-The viewing height is in the same units as the elevations of the DEM and represent a 
-height above the ground elevation from which the viewshed is calculated. Viewshed 
-analysis is a very computationally intensive task. Depending on the size of the input 
-DEM grid and the number of viewing stations, this operation may take considerable time 
-to complete.
+DEM, a viewing station input vector file, the output file name, and the viewing height. 
+Viewing station locations are specified as points within an input shapefile. The output 
+image indicates the number of stations visible from each grid cell. The viewing height 
+is in the same units as the elevations of the DEM and represent a height above the ground 
+elevation from which the viewshed is calculated. Viewshed analysis is a very 
+computationally intensive task. Depending on the size of the input DEM grid and the 
+number of viewing stations, this operation may take considerable time to complete.
 */
 
 use time;
@@ -171,11 +169,11 @@ impl WhiteboxTool for Viewshed {
                     args[i+1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
+                    args[i+1].to_string()
+                };
             } else if flag_val == "-height" {
                 height = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
