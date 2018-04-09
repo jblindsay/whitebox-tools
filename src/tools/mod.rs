@@ -868,7 +868,7 @@ impl ToolManager {
     }
 
     pub fn get_tool_source_code(&self, tool_name: String) -> Result<(), Error> {
-        let repo = String::from("https://github.com/jblindsay/whitebox-geospatial-analysis-tools/blob/master/whitebox_tools/");
+        let repo = String::from("https://github.com/jblindsay/whitebox-tools/");
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => println!("{}{}", repo, tool.get_source_file()),
             None => {
