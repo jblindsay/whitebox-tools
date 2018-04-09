@@ -389,7 +389,7 @@ impl Raster {
     }
 
     pub fn set_data_from_raster(&mut self, other: &Raster) -> Result<(), Error> {
-        if self.configs.rows != other.configs.rows || self.configs.columns != self.configs.columns {
+        if self.configs.rows != other.configs.rows || self.configs.columns != other.configs.columns {
             return Err(Error::new(ErrorKind::Other,
                                   "Rasters must have the same dimensions and extent."));
         }

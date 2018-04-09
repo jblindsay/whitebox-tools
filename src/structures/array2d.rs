@@ -83,6 +83,15 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
         values
     }
 
+    pub fn set_data_from_other(&mut self, other: &Array2D<T>) -> Result<(), Error> {
+        if self.rows != other.rows || self.columns != other.columns {
+            return Err(Error::new(ErrorKind::Other,
+                                  "Rasters must have the same dimensions and extent."));
+        }
+        self.data = other.data.clone();
+        Ok(())
+    }
+
     pub fn columns(&self) -> isize { self.columns }
     pub fn rows(&self) -> isize { self.rows }
     pub fn nodata(&self) -> T { self.nodata }

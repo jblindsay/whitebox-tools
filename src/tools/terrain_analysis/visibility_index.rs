@@ -21,7 +21,8 @@ resolution factor. A resolution factor of 2 will skip every second row and every
 value decreases the number of calculated viewshed but will result in a lower accuracy estimate
 of overall visibility. In addition to the high computational costs of this index, the tool
 also requires substantial memory resources to operate. Each of these limitations should be
-considered before running this tool on a particular data set.
+considered before running this tool on a particular data set. This tool is best to apply
+on systems with high core-counts and plenty of memory.
 */
 
 use time;
@@ -29,7 +30,7 @@ use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
@@ -146,7 +147,7 @@ impl WhiteboxTool for VisibilityIndex {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut height = 2.0;
+        let mut height = 2f32;
         let mut res_factor = 2isize;
          
         if args.len() == 0 {
@@ -176,9 +177,9 @@ impl WhiteboxTool for VisibilityIndex {
                 };
             } else if flag_val == "-height" {
                 height = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f32>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i+1].to_string().parse::<f32>().unwrap()
                 };
             } else if flag_val == "-res_factor" {
                 res_factor = if keyval {
@@ -214,9 +215,9 @@ impl WhiteboxTool for VisibilityIndex {
         
         let start = time::now();
 
-        if height < 0f64 {
+        if height < 0f32 {
             println!("Warning: Input station height cannot be less than zero.");
-            height = 0f64;
+            height = 0f32;
         }
 
         if res_factor < 1 {
@@ -232,44 +233,63 @@ impl WhiteboxTool for VisibilityIndex {
 
         if verbose { println!("Performing analysis. Please be patient...") };
 
+        let num_cells_tested = (rows as f64 / res_factor as f64).ceil() * (columns as f64 / res_factor as f64).ceil();
+        let target_cells_count = (num_cells_tested / 100f64) as usize;
+        let num_cells_completed = Arc::new(Mutex::new(0));
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let dem = dem.clone();
+            let num_cells_completed = num_cells_completed.clone();
             let tx = tx.clone();
             thread::spawn(move || {
+                let mut return_data: Array2D<usize> = Array2D::new(rows, columns, 0usize, 0usize).unwrap();
+                let mut view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
+                let mut max_view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
+                
+                let mut row_y_values = vec![0f32; rows as usize];
+                let mut col_x_values = vec![0f32; columns as usize];
+                for row in 0..rows {
+                    row_y_values[row as usize] = dem.get_y_from_row(row) as f32;
+                }
+                for col in 0..columns {
+                    col_x_values[col as usize] = dem.get_x_from_column(col) as f32;
+                }
+
+                let mut stn_x: f32;
+                let mut stn_y: f32;
+                let mut stn_z: f32;
+                let (mut x, mut y): (f32, f32);
+                let mut dz: f32;
+                let mut dist: f32;
+                let mut z: f32;
+                let mut tva: f32;
+                let mut va: f32;
+                let mut t1: f32;
+                let mut t2: f32;
+                let mut vert_count: f32;
+                let mut horiz_count: f32;
+                let mut max_va: f32;
+                let mut cells_completed_by_thread = 0usize;
                 for stn_row in (0..rows).filter(|r| (r % res_factor == 0) && ((r / res_factor) % num_procs == tid)) {
                     for stn_col in (0..columns).filter(|c| c % res_factor == 0) {
-                        let mut view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
-                        
-                        let mut stn_x = dem.get_x_from_column(stn_col);
-                        let mut stn_y = dem.get_y_from_row(stn_row);
-                        let mut stn_z = dem.get_value(stn_row, stn_col) + height;
+                        stn_x = col_x_values[stn_col as usize];
+                        stn_y = row_y_values[stn_row as usize];
+                        stn_z = dem.get_value(stn_row, stn_col) as f32 + height;
 
                         // now calculate the view angle
-                        let (mut x, mut y): (f64, f64);
-                        let mut z: f64;
-                        let mut dz: f64;
-                        let mut dist: f64;
                         for row in 0..rows {
                             for col in 0..columns {
-                                z = dem.get_value(row, col);
-                                if z != nodata {
-                                    x = dem.get_x_from_column(col);
-                                    y = dem.get_y_from_row(row);
-                                    dz = z - stn_z;
-                                    dist = ((x - stn_x) * (x - stn_x) + (y - stn_y) * (y - stn_y)).sqrt();
-                                    if dist != 0.0 {
-                                        view_angle.set_value(row, col, (dz / dist * 1000f64) as f32);
-                                    } else {
-                                        view_angle.set_value(row, col, 0f32);
-                                    }
+                                x = col_x_values[col as usize];
+                                y = row_y_values[row as usize];
+                                dz = dem.get_value(row, col) as f32 - stn_z;
+                                dist = ((x - stn_x) * (x - stn_x) + (y - stn_y) * (y - stn_y)).sqrt();
+                                if dist != 0.0 {
+                                    view_angle.set_value(row, col, dz / dist * 1000f32);
+                                } else {
+                                    view_angle.set_value(row, col, 0f32);
                                 }
                             }
                         }
-
-                        let mut max_view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
-
-                        let mut z: f32;
 
                         // perform the simple scan lines.
                         for row in stn_row-1..stn_row+2 {
@@ -278,11 +298,12 @@ impl WhiteboxTool for VisibilityIndex {
                             }
                         }
 
-                        let mut max_va = view_angle.get_value(stn_row - 1, stn_col);
+                        max_va = view_angle.get_value(stn_row - 1, stn_col);
                         for row in (0..stn_row-1).rev() {
                             z = view_angle.get_value(row, stn_col);
                             if z > max_va {
                                 max_va = z;
+                                return_data.increment(row, stn_col, 1usize);
                             }
                             max_view_angle.set_value(row, stn_col, max_va);
                         }
@@ -292,6 +313,7 @@ impl WhiteboxTool for VisibilityIndex {
                             z = view_angle.get_value(row, stn_col);
                             if z > max_va {
                                 max_va = z;
+                                return_data.increment(row, stn_col, 1usize);
                             }
                             max_view_angle.set_value(row, stn_col, max_va);
                         }
@@ -301,6 +323,7 @@ impl WhiteboxTool for VisibilityIndex {
                             z = view_angle.get_value(stn_row, col);
                             if z > max_va {
                                 max_va = z;
+                                return_data.increment(stn_row, col, 1usize);
                             }
                             max_view_angle.set_value(stn_row, col, max_va);
                         }
@@ -310,17 +333,13 @@ impl WhiteboxTool for VisibilityIndex {
                             z = view_angle.get_value(stn_row, col);
                             if z > max_va {
                                 max_va = z;
+                                return_data.increment(stn_row, col, 1usize);
                             }
                             max_view_angle.set_value(stn_row, col, max_va);
                         }
 
                         //solve the first triangular facet
-                        let mut tva: f32;
-                        let mut va: f32;
-                        let mut t1: f32;
-                        let mut t2: f32;
-                        let mut vert_count = 1f32;
-                        let mut horiz_count: f32;
+                        vert_count = 1f32;
                         for row in (0..stn_row-1).rev() {
                             vert_count += 1f32;
                             horiz_count = 0f32;
@@ -339,6 +358,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -366,6 +386,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -393,6 +414,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -420,6 +442,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -447,6 +470,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -474,6 +498,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -501,6 +526,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -528,6 +554,7 @@ impl WhiteboxTool for VisibilityIndex {
                                         max_view_angle.set_value(row, col, tva);
                                     } else {
                                         max_view_angle.set_value(row, col, va);
+                                        return_data.increment(row, col, 1usize);
                                     }
                                 } else {
                                     break;
@@ -535,48 +562,43 @@ impl WhiteboxTool for VisibilityIndex {
                             }
                         }
 
-                        let mut return_data: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
-                        
-                        let mut value: f32;
-                        for row in 0..rows {
-                            for col in 0..columns {
-                                if dem.get_value(row, col) != nodata {
-                                    value = if max_view_angle.get_value(row, col) > view_angle.get_value(row, col) {
-                                        0f32
-                                    } else {
-                                        1f32
-                                    };
-                                    return_data.set_value(row, col, value);
-                                }
+                        cells_completed_by_thread += 1usize;
+                        if cells_completed_by_thread == target_cells_count {
+                            let mut num_cells_completed = num_cells_completed.lock().unwrap();
+                            *num_cells_completed += cells_completed_by_thread;
+                            cells_completed_by_thread = 0;
+                            if verbose {
+                                let progress = (100.0_f64 * *num_cells_completed as f64 / (num_cells_tested - 1f64)) as usize;
+                                println!("Progress (Loop 1 of 2): {}%", progress);
                             }
                         }
-                        tx.send(return_data).unwrap();
                     }
                 }
+                let mut num_cells_completed = num_cells_completed.lock().unwrap();
+                *num_cells_completed += cells_completed_by_thread;
+                if verbose {
+                    let progress = (100.0_f64 * *num_cells_completed as f64 / (num_cells_tested - 1f64)) as usize;
+                    println!("Progress (Loop 1 of 2): {}%", progress);
+                }
+                tx.send(return_data).unwrap();
             });
         }
-        
-        let mut output = Raster::initialize_using_file(&output_file, &dem);
 
-        let num_cells_tested = (rows as f64 / res_factor as f64).ceil() * (columns as f64 / res_factor as f64).ceil();
-        for cell in 0..num_cells_tested as usize {
+        let mut output = Raster::initialize_using_file(&output_file, &dem);
+        let mut z: f64;
+        for _p in 0..num_procs {
             let data = rx.recv().unwrap();
             for row in 0..rows {
                 for col in 0..columns {
-                    output.increment(row, col, data.get_value(row, col).into());
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * cell as f64 / (num_cells_tested - 1f64)) as usize;
-                if progress != old_progress {
-                    println!("Progress (Loop 1 of 2): {}%", progress);
-                    old_progress = progress;
+                    if dem.get_value(row, col) != nodata {
+                        z = data.get_value(row, col) as f64;
+                        output.increment(row, col, z);
+                    }
                 }
             }
         }
 
-        let mut z: f64;
-        for row in 0..rows {
+       for row in 0..rows {
             for col in 0..columns {
                 if dem.get_value(row, col) != nodata {
                     z = output.get_value(row, col);

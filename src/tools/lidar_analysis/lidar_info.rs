@@ -62,7 +62,7 @@ impl LidarInfo {
         parameters.push(ToolParameter{
             name: "Output Summary Report File".to_owned(), 
             flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file for regression summary report.".to_owned(),
+            description: "Output HTML file for summary report.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
             optional: true
