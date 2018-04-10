@@ -161,8 +161,9 @@ impl WhiteboxTool for AverageOverlay {
         let start = time::now();
 
         // We need to initialize output and n here, but in reality this can't be done
-        // until we know the size of rows and columns, which occurs during the first loop.
+        // until we know the size of rows and columns, which occurs during the first loop.   
         let mut output: Raster = Raster::new(&output_file, "w")?;
+
         let mut n: Array2D<i16> = Array2D::new(0, 0, 0i16, i16::MIN)?; // use i16::MIN as the nodata value
         let mut rows = 0isize;
         let mut columns = 0isize;

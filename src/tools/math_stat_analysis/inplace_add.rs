@@ -166,7 +166,7 @@ impl WhiteboxTool for InPlaceAdd {
         }
 
         if verbose { println!("Reading data...") };
-        let mut in1 = Raster::new(&input1, "w")?;
+        let mut in1 = Raster::new(&input1, "rw")?;
         
         let mut start = time::now();
         

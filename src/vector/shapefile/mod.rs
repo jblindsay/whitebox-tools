@@ -2,11 +2,16 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: July 17, 2017
+Last Modified: 10/04/2018
 License: MIT
+
+Notes: The logic behind working with the ESRI Shapefile format.
 */
+pub mod attributes;
+
+pub use self::attributes::{AttributeField, AttributeHeader, ShapefileAttributes};
 use std::io::prelude::*;
-use std::io::{Error, ErrorKind};
+use std::io::{BufReader, Error, ErrorKind};
 use std::fs;
 use std::fs::File;
 use std::fmt;
@@ -72,6 +77,8 @@ pub struct Shapefile {
     pub header: ShapefileHeader,
     pub num_records: usize,
     pub records: Vec<ShapefileGeometry>,
+    pub attributes: ShapefileAttributes,
+    pub projection: String,
 }
 
 impl Shapefile {
@@ -98,6 +105,10 @@ impl Shapefile {
     }
 
     fn read(&mut self) -> Result<(), Error>  {
+        ///////////////////////////////
+        // First read the geometries //
+        ///////////////////////////////
+
         // read the header
         let mut f = File::open(self.file_name.clone()).unwrap(); //?;
         let metadata = fs::metadata(self.file_name.clone()).unwrap(); //?;
@@ -361,6 +372,18 @@ impl Shapefile {
         }
 
         self.num_records = self.records.len();
+
+        //////////////////////////////
+        // Read the projection file //
+        //////////////////////////////
+        let prj_file = self.file_name.replace(".shp", ".prj");
+        let f = File::open(prj_file)?;
+        let f = BufReader::new(f);
+
+        for line in f.lines() {
+            let line_unwrapped = line.unwrap();
+            self.projection.push_str(&line_unwrapped);
+        }
 
         Ok(())
     }

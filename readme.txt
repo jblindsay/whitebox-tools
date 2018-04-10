@@ -56,10 +56,14 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.6.0 (DD--MM-YYYY)
+Version 0.5.1 (DD--MM-YYYY)
 - The following tools have been added:
   VisibilityIndex
   
+- Fixed a far-reaching bug caused by change to Raster. The change was 
+  needed for the in-place operator tools added in the last update. This
+  change however affected the proper running of several other tools
+  in the library. 
 - Modified tools with integer parameter inputs to parse strings 
   representations of floating point numbers. Previously, feeding
   a tool 'filter_size=3.0' would cause a fatal error.

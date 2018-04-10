@@ -46,7 +46,7 @@ use structures::Array2D;
 #[derive(Default, Clone)]
 pub struct Raster {
     pub file_name: String,
-    file_mode: String,
+    pub file_mode: String,
     pub raster_type: RasterType,
     pub configs: RasterConfigs,
     data: Vec<f64>,
@@ -112,7 +112,7 @@ impl Raster {
             raster_type: get_raster_type_from_file(file_name.to_string(), fm.clone()),
             ..Default::default()
         };
-        // if r.file_mode.contains("r") {
+        if r.file_mode.contains("r") {
             match get_raster_type_from_file(file_name.to_string(), fm) {
                 RasterType::ArcBinary => {
                     let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data).unwrap();
@@ -156,10 +156,10 @@ impl Raster {
                     return Err(Error::new(ErrorKind::Other, "Unrecognized raster type"));
                 }
             }
-        // } else {
-        //     // write
-        //     return Ok(r);
-        // }
+        } else {
+            // write
+            return Ok(r);
+        }
         // Err(Error::new(ErrorKind::Other, "Error creating raster"))
     }
 

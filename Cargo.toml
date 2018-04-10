@@ -1,7 +1,7 @@
 
 [package]
 name = "whitebox_tools"
-version = "0.6.0"
+version = "0.5.1"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 description = "A library for analyzing geospatial data."
 keywords = ["geospatial", "GIS", "remote sensing", "geomatics", "image processing", "lidar", "spatial analysis"]
