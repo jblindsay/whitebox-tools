@@ -91,7 +91,7 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 
 ## 3. Supported Data Formats
 
-The *WhiteboxTools* library can currently support reading/writing raster data in GeoTIFF (.tif), *Whitebox GAT*(.tas and .dep), ESRI (ArcGIS) ASCII (.txt) and binary (.flt and .hdr), GRASS GIS, Idrisi (.rdc and .rst), SAGA GIS (binary--.sdat and .sgrd--and ASCII formats), and Surfer 7 (.grd) data formats. The library is primarily tested using Whitebox raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase without third-party dependencies. 
+The *WhiteboxTools* library can currently support reading/writing raster data in GeoTIFF (.tif), *Whitebox GAT*(.tas and .dep), ESRI (ArcGIS) ASCII (.txt) and binary (.flt and .hdr), GRASS GIS, Idrisi (.rdc and .rst), SAGA GIS (binary--.sdat and .sgrd--and ASCII formats), and Surfer 7 (.grd) data formats. *LZW compression in GeoTIFF files and the BigTIFF (64-bit) format are not currently supported.* The library is primarily tested using Whitebox and GeoTIFF raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase without third-party dependencies. 
 
 Please note that throughout this manual code examples that manipulate raster files all use the GeoTIFF format (.tif) but any of the supported file extensions can be used in its place.
 
@@ -402,6 +402,16 @@ log=True
 
 print("Complete!")
 ~~~~
+
+To run the above script, open a terminal (command prompt), *cd* to the script containing folder, and run the following command:
+
+```
+
+>>python FlowAccumulation.py
+
+```
+
+If Python 3 is not your default Python version, substitute ```python3``` for ```python``` in the above command line.
 
 The final D-infinity flow accumulation raster can be displayed in any GIS software of choice and should look similar to Figure 5. 
 
