@@ -424,36 +424,36 @@ impl Shapefile {
         // reserved bytes
         bor.pos += 2;
 
-        self.attributes.fields = vec![];
-        let mut flag = true;
-        while flag {
-            let mut field_data = AttributeField{..Default::default()};
-            fieldData.name = (cast[string](buf[bor.pos..bor.pos+10])).strip.replaceNullCharacters
+        // self.attributes.fields = vec![];
+        // let mut flag = true;
+        // while flag {
+        //     // let mut field_data = AttributeField{..Default::default()};
+        //     // fieldData.name = (cast[string](buf[bor.pos..bor.pos+10])).strip.replaceNullCharacters
 
-            bor.pos += 11;
-            // fieldData.fieldType = bor.readUint8.char;
-        //     bor.pos += 4;
-        //     fieldData.fieldLength = bor.readUint8
-        //     fieldData.decimalCount = bor.readUint8
+        //     bor.pos += 11;
+        //     // fieldData.fieldType = bor.readUint8.char;
+        // //     bor.pos += 4;
+        // //     fieldData.fieldLength = bor.readUint8
+        // //     fieldData.decimalCount = bor.readUint8
 
-        //     // Skip reserved bytes multi-user dBASE.
-        //     bor.pos += 2;
-        //     fieldData.workAreaId = bor.readUint8
-        //     // Skip reserved bytes multi-user dBASE.
-        //     bor.pos += 2;
-        //     fieldData.setFieldFlag = bor.readUint8
-        //     // Skip reserved bytes.
-        //     bor.pos += 7;
-        //     fieldData.indexFieldFlag = bor.readUint8
-        //     attr.fields.add(fieldData)
+        // //     // Skip reserved bytes multi-user dBASE.
+        // //     bor.pos += 2;
+        // //     fieldData.workAreaId = bor.readUint8
+        // //     // Skip reserved bytes multi-user dBASE.
+        // //     bor.pos += 2;
+        // //     fieldData.setFieldFlag = bor.readUint8
+        // //     // Skip reserved bytes.
+        // //     bor.pos += 7;
+        // //     fieldData.indexFieldFlag = bor.readUint8
+        // //     attr.fields.add(fieldData)
 
-            // Checks for end of field descriptor array (0x0d). Valid .dbf files
-            // will have this flag.
-            if buf[bor.pos] == 0x0d {
-                flag = false;
-                break;
-            }
-        }
+        //     // Checks for end of field descriptor array (0x0d). Valid .dbf files
+        //     // will have this flag.
+        //     if buf[bor.pos] == 0x0d {
+        //         flag = false;
+        //         break;
+        //     }
+        // }
 
         // attr.header.numberOfFields = len(attr.fields).uint32
 
