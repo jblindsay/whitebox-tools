@@ -9,6 +9,8 @@ NOTE: Structures and functions for handling the Shapefile attribute table info
 contained with the associated .dbf file.
 */
 
+use std::fmt;
+
 #[derive(Debug, Default, Clone)]
 pub struct AttributeHeader {
     pub version: u8,
@@ -30,6 +32,16 @@ pub struct DateData {
     pub year: u16,
     pub month: u8,
     pub day: u8,
+}
+
+impl fmt::Display for DateData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = format!("{}-{}-{}", 
+            self.year,
+            self.month,
+            self.day);
+        write!(f, "{}", s)
+    }
 }
 
 #[derive(Debug, Clone)]

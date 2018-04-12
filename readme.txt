@@ -60,6 +60,7 @@ Version 0.6.0 (DD-MM-2018)
 - The following tools have been added in this release:
     AttributeHistogram
     AttributeScattergram
+    ListUniqueValues
 
 Version 0.5.1 (11-04-2018)
 - This minor-point release fixes a far-reaching regression bug caused by a 

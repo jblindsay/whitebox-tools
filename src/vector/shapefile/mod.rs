@@ -477,32 +477,33 @@ impl Shapefile {
                 str_rep = bor.read_utf8(self.attributes.fields[j as usize].field_length as usize).replace(char::from(0), "").replace("*", "").trim().to_string();
                 if str_rep.is_empty() {
                     r.push(FieldData::Null);
-                }
-                match self.attributes.fields[j as usize].field_type {
-                    'N' | 'F' => {
-                        if self.attributes.fields[j as usize].decimal_count == 0 {
-                            r.push(FieldData::Int64(str_rep.parse::<i64>().unwrap()));
-                        } else {
-                            r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
+                } else {
+                    match self.attributes.fields[j as usize].field_type {
+                        'N' | 'F' | 'I' | 'O' => {
+                            if self.attributes.fields[j as usize].decimal_count == 0 {
+                                r.push(FieldData::Int64(str_rep.parse::<i64>().unwrap()));
+                            } else {
+                                r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
+                            }
+                        },
+                        'D' => {
+                            r.push(FieldData::Date(DateData{
+                                year: str_rep[0..4].parse::<u16>().unwrap(), 
+                                month: str_rep[4..6].parse::<u8>().unwrap(), 
+                                day: str_rep[6..8].parse::<u8>().unwrap()
+                            }));
+                        },
+                        'L' => {
+                            if str_rep.to_lowercase().contains("t") {
+                                r.push(FieldData::Bool(true));
+                            } else {
+                                r.push(FieldData::Bool(false));
+                            }
                         }
-                    },
-                    'D' => {
-                        r.push(FieldData::Date(DateData{
-                            year: str_rep[0..4].parse::<u16>().unwrap(), 
-                            month: str_rep[4..6].parse::<u8>().unwrap(), 
-                            day: str_rep[6..8].parse::<u8>().unwrap()
-                        }));
-                    },
-                    'L' => {
-                        if str_rep.to_lowercase().contains("t") {
-                            r.push(FieldData::Bool(true));
-                        } else {
-                            r.push(FieldData::Bool(false));
+                        _ => {
+                            // treat it like a string
+                            r.push(FieldData::Text(str_rep.clone()));
                         }
-                    }
-                    _ => {
-                        // treat it like a string
-                        r.push(FieldData::Text(str_rep.clone()));
                     }
                 }
             }

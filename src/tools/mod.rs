@@ -228,6 +228,7 @@ impl ToolManager {
         tool_names.push("KappaIndex".to_string());
         tool_names.push("KSTestForNormality".to_string());
         tool_names.push("LessThan".to_string());
+        tool_names.push("ListUniqueValues".to_string());
         tool_names.push("Log10".to_string());
         tool_names.push("Log2".to_string());
         tool_names.push("Ln".to_string());
@@ -604,6 +605,7 @@ impl ToolManager {
             "kappaindex" => Some(Box::new(tools::math_stat_analysis::KappaIndex::new())),
             "kstestfornormality" => Some(Box::new(tools::math_stat_analysis::KSTestForNormality::new())),
             "lessthan" => Some(Box::new(tools::math_stat_analysis::LessThan::new())),
+            "listuniquevalues" => Some(Box::new(tools::math_stat_analysis::ListUniqueValues::new())),
             "log10" => Some(Box::new(tools::math_stat_analysis::Log10::new())),
             "log2" => Some(Box::new(tools::math_stat_analysis::Log2::new())),
             "ln" => Some(Box::new(tools::math_stat_analysis::Ln::new())),
