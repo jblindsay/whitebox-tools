@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: December 14, 2017
+Last Modified: 12/04/2018
 License: MIT
 */
 
@@ -122,19 +122,20 @@ impl WhiteboxTool for Basins {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-d8_pntr" || vec[0].to_lowercase() == "--d8_pntr" {
-                if keyval {
-                    d8_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-d8_pntr" {
+                d8_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    d8_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
             }
         }

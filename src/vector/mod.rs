@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: July 17, 2017
+Last Modified: 12/04/2018
 License: MIT
 */
 
@@ -19,6 +19,8 @@ mod shapefile;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::shapefile::Shapefile;
 pub use self::shapefile::ShapeType;
+pub use self::shapefile::{AttributeField, AttributeHeader, DateData, FieldData, ShapefileAttributes};
+
 
 #[derive(Default, Clone, Debug)]
 pub struct Point2D {

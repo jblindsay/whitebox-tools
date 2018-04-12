@@ -8,7 +8,6 @@ pub mod stream_network_analysis;
 pub mod terrain_analysis;
 
 use serde_json;
-// use serde_json::Value;
 use tools;
 use std::io::{Error, ErrorKind};
 
@@ -200,6 +199,8 @@ impl ToolManager {
         tool_names.push("ArcSin".to_string());
         tool_names.push("ArcTan".to_string());
         tool_names.push("Atan2".to_string());
+        tool_names.push("AttributeHistogram".to_string());
+        tool_names.push("AttributeScattergram".to_string());
         tool_names.push("Ceil".to_string());
         tool_names.push("Cos".to_string());
         tool_names.push("Cosh".to_string());
@@ -574,6 +575,8 @@ impl ToolManager {
             "arcsin" => Some(Box::new(tools::math_stat_analysis::ArcSin::new())),
             "arctan" => Some(Box::new(tools::math_stat_analysis::ArcTan::new())),
             "atan2" => Some(Box::new(tools::math_stat_analysis::Atan2::new())),
+            "attributehistogram" => Some(Box::new(tools::math_stat_analysis::AttributeHistogram::new())),
+            "attributescattergram" => Some(Box::new(tools::math_stat_analysis::AttributeScattergram::new())),
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),
             "cos" => Some(Box::new(tools::math_stat_analysis::Cos::new())),
             "cosh" => Some(Box::new(tools::math_stat_analysis::Cosh::new())),
@@ -976,6 +979,7 @@ enum ParameterType {
     StringList,
     Integer,
     Float,
+    VectorAttributeField,
     StringOrNumber,
     ExistingFile(ParameterFileType),
     ExistingFileOrFloat(ParameterFileType),
@@ -990,8 +994,8 @@ enum ParameterFileType {
     Any,
     Lidar,
     Raster,
-    Vector(VectorGeometryType),
     RasterAndVector(VectorGeometryType),
+    Vector(VectorGeometryType),
     Text,
     Html,
 }

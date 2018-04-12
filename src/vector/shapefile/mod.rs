@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: 10/04/2018
+Last Modified: 12/04/2018
 License: MIT
 
 Notes: The logic behind working with the ESRI Shapefile format.
@@ -10,13 +10,14 @@ Notes: The logic behind working with the ESRI Shapefile format.
 pub mod attributes;
 pub mod geometry;
 
-pub use self::attributes::{AttributeField, AttributeHeader, ShapefileAttributes};
+pub use self::attributes::{AttributeField, AttributeHeader, DateData, FieldData, ShapefileAttributes};
 pub use self::geometry::{ShapefileGeometry, ShapeType};
 use std::io::prelude::*;
 use std::io::{BufReader, Error, ErrorKind};
 use std::fs;
 use std::fs::File;
 use std::fmt;
+use std::str;
 use io_utils::{ByteOrderReader, Endianness};
 use vector::Point2D;
 
@@ -424,63 +425,89 @@ impl Shapefile {
         // reserved bytes
         bor.pos += 2;
 
-        // self.attributes.fields = vec![];
-        // let mut flag = true;
-        // while flag {
-        //     // let mut field_data = AttributeField{..Default::default()};
-        //     // fieldData.name = (cast[string](buf[bor.pos..bor.pos+10])).strip.replaceNullCharacters
+        // read the field data
+        self.attributes.fields = vec![];
+        let mut flag = true;
+        while flag {
+            let name = bor.read_utf8(11).replace(char::from(0), ""); //(cast[string](buf[bor.pos..bor.pos+10])).strip.replaceNullCharacters
+            let field_type = char::from(bor.read_u8());
+            bor.pos += 4;
+            let field_length = bor.read_u8();
+            let decimal_count = bor.read_u8();
+            // Skip reserved bytes multi-user dBASE.
+            bor.pos += 2;
+            let work_area_id = bor.read_u8();
+            // Skip reserved bytes multi-user dBASE.
+            bor.pos += 2;
+            let set_field_flag = bor.read_u8();
+            // Skip reserved bytes.
+            bor.pos += 7;
+            let index_field_flag = bor.read_u8();
+            
+            let field_data = AttributeField::new(
+                &name, 
+                field_type, 
+                field_length, 
+                decimal_count,
+                work_area_id,
+                set_field_flag,
+                index_field_flag
+            );
 
-        //     bor.pos += 11;
-        //     // fieldData.fieldType = bor.readUint8.char;
-        // //     bor.pos += 4;
-        // //     fieldData.fieldLength = bor.readUint8
-        // //     fieldData.decimalCount = bor.readUint8
+            self.attributes.fields.push(field_data);
 
-        // //     // Skip reserved bytes multi-user dBASE.
-        // //     bor.pos += 2;
-        // //     fieldData.workAreaId = bor.readUint8
-        // //     // Skip reserved bytes multi-user dBASE.
-        // //     bor.pos += 2;
-        // //     fieldData.setFieldFlag = bor.readUint8
-        // //     // Skip reserved bytes.
-        // //     bor.pos += 7;
-        // //     fieldData.indexFieldFlag = bor.readUint8
-        // //     attr.fields.add(fieldData)
+            // Checks for end of field descriptor array (0x0d). Valid .dbf files
+            // will have this flag.
+            if bor.peek_u8() == 0x0d {
+                flag = false;
+                // break;
+            }
+        }
 
-        //     // Checks for end of field descriptor array (0x0d). Valid .dbf files
-        //     // will have this flag.
-        //     if buf[bor.pos] == 0x0d {
-        //         flag = false;
-        //         break;
-        //     }
-        // }
+        self.attributes.header.num_fields = self.attributes.fields.len() as u32;
 
-        // attr.header.numberOfFields = len(attr.fields).uint32
+        bor.pos += 1;
 
-        // bor.pos += 1
-
-        // attr.data = @[]
-        // attr.deleted = @[] #newSeq[false](attr.header.numberOfRecords)
-
-        // for i in 0..attr.header.numberOfRecords-1:
-        //     # var record = {};
-        //     # record["recordDeleted"] = String.fromCharCode(dv.getUint8(idx));
-        //     let deleted = (bor.readUint8).uint32 == 0x2A
-        //     attr.deleted.add(deleted)
-        //     # discard bor.readUint8
-        //     var r = newSeq[string]()
-        //     for j in 0..attr.header.numberOfFields-1:
-        //     var charString = newSeq[char]()
-        //     for h in 0'u64..(attr.fields[j.int].fieldLength - 1):
-        //         charString.add(bor.readUint8.char)
-
-        //     r.add((cast[string](charString)).strip)
-        //     # # record[o.fields[j].name] = charString.join('').trim();
-        //     # echo val
-        //     attr.data.add(r)
-
-
-        // self.attributes = attr
+        let mut d: bool;
+        let mut str_rep: String;
+        for _i in 0..self.attributes.header.num_records {
+            d = bor.read_u8() as u32 == 0x2A;
+            let mut r: Vec<FieldData> = vec![];
+            for j in 0..self.attributes.header.num_fields {
+                str_rep = bor.read_utf8(self.attributes.fields[j as usize].field_length as usize).replace(char::from(0), "").replace("*", "").trim().to_string();
+                if str_rep.is_empty() {
+                    r.push(FieldData::Null);
+                }
+                match self.attributes.fields[j as usize].field_type {
+                    'N' | 'F' => {
+                        if self.attributes.fields[j as usize].decimal_count == 0 {
+                            r.push(FieldData::Int64(str_rep.parse::<i64>().unwrap()));
+                        } else {
+                            r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
+                        }
+                    },
+                    'D' => {
+                        r.push(FieldData::Date(DateData{
+                            year: str_rep[0..4].parse::<u16>().unwrap(), 
+                            month: str_rep[4..6].parse::<u8>().unwrap(), 
+                            day: str_rep[6..8].parse::<u8>().unwrap()
+                        }));
+                    },
+                    'L' => {
+                        if str_rep.to_lowercase().contains("t") {
+                            r.push(FieldData::Bool(true));
+                        } else {
+                            r.push(FieldData::Bool(false));
+                        }
+                    }
+                    _ => {
+                        // treat it like a string
+                        r.push(FieldData::Text(str_rep.clone()));
+                    }
+                }
+            }
+            self.attributes.add_record(d, r);
+        }
 
         Ok(())
     }

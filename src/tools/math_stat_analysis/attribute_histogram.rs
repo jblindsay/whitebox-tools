@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Dec. 19, 2017
-Last Modified: Dec. 19, 2017
+Created: 12/04/2018
+Last Modified: 12/04/2018
 License: MIT
 */
 
@@ -14,13 +14,13 @@ use std::env;
 use std::path;
 use std::f64;
 use std::process::Command;
-use raster::*;
+use vector::{Shapefile, FieldData};
 use std::io::{Error, ErrorKind};
 use tools::*;
 use rendering::Histogram;
 use rendering::html::*;
 
-pub struct RasterHistogram {
+pub struct AttributeHistogram {
     name: String,
     description: String,
     toolbox: String,
@@ -28,19 +28,28 @@ pub struct RasterHistogram {
     example_usage: String,
 }
 
-impl RasterHistogram {
-    pub fn new() -> RasterHistogram {
+impl AttributeHistogram {
+    pub fn new() -> AttributeHistogram {
         // public constructor
-        let name = "RasterHistogram".to_string();
+        let name = "AttributeHistogram".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Creates a histogram from raster values.".to_string();
+        let description = "Creates a histogram for the field values of a vector's attribute table.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{
             name: "Input File".to_owned(), 
             flags: vec!["-i".to_owned(), "--input".to_owned()], 
             description: "Input raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Any)),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Field Name".to_owned(), 
+            flags: vec!["--field".to_owned()], 
+            description: "Input field name in attribute table.".to_owned(),
+            parameter_type: ParameterType::VectorAttributeField,
             default_value: None,
             optional: false
         });
@@ -64,10 +73,10 @@ impl RasterHistogram {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif\" -o=outfile.html",
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lakes.shp --field=HEIGHT -o=outfile.html",
                             short_exe, name).replace("*", &sep);
 
-        RasterHistogram {
+        AttributeHistogram {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -77,7 +86,7 @@ impl RasterHistogram {
     }
 }
 
-impl WhiteboxTool for RasterHistogram {
+impl WhiteboxTool for AttributeHistogram {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -118,6 +127,7 @@ impl WhiteboxTool for RasterHistogram {
                verbose: bool)
                -> Result<(), Error> {
         let mut input_file = String::new();
+        let mut field_name = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
@@ -138,6 +148,12 @@ impl WhiteboxTool for RasterHistogram {
                     vec[1].to_string()
                 } else {
                     args[i+1].to_string()
+                };
+            } else if flag_val == "-field" {
+                field_name = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -168,36 +184,84 @@ impl WhiteboxTool for RasterHistogram {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        let input = Raster::new(&input_file, "r")?;
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
-        
-        let min = input.configs.display_min;
-        let max = input.configs.display_max;
-        let range = max - min + 0.00001f64;
-        let mut num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
-        let mut bin_width = range / num_bins as f64;
-        if input.configs.photometric_interp == PhotometricInterpretation::Categorical {
-            bin_width = 1f64;
-            num_bins = range.ceil() as usize;
+        if verbose { println!("Reading vector data...") };
+        let vector_data = Shapefile::new(&input_file, "r")?;
+
+        // What is the index of the field to be analyzed?
+        let field_index = match vector_data.attributes.get_field_num(&field_name) {
+            Some(i) => i,
+            None => return Err(Error::new(ErrorKind::InvalidInput, "The specified field name does not exist in input shapefile.")),
+        };
+
+        // Is the field numeric?
+        if !vector_data.attributes.is_field_numeric(field_index) {
+            return Err(Error::new(ErrorKind::InvalidInput, "The specified attribute field is non-numeric."));
         }
-        let mut freq_data = vec![0usize; num_bins];
         
-        let mut val: f64;
-        let mut bin: usize;
-        for row in 0..rows {
-            for col in 0..columns {
-                val = input.get_value(row, col);
-                if val != nodata && val >= min && val <= max {
-                    bin = ((val - min) / bin_width).floor() as usize;
-                    freq_data[bin] += 1;
+        // Find the min and max values of the field
+        let mut min = f64::INFINITY;
+        let mut max = f64::NEG_INFINITY;
+        for record_num in 0..vector_data.num_records {
+            match vector_data.attributes.get_field_value(record_num, field_index) {
+                FieldData::Int(val) => {
+                    let valf64 = val as f64;
+                    if valf64 < min { min = valf64; }
+                    if valf64 > max { max = valf64; }
+                },
+                FieldData::Int64(val) => {
+                    let valf64 = val as f64;
+                    if valf64 < min { min = valf64; }
+                    if valf64 > max { max = valf64; }
+                },
+                FieldData::Real(val) => {
+                    if val < min { min = val; }
+                    if val > max { max = val; }
+                },
+                _ => {
+                    // do nothing, likely a null field
                 }
             }
+            
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Binning the data: {}%", progress);
+                    println!("Finding min and max: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let range = max - min + 0.00001f64;
+        let num_bins = (vector_data.num_records as f64).log2().ceil() as usize  + 1;
+        let bin_width = range / num_bins as f64;
+        let mut freq_data = vec![0usize; num_bins];
+        
+        let mut bin: usize;
+        for record_num in 0..vector_data.num_records {
+            match vector_data.attributes.get_field_value(record_num, field_index) {
+                FieldData::Int(val) => {
+                    let valf64 = val as f64;
+                    bin = ((valf64 - min) / bin_width).floor() as usize;
+                    freq_data[bin] += 1;
+                },
+                FieldData::Int64(val) => {
+                    let valf64 = val as f64;
+                    bin = ((valf64 - min) / bin_width).floor() as usize;
+                    freq_data[bin] += 1;
+                },
+                FieldData::Real(val) => {
+                    bin = ((val - min) / bin_width).floor() as usize;
+                    freq_data[bin] += 1;
+                },
+                _ => {
+                    // do nothing, likely a null field
+                }
+            }
+            
+            if verbose {
+                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Binning data: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -225,7 +289,8 @@ impl WhiteboxTool for RasterHistogram {
         <body>
             <h1>Histogram Analysis</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Image</strong>: {}</p>", input_file.clone()).as_bytes())?;
+        writer.write_all(&format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes())?;
+        writer.write_all(&format!("<p><strong>Field Name</strong>: {}</p>", field_name.clone()).as_bytes())?;
         
         let histo = Histogram {
             parent_id: "histo".to_owned(),
@@ -234,7 +299,7 @@ impl WhiteboxTool for RasterHistogram {
             freq_data: freq_data.clone(),
             min_bin_val: min, 
             bin_width: bin_width,
-            x_axis_label: "Image Value (X)".to_owned(),
+            x_axis_label: field_name.to_owned(),
             cumulative: false,
         };
 

@@ -370,7 +370,7 @@ impl WhiteboxTool for LidarHistogram {
         <body>
             <h1>Histogram Analysis</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Image</strong>: {}<br>", input_file.clone()).as_bytes())?;
+        writer.write_all(&format!("<p><strong>Input</strong>: {}<br>", input_file.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Parameter</strong>: {}", parameter).as_bytes())?;
         if parameter_mode != 3 { 
             writer.write_all(&format!("<br><strong>Clip amount</strong>: {}%</p>", clip_percent*100f64).as_bytes())?;

@@ -56,14 +56,21 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.5.1 (DD--MM-YYYY)
-- The following tools have been added:
-  VisibilityIndex
-  
-- Fixed a far-reaching bug caused by change to Raster. The change was 
+Version 0.6.0 (DD-MM-2018)
+- The following tools have been added in this release:
+    AttributeHistogram
+    AttributeScattergram
+
+Version 0.5.1 (11-04-2018)
+- This minor-point release fixes a far-reaching regression bug caused by a 
+  change to the Raster class in the previous release. The change was 
   needed for the in-place operator tools added in the last update. This
-  change however affected the proper running of several other tools
-  in the library. 
+  modification however affected the proper running of several other tools
+  in the library, particularly those in the Math and Stats toolbox. The
+  issue has now been resolved. 
+- The VisibilityIndex tool has been added to the library. This is one 
+  of the most computationally intensive tools in the library and should
+  really only be used in a high 
 - Modified tools with integer parameter inputs to parse strings 
   representations of floating point numbers. Previously, feeding
   a tool 'filter_size=3.0' would cause a fatal error.

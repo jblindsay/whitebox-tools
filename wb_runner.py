@@ -951,7 +951,7 @@ class WbRunner(tk.Frame):
                 param_num = param_num + 1
             elif ('Float' in pt or 'Integer' in pt or
                   'String' in pt or 'StringOrNumber' in pt or
-                  'StringList' in pt):
+                  'StringList' in pt or 'VectorAttributeField' in pt):
                 b = DataInput(json_str, self.tool_args_frame)
                 b.grid(row=param_num, column=0, sticky=tk.NSEW)
                 param_num = param_num + 1

@@ -37,6 +37,11 @@ impl ByteOrderReader {
         val
     }
 
+    pub fn peek_u8(&mut self) -> u8 {
+        let val = self.buffer[self.pos];
+        val
+    }
+
     pub fn read_u16(&mut self) -> u16 {
         let buf = &self.buffer[self.pos..self.pos + 2];
         self.pos += 2;
