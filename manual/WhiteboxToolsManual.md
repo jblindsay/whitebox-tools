@@ -23,7 +23,7 @@ header-includes:
     - \usepackage{xcolor}
     - \let\oldquote=\quote
     - \let\endoldquote=\endquote
-    - \colorlet{shadecolor}{gray!15}
+    - \colorlet{shadecolor}{blue!5}
     - \renewenvironment{quote}{\begin{shaded*}\begin{oldquote}}{\end{oldquote}\end{shaded*}}
     - \usepackage{titling}
     - \pretitle{\begin{center}\LARGE\includegraphics[width=12cm]{./img/WhiteboxToolsLogoBlue.png}\\[\bigskipamount]}
@@ -91,11 +91,11 @@ Be sure to follow the instructions for installing Rust carefully. In particular,
 
 ## 3. Supported Data Formats
 
-The *WhiteboxTools* library can currently support reading/writing raster data in GeoTIFF (.tif), *Whitebox GAT*(.tas and .dep), ESRI (ArcGIS) ASCII (.txt) and binary (.flt and .hdr), GRASS GIS, Idrisi (.rdc and .rst), SAGA GIS (binary--.sdat and .sgrd--and ASCII formats), and Surfer 7 (.grd) data formats. *LZW compression in GeoTIFF files and the BigTIFF (64-bit) format are not currently supported.* The library is primarily tested using Whitebox and GeoTIFF raster data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase without third-party dependencies. 
+The *WhiteboxTools* library can currently support reading/writing raster data in GeoTIFF (.tif), *Whitebox GAT*(.tas and .dep), ESRI (ArcGIS) ASCII (.txt) and binary (.flt and .hdr), GRASS GIS, Idrisi (.rdc and .rst), SAGA GIS (binary--.sdat and .sgrd--and ASCII formats), and Surfer 7 (.grd) data formats. *LZW compression in GeoTIFF files and the BigTIFF (64-bit) format are not currently supported.* The library is primarily tested using Whitebox raster and GeoTIFF data sets and if you encounter issues when reading/writing data in other formats, you should report the [issue](#reporting-bugs). Please note that there are no plans to incorporate third-party libraries, like [GDAL](http://www.gdal.org), in the project given the design goal of keeping a pure (or as close as possible) Rust codebase without third-party dependencies. This design greatly simplifies installation of the library.
 
 Please note that throughout this manual code examples that manipulate raster files all use the GeoTIFF format (.tif) but any of the supported file extensions can be used in its place.
 
-At present, there is limited ability in *WhiteboxTools* to read vector geospatial data. Support for Shapefile (and other common vector formats) will be enhanced within the library soon. Currently Shapefile geometries can be read and certain tools take vector inputs. Reading vector attributes and writing vector geometries and attributes will be added a future version of the library.
+At present, there is limited ability in *WhiteboxTools* to work with vector geospatial data. Shapefiles geometries (.shp) and attributes (.dbf) can be read and some tools take vector inputs. There is currently no support for writing vector data although this feature is being actively developed. Other vector data formats may be added in the future.
 
 LiDAR data can be read/written in the common [LAS](https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html) data format. *WhiteboxTools* can read and write LAS files that have been compressed (zipped with a .zip extension) using the common DEFLATE algorithm. Note that only LAS file should be contained within a zipped archive file. The compressed LiDAR format LAZ and ESRI LiDAR format are not currently supported by the library. The following is an example of running a LiDAR tool using zipped input/output files:
 
@@ -411,9 +411,7 @@ To run the above script, open a terminal (command prompt), *cd* to the script co
 
 ```
 
-If Python 3 is not your default Python version, substitute ```python3``` for ```python``` in the above command line.
-
-The final D-infinity flow accumulation raster can be displayed in any GIS software of choice and should look similar to Figure 5. 
+If Python 3 is not your default Python version, substitute ```python3``` for ```python``` in the above command line. The final D-infinity flow accumulation raster can be displayed in any GIS software of choice and should look similar to Figure 5. 
 
 ![Output of the flow accumulation script for the St. Elis Mountains data set.](./img/flow_accum.png){width=605px height=auto}
 
@@ -3187,7 +3185,43 @@ viewshed(
 ```
 
 
-#### 7.6.45 WetnessIndex
+#### 7.6.45 VisibilityIndex
+
+Estimates the relative visibility of sites in a DEM.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-dem               Input raster DEM file
+-o, -\-output        Output raster file
+-\-height            Viewing station height, in z units
+-\-res_factor        The resolution factor determines the density of measured viewsheds
+
+
+*Python function*:
+
+~~~~{.python}
+visibility_index(
+    dem, 
+    output, 
+    height=2.0, 
+    res_factor=2, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VisibilityIndex -v ^
+--wd="/path/to/data/" --dem=dem.tif -o=output.tif ^
+--height=10.0 --res_factor=4 
+
+
+```
+
+
+#### 7.6.46 WetnessIndex
 
 Calculates the topographic wetness index, Ln(A / tan(slope)).
 
@@ -5046,43 +5080,7 @@ opening(
 ```
 
 
-#### 7.8.13 PrincipalComponentAnalysis
-
-Performs a principal component analysis (PCA) on a multi-spectral dataset.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-inputs        Input raster files
--\-out_html          Output HTML report file
--\-num_comp          Number of component images to output; <= to num. input images
--\-standardized      Perform standardized PCA?
-
-
-*Python function*:
-
-~~~~{.python}
-principal_component_analysis(
-    inputs, 
-    out_html=None, 
-    num_comp=None, 
-    standardized=False, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=PrincipalComponentAnalysis -v ^
---wd='/path/to/data/' -i='image1.tif;image2.tif;image3.tif' ^
---out_html=report.html --num_comp=3 --standardized 
-
-
-```
-
-
-#### 7.8.14 RemoveSpurs
+#### 7.8.13 RemoveSpurs
 
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
@@ -5115,7 +5113,7 @@ remove_spurs(
 ```
 
 
-#### 7.8.15 Resample
+#### 7.8.14 Resample
 
 Resamples one or more input images into a destination image.
 
@@ -5149,7 +5147,7 @@ resample(
 ```
 
 
-#### 7.8.16 RgbToIhs
+#### 7.8.15 RgbToIhs
 
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 
@@ -5200,7 +5198,7 @@ rgb_to_ihs(
 ```
 
 
-#### 7.8.17 SplitColourComposite
+#### 7.8.16 SplitColourComposite
 
 This tool splits an RGB colour composite image into seperate multispectral images.
 
@@ -5231,7 +5229,7 @@ split_colour_composite(
 ```
 
 
-#### 7.8.18 ThickenRasterLine
+#### 7.8.17 ThickenRasterLine
 
 Thickens single-cell wide lines within a raster image.
 
@@ -5262,7 +5260,7 @@ thicken_raster_line(
 ```
 
 
-#### 7.8.19 TophatTransform
+#### 7.8.18 TophatTransform
 
 Performs either a white or black top-hat transform on an input image.
 
@@ -5299,7 +5297,7 @@ tophat_transform(
 ```
 
 
-#### 7.8.20 WriteFunctionMemoryInsertion
+#### 7.8.19 WriteFunctionMemoryInsertion
 
 Performs a write function memory insertion for single-band multi-date change detection.
 
@@ -7212,7 +7210,7 @@ Prints information about a LiDAR (LAS) dataset, including header, point return f
 **Flag**             **Description**
 -------------------  ---------------
 -i, -\-input         Input LiDAR file
--o, -\-output        Output HTML file for regression summary report
+-o, -\-output        Output HTML file for summary report
 -\-vlr               Flag indicating whether or not to print the variable length records (VLRs)
 -\-geokeys           Flag indicating whether or not to print the geokeys
 
@@ -7960,7 +7958,79 @@ atan2(
 ```
 
 
-#### 7.12.9 Ceil
+#### 7.12.9 AttributeHistogram
+
+Creates a histogram for the field values of a vector's attribute table.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-field             Input field name in attribute table
+-o, -\-output        Output HTML file (default name will be based on input file if unspecified)
+
+
+*Python function*:
+
+~~~~{.python}
+attribute_histogram(
+    i, 
+    field, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=AttributeHistogram -v ^
+--wd="/path/to/data/" -i=lakes.shp --field=HEIGHT ^
+-o=outfile.html 
+
+
+```
+
+
+#### 7.12.10 AttributeScattergram
+
+Creates a scattergram for two field values of a vector's attribute table.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-fieldx            Input field name in attribute table for the x-axis
+-\-fieldy            Input field name in attribute table for the y-axis
+-o, -\-output        Output HTML file (default name will be based on input file if unspecified)
+-\-trendline         Draw the trendline
+
+
+*Python function*:
+
+~~~~{.python}
+attribute_scattergram(
+    i, 
+    fieldx, 
+    fieldy, 
+    output, 
+    trendline=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=AttributeScattergram -v ^
+--wd="/path/to/data/" -i=lakes.shp --fieldx=HEIGHT ^
+--fieldy=area -o=outfile.html --trendline 
+
+
+```
+
+
+#### 7.12.11 Ceil
 
 Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 
@@ -7991,7 +8061,7 @@ ceil(
 ```
 
 
-#### 7.12.10 Cos
+#### 7.12.12 Cos
 
 Returns the cosine (cos) of each values in a raster.
 
@@ -8022,7 +8092,7 @@ cos(
 ```
 
 
-#### 7.12.11 Cosh
+#### 7.12.13 Cosh
 
 Returns the hyperbolic cosine (cosh) of each values in a raster.
 
@@ -8053,7 +8123,7 @@ cosh(
 ```
 
 
-#### 7.12.12 CrispnessIndex
+#### 7.12.14 CrispnessIndex
 
 Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
 
@@ -8087,7 +8157,7 @@ crispness_index(
 ```
 
 
-#### 7.12.13 CrossTabulation
+#### 7.12.15 CrossTabulation
 
 Performs a cross-tabulation on two categorical images.
 
@@ -8121,7 +8191,7 @@ cross_tabulation(
 ```
 
 
-#### 7.12.14 CumulativeDistribution
+#### 7.12.16 CumulativeDistribution
 
 Converts a raster image to its cumulative distribution function.
 
@@ -8152,7 +8222,7 @@ cumulative_distribution(
 ```
 
 
-#### 7.12.15 Decrement
+#### 7.12.17 Decrement
 
 Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
 
@@ -8183,7 +8253,7 @@ decrement(
 ```
 
 
-#### 7.12.16 Divide
+#### 7.12.18 Divide
 
 Performs a division operation on two rasters or a raster and a constant value.
 
@@ -8216,7 +8286,7 @@ divide(
 ```
 
 
-#### 7.12.17 EqualTo
+#### 7.12.19 EqualTo
 
 Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -8249,7 +8319,7 @@ equal_to(
 ```
 
 
-#### 7.12.18 Exp
+#### 7.12.20 Exp
 
 Returns the exponential (base e) of values in a raster.
 
@@ -8280,7 +8350,7 @@ exp(
 ```
 
 
-#### 7.12.19 Exp2
+#### 7.12.21 Exp2
 
 Returns the exponential (base 2) of values in a raster.
 
@@ -8311,7 +8381,7 @@ exp2(
 ```
 
 
-#### 7.12.20 ExtractRasterStatistics
+#### 7.12.22 ExtractRasterStatistics
 
 Extracts descriptive statistics for a group of patches in a raster.
 
@@ -8353,7 +8423,7 @@ extract_raster_statistics(
 ```
 
 
-#### 7.12.21 Floor
+#### 7.12.23 Floor
 
 Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
 
@@ -8384,7 +8454,7 @@ floor(
 ```
 
 
-#### 7.12.22 GreaterThan
+#### 7.12.24 GreaterThan
 
 Performs a greater-than comparison operation on two rasters or a raster and a constant value.
 
@@ -8420,7 +8490,7 @@ greater_than(
 ```
 
 
-#### 7.12.23 ImageAutocorrelation
+#### 7.12.25 ImageAutocorrelation
 
 Performs Moran's I analysis on two or more input images.
 
@@ -8454,7 +8524,7 @@ image_autocorrelation(
 ```
 
 
-#### 7.12.24 ImageCorrelation
+#### 7.12.26 ImageCorrelation
 
 Performs image correlation on two or more input images.
 
@@ -8486,7 +8556,7 @@ image_correlation(
 ```
 
 
-#### 7.12.25 ImageRegression
+#### 7.12.27 ImageRegression
 
 Performs image regression analysis on two input images.
 
@@ -8525,7 +8595,7 @@ image_regression(
 ```
 
 
-#### 7.12.26 InPlaceAdd
+#### 7.12.28 InPlaceAdd
 
 Performs an in-place addition operation (input1 += input2).
 
@@ -8559,7 +8629,7 @@ in_place_add(
 ```
 
 
-#### 7.12.27 InPlaceDivide
+#### 7.12.29 InPlaceDivide
 
 Performs an in-place division operation (input1 /= input2).
 
@@ -8593,7 +8663,7 @@ in_place_divide(
 ```
 
 
-#### 7.12.28 InPlaceMultiply
+#### 7.12.30 InPlaceMultiply
 
 Performs an in-place multiplication operation (input1 *= input2).
 
@@ -8627,7 +8697,7 @@ in_place_multiply(
 ```
 
 
-#### 7.12.29 InPlaceSubtract
+#### 7.12.31 InPlaceSubtract
 
 Performs an in-place subtraction operation (input1 -= input2).
 
@@ -8661,7 +8731,7 @@ in_place_subtract(
 ```
 
 
-#### 7.12.30 Increment
+#### 7.12.32 Increment
 
 Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd).
 
@@ -8692,7 +8762,7 @@ increment(
 ```
 
 
-#### 7.12.31 IntegerDivision
+#### 7.12.33 IntegerDivision
 
 Performs an integer division operation on two rasters or a raster and a constant value.
 
@@ -8726,7 +8796,7 @@ integer_division(
 ```
 
 
-#### 7.12.32 IsNoData
+#### 7.12.34 IsNoData
 
 Identifies NoData valued pixels in an image.
 
@@ -8757,7 +8827,7 @@ is_no_data(
 ```
 
 
-#### 7.12.33 KSTestForNormality
+#### 7.12.35 KSTestForNormality
 
 Evaluates whether the values in a raster are normally distributed.
 
@@ -8793,7 +8863,7 @@ ks_test_for_normality(
 ```
 
 
-#### 7.12.34 KappaIndex
+#### 7.12.36 KappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
 
@@ -8826,7 +8896,7 @@ kappa_index(
 ```
 
 
-#### 7.12.35 LessThan
+#### 7.12.37 LessThan
 
 Performs a less-than comparison operation on two rasters or a raster and a constant value.
 
@@ -8862,7 +8932,41 @@ less_than(
 ```
 
 
-#### 7.12.36 Ln
+#### 7.12.38 ListUniqueValues
+
+Lists the unique values contained in a field witin a vector's attribute table.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-field             Input field name in attribute table
+-o, -\-output        Output HTML file (default name will be based on input file if unspecified)
+
+
+*Python function*:
+
+~~~~{.python}
+list_unique_values(
+    i, 
+    field, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ListUniqueValues -v ^
+--wd="/path/to/data/" -i=lakes.shp --field=HEIGHT ^
+-o=outfile.html 
+
+
+```
+
+
+#### 7.12.39 Ln
 
 Returns the natural logarithm of values in a raster.
 
@@ -8893,7 +8997,7 @@ ln(
 ```
 
 
-#### 7.12.37 Log10
+#### 7.12.40 Log10
 
 Returns the base-10 logarithm of values in a raster.
 
@@ -8924,7 +9028,7 @@ log10(
 ```
 
 
-#### 7.12.38 Log2
+#### 7.12.41 Log2
 
 Returns the base-2 logarithm of values in a raster.
 
@@ -8955,7 +9059,7 @@ log2(
 ```
 
 
-#### 7.12.39 Max
+#### 7.12.42 Max
 
 Performs a MAX operation on two rasters or a raster and a constant value.
 
@@ -8988,7 +9092,7 @@ max(
 ```
 
 
-#### 7.12.40 Min
+#### 7.12.43 Min
 
 Performs a MIN operation on two rasters or a raster and a constant value.
 
@@ -9021,7 +9125,7 @@ min(
 ```
 
 
-#### 7.12.41 Modulo
+#### 7.12.44 Modulo
 
 Performs a modulo operation on two rasters or a raster and a constant value.
 
@@ -9054,7 +9158,7 @@ modulo(
 ```
 
 
-#### 7.12.42 Multiply
+#### 7.12.45 Multiply
 
 Performs a multiplication operation on two rasters or a raster and a constant value.
 
@@ -9087,7 +9191,7 @@ multiply(
 ```
 
 
-#### 7.12.43 Negate
+#### 7.12.46 Negate
 
 Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
@@ -9118,7 +9222,7 @@ negate(
 ```
 
 
-#### 7.12.44 Not
+#### 7.12.47 Not
 
 Performs a logical NOT operator on two Boolean raster images.
 
@@ -9151,7 +9255,7 @@ Not(
 ```
 
 
-#### 7.12.45 NotEqualTo
+#### 7.12.48 NotEqualTo
 
 Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -9184,7 +9288,7 @@ not_equal_to(
 ```
 
 
-#### 7.12.46 Or
+#### 7.12.49 Or
 
 Performs a logical OR operator on two Boolean raster images.
 
@@ -9217,7 +9321,7 @@ Or(
 ```
 
 
-#### 7.12.47 Power
+#### 7.12.50 Power
 
 Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 
@@ -9250,7 +9354,43 @@ power(
 ```
 
 
-#### 7.12.48 Quantiles
+#### 7.12.51 PrincipalComponentAnalysis
+
+Performs a principal component analysis (PCA) on a multi-spectral dataset.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-inputs        Input raster files
+-\-out_html          Output HTML report file
+-\-num_comp          Number of component images to output; <= to num. input images
+-\-standardized      Perform standardized PCA?
+
+
+*Python function*:
+
+~~~~{.python}
+principal_component_analysis(
+    inputs, 
+    out_html=None, 
+    num_comp=None, 
+    standardized=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PrincipalComponentAnalysis -v ^
+--wd='/path/to/data/' -i='image1.tif;image2.tif;image3.tif' ^
+--out_html=report.html --num_comp=3 --standardized 
+
+
+```
+
+
+#### 7.12.52 Quantiles
 
 Transforms raster values into quantiles.
 
@@ -9283,7 +9423,7 @@ quantiles(
 ```
 
 
-#### 7.12.49 RandomField
+#### 7.12.53 RandomField
 
 Creates an image containing random values.
 
@@ -9314,7 +9454,7 @@ random_field(
 ```
 
 
-#### 7.12.50 RandomSample
+#### 7.12.54 RandomSample
 
 Creates an image containing randomly located sample grid cells with unique IDs.
 
@@ -9347,7 +9487,7 @@ random_sample(
 ```
 
 
-#### 7.12.51 RasterHistogram
+#### 7.12.55 RasterHistogram
 
 Creates a histogram from raster values.
 
@@ -9378,7 +9518,7 @@ raster_histogram(
 ```
 
 
-#### 7.12.52 RasterSummaryStats
+#### 7.12.56 RasterSummaryStats
 
 Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 
@@ -9407,7 +9547,7 @@ raster_summary_stats(
 ```
 
 
-#### 7.12.53 Reciprocal
+#### 7.12.57 Reciprocal
 
 Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
@@ -9438,7 +9578,7 @@ reciprocal(
 ```
 
 
-#### 7.12.54 RescaleValueRange
+#### 7.12.58 RescaleValueRange
 
 Performs a min-max contrast stretch on an input greytone image.
 
@@ -9482,7 +9622,7 @@ rescale_value_range(
 ```
 
 
-#### 7.12.55 RootMeanSquareError
+#### 7.12.59 RootMeanSquareError
 
 Calculates the RMSE and other accuracy statistics.
 
@@ -9513,7 +9653,7 @@ root_mean_square_error(
 ```
 
 
-#### 7.12.56 Round
+#### 7.12.60 Round
 
 Rounds the values in an input raster to the nearest integer value.
 
@@ -9544,7 +9684,7 @@ round(
 ```
 
 
-#### 7.12.57 Sin
+#### 7.12.61 Sin
 
 Returns the sine (sin) of each values in a raster.
 
@@ -9575,7 +9715,7 @@ sin(
 ```
 
 
-#### 7.12.58 Sinh
+#### 7.12.62 Sinh
 
 Returns the hyperbolic sine (sinh) of each values in a raster.
 
@@ -9606,7 +9746,7 @@ sinh(
 ```
 
 
-#### 7.12.59 Square
+#### 7.12.63 Square
 
 Squares the values in a raster.
 
@@ -9637,7 +9777,7 @@ square(
 ```
 
 
-#### 7.12.60 SquareRoot
+#### 7.12.64 SquareRoot
 
 Returns the square root of the values in a raster.
 
@@ -9668,7 +9808,7 @@ square_root(
 ```
 
 
-#### 7.12.61 Subtract
+#### 7.12.65 Subtract
 
 Performs a differencing operation on two rasters or a raster and a constant value.
 
@@ -9701,7 +9841,7 @@ subtract(
 ```
 
 
-#### 7.12.62 Tan
+#### 7.12.66 Tan
 
 Returns the tangent (tan) of each values in a raster.
 
@@ -9732,7 +9872,7 @@ tan(
 ```
 
 
-#### 7.12.63 Tanh
+#### 7.12.67 Tanh
 
 Returns the hyperbolic tangent (tanh) of each values in a raster.
 
@@ -9763,7 +9903,7 @@ tanh(
 ```
 
 
-#### 7.12.64 ToDegrees
+#### 7.12.68 ToDegrees
 
 Converts a raster from radians to degrees.
 
@@ -9794,7 +9934,7 @@ to_degrees(
 ```
 
 
-#### 7.12.65 ToRadians
+#### 7.12.69 ToRadians
 
 Converts a raster from degrees to radians.
 
@@ -9825,7 +9965,7 @@ to_radians(
 ```
 
 
-#### 7.12.66 Truncate
+#### 7.12.70 Truncate
 
 Truncates the values in a raster to the desired number of decimal places.
 
@@ -9858,7 +9998,7 @@ truncate(
 ```
 
 
-#### 7.12.67 TurningBandsSimulation
+#### 7.12.71 TurningBandsSimulation
 
 Creates an image containing random values based on a turning-bands simulation.
 
@@ -9894,7 +10034,7 @@ turning_bands_simulation(
 ```
 
 
-#### 7.12.68 Xor
+#### 7.12.72 Xor
 
 Performs a logical XOR operator on two Boolean raster images.
 
@@ -9927,7 +10067,7 @@ xor(
 ```
 
 
-#### 7.12.69 ZScores
+#### 7.12.73 ZScores
 
 Standardizes the values in an input raster by converting to z-scores.
 
@@ -10811,6 +10951,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

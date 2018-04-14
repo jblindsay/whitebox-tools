@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: January 21, 2018
+Last Modified: 13/04/2018
 License: MIT
 */
 
@@ -365,7 +365,7 @@ impl WhiteboxTool for DiffFromMeanElev {
                                 sum = i.get_value(y2, x2) + i.get_value(y1, x1) - i.get_value(y1, x2) -
                                     i.get_value(y2, x1);
                                 mean = sum / n as f64;
-                                data[col as usize] = z as f64 - mean;
+                                data[col as usize] = (z as f64 - mean) / multiplier;
                             } else {
                                 data[col as usize] = 0f64;
                             }

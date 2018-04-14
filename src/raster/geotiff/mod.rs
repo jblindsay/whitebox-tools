@@ -284,6 +284,11 @@ pub fn read_geotiff<'a>(file_name: &'a String,
         }
     };
 
+    if compression != COMPRESS_NONE && compression != COMPRESS_PACKBITS {
+        return Err(Error::new(ErrorKind::InvalidData,
+            "The GeoTIFF decoder currently only supports PACKBITS compression."))
+    }
+
     let photometric_interp = match ifd_map.get(&262) {
         Some(ifd) => ifd.interpret_as_u16()[0],
         _ => {
@@ -586,7 +591,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 COMPRESS_PACKBITS => {
                     buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
                 }
-                _ => {}
+                _ => {
+                    return Err(Error::new(ErrorKind::InvalidData,
+                                      "The GeoTIFF decoder currently only supports PACKBITS compression."))
+                }
             }
             let mut bor = ByteOrderReader::new(buf, configs.endian);
 

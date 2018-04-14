@@ -5,11 +5,12 @@ tools are added to WhiteboxTools.exe and before a public release.
 """
 from __future__ import print_function
 import os
+from os import path
 import re
 import json
 import sys
 sys.path.append(
-    '/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/')
+    '/Users/johnlindsay/Documents/programming/whitebox_tools/whitebox-tools/')
 from whitebox_tools import WhiteboxTools
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
@@ -24,10 +25,11 @@ def camel_to_snake(s):
 wbt = WhiteboxTools()
 
 # Set the directory containing the whitebox_tools.exe file
-wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/target/release/'
+wbt.exe_path = r'/Users/johnlindsay/Documents/programming/whitebox_tools/whitebox-tools/target/release/'
 # wbt.ext_path = r'../target/release/'
 
 toolboxes = wbt.toolbox('')
+# print(toolboxes)
 tb_set = set()
 for tb in toolboxes.split('\n'):
     if tb.strip():

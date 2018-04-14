@@ -57,9 +57,11 @@ for more details.
 ******************
 
 Version 0.6.0 (DD-MM-2018)
+- Added the ability to read Shapefile attribute data (.dbf files).
 - The following tools have been added in this release:
     AttributeHistogram
     AttributeScattergram
+    CountIf
     ListUniqueValues
 
 Version 0.5.1 (11-04-2018)

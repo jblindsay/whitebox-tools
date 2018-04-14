@@ -5,6 +5,7 @@ tools are added to WhiteboxTools.exe and before a public release.
 """
 from __future__ import print_function
 import os
+from os import path
 import re
 import json
 from whitebox_tools import WhiteboxTools
@@ -21,7 +22,9 @@ def camel_to_snake(s):
 wbt = WhiteboxTools()
 
 # Set the directory containing the whitebox_tools.exe file
-wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/target/release/'
+wbt.exe_path = path.dirname(path.abspath(__file__)) + \
+    r'/target/release/'
+# wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/target/release/'
 
 toolboxes = wbt.toolbox('')
 tb_set = set()
