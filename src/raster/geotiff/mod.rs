@@ -1,6 +1,9 @@
+
 #![allow(unused_assignments, dead_code)]
 pub mod geokeys;
 pub mod tiff_consts;
+
+extern crate lzw;
 
 use std::collections::HashMap;
 use std::io::Error;
@@ -284,9 +287,12 @@ pub fn read_geotiff<'a>(file_name: &'a String,
         }
     };
 
-    if compression != COMPRESS_NONE && compression != COMPRESS_PACKBITS {
+    if compression != COMPRESS_NONE && 
+        compression != COMPRESS_PACKBITS && 
+        compression != COMPRESS_LZW {
+        println!("Compression: {}", compression);
         return Err(Error::new(ErrorKind::InvalidData,
-            "The GeoTIFF decoder currently only supports PACKBITS compression."))
+            "The GeoTIFF decoder currently only supports PACKBITS and LZW compression."))
     }
 
     let photometric_interp = match ifd_map.get(&262) {
@@ -587,10 +593,19 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 COMPRESS_NONE => {
                     // no compression
                     buf = th.buffer[offset..(offset + n)].to_vec();
-                }
+                },
                 COMPRESS_PACKBITS => {
                     buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
-                }
+                },
+                COMPRESS_LZW => {
+                    let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
+                    let mut compressed = &th.buffer[offset..(offset + n)];
+                    while compressed.len() > 0 {
+                        let (start, bytes) = dec.decode_bytes(&compressed).unwrap();
+                        compressed = &compressed[start..];
+                        buf.extend(bytes.iter().map(|&i| i));
+                    }
+                },
                 _ => {
                     return Err(Error::new(ErrorKind::InvalidData,
                                       "The GeoTIFF decoder currently only supports PACKBITS compression."))
@@ -945,6 +960,23 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
         }
+    }
+
+    // Check to see if a predictor is used with LZW
+    match ifd_map.get(&317) {
+        Some(ifd) => {
+            if ifd.interpret_as_u16()[0] == 2 { // Horizontal predictor
+                // transform the data
+                let mut idx: usize;
+                for row in 0..configs.rows {
+                    for col in 1..configs.columns { //(0..configs.columns-1).rev() {
+                        idx = row * configs.columns + col;
+                        data[idx] += data[idx-1];
+                    }
+                }
+            }
+        },
+        _ => {}, // do nothing,
     }
 
     // match geokeys_map.get(&1024) {

@@ -14,6 +14,7 @@ extern crate time;
 extern crate num_cpus;
 extern crate rand;
 extern crate statrs;
+extern crate lzw;
 
 pub mod io_utils;
 pub mod lidar;

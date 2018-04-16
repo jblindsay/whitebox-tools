@@ -115,41 +115,40 @@ impl Raster {
         if r.file_mode.contains("r") {
             match get_raster_type_from_file(file_name.to_string(), fm) {
                 RasterType::ArcBinary => {
-                    let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::ArcAscii => {
-                    let _ = read_arcascii(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_arcascii(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::GeoTiff => {
-                    let _ = read_geotiff(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_geotiff(&r.file_name, &mut r.configs, &mut r.data)?;
                     r.update_min_max();
                     return Ok(r);
                 }
                 RasterType::GrassAscii => {
-                    let _ = read_grass_raster(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_grass_raster(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::IdrisiBinary => {
-                    let _ = read_idrisi(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_idrisi(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::SagaBinary => {
-                    let _ = read_saga(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_saga(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::Surfer7Binary => {
-                    let _ = read_surfer7(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_surfer7(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::SurferAscii => {
-                    let _ = read_surfer_ascii_raster(&r.file_name, &mut r.configs, &mut r.data)
-                        .unwrap();
+                    let _ = read_surfer_ascii_raster(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::Whitebox => {
-                    let _ = read_whitebox(&r.file_name, &mut r.configs, &mut r.data).unwrap();
+                    let _ = read_whitebox(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::Unknown => {

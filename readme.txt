@@ -58,6 +58,9 @@ for more details.
 
 Version 0.6.0 (DD-MM-2018)
 - Added the ability to read Shapefile attribute data (.dbf files).
+- Added support to read LZW compressed GeoTIFFs, at least for simple
+  single-band files. The decoder can also handle the use of a horizontal
+  predictor (TIFF Tag 317).
 - The following tools have been added in this release:
     AttributeHistogram
     AttributeScattergram
