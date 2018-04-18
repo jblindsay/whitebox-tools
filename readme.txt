@@ -66,6 +66,8 @@ Version 0.6.0 (DD-MM-2018)
     AttributeScattergram
     CountIf
     ListUniqueValues
+    VectorLinesToRaster
+    VectorPolygonsToRaster
 
 Version 0.5.1 (11-04-2018)
 - This minor-point release fixes a far-reaching regression bug caused by a 
