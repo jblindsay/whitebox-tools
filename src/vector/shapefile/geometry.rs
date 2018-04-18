@@ -55,7 +55,7 @@ impl ShapefileGeometry {
 
         let end_point = if part_num < self.num_parts - 2 {
             // remember, the last point in each part is the same as the first...it's not a legitemate point.
-            (self.parts[part_num as usize] - 2i32) as usize
+            (self.parts[part_num as usize + 1] - 2i32) as usize
         } else {
             (self.num_points - 2i32) as usize
         };
@@ -68,7 +68,6 @@ impl ShapefileGeometry {
 
         // first see if it is a convex or concave polygon
         // calculate the cross product for each adjacent edge.
-
         let mut crossproducts = vec![0f64; num_points_in_part];
         for j in 0..num_points_in_part {
             n2 = st_point + j;

@@ -79,8 +79,7 @@ fn run() -> Result<(), Error> {
     let mut finding_working_dir = false;
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        // return Err(Error::new(ErrorKind::InvalidInput,
-        //                       "Tool run with no paramters."));
+        version();
         // print help
         help();
         // list tools
@@ -90,6 +89,7 @@ fn run() -> Result<(), Error> {
         return Ok(());
     }
     for arg in args {
+        // let flag_val = arg.to_lowercase().replace("--", "-");
         if arg.starts_with("-h") || arg.starts_with("--help") {
             help();
             return Ok(());

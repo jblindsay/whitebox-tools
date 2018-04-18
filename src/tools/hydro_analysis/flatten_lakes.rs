@@ -183,7 +183,7 @@ impl WhiteboxTool for FlattenLakes {
 
         let polygons = Shapefile::new(&polygons_file, "r")?;
 
-        // make sure the input vector file is of points type
+        // make sure the input vector file is of polygon type
         if polygons.header.shape_type.base_shape_type() != ShapeType::Polygon {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "The input vector data must be of polygon base shape type."));
