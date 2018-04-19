@@ -133,7 +133,7 @@ impl LasHeader {
             header.version_minor = buffer[9];
             if header.version_major < 1 || header.version_major > 2 || header.version_minor > 5 {
                 // There's something very wrong. Throw an error.
-                return Err(Error::new(ErrorKind::Other, "Either the file is formatted incorrectly or it is an unsupported LAS version."));
+                return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", file_name)));
             }
             header.project_id_used = false;
         }
@@ -143,7 +143,7 @@ impl LasHeader {
         bor.pos = 0;
         header.file_signature = bor.read_utf8(4);
         if header.file_signature != "LASF" {
-            return Err(Error::new(ErrorKind::Other, "Either the file is formatted incorrectly or it is an unsupported LAS version."));
+            return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", file_name)));
         }
         header.file_source_id = bor.read_u16();
         let ge_val = bor.read_u16();

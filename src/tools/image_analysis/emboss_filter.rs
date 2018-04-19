@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: January 21, 2018
+Last Modified: 19/04/2018
 License: MIT
 */
 
@@ -135,31 +135,32 @@ impl WhiteboxTool for EmbossFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-direction" || vec[0].to_lowercase() == "--direction" {
-                if keyval {
-                    direction = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-direction" {
+                direction = if keyval {
+                    vec[1].to_string()
                 } else {
-                    direction = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
                 direction = direction.to_lowercase();
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                if keyval {
-                    clip_amount = vec[1].to_string().parse::<f64>().unwrap();
+            } else if flag_val == "-clip" {
+                clip_amount = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
                 if clip_amount < 0.0 { clip_amount == 0.0; }
             }
         }

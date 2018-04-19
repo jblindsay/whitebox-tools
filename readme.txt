@@ -67,6 +67,7 @@ Version 0.6.0 (DD-MM-2018)
     CountIf
     ListUniqueValues
     VectorLinesToRaster
+    VectorPointsToRaster
     VectorPolygonsToRaster
 
 Version 0.5.1 (11-04-2018)

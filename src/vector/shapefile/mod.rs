@@ -380,12 +380,15 @@ impl Shapefile {
         // Read the projection file //
         //////////////////////////////
         let prj_file = self.file_name.replace(".shp", ".prj");
-        let f = File::open(prj_file)?;
-        let f = BufReader::new(f);
-
-        for line in f.lines() {
-            let line_unwrapped = line.unwrap();
-            self.projection.push_str(&line_unwrapped);
+         match File::open(prj_file) {
+            Ok(f) => {
+                let f = BufReader::new(f);
+                for line in f.lines() {
+                    let line_unwrapped = line.unwrap();
+                    self.projection.push_str(&line_unwrapped);
+                }
+            },
+            Err(_) => { println!("Warning: Projection file not located.") },
         }
 
 

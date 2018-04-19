@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 18/04/2018
-Last Modified: 18/04/2018
+Created: 19/04/2018
+Last Modified: 19/04/2018
 License: MIT
 */
 
@@ -14,9 +14,8 @@ use raster::*;
 use vector::{FieldData, Shapefile, ShapeType};
 use std::io::{Error, ErrorKind};
 use tools::*;
-use structures::BoundingBox;
 
-pub struct VectorLinesToRaster {
+pub struct VectorPointsToRaster {
     name: String,
     description: String,
     toolbox: String,
@@ -24,19 +23,19 @@ pub struct VectorLinesToRaster {
     example_usage: String,
 }
 
-impl VectorLinesToRaster {
+impl VectorPointsToRaster {
     /// public constructor
-    pub fn new() -> VectorLinesToRaster { 
-        let name = "VectorLinesToRaster".to_string();
+    pub fn new() -> VectorPointsToRaster { 
+        let name = "VectorPointsToRaster".to_string();
         let toolbox = "Data Tools".to_string();
-        let description = "Converts a vector containing polylines into a raster.".to_string();
+        let description = "Converts a vector containing points into a raster.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
-            name: "Input Vector Lines File".to_owned(), 
+            name: "Input Vector Points File".to_owned(), 
             flags: vec!["-i".to_owned(), "--input".to_owned()], 
-            description: "Input vector lines file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Line)),
+            description: "Input vector Points file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
             default_value: None,
             optional: false
         });
@@ -57,6 +56,15 @@ impl VectorLinesToRaster {
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Assignment Operation".to_owned(), 
+            flags: vec!["--assign".to_owned()], 
+            description: "Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum'".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["first".to_owned(), "last".to_owned(), "min".to_owned(), "max".to_owned(), "sum".to_owned()]),
+            default_value: Some("last".to_owned()),
+            optional: true
         });
 
         parameters.push(ToolParameter{
@@ -93,10 +101,10 @@ impl VectorLinesToRaster {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lines.shp --field=ELEV -o=output.tif --nodata --cell_size=10.0
-        >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lines.shp --field=FID -o=output.tif --base=existing_raster.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=ELEV -o=output.tif --assign=min --nodata --cell_size=10.0
+        >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=FID -o=output.tif --assign=last --base=existing_raster.tif", short_exe, name).replace("*", &sep);
     
-        VectorLinesToRaster { 
+        VectorPointsToRaster { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -106,7 +114,7 @@ impl VectorLinesToRaster {
     }
 }
 
-impl WhiteboxTool for VectorLinesToRaster {
+impl WhiteboxTool for VectorPointsToRaster {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -142,6 +150,7 @@ impl WhiteboxTool for VectorLinesToRaster {
         let mut base_file = String::new();
         let nodata = -32768.0f64;
         let mut background_val = 0f64;
+        let mut assign_op = String::from("last");
          
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -189,6 +198,12 @@ impl WhiteboxTool for VectorLinesToRaster {
                 };
             } else if flag_val == "-nodata" {
                 background_val = nodata;
+            } else if flag_val == "-assign" {
+                assign_op = if keyval {
+                    vec[1].to_lowercase()
+                } else {
+                    args[i+1].to_lowercase()
+                };
             }
         }
 
@@ -216,10 +231,9 @@ impl WhiteboxTool for VectorLinesToRaster {
         let start = time::now();
 
         // make sure the input vector file is of points type
-        if vector_data.header.shape_type.base_shape_type() != ShapeType::PolyLine &&
-            vector_data.header.shape_type.base_shape_type() != ShapeType::Polygon {
+        if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
             return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must either be of polyline or polygon base shape type."));
+                "The input vector data must either be of point base shape type."));
         }
         
         // What is the index of the field to be analyzed?
@@ -288,9 +302,6 @@ impl WhiteboxTool for VectorLinesToRaster {
             output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         }
 
-        let rows = output.configs.rows as isize;
-        let columns = output.configs.columns as isize;
-
         let mut attribute_data = vec![background_val; vector_data.num_records];
         // get the attribute data
         for record_num in 0..vector_data.num_records {
@@ -322,112 +333,114 @@ impl WhiteboxTool for VectorLinesToRaster {
             }
         }
 
-        let raster_bb = BoundingBox::new(output.configs.west, output.configs.east, output.configs.south, output.configs.north);
-        let mut bb = BoundingBox{ ..Default::default() };
-        let (mut top_row, mut bottom_row, mut left_col, mut right_col): (isize, isize, isize, isize);
-        let mut row_y_coord: f64;
-        let mut col_x_coord: f64;
-        let (mut x1, mut x2, mut y1, mut y2): (f64, f64, f64, f64);
-        let (mut x_prime, mut y_prime): (f64, f64);
-        let mut start_point_in_part: usize;
-        let mut end_point_in_part: usize;
-        let mut output_something = false;
+        let mut row: isize;
+        let mut col: isize;
+        let (mut x, mut y, mut z): (f64, f64, f64);
         let num_records = vector_data.num_records;
-        for record_num in 0..vector_data.num_records {
-            let record = vector_data.get_record(record_num);
-            let rec_bb = BoundingBox::new(record.x_min, record.x_max, record.y_min, record.y_max);
-            if rec_bb.overlaps(raster_bb) {
-                for part in 0..record.num_parts as usize {
-                    start_point_in_part = record.parts[part] as usize;
-                    if part < record.num_parts as usize - 1 {
-                        end_point_in_part = record.parts[part + 1] as usize - 1;
-                    } else {
-                        end_point_in_part = record.num_points as usize - 1;
-                    }
-
-                    bb.initialize_to_inf();
-                    for i in start_point_in_part..end_point_in_part+1 {
-                        if record.points[i].x < bb.min_x {
-                            bb.min_x = record.points[i].x;
-                        }
-                        if record.points[i].x > bb.max_x {
-                            bb.max_x = record.points[i].x;
-                        }
-                        if record.points[i].y < bb.min_y {
-                            bb.min_y = record.points[i].y;
-                        }
-                        if record.points[i].y > bb.max_y {
-                            bb.max_y = record.points[i].y;
-                        }
-                    }
-                    top_row = output.get_row_from_y(bb.max_y);
-                    bottom_row = output.get_row_from_y(bb.min_y);
-                    left_col = output.get_column_from_x(bb.min_x);
-                    right_col = output.get_column_from_x(bb.max_x);
-
-                    if top_row < 0 { top_row = 0; }
-                    if bottom_row < 0 { bottom_row = 0; }
-                    if top_row >= rows { top_row = rows-1; }
-                    if bottom_row >= rows { bottom_row = rows-1; }
-
-                    if left_col < 0 { left_col = 0; }
-                    if right_col < 0 { right_col = 0; }
-                    if left_col >= columns { left_col = columns-1; }
-                    if right_col >= columns { right_col = columns-1; }
-
-                    // find each intersection with a row.
-                    for row in top_row..bottom_row+1 {
-                        row_y_coord = output.get_y_from_row(row);
-                        // find the x-coordinates of each of the line segments 
-                        // that intersect this row's y coordinate
-                        for i in start_point_in_part..end_point_in_part {
-                            if is_between(row_y_coord, record.points[i].y, record.points[i+1].y) {
-                                y1 = record.points[i].y;
-                                y2 = record.points[i+1].y;
-                                if y2 != y1 {
-                                    x1 = record.points[i].x;
-                                    x2 = record.points[i+1].x;
-
-                                    // calculate the intersection point
-                                    x_prime = x1 + (row_y_coord - y1) / (y2 - y1) * (x2 - x1);
-                                    let col = output.get_column_from_x(x_prime);
-
-                                    output.set_value(row, col, attribute_data[record_num]);
-                                    output_something = true;
-                                }
-                            }
-                        }
-                    }
-
-                    // find each intersection with a column.
-                    for col in left_col..right_col+1 {
-                        col_x_coord = output.get_x_from_column(col);
-                        for i in start_point_in_part..end_point_in_part {
-                            if is_between(col_x_coord, record.points[i].x, record.points[i+1].x) {
-                                x1 = record.points[i].x;
-                                x2 = record.points[i+1].x;
-                                if x1 != x2 {
-                                    y1 = record.points[i].y;
-                                    y2 = record.points[i+1].y;
-
-                                    // calculate the intersection point
-                                    y_prime = y1 + (col_x_coord - x1) / (x2 - x1) * (y2 - y1);
-
-                                    let row = output.get_row_from_y(y_prime);
-                                    
-                                    output.set_value(row, col, attribute_data[record_num]);
-                                    output_something = true;
-                                }
-                            }
-                        }
+        if assign_op.contains("last") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    output.set_value(row, col, attribute_data[record_num]);
+                    
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        old_progress = progress;
                     }
                 }
             }
-            if verbose {
-                progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
-                if progress != old_progress {
-                    println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
-                    old_progress = progress;
+        } else if assign_op.contains("first") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata {
+                        output.set_value(row, col, attribute_data[record_num]);
+                    }
+                    
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else if assign_op.contains("min") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata || attribute_data[record_num] < z {
+                        output.set_value(row, col, attribute_data[record_num]);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else if assign_op.contains("max") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata || attribute_data[record_num] > z {
+                        output.set_value(row, col, attribute_data[record_num]);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else if assign_op.contains("sum") || assign_op.contains("total") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata {
+                        output.set_value(row, col, attribute_data[record_num]);
+                    } else {
+                        output.set_value(row, col, z + attribute_data[record_num]);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        old_progress = progress;
+                    }
                 }
             }
         }
@@ -444,25 +457,10 @@ impl WhiteboxTool for VectorLinesToRaster {
             Err(e) => return Err(e),
         };
 
-        if !output_something && verbose {
-            println!("Warning: No polylines were output to the raster.");
-        }
-
         if verbose {
             println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         }
         
         Ok(())
     }
-}
-
-#[inline]
-fn is_between(val: f64, threshold1: f64, threshold2: f64) -> bool {
-    if val == threshold1 || val == threshold2 {
-        return true;
-    }
-    if threshold2 > threshold1 {
-        return val > threshold1 && val < threshold2;
-    }
-    val > threshold2 && val < threshold1
 }
