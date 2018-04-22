@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="486"
-   height="125"
-   viewBox="0 0 486 125"
+   width="160"
+   height="150"
+   viewBox="0 0 160 150"
    id="svg5213"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4242471"
-     inkscape:cx="244.23601"
-     inkscape:cy="72.183112"
+     inkscape:zoom="2.0226337"
+     inkscape:cx="243"
+     inkscape:cy="62.5"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -53,15 +53,15 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-927.36216)">
+     transform="translate(0,-902.36216)">
     <g
-       id="g4148"
-       transform="translate(-140.12865,502.91519)">
+       id="g4195"
+       transform="translate(-163,-22.091209)">
       <g
          inkscape:export-ydpi="119.92161"
          inkscape:export-xdpi="119.92161"
          inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
-         transform="translate(68.34187,-460.28275)"
+         transform="translate(112.84824,40.419688)"
          id="g4665">
         <path
            sodipodi:type="star"
@@ -145,36 +145,40 @@
            inkscape:export-xdpi="120"
            inkscape:export-ydpi="120" />
       </g>
-      <text
-         inkscape:export-ydpi="119.92161"
-         inkscape:export-xdpi="119.92161"
-         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
-         sodipodi:linespacing="125%"
-         id="text4887-9-8-3-4-5"
-         y="505.69696"
-         x="257.44406"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:27.5px;line-height:125%;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#3465a4;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:50px;line-height:125%;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#3465a4;fill-opacity:1"
-           y="505.69696"
-           x="257.44406"
-           id="tspan4889-1-8-0-8-1"
-           sodipodi:role="line">WhiteboxTools</tspan></text>
-      <text
-         inkscape:export-ydpi="119.92161"
-         inkscape:export-xdpi="119.92161"
-         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
-         sodipodi:linespacing="125%"
-         id="text6341-8"
-         y="467.84912"
-         x="604.18457"
-         style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#3465a4;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';fill:#3465a4;fill-opacity:1"
-           y="467.84912"
-           x="604.18457"
-           id="tspan6343-6"
-           sodipodi:role="line">TM</tspan></text>
+      <g
+         transform="translate(153.85966,0)"
+         id="g4189">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.4691515px;line-height:125%;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#3465a4;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="11.678741"
+           y="1068.5774"
+           id="text4887-9-8-3-4-5"
+           sodipodi:linespacing="125%"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
+           inkscape:export-xdpi="119.92161"
+           inkscape:export-ydpi="119.92161"><tspan
+             sodipodi:role="line"
+             id="tspan4889-1-8-0-8-1"
+             x="11.678741"
+             y="1068.5774"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20.85300255px;line-height:125%;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#3465a4;fill-opacity:1">WhiteboxTools</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:29.6489315px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#3465a4;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="156.26187"
+           y="1052.7926"
+           id="text6341-8"
+           sodipodi:linespacing="125%"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
+           inkscape:export-xdpi="119.92161"
+           inkscape:export-ydpi="119.92161"><tspan
+             sodipodi:role="line"
+             id="tspan6343-6"
+             x="156.26187"
+             y="1052.7926"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.41223288px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';fill:#3465a4;fill-opacity:1">TM</tspan></text>
+      </g>
     </g>
   </g>
 </svg>

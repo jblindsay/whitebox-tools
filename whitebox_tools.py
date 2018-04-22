@@ -5,8 +5,8 @@ See whitebox_example.py for an example of how to use it.
 
 # This script is part of the WhiteboxTools geospatial library.
 # Authors: Dr. John Lindsay
-# Created: November 28, 2017
-# Last Modified: Feb. 18, 2018
+# Created: 28/11/2017
+# Last Modified: 22/04/2018
 # License: MIT
 
 from __future__ import print_function
@@ -332,6 +332,7 @@ class WhiteboxTools(object):
 
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -409,6 +410,74 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         args.append("--back_value={}".format(back_value))
         return self.run_tool('SetNodataValue', args, callback) # returns 1 if error
+
+    def vector_lines_to_raster(self, i, output, field="FID", nodata=True, cell_size=None, base=None, callback=default_callback):
+        """ Converts a vector containing polylines into a raster.
+
+        Keyword arguments:
+
+        i -- Input vector lines file. 
+        field -- Input field name in attribute table. 
+        output -- Output raster file. 
+        nodata -- Background value to set to NoData. Without this flag, it will be set to 0.0. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field={}".format(field))
+        args.append("--output='{}'".format(output))
+        if nodata: args.append("--nodata")
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('VectorLinesToRaster', args, callback) # returns 1 if error
+
+    def vector_points_to_raster(self, i, output, field="FID", assign="last", nodata=True, cell_size=None, base=None, callback=default_callback):
+        """ Converts a vector containing points into a raster.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        output -- Output raster file. 
+        assign -- Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum'. 
+        nodata -- Background value to set to NoData. Without this flag, it will be set to 0.0. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field={}".format(field))
+        args.append("--output='{}'".format(output))
+        args.append("--assign={}".format(assign))
+        if nodata: args.append("--nodata")
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('VectorPointsToRaster', args, callback) # returns 1 if error
+
+    def vector_polygons_to_raster(self, i, output, field="FID", nodata=True, cell_size=None, base=None, callback=default_callback):
+        """ Converts a vector containing polygons into a raster.
+
+        Keyword arguments:
+
+        i -- Input vector polygons file. 
+        field -- Input field name in attribute table. 
+        output -- Output raster file. 
+        nodata -- Background value to set to NoData. Without this flag, it will be set to 0.0. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field={}".format(field))
+        args.append("--output='{}'".format(output))
+        if nodata: args.append("--nodata")
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('VectorPolygonsToRaster', args, callback) # returns 1 if error
 
     ################
     # GIS Analysis #
@@ -675,6 +744,22 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('AverageOverlay', args, callback) # returns 1 if error
+
+    def count_if(self, inputs, output, value, callback=default_callback):
+        """ Counts the number of occurrences of a specified value in a cell-stack of rasters.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        value -- Search value (e.g. countif value = 5.0). 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        args.append("--value='{}'".format(value))
+        return self.run_tool('CountIf', args, callback) # returns 1 if error
 
     def erase_polygon_from_raster(self, i, polygons, output, callback=default_callback):
         """ Erases (cuts out) a vector polygon from a raster.

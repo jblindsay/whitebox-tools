@@ -142,15 +142,17 @@ The following is an example of calling the *WhiteboxTools* binary executable fil
 ```
 
 
-Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. Use the '-v' flag (run in verbose mode) to force the tool print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break (^) commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
+Notice the quotation marks (single or double) used around directories and filenames, and string tool arguments in general. After the ```-\-run``` flag, used to call a tool, a series of tool-specific 
+flags are provided to indicate the values of various input parameters. Note
+that the order of these flags is unimportant. Use the '-v' flag (run in verbose mode) to force the tool to print output to the command prompt. Please note that the whitebox_tools executable file must have permission to be executed; on some systems, this may require setting special permissions. Also, the above example uses the forward slash character (/), the directory path separator used on unix based systems. On Windows, users should use the back slash character (\\) instead. Also, it is sometimes necessary to break (^) commands across multiple lines, as above, in order to better fit with the documents format. Actual command prompts should be contained to a single line.
 
 ## 5. Interacting With *WhiteboxTools* Through Python Scripting
 
-By combining the *WhiteboxTools* library with the a high-level scripting language, such as Python, users are capable of creating powerful stand-alone geospatial applications and workflow automation scripts. In fact, *WhiteboxTools* functionality can be called from many different programming languages. However, given the prevalent use of the Python language in the geospatial field, the library is distributed with several resources specifically aimed at Python scripting. This section focuses on how Python programming can be used to interact with the *WhiteboxTools* library.
+By combining the *WhiteboxTools* library with a high-level scripting language, such as Python, users are capable of creating powerful stand-alone geospatial applications and workflow automation scripts. In fact, *WhiteboxTools* functionality can be called from many different programming languages. However, given the prevalent use of the Python language in the geospatial fields, the library is distributed with several resources specifically aimed at Python scripting. This section focuses on how Python programming can be used to interact with the *WhiteboxTools* library.
 
 > Note that all of the following material assumes the user system is configured with Python 3. The code snippets below are not guaranteed to work with older versions of the language. 
 
-### 5.1 Using the *whitebox_tools.py* Script
+### 5.1 Using the *whitebox_tools.py* script
 
 Interacting with *WhiteboxTools* from Python scripts is easy. To begin, each script must start by importing the *WhiteboxTools* class, contained with the *whitebox_tools.py* script; a new ```WhiteboxTools``` object can then be created:
 
@@ -160,9 +162,9 @@ from whitebox_tools import WhiteboxTools
 wbt = WhiteboxTools() 
 ~~~~
 
-The use of ```wbt``` to designate the WhiteboxTools object variable in the above script is just the convention used in this manual and other project resources. In fact, any variable name can be used for this purpose. Depending on the relative location of the *WhiteboxTools* directory and the script file that you are importing to, the import statement may need to be altered slightly. See [An Example WhiteboxTools Python Project](#an-example-whiteboxtools-python-project) for more details on project set-up.
+Depending on the relative location of the *WhiteboxTools* directory and the script file that you are importing to, the import statement may need to be altered slightly. In the above script, it is assumed that the folder containing the *WhiteboxTools* files (including the *whitebox_tools* Python script) is named ```WBT``` (Line 1) and that the calling script is located in the parent directory of <code>WBT</code>. See [An Example WhiteboxTools Python Project](#an-example-whiteboxtools-python-project) for more details on project set-up. The use of ```wbt``` to designate the WhiteboxTools object variable in the above script (Line 3) is just the convention used in this manual and other project resources. In fact, any variable name can be used for this purpose. 
 
-The `WhiteboxTools` class expects to find the *WhiteboxTools* executable file (*whitebox_tools.exe* on Windows and *whitebox_tools* on other platforms) within the same directory as the *whitebox_tools.py* script. If the binary file is located in a separate directory, you will need to set the executable directory as follows:
+The `WhiteboxTools` class expects to find the *WhiteboxTools* executable file (*whitebox_tools.exe* on Windows and *whitebox_tools* on other platforms) within the same directory (```WBT```) as the *whitebox_tools.py* script. If the binary file is located in a separate directory, you will need to set the executable directory as follows:
 
 ~~~~{.python .numberLines}
 wbt.set_whitebox_dir('/local/path/to/whitebox/binary/')  
@@ -204,7 +206,7 @@ An advanced text editor, such as VS Code or Atom, can provide hints and autocomp
 
 ![Autocompletion in Atom text editor makes calling *WhiteboxTools* functions easier.](./img/wbt_auotcomplete.png)
 
-Sometimes, however, it can be useful to print a complete list of available tools:
+Sometimes it can be useful to print a complete list of available tools:
 
 ~~~~{.python .numberLines}
 print(wbt.list_tools()) # List all tools in WhiteboxTools
@@ -248,6 +250,36 @@ Example usage:
 
 ````
 
+> **A note on default parameter values**
+>
+> Each tool contains one or more parameters with default values. These will always be listed after any input parameters that do not have default values. You do not need to specify a parameter with a default value if you accept the default. That is, unless you intend to specify an input value different from the default, you may leave these parameters off of the function call. However, be mindful of the fact that Python assigns values to parameters based on order, unless parameter names are specified.
+> 
+> Consider the Hillshade tool as an example. The User Manual gives the following function definition for the tool:
+> 
+> ~~~~{.python}
+> hillshade(
+> dem,
+> output,
+> azimuth=315.0,
+> altitude=30.0,
+> zfactor=1.0,
+> callback=default_callback)
+> ~~~~
+> 
+> The ```dem``` and ```output``` parameters do not have default values and must be specified every time you call this function. Each of the remaining parameters have default values and can, optionally, be left off of calls to the ```hillshade``` function. As an example, say I want to accept the default values for all the parameters except ```altitude```. I would then need to use the named-parameter form of the function call:
+> 
+> ~~~~{.python .numberLines}
+> wbt.hillshade(
+> "DEM.tif",
+> "hillshade.tif",
+> altitude=20.0)
+> ~~~~
+> 
+> If I hadn't specified the parameter name for ```altitude```, Python would have assumed that the value 20.0 should be assigned to the third parameter, ```azimuth```.
+
+
+### 5.2 Handling tool output
+
 Tools will frequently print text to the standard output during their execution, including warnings, progress updates and other notifications. Sometimes, when users run many tools in complex workflows and in batch mode, these output messages can be undesirable. Most tools will have their outputs suppressed by setting the *verbose* mode to *False* as follows:
 
 ~~~~{.python .numberLines}
@@ -283,6 +315,8 @@ def my_callback(value):
 wbt.breach_depressions('DEM.tif', 'DEM_breached.tif', callback=my_callback)
 ~~~~
 
+### 5.3 Additional functions in *whitebox_tools.py*
+
 The *whitebox_tools.py* script provides several other functions for interacting with the *WhiteboxTools* library, including: 
 
 ~~~~{.python .numberLines}
@@ -308,7 +342,7 @@ wbt.view_code('watershed')
 
 For a working example of how to call functions and run tools from Python, see the *whitebox_example.py* Python script, which is distributed with the *WhiteboxTools* library.
 
-### 5.2 An Example WhiteboxTools Python Project
+### 5.4 An example WhiteboxTools Python project
 
 In this section, we will create a Python project that utilizes the *WhiteboxTools* library to interpolate a LiDAR point-cloud, to process the resulting digital elevation model (DEM) to make it suitable for hydrological applications, and to perform a simple flow-accumulation operation. I suggest using an advanced coding text editor, such as *Visual Studio Code* or *Atom*, for this tutorial, but Python code can be written using any basic text editor. 
 
@@ -599,6 +633,147 @@ set_nodata_value(
 ```
 >>./whitebox_tools -r=SetNodataValue -v --wd="/path/to/data/" ^
 -i=in.tif -o=newRaster.tif --back_value=1.0 
+
+
+```
+
+
+#### 7.1.6 VectorLinesToRaster
+
+Converts a vector containing polylines into a raster.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector lines file
+-\-field             Input field name in attribute table
+-o, -\-output        Output raster file
+-\-nodata            Background value to set to NoData. Without this flag, it will be set to 0.0
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+vector_lines_to_raster(
+    i, 
+    output, 
+    field="FID", 
+    nodata=True, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VectorLinesToRaster -v ^
+--wd="/path/to/data/" -i=lines.shp --field=ELEV -o=output.tif ^
+--nodata --cell_size=10.0
+        >>./whitebox_tools ^
+-r=VectorLinesToRaster -v --wd="/path/to/data/" -i=lines.shp ^
+--field=FID -o=output.tif --base=existing_raster.tif 
+
+
+```
+
+
+#### 7.1.7 VectorPointsToRaster
+
+Converts a vector containing points into a raster.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-o, -\-output        Output raster file
+-\-assign            Assignment operation, where multiple points are in the same grid cell; options 
+                     include 'first', 'last' (default), 'min', 'max', 'sum' 
+-\-nodata            Background value to set to NoData. Without this flag, it will be set to 0.0
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+vector_points_to_raster(
+    i, 
+    output, 
+    field="FID", 
+    assign="last", 
+    nodata=True, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VectorPointsToRaster -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--assign=min --nodata ^
+--cell_size=10.0
+        >>./whitebox_tools ^
+-r=VectorPointsToRaster -v --wd="/path/to/data/" -i=points.shp ^
+--field=FID -o=output.tif --assign=last ^
+--base=existing_raster.tif 
+
+
+```
+
+
+#### 7.1.8 VectorPolygonsToRaster
+
+Converts a vector containing polygons into a raster.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygons file
+-\-field             Input field name in attribute table
+-o, -\-output        Output raster file
+-\-nodata            Background value to set to NoData. Without this flag, it will be set to 0.0
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+vector_polygons_to_raster(
+    i, 
+    output, 
+    field="FID", 
+    nodata=True, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VectorPolygonsToRaster -v ^
+--wd="/path/to/data/" -i=lakes.shp --field=ELEV -o=output.tif ^
+--nodata --cell_size=10.0
+        >>./whitebox_tools ^
+-r=VectorPolygonsToRaster -v --wd="/path/to/data/" ^
+-i=lakes.shp --field=ELEV -o=output.tif ^
+--base=existing_raster.tif 
 
 
 ```
@@ -1136,7 +1311,41 @@ average_overlay(
 ```
 
 
-#### 7.4.2 ErasePolygonFromRaster
+#### 7.4.2 CountIf
+
+Counts the number of occurrences of a specified value in a cell-stack of rasters.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-inputs        Input raster files
+-o, -\-output        Output raster file
+-\-value             Search value (e.g. countif value = 5.0)
+
+
+*Python function*:
+
+~~~~{.python}
+count_if(
+    inputs, 
+    output, 
+    value, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CountIf -v --wd='/path/to/data/' ^
+-i='image1.dep;image2.dep;image3.tif' -o=output.tif ^
+--value=5.0 
+
+
+```
+
+
+#### 7.4.3 ErasePolygonFromRaster
 
 Erases (cuts out) a vector polygon from a raster.
 
@@ -1170,7 +1379,7 @@ erase_polygon_from_raster(
 ```
 
 
-#### 7.4.3 HighestPosition
+#### 7.4.4 HighestPosition
 
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 
@@ -1202,7 +1411,7 @@ highest_position(
 ```
 
 
-#### 7.4.4 LowestPosition
+#### 7.4.5 LowestPosition
 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
@@ -1233,7 +1442,7 @@ lowest_position(
 ```
 
 
-#### 7.4.5 MaxAbsoluteOverlay
+#### 7.4.6 MaxAbsoluteOverlay
 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
@@ -1265,7 +1474,7 @@ max_absolute_overlay(
 ```
 
 
-#### 7.4.6 MaxOverlay
+#### 7.4.7 MaxOverlay
 
 Evaluates the maximum value for each grid cell from a stack of input rasters.
 
@@ -1296,7 +1505,7 @@ max_overlay(
 ```
 
 
-#### 7.4.7 MinAbsoluteOverlay
+#### 7.4.8 MinAbsoluteOverlay
 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -1328,7 +1537,7 @@ min_absolute_overlay(
 ```
 
 
-#### 7.4.8 MinOverlay
+#### 7.4.9 MinOverlay
 
 Evaluates the minimum value for each grid cell from a stack of input rasters.
 
@@ -1359,7 +1568,7 @@ min_overlay(
 ```
 
 
-#### 7.4.9 PercentEqualTo
+#### 7.4.10 PercentEqualTo
 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
@@ -1393,7 +1602,7 @@ percent_equal_to(
 ```
 
 
-#### 7.4.10 PercentGreaterThan
+#### 7.4.11 PercentGreaterThan
 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
@@ -1427,7 +1636,7 @@ percent_greater_than(
 ```
 
 
-#### 7.4.11 PercentLessThan
+#### 7.4.12 PercentLessThan
 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
@@ -1461,7 +1670,7 @@ percent_less_than(
 ```
 
 
-#### 7.4.12 PickFromList
+#### 7.4.13 PickFromList
 
 Outputs the value from a raster stack specified by a position raster.
 
@@ -1495,7 +1704,7 @@ pick_from_list(
 ```
 
 
-#### 7.4.13 WeightedSum
+#### 7.4.14 WeightedSum
 
 Performs a weighted-sum overlay on multiple input raster images.
 
@@ -10951,6 +11160,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 
