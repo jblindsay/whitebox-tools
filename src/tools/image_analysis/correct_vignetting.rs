@@ -1,12 +1,27 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
-Last Modified: Dec. 14, 2017
+Created: 24/04/2018
+Last Modified: 24/04/2018
 License: MIT
 
-NOTES: 1. The tool should be updated to take multiple file inputs.
-       2. Unlike the original Whitebox GAT tool that this is based on, 
+This tool can be used to reduce vignetting within an image. Vignetting refers to the 
+reducuction of image brightness away from the image centre (i.e. the principal point). 
+Vignetting is a radiometric distortion resulting from lens characteristics. The 
+algorithm calculates the brightness value in the output image (BVout) as:
+
+BVout = BVin / [cos^n(arctan(d / f))]
+
+Where d is the photo-distance from the principal point in millimetres, f is the focal 
+length of the camera, in millimeters, and n is a user-specified parameter. Pixel 
+distances are converted to photo-distances (in millimetres) using the specified 
+image width, i.e. distance between left and right edges (mm). For many cameras, 4.0 
+is an appropriate value of the n parameter. A second pass of the image is used to 
+rescale the output image so that it possesses the same minimum and maximum values as 
+the input image. 
+
+If an RGB image is input, the analysis will be performed on the intensity component
+of the HSI transform.
 */
 
 use time;
@@ -16,13 +31,15 @@ use std::path;
 use std::f64;
 use std::f64::consts::PI;
 use raster::*;
+use vector::{Shapefile, ShapeType};
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use tools::*;
+use structures::Array2D;
 
-pub struct GammaCorrection {
+pub struct CorrectVignetting {
     name: String,
     description: String,
     toolbox: String,
@@ -30,11 +47,11 @@ pub struct GammaCorrection {
     example_usage: String,
 }
 
-impl GammaCorrection {
-    pub fn new() -> GammaCorrection { // public constructor
-        let name = "GammaCorrection".to_string();
+impl CorrectVignetting {
+    pub fn new() -> CorrectVignetting { // public constructor
+        let name = "CorrectVignetting".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Performs a sigmoidal contrast stretch on input images.".to_string();
+        let description = "Corrects the darkening of images towards corners.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -42,6 +59,15 @@ impl GammaCorrection {
             flags: vec!["-i".to_owned(), "--input".to_owned()], 
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Principal Point File".to_owned(), 
+            flags: vec!["--pp".to_owned()], 
+            description: "Input principal point file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
             default_value: None,
             optional: false
         });
@@ -56,11 +82,29 @@ impl GammaCorrection {
         });
         
         parameters.push(ToolParameter{
-            name: "Gamma Value".to_owned(), 
-            flags: vec!["--gamma".to_owned()], 
-            description: "Gamma value.".to_owned(),
+            name: "Camera Focal Length (mm)".to_owned(), 
+            flags: vec!["--focal_length".to_owned()], 
+            description: "Camera focal length, in millimeters.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("0.5".to_owned()),
+            default_value: Some("304.8".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Distance Between Left-Right Edges (mm)".to_owned(), 
+            flags: vec!["--image_width".to_owned()], 
+            description: "Distance between photograph edges, in millimeters.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("228.6".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "n Parameter".to_owned(), 
+            flags: vec!["-n".to_owned()], 
+            description: "The 'n' parameter.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("4.0".to_owned()),
             optional: true
         });
         
@@ -71,9 +115,9 @@ impl GammaCorrection {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --gamma=0.5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif --pp=princ_pt.shp -o=output.tif --focal_length=304.8 --image_width=228.6 -n=4.0", short_exe, name).replace("*", &sep);
     
-        GammaCorrection { 
+        CorrectVignetting { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -83,7 +127,7 @@ impl GammaCorrection {
     }
 }
 
-impl WhiteboxTool for GammaCorrection {
+impl WhiteboxTool for CorrectVignetting {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -113,8 +157,11 @@ impl WhiteboxTool for GammaCorrection {
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
+        let mut pp_file = String::new();
         let mut output_file = String::new();
-        let mut gamma = 0.5;
+        let mut focal_length = 304.8f64;
+        let mut image_width = 228.6f64;
+        let mut n_param = 4f64;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -129,24 +176,43 @@ impl WhiteboxTool for GammaCorrection {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-pp" {
+                pp_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-gamma" || vec[0].to_lowercase() == "--gamma" {
-                if keyval {
-                    gamma = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    gamma = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-focal_length" {
+                focal_length = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-image_width" {
+                image_width = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-n" {
+                n_param = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -164,6 +230,9 @@ impl WhiteboxTool for GammaCorrection {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
+        if !pp_file.contains(&sep) && !pp_file.contains("/") {
+            pp_file = format!("{}{}", working_directory, pp_file);
+        }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
@@ -173,27 +242,37 @@ impl WhiteboxTool for GammaCorrection {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+        let scale_factor = image_width / columns as f64;
 
-        let is_rgb_image = 
-            if input.configs.data_type == DataType::RGB24 ||
-                input.configs.data_type == DataType::RGBA32 ||
-                input.configs.photometric_interp == PhotometricInterpretation::RGB {
-                
-                true
-            } else {
-                false
-            };
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
 
         if input.configs.data_type == DataType::RGB48 {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "This tool cannot be applied to 48-bit RGB colour-composite images."));
         }
+
+
+        let vector_data = Shapefile::new(&pp_file, "r")?;
+
+        // make sure the input vector file is of point base type
+        if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The input vector data must be of a point base shape type."));
+        }
         
         let start = time::now();
 
-        if gamma < 0.0 { gamma = 0f64; }
-        if gamma > 4.0 { gamma = 4f64; }
-        
+        // get the row/column of the principal point
+        let pp_x = input.get_column_from_x(vector_data.get_record(0).points[0].x) as f64;
+        let pp_y = input.get_row_from_y(vector_data.get_record(0).points[0].y) as f64;
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -214,16 +293,75 @@ impl WhiteboxTool for GammaCorrection {
                         }
                         )
                     };
-                
+                let mut z_in: f64;
+                let mut z_out: f64;
+                let mut dist: f64;
+                let mut theta: f64;
+                let mut min_in = f64::INFINITY;
+                let mut max_in = f64::NEG_INFINITY;
+                let mut min_out = f64::INFINITY;
+                let mut max_out = f64::NEG_INFINITY;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z_in = input_fn(row, col);
+                        if z_in != nodata {
+                            dist = ((row as f64 - pp_y) * (row as f64 - pp_y) + (col as f64 - pp_x) * (col as f64 - pp_x)).sqrt();
+                            theta = ((dist * scale_factor / focal_length)).atan();
+                            z_out = z_in / theta.cos().powf(n_param);
+                            data[col as usize] = z_out;
+                            if z_in < min_in { min_in = z_in; }
+                            if z_in > max_in { max_in = z_in; }
+                            if z_out < min_out { min_out = z_out; }
+                            if z_out > max_out { max_out = z_out; }
+                        }
+                    }
+                    tx.send((row, data, min_in, max_in, min_out, max_out)).unwrap();
+                }
+            });
+        }
+
+        let mut unscaled_data: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
+        let mut min_in = f64::INFINITY;
+        let mut max_in = f64::NEG_INFINITY;
+        let mut min_out = f64::INFINITY;
+        let mut max_out = f64::NEG_INFINITY;
+        for r in 0..rows {
+            let (row, data, a, b, c, d) = rx.recv().unwrap();
+            if a < min_in { min_in = a; }
+            if b > max_in { max_in = b; }
+            if c < min_out { min_out = c; }
+            if d > max_out { max_out = d; }
+            unscaled_data.set_row_data(row, data);
+            if verbose {
+                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 1 of 2): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+        let range_in = max_in - min_in;
+        let range_out = max_out - min_out;
+
+        let unscaled_data = Arc::new(unscaled_data);
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let unscaled_data = unscaled_data.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = 
                     if !is_rgb_image {
+                        // simply return the value.
                         Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                     } else {
+                        // convert it back into an rgb value, using the modified intensity value.
                         Box::new(
                         |row: isize, col: isize, value: f64| -> f64 {
                             if value != nodata {
                                 let (h, s, _) = value2hsi(input.get_value(row, col));
-                                let ret = hsi2value(h, s, value / 1f64.powf(gamma));
+                                let ret = hsi2value(h, s, value);
                                 return ret;
                             }
                             nodata
@@ -235,9 +373,9 @@ impl WhiteboxTool for GammaCorrection {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z_in = input_fn(row, col);
+                        z_in = unscaled_data.get_value(row, col);
                         if z_in != nodata {
-                            z_out = z_in.powf(gamma);
+                            z_out = min_in + (z_in - min_out) / range_out * range_in;
                             data[col as usize] = output_fn(row, col, z_out);
                         }
                     }
@@ -253,7 +391,7 @@ impl WhiteboxTool for GammaCorrection {
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Progress (Loop 2 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -263,7 +401,10 @@ impl WhiteboxTool for GammaCorrection {
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Gamma value: {}", gamma));
+        output.add_metadata_entry(format!("PP file: {}", pp_file));
+        output.add_metadata_entry(format!("Focal length: {}", focal_length));
+        output.add_metadata_entry(format!("Image width: {}", image_width));
+        output.add_metadata_entry(format!("n-parameter: {}", n_param));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };

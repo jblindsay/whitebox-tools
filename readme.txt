@@ -58,6 +58,7 @@ for more details.
 
 Version 0.7.0 (DD-MM-2018)
 - Added the following tools:
+    CorrectVignetting
     RaiseWalls
 
 Version 0.6.0 (22-04-2018)

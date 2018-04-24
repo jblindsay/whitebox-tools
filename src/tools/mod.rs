@@ -114,6 +114,7 @@ impl ToolManager {
         tool_names.push("BilateralFilter".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
+        tool_names.push("CorrectVignetting".to_string());
         tool_names.push("CreateColourComposite".to_string());
         tool_names.push("DirectDecorrelationStretch".to_string());
         tool_names.push("DiversityFilter".to_string());
@@ -471,6 +472,7 @@ impl ToolManager {
             "balancecontrastenhancement" => Some(Box::new(tools::image_analysis::BalanceContrastEnhancement::new())),
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
+            "correctvignetting" => Some(Box::new(tools::image_analysis::CorrectVignetting::new())),
             "conservativesmoothingfilter" => {
                 Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new()))
             }
