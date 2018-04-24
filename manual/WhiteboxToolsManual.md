@@ -288,7 +288,7 @@ wbt.set_verbose_mode(False)
 wbt.verbose = False
 ~~~~
 
-Alternatively, it may be helpful to capture the text output of a tool for custom processing. This is achieved by specifying a custom *callback* function to the tool's convenience method:
+Alternatively, it may be helpful to capture the text output of a tool for custom processing. This is achieved by specifying a custom *callback* function to the tool's convenience function:
 
 ~~~~{.python .numberLines}
 # This callback function suppresses printing progress updates,
@@ -302,7 +302,7 @@ def my_callback(value):
 wbt.slope('DEM.tif', 'slope_raster.tif', callback=my_callback)
 ~~~~
 
-Callback functions can also serve as a means of cancelling operations:
+Every convienience function takes an optional callback as the last parameter. The default callback simply prints tool outputs to the standard output without any additional processing. Callback functions can serve as a means of cancelling operations:
 
 ~~~~{.python .numberLines}
 def my_callback(value):
@@ -352,7 +352,7 @@ Begin by creating a dedicated project directory called *FlowAccumExample* and co
 
 The folder contains a number of files, including the *WhiteboxTools* executable file, the *whitebox_tools.py* python script, the WhiteboxTools Runner (*wb_runner.py*; see below), and this user manual. It is likely that the folder has a name that reflects the operating system and architecture that the binary file was compiled for (e.g. WhiteboxTools_darwin_amd64). Rename this directory to *WBT*. Also note, depending on your decompression software, it may be the case that the contents of the *WBT* folder itself contains a sub-directory that actually holds these files. If this is the case, be sure to move the contents of the sub-directory into the *WBT* parent directory.
 
-Using your text editor, create a new Python script file, called *FlowAccumulation.py* within the *FlowAccumExample* directory. We will begin by importing the *WhiteboxTools* class from the *whitebox_tools.py* script contained within the *WBT* sub-directory. Unfortunately, Python's module system is only able to import classes and function definitions declared in external Python scripts *if these external files are contained somewhere on the Python path or in the directory containing the script file into which you are importing*. This is important because based on the project structure that we have established, the *whitebox_tools.py* script is actually contained within a sub-directory of the *FlowAccumExample* directory and is therefore not directly accessible, unless you have previously installed script on the Python path. Another, perhaps easier solution to this problem is to create a file named *\_\_init\_\_.py* (those are two leading and trailing underscore characters) within the *FlowAccumExample* directory. The presence of this empty file will make Python treat the *WBT* directory as containing packages, in this case, the *whitebox_tools* package. For more information, see the Python documentation on [modules and packages](https://docs.python.org/3/tutorial/modules.html#packages). 
+Using your text editor, create a new Python script file, called *FlowAccumulation.py* within the *FlowAccumExample* directory. We will begin by importing the *WhiteboxTools* class from the *whitebox_tools.py* script contained within the *WBT* sub-directory. Unfortunately, Python's module system is only able to import classes and function definitions declared in external Python scripts *if these external files are contained somewhere on the Python path or in the directory containing the script file into which you are importing*. This is important because based on the project structure that we have established, the *whitebox_tools.py* script is actually contained within a sub-directory of the *FlowAccumExample* directory and is therefore not directly accessible, unless you have previously installed the script on the Python path. Another, perhaps easier solution to this problem is to create a file named *\_\_init\_\_.py* (those are two leading and trailing underscore characters) within the *FlowAccumExample* directory. The presence of this empty file will make Python treat the *WBT* directory as containing packages, in this case, the *whitebox_tools* package. For more information, see the Python documentation on [modules and packages](https://docs.python.org/3/tutorial/modules.html#packages). 
 
 At this stage, you should have a project directory structure like that of the Figure 3.
 

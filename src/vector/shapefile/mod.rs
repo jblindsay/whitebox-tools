@@ -478,7 +478,7 @@ impl Shapefile {
             let mut r: Vec<FieldData> = vec![];
             for j in 0..self.attributes.header.num_fields {
                 str_rep = bor.read_utf8(self.attributes.fields[j as usize].field_length as usize).replace(char::from(0), "").replace("*", "").trim().to_string();
-                if str_rep.is_empty() {
+                if str_rep.replace(" ", "").replace("?", "").is_empty() {
                     r.push(FieldData::Null);
                 } else {
                     match self.attributes.fields[j as usize].field_type {

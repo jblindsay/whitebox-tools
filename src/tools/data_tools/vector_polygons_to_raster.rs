@@ -216,7 +216,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
         
         let start = time::now();
 
-        // make sure the input vector file is of points type
+        // make sure the input vector file is of polygon type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Polygon {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "The input vector data must be of polygon base shape type."));

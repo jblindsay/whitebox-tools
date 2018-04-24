@@ -56,6 +56,10 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 0.7.0 (DD-MM-2018)
+- Added the following tools:
+    RaiseWalls
+
 Version 0.6.0 (22-04-2018)
 - Added the ability to read Shapefile attribute data (.dbf files).
 - Added support to read LZW compressed GeoTIFFs, at least for simple
