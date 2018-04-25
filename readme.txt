@@ -58,7 +58,10 @@ for more details.
 
 Version 0.7.0 (DD-MM-2018)
 - Added the following tools:
+    ClipLidarToPolygon
     CorrectVignetting
+    ErasePolygonFromLidar
+    ExportTableToCsv
     RaiseWalls
 
 Version 0.6.0 (22-04-2018)

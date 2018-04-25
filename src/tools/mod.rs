@@ -172,7 +172,9 @@ impl ToolManager {
 
         // lidar_analysis
         tool_names.push("BlockMaximum".to_string());
+        tool_names.push("ClipLidarToPolygon".to_string());
         tool_names.push("BlockMinimum".to_string());
+        tool_names.push("ErasePolygonFromLidar".to_string());
         tool_names.push("FilterLidarScanAngles".to_string());
         tool_names.push("FindFlightlineEdgePoints".to_string());
         tool_names.push("FlightlineOverlap".to_string());
@@ -547,6 +549,8 @@ impl ToolManager {
             // lidar_analysis
             "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),
             "blockminimum" => Some(Box::new(tools::lidar_analysis::BlockMinimum::new())),
+            "cliplidartopolygon" => Some(Box::new(tools::lidar_analysis::ClipLidarToPolygon::new())),
+            "erasepolygonfromlidar" => Some(Box::new(tools::lidar_analysis::ErasePolygonFromLidar::new())),
             "filterlidarscanangles" => Some(Box::new(tools::lidar_analysis::FilterLidarScanAngles::new())),
             "findflightlineedgepoints" => Some(Box::new(tools::lidar_analysis::FindFlightlineEdgePoints::new())),
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
