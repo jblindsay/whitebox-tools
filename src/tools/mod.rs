@@ -26,6 +26,7 @@ impl ToolManager {
         // data_tools
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
+        tool_names.push("ExportTableToCsv".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("SetNodataValue".to_string());
@@ -357,6 +358,7 @@ impl ToolManager {
             // data_tools
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
+            "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
@@ -1012,6 +1014,7 @@ enum ParameterFileType {
     Vector(VectorGeometryType),
     Text,
     Html,
+    Csv,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

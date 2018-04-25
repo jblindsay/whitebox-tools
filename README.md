@@ -167,6 +167,7 @@ The library currently contains the following 303 tools, which are each grouped b
 
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
+- ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PrintGeoTiffTags***: Prints the tags within a GeoTIFF.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.

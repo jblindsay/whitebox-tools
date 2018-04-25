@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 24/04/2018
 License: MIT
 */
 
@@ -137,18 +137,19 @@ impl WhiteboxTool for ImageCorrelation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--inputs" {
-                if keyval {
-                    input_files = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-inputs" {
+                input_files = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_files = args[i+1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -324,11 +325,6 @@ impl WhiteboxTool for ImageCorrelation {
             }
         }
 
-        // for value in correlation_matrix {
-        //     println!("{:?}", value);
-        // }
-
-        
         let end = time::now();
         let elapsed_time = end - start;
 
