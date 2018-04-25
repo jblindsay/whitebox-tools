@@ -52,9 +52,9 @@ impl ExportTableToCsv {
         });
 
         parameters.push(ToolParameter{
-            name: "Export Field Names As Header".to_owned(), 
+            name: "Export field names as file header?".to_owned(), 
             flags: vec!["--headers".to_owned()], 
-            description: "Export field names as header".to_owned(),
+            description: "Export field names as file header?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_string()),
             optional: true
