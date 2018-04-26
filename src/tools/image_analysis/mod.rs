@@ -57,6 +57,7 @@ mod stdev_filter;
 mod thicken_line;
 mod tophat;
 mod total_filter;
+mod user_defined_weights_filter;
 mod write_func_memory_insertion;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -118,4 +119,5 @@ pub use self::stdev_filter::StandardDeviationFilter;
 pub use self::thicken_line::ThickenRasterLine;
 pub use self::tophat::TophatTransform;
 pub use self::total_filter::TotalFilter;
+pub use self::user_defined_weights_filter::UserDefinedWeightsFilter;
 pub use self::write_func_memory_insertion::WriteFunctionMemoryInsertion;

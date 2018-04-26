@@ -64,6 +64,7 @@ Version 0.7.0 (DD-MM-2018)
     ErasePolygonFromLidar
     ExportTableToCsv
     RaiseWalls
+    UserDefinedWeightsFilter
 
 Version 0.6.0 (22-04-2018)
 - Added the ability to read Shapefile attribute data (.dbf files).

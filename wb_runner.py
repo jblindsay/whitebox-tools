@@ -105,6 +105,8 @@ class FileSelector(tk.Frame):
                     ftypes = [("Shapefiles", "*.shp")]
                 elif 'Text' in self.file_type:
                     ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
+                elif 'Csv' in self.file_type:
+                    ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
                 elif 'Html' in self.file_type:
                     ftypes = [("HTML files", "*.html")]
 
@@ -144,6 +146,8 @@ class FileSelector(tk.Frame):
                     ext = '.shp'
                 elif 'Text' in self.file_type:
                     ext = '.txt'
+                elif 'Csv' in self.file_type:
+                    ext = '.csv'
                 elif 'Html' in self.file_type:
                     ext = '.html'
 
@@ -248,6 +252,8 @@ class FileOrFloat(tk.Frame):
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
                 ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
+            elif 'Csv' in self.file_type:
+                ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
             elif 'Html' in self.file_type:
                 ftypes = [("HTML files", "*.html")]
 
@@ -291,6 +297,8 @@ class FileOrFloat(tk.Frame):
                     ext = '.shp'
                 elif 'Text' in self.file_type:
                     ext = '.txt'
+                elif 'Csv' in self.file_type:
+                    ext = '.csv'
                 elif 'Html' in self.file_type:
                     ext = '.html'
 
@@ -392,6 +400,8 @@ class MultifileSelector(tk.Frame):
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
                 ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
+            elif 'Csv' in self.file_type:
+                    ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
             elif 'Html' in self.file_type:
                 ftypes = [("HTML files", "*.html")]
 
