@@ -38,6 +38,7 @@ mod snap_pour_points;
 mod strahler_basins;
 mod subbasins;
 mod trace_downslope_flowpaths;
+mod unnest_basins;
 mod watershed;
 
 // exports identifiers from private sub-modules in the current module namespace
@@ -80,4 +81,5 @@ pub use self::snap_pour_points::SnapPourPoints;
 pub use self::strahler_basins::StrahlerOrderBasins;
 pub use self::subbasins::Subbasins;
 pub use self::trace_downslope_flowpaths::TraceDownslopeFlowpaths;
+pub use self::unnest_basins::UnnestBasins;
 pub use self::watershed::Watershed;

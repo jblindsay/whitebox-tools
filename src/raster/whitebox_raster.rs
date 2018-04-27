@@ -153,6 +153,7 @@ pub fn read_whitebox(file_name: &String,
         // DataType::Byte
         1
     };
+    
 
     let num_cells = configs.rows * configs.columns;
     let buf_size = 1_000_000usize;

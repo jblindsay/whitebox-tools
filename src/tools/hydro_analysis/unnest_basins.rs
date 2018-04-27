@@ -1,9 +1,28 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
-Last Modified: Dec. 14, 2017
+Created: 27/04/2018
+Last Modified: 27/04/2018
 License: MIT
+
+HELP:
+In some applications it is necessary to relate a measured variable for a group of 
+hydrometric stations (e.g. characteristics of flow timing and duration or water 
+chemistry) to some characteristics of each outlet's catchment (e.g. mean slope, 
+area of wetlands, etc.). When the group of outlets are nested, i.e. some stations 
+are located downstream of others, then performing a watershed operation will 
+result in inappropriate watershed delineation. In particular, the delineated 
+watersheds of each nested outlet will not include the catchment areas of upstream 
+outlets. This creates a serious problem for this type of application.
+
+The Unnest Basin tool can be used to perform a watershedding operation based on a 
+group of specified pour points, i.e. outlets or target cells, such that each 
+complete watershed is delineated. The user must specify the name of a flow pointer 
+(flow direction) raster, a pour point raster, and the name of the output rasters. 
+Multiple numbered outputs will be created, one for each nesting level. Pour point, 
+or target, cells are denoted in the input pour-point image as any non-zero, 
+non-NoData value. The flow pointer raster should be generated using the D8 
+algorithm.
 */
 
 use time;
@@ -16,7 +35,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
-pub struct Watershed {
+pub struct UnnestBasins {
     name: String,
     description: String,
     toolbox: String,
@@ -24,11 +43,11 @@ pub struct Watershed {
     example_usage: String,
 }
 
-impl Watershed {
-    pub fn new() -> Watershed { // public constructor
-        let name = "Watershed".to_string();
+impl UnnestBasins {
+    pub fn new() -> UnnestBasins { // public constructor
+        let name = "UnnestBasins".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Identifies the watershed, or drainage basin, draining to a set of target cells.".to_string();
+        let description = "Extract whole watersheds for a set of outlet points.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -76,7 +95,7 @@ impl Watershed {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.tif' --pour_pts='pour_pts.shp' -o='output.tif'", short_exe, name).replace("*", &sep);
     
-        Watershed { 
+        UnnestBasins { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -86,7 +105,7 @@ impl Watershed {
     }
 }
 
-impl WhiteboxTool for Watershed {
+impl WhiteboxTool for UnnestBasins {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -178,11 +197,12 @@ impl WhiteboxTool for Watershed {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        let start = time::now();
+
         if verbose { println!("Reading data...") };
 
         let pntr = Raster::new(&d8_file, "r")?;
         
-        // let pourpts = Raster::new(&pourpts_file, "r")?;
         let pourpts = Shapefile::new(&pourpts_file, "r")?;
 
         // make sure the input vector file is of points type
@@ -191,40 +211,31 @@ impl WhiteboxTool for Watershed {
                 "The input vector data must be of point base shape type."));
         }
 
-        let start = time::now();
-
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
         let nodata = -32768f64; //pour_pts.configs.nodata;
         let pntr_nodata = pntr.configs.nodata;
-        // let palette = pourpts.configs.palette.clone();
-
-        // // make sure the input files have the same size
-        // if pourpts.configs.rows != pntr.configs.rows || pourpts.configs.columns != pntr.configs.columns {
-        //     return Err(Error::new(ErrorKind::InvalidInput,
-        //                         "The input files must have the same number of rows and columns and spatial extent."));
-        // }
 
         let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
-        let mut output = Raster::initialize_using_file(&output_file, &pntr);
-        output.configs.nodata = nodata;
-        output.configs.data_type = DataType::I16;
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.configs.palette = "qual.pal".to_string(); //palette;
-        let low_value = f64::MIN;
-        output.reinitialize_values(low_value);
+        let mut outlet_points: Array2D<isize> = Array2D::new(rows, columns, 0, 0)?;
+        let mut outlet_rows = vec![0isize; pourpts.num_records + 1];
+        let mut outlet_columns = vec![0isize; pourpts.num_records + 1];
+        let mut nesting_order = vec![0usize; pourpts.num_records + 1];
+        let mut outlet: usize;
 
         for record_num in 0..pourpts.num_records {
             let record = pourpts.get_record(record_num);
+            outlet = record_num + 1;
             let row = pntr.get_row_from_y(record.points[0].y);
             let col = pntr.get_column_from_x(record.points[0].x);
-            output.set_value(row, col, (record_num+1) as f64);
+            outlet_points.set_value(row, col, outlet as isize);
+            outlet_rows[outlet] = row;
+            outlet_columns[outlet] = col;
 
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (pourpts.num_records - 1) as f64) as usize;
+                progress = (100.0_f64 * outlet as f64 / pourpts.num_records as f64) as usize;
                 if progress != old_progress {
                     println!("Locating pour points: {}%", progress);
                     old_progress = progress;
@@ -264,20 +275,14 @@ impl WhiteboxTool for Watershed {
         let mut z: f64;
         for row in 0..rows {
             for col in 0..columns {
-                z = pntr[(row, col)];
+                z = pntr.get_value(row, col);
                 if z != pntr_nodata {
                     if z > 0.0 {
-                        flow_dir[(row, col)] = pntr_matches[z as usize];
+                        flow_dir.set_value(row, col, pntr_matches[z as usize]);
                     } else {
-                        flow_dir[(row, col)] = -1i8;
+                        flow_dir.set_value(row, col, -1i8);
                     }
-                } else {
-                    output[(row, col)] = nodata;
                 }
-                // z = pourpts[(row, col)];
-                // if z != nodata && z > 0.0 {
-                //     output[(row, col)] = z;
-                // }
             }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -288,82 +293,157 @@ impl WhiteboxTool for Watershed {
             }
         }
 
+        // calculate the nesting order for each outlet point
         let mut flag: bool;
+        let mut cur_order: usize;
         let (mut x, mut y): (isize, isize);
         let mut dir: i8;
-        let mut outlet_id: f64;
-        for row in 0..rows {
-            for col in 0..columns {
-                if output[(row, col)] == low_value {
-                    flag = false;
-                    x = col;
-                    y = row;
-                    outlet_id = nodata;
-                    while !flag {
-                        // find its downslope neighbour
-                        dir = flow_dir[(y, x)];
-                        if dir >= 0 {
-                            // move x and y accordingly
-                            x += dx[dir as usize];
-                            y += dy[dir as usize];
-
-                            // if the new cell already has a value in the output, use that as the outletID
-                            z = output[(y, x)];
-                            if z != low_value {
-                                outlet_id = z;
+        let mut max_nesting_order = 1;
+        for record_num in 0..pourpts.num_records {
+            outlet = record_num + 1;
+            cur_order = 1;
+            if nesting_order[outlet] < cur_order {
+                nesting_order[outlet] = cur_order;
+                flag = false;
+                y = outlet_rows[outlet];
+                x = outlet_columns[outlet];
+                while !flag {
+                    // find its downslope neighbour
+                    dir = flow_dir.get_value(y, x);
+                    if dir >= 0 {
+                        // move x and y accordingly
+                        x += dx[dir as usize];
+                        y += dy[dir as usize];
+                        if outlet_points.get_value(y, x) > 0 {
+                            outlet = outlet_points.get_value(y, x) as usize;
+                            cur_order += 1;
+                            if nesting_order[outlet] < cur_order {
+                                nesting_order[outlet] = cur_order;
+                                if cur_order > max_nesting_order {
+                                    max_nesting_order = cur_order;
+                                }
+                            } else {
                                 flag = true;
                             }
-                        } else {
-                            flag = true;
                         }
-                    }
-
-                    flag = false;
-                    x = col;
-                    y = row;
-                    output[(y, x)] = outlet_id;
-                    while !flag {
-                        // find its downslope neighbour
-                        dir = flow_dir[(y, x)];
-                        if dir >= 0 {
-                            // move x and y accordingly
-                            x += dx[dir as usize];
-                            y += dy[dir as usize];
-
-                            // if the new cell already has a value in the output, use that as the outletID
-                            if output[(y, x)] != low_value {
-                                flag = true;
-                            }
-                        } else {
-                            flag = true;
-                        }
-                        output[(y, x)] = outlet_id;
+                    } else {
+                        flag = true;
                     }
                 }
             }
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * outlet as f64 / pourpts.num_records as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Calculating outlet nesting order: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
-        
+
+        for order in 1..max_nesting_order+1 {
+            let start2 = time::now();
+            // there will be an output file for each nesting order
+            let pos_of_dot = output_file.rfind('.').unwrap_or(0);
+            let ext = &output_file[pos_of_dot..];
+            let output_file_order = output_file.replace(ext, &format!("_{}{}", order, ext));
+    
+            let mut output = Raster::initialize_using_file(&output_file_order, &pntr);
+            output.configs.nodata = nodata;
+            output.configs.data_type = DataType::I16;
+            output.configs.photometric_interp = PhotometricInterpretation::Categorical;
+            output.configs.palette = "qual.pal".to_string();
+            let low_value = f64::MIN;
+            output.reinitialize_values(low_value);
+
+            for outlet in 1..pourpts.num_records+1 {
+                if nesting_order[outlet] == order {
+                    y = outlet_rows[outlet];
+                    x = outlet_columns[outlet];
+                    output.set_value(y, x, outlet as f64);
+                }
+            }
+
+            let mut outlet_id: f64;
+            for row in 0..rows {
+                for col in 0..columns {
+                    if flow_dir.get_value(row, col) == -2 {
+                        output.set_value(row, col, nodata);
+                    }
+                    if output.get_value(row, col) == low_value {
+                        flag = false;
+                        x = col;
+                        y = row;
+                        outlet_id = nodata;
+                        while !flag {
+                            // find its downslope neighbour
+                            dir = flow_dir.get_value(y, x);
+                            if dir >= 0 {
+                                // move x and y accordingly
+                                x += dx[dir as usize];
+                                y += dy[dir as usize];
+
+                                // if the new cell already has a value in the output, use that as the outletID
+                                z = output.get_value(y, x);
+                                if z != low_value {
+                                    outlet_id = z;
+                                    flag = true;
+                                }
+                            } else {
+                                flag = true;
+                            }
+                        }
+
+                        flag = false;
+                        x = col;
+                        y = row;
+                        output.set_value(y, x, outlet_id);
+                        while !flag {
+                            // find its downslope neighbour
+                            dir = flow_dir.get_value(y, x);
+                            if dir >= 0 {
+                                // move x and y accordingly
+                                x += dx[dir as usize];
+                                y += dy[dir as usize];
+
+                                // if the new cell already has a value in the output, use that as the outletID
+                                if output.get_value(y, x) != low_value {
+                                    flag = true;
+                                }
+                            } else {
+                                flag = true;
+                            }
+                            output.set_value(y, x, outlet_id);
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress (Loop {} of {}): {}%", order, max_nesting_order, progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+
+            let end2 = time::now();
+            let elapsed_time2 = end2 - start2;
+            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
+            output.add_metadata_entry(format!("Pour-points file: {}", pourpts_file));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time2).replace("PT", ""));
+
+            if verbose { println!("Saving data for nesting order {}...", order) };
+            let _ = match output.write() {
+                Ok(_) => if verbose { println!("Output file written") },
+                Err(e) => return Err(e),
+            };
+        }
+
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-        output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
-        output.add_metadata_entry(format!("Pour-points file: {}", pourpts_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
-        if verbose { println!("Saving data...") };
-        let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
-            Err(e) => return Err(e),
-        };
+            
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
         }
         
         Ok(())

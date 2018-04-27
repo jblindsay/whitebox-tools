@@ -108,6 +108,7 @@ impl ToolManager {
         tool_names.push("StrahlerOrderBasins".to_string());
         tool_names.push("Subbasins".to_string());
         tool_names.push("TraceDownslopeFlowpaths".to_string());
+        tool_names.push("UnnestBasins".to_string());
         tool_names.push("Watershed".to_string());
 
         // image_analysis
@@ -470,7 +471,8 @@ impl ToolManager {
             "subbasins" => Some(Box::new(tools::hydro_analysis::Subbasins::new())),
             "tracedownslopeflowpaths" => {
                 Some(Box::new(tools::hydro_analysis::TraceDownslopeFlowpaths::new()))
-            }
+            },
+            "unnestbasins" => Some(Box::new(tools::hydro_analysis::UnnestBasins::new())),
             "watershed" => Some(Box::new(tools::hydro_analysis::Watershed::new())),
 
 

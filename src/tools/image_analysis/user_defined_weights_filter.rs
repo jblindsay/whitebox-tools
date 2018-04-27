@@ -2,8 +2,23 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/04/2018
-Last Modified: 26/04/2018
+Last Modified: 27/04/2018
 License: MIT
+
+NOTES: NoData values in the input image are ignored during the convolution operation. 
+This can lead to unexpected behavior at the edges of images (since the default behavior 
+is to return NoData when addressing cells beyond the grid edge) and where the grid 
+contains interior areas of NoData values. Normalization of kernel weights can be useful 
+for handling the edge effects associated with interior areas of NoData values. When the 
+normalization option is selected, the sum of the cell value-weight product is divided 
+by the sum of the weights on a cell-by-cell basis. Therefore, if the kernel at a 
+particular grid cell contains neighboring cells of NoData values, normalization 
+effectively re-adjusts the weighting to account for the missing data values. Normalization 
+also ensures that the output image will possess values within the range of the input 
+image and allows the user to specify integer value weights in the kernel. However, note
+that this implies that the sum of weights should equal one. In some cases, alternative
+sums (e.g. zero) are more appropriate, and as such normalization should not be applied
+in these cases.
 */
 
 use time;
@@ -71,6 +86,15 @@ impl UserDefinedWeightsFilter {
             default_value: Some("center".to_owned()),
             optional: true
         });
+
+        parameters.push(ToolParameter{
+            name: "Normalize kernel weights?".to_owned(), 
+            flags: vec!["--normalize".to_owned()], 
+            description: "Normalize kernel weights? This can reduce edge effects and lessen the impact of data gaps (nodata) but is not suited when the kernel weights sum to zero.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true
+        });
         
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -79,7 +103,7 @@ impl UserDefinedWeightsFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif --weights=weights.txt -o=output.tif --center=center", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif --weights=weights.txt -o=output.tif --center=center --normalize", short_exe, name).replace("*", &sep);
     
         UserDefinedWeightsFilter { 
             name: name, 
@@ -124,6 +148,7 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
         let mut output_file = String::new();
         let mut weights_file = String::new();
         let mut kernel_center = "center".to_string();
+        let mut normalize = false;
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters."));
@@ -158,6 +183,8 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
                 };
             } else if flag_val == "-center" || flag_val == "-centre" {
                 kernel_center = vec[1].to_string().to_lowercase();
+            } else if flag_val == "-normalize" {
+                normalize = true;
             }
         }
 
@@ -271,22 +298,40 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
                 let (mut x, mut y): (isize, isize);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input.get_value(row, col);
-                        if z != nodata {
-                            sum_weights = 0.0;
-                            z_final = 0.0;
-                            for a in 0..num_pixels_in_filter {
-                                x = col + d_x[a];
-                                y = row + d_y[a];
-                                zn = input.get_value(y, x);
-                                if zn != nodata {
-                                    sum_weights += weights[a];
-                                    z_final += weights[a] * zn;
+                    if normalize {
+                        for col in 0..columns {
+                            z = input.get_value(row, col);
+                            if z != nodata {
+                                sum_weights = 0.0;
+                                z_final = 0.0;
+                                for a in 0..num_pixels_in_filter {
+                                    x = col + d_x[a];
+                                    y = row + d_y[a];
+                                    zn = input.get_value(y, x);
+                                    if zn != nodata {
+                                        sum_weights += weights[a];
+                                        z_final += weights[a] * zn;
+                                    }
+                                }
+                                if sum_weights > 0f64 {
+                                    data[col as usize] = z_final / sum_weights;
                                 }
                             }
-                            if sum_weights > 0f64 {
-                                data[col as usize] = z_final / sum_weights;
+                        }
+                    } else {
+                        for col in 0..columns {
+                            z = input.get_value(row, col);
+                            if z != nodata {
+                                z_final = 0.0;
+                                for a in 0..num_pixels_in_filter {
+                                    x = col + d_x[a];
+                                    y = row + d_y[a];
+                                    zn = input.get_value(y, x);
+                                    if zn != nodata {
+                                        z_final += weights[a] * zn;
+                                    }
+                                }
+                                data[col as usize] = z_final;
                             }
                         }
                     }
