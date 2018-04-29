@@ -340,14 +340,14 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     if point_nums.len() > 0 {
                         // find the overall span of time in the cell and the index 
                         // with the minimum scan angle first and min time second
-                        let mut min_scan_angle = i16::max_value();
-                        let mut min_time = f64::INFINITY;
-                        let mut overall_min_time = f64::INFINITY;
-                        let mut overall_max_time = f64::NEG_INFINITY;
+                        let mut min_scan_angle = i16::max_value(); // actually the min abs scan angle
+                        let mut min_time = f64::INFINITY; // actually the earliest time for the points with the min abs scan angles.
+                        let mut earliest_time = f64::INFINITY;
+                        let mut latest_time = f64::NEG_INFINITY;
                         for j in 0..point_nums.len() {
                             index_n = point_nums[j];
-                            if gps_times[index_n] < overall_min_time { overall_min_time = gps_times[index_n]; }
-                            if gps_times[index_n] > overall_max_time { overall_max_time = gps_times[index_n]; }
+                            if gps_times[index_n] < earliest_time { earliest_time = gps_times[index_n]; }
+                            if gps_times[index_n] > latest_time { latest_time = gps_times[index_n]; }
                             if scan_angles[index_n] <= min_scan_angle {
                                 if gps_times[index_n] < min_time {
                                     min_scan_angle = scan_angles[index_n];
@@ -356,7 +356,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                             }
                         }
 
-                        if overall_max_time - overall_min_time > time_threshold {
+                        if latest_time - earliest_time > time_threshold {
                             for j in 0..point_nums.len() {
                                 overlapping[point_nums[j]] = true;
                             }

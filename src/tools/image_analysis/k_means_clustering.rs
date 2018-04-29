@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 27, 2017
-Last Modified: Dec. 27, 2017
+Last Modified: 29/04/2018
 License: MIT
 */
 
@@ -184,41 +184,41 @@ impl WhiteboxTool for KMeansClustering {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-inputs" {
-                if keyval {
-                    input_files_str = vec[1].to_string();
+                input_files_str = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_files_str = args[i+1].to_string();
-                }
+                    args[i+1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i+1].to_string();
-                }
+                    args[i+1].to_string()
+                };
             } else if flag_val == "-out_html" {
-                if keyval {
-                    output_html_file = vec[1].to_string();
+                output_html_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_html_file = args[i+1].to_string();
-                }
+                    args[i+1].to_string()
+                };
             } else if flag_val == "-classes" {
-                if keyval {
-                    num_classes = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                num_classes = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    num_classes = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             } else if flag_val == "-max_iterations" {
-                if keyval {
-                    max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                max_iterations = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    max_iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             } else if flag_val == "-class_change" {
-                if keyval {
-                    percent_changed_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                percent_changed_threshold = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    percent_changed_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-initialize" {
                 if keyval {
                     if vec[1].to_string().to_lowercase().contains("rand") {
@@ -230,11 +230,11 @@ impl WhiteboxTool for KMeansClustering {
                     }
                 }
             } else if flag_val == "-min_class_size" {
-                if keyval {
-                    min_class_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                min_class_size = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    min_class_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             }
         }
 

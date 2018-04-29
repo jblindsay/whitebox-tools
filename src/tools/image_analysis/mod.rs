@@ -2,6 +2,7 @@
 mod adaptive_filter;
 mod balance_contrast_enhancement;
 mod bilateral_filter;
+mod change_vector_analysis;
 mod closing;
 mod conservative_smoothing_filter;
 mod correct_vignetting;
@@ -64,6 +65,7 @@ mod write_func_memory_insertion;
 pub use self::adaptive_filter::AdaptiveFilter;
 pub use self::balance_contrast_enhancement::BalanceContrastEnhancement;
 pub use self::bilateral_filter::BilateralFilter;
+pub use self::change_vector_analysis::ChangeVectorAnalysis;
 pub use self::closing::Closing;
 pub use self::conservative_smoothing_filter::ConservativeSmoothingFilter;
 pub use self::correct_vignetting::CorrectVignetting;

@@ -115,6 +115,7 @@ impl ToolManager {
         tool_names.push("AdaptiveFilter".to_string());
         tool_names.push("BalanceContrastEnhancement".to_string());
         tool_names.push("BilateralFilter".to_string());
+        tool_names.push("ChangeVectorAnalysis".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
         tool_names.push("CorrectVignetting".to_string());
@@ -481,6 +482,7 @@ impl ToolManager {
             "adaptivefilter" => Some(Box::new(tools::image_analysis::AdaptiveFilter::new())),
             "balancecontrastenhancement" => Some(Box::new(tools::image_analysis::BalanceContrastEnhancement::new())),
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
+            "changevectoranalysis" => Some(Box::new(tools::image_analysis::ChangeVectorAnalysis::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
             "correctvignetting" => Some(Box::new(tools::image_analysis::CorrectVignetting::new())),
             "conservativesmoothingfilter" => {
