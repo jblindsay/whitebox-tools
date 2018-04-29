@@ -101,7 +101,7 @@ impl LasFile {
 
         self.header.version_major = 1;
         self.header.version_minor = 3;
-    		// These must be set by the data
+    	// These must be set by the data
         self.header.min_x = f64::INFINITY;
         self.header.max_x = f64::NEG_INFINITY;
         self.header.min_y = f64::INFINITY;
@@ -545,9 +545,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -560,9 +560,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -577,9 +577,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -598,9 +598,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -621,9 +621,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -648,9 +648,9 @@ impl LasFile {
                 for i in 0..self.header.number_of_points {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -682,9 +682,9 @@ impl LasFile {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
                     p.is_64bit = true;
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -701,9 +701,9 @@ impl LasFile {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
                     p.is_64bit = true;
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -727,9 +727,9 @@ impl LasFile {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
                     p.is_64bit = true;
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -754,9 +754,9 @@ impl LasFile {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
                     p.is_64bit = true;
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();
@@ -784,9 +784,9 @@ impl LasFile {
                     bor.seek(self.header.offset_to_points as usize + (i as usize) * (self.header.point_record_length as usize));
                     let mut p: PointData = Default::default();
                     p.is_64bit = true;
-                    p.x = bor.read_u32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_u32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_u32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity { p.intensity = bor.read_u16(); }
                     p.point_bit_field = bor.read_u8();
                     p.class_bit_field = bor.read_u8();

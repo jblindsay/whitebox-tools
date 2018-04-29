@@ -1,6 +1,7 @@
 // private sub-module defined in other files
 mod block_maximum;
 mod block_minimum;
+mod classify_overlap_points;
 mod clip_lidar_to_polygon;
 mod erase_polygon_from_lidar;
 mod filter_lidar_scan_angles;
@@ -30,6 +31,7 @@ mod remove_duplicates;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::block_maximum::BlockMaximum;
 pub use self::block_minimum::BlockMinimum;
+pub use self::classify_overlap_points::ClassifyOverlapPoints;
 pub use self::clip_lidar_to_polygon::ClipLidarToPolygon;
 pub use self::erase_polygon_from_lidar::ErasePolygonFromLidar;
 pub use self::filter_lidar_scan_angles::FilterLidarScanAngles;

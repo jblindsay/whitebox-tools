@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
-Last Modified: February 14, 2018
+Last Modified: 27/04/2018
 License: MIT
 
 NOTES: This tool needs to be parallelized.
@@ -61,15 +61,6 @@ impl FlightlineOverlap {
             default_value: Some("1.0".to_owned()),
             optional: true
         });
-
-        // parameters.push(ToolParameter{
-        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
-        //     flags: vec!["--palette".to_owned()], 
-        //     description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
-        //     parameter_type: ParameterType::String,
-        //     default_value: None,
-        //     optional: true
-        // });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -153,31 +144,31 @@ impl WhiteboxTool for FlightlineOverlap {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-resolution" ||
-                      vec[0].to_lowercase() == "--resolution" {
-                if keyval {
-                    grid_res = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-resolution" {
+                grid_res = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
-                if keyval {
-                    palette = vec[1].to_string();
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-palette" {
+                palette = if keyval {
+                    vec[1].to_string()
                 } else {
-                    palette = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -259,24 +250,60 @@ impl WhiteboxTool for FlightlineOverlap {
             let mut old_progress: usize = 1;
             for i in 0..n_points {
                 match input.get_record(i) {
-                    LidarPointRecord::PointRecord1 {
-                        point_data,
-                        gps_data,
-                    } => {
+                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
-                    }
-                    LidarPointRecord::PointRecord3 {
-                        point_data,
-                        gps_data,
-                        colour_data,
-                    } => {
+                    },
+                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, colour_data } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
-                        let _ = colour_data; // just to kill the 'unused variable' warning
-                    }
+                        let _ = colour_data;
+                    },
+                    LidarPointRecord::PointRecord4 { mut point_data, gps_data, wave_packet } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = wave_packet;
+                    },
+                    LidarPointRecord::PointRecord5 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                        let _ = wave_packet;
+                    },
+                    LidarPointRecord::PointRecord6 { mut point_data, gps_data } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                    },
+                    LidarPointRecord::PointRecord7 { mut point_data, gps_data, colour_data } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                    },
+                    LidarPointRecord::PointRecord8 { mut point_data, gps_data, colour_data } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                    },
+                    LidarPointRecord::PointRecord9 { mut point_data, gps_data, wave_packet } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = wave_packet;
+                    },
+                    LidarPointRecord::PointRecord10 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                        let _ = wave_packet;
+                    },
                     _ => {
                         panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
                     }
