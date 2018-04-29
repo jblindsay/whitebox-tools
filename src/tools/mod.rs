@@ -213,6 +213,7 @@ impl ToolManager {
         tool_names.push("ArcSin".to_string());
         tool_names.push("ArcTan".to_string());
         tool_names.push("Atan2".to_string());
+        tool_names.push("AttributeCorrelation".to_string());
         tool_names.push("AttributeHistogram".to_string());
         tool_names.push("AttributeScattergram".to_string());
         tool_names.push("Ceil".to_string());
@@ -604,6 +605,7 @@ impl ToolManager {
             "arcsin" => Some(Box::new(tools::math_stat_analysis::ArcSin::new())),
             "arctan" => Some(Box::new(tools::math_stat_analysis::ArcTan::new())),
             "atan2" => Some(Box::new(tools::math_stat_analysis::Atan2::new())),
+            "attributecorrelation" => Some(Box::new(tools::math_stat_analysis::AttributeCorrelation::new())),
             "attributehistogram" => Some(Box::new(tools::math_stat_analysis::AttributeHistogram::new())),
             "attributescattergram" => Some(Box::new(tools::math_stat_analysis::AttributeScattergram::new())),
             "ceil" => Some(Box::new(tools::math_stat_analysis::Ceil::new())),

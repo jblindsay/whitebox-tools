@@ -432,7 +432,6 @@ impl WhiteboxTool for ImageCorrelation {
 
                 let _ = output.stdout;
             } else if cfg!(target_os = "windows") {
-                // let output = Command::new("cmd /c start")
                 let output = Command::new("explorer.exe")
                     .arg(output_file.clone())
                     .output()

@@ -137,7 +137,7 @@ impl ShapefileAttributes {
             panic!("Error: Specified field is greater than the number of fields.");
         }
         match self.fields[index].field_type {
-            'N' | 'F' => return true,
+            'N' | 'F' | 'I' | 'O' => return true,
             _ => return false,
         }
     }
