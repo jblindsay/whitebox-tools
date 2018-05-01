@@ -4876,7 +4876,7 @@ Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
 **Flag**             **Description**
 -------------------  ---------------
--\-seed_pts          Input raster seed points file
+-\-seed_pts          Input vector seed points file
 -\-d8_pntr           Input D8 pointer raster file
 -o, -\-output        Output raster file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
@@ -4899,7 +4899,7 @@ trace_downslope_flowpaths(
 
 ```
 >>./whitebox_tools -r=TraceDownslopeFlowpaths -v ^
---wd="/path/to/data/" --seed_pts=seeds.tif ^
+--wd="/path/to/data/" --seed_pts=seeds.shp ^
 --flow_dir=flow_directions.tif --output=flow_paths.tif 
 
 
@@ -11636,6 +11636,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

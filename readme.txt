@@ -71,6 +71,7 @@ Version 0.7.0 (01-05-2018)
     TrendSurfaceVectorPoints
     UnnestBasins
     UserDefinedWeightsFilter
+- Updated TraceDownslopeFlowpaths to take vector seed point inputs.
 
 Version 0.6.0 (22-04-2018)
 - Added the ability to read Shapefile attribute data (.dbf files).

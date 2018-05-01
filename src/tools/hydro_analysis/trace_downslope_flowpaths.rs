@@ -13,6 +13,7 @@ use std::env;
 use std::path;
 use std::f64;
 use raster::*;
+use vector::{Shapefile, ShapeType};
 use std::io::{Error, ErrorKind};
 use tools::*;
 
@@ -31,11 +32,20 @@ impl TraceDownslopeFlowpaths {
         let description = "Traces downslope flowpaths from one or more target sites (i.e. seed points).".to_string();
         
         let mut parameters = vec![];
+        // parameters.push(ToolParameter{
+        //     name: "Input Seed Points File".to_owned(), 
+        //     flags: vec!["--seed_pts".to_owned()], 
+        //     description: "Input raster seed points file.".to_owned(),
+        //     parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+        //     default_value: None,
+        //     optional: false
+        // });
+
         parameters.push(ToolParameter{
-            name: "Input Seed Points File".to_owned(), 
+            name: "Input Vector Seed Points File".to_owned(), 
             flags: vec!["--seed_pts".to_owned()], 
-            description: "Input raster seed points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            description: "Input vector seed points file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
             default_value: None,
             optional: false
         });
@@ -83,7 +93,7 @@ impl TraceDownslopeFlowpaths {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --seed_pts=seeds.tif --flow_dir=flow_directions.tif --output=flow_paths.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --seed_pts=seeds.shp --flow_dir=flow_directions.tif --output=flow_paths.tif", short_exe, name).replace("*", &sep);
     
         TraceDownslopeFlowpaths { 
             name: name, 
@@ -189,28 +199,52 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
             output_file = format!("{}{}", working_directory, output_file);
         }
         
-        if verbose { println!("Reading destination data...") };
-        let seeds = Raster::new(&seed_file, "r")?;
+        // if verbose { println!("Reading destination data...") };
+        // let seeds = Raster::new(&seed_file, "r")?;
 
-        if verbose { println!("Reading backlink data...") };
+        if verbose { println!("Reading flow direction data...") };
         let flowdir = Raster::new(&flowdir_file, "r")?;
 
         // make sure the input files have the same size
-        if seeds.configs.rows != flowdir.configs.rows || seeds.configs.columns != flowdir.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
-        }
+        // if seeds.configs.rows != flowdir.configs.rows || seeds.configs.columns != flowdir.configs.columns {
+        //     return Err(Error::new(ErrorKind::InvalidInput,
+        //                         "The input files must have the same number of rows and columns and spatial extent."));
+        // }
 
         let start = time::now();
-        let rows = seeds.configs.rows as isize;
-        let columns = seeds.configs.columns as isize;
+        let rows = flowdir.configs.rows as isize;
+        let columns = flowdir.configs.columns as isize;
         let nodata = flowdir.configs.nodata;
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
         
-        let mut output = Raster::initialize_using_file(&output_file, &seeds);
+        let mut output = Raster::initialize_using_file(&output_file, &flowdir);
         output.reinitialize_values(background_val);
+
+        let seeds = Shapefile::new(&seed_file, "r")?;
+
+        // make sure the input vector file is of points type
+        if seeds.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type."));
+        }
+
+        let mut seed_rows = vec![];
+        let mut seed_cols = vec![];
+        for record_num in 0..seeds.num_records {
+            let record = seeds.get_record(record_num);
+            seed_rows.push(flowdir.get_row_from_y(record.points[0].y));
+            seed_cols.push(flowdir.get_column_from_x(record.points[0].x));
+
+            if verbose {
+                progress = (100.0_f64 * record_num as f64 / (seeds.num_records - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Locating seed points: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
         
         let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
         let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
@@ -241,30 +275,78 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         let (mut x, mut y): (isize, isize);
         let mut flag: bool;
         let mut dir: f64;
+        // for row in 0..rows {
+        //     for col in 0..columns {
+            //     if seeds[(row, col)] > 0.0 && flowdir[(row, col)] != nodata {
+            //         flag = false;
+            //         x = col;
+            //         y = row;
+            //         while !flag {
+            //             if output[(y, x)] == background_val {
+            //                 output[(y, x)] = 1.0;
+            //             } else {
+            //                 output.increment(y, x, 1.0);
+            //             }
+            //             // find its downslope neighbour
+            //             dir = flowdir[(y, x)];
+            //             if dir != nodata && dir > 0.0 {
+            //                 // move x and y accordingly
+            //                 x += dx[pntr_matches[dir as usize]];
+            //                 y += dy[pntr_matches[dir as usize]];
+            //             } else {
+            //                 flag = true;
+            //             }
+            //         }
+            //     } else if flowdir[(row, col)] == nodata {
+            //         output[(row, col)] = nodata;
+            //     }
+            // }
+            // if verbose {
+            //     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+            //     if progress != old_progress {
+            //         println!("Progress: {}%", progress);
+            //         old_progress = progress;
+            //     }
+            // }
+        // }
+
+        for i in 0..seed_cols.len() {
+            let row = seed_rows[i];
+            let col = seed_cols[i];
+            if flowdir.get_value(row, col) != nodata {
+                flag = false;
+                x = col;
+                y = row;
+                while !flag {
+                    if output.get_value(y, x) == background_val {
+                        output.set_value(y, x, 1f64);
+                    } else {
+                        output.increment(y, x, 1f64);
+                    }
+                    // find its downslope neighbour
+                    dir = flowdir.get_value(y, x);
+                    if dir != nodata && dir > 0.0 {
+                        // move x and y accordingly
+                        x += dx[pntr_matches[dir as usize]];
+                        y += dy[pntr_matches[dir as usize]];
+                    } else {
+                        flag = true;
+                    }
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * i as f64 / (seed_cols.len() - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
         for row in 0..rows {
             for col in 0..columns {
-                if seeds[(row, col)] > 0.0 && flowdir[(row, col)] != nodata {
-                    flag = false;
-                    x = col;
-                    y = row;
-                    while !flag {
-                        if output[(y, x)] == background_val {
-                            output[(y, x)] = 1.0;
-                        } else {
-                            output.increment(y, x, 1.0);
-                        }
-                        // find its downslope neighbour
-                        dir = flowdir[(y, x)];
-                        if dir != nodata && dir > 0.0 {
-                            // move x and y accordingly
-                            x += dx[pntr_matches[dir as usize]];
-                            y += dy[pntr_matches[dir as usize]];
-                        } else {
-                            flag = true;
-                        }
-                    }
-                } else if flowdir[(row, col)] == nodata {
-                    output[(row, col)] = nodata;
+                if flowdir.get_value(row, col) == nodata {
+                    output.set_value(row, col, nodata);
                 }
             }
             if verbose {
@@ -275,7 +357,6 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 }
             }
         }
-
         
         let end = time::now();
         let elapsed_time = end - start;
