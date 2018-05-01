@@ -55,7 +55,7 @@ impl PrincipalComponentAnalysis {
             description: "Output HTML report file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: false
         });
 
         parameters.push(ToolParameter{

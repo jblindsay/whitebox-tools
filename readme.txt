@@ -67,6 +67,7 @@ Version 0.7.0 (DD-MM-2018)
     ErasePolygonFromLidar
     ExportTableToCsv
     RaiseWalls
+    TrendSurface
     UnnestBasins
     UserDefinedWeightsFilter
 

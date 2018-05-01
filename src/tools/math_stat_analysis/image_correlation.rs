@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
-Last Modified: 24/04/2018
+Last Modified: 29/04/2018
 License: MIT
 */
 
@@ -21,6 +21,7 @@ use std::process::Command;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
+use rendering::html::*;
 
 pub struct ImageCorrelation {
     name: String,
@@ -336,53 +337,18 @@ impl WhiteboxTool for ImageCorrelation {
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
-        writer.write_all("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+        writer.write_all(&r#"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-            <title>Image Correlation</title>
-            <style  type=\"text/css\">
-                h1 {
-                    font-size: 14pt;
-                    margin-left: 15px;
-                    margin-right: 15px;
-                    text-align: center;
-                    font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
-                }
-                p {
-                    font-size: 12pt;
-                    font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
-                    margin-left: 15px;
-                    margin-right: 15px;
-                }
-                caption {
-                    font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
-                    font-size: 12pt;
-                    margin-left: 15px;
-                    margin-right: 15px;
-                }
-                table {
-                    font-size: 12pt;
-                    font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
-                    font-family: arial, sans-serif;
-                    border-collapse: collapse;
-                    align: center;
-                }
-                td, th {
-                    border: 1px solid #222222;
-                    text-align: center;
-                    padding: 8px;
-                }
-                tr:nth-child(even) {
-                    background-color: #dddddd;
-                }
-                .numberCell {
-                    text-align: right;
-                }
-            </style>
-        </head>
+            <title>Image Correlation</title>"#.as_bytes())?;
+        
+        // get the style sheet
+        writer.write_all(&get_css().as_bytes())?;
+            
+        writer.write_all(&r#"</head>
         <body>
-            <h1>Image Correlation Report</h1>
-        ".as_bytes())?;
+            <h1>Image Correlation Report</h1>"#.as_bytes())?;
+
 
         // output the names of the input files.
         writer.write_all("<p><strong>Input files</strong>:</br>".as_bytes())?;

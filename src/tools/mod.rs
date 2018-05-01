@@ -275,6 +275,8 @@ impl ToolManager {
         tool_names.push("Tanh".to_string());
         tool_names.push("ToDegrees".to_string());
         tool_names.push("ToRadians".to_string());
+        tool_names.push("TrendSurface".to_string());
+        tool_names.push("TrendSurfaceVectorPoints".to_string());
         tool_names.push("Truncate".to_string());
         tool_names.push("TurningBandsSimulation".to_string());
         tool_names.push("Xor".to_string());
@@ -667,6 +669,8 @@ impl ToolManager {
             "tanh" => Some(Box::new(tools::math_stat_analysis::Tanh::new())),
             "todegrees" => Some(Box::new(tools::math_stat_analysis::ToDegrees::new())),
             "toradians" => Some(Box::new(tools::math_stat_analysis::ToRadians::new())),
+            "trendsurface" => Some(Box::new(tools::math_stat_analysis::TrendSurface::new())),
+            "trendsurfacevectorpoints" => Some(Box::new(tools::math_stat_analysis::TrendSurfaceVectorPoints::new())),
             "truncate" => Some(Box::new(tools::math_stat_analysis::Truncate::new())),
             "turningbandssimulation" => Some(Box::new(tools::math_stat_analysis::TurningBandsSimulation::new())),
             "xor" => Some(Box::new(tools::math_stat_analysis::Xor::new())),

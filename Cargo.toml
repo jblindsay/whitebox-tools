@@ -21,22 +21,13 @@ license = "MIT"
 # name = "whitebox_tools"
 # path = "src/main.rs"
 
-# [profile.release]
-# panic = 'abort'
-
 # The release profile, used for `cargo build --release`.
-[profile.release]
-codegen-units = 16
-# opt-level = 3
-# debug = false
-# rpath = false
-# lto = false
-# debug-assertions = false
-# panic = 'unwind'
+# [profile.release]
+# codegen-units = 16
 
 [dependencies]
 byteorder = "^1.1.0"
-kdtree = "0.4.0"
+# kdtree = "0.4.0"
 nalgebra = "0.14.0"
 num_cpus = "1.6.2"
 rand = "0.4.2"

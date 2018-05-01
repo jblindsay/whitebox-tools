@@ -35,12 +35,12 @@ header-includes:
 
 <!-- ![*Bringing the power of Whitebox GAT to the world at large*](./img/WhiteboxToolsLogoBlue.png)   -->
 
-WhiteboxTools Version 0.6  \
+WhiteboxTools Version 0.7  \
 Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-April 3, 2018  \
+April 30, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
