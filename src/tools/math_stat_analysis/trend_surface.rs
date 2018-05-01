@@ -49,7 +49,7 @@ pub struct TrendSurface {
 impl TrendSurface {
     pub fn new() -> TrendSurface { // public constructor
         let name = "TrendSurface".to_string();
-        let toolbox = "Hydrological Analysis".to_string();
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Estimates the trend surface of an input raster file.".to_string();
         
         let mut parameters = vec![];

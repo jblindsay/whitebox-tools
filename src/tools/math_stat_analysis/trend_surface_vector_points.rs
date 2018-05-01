@@ -51,7 +51,7 @@ pub struct TrendSurfaceVectorPoints {
 impl TrendSurfaceVectorPoints {
     pub fn new() -> TrendSurfaceVectorPoints { // public constructor
         let name = "TrendSurfaceVectorPoints".to_string();
-        let toolbox = "Hydrological Analysis".to_string();
+        let toolbox = "Math and Stats Tools".to_string();
         let description = "Estimates a trend surface from vector points.".to_string();
         
         let mut parameters = vec![];

@@ -333,6 +333,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -364,6 +365,22 @@ class WhiteboxTools(object):
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ConvertRasterFormat', args, callback) # returns 1 if error
+
+    def export_table_to_csv(self, i, output, headers=True, callback=default_callback):
+        """ Exports an attribute table to a CSV text file.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output raster file. 
+        headers -- Export field names as file header?. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if headers: args.append("--headers")
+        return self.run_tool('ExportTableToCsv', args, callback) # returns 1 if error
 
     def new_raster_from_base(self, base, output, value="nodata", data_type="float", callback=default_callback):
         """ Creates a new raster using a base image.
@@ -744,6 +761,24 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('AverageOverlay', args, callback) # returns 1 if error
+
+    def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=False, callback=default_callback):
+        """ Clips a raster to a vector polygon.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        polygons -- Input vector polygons file. 
+        output -- Output raster file. 
+        maintain_dimensions -- Maintain input raster dimensions?. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--polygons='{}'".format(polygons))
+        args.append("--output='{}'".format(output))
+        if maintain_dimensions: args.append("--maintain_dimensions")
+        return self.run_tool('ClipRasterToPolygon', args, callback) # returns 1 if error
 
     def count_if(self, inputs, output, value, callback=default_callback):
         """ Counts the number of occurrences of a specified value in a cell-stack of rasters.
@@ -2351,6 +2386,26 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('NumInflowingNeighbours', args, callback) # returns 1 if error
 
+    def raise_walls(self, i, dem, output, breach=None, height=100.0, callback=default_callback):
+        """ Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
+
+        Keyword arguments:
+
+        i -- Input vector lines or polygons file. 
+        breach -- Optional input vector breach lines. 
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        height -- Wall height. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if breach is not None: args.append("--breach='{}'".format(breach))
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--height={}".format(height))
+        return self.run_tool('RaiseWalls', args, callback) # returns 1 if error
+
     def rho8_pointer(self, dem, output, esri_pntr=False, callback=default_callback):
         """ Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
@@ -2457,6 +2512,24 @@ callback -- Custom functon for handling tool text outputs.
         if zero_background: args.append("--zero_background")
         return self.run_tool('TraceDownslopeFlowpaths', args, callback) # returns 1 if error
 
+    def unnest_basins(self, d8_pntr, pour_pts, output, esri_pntr=False, callback=default_callback):
+        """ Extract whole watersheds for a set of outlet points.
+
+        Keyword arguments:
+
+        d8_pntr -- Input D8 pointer raster file. 
+        pour_pts -- Input vector pour points (outlet) file. 
+        output -- Output raster file. 
+        esri_pntr -- D8 pointer uses the ESRI style scheme. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--d8_pntr='{}'".format(d8_pntr))
+        args.append("--pour_pts='{}'".format(pour_pts))
+        args.append("--output='{}'".format(output))
+        if esri_pntr: args.append("--esri_pntr")
+        return self.run_tool('UnnestBasins', args, callback) # returns 1 if error
+
     def watershed(self, d8_pntr, pour_pts, output, esri_pntr=False, callback=default_callback):
         """ Identifies the watershed, or drainage basin, draining to a set of target cells.
 
@@ -2478,6 +2551,24 @@ callback -- Custom functon for handling tool text outputs.
     ##########################
     # Image Processing Tools #
     ##########################
+
+    def change_vector_analysis(self, date1, date2, magnitude, direction, callback=default_callback):
+        """ Performs a change vector analysis on a two-date multi-spectral dataset.
+
+        Keyword arguments:
+
+        date1 -- Input raster files for the earlier date. 
+        date2 -- Input raster files for the later date. 
+        magnitude -- Output vector magnitude raster file. 
+        direction -- Output vector Direction raster file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--date1='{}'".format(date1))
+        args.append("--date2='{}'".format(date2))
+        args.append("--magnitude='{}'".format(magnitude))
+        args.append("--direction='{}'".format(direction))
+        return self.run_tool('ChangeVectorAnalysis', args, callback) # returns 1 if error
 
     def closing(self, i, output, filterx=11, filtery=11, callback=default_callback):
         """ A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
@@ -3341,6 +3432,26 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--filtery={}".format(filtery))
         return self.run_tool('TotalFilter', args, callback) # returns 1 if error
 
+    def user_defined_weights_filter(self, i, weights, output, center="center", normalize=False, callback=default_callback):
+        """ Performs a user-defined weights filter on an image.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        weights -- Input weights file. 
+        output -- Output raster file. 
+        center -- Kernel center cell; options include 'center', 'upper-left', 'upper-right', 'lower-left', 'lower-right'. 
+        normalize -- Normalize kernel weights? This can reduce edge effects and lessen the impact of data gaps (nodata) but is not suited when the kernel weights sum to zero. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--weights='{}'".format(weights))
+        args.append("--output='{}'".format(output))
+        args.append("--center={}".format(center))
+        if normalize: args.append("--normalize")
+        return self.run_tool('UserDefinedWeightsFilter', args, callback) # returns 1 if error
+
     ############################################
     # Image Processing Tools/Image Enhancement #
     ############################################
@@ -3360,6 +3471,28 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         args.append("--band_mean={}".format(band_mean))
         return self.run_tool('BalanceContrastEnhancement', args, callback) # returns 1 if error
+
+    def correct_vignetting(self, i, pp, output, focal_length=304.8, image_width=228.6, n=4.0, callback=default_callback):
+        """ Corrects the darkening of images towards corners.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        pp -- Input principal point file. 
+        output -- Output raster file. 
+        focal_length -- Camera focal length, in millimeters. 
+        image_width -- Distance between photograph edges, in millimeters. 
+        n -- The 'n' parameter. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--pp='{}'".format(pp))
+        args.append("--output='{}'".format(output))
+        args.append("--focal_length={}".format(focal_length))
+        args.append("--image_width={}".format(image_width))
+        args.append("-n={}".format(n))
+        return self.run_tool('CorrectVignetting', args, callback) # returns 1 if error
 
     def direct_decorrelation_stretch(self, i, output, k=0.5, clip=1.0, callback=default_callback):
         """ Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
@@ -3580,6 +3713,56 @@ callback -- Custom functon for handling tool text outputs.
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--resolution={}".format(resolution))
         return self.run_tool('BlockMinimum', args, callback) # returns 1 if error
+
+    def classify_overlap_points(self, i, output, resolution=2.0, filter=False, callback=default_callback):
+        """ Classifies or filters LAS point in regions of overlapping flight lines.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        output -- Output LiDAR file. 
+        resolution -- The distance of the square area used to evaluate nearby points in the LiDAR data. 
+        filter -- Filter out points from overlapping flightlines? If false, overlaps will simply be classified. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--resolution={}".format(resolution))
+        if filter: args.append("--filter")
+        return self.run_tool('ClassifyOverlapPoints', args, callback) # returns 1 if error
+
+    def clip_lidar_to_polygon(self, i, polygons, output, callback=default_callback):
+        """ Clips a LiDAR point cloud to a vector polygon or polygons.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        polygons -- Input vector polygons file. 
+        output -- Output LiDAR file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--polygons='{}'".format(polygons))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('ClipLidarToPolygon', args, callback) # returns 1 if error
+
+    def erase_polygon_from_lidar(self, i, polygons, output, callback=default_callback):
+        """ Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        polygons -- Input vector polygons file. 
+        output -- Output LiDAR file. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--polygons='{}'".format(polygons))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('ErasePolygonFromLidar', args, callback) # returns 1 if error
 
     def filter_lidar_scan_angles(self, i, output, threshold, callback=default_callback):
         """ Removes points in a LAS file with scan angles greater than a threshold.
@@ -4146,6 +4329,20 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--input_x='{}'".format(input_x))
         args.append("--output='{}'".format(output))
         return self.run_tool('Atan2', args, callback) # returns 1 if error
+
+    def attribute_correlation(self, i, output=None, callback=default_callback):
+        """ Performs a correlation analysis on attribute fields from a vector database.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output HTML file (default name will be based on input file if unspecified). 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        return self.run_tool('AttributeCorrelation', args, callback) # returns 1 if error
 
     def attribute_histogram(self, i, field, output, callback=default_callback):
         """ Creates a histogram for the field values of a vector's attribute table.
@@ -4795,7 +4992,7 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('Power', args, callback) # returns 1 if error
 
-    def principal_component_analysis(self, inputs, out_html=None, num_comp=None, standardized=False, callback=default_callback):
+    def principal_component_analysis(self, inputs, out_html, num_comp=None, standardized=False, callback=default_callback):
         """ Performs a principal component analysis (PCA) on a multi-spectral dataset.
 
         Keyword arguments:
@@ -4808,7 +5005,7 @@ callback -- Custom functon for handling tool text outputs.
         """
         args = []
         args.append("--inputs='{}'".format(inputs))
-        if out_html is not None: args.append("--out_html='{}'".format(out_html))
+        args.append("--out_html='{}'".format(out_html))
         if num_comp is not None: args.append("--num_comp='{}'".format(num_comp))
         if standardized: args.append("--standardized")
         return self.run_tool('PrincipalComponentAnalysis', args, callback) # returns 1 if error
@@ -5076,6 +5273,42 @@ callback -- Custom functon for handling tool text outputs.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('ToRadians', args, callback) # returns 1 if error
+
+    def trend_surface(self, i, output, order=1, callback=default_callback):
+        """ Estimates the trend surface of an input raster file.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        order -- Polynomial order (1 to 10). 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--order={}".format(order))
+        return self.run_tool('TrendSurface', args, callback) # returns 1 if error
+
+    def trend_surface_vector_points(self, i, field, output, cell_size, order=1, callback=default_callback):
+        """ Estimates a trend surface from vector points.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        output -- Output raster file. 
+        order -- Polynomial order (1 to 10). 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        callback -- Custom functon for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        args.append("--order={}".format(order))
+        args.append("--cell_size='{}'".format(cell_size))
+        return self.run_tool('TrendSurfaceVectorPoints', args, callback) # returns 1 if error
 
     def truncate(self, i, output, num_decimals=None, callback=default_callback):
         """ Truncates the values in a raster to the desired number of decimal places.

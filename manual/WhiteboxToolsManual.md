@@ -536,7 +536,40 @@ convert_raster_format(
 ```
 
 
-#### 7.1.3 NewRasterFromBase
+#### 7.1.3 ExportTableToCsv
+
+Exports an attribute table to a CSV text file.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output raster file
+-\-headers           Export field names as file header?
+
+
+*Python function*:
+
+~~~~{.python}
+export_table_to_csv(
+    i, 
+    output, 
+    headers=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ExportTableToCsv -v ^
+--wd="/path/to/data/" -i=lines.shp -o=output.csv --headers 
+
+
+```
+
+
+#### 7.1.4 NewRasterFromBase
 
 Creates a new raster using a base image.
 
@@ -576,7 +609,7 @@ new_raster_from_base(
 ```
 
 
-#### 7.1.4 PrintGeoTiffTags
+#### 7.1.5 PrintGeoTiffTags
 
 Prints the tags within a GeoTIFF.
 
@@ -605,7 +638,7 @@ print_geo_tiff_tags(
 ```
 
 
-#### 7.1.5 SetNodataValue
+#### 7.1.6 SetNodataValue
 
 Assign a specified value in an input image to the NoData value.
 
@@ -638,7 +671,7 @@ set_nodata_value(
 ```
 
 
-#### 7.1.6 VectorLinesToRaster
+#### 7.1.7 VectorLinesToRaster
 
 Converts a vector containing polylines into a raster.
 
@@ -683,7 +716,7 @@ vector_lines_to_raster(
 ```
 
 
-#### 7.1.7 VectorPointsToRaster
+#### 7.1.8 VectorPointsToRaster
 
 Converts a vector containing points into a raster.
 
@@ -733,7 +766,7 @@ vector_points_to_raster(
 ```
 
 
-#### 7.1.8 VectorPolygonsToRaster
+#### 7.1.9 VectorPolygonsToRaster
 
 Converts a vector containing polygons into a raster.
 
@@ -1311,7 +1344,43 @@ average_overlay(
 ```
 
 
-#### 7.4.2 CountIf
+#### 7.4.2 ClipRasterToPolygon
+
+Clips a raster to a vector polygon.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-polygons          Input vector polygons file
+-o, -\-output        Output raster file
+-\-maintain_dimensionsMaintain input raster dimensions?
+
+
+*Python function*:
+
+~~~~{.python}
+clip_raster_to_polygon(
+    i, 
+    polygons, 
+    output, 
+    maintain_dimensions=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ClipRasterToPolygon -v ^
+--wd="/path/to/data/" -i=raster.tif --polygons=poly.shp ^
+-o=output.tif --maintain_dimensions 
+
+
+```
+
+
+#### 7.4.3 CountIf
 
 Counts the number of occurrences of a specified value in a cell-stack of rasters.
 
@@ -1345,7 +1414,7 @@ count_if(
 ```
 
 
-#### 7.4.3 ErasePolygonFromRaster
+#### 7.4.4 ErasePolygonFromRaster
 
 Erases (cuts out) a vector polygon from a raster.
 
@@ -1379,7 +1448,7 @@ erase_polygon_from_raster(
 ```
 
 
-#### 7.4.4 HighestPosition
+#### 7.4.5 HighestPosition
 
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 
@@ -1411,7 +1480,7 @@ highest_position(
 ```
 
 
-#### 7.4.5 LowestPosition
+#### 7.4.6 LowestPosition
 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
@@ -1442,7 +1511,7 @@ lowest_position(
 ```
 
 
-#### 7.4.6 MaxAbsoluteOverlay
+#### 7.4.7 MaxAbsoluteOverlay
 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
@@ -1474,7 +1543,7 @@ max_absolute_overlay(
 ```
 
 
-#### 7.4.7 MaxOverlay
+#### 7.4.8 MaxOverlay
 
 Evaluates the maximum value for each grid cell from a stack of input rasters.
 
@@ -1505,7 +1574,7 @@ max_overlay(
 ```
 
 
-#### 7.4.8 MinAbsoluteOverlay
+#### 7.4.9 MinAbsoluteOverlay
 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -1537,7 +1606,7 @@ min_absolute_overlay(
 ```
 
 
-#### 7.4.9 MinOverlay
+#### 7.4.10 MinOverlay
 
 Evaluates the minimum value for each grid cell from a stack of input rasters.
 
@@ -1568,7 +1637,7 @@ min_overlay(
 ```
 
 
-#### 7.4.10 PercentEqualTo
+#### 7.4.11 PercentEqualTo
 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
@@ -1602,7 +1671,7 @@ percent_equal_to(
 ```
 
 
-#### 7.4.11 PercentGreaterThan
+#### 7.4.12 PercentGreaterThan
 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
@@ -1636,7 +1705,7 @@ percent_greater_than(
 ```
 
 
-#### 7.4.12 PercentLessThan
+#### 7.4.13 PercentLessThan
 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
@@ -1670,7 +1739,7 @@ percent_less_than(
 ```
 
 
-#### 7.4.13 PickFromList
+#### 7.4.14 PickFromList
 
 Outputs the value from a raster stack specified by a position raster.
 
@@ -1704,7 +1773,7 @@ pick_from_list(
 ```
 
 
-#### 7.4.14 WeightedSum
+#### 7.4.15 WeightedSum
 
 Performs a weighted-sum overlay on multiple input raster images.
 
@@ -4584,7 +4653,48 @@ num_inflowing_neighbours(
 ```
 
 
-#### 7.7.33 Rho8Pointer
+#### 7.7.33 RaiseWalls
+
+Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector lines or polygons file
+-\-breach            Optional input vector breach lines
+-\-dem               Input raster DEM file
+-o, -\-output        Output raster file
+-\-height            Wall height
+
+
+*Python function*:
+
+~~~~{.python}
+raise_walls(
+    i, 
+    dem, 
+    output, 
+    breach=None, 
+    height=100.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=RaiseWalls -v --wd="/path/to/data/" ^
+-i=watershed.shp --dem=dem.tif -o=output.tif ^
+--height=25.0
+>>./whitebox_tools -r=RaiseWalls -v ^
+--wd="/path/to/data/" -i=watershed.shp --breach=outlet.shp ^
+--dem=dem.tif -o=output.tif --height=25.0 
+
+
+```
+
+
+#### 7.7.34 Rho8Pointer
 
 Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
@@ -4617,7 +4727,7 @@ rho8_pointer(
 ```
 
 
-#### 7.7.34 Sink
+#### 7.7.35 Sink
 
 Identifies the depressions in a DEM, giving each feature a unique identifier.
 
@@ -4650,7 +4760,7 @@ sink(
 ```
 
 
-#### 7.7.35 SnapPourPoints
+#### 7.7.36 SnapPourPoints
 
 Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
 
@@ -4686,7 +4796,7 @@ snap_pour_points(
 ```
 
 
-#### 7.7.36 StrahlerOrderBasins
+#### 7.7.37 StrahlerOrderBasins
 
 Identifies Strahler-order basins from an input stream network.
 
@@ -4722,7 +4832,7 @@ strahler_order_basins(
 ```
 
 
-#### 7.7.37 Subbasins
+#### 7.7.38 Subbasins
 
 Identifies the catchments, or sub-basin, draining to each link in a stream network.
 
@@ -4758,7 +4868,7 @@ subbasins(
 ```
 
 
-#### 7.7.38 TraceDownslopeFlowpaths
+#### 7.7.39 TraceDownslopeFlowpaths
 
 Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
@@ -4796,7 +4906,43 @@ trace_downslope_flowpaths(
 ```
 
 
-#### 7.7.39 Watershed
+#### 7.7.40 UnnestBasins
+
+Extract whole watersheds for a set of outlet points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-d8_pntr           Input D8 pointer raster file
+-\-pour_pts          Input vector pour points (outlet) file
+-o, -\-output        Output raster file
+-\-esri_pntr         D8 pointer uses the ESRI style scheme
+
+
+*Python function*:
+
+~~~~{.python}
+unnest_basins(
+    d8_pntr, 
+    pour_pts, 
+    output, 
+    esri_pntr=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=UnnestBasins -v --wd="/path/to/data/" ^
+--d8_pntr='d8pntr.tif' --pour_pts='pour_pts.shp' ^
+-o='output.tif' 
+
+
+```
+
+
+#### 7.7.41 Watershed
 
 Identifies the watershed, or drainage basin, draining to a set of target cells.
 
@@ -4833,7 +4979,45 @@ watershed(
 
 ### 7.8 Image Processing Tools
 
-#### 7.8.1 Closing
+#### 7.8.1 ChangeVectorAnalysis
+
+Performs a change vector analysis on a two-date multi-spectral dataset.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-date1             Input raster files for the earlier date
+-\-date2             Input raster files for the later date
+-\-magnitude         Output vector magnitude raster file
+-\-direction         Output vector Direction raster file
+
+
+*Python function*:
+
+~~~~{.python}
+change_vector_analysis(
+    date1, 
+    date2, 
+    magnitude, 
+    direction, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ChangeVectorAnalysis -v ^
+--wd="/path/to/data/" ^
+--date1='d1_band1.tif;d1_band2.tif;d1_band3.tif' ^
+--date2='d2_band1.tif;d2_band2.tif;d2_band3.tif' ^
+--magnitude=mag_out.tif --direction=dir_out.tif 
+
+
+```
+
+
+#### 7.8.2 Closing
 
 A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 
@@ -4868,7 +5052,7 @@ closing(
 ```
 
 
-#### 7.8.2 CreateColourComposite
+#### 7.8.3 CreateColourComposite
 
 Creates a colour-composite image from three bands of multispectral imagery.
 
@@ -4912,7 +5096,7 @@ create_colour_composite(
 ```
 
 
-#### 7.8.3 FlipImage
+#### 7.8.4 FlipImage
 
 Reflects an image in the vertical or horizontal axis.
 
@@ -4946,7 +5130,7 @@ flip_image(
 ```
 
 
-#### 7.8.4 IhsToRgb
+#### 7.8.5 IhsToRgb
 
 Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 
@@ -4992,7 +5176,7 @@ ihs_to_rgb(
 ```
 
 
-#### 7.8.5 ImageStackProfile
+#### 7.8.6 ImageStackProfile
 
 Plots an image stack profile (i.e. signature) for a set of points and multispectral images.
 
@@ -5026,7 +5210,7 @@ image_stack_profile(
 ```
 
 
-#### 7.8.6 IntegralImage
+#### 7.8.7 IntegralImage
 
 Transforms an input image (summed area table) into its integral image equivalent.
 
@@ -5057,7 +5241,7 @@ integral_image(
 ```
 
 
-#### 7.8.7 KMeansClustering
+#### 7.8.8 KMeansClustering
 
 Performs a k-means clustering operation on a multi-spectral dataset.
 
@@ -5103,7 +5287,7 @@ k_means_clustering(
 ```
 
 
-#### 7.8.8 LineThinning
+#### 7.8.9 LineThinning
 
 Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 
@@ -5134,7 +5318,7 @@ line_thinning(
 ```
 
 
-#### 7.8.9 ModifiedKMeansClustering
+#### 7.8.10 ModifiedKMeansClustering
 
 Performs a modified k-means clustering operation on a multi-spectral dataset.
 
@@ -5177,7 +5361,7 @@ modified_k_means_clustering(
 ```
 
 
-#### 7.8.10 Mosaic
+#### 7.8.11 Mosaic
 
 Mosaics two or more images together.
 
@@ -5211,7 +5395,7 @@ mosaic(
 ```
 
 
-#### 7.8.11 NormalizedDifferenceVegetationIndex
+#### 7.8.12 NormalizedDifferenceVegetationIndex
 
 Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 
@@ -5254,7 +5438,7 @@ normalized_difference_vegetation_index(
 ```
 
 
-#### 7.8.12 Opening
+#### 7.8.13 Opening
 
 An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 
@@ -5289,7 +5473,7 @@ opening(
 ```
 
 
-#### 7.8.13 RemoveSpurs
+#### 7.8.14 RemoveSpurs
 
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
@@ -5322,7 +5506,7 @@ remove_spurs(
 ```
 
 
-#### 7.8.14 Resample
+#### 7.8.15 Resample
 
 Resamples one or more input images into a destination image.
 
@@ -5356,7 +5540,7 @@ resample(
 ```
 
 
-#### 7.8.15 RgbToIhs
+#### 7.8.16 RgbToIhs
 
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 
@@ -5407,7 +5591,7 @@ rgb_to_ihs(
 ```
 
 
-#### 7.8.16 SplitColourComposite
+#### 7.8.17 SplitColourComposite
 
 This tool splits an RGB colour composite image into seperate multispectral images.
 
@@ -5438,7 +5622,7 @@ split_colour_composite(
 ```
 
 
-#### 7.8.17 ThickenRasterLine
+#### 7.8.18 ThickenRasterLine
 
 Thickens single-cell wide lines within a raster image.
 
@@ -5469,7 +5653,7 @@ thicken_raster_line(
 ```
 
 
-#### 7.8.18 TophatTransform
+#### 7.8.19 TophatTransform
 
 Performs either a white or black top-hat transform on an input image.
 
@@ -5506,7 +5690,7 @@ tophat_transform(
 ```
 
 
-#### 7.8.19 WriteFunctionMemoryInsertion
+#### 7.8.20 WriteFunctionMemoryInsertion
 
 Performs a write function memory insertion for single-band multi-date change detection.
 
@@ -6544,6 +6728,46 @@ total_filter(
 
 ```
 
+
+#### 7.9.29 UserDefinedWeightsFilter
+
+Performs a user-defined weights filter on an image.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-weights           Input weights file
+-o, -\-output        Output raster file
+-\-center            Kernel center cell; options include 'center', 'upper-left', 'upper-right', 
+                     'lower-left', 'lower-right' 
+-\-normalize         Normalize kernel weights? This can reduce edge effects and lessen the impact of 
+                     data gaps (nodata) but is not suited when the kernel weights sum to zero 
+
+
+*Python function*:
+
+~~~~{.python}
+user_defined_weights_filter(
+    i, 
+    weights, 
+    output, 
+    center="center", 
+    normalize=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=UserDefinedWeightsFilter -v ^
+--wd="/path/to/data/" -i=image.tif --weights=weights.txt ^
+-o=output.tif --center=center --normalize 
+
+
+```
+
 ### 7.10 Image Processing Tools => Image Enhancement
 
 #### 7.10.1 BalanceContrastEnhancement
@@ -6580,7 +6804,48 @@ balance_contrast_enhancement(
 ```
 
 
-#### 7.10.2 DirectDecorrelationStretch
+#### 7.10.2 CorrectVignetting
+
+Corrects the darkening of images towards corners.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-\-pp                Input principal point file
+-o, -\-output        Output raster file
+-\-focal_length      Camera focal length, in millimeters
+-\-image_width       Distance between photograph edges, in millimeters
+-n                   The 'n' parameter
+
+
+*Python function*:
+
+~~~~{.python}
+correct_vignetting(
+    i, 
+    pp, 
+    output, 
+    focal_length=304.8, 
+    image_width=228.6, 
+    n=4.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CorrectVignetting -v ^
+--wd="/path/to/data/" -i=input.tif --pp=princ_pt.shp ^
+-o=output.tif --focal_length=304.8 --image_width=228.6 ^
+-n=4.0 
+
+
+```
+
+
+#### 7.10.3 DirectDecorrelationStretch
 
 Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 
@@ -6616,7 +6881,7 @@ direct_decorrelation_stretch(
 ```
 
 
-#### 7.10.3 GammaCorrection
+#### 7.10.4 GammaCorrection
 
 Performs a sigmoidal contrast stretch on input images.
 
@@ -6649,7 +6914,7 @@ gamma_correction(
 ```
 
 
-#### 7.10.4 HistogramEqualization
+#### 7.10.5 HistogramEqualization
 
 Performs a histogram equalization contrast enhancment on an image.
 
@@ -6683,7 +6948,7 @@ histogram_equalization(
 ```
 
 
-#### 7.10.5 HistogramMatching
+#### 7.10.6 HistogramMatching
 
 Alters the statistical distribution of a raster image matching it to a specified PDF.
 
@@ -6717,7 +6982,7 @@ histogram_matching(
 ```
 
 
-#### 7.10.6 HistogramMatchingTwoImages
+#### 7.10.7 HistogramMatchingTwoImages
 
 This tool alters the cumulative distribution function of a raster image to that of another image.
 
@@ -6751,7 +7016,7 @@ histogram_matching_two_images(
 ```
 
 
-#### 7.10.7 MinMaxContrastStretch
+#### 7.10.8 MinMaxContrastStretch
 
 Performs a min-max contrast stretch on an input greytone image.
 
@@ -6789,7 +7054,7 @@ min_max_contrast_stretch(
 ```
 
 
-#### 7.10.8 PanchromaticSharpening
+#### 7.10.9 PanchromaticSharpening
 
 Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
 
@@ -6839,7 +7104,7 @@ panchromatic_sharpening(
 ```
 
 
-#### 7.10.9 PercentageContrastStretch
+#### 7.10.10 PercentageContrastStretch
 
 Performs a percentage linear contrast stretch on input images.
 
@@ -6878,7 +7143,7 @@ percentage_contrast_stretch(
 ```
 
 
-#### 7.10.10 SigmoidalContrastStretch
+#### 7.10.11 SigmoidalContrastStretch
 
 Performs a sigmoidal contrast stretch on input images.
 
@@ -6916,7 +7181,7 @@ sigmoidal_contrast_stretch(
 ```
 
 
-#### 7.10.11 StandardDeviationContrastStretch
+#### 7.10.12 StandardDeviationContrastStretch
 
 Performs a standard-deviation contrast stretch on input images.
 
@@ -7025,7 +7290,115 @@ block_minimum(
 ```
 
 
-#### 7.11.3 FilterLidarScanAngles
+#### 7.11.3 ClassifyOverlapPoints
+
+Classifies or filters LAS point in regions of overlapping flight lines.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-o, -\-output        Output LiDAR file
+-\-resolution        The distance of the square area used to evaluate nearby points in the LiDAR data
+-\-filter            Filter out points from overlapping flightlines? If false, overlaps will simply 
+                     be classified 
+
+
+*Python function*:
+
+~~~~{.python}
+classify_overlap_points(
+    i, 
+    output, 
+    resolution=2.0, 
+    filter=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ClassifyOverlapPoints -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=2.0"
+./whitebox_tools -r=ClassifyOverlapPoints -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=5.0 --palette=light_quant.plt 
+
+
+```
+
+
+#### 7.11.4 ClipLidarToPolygon
+
+Clips a LiDAR point cloud to a vector polygon or polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-\-polygons          Input vector polygons file
+-o, -\-output        Output LiDAR file
+
+
+*Python function*:
+
+~~~~{.python}
+clip_lidar_to_polygon(
+    i, 
+    polygons, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ClipLidarToPolygon -v ^
+--wd="/path/to/data/" -i='data.las' --polygons='lakes.shp' ^
+-o='output.las' 
+
+
+```
+
+
+#### 7.11.5 ErasePolygonFromLidar
+
+Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-\-polygons          Input vector polygons file
+-o, -\-output        Output LiDAR file
+
+
+*Python function*:
+
+~~~~{.python}
+erase_polygon_from_lidar(
+    i, 
+    polygons, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ErasePolygonFromLidar -v ^
+--wd="/path/to/data/" -i='data.las' --polygons='lakes.shp' ^
+-o='output.las' 
+
+
+```
+
+
+#### 7.11.6 FilterLidarScanAngles
 
 Removes points in a LAS file with scan angles greater than a threshold.
 
@@ -7059,7 +7432,7 @@ filter_lidar_scan_angles(
 ```
 
 
-#### 7.11.4 FindFlightlineEdgePoints
+#### 7.11.7 FindFlightlineEdgePoints
 
 Identifies points along a flightline's edge in a LAS file.
 
@@ -7090,7 +7463,7 @@ find_flightline_edge_points(
 ```
 
 
-#### 7.11.5 FlightlineOverlap
+#### 7.11.8 FlightlineOverlap
 
 Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 
@@ -7127,7 +7500,7 @@ flightline_overlap(
 ```
 
 
-#### 7.11.6 LasToAscii
+#### 7.11.9 LasToAscii
 
 Converts one or more LAS files into ASCII text files.
 
@@ -7156,7 +7529,7 @@ las_to_ascii(
 ```
 
 
-#### 7.11.7 LidarColourize
+#### 7.11.10 LidarColourize
 
 Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
@@ -7190,7 +7563,7 @@ lidar_colourize(
 ```
 
 
-#### 7.11.8 LidarElevationSlice
+#### 7.11.11 LidarElevationSlice
 
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -7242,7 +7615,7 @@ lidar_elevation_slice(
 ```
 
 
-#### 7.11.9 LidarGroundPointFilter
+#### 7.11.12 LidarGroundPointFilter
 
 Identifies ground points within LiDAR dataset using a slope-based method.
 
@@ -7280,7 +7653,7 @@ lidar_ground_point_filter(
 ```
 
 
-#### 7.11.10 LidarHillshade
+#### 7.11.13 LidarHillshade
 
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
@@ -7320,7 +7693,7 @@ lidar_hillshade(
 ```
 
 
-#### 7.11.11 LidarHistogram
+#### 7.11.14 LidarHistogram
 
 Creates a histogram from LiDAR data.
 
@@ -7356,7 +7729,7 @@ lidar_histogram(
 ```
 
 
-#### 7.11.12 LidarIdwInterpolation
+#### 7.11.15 LidarIdwInterpolation
 
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
 
@@ -7410,7 +7783,7 @@ lidar_idw_interpolation(
 ```
 
 
-#### 7.11.13 LidarInfo
+#### 7.11.16 LidarInfo
 
 Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
@@ -7447,7 +7820,7 @@ lidar_info(
 ```
 
 
-#### 7.11.14 LidarJoin
+#### 7.11.17 LidarJoin
 
 Joins multiple LiDAR (LAS) files into a single LAS file.
 
@@ -7478,7 +7851,7 @@ lidar_join(
 ```
 
 
-#### 7.11.15 LidarKappaIndex
+#### 7.11.18 LidarKappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
@@ -7512,7 +7885,7 @@ lidar_kappa_index(
 ```
 
 
-#### 7.11.16 LidarNearestNeighbourGridding
+#### 7.11.19 LidarNearestNeighbourGridding
 
 Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -7564,7 +7937,7 @@ lidar_nearest_neighbour_gridding(
 ```
 
 
-#### 7.11.17 LidarPointDensity
+#### 7.11.20 LidarPointDensity
 
 Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -7613,7 +7986,7 @@ lidar_point_density(
 ```
 
 
-#### 7.11.18 LidarPointStats
+#### 7.11.21 LidarPointStats
 
 Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
@@ -7655,7 +8028,7 @@ lidar_point_stats(
 ```
 
 
-#### 7.11.19 LidarRemoveDuplicates
+#### 7.11.22 LidarRemoveDuplicates
 
 Removes duplicate points from a LiDAR data set.
 
@@ -7688,7 +8061,7 @@ lidar_remove_duplicates(
 ```
 
 
-#### 7.11.20 LidarRemoveOutliers
+#### 7.11.23 LidarRemoveOutliers
 
 Removes outliers (high and low points) in a LiDAR point cloud.
 
@@ -7724,7 +8097,7 @@ lidar_remove_outliers(
 ```
 
 
-#### 7.11.21 LidarSegmentation
+#### 7.11.24 LidarSegmentation
 
 Segments a LiDAR point cloud based on normal vectors.
 
@@ -7763,7 +8136,7 @@ lidar_segmentation(
 ```
 
 
-#### 7.11.22 LidarSegmentationBasedFilter
+#### 7.11.25 LidarSegmentationBasedFilter
 
 Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
@@ -7804,7 +8177,7 @@ lidar_segmentation_based_filter(
 ```
 
 
-#### 7.11.23 LidarTile
+#### 7.11.26 LidarTile
 
 Tiles a LiDAR LAS file into multiple LAS files.
 
@@ -7843,7 +8216,7 @@ lidar_tile(
 ```
 
 
-#### 7.11.24 LidarTophatTransform
+#### 7.11.27 LidarTophatTransform
 
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
@@ -7877,7 +8250,7 @@ lidar_tophat_transform(
 ```
 
 
-#### 7.11.25 NormalVectors
+#### 7.11.28 NormalVectors
 
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
@@ -8167,7 +8540,38 @@ atan2(
 ```
 
 
-#### 7.12.9 AttributeHistogram
+#### 7.12.9 AttributeCorrelation
+
+Performs a correlation analysis on attribute fields from a vector database.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output HTML file (default name will be based on input file if unspecified)
+
+
+*Python function*:
+
+~~~~{.python}
+attribute_correlation(
+    i, 
+    output=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=AttributeCorrelation -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.html 
+
+
+```
+
+
+#### 7.12.10 AttributeHistogram
 
 Creates a histogram for the field values of a vector's attribute table.
 
@@ -8201,7 +8605,7 @@ attribute_histogram(
 ```
 
 
-#### 7.12.10 AttributeScattergram
+#### 7.12.11 AttributeScattergram
 
 Creates a scattergram for two field values of a vector's attribute table.
 
@@ -8239,7 +8643,7 @@ attribute_scattergram(
 ```
 
 
-#### 7.12.11 Ceil
+#### 7.12.12 Ceil
 
 Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 
@@ -8270,7 +8674,7 @@ ceil(
 ```
 
 
-#### 7.12.12 Cos
+#### 7.12.13 Cos
 
 Returns the cosine (cos) of each values in a raster.
 
@@ -8301,7 +8705,7 @@ cos(
 ```
 
 
-#### 7.12.13 Cosh
+#### 7.12.14 Cosh
 
 Returns the hyperbolic cosine (cosh) of each values in a raster.
 
@@ -8332,7 +8736,7 @@ cosh(
 ```
 
 
-#### 7.12.14 CrispnessIndex
+#### 7.12.15 CrispnessIndex
 
 Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
 
@@ -8366,7 +8770,7 @@ crispness_index(
 ```
 
 
-#### 7.12.15 CrossTabulation
+#### 7.12.16 CrossTabulation
 
 Performs a cross-tabulation on two categorical images.
 
@@ -8400,7 +8804,7 @@ cross_tabulation(
 ```
 
 
-#### 7.12.16 CumulativeDistribution
+#### 7.12.17 CumulativeDistribution
 
 Converts a raster image to its cumulative distribution function.
 
@@ -8431,7 +8835,7 @@ cumulative_distribution(
 ```
 
 
-#### 7.12.17 Decrement
+#### 7.12.18 Decrement
 
 Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
 
@@ -8462,7 +8866,7 @@ decrement(
 ```
 
 
-#### 7.12.18 Divide
+#### 7.12.19 Divide
 
 Performs a division operation on two rasters or a raster and a constant value.
 
@@ -8495,7 +8899,7 @@ divide(
 ```
 
 
-#### 7.12.19 EqualTo
+#### 7.12.20 EqualTo
 
 Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -8528,7 +8932,7 @@ equal_to(
 ```
 
 
-#### 7.12.20 Exp
+#### 7.12.21 Exp
 
 Returns the exponential (base e) of values in a raster.
 
@@ -8559,7 +8963,7 @@ exp(
 ```
 
 
-#### 7.12.21 Exp2
+#### 7.12.22 Exp2
 
 Returns the exponential (base 2) of values in a raster.
 
@@ -8590,7 +8994,7 @@ exp2(
 ```
 
 
-#### 7.12.22 ExtractRasterStatistics
+#### 7.12.23 ExtractRasterStatistics
 
 Extracts descriptive statistics for a group of patches in a raster.
 
@@ -8632,7 +9036,7 @@ extract_raster_statistics(
 ```
 
 
-#### 7.12.23 Floor
+#### 7.12.24 Floor
 
 Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
 
@@ -8663,7 +9067,7 @@ floor(
 ```
 
 
-#### 7.12.24 GreaterThan
+#### 7.12.25 GreaterThan
 
 Performs a greater-than comparison operation on two rasters or a raster and a constant value.
 
@@ -8699,7 +9103,7 @@ greater_than(
 ```
 
 
-#### 7.12.25 ImageAutocorrelation
+#### 7.12.26 ImageAutocorrelation
 
 Performs Moran's I analysis on two or more input images.
 
@@ -8733,7 +9137,7 @@ image_autocorrelation(
 ```
 
 
-#### 7.12.26 ImageCorrelation
+#### 7.12.27 ImageCorrelation
 
 Performs image correlation on two or more input images.
 
@@ -8765,7 +9169,7 @@ image_correlation(
 ```
 
 
-#### 7.12.27 ImageRegression
+#### 7.12.28 ImageRegression
 
 Performs image regression analysis on two input images.
 
@@ -8804,7 +9208,7 @@ image_regression(
 ```
 
 
-#### 7.12.28 InPlaceAdd
+#### 7.12.29 InPlaceAdd
 
 Performs an in-place addition operation (input1 += input2).
 
@@ -8838,7 +9242,7 @@ in_place_add(
 ```
 
 
-#### 7.12.29 InPlaceDivide
+#### 7.12.30 InPlaceDivide
 
 Performs an in-place division operation (input1 /= input2).
 
@@ -8872,7 +9276,7 @@ in_place_divide(
 ```
 
 
-#### 7.12.30 InPlaceMultiply
+#### 7.12.31 InPlaceMultiply
 
 Performs an in-place multiplication operation (input1 *= input2).
 
@@ -8906,7 +9310,7 @@ in_place_multiply(
 ```
 
 
-#### 7.12.31 InPlaceSubtract
+#### 7.12.32 InPlaceSubtract
 
 Performs an in-place subtraction operation (input1 -= input2).
 
@@ -8940,7 +9344,7 @@ in_place_subtract(
 ```
 
 
-#### 7.12.32 Increment
+#### 7.12.33 Increment
 
 Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd).
 
@@ -8971,7 +9375,7 @@ increment(
 ```
 
 
-#### 7.12.33 IntegerDivision
+#### 7.12.34 IntegerDivision
 
 Performs an integer division operation on two rasters or a raster and a constant value.
 
@@ -9005,7 +9409,7 @@ integer_division(
 ```
 
 
-#### 7.12.34 IsNoData
+#### 7.12.35 IsNoData
 
 Identifies NoData valued pixels in an image.
 
@@ -9036,7 +9440,7 @@ is_no_data(
 ```
 
 
-#### 7.12.35 KSTestForNormality
+#### 7.12.36 KSTestForNormality
 
 Evaluates whether the values in a raster are normally distributed.
 
@@ -9072,7 +9476,7 @@ ks_test_for_normality(
 ```
 
 
-#### 7.12.36 KappaIndex
+#### 7.12.37 KappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
 
@@ -9105,7 +9509,7 @@ kappa_index(
 ```
 
 
-#### 7.12.37 LessThan
+#### 7.12.38 LessThan
 
 Performs a less-than comparison operation on two rasters or a raster and a constant value.
 
@@ -9141,7 +9545,7 @@ less_than(
 ```
 
 
-#### 7.12.38 ListUniqueValues
+#### 7.12.39 ListUniqueValues
 
 Lists the unique values contained in a field witin a vector's attribute table.
 
@@ -9175,7 +9579,7 @@ list_unique_values(
 ```
 
 
-#### 7.12.39 Ln
+#### 7.12.40 Ln
 
 Returns the natural logarithm of values in a raster.
 
@@ -9206,7 +9610,7 @@ ln(
 ```
 
 
-#### 7.12.40 Log10
+#### 7.12.41 Log10
 
 Returns the base-10 logarithm of values in a raster.
 
@@ -9237,7 +9641,7 @@ log10(
 ```
 
 
-#### 7.12.41 Log2
+#### 7.12.42 Log2
 
 Returns the base-2 logarithm of values in a raster.
 
@@ -9268,7 +9672,7 @@ log2(
 ```
 
 
-#### 7.12.42 Max
+#### 7.12.43 Max
 
 Performs a MAX operation on two rasters or a raster and a constant value.
 
@@ -9301,7 +9705,7 @@ max(
 ```
 
 
-#### 7.12.43 Min
+#### 7.12.44 Min
 
 Performs a MIN operation on two rasters or a raster and a constant value.
 
@@ -9334,7 +9738,7 @@ min(
 ```
 
 
-#### 7.12.44 Modulo
+#### 7.12.45 Modulo
 
 Performs a modulo operation on two rasters or a raster and a constant value.
 
@@ -9367,7 +9771,7 @@ modulo(
 ```
 
 
-#### 7.12.45 Multiply
+#### 7.12.46 Multiply
 
 Performs a multiplication operation on two rasters or a raster and a constant value.
 
@@ -9400,7 +9804,7 @@ multiply(
 ```
 
 
-#### 7.12.46 Negate
+#### 7.12.47 Negate
 
 Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
@@ -9431,7 +9835,7 @@ negate(
 ```
 
 
-#### 7.12.47 Not
+#### 7.12.48 Not
 
 Performs a logical NOT operator on two Boolean raster images.
 
@@ -9464,7 +9868,7 @@ Not(
 ```
 
 
-#### 7.12.48 NotEqualTo
+#### 7.12.49 NotEqualTo
 
 Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -9497,7 +9901,7 @@ not_equal_to(
 ```
 
 
-#### 7.12.49 Or
+#### 7.12.50 Or
 
 Performs a logical OR operator on two Boolean raster images.
 
@@ -9530,7 +9934,7 @@ Or(
 ```
 
 
-#### 7.12.50 Power
+#### 7.12.51 Power
 
 Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 
@@ -9563,7 +9967,7 @@ power(
 ```
 
 
-#### 7.12.51 PrincipalComponentAnalysis
+#### 7.12.52 PrincipalComponentAnalysis
 
 Performs a principal component analysis (PCA) on a multi-spectral dataset.
 
@@ -9582,7 +9986,7 @@ Performs a principal component analysis (PCA) on a multi-spectral dataset.
 ~~~~{.python}
 principal_component_analysis(
     inputs, 
-    out_html=None, 
+    out_html, 
     num_comp=None, 
     standardized=False, 
     callback=default_callback)
@@ -9599,7 +10003,7 @@ principal_component_analysis(
 ```
 
 
-#### 7.12.52 Quantiles
+#### 7.12.53 Quantiles
 
 Transforms raster values into quantiles.
 
@@ -9632,7 +10036,7 @@ quantiles(
 ```
 
 
-#### 7.12.53 RandomField
+#### 7.12.54 RandomField
 
 Creates an image containing random values.
 
@@ -9663,7 +10067,7 @@ random_field(
 ```
 
 
-#### 7.12.54 RandomSample
+#### 7.12.55 RandomSample
 
 Creates an image containing randomly located sample grid cells with unique IDs.
 
@@ -9696,7 +10100,7 @@ random_sample(
 ```
 
 
-#### 7.12.55 RasterHistogram
+#### 7.12.56 RasterHistogram
 
 Creates a histogram from raster values.
 
@@ -9727,7 +10131,7 @@ raster_histogram(
 ```
 
 
-#### 7.12.56 RasterSummaryStats
+#### 7.12.57 RasterSummaryStats
 
 Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 
@@ -9756,7 +10160,7 @@ raster_summary_stats(
 ```
 
 
-#### 7.12.57 Reciprocal
+#### 7.12.58 Reciprocal
 
 Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
@@ -9787,7 +10191,7 @@ reciprocal(
 ```
 
 
-#### 7.12.58 RescaleValueRange
+#### 7.12.59 RescaleValueRange
 
 Performs a min-max contrast stretch on an input greytone image.
 
@@ -9831,7 +10235,7 @@ rescale_value_range(
 ```
 
 
-#### 7.12.59 RootMeanSquareError
+#### 7.12.60 RootMeanSquareError
 
 Calculates the RMSE and other accuracy statistics.
 
@@ -9862,7 +10266,7 @@ root_mean_square_error(
 ```
 
 
-#### 7.12.60 Round
+#### 7.12.61 Round
 
 Rounds the values in an input raster to the nearest integer value.
 
@@ -9893,7 +10297,7 @@ round(
 ```
 
 
-#### 7.12.61 Sin
+#### 7.12.62 Sin
 
 Returns the sine (sin) of each values in a raster.
 
@@ -9924,7 +10328,7 @@ sin(
 ```
 
 
-#### 7.12.62 Sinh
+#### 7.12.63 Sinh
 
 Returns the hyperbolic sine (sinh) of each values in a raster.
 
@@ -9955,7 +10359,7 @@ sinh(
 ```
 
 
-#### 7.12.63 Square
+#### 7.12.64 Square
 
 Squares the values in a raster.
 
@@ -9986,7 +10390,7 @@ square(
 ```
 
 
-#### 7.12.64 SquareRoot
+#### 7.12.65 SquareRoot
 
 Returns the square root of the values in a raster.
 
@@ -10017,7 +10421,7 @@ square_root(
 ```
 
 
-#### 7.12.65 Subtract
+#### 7.12.66 Subtract
 
 Performs a differencing operation on two rasters or a raster and a constant value.
 
@@ -10050,7 +10454,7 @@ subtract(
 ```
 
 
-#### 7.12.66 Tan
+#### 7.12.67 Tan
 
 Returns the tangent (tan) of each values in a raster.
 
@@ -10081,7 +10485,7 @@ tan(
 ```
 
 
-#### 7.12.67 Tanh
+#### 7.12.68 Tanh
 
 Returns the hyperbolic tangent (tanh) of each values in a raster.
 
@@ -10112,7 +10516,7 @@ tanh(
 ```
 
 
-#### 7.12.68 ToDegrees
+#### 7.12.69 ToDegrees
 
 Converts a raster from radians to degrees.
 
@@ -10143,7 +10547,7 @@ to_degrees(
 ```
 
 
-#### 7.12.69 ToRadians
+#### 7.12.70 ToRadians
 
 Converts a raster from degrees to radians.
 
@@ -10174,7 +10578,79 @@ to_radians(
 ```
 
 
-#### 7.12.70 Truncate
+#### 7.12.71 TrendSurface
+
+Estimates the trend surface of an input raster file.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output raster file
+-\-order             Polynomial order (1 to 10)
+
+
+*Python function*:
+
+~~~~{.python}
+trend_surface(
+    i, 
+    output, 
+    order=1, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=TrendSurface -v --wd="/path/to/data/" ^
+-i='input.tif' -o='output.tif' --order=2 
+
+
+```
+
+
+#### 7.12.72 TrendSurfaceVectorPoints
+
+Estimates a trend surface from vector points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-o, -\-output        Output raster file
+-\-order             Polynomial order (1 to 10)
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+trend_surface_vector_points(
+    i, 
+    field, 
+    output, 
+    cell_size, 
+    order=1, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=TrendSurfaceVectorPoints -v ^
+--wd="/path/to/data/" -i='input.shp' --field=ELEV ^
+-o='output.tif' --order=2 --cell_size=10.0 
+
+
+```
+
+
+#### 7.12.73 Truncate
 
 Truncates the values in a raster to the desired number of decimal places.
 
@@ -10207,7 +10683,7 @@ truncate(
 ```
 
 
-#### 7.12.71 TurningBandsSimulation
+#### 7.12.74 TurningBandsSimulation
 
 Creates an image containing random values based on a turning-bands simulation.
 
@@ -10243,7 +10719,7 @@ turning_bands_simulation(
 ```
 
 
-#### 7.12.72 Xor
+#### 7.12.75 Xor
 
 Performs a logical XOR operator on two Boolean raster images.
 
@@ -10276,7 +10752,7 @@ xor(
 ```
 
 
-#### 7.12.73 ZScores
+#### 7.12.76 ZScores
 
 Standardizes the values in an input raster by converting to z-scores.
 
@@ -11160,6 +11636,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 
