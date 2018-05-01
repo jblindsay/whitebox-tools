@@ -40,7 +40,7 @@ Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-April 30, 2018  \
+May 1, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
