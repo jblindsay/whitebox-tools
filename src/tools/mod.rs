@@ -171,6 +171,7 @@ impl ToolManager {
         tool_names.push("ThickenRasterLine".to_string());
         tool_names.push("TophatTransform".to_string());
         tool_names.push("TotalFilter".to_string());
+        tool_names.push("UnsharpMasking".to_string());
         tool_names.push("UserDefinedWeightsFilter".to_string());
         tool_names.push("WriteFunctionMemoryInsertion".to_string());
 
@@ -555,6 +556,7 @@ impl ToolManager {
             "thickenrasterline" => Some(Box::new(tools::image_analysis::ThickenRasterLine::new())),
             "tophattransform" => Some(Box::new(tools::image_analysis::TophatTransform::new())),
             "totalfilter" => Some(Box::new(tools::image_analysis::TotalFilter::new())),
+            "unsharpmasking" => Some(Box::new(tools::image_analysis::UnsharpMasking::new())),
             "userdefinedweightsfilter" => Some(Box::new(tools::image_analysis::UserDefinedWeightsFilter::new())),
             "writefunctionmemoryinsertion" => Some(Box::new(tools::image_analysis::WriteFunctionMemoryInsertion::new())),
 
@@ -1015,7 +1017,7 @@ enum ParameterType {
     StringList,
     Integer,
     Float,
-    VectorAttributeField,
+    VectorAttributeField(AttributeType),
     StringOrNumber,
     ExistingFile(ParameterFileType),
     ExistingFileOrFloat(ParameterFileType),
@@ -1043,4 +1045,15 @@ enum VectorGeometryType {
     Point,
     Line,
     Polygon,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+enum AttributeType {
+    Any,
+    Integer,
+    Float,
+    Number,
+    Text,
+    Boolean,
+    Date,
 }

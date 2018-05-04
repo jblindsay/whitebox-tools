@@ -49,7 +49,7 @@ impl ListUniqueValues {
             name: "Field Name".to_owned(), 
             flags: vec!["--field".to_owned()], 
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField,
+            parameter_type: ParameterType::VectorAttributeField(AttributeType::Any),
             default_value: None,
             optional: false
         });

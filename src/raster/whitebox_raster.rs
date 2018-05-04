@@ -153,7 +153,7 @@ pub fn read_whitebox(file_name: &String,
         // DataType::Byte
         1
     };
-    
+
 
     let num_cells = configs.rows * configs.columns;
     let buf_size = 1_000_000usize;
@@ -190,21 +190,30 @@ pub fn read_whitebox(file_name: &String,
                 }
             }
             DataType::F32 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
-                    data.push(unsafe {
-                                  mem::transmute::<[u8; 4], f32>([buffer[offset],
-                                                                  buffer[offset + 1],
-                                                                  buffer[offset + 2],
-                                                                  buffer[offset + 3]])
-                              } as f64);
+                let mut bor = ByteOrderReader::new(buffer, configs.endian);
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_f32() as f64);
                     j += 1;
                     if j == num_cells {
                         break;
                     }
                 }
+                // for i in 0..buf_size {
+                //     offset = i * data_size;
+                //     data.push(unsafe {
+                //                   mem::transmute::<[u8; 4], f32>([buffer[offset],
+                //                                                   buffer[offset + 1],
+                //                                                   buffer[offset + 2],
+                //                                                   buffer[offset + 3]])
+                //               } as f64);
+                //     j += 1;
+                //     if j == num_cells {
+                //         break;
+                //     }
+                // }
             }
-            DataType::I32 | DataType::RGBA32 => {
+            DataType::I32 => {
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe {
@@ -240,6 +249,41 @@ pub fn read_whitebox(file_name: &String,
                         break;
                     }
                 }
+            }
+            DataType::RGBA32 => {
+                let mut bor = ByteOrderReader::new(buffer, configs.endian);
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_f32() as i32 as u32 as f64);
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
+                }
+                // let mut bor = ByteOrderReader::new(buffer, configs.endian);
+                // bor.pos = 0;
+                // let mut val: u32;
+                // let mut r: u32;
+                // let mut g: u32;
+                // let mut b: u32;
+                // let mut a: u32;
+                // for _ in 0..buf_size {
+                //     val = bor.read_f32() as u32;
+                //     r = (value as u32 & 0xFF) as f64 / 255f64;
+                //     g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+                //     b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+                //     val = in_val as u32;
+                //     red = val & 0xFF;
+                //     green = (val >> 8) & 0xFF;
+                //     blue = (val >> 16) & 0xFF;
+
+                //     data.push(bor.read_f32() as f64);
+                //     j += 1;
+                //     if j == num_cells {
+                //         break;
+                //     }
+                // }
             }
             _ => {
                 return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
@@ -316,11 +360,10 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write_all("Data Type:\tI32\n".as_bytes())?;
             }
         }
-        DataType::F32 => {
-            // Java doesn't have an unsigned 32-bit integer, so Whitebox only has an I32.
+        DataType::F32 | DataType::RGBA32 => {
             writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
         }
-        DataType::I32 | DataType::U16 | DataType::RGB24 | DataType::RGBA32 => {
+        DataType::I32 | DataType::U16 => {
             writer.write_all("Data Type:\tI32\n".as_bytes())?;
         }
         DataType::I16 => {
@@ -439,18 +482,9 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::RGBA32 => {
-            let mut i: usize;
-            let mut bytes: [u8; 4] = [0u8; 4];
-            for row in 0..r.configs.rows {
-                for col in 0..r.configs.columns {
-                    i = row * r.configs.columns + col;
-                    let val = r.data[i] as u32;
-                    bytes[0] = ((val >> 16u32) & 0xFF) as u8; // blue
-                    bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                    bytes[2] = (val & 0xFF) as u8; // red
-                    bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
-                    writer.write(&bytes)?;
-                }
+            for i in 0..num_cells {
+                u32_bytes = unsafe { mem::transmute(r.data[i] as u32 as i32 as f32) };
+                writer.write(&u32_bytes)?;
             }
         }
         DataType::RGB24 => {

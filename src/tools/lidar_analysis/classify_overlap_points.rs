@@ -40,7 +40,7 @@ impl ClassifyOverlapPoints {
         // public constructor
         let name = "ClassifyOverlapPoints".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Classifies or filters LAS point in regions of overlapping flight lines.".to_string();
+        let description = "Classifies or filters LAS points in regions of overlapping flight lines.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter{

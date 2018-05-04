@@ -385,6 +385,10 @@ impl WhiteboxTool for CorrectVignetting {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        if is_rgb_image {
+            output.configs.photometric_interp = PhotometricInterpretation::RGB;
+            output.configs.data_type = DataType::RGBA32;
+        }
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

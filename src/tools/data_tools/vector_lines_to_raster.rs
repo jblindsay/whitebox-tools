@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/04/2018
-Last Modified: 18/04/2018
+Last Modified: 04/05/2018
 License: MIT
 */
 
@@ -45,7 +45,7 @@ impl VectorLinesToRaster {
             name: "Field Name".to_owned(), 
             flags: vec!["--field".to_owned()], 
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField,
+            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number),
             default_value: Some("FID".to_owned()),
             optional: true
         });

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 12/04/2018
+Last Modified: 04/05/2018
 License: MIT
 */
 
@@ -49,7 +49,7 @@ impl AttributeScattergram {
             name: "Field Name X".to_owned(), 
             flags: vec!["--fieldx".to_owned()], 
             description: "Input field name in attribute table for the x-axis.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField,
+            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number),
             default_value: None,
             optional: false
         });
@@ -58,7 +58,7 @@ impl AttributeScattergram {
             name: "Field Name Y".to_owned(), 
             flags: vec!["--fieldy".to_owned()], 
             description: "Input field name in attribute table for the y-axis.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField,
+            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number),
             default_value: None,
             optional: false
         });

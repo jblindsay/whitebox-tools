@@ -323,6 +323,38 @@ impl WhiteboxTool for TrendSurface {
         writer.write_all(&format!("<tr><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td></tr>", min_x, min_y, min_z).as_bytes())?;
         writer.write_all("</table></p>".as_bytes())?;
 
+        //////////////
+        // Equation //
+        //////////////
+        let mut s = "z = ".to_string();
+        let mut b_val = 1;
+        for j in 0..(order+1) {
+            for k in 0..(order - j + 1) {
+                let x_exp = if j > 1 {
+                    format!("^{}", j)
+                } else {
+                    "".to_string()
+                };
+                let y_exp = if k > 1 {
+                    format!("^{}", k)
+                } else {
+                    "".to_string()
+                };
+                if j != 0 && k != 0 {
+                    s.push_str(&format!("b{} * x{} * y{} + ", b_val, x_exp, y_exp));
+                } else if j != 0 {
+                    s.push_str(&format!("b{} * x{} + ", b_val, x_exp));
+                } else if k != 0 {
+                    s.push_str(&format!("b{} * y{} + ", b_val, y_exp));
+                } else {
+                    s.push_str(&format!("b{} + ", b_val));
+                }
+                b_val += 1;
+            }
+        }
+        s = s.trim().trim_right_matches(" +").to_string();
+        writer.write_all(&format!("<p>{}</p>", s).as_bytes())?;
+
         ///////////////////////
         // Coefficient Table //
         ///////////////////////
@@ -330,7 +362,7 @@ impl WhiteboxTool for TrendSurface {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!("<td class=\"numberCell\">{}</td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
+            let mut s = format!("<td class=\"numberCell\">b{}</td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
             writer.write_all(&format!("<tr>{}</tr>", s).as_bytes())?;
         }
         writer.write_all("</table></p>".as_bytes())?;

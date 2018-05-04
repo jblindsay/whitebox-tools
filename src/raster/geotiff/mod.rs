@@ -1030,7 +1030,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // offset to first IFD
         let total_bytes_per_pixel = r.configs.data_type.get_data_size();
         if total_bytes_per_pixel == 0 {
-            return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
+            return Err(Error::new(ErrorKind::InvalidData, 
+            format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
         }
         let mut ifd_start = (8usize + r.configs.rows as usize * r.configs.columns as usize *
                         total_bytes_per_pixel) as u32; // plus the 8-byte header
@@ -1140,7 +1141,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         }
                     },
                     _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
+                        return Err(Error::new(ErrorKind::InvalidData, 
+                        format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
                     },
                 }
             },
@@ -1161,7 +1163,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                             }
                         }
                     },
-                    DataType::RGBA32 => {
+                    DataType::RGBA32 | DataType::U32 => {
                         let mut i: usize;
                         let mut bytes: [u8; 4] = [0u8; 4];
                         for row in 0..r.configs.rows {
@@ -1179,7 +1181,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         }
                     },
                     _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
+                        return Err(Error::new(ErrorKind::InvalidData, 
+                        format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
                     },
                 }
             },
