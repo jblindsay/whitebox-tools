@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 04/05/2018
+Last Modified: 05/05/2018
 License: MIT
 */
 
@@ -49,7 +49,7 @@ impl AttributeHistogram {
             name: "Field Name".to_owned(), 
             flags: vec!["--field".to_owned()], 
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number),
+            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
             default_value: None,
             optional: false
         });

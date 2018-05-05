@@ -1017,7 +1017,7 @@ enum ParameterType {
     StringList,
     Integer,
     Float,
-    VectorAttributeField(AttributeType),
+    VectorAttributeField(AttributeType, String),
     StringOrNumber,
     ExistingFile(ParameterFileType),
     ExistingFileOrFloat(ParameterFileType),

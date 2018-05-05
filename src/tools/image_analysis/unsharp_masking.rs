@@ -314,7 +314,7 @@ impl WhiteboxTool for UnsharpMasking {
                                 } else {
                                     value
                                 };
-                                hsi2value(h, s, i)
+                                return hsi2value(h, s, i);
                             }
                             nodata
                         }

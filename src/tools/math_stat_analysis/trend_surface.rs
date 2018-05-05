@@ -331,23 +331,23 @@ impl WhiteboxTool for TrendSurface {
         for j in 0..(order+1) {
             for k in 0..(order - j + 1) {
                 let x_exp = if j > 1 {
-                    format!("^{}", j)
+                    format!("<sup>{}</sup>", j)
                 } else {
                     "".to_string()
                 };
                 let y_exp = if k > 1 {
-                    format!("^{}", k)
+                    format!("<sup>{}</sup>", k)
                 } else {
                     "".to_string()
                 };
                 if j != 0 && k != 0 {
-                    s.push_str(&format!("b{} * x{} * y{} + ", b_val, x_exp, y_exp));
+                    s.push_str(&format!("b<sub>{}</sub>x{}y{} + ", b_val, x_exp, y_exp));
                 } else if j != 0 {
-                    s.push_str(&format!("b{} * x{} + ", b_val, x_exp));
+                    s.push_str(&format!("b<sub>{}</sub>x{} + ", b_val, x_exp));
                 } else if k != 0 {
-                    s.push_str(&format!("b{} * y{} + ", b_val, y_exp));
+                    s.push_str(&format!("b<sub>{}</sub>y{} + ", b_val, y_exp));
                 } else {
-                    s.push_str(&format!("b{} + ", b_val));
+                    s.push_str(&format!("b<sub>{}</sub> + ", b_val));
                 }
                 b_val += 1;
             }
@@ -362,7 +362,7 @@ impl WhiteboxTool for TrendSurface {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!("<td class=\"numberCell\">b{}</td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
+            let mut s = format!("<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
             writer.write_all(&format!("<tr>{}</tr>", s).as_bytes())?;
         }
         writer.write_all("</table></p>".as_bytes())?;
