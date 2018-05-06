@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: January 21, 2018
+Last Modified: 06/05/2018
 License: MIT
 */
 
@@ -213,10 +213,37 @@ impl WhiteboxTool for HighPassFilter {
 
         let start = time::now();
 
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        let min_val = input.configs.minimum;
+        let min_val = if !is_rgb_image {
+            input.configs.minimum
+        } else {
+            0f64
+        };
+
+        let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+            Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+        } else {
+            Box::new(
+                |row: isize, col: isize| -> f64 {
+                    let value = input.get_value(row, col);
+                    if value != nodata {
+                        return value2i(value);
+                    }
+                    nodata
+                }
+            )
+        };
 
         // create the integral images
         let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
@@ -231,7 +258,7 @@ impl WhiteboxTool for HighPassFilter {
             sum = 0f64;
             sum_n = 0;
             for col in 0..columns {
-                val = input[(row, col)];
+                val = input_fn(row, col);
                 if val == nodata {
                     val = 0f64;
                 } else {
@@ -261,14 +288,30 @@ impl WhiteboxTool for HighPassFilter {
         let i = Arc::new(integral); // wrap integral in an Arc
         let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+
         let (tx, rx) = mpsc::channel();
         let num_procs = num_cpus::get() as isize;
         for tid in 0..num_procs {
-            let input_data = input.clone();
+            let input = input.clone();
             let i = i.clone();
             let i_n = i_n.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
                 let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                 let mut n: i32;
                 let mut sum: f64;
@@ -292,7 +335,7 @@ impl WhiteboxTool for HighPassFilter {
                     }
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input_data[(row, col)];
+                        z = input_fn(row, col);
                         if z != nodata {
                             x1 = col - midpoint_x - 1;
                             if x1 < 0 {
@@ -360,10 +403,18 @@ impl WhiteboxTool for HighPassFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         }
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
 }

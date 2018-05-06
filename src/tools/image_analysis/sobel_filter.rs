@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: January 21, 2018
+Last Modified: 06/05/2018
 License: MIT
 */
 
@@ -204,8 +204,19 @@ impl WhiteboxTool for SobelFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
     
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -214,6 +225,20 @@ impl WhiteboxTool for SobelFilter {
             let variant = variant.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+
                 let (mut slope_x, mut slope_y): (f64, f64);
                 let mut z: f64;
                 let mut zn: f64;
@@ -228,12 +253,12 @@ impl WhiteboxTool for SobelFilter {
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            z = input[(row, col)];
+                            z = input_fn(row, col);
                             if z != nodata {
                                 slope_x = 0.0;
                                 slope_y = 0.0;
                                 for i in 0..num_pixels_in_filter {
-                                    zn = input[(row + dy[i], col + dx[i])];
+                                    zn = input_fn(row + dy[i], col + dx[i]);
                                     if zn == nodata {
                                         zn = z; // replace it with z
                                     }
@@ -255,12 +280,12 @@ impl WhiteboxTool for SobelFilter {
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            z = input[(row, col)];
+                            z = input_fn(row, col);
                             if z != nodata {
                                 slope_x = 0.0;
                                 slope_y = 0.0;
                                 for i in 0..num_pixels_in_filter {
-                                    zn = input[(row + dy[i], col + dx[i])];
+                                    zn = input_fn(row + dy[i], col + dx[i]);
                                     if zn == nodata {
                                         zn = z; // replace it with z
                                     }
@@ -290,25 +315,6 @@ impl WhiteboxTool for SobelFilter {
 
         if clip_amount > 0.0 {
             println!("Clipping output...");
-            // let (mean, stdev) = output.calculate_mean_and_stdev();
-            // let mut z: f64;
-            // for row in 0..rows {
-            //     for col in 0..columns {
-            //         z = output[(row, col)];
-            //         if z != nodata {
-            //             output[(row, col)] = (z - mean) / stdev;
-            //         }
-            //     }
-            //     if verbose {
-            //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-            //         if progress != old_progress {
-            //             println!("Normalizing output: {}%", progress);
-            //             old_progress = progress;
-            //         }
-            //     }
-            // }
-            // output.configs.display_min = -2.0;
-            // output.configs.display_max = 2.0;
             output.clip_min_and_max_by_percent(clip_amount);
         }
 
@@ -321,9 +327,7 @@ impl WhiteboxTool for SobelFilter {
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
-        if verbose {
-            println!("Saving data...")
-        };
+        if verbose { println!("Saving data...") };
         let _ = match output.write() {
             Ok(_) => {
                 if verbose {
@@ -334,10 +338,18 @@ impl WhiteboxTool for SobelFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         }
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
 }

@@ -58,7 +58,7 @@ impl ConservativeSmoothingFilter {
             flags: vec!["--filterx".to_owned()], 
             description: "Size of the filter kernel in the x-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("11".to_owned()),
+            default_value: Some("3".to_owned()),
             optional: true
         });
 
@@ -67,7 +67,7 @@ impl ConservativeSmoothingFilter {
             flags: vec!["--filtery".to_owned()], 
             description: "Size of the filter kernel in the y-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("11".to_owned()),
+            default_value: Some("3".to_owned()),
             optional: true
         });
 
@@ -121,8 +121,8 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut filter_size_x = 11usize;
-        let mut filter_size_y = 11usize;
+        let mut filter_size_x = 3usize;
+        let mut filter_size_y = 3usize;
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters."));

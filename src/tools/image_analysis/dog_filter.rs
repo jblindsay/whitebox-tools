@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: January 21, 2018
+Last Modified: 05/05/2018
 License: MIT
 */
 
@@ -297,13 +297,24 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
     
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            let input_data = input.clone();
+            let input = input.clone();
             let d_x1 = d_x1.clone();
             let d_y1 = d_y1.clone();
             let weights1 = weights1.clone();
@@ -312,6 +323,20 @@ impl WhiteboxTool for DiffOfGaussianFilter {
             let weights2 = weights2.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+                
                 let (mut sum, mut z_final1, mut z_final2): (f64, f64, f64);
                 let mut z: f64;
                 let mut zn: f64;
@@ -319,14 +344,14 @@ impl WhiteboxTool for DiffOfGaussianFilter {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input_data[(row, col)];
+                        z = input_fn(row, col);
                         if z != nodata {
                             sum = 0.0;
                             z_final1 = 0.0;
                             for a in 0..num_pixels_in_filter1 {
                                 x = col + d_x1[a];
                                 y = row + d_y1[a];
-                                zn = input_data[(y, x)];
+                                zn = input_fn(y, x);
                                 if zn != nodata {
                                     sum += weights1[a];
                                     z_final1 += weights1[a] * zn;
@@ -339,7 +364,7 @@ impl WhiteboxTool for DiffOfGaussianFilter {
                             for a in 0..num_pixels_in_filter2 {
                                 x = col + d_x2[a];
                                 y = row + d_y2[a];
-                                zn = input_data[(y, x)];
+                                zn = input_fn(y, x);
                                 if zn != nodata {
                                     sum += weights2[a];
                                     z_final2 += weights2[a] * zn;
@@ -396,4 +421,13 @@ impl WhiteboxTool for DiffOfGaussianFilter {
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
 }

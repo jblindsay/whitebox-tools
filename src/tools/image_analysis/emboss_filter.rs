@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: 19/04/2018
+Last Modified: 06/05/2018
 License: MIT
 */
 
@@ -194,8 +194,20 @@ impl WhiteboxTool for EmbossFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
     
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -204,6 +216,20 @@ impl WhiteboxTool for EmbossFilter {
             let direction = direction.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+                
                 let weights = match &direction as &str {
                     "n" => [ 0f64, -1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64 ],
                     "s" => [ 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, -1f64, 0f64 ],
@@ -223,11 +249,11 @@ impl WhiteboxTool for EmbossFilter {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input_fn(row, col);
                         if z != nodata {
                             sum = 0.0;
                             for n in 0..num_pixels_in_filter {
-                                zn = input[(row + dy[n], col + dx[n])];
+                                zn = input_fn(row + dy[n], col + dx[n]);
                                 if zn == nodata { zn = z; }
                                 sum += zn * weights[n];
                             }
@@ -284,4 +310,13 @@ impl WhiteboxTool for EmbossFilter {
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
 }
