@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 15, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 05/05/2018
 License: MIT
 
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
@@ -13,6 +13,7 @@ use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
+use std::f64::consts::PI;
 use std::i64;
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -238,15 +239,26 @@ impl WhiteboxTool for MedianFilter {
 
         let start = time::now();
 
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
+
+        if is_rgb_image && num_sig_digits < 4 { num_sig_digits == 4; }
+
         // first bin the data
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        let display_min = input.configs.display_min;
-        let display_max = input.configs.display_max;
+        let display_min = if !is_rgb_image { input.configs.display_min } else { 0f64 };
+        let display_max = if !is_rgb_image { input.configs.display_max } else { 1f64 };
         let multiplier = 10f64.powi(num_sig_digits);
-        let min_val = input.configs.minimum;
-        let max_val = input.configs.maximum;
+        let min_val = if !is_rgb_image { input.configs.minimum } else { 0f64 };
+        let max_val = if !is_rgb_image { input.configs.maximum } else { 1f64 };
         let min_bin = (min_val * multiplier).floor() as i64;
         let num_bins = (max_val * multiplier).floor() as i64 - min_bin + 1;
         let bin_nodata = i64::MIN;
@@ -258,12 +270,26 @@ impl WhiteboxTool for MedianFilter {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+
                 let mut z : f64;
                 let mut val : i64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![bin_nodata; columns as usize];
                     for col in 0..columns {
-                        z = input.get_value(row, col);
+                        z = input_fn(row, col);
                         if z != nodata {
                             val = (z*multiplier).floor() as i64 - min_bin;
                             data[col as usize] = val;
@@ -291,8 +317,24 @@ impl WhiteboxTool for MedianFilter {
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let binned_data = bd.clone();
+            let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
+                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                    // simply return the value.
+                    Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
+                } else {
+                    // convert it back into an rgb value, using the modified intensity value.
+                    Box::new(
+                        |row: isize, col: isize, value: f64| -> f64 {
+                            if value != nodata {
+                                let (h, s, _) = value2hsi(input.get_value(row, col));
+                                return hsi2value(h, s, value);
+                            }
+                            nodata
+                        }
+                    )
+                };
                 let (mut bin_val, mut bin_val_n): (i64, i64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
                 let mut median: i64;
@@ -388,7 +430,7 @@ impl WhiteboxTool for MedianFilter {
                             }
 
                             if n > 0f64 {
-                                data[col as usize] = (median + min_bin) as f64 / multiplier;
+                                data[col as usize] = output_fn(row, col, (median + min_bin) as f64 / multiplier);
                             } else {
                                 data[col as usize] = nodata;
                             }
@@ -423,6 +465,7 @@ impl WhiteboxTool for MedianFilter {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
+        output.add_metadata_entry(format!("Num. significant digits: {}", num_sig_digits));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose { println!("Saving data...") };
@@ -436,4 +479,76 @@ impl WhiteboxTool for MedianFilter {
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
+}
+
+#[inline]
+fn value2hsi(value: f64) -> (f64, f64, f64) {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    let i = (r + g + b) / 3f64;
+
+	let rn = r / (r + g + b);
+	let gn = g / (r + g + b);
+	let bn = b / (r + g + b);
+
+	let mut h = if rn != gn || rn != bn {
+	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
+	} else {
+	    0f64
+	};
+	if b > g {
+		h = 2f64 * PI - h;	
+	}
+
+	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+    
+    (h, s, i)
+}
+
+#[inline]
+fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
+    let mut r: u32;
+    let mut g: u32;
+    let mut b: u32;
+
+    let x = i * (1f64 - s);	
+		
+	if h < 2f64 * PI / 3f64 {
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (y * 255f64).round() as u32; 
+        g = (z * 255f64).round() as u32;
+        b = (x * 255f64).round() as u32;
+	} else if h < 4f64 * PI / 3f64 {
+        let h = h - 2f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (x * 255f64).round() as u32;
+        g = (y * 255f64).round() as u32;
+        b = (z * 255f64).round() as u32;
+	} else {
+        let h = h - 4f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (z * 255f64).round() as u32; 
+        g = (x * 255f64).round() as u32;
+        b = (y * 255f64).round() as u32;
+	}
+    
+    if r > 255u32 { r = 255u32; }
+	if g > 255u32 { g = 255u32; }
+	if b > 255u32 { b = 255u32; }
+
+    ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

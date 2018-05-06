@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: January 21, 2018
+Last Modified: 05/05/2018
 License: MIT
 */
 
@@ -11,6 +11,7 @@ use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
+use std::f64::consts::PI;
 use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -204,20 +205,59 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
         if verbose { println!("Reading data...") };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+                
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
+            input.configs.data_type == DataType::RGBA32 ||
+            input.configs.photometric_interp == PhotometricInterpretation::RGB {
+            
+            true
+        } else {
+            false
+        };
 
         let start = time::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        let rows = input.configs.rows as isize;
-
+        
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(
+                        |row: isize, col: isize| -> f64 {
+                            let value = input.get_value(row, col);
+                            if value != nodata {
+                                return value2i(value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+                
+                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                    // simply return the value.
+                    Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
+                } else {
+                    // convert it back into an rgb value, using the modified intensity value.
+                    Box::new(
+                        |row: isize, col: isize, value: f64| -> f64 {
+                            if value != nodata {
+                                let (h, s, _) = value2hsi(input.get_value(row, col));
+                                return hsi2value(h, s, value);
+                            }
+                            nodata
+                        }
+                    )
+                };
+
                 let (mut z_n, mut z) : (f64, f64);
                 let (mut min_val, mut max_val): (f64, f64);
                 let (mut min_val2, mut max_val2): (f64, f64);
@@ -235,7 +275,7 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
                             min_val = f64::INFINITY;
                             max_val = f64::NEG_INFINITY;
                             for row2 in start_row..end_row+1 {
-                                z_n = input.get_value(row2, col + midpoint_x);
+                                z_n = input_fn(row2, col + midpoint_x);
                                 if z_n != nodata {
                                     if z_n < min_val { min_val = z_n; }
                                     if z_n > max_val { max_val = z_n; }
@@ -251,7 +291,7 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
                                 min_val = f64::INFINITY;
                                 max_val = f64::NEG_INFINITY;
                                 for row2 in start_row..end_row+1 {
-                                    z_n = input[(row2, col2)];
+                                    z_n = input_fn(row2, col2);
                                     if z_n != nodata {
                                         if z_n < min_val { min_val = z_n; }
                                         if z_n > max_val { max_val = z_n; }
@@ -261,7 +301,7 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
                                 filter_max_vals.push_back(max_val);
                             }
                         }
-                        z = input[(row, col)];
+                        z = input_fn(row, col);
                         if z != nodata {
                             min_val = f64::INFINITY;
                             max_val = f64::NEG_INFINITY;
@@ -278,20 +318,20 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
                                 }
                             }
                             if z > min_val && z < max_val {
-                                data[col as usize] = z;
+                                data[col as usize] = output_fn(row, col, z);
                             } else if z == min_val {
                                 if min_val2 != f64::INFINITY {
-                                    data[col as usize] = min_val2;
+                                    data[col as usize] = output_fn(row, col, min_val2);
                                 } else {
                                     // this should only occur when there is no range of values within the window
-                                    data[col as usize] = min_val;
+                                    data[col as usize] = output_fn(row, col, min_val);
                                 }
                             } else if z == max_val {
                                 if max_val2 != f64::NEG_INFINITY {
-                                    data[col as usize] = max_val2;
+                                    data[col as usize] = output_fn(row, col, max_val2);
                                 } else {
                                     // this should only occur when there is no range of values within the window
-                                    data[col as usize] = max_val;
+                                    data[col as usize] = output_fn(row, col, max_val);
                                 }
                             }
                         }
@@ -332,4 +372,76 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
 
         Ok(())
     }
+}
+
+#[inline]
+fn value2i(value: f64) -> f64 {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    (r + g + b) / 3f64
+}
+
+#[inline]
+fn value2hsi(value: f64) -> (f64, f64, f64) {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    let i = (r + g + b) / 3f64;
+
+	let rn = r / (r + g + b);
+	let gn = g / (r + g + b);
+	let bn = b / (r + g + b);
+
+	let mut h = if rn != gn || rn != bn {
+	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
+	} else {
+	    0f64
+	};
+	if b > g {
+		h = 2f64 * PI - h;	
+	}
+
+	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+    
+    (h, s, i)
+}
+
+#[inline]
+fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
+    let mut r: u32;
+    let mut g: u32;
+    let mut b: u32;
+
+    let x = i * (1f64 - s);	
+		
+	if h < 2f64 * PI / 3f64 {
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (y * 255f64).round() as u32; 
+        g = (z * 255f64).round() as u32;
+        b = (x * 255f64).round() as u32;
+	} else if h < 4f64 * PI / 3f64 {
+        let h = h - 2f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (x * 255f64).round() as u32;
+        g = (y * 255f64).round() as u32;
+        b = (z * 255f64).round() as u32;
+	} else {
+        let h = h - 4f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+	    let z = 3f64 * i - (x + y);
+		r = (z * 255f64).round() as u32; 
+        g = (x * 255f64).round() as u32;
+        b = (y * 255f64).round() as u32;
+	}
+    
+    if r > 255u32 { r = 255u32; }
+	if g > 255u32 { g = 255u32; }
+	if b > 255u32 { b = 255u32; }
+
+    ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

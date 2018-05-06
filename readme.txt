@@ -59,6 +59,11 @@ for more details.
 Version 0.8.0 (DD-MM-2018)
 - Added the following tools:
     UnsharpMasking
+- Modified some filters to take RGB inputs by operating on the intensity value. 
+  These include BilateralFilter, ConservativeSmoothingFilter, EdgePreservingMeanFilter, 
+  GaussianFilter, KNearestMeanFilter, LeeFilter, MaximumFilter, MeanFilter, 
+  MedianFilter, MinimumFilter, OlympicFilter, UserDefinedWeightsFilter
+
 
 Version 0.7.0 (01-05-2018)
 - Added the following tools:
