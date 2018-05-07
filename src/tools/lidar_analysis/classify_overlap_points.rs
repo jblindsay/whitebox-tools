@@ -64,7 +64,7 @@ impl ClassifyOverlapPoints {
         parameters.push(ToolParameter{
             name: "Sample Resolution".to_owned(), 
             flags: vec!["--resolution".to_owned()], 
-            description: "The distance of the square area used to evaluate nearby points in the LiDAR data.".to_owned(),
+            description: "The size of the square area used to evaluate nearby points in the LiDAR data.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
             optional: true
@@ -89,8 +89,7 @@ impl ClassifyOverlapPoints {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0\"
-.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.las --resolution=2.0", short_exe, name).replace("*", &sep);
 
         ClassifyOverlapPoints {
             name: name,

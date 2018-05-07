@@ -201,6 +201,7 @@ impl ToolManager {
         tool_names.push("LidarRemoveOutliers".to_string());
         tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
+        tool_names.push("LidarThin".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
@@ -594,6 +595,7 @@ impl ToolManager {
             "lidarremoveoutliers" => Some(Box::new(tools::lidar_analysis::LidarRemoveOutliers::new())),
             "lidarsegmentation" => Some(Box::new(tools::lidar_analysis::LidarSegmentation::new())),
             "lidarsegmentationbasedfilter" => Some(Box::new(tools::lidar_analysis::LidarSegmentationBasedFilter::new())),
+            "lidarthin" => Some(Box::new(tools::lidar_analysis::LidarThin::new())),
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
             "lidartophattransform" => {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))

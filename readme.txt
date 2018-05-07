@@ -58,14 +58,17 @@ for more details.
 
 Version 0.8.0 (DD-MM-2018)
 - Added the following tools:
+    LidarThin
     UnsharpMasking
+
 - Modified some filters to take RGB inputs by operating on the intensity value. 
   These include AdaptiveFilter, BilateralFilter, ConservativeSmoothingFilter, 
   DiffOfGaussianFilter, EdgePreservingMeanFilter, EmbossFilter, GaussianFilter, 
-  HighPassFilter, KNearestMeanFilter, LaplacianOfGaussianFilter, LeeFilter, 
-  MaximumFilter, MeanFilter, MedianFilter, MinimumFilter, OlympicFilter, 
-  PrewittFilter, RangeFilter, RobertsCrossFilter, ScharrFilter, SobelFilter, 
-  UserDefinedWeightsFilter
+  HighPassFilter, KNearestMeanFilter, LaplacianFilter, LaplacianOfGaussianFilter, 
+  LeeFilter, MaximumFilter, MeanFilter, MedianFilter, MinimumFilter, OlympicFilter, 
+  PrewittFilter, RangeFilter, RobertsCrossFilter, ScharrFilter, SobelFilter, and
+  UserDefinedWeightsFilter.
+- Fixed a bug with reading/writing Whitebox Raster files containing RGB data.
 
 
 Version 0.7.0 (01-05-2018)
