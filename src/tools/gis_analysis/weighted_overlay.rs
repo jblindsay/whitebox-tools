@@ -1,7 +1,7 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
+Created: 07/05/2018
 Last Modified: 07/05/2018
 License: MIT
 */
@@ -14,7 +14,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
-pub struct WeightedSum {
+pub struct WeightedOverlay {
     name: String,
     description: String,
     toolbox: String,
@@ -22,38 +22,65 @@ pub struct WeightedSum {
     example_usage: String,
 }
 
-impl WeightedSum {
-    pub fn new() -> WeightedSum { // public constructor
-        let name = "WeightedSum".to_string();
+impl WeightedOverlay {
+    pub fn new() -> WeightedOverlay { // public constructor
+        let name = "WeightedOverlay".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
-        let description = "Performs a weighted-sum overlay on multiple input raster images.".to_string();
+        let description = "Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
-            description: "Input raster files.".to_owned(),
+            name: "Input Factor Files".to_string(), 
+            flags: vec!["--factors".to_string()], 
+            description: "Input factor raster files.".to_string(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
             optional: false
         });
 
         parameters.push(ToolParameter{
-            name: "Weight Values (e.g. 1.7;3.5;1.2)".to_owned(), 
-            flags: vec!["-w".to_owned(), "--weights".to_owned()], 
-            description: "Weight values, contained in quotes and separated by commas or semicolons.".to_owned(),
+            name: "Weight Values (e.g. 1.7;3.5;1.2)".to_string(), 
+            flags: vec!["-w".to_owned(), "--weights".to_string()], 
+            description: "Weight values, contained in quotes and separated by commas or semicolons. Must have the same number as factors.".to_string(),
             parameter_type: ParameterType::String,
             default_value: None,
             optional: false
         });
 
         parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output raster file.".to_owned(),
+            name: "Cost Factor? (e.g. false;true;true)".to_string(), 
+            flags: vec!["--cost".to_string()], 
+            description: "Weight values, contained in quotes and separated by commas or semicolons. Must have the same number as factors.".to_string(),
+            parameter_type: ParameterType::String,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Input Constraints Files".to_string(), 
+            flags: vec!["--constraints".to_string()], 
+            description: "Input constraints raster files.".to_string(),
+            parameter_type: ParameterType::FileList(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Output File".to_string(), 
+            flags: vec!["-o".to_string(), "--output".to_string()], 
+            description: "Output raster file.".to_string(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false
+        });
+
+        parameters.push(ToolParameter{
+            name: "Suitability Scale Maximum".to_owned(), 
+            flags: vec!["--scale_max".to_owned()], 
+            description: "Suitability scale maximum value (common values are 1.0, 100.0, and 255.0).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -63,9 +90,9 @@ impl WeightedSum {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --weights='0.3;0.2;0.5' -o=output.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' --factors='image1.tif;image2.tif;image3.tif' --weights='0.3;0.2;0.5' --cost='false;false;true' -o=output.tif --scale_max=100.0", short_exe, name).replace("*", &sep);
     
-        WeightedSum { 
+        WeightedOverlay { 
             name: name, 
             description: description, 
             toolbox: toolbox,
@@ -75,7 +102,7 @@ impl WeightedSum {
     }
 }
 
-impl WhiteboxTool for WeightedSum {
+impl WhiteboxTool for WeightedOverlay {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -105,8 +132,11 @@ impl WhiteboxTool for WeightedSum {
 
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_files = String::new();
-        let mut output_file = String::new();
         let mut weights_list = String::new();
+        let mut cost_list = String::new();
+        let mut constraint_files = String::new();
+        let mut output_file = String::new();
+        let mut scale_max = 1f64;
         
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
@@ -121,14 +151,8 @@ impl WhiteboxTool for WeightedSum {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-inputs" {
+            if flag_val == "-factors" {
                 input_files = if keyval {
-                    vec[1].to_string()
-                } else {
-                    args[i+1].to_string()
-                };
-            } else if flag_val == "-o" || flag_val == "-output" {
-                output_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i+1].to_string()
@@ -139,7 +163,31 @@ impl WhiteboxTool for WeightedSum {
                 } else {
                     args[i+1].to_string()
                 };
-            }
+            } else if flag_val == "-cost" {
+                cost_list = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-constraints" {
+                constraint_files = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i+1].to_string()
+                };
+            } else if flag_val == "-scale_max" {
+                scale_max = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } 
         }
 
         if verbose {
@@ -172,6 +220,12 @@ impl WhiteboxTool for WeightedSum {
         let start = time::now();
 
         // Parse the weights list and convert it into numbers
+        if weights_list.is_empty() { // assume they are all benefit factors
+            for _ in 0..num_files-1 {
+                weights_list.push_str("false;");
+            }
+            weights_list.push_str("false");
+        }
         cmd = weights_list.split(";");
         let mut weights_str = cmd.collect::<Vec<&str>>();
         if vec.len() == 1 {
@@ -181,7 +235,7 @@ impl WhiteboxTool for WeightedSum {
         let num_weights = weights_str.len();
         if num_weights != num_files {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "The number of weights specified must equal the number of input files."));
+                                "The number of weights specified must equal the number of factors."));
         }
         let mut weights = vec![];
         for w in weights_str {
@@ -197,6 +251,27 @@ impl WhiteboxTool for WeightedSum {
             weights[i] /= weight_sum;
         }
 
+        // Parse the cost list and convert it into booleans
+        cmd = cost_list.split(";");
+        let mut cost_str = cmd.collect::<Vec<&str>>();
+        if vec.len() == 1 {
+            cmd = cost_list.split(",");
+            cost_str = cmd.collect::<Vec<&str>>();
+        }
+        let num_costs = cost_str.len();
+        if num_costs != num_files {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                                "The number of cost values specified must equal the number of factors."));
+        }
+        let mut cost = vec![];
+        for c in cost_str {
+            if c.to_lowercase().contains("t") {
+                cost.push(true);
+            } else {
+                cost.push(false);
+            }
+        }
+
         // We need to initialize output here, but in reality this can't be done
         // until we know the size of rows and columns, which occurs during the first loop.
         let mut output: Raster = Raster::new(&output_file, "w")?;
@@ -205,6 +280,8 @@ impl WhiteboxTool for WeightedSum {
         let mut in_nodata: f64;
         let mut out_nodata: f64 = -32768.0f64;
         let mut in_val: f64;
+        let mut min_val: f64;
+        let mut range: f64;
         let mut read_first_file = false;
         let mut i = 1;
         let mut j = 0usize;
@@ -212,7 +289,7 @@ impl WhiteboxTool for WeightedSum {
             if !value.trim().is_empty() {
                 if verbose { println!("Reading data...") };
 
-                let mut input_file = value.trim().to_owned();
+                let mut input_file = value.trim().to_string();
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
@@ -234,21 +311,27 @@ impl WhiteboxTool for WeightedSum {
                                 "The input files must have the same number of rows and columns and spatial extent."));
                 }
 
+                min_val = input.configs.minimum;
+                range = input.configs.maximum - min_val;
+
                 for row in 0..rows {
                     for col in 0..columns {
-                        if output[(row, col)] != out_nodata {
-                            in_val = input[(row, col)];
+                        if output.get_value(row, col) != out_nodata {
+                            in_val = input.get_value(row, col);
                             if in_val != in_nodata {
+                                in_val = (in_val - min_val) / range;
+                                if cost[j] { in_val = 1.0 - in_val; }
+                                in_val *= scale_max;
                                 output.increment(row, col, in_val * weights[j]);
                             } else {
-                                output[(row, col)] = out_nodata;
+                                output.set_value(row, col, out_nodata);
                             }
                         }
                     }
                     if verbose {
                         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                         if progress != old_progress {
-                            println!("Progress (loop {} of {}): {}%", i, num_files, progress);
+                            println!("Processing Factors (loop {} of {}): {}%", i, num_files, progress);
                             old_progress = progress;
                         }
                     }
@@ -257,6 +340,57 @@ impl WhiteboxTool for WeightedSum {
             i += 1;
             j += 1;
         }
+
+        // now deal with the constraints
+        cmd = constraint_files.split(";");
+        let mut constraint_file_names = cmd.collect::<Vec<&str>>();
+        if constraint_file_names.len() == 1 {
+            cmd = constraint_files.split(",");
+            constraint_file_names = cmd.collect::<Vec<&str>>();
+        }
+        let num_constraints = constraint_file_names.len();
+        i = 1;
+        j = 0usize;
+        for value in constraint_file_names {
+            if !value.trim().is_empty() {
+                if verbose { println!("Reading data...") };
+
+                let mut input_file = value.trim().to_string();
+                if !input_file.contains(&sep) && !input_file.contains("/") {
+                    input_file = format!("{}{}", working_directory, input_file);
+                }
+                let input = Raster::new(&input_file, "r")?;
+                in_nodata = input.configs.nodata;
+                // check to ensure that all inputs have the same rows and columns
+                if input.configs.rows as isize != rows || input.configs.columns as isize != columns {
+                    return Err(Error::new(ErrorKind::InvalidInput,
+                                "The input files must have the same number of rows and columns and spatial extent."));
+                }
+
+                for row in 0..rows {
+                    for col in 0..columns {
+                        in_val = input.get_value(row, col);
+                        if in_val != in_nodata && in_val <= 0f64 {
+                            if output.get_value(row, col) != out_nodata {
+                                output.set_value(row, col, 0f64);
+                            }
+                        } else if in_val == in_nodata {
+                            output.set_value(row, col, out_nodata);
+                        } // else it stays unaltered
+                    }
+                    if verbose {
+                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                        if progress != old_progress {
+                            println!("Processing Constraints (loop {} of {}): {}%", i, num_constraints, progress);
+                            old_progress = progress;
+                        }
+                    }
+                }
+            }
+            i += 1;
+            j += 1;
+        }
+        
         
         let end = time::now();
         let elapsed_time = end - start;

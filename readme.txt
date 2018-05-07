@@ -60,7 +60,7 @@ Version 0.8.0 (DD-MM-2018)
 - Added the following tools:
     LidarThin
     UnsharpMasking
-
+    WeightedOverlay
 - Modified some filters to take RGB inputs by operating on the intensity value. 
   These include AdaptiveFilter, BilateralFilter, ConservativeSmoothingFilter, 
   DiffOfGaussianFilter, EdgePreservingMeanFilter, EmbossFilter, GaussianFilter, 
