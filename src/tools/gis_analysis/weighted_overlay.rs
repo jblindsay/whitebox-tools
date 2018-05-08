@@ -4,6 +4,28 @@ Authors: Dr. John Lindsay
 Created: 07/05/2018
 Last Modified: 07/05/2018
 License: MIT
+
+HELP:
+
+This tool performs a weighted overlay on multiple input images. It can be used to 
+combine multiple factors with varying levels of weight or relative importance. The 
+WeightedOverlay tool is similar to the WeightedSum tool but is more powerful because 
+it automatically converts the input factors to a common user-defined scale and allows 
+the user to specify benefit factors and cost factors. A benefit factor is a factor 
+for which higher values are more suitable. A cost factor is a factor for which higher 
+values are less suitable. By default, WeightedOverlay assumes that input images are 
+benefit factors, unless a cost value of 'true' is entered in the cost array. 
+Constraints are absolute restriction with values of 0 (unsuitable) and 1 (suitable). 
+This tool is particularly useful for performing multi-criteria evaluations (MCE).
+
+Notice that the algorithm will convert the user-defined factor weights internally such 
+that the sum of the weights is always equal to one. As such, the user can specify the 
+relative weights as decimals, percentages, or relative weightings (e.g. slope is 2 times 
+more important than elevation, in which case the weights may not sum to 1 or 100).
+
+NoData valued grid cells in any of the input images will be assigned NoData values in 
+the output image. The output raster is of the float data type and continuous data scale.
+
 */
 
 use time;

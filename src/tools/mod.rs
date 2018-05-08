@@ -119,6 +119,7 @@ impl ToolManager {
         tool_names.push("ChangeVectorAnalysis".to_string());
         tool_names.push("Closing".to_string());
         tool_names.push("ConservativeSmoothingFilter".to_string());
+        tool_names.push("CornerDetection".to_string());
         tool_names.push("CorrectVignetting".to_string());
         tool_names.push("CreateColourComposite".to_string());
         tool_names.push("DirectDecorrelationStretch".to_string());
@@ -491,6 +492,7 @@ impl ToolManager {
             "bilateralfilter" => Some(Box::new(tools::image_analysis::BilateralFilter::new())),
             "changevectoranalysis" => Some(Box::new(tools::image_analysis::ChangeVectorAnalysis::new())),
             "closing" => Some(Box::new(tools::image_analysis::Closing::new())),
+            "cornerdetection" => Some(Box::new(tools::image_analysis::CornerDetection::new())),
             "correctvignetting" => Some(Box::new(tools::image_analysis::CorrectVignetting::new())),
             "conservativesmoothingfilter" => {
                 Some(Box::new(tools::image_analysis::ConservativeSmoothingFilter::new()))
