@@ -38,7 +38,7 @@ class WhiteboxTools(object):
         else:
             self.ext = ''
         self.exe_name = "whitebox_tools{}".format(self.ext)
-        self.exe_path = os.path.dirname(shutil.which(self.exe_name) or '')
+        self.exe_path = os.path.dirname(shutil.which(self.exe_name) or './')
         self.work_dir = ""
         self.verbose = True
         self.cancel_op = False
