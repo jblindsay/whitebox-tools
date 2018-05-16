@@ -28,6 +28,21 @@ def default_callback(value):
     print(value)
 
 
+def to_camelcase(name):
+    '''
+    Convert snake_case name to CamelCase name 
+    '''
+    return ''.join(x.title() for x in name.split('_'))
+
+
+def to_snakecase(name):
+    '''
+    Convert CamelCase name to snake_case name 
+    '''
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
 class WhiteboxTools(object):
     ''' 
     An object for interfacing with the WhiteboxTools executable.
@@ -82,7 +97,7 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args2 = []
             args2.append("." + path.sep + self.exe_name)
-            args2.append("--run=\"{}\"".format(tool_name))
+            args2.append("--run=\"{}\"".format(to_camelcase(tool_name)))
 
             if self.work_dir.strip() != "":
                 args2.append("--wd=\"{}\"".format(self.work_dir))
@@ -204,7 +219,7 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            args.append("--toolhelp={}".format(tool_name))
+            args.append("--toolhelp={}".format(to_camelcase(tool_name)))
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -228,7 +243,7 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            args.append("--toolparameters={}".format(tool_name))
+            args.append("--toolparameters={}".format(to_camelcase(tool_name)))
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -252,7 +267,7 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            args.append("--toolbox={}".format(tool_name))
+            args.append("--toolbox={}".format(to_camelcase(tool_name)))
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -277,7 +292,7 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            args.append("--viewcode={}".format(tool_name))
+            args.append("--viewcode={}".format(to_camelcase(tool_name)))
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -316,10 +331,7 @@ class WhiteboxTools(object):
                 if line != '':
                     if line.strip() != '':
                         name, descr = line.split(':')
-                        # convert camelCase to snake_case
-                        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-                        name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-                        ret[name.strip()] = descr.strip()
+                        ret[to_snakecase(name.strip())] = descr.strip()
                 else:
                     break
 
