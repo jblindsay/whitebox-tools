@@ -14,6 +14,7 @@ import os
 from os import path
 import sys
 import platform
+import re
 import shutil
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
@@ -308,11 +309,17 @@ class WhiteboxTools(object):
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
             ret = {}
+            line = proc.stdout.readline() # skip number of available tools header
             while True:
                 line = proc.stdout.readline()
+                print(line)
                 if line != '':
-                    name, descr = line.split(':')
-                    ret[name.strip()] = descr.strip()
+                    if line.strip() != '':
+                        name, descr = line.split(':')
+                        # convert camelCase to snake_case
+                        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+                        name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+                        ret[name.strip()] = descr.strip()
                 else:
                     break
 
