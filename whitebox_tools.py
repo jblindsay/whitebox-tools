@@ -327,7 +327,6 @@ class WhiteboxTools(object):
             line = proc.stdout.readline() # skip number of available tools header
             while True:
                 line = proc.stdout.readline()
-                print(line)
                 if line != '':
                     if line.strip() != '':
                         name, descr = line.split(':')
