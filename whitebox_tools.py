@@ -307,11 +307,12 @@ class WhiteboxTools(object):
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
-            ret = ""
+            ret = {}
             while True:
                 line = proc.stdout.readline()
                 if line != '':
-                    ret += line
+                    name, descr = line.split(':')
+                    ret[name.strip()] = descr.strip()
                 else:
                     break
 
