@@ -25,7 +25,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter import filedialog
 from tkinter import messagebox
 import webbrowser
-from whitebox_tools import WhiteboxTools
+from whitebox_tools import WhiteboxTools, to_camelcase
 
 wbt = WhiteboxTools()
 
@@ -1032,13 +1032,12 @@ class WbRunner(tk.Frame):
     def get_tools_list(self):
         list = []
         selected_item = -1
-        for item in wbt.list_tools().splitlines():
+        for item in wbt.list_tools().keys():
             if item:
-                if "available tools" not in item.lower():
-                    value = item.split(":")[0]
-                    list.append(value)
-                    if value == self.tool_name:
-                        selected_item = len(list) - 1
+                value = to_camelcase(item)
+                list.append(value)
+                if value == self.tool_name:
+                    selected_item = len(list) - 1
         if selected_item == -1:
             selected_item = 0
             self.tool_name = list[0]
