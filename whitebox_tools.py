@@ -14,6 +14,7 @@ import os
 from os import path
 import sys
 import platform
+import shutil
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
 
@@ -32,17 +33,15 @@ class WhiteboxTools(object):
     '''
 
     def __init__(self):
-        self.exe_path = path.dirname(path.abspath(__file__))
+        if platform.system() == 'Windows':
+            self.ext = '.exe'
+        else:
+            self.ext = ''
+        self.exe_name = "whitebox_tools{}".format(ext)
+        self.exe_path = os.path.dirname(shutil.which(exe_name) or '')
         self.work_dir = ""
         self.verbose = True
         self.cancel_op = False
-
-    if platform.system() == 'Windows':
-        ext = '.exe'
-    else:
-        ext = ''
-
-    exe_name = "whitebox_tools{}".format(ext)
 
     def set_whitebox_dir(self, path_str):
         ''' 
