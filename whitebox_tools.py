@@ -13,7 +13,7 @@ from __future__ import print_function
 import os
 from os import path
 import sys
-from sys import platform
+import platform
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
 
@@ -37,7 +37,7 @@ class WhiteboxTools(object):
         self.verbose = True
         self.cancel_op = False
 
-    if platform == 'win32':
+    if platform.system() == 'Windows':
         ext = '.exe'
     else:
         ext = ''
