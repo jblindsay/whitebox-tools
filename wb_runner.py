@@ -664,23 +664,6 @@ class DataInput(tk.Frame):
 
 class WbRunner(tk.Frame):
     def __init__(self, tool_name=None, master=None):
-        # First, try to find the WhiteboxTools exe directory
-        if _platform == 'win32':
-            ext = '.exe'
-        else:
-            ext = ''
-
-        exe_name = "whitebox_tools{}".format(ext)
-
-        self.exe_path = path.dirname(path.abspath(__file__))
-        os.chdir(self.exe_path)
-        for filename in glob.iglob('**/*', recursive=True):
-            if filename.endswith(exe_name):
-                self.exe_path = path.dirname(path.abspath(filename))
-                break
-
-        wbt.set_whitebox_dir(self.exe_path)
-
         ttk.Frame.__init__(self, master)
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.grid()
