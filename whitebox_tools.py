@@ -54,7 +54,8 @@ class WhiteboxTools(object):
         else:
             self.ext = ''
         self.exe_name = "whitebox_tools{}".format(self.ext)
-        self.exe_path = os.path.dirname(shutil.which(self.exe_name) or './')
+        self.exe_path = os.path.dirname(shutil.which(
+            self.exe_name) or path.dirname(path.abspath(__file__)))
         self.work_dir = ""
         self.verbose = True
         self.cancel_op = False
@@ -324,7 +325,7 @@ class WhiteboxTools(object):
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
             ret = {}
-            line = proc.stdout.readline() # skip number of available tools header
+            line = proc.stdout.readline()  # skip number of available tools header
             while True:
                 line = proc.stdout.readline()
                 if line != '':

@@ -15,6 +15,7 @@ import os
 from os import path
 # from __future__ import print_function
 # from enum import Enum
+import platform
 from pathlib import Path
 import glob
 from sys import platform as _platform
@@ -401,7 +402,7 @@ class MultifileSelector(tk.Frame):
             elif 'Text' in self.file_type:
                 ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
             elif 'Csv' in self.file_type:
-                    ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
+                ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
             elif 'Html' in self.file_type:
                 ftypes = [("HTML files", "*.html")]
 
@@ -664,6 +665,22 @@ class DataInput(tk.Frame):
 
 class WbRunner(tk.Frame):
     def __init__(self, tool_name=None, master=None):
+        if platform.system() == 'Windows':
+            self.ext = '.exe'
+        else:
+            self.ext = ''
+
+        exe_name = "whitebox_tools{}".format(self.ext)
+
+        self.exe_path = path.dirname(path.abspath(__file__))
+        os.chdir(self.exe_path)
+        for filename in glob.iglob('**/*', recursive=True):
+            if filename.endswith(exe_name):
+                self.exe_path = path.dirname(path.abspath(filename))
+                break
+
+        wbt.set_whitebox_dir(self.exe_path)
+
         ttk.Frame.__init__(self, master)
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.grid()
