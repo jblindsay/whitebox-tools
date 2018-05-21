@@ -59,7 +59,10 @@ for more details.
 Version 0.8.0 (DD-MM-2018)
 - Added the following tools:
     CornerDetection
+    FastAlmostGaussianFilter
+    IdwInterpolation
     LidarThin
+    StochasticDepressionAnalysis
     UnsharpMasking
     WeightedOverlay
 - Modified some filters to take RGB inputs by operating on the intensity value. 

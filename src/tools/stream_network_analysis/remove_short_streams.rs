@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Removes short first-order streams from a stream network.
 pub struct RemoveShortStreams {
     name: String,
     description: String,

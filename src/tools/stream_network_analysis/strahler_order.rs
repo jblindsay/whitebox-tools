@@ -14,6 +14,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Assigns the Strahler stream order to each link in a stream network.
 pub struct StrahlerStreamOrder {
     name: String,
     description: String,

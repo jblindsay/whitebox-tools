@@ -15,6 +15,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Estimates the average slope of each link (or tributary) in a stream network.
 pub struct StreamLinkSlope {
     name: String,
     description: String,

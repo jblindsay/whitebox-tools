@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Calculates the distance to the furthest upstream channel head for each stream cell.
 pub struct FarthestChannelHead {
     name: String,
     description: String,

@@ -27,6 +27,7 @@ impl ToolManager {
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
+        tool_names.push("IdwInterpolation".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("SetNodataValue".to_string());
@@ -106,6 +107,7 @@ impl ToolManager {
         tool_names.push("Rho8Pointer".to_string());
         tool_names.push("Sink".to_string());
         tool_names.push("SnapPourPoints".to_string());
+        tool_names.push("StochasticDepressionAnalysis".to_string());
         tool_names.push("StrahlerOrderBasins".to_string());
         tool_names.push("Subbasins".to_string());
         tool_names.push("TraceDownslopeFlowpaths".to_string());
@@ -127,6 +129,7 @@ impl ToolManager {
         tool_names.push("DiffOfGaussianFilter".to_string());
         tool_names.push("EdgePreservingMeanFilter".to_string());
         tool_names.push("EmbossFilter".to_string());
+        tool_names.push("FastAlmostGaussianFilter".to_string());
         tool_names.push("FlipImage".to_string());
         tool_names.push("GammaCorrection".to_string());
         tool_names.push("GaussianFilter".to_string());
@@ -373,6 +376,7 @@ impl ToolManager {
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
+            "idwinterpolation" => Some(Box::new(tools::data_tools::IdwInterpolation::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
@@ -477,6 +481,7 @@ impl ToolManager {
             "rho8pointer" => Some(Box::new(tools::hydro_analysis::Rho8Pointer::new())),
             "sink" => Some(Box::new(tools::hydro_analysis::Sink::new())),
             "snappourpoints" => Some(Box::new(tools::hydro_analysis::SnapPourPoints::new())),
+            "stochasticdepressionanalysis" => Some(Box::new(tools::hydro_analysis::StochasticDepressionAnalysis::new())),
             "strahlerorderbasins" => Some(Box::new(tools::hydro_analysis::StrahlerOrderBasins::new())),
             "subbasins" => Some(Box::new(tools::hydro_analysis::Subbasins::new())),
             "tracedownslopeflowpaths" => {
@@ -505,6 +510,7 @@ impl ToolManager {
             }
             "edgepreservingmeanfilter" => Some(Box::new(tools::image_analysis::EdgePreservingMeanFilter::new())),
             "embossfilter" => Some(Box::new(tools::image_analysis::EmbossFilter::new())),
+            "fastalmostgaussianfilter" => Some(Box::new(tools::image_analysis::FastAlmostGaussianFilter::new())),
             "flipimage" => Some(Box::new(tools::image_analysis::FlipImage::new())),
             "gammacorrection" => Some(Box::new(tools::image_analysis::GammaCorrection::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),

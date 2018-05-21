@@ -4,6 +4,8 @@ Authors: Simon Gudim
 Created: 04/05/2017
 Last Modified: 04/05/2018
 License: MIT
+
+NOTES: http://homepages.inf.ed.ac.uk/rbf/HIPR2/hitmiss.htm
 */
 
 use time;
@@ -18,6 +20,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Identifies corner patterns in boolean images using hit-and-miss pattern mattching.
 pub struct CornerDetection {
     name: String,
     description: String,
@@ -30,7 +33,7 @@ impl CornerDetection {
     pub fn new() -> CornerDetection { // public constructor
         let name = "CornerDetection".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
-        let description = "Identifies patterns in boolean images.".to_string();
+        let description = "Identifies corner patterns in boolean images using hit-and-miss pattern mattching.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -209,7 +212,9 @@ impl WhiteboxTool for CornerDetection {
                                     data[col as usize] = 0f64;
                                 }
                             }
-                        }              
+                        } else if z <= 0f64 {
+                            data[col as usize] = 0f64;
+                        }          
                     }
                 
                     tx.send((row, data)).unwrap();

@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Assigns the Shreve stream magnitude to each link in a stream network.
 pub struct ShreveStreamMagnitude {
     name: String,
     description: String,

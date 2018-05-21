@@ -18,6 +18,7 @@ use std::thread;
 use raster::*;
 use tools::*;
 
+/// Estimates the slope of each grid cell in a stream network.
 pub struct StreamSlopeContinuous {
     name: String,
     description: String,

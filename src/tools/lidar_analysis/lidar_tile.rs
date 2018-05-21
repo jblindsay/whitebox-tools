@@ -14,6 +14,7 @@ use std::path::Path;
 use lidar::*;
 use tools::*;
 
+/// Tiles a LiDAR LAS file into multiple LAS files.
 pub struct LidarTile {
     name: String,
     description: String,

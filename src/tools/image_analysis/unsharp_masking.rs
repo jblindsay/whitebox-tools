@@ -19,6 +19,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// An image sharpening technique that enhances edges.
 pub struct UnsharpMasking {
     name: String,
     description: String,

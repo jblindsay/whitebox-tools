@@ -5,6 +5,7 @@ use std::io::Error;
 use std::io::ErrorKind;
 use std::ops::{AddAssign, SubAssign, Index, IndexMut};
 
+#[derive(Debug)]
 pub struct Array2D<T: Copy + AddAssign + SubAssign> {
     pub columns: isize,
     pub rows: isize,
@@ -81,6 +82,28 @@ impl<T> Array2D<T> where T: Copy + AddAssign + SubAssign {
             }
         }
         values
+    }
+
+    /// Increments an entire row of data at one time.
+    pub fn increment_row_data(&mut self, row: isize, values: Vec<T>) {
+        for column in 0..values.len() as isize  {
+            if row >= 0 {
+                if column < self.columns && row < self.rows {
+                    self.data[(row * self.columns + column) as usize] += values[column as usize];
+                }
+            }
+        }
+    }
+
+    /// Decrements an entire row of data at one time.
+    pub fn decrement_row_data(&mut self, row: isize, values: Vec<T>) {
+        for column in 0..values.len() as isize  {
+            if row >= 0 {
+                if column < self.columns && row < self.rows {
+                    self.data[(row * self.columns + column) as usize] -= values[column as usize];
+                }
+            }
+        }
     }
 
     pub fn set_data_from_other(&mut self, other: &Array2D<T>) -> Result<(), Error> {

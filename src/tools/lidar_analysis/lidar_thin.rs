@@ -15,6 +15,7 @@ use lidar::*;
 use structures::Array2D;
 use tools::*;
 
+/// Thins a LiDAR point cloud, reducing point density.
 pub struct LidarThin {
     name: String,
     description: String,

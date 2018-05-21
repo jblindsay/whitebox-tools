@@ -9,25 +9,10 @@ readme = "README.md"
 repository = "https://github.com/jblindsay/whitebox-geospatial-analysis-tools/whitebox_tools/"
 license = "MIT"
 
-# [lib]
-# name = "whitebox_tools"
-# crate-type = ["dylib"]
-# # crate-type = ["rdylib"]
-# # crate-type = ["rlib"]
-# # crate-type = ["staticlib"]
-# path = "src/lib.rs"
-
-# [[bin]]
-# name = "whitebox_tools"
-# path = "src/main.rs"
-
-# The release profile, used for `cargo build --release`.
-# [profile.release]
-# codegen-units = 16
-
 [dependencies]
 byteorder = "^1.1.0"
-# kdtree = "0.4.0"
+kdtree = "0.5.1"
+lzw = "0.10.0"
 nalgebra = "0.14.0"
 num_cpus = "1.6.2"
 rand = "0.4.2"
@@ -37,4 +22,3 @@ serde_json = "1.0.9"
 statrs = "0.9.0"
 time = "^0.1.37"
 zip = "0.3.0"
-lzw = "0.10.0"

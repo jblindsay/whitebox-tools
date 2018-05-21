@@ -21,6 +21,7 @@ use std::io::{Error, ErrorKind};
 use structures::{Array2D, BoundingBox};
 use tools::*;
 
+/// Rasterizes vector streams based on Lindsay (2016) method.
 pub struct RasterizeStreams {
     name: String,
     description: String,

@@ -15,6 +15,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Estimates the length of each link (or tributary) in a stream network.
 pub struct StreamLinkLength {
     name: String,
     description: String,

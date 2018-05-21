@@ -161,13 +161,14 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 318 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 321 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
+- ***IdwInterpolation***: Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PrintGeoTiffTags***: Prints the tags within a GeoTIFF.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
@@ -298,6 +299,7 @@ The library currently contains the following 318 tools, which are each grouped b
 - ***Rho8Pointer***: Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 - ***Sink***: Identifies the depressions in a DEM, giving each feature a unique identifier.
 - ***SnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
+- ***StochasticDepressionAnalysis***: Preforms a stochastic analysis of depressions within a DEM.
 - ***StrahlerOrderBasins***: Identifies Strahler-order basins from an input stream network.
 - ***Subbasins***: Identifies the catchments, or sub-basin, draining to each link in a stream network.
 - ***TraceDownslopeFlowpaths***: Traces downslope flowpaths from one or more target sites (i.e. seed points).
@@ -320,6 +322,7 @@ The library currently contains the following 318 tools, which are each grouped b
 - ***DiversityFilter***: Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 - ***EdgePreservingMeanFilter***: Performs a simple edge-preserving mean filter on an input image.
 - ***EmbossFilter***: Performs an emboss filter on an image, similar to a hillshade operation.
+- ***FastAlmostGaussianFilter***: Performs a fast approximate Gaussian filter on an image.
 - ***FlipImage***: Reflects an image in the vertical or horizontal axis.
 - ***GammaCorrection***: Performs a sigmoidal contrast stretch on input images.
 - ***GaussianFilter***: Performs a Gaussian filter on an image.

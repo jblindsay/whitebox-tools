@@ -38,6 +38,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
 
+/// Estimates the trend surface of an input raster file.
 pub struct TrendSurface {
     name: String,
     description: String,

@@ -40,6 +40,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
 
+/// Estimates a trend surface from vector points.
 pub struct TrendSurfaceVectorPoints {
     name: String,
     description: String,

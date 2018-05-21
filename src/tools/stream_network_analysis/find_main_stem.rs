@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Finds the main stem, based on stream lengths, of each stream network.
 pub struct FindMainStem {
     name: String,
     description: String,

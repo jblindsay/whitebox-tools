@@ -6,15 +6,42 @@ Last Modified: February 7, 2018
 License: MIT
 */
 
+/*!
+WhiteboxTools is an advanced geospatial data analysis platform developed at 
+the University of Guelph's Geomorphometry and Hydrogeomatics Research Group (GHRG). 
+
+WhiteboxTools is a command-line program and can be run either by calling it, 
+with appropriate commands and arguments, from a terminal application, or, more 
+conveniently, by calling it from a script. The following commands are recognized 
+by the WhiteboxTools library:
+
+| Command           | Description                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| --cd, --wd        | Changes the working directory; used in conjunction with --run flag.                               |
+| -h, --help        | Prints help information.                                                                          |
+| -l, --license     | Prints the whitebox-tools license.                                                                |
+| --listtools       | Lists all available tools, with tool descriptions. Keywords may also be used, --listtools slope.  |
+| -r, --run         | Runs a tool; used in conjunction with --cd flag; -r="LidarInfo".                                  |
+| --toolbox         | Prints the toolbox associated with a tool; --toolbox=Slope.                                       |
+| --toolhelp        | Prints the help associated with a tool; --toolhelp="LidarInfo".                                   |
+| --toolparameters  | Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".         |
+| -v                | Verbose mode. Without this flag, tool outputs will not be printed.                                |
+| --viewcode        | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".                       |
+| --version         | Prints the version information.                                                                   |
+
+*/ 
+
+
 extern crate byteorder;
+extern crate kdtree;
+extern crate lzw;
+extern crate nalgebra as na;
+extern crate num_cpus;
 extern crate serde;
 extern crate serde_json;
-extern crate nalgebra as na;
 extern crate time;
-extern crate num_cpus;
 extern crate rand;
 extern crate statrs;
-extern crate lzw;
 
 pub mod io_utils;
 pub mod lidar;

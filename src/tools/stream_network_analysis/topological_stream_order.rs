@@ -14,6 +14,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Assigns each link in a stream network its topological order.
 pub struct TopologicalStreamOrder {
     name: String,
     description: String,

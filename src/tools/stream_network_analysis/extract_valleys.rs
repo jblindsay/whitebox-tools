@@ -19,6 +19,7 @@ use std::thread;
 use raster::*;
 use tools::*;
 
+/// Identifies potential valley bottom grid cells based on local topolography alone.
 pub struct ExtractValleys {
     name: String,
     description: String,

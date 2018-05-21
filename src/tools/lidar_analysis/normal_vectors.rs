@@ -21,6 +21,7 @@ use tools::*;
 use self::na::Vector3;
 use structures::FixedRadiusSearch3D;
 
+/// Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 pub struct NormalVectors {
     name: String,
     description: String,

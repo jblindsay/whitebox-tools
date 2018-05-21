@@ -20,6 +20,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Extracts stream grid cells from a flow accumulation raster.
 pub struct ExtractStreams {
     name: String,
     description: String,

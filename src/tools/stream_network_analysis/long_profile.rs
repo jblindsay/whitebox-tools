@@ -25,6 +25,7 @@ use rendering::LineGraph;
 use rendering::html::*;
 use structures::Array2D;
 
+/// Plots the stream longitudinal profiles for one or more rivers.
 pub struct LongProfile {
     name: String,
     description: String,

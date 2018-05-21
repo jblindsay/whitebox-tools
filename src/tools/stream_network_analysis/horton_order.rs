@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Assigns the Horton stream order to each tributary in a stream network.
 pub struct HortonStreamOrder {
     name: String,
     description: String,

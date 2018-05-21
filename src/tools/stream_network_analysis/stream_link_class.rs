@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Identifies the exterior/interior links and nodes in a stream network.
 pub struct StreamLinkClass {
     name: String,
     description: String,

@@ -54,6 +54,10 @@ impl Index<usize> for LasFile {
 
 impl LasFile {
 
+    /// Constructs a new `LasFile` based on a file.
+    /// The function takes the name of an existing raster file (`file_name`) 
+    /// and the `file_mode`, wich can be 'r' (read), 'rh' (read header), and
+    /// 'w' (write).
     pub fn new<'a>(file_name: &'a str, file_mode: &'a str) -> Result<LasFile, Error> { //LasFile {
         let mut lf = LasFile { file_name: file_name.to_string(), ..Default::default() };
         lf.file_mode = file_mode.to_lowercase();
@@ -68,8 +72,8 @@ impl LasFile {
         Ok(lf)
     }
 
-    /// This function returns a new LasFile that has been initialized using another
-    /// LasFile.
+    /// This function returns a new `LasFile` that has been initialized using another
+    /// `LasFile`.
     /// Input Parameters:
     /// * file_name: The name of the LAS file to be created.
     /// * input: An existing LAS file.

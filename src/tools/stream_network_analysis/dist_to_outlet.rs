@@ -14,6 +14,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Calculates the distance of stream grid cells to the channel network outlet cell.
 pub struct DistanceToOutlet {
     name: String,
     description: String,

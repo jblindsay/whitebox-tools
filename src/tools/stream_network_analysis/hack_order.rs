@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Assigns the Hack stream order to each tributary in a stream network.
 pub struct HackStreamOrder {
     name: String,
     description: String,

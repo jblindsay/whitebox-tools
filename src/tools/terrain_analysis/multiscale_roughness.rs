@@ -246,6 +246,16 @@ impl WhiteboxTool for MultiscaleRoughness {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
+        let mut z_factor = 1f64;
+        if input.is_in_geographic_coordinates() {
+            // calculate a new z-conversion factor
+            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            if mid_lat <= 90.0 && mid_lat >= -90.0 {
+                mid_lat = mid_lat.to_radians();
+                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+            }
+        }
+
         ///////////////////////////////
         // Create the normal vectors //
         ///////////////////////////////
@@ -267,11 +277,11 @@ impl WhiteboxTool for MultiscaleRoughness {
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
-                            // z *= z_factor;
+                            z *= z_factor;
                             for i in 0..8 {
                                 zn = input.get_value(row + dy[i], col + dx[i]);
                                 if zn != nodata {
-                                    values[i] = zn;
+                                    values[i] = zn * z_factor;
                                 } else {
                                     values[i] = z;
                                 }
@@ -355,7 +365,7 @@ impl WhiteboxTool for MultiscaleRoughness {
         for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) { // .step_by(step) { once step_by is stabilized
             // loop_num += 1;
 
-            println!("Filter Size {} / {}", midpoint, max_scale);
+            println!("Loop {} / {}", midpoint - min_scale, max_scale - min_scale);
 
             ////////////////////////////////////////////////////////////////////////////
             // Use the integral image to smooth the DEM at a scale of the filter size //
@@ -411,13 +421,6 @@ impl WhiteboxTool for MultiscaleRoughness {
             for _ in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 smoothed.set_row_data(row, data);
-                // if verbose {
-                //     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                //     if progress != old_progress {
-                //         println!("Progress (Loop {} of {}): {}%", loop_num, num_loops, progress);
-                //         old_progress = progress;
-                //     }
-                // }
             }
 
             ///////////////////////////////////////////////////////////////////////////
@@ -437,11 +440,11 @@ impl WhiteboxTool for MultiscaleRoughness {
                 sum = 0f64;
                 for col in 0..columns {
                     if input.get_value(row, col) != nodata {
-                        z = smoothed.get_value(row, col);
+                        z = smoothed.get_value(row, col) * z_factor;
                         for i in 0..8 {
                             zn = smoothed.get_value(row + dy[i], col + dx[i]);
                             if zn != nodata {
-                                values[i] = zn;
+                                values[i] = zn * z_factor;
                             } else {
                                 values[i] = z;
                             }
@@ -527,13 +530,6 @@ impl WhiteboxTool for MultiscaleRoughness {
                         output_scale.set_value(row, col, midpoint as f64);
                     }
                 }
-                // if verbose {
-                //     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                //     if progress != old_progress {
-                //         println!("Progress (Loop {} of {}): {}%", loop_num, num_loops, progress);
-                //         old_progress = progress;
-                //     }
-                // }
             }
         }
 

@@ -5,6 +5,7 @@ import os
 import sys
 from subprocess import call
 
+
 def main():
     ''' main function
     '''
@@ -23,25 +24,28 @@ def main():
             # Update #
             retcode = call(['cargo', 'update'], shell=False)
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
+                print("Child was terminated by signal", -
+                      retcode, file=sys.stderr)
             else:
-                print >>sys.stderr, "Update successful"
+                print("Update successful", file=sys.stderr)
 
         if clean_code:
             # Clean #
             retcode = call(['cargo', 'clean'], shell=False)
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
+                print("Child was terminated by signal", -
+                      retcode, file=sys.stderr)
             else:
-                print >>sys.stderr, "Clean successful"
+                print("Clean successful", file=sys.stderr)
 
         if doc_code:
             # Clean #
             retcode = call(['cargo', 'doc'], shell=False)
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
+                print("Child was terminated by signal", -
+                      retcode, file=sys.stderr)
             else:
-                print >>sys.stderr, "Clean successful"
+                print("Clean successful", file=sys.stderr)
 
         if build_code:
             # Build #
@@ -54,12 +58,13 @@ def main():
                 retcode = call(['cargo', 'build'], shell=False)
 
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
+                print("Child was terminated by signal", -
+                      retcode, file=sys.stderr)
             else:
-                print >>sys.stderr, "Build executed successfully"
+                print("Build executed successfully", file=sys.stderr)
 
     except OSError as err:
-        print >>sys.stderr, "Execution failed:", err
+        print("Execution failed:", err, file=sys.stderr)
 
 
 main()

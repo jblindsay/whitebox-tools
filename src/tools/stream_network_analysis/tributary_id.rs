@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Assigns a unique identifier to each tributary in a stream network.
 pub struct TributaryIdentifier {
     name: String,
     description: String,

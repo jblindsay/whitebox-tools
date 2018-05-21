@@ -18,7 +18,7 @@ use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+// Performs a balance contrast enhancement on a colour-composite image of multispectral data.
 pub struct BalanceContrastEnhancement {
     name: String,
     description: String,

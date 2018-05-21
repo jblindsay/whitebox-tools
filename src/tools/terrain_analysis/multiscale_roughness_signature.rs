@@ -253,6 +253,16 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
+        let mut z_factor = 1f64;
+        if input.is_in_geographic_coordinates() {
+            // calculate a new z-conversion factor
+            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            if mid_lat <= 90.0 && mid_lat >= -90.0 {
+                mid_lat = mid_lat.to_radians();
+                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+            }
+        }
+
         if verbose { println!("Reading points data...") };
         let points = Shapefile::new(&points_file, "r")?;
 
@@ -308,10 +318,11 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
+                            z *= z_factor;
                             for i in 0..8 {
                                 zn = input.get_value(row + dy[i], col + dx[i]);
                                 if zn != nodata {
-                                    values[i] = zn;
+                                    values[i] = zn * z_factor;
                                 } else {
                                     values[i] = z;
                                 }
@@ -467,11 +478,11 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                 sum = 0f64;
                 for col in 0..columns {
                     if input.get_value(row, col) != nodata {
-                        z = smoothed.get_value(row, col);
+                        z = smoothed.get_value(row, col) * z_factor;
                         for i in 0..8 {
                             zn = smoothed.get_value(row + dy[i], col + dx[i]);
                             if zn != nodata {
-                                values[i] = zn;
+                                values[i] = zn * z_factor;
                             } else {
                                 values[i] = z;
                             }
@@ -495,8 +506,6 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                     }
                 }
             }
-
-
 
             ///////////////////////////////////////////////////////////////////////////
             // Calcuate the average deviation within the local kernels and output it //

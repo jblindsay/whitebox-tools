@@ -2,6 +2,7 @@
 mod convert_nodata_to_zero;
 mod convert_raster_format;
 mod export_table_to_csv;
+mod idw_interpolation;
 mod new_raster;
 mod print_geotiff_tags;
 mod set_nodata_value;
@@ -13,6 +14,7 @@ mod vector_polygons_to_raster;
 pub use self::convert_nodata_to_zero::ConvertNodataToZero;
 pub use self::convert_raster_format::ConvertRasterFormat;
 pub use self::export_table_to_csv::ExportTableToCsv;
+pub use self::idw_interpolation::IdwInterpolation;
 pub use self::new_raster::NewRasterFromBase;
 pub use self::print_geotiff_tags::PrintGeoTiffTags;
 pub use self::set_nodata_value::SetNodataValue;

@@ -1,30 +1,34 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
+Created: 19/05/2019
 Last Modified: 19/05/2018
 License: MIT
+
+Reference: P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing: 
+Techniques and Applications (DICTA), 2010 International Conference on.
+
+The tool is somewhat modiied from Dr. Kovesi's original Matlab code in that it
+works with both greyscale and RGB images (decomposes to HSI and uses the intensity
+data) and it handles the case of rasters that contain NoData values. This adds
+complexity to the original 20 additions and 5 multiplications assertion of the
+original paper.
+
+Also note, for small values of sigma (< 1.8), you should probably just use the
+regular GaussianFilter tool.
 */
 
 use time;
-use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::i32;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
 use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
-use tools::ParameterFileType;
 
-pub struct MeanFilter {
+pub struct FastAlmostGaussianFilter {
     name: String,
     description: String,
     toolbox: String,
@@ -32,11 +36,11 @@ pub struct MeanFilter {
     example_usage: String,
 }
 
-impl MeanFilter {
-    pub fn new() -> MeanFilter { // public constructor
-        let name = "MeanFilter".to_string();
+impl FastAlmostGaussianFilter {
+    pub fn new() -> FastAlmostGaussianFilter { // public constructor
+        let name = "FastAlmostGaussianFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
-        let description = "Performs a mean filter (low-pass filter) on an input image.".to_string();
+        let description = "Performs a fast approximate Gaussian filter on an image.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
@@ -56,25 +60,16 @@ impl MeanFilter {
             default_value: None,
             optional: false
         });
-
+        
         parameters.push(ToolParameter{
-            name: "Filter X-Dimension".to_owned(), 
-            flags: vec!["--filterx".to_owned()], 
-            description: "Size of the filter kernel in the x-direction.".to_owned(),
-            parameter_type: ParameterType::Integer,
-            default_value: Some("3".to_owned()),
-            optional: true
+            name: "Standard Deviation (pixels)".to_owned(), 
+            flags: vec!["--sigma".to_owned()], 
+            description: "Standard deviation distance in pixels.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.8".to_owned()),
+            optional: false
         });
-
-        parameters.push(ToolParameter{
-            name: "Filter Y-Dimension".to_owned(), 
-            flags: vec!["--filtery".to_owned()], 
-            description: "Size of the filter kernel in the y-direction.".to_owned(),
-            parameter_type: ParameterType::Integer,
-            default_value: Some("3".to_owned()),
-            optional: true
-        });
-
+        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -82,19 +77,19 @@ impl MeanFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filterx=25 --filtery=25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma=2.0", short_exe, name).replace("*", &sep);
     
-        MeanFilter { 
+        FastAlmostGaussianFilter { 
             name: name, 
             description: description, 
             toolbox: toolbox,
-            parameters: parameters,
+            parameters: parameters, 
             example_usage: usage 
         }
     }
 }
 
-impl WhiteboxTool for MeanFilter {
+impl WhiteboxTool for FastAlmostGaussianFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -125,8 +120,7 @@ impl WhiteboxTool for MeanFilter {
     fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut filter_size_x = 3usize;
-        let mut filter_size_y = 3usize;
+        let mut sigma = 1.8;
         if args.len() == 0 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "Tool run with no paramters."));
@@ -152,24 +146,11 @@ impl WhiteboxTool for MeanFilter {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if vec[0].to_lowercase() == "-sigma" || vec[0].to_lowercase() == "--sigma" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    sigma = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-                filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
-                } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
-                if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
-                } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    sigma = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -182,26 +163,6 @@ impl WhiteboxTool for MeanFilter {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        if filter_size_x < 3 {
-            filter_size_x = 3;
-        }
-        if filter_size_y < 3 {
-            filter_size_y = 3;
-        }
-
-        // The filter dimensions must be odd numbers such that there is a middle pixel
-        if (filter_size_x as f64 / 2f64).floor() == (filter_size_x as f64 / 2f64) {
-            filter_size_x += 1;
-        }
-        if (filter_size_y as f64 / 2f64).floor() == (filter_size_y as f64 / 2f64) {
-            filter_size_y += 1;
-        }
-
-        let midpoint_x = (filter_size_x as f64 / 2f64).floor() as isize;
-        let midpoint_y = (filter_size_y as f64 / 2f64).floor() as isize;
-        let mut progress: usize;
-        let mut old_progress: usize = 1;
-
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -209,11 +170,27 @@ impl WhiteboxTool for MeanFilter {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose {
-            println!("Reading data...")
-        };
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
 
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+        if sigma < 1.8 {
+            println!("Warning: Sigma values less than 1.8 cannot be achieved using this filter. Perhaps use the GaussianFilter tool instead.");
+            sigma = 1.8;
+        }
+
+        let n = 5;
+        let w_ideal = ((12f64 * sigma * sigma / n as f64 + 1f64)).sqrt();
+        let mut wl = w_ideal.floor() as isize;
+        if wl % 2 == 0 { wl -= 1; } // must be an odd integer
+        let wu = wl + 2;
+        let m = ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64) / (-4 * wl - 4) as f64).round() as isize;
+
+        let sigma_actual = (((m*wl*wl) as f64 + (((n-m) as f64))*(wu*wu) as f64 - n as f64) / 12f64).sqrt();
+        if verbose {
+            println!("Actual sigma: {:.3}", sigma_actual);
+        }
+
+        let input = Raster::new(&input_file, "r")?;
 
         let start = time::now();
 
@@ -230,77 +207,35 @@ impl WhiteboxTool for MeanFilter {
             false
         };
 
-        let min_val = if !is_rgb_image { input.configs.minimum } else { 0f64 };
-
-        // create the integral images
         let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
-
-
-        let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
-                Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
-            } else {
-                Box::new(
-                    |row: isize, col: isize| -> f64 {
-                        let value = input.get_value(row, col);
-                        if value != nodata {
-                            return value2i(value);
-                        }
-                        nodata
-                    }
-                )
-            };
-
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        
         let mut val: f64;
         let mut sum: f64;
         let mut sum_n: i32;
         let mut i_prev: f64;
         let mut n_prev: i32;
-        for row in 0..rows {
-            sum = 0f64;
-            sum_n = 0;
-            for col in 0..columns {
-                val = input_fn(row, col);
-                if val == nodata {
-                    val = 0f64;
-                } else {
-                    val -= min_val;
-                    sum_n += 1;
-                }
-                sum += val;
-                if row > 0 {
-                    i_prev = integral[(row - 1, col)];
-                    n_prev = integral_n[(row - 1, col)];
-                    integral[(row, col)] = sum + i_prev;
-                    integral_n[(row, col)] = sum_n + n_prev;
-                } else {
-                    integral[(row, col)] = sum;
-                    integral_n[(row, col)] = sum_n;
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Creating integral images: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
+        let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+        let mut num_cells: i32;
         
-        let i = Arc::new(integral); // wrap integral in an Arc
-        let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        let (tx, rx) = mpsc::channel();
-        let num_procs = num_cpus::get() as isize;
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let i = i.clone();
-            let i_n = i_n.clone();
-            let tx1 = tx.clone();
-            thread::spawn(move || {
+        for iteration_num in 0..n {
+            if verbose {
+                println!("Loop {} of {}", iteration_num+1, n);
+            }
+
+            let midpoint = if iteration_num < m {
+                (wl as f64 / 2f64).floor() as isize
+            } else {
+                (wu as f64 / 2f64).floor() as isize
+            };
+
+            if iteration_num == 0 { // first iteration
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    // It's a greyscale image; just read the value.
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
+                    // It's an RGB image. Get the intensity value from the IHS decomposition of the RGB value.
                     Box::new(
                         |row: isize, col: isize| -> f64 {
                             let value = input.get_value(row, col);
@@ -311,7 +246,84 @@ impl WhiteboxTool for MeanFilter {
                         }
                     )
                 };
-                
+
+                // Create the integral images.
+                for row in 0..rows {
+                    sum = 0f64;
+                    sum_n = 0;
+                    for col in 0..columns {
+                        val = input_fn(row, col);
+                        if val == nodata {
+                            val = 0f64;
+                        } else {
+                            sum_n += 1;
+                        }
+                        sum += val;
+                        if row > 0 {
+                            i_prev = integral.get_value(row - 1, col);
+                            n_prev = integral_n.get_value(row - 1, col);
+                            integral.set_value(row, col, sum + i_prev);
+                            integral_n.set_value(row, col, sum_n + n_prev);
+                        } else {
+                            integral.set_value(row, col, sum);
+                            integral_n.set_value(row, col, sum_n);
+                        }
+                    }
+                }
+            } else {
+                // Create the integral image based on previous iteration output. 
+                // We don't need to recalculate the num_cells integral image.
+                for row in 0..rows {
+                    sum = 0f64;
+                    for col in 0..columns {
+                        val = output.get_value(row, col);
+                        if val == nodata { val = 0f64; }
+                        sum += val;
+                        if row > 0 {
+                            i_prev = integral.get_value(row - 1, col);
+                            integral.set_value(row, col, sum + i_prev);
+                        } else {
+                            integral.set_value(row, col, sum);
+                        }
+                    }
+                }
+            }
+
+            if iteration_num < n-1 { // not the last iteration
+                // Perform Filter
+                for row in 0..rows {
+                    y1 = row - midpoint - 1;
+                    if y1 < 0 { y1 = 0; }
+                    y2 = row + midpoint;
+                    if y2 >= rows { y2 = rows - 1; }
+
+                    for col in 0..columns {
+                        if input.get_value(row, col) != nodata {
+                            x1 = col - midpoint - 1;
+                            if x1 < 0 { x1 = 0; }
+                            x2 = col + midpoint;
+                            if x2 >= columns { x2 = columns - 1; }
+
+                            num_cells = integral_n[(y2, x2)] + integral_n[(y1, x1)] - integral_n[(y1, x2)] - integral_n[(y2, x1)];
+                            if num_cells > 0 {
+                                sum = integral[(y2, x2)] + integral[(y1, x1)] - integral[(y1, x2)] - integral[(y2, x1)];
+                                output.set_value(row, col, sum / num_cells as f64);
+                            } else {
+                                // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
+                                output.set_value(row, col, 0f64);
+                            }
+                        }
+                    }
+                    if verbose {
+                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                        if progress != old_progress {
+                            println!("Progress (Loop {} of {}): {}%", iteration_num+1, n, progress);
+                            old_progress = progress;
+                        }
+                    }
+                }
+            } else { // last iteration
+
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
@@ -328,58 +340,39 @@ impl WhiteboxTool for MeanFilter {
                     )
                 };
 
-                let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
-                let mut n: i32;
-                let mut sum: f64;
-                let mut mean: f64;
-                let mut z: f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    y1 = row - midpoint_y - 1;
-                    if y1 < 0 {
-                        y1 = 0;
-                    }
+                // Perform Filter
+                for row in 0..rows {
+                    y1 = row - midpoint - 1;
+                    if y1 < 0 { y1 = 0; }
+                    y2 = row + midpoint;
+                    if y2 >= rows { y2 = rows - 1; }
 
-                    y2 = row + midpoint_y;
-                    if y2 >= rows {
-                        y2 = rows - 1;
-                    }
-                    let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input_fn(row, col);
-                        if z != nodata {
-                            x1 = col - midpoint_x - 1;
-                            if x1 < 0 {
-                                x1 = 0;
+                        if input.get_value(row, col) != nodata {
+                            x1 = col - midpoint - 1;
+                            if x1 < 0 { x1 = 0; }
+                            x2 = col + midpoint;
+                            if x2 >= columns { x2 = columns - 1; }
+
+                            num_cells = integral_n[(y2, x2)] + integral_n[(y1, x1)] - integral_n[(y1, x2)] - integral_n[(y2, x1)];
+                            if num_cells > 0 {
+                                sum = integral[(y2, x2)] + integral[(y1, x1)] - integral[(y1, x2)] - integral[(y2, x1)];
+                                val = output_fn(row, col, sum / num_cells as f64);
+                            } else {
+                                // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
+                                val = output_fn(row, col, 0f64);
                             }
 
-                            x2 = col + midpoint_x;
-                            if x2 >= columns {
-                                x2 = columns - 1;
-                            }
-                            n = i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)] - i_n[(y2, x1)];
-                            if n > 0 {
-                                sum = i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)];
-                                mean = sum / n as f64 + min_val;
-                                data[col as usize] = output_fn(row, col, mean);
-                            } else {
-                                data[col as usize] = output_fn(row, col, 0f64);
-                            }
+                            output.set_value(row, col, val);
                         }
                     }
-
-                    tx1.send((row, data)).unwrap();
-                }
-            });
-        }
-
-        for row in 0..rows {
-            let data = rx.recv().unwrap();
-            output.set_row_data(data.0, data.1);
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Progress: {}%", progress);
-                    old_progress = progress;
+                    if verbose {
+                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                        if progress != old_progress {
+                            println!("Progress (Loop {} of {}): {}%", iteration_num+1, n, progress);
+                            old_progress = progress;
+                        }
+                    }
                 }
             }
         }
@@ -388,15 +381,10 @@ impl WhiteboxTool for MeanFilter {
         let elapsed_time = end - start;
         output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
-        output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output
-            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT",
-                                                                                                ""));
+        output.add_metadata_entry(format!("Sigma: {}", sigma));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
-        if verbose {
-            println!("Saving data...")
-        };
+        if verbose { println!("Saving data...") };
         let _ = match output.write() {
             Ok(_) => {
                 if verbose {
@@ -406,10 +394,7 @@ impl WhiteboxTool for MeanFilter {
             Err(e) => return Err(e),
         };
 
-        if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-        }
+        if verbose { println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
 
         Ok(())
     }

@@ -19,6 +19,7 @@ use lidar::*;
 use tools::*;
 use structures::FixedRadiusSearch2D;
 
+/// Removes duplicate points from a LiDAR data set.
 pub struct LidarRemoveDuplicates {
     name: String,
     description: String,

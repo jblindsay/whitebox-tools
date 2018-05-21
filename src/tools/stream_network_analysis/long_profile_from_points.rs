@@ -22,6 +22,7 @@ use rendering::LineGraph;
 use rendering::html::*;
 use structures::Array2D;
 
+/// Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 pub struct LongProfileFromPoints {
     name: String,
     description: String,

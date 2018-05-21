@@ -19,6 +19,7 @@ use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 pub struct MaxAnisotropyDev {
     name: String,
     description: String,
@@ -162,44 +163,45 @@ impl WhiteboxTool for MaxAnisotropyDev {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-out_mag" || vec[0].to_lowercase() == "--out_mag" {
-                if keyval {
-                    output_mag_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_mag" || flag_val == "-out_mag" {
+                output_mag_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_mag_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-out_scale" || vec[0].to_lowercase() == "--out_scale" {
-                if keyval {
-                    output_scale_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_scale" {
+                output_scale_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_scale_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-min_scale" || vec[0].to_lowercase() == "--min_scale" {
-                if keyval {
-                    min_scale = vec[1].to_string().parse::<isize>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-min_scale" {
+                min_scale = if keyval {
+                    vec[1].to_string().parse::<isize>().unwrap()
                 } else {
-                    min_scale = args[i + 1].to_string().parse::<isize>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<isize>().unwrap()
+                };
                 if min_scale < 3 { min_scale = 3; }
-            } else if vec[0].to_lowercase() == "-max_scale" || vec[0].to_lowercase() == "--max_scale" {
-                if keyval {
-                    max_scale = vec[1].to_string().parse::<isize>().unwrap();
+            } else if flag_val == "-max_scale" {
+                max_scale = if keyval {
+                    vec[1].to_string().parse::<isize>().unwrap()
                 } else {
-                    max_scale = args[i + 1].to_string().parse::<isize>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<isize>().unwrap()
+                };
                 if max_scale < 5 { max_scale = 5; }
-            } else if vec[0].to_lowercase() == "-step" || vec[0].to_lowercase() == "--step" {
-                if keyval {
-                    step = vec[1].to_string().parse::<isize>().unwrap();
+            } else if flag_val == "-step" {
+                step = if keyval {
+                    vec[1].to_string().parse::<isize>().unwrap()
                 } else {
-                    step = args[i + 1].to_string().parse::<isize>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<isize>().unwrap()
+                };
                 if step < 1 { step = 1; }
             }
         }

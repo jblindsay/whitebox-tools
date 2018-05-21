@@ -30,6 +30,7 @@ use self::na::Vector3;
 use structures::FixedRadiusSearch3D;
 use self::rand::Rng;
 
+/// Segments a LiDAR point cloud based on normal vectors.
 pub struct LidarSegmentation {
     name: String,
     description: String,

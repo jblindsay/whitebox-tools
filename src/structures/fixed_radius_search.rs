@@ -1,7 +1,3 @@
-///////////////////////////////////////
-// A 2D hash-based fixed radius search
-///////////////////////////////////////
-
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 
@@ -15,10 +11,24 @@ struct FixedRadiusSearchKey2D {
 struct FixedRadiusSearchEntry2D {
     x: f64,
     y: f64,
-    // dist: f64,
     index: usize,
 }
 
+/// A simple 2D hash-based fixed radius search data structure.
+/// 
+/// ## Example
+///     let mut frs: FixedRadiusSearch2D<i32> = FixedRadiusSearch2D::new(5.0);
+///     frs.insert(45.3, 32.5, 1i32);
+///     frs.insert(25.3, 65.5, 2i32);
+///     frs.insert(42.3, 35.5, 3i32);
+///     frs.insert(40.3, 31.5, 4i32);
+///     frs.insert(24.3, 68.5, 5i32);
+///
+///     let s1 = frs.search(41.4, 31.4);
+///     println!("{:?}", s1);
+///
+///     let s2 = frs.search(22.4, 69.4);
+///     println!("{:?}", s2);
 pub struct FixedRadiusSearch2D<T: Copy> {
     r: f64,
     r_sqr: f64,
@@ -28,6 +38,7 @@ pub struct FixedRadiusSearch2D<T: Copy> {
 }
 
 impl<T: Copy> FixedRadiusSearch2D<T> {
+    /// Creates a new 2-D fixed-radius search structure with the specified radius, containing data of type T.
     pub fn new(radius: f64) -> FixedRadiusSearch2D<T> {
         let map = HashMap::new();
         let values: Vec<T> = vec![];
@@ -40,6 +51,7 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
         }
     }
 
+    /// Inserts a point (x, y, value).
     pub fn insert(&mut self, x: f64, y: f64, value: T) {
         let k = FixedRadiusSearchKey2D { col: (x / self.r).floor() as isize, row: (y / self.r).floor() as isize };
         let val = match self.hm.entry(k) {
@@ -51,6 +63,7 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
         self.length += 1;
     }
 
+    /// Performs a fixed-radius search operation on point (x, y), returning a vector of data (type T), distance tuples.
     pub fn search(&self, x: f64, y: f64) -> Vec<(T, f64)> {
         let mut ret = vec![];
         let i = (x / self.r).floor() as isize;
@@ -74,26 +87,6 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
     }
 }
 
-// #[test]
-// pub fn main() {
-//     let mut frs: FixedRadiusSearch<i32> = FixedRadiusSearch::new(5.0);
-//     frs.insert(45.3, 32.5, 1i32);
-//     frs.insert(25.3, 65.5, 2i32);
-//     frs.insert(42.3, 35.5, 3i32);
-//     frs.insert(40.3, 31.5, 4i32);
-//     frs.insert(24.3, 68.5, 5i32);
-//
-//     let s1 = frs.search(41.4, 31.4);
-//     println!("{:?}", s1);
-//
-//     let s2 = frs.search(22.4, 69.4);
-//     println!("{:?}", s2);
-// }
-
-
-////////////////////////////////////////
-// A 3D hash-based fixed radius search
-////////////////////////////////////////
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct FixedRadiusSearchKey3D {
     col: isize,
@@ -106,10 +99,10 @@ struct FixedRadiusSearchEntry3D {
     x: f64,
     y: f64,
     z: f64,
-    // dist: f64,
     index: usize,
 }
 
+/// A simple 3D hash-based fixed radius search data structure.
 pub struct FixedRadiusSearch3D<T: Copy> {
     r: f64,
     r_sqr: f64,
@@ -119,6 +112,7 @@ pub struct FixedRadiusSearch3D<T: Copy> {
 }
 
 impl<T: Copy> FixedRadiusSearch3D<T> {
+    /// Creates a new 3-D fixed-radius search structure with the specified radius, containing data of type T.
     pub fn new(radius: f64) -> FixedRadiusSearch3D<T> {
         let map = HashMap::new();
         let values: Vec<T> = vec![];
@@ -131,6 +125,7 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         }
     }
 
+    /// Inserts a point (x, y, z, value).
     pub fn insert(&mut self, x: f64, y: f64, z: f64, value: T) {
         let k = FixedRadiusSearchKey3D { 
             col: (x / self.r).floor() as isize, 
@@ -146,6 +141,7 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         self.length += 1;
     }
 
+    /// Performs a fixed-radius search operation on point (x, y, z), returning a vector of data (type T), distance tuples.
     pub fn search(&self, x: f64, y: f64, z: f64) -> Vec<(T, f64)> {
         let mut ret = vec![];
         let i = (x / self.r).floor() as isize;
@@ -171,3 +167,19 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         ret
     }
 }
+
+// #[test]
+// pub fn main() {
+//     let mut frs: FixedRadiusSearch<i32> = FixedRadiusSearch::new(5.0);
+//     frs.insert(45.3, 32.5, 1i32);
+//     frs.insert(25.3, 65.5, 2i32);
+//     frs.insert(42.3, 35.5, 3i32);
+//     frs.insert(40.3, 31.5, 4i32);
+//     frs.insert(24.3, 68.5, 5i32);
+//
+//     let s1 = frs.search(41.4, 31.4);
+//     println!("{:?}", s1);
+//
+//     let s2 = frs.search(22.4, 69.4);
+//     println!("{:?}", s2);
+// }

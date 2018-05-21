@@ -22,6 +22,7 @@ pub use self::shapefile::ShapeType;
 pub use self::shapefile::{AttributeField, AttributeHeader, DateData, FieldData, ShapefileAttributes};
 
 
+/// A 2-D point, with x and y fields.
 #[derive(Default, Clone, Debug)]
 pub struct Point2D {
     pub x: f64,
@@ -41,25 +42,24 @@ impl PartialEq for Point2D {
     }
 }
 
-
-/////////////////////////////////////////////////////////////////////////////
-// The following is based on http://geomalgorithms.com/a03-_inclusion.html //
-/////////////////////////////////////////////////////////////////////////////
-
-// is_left: tests if a point is Left|On|Right of an infinite line.
-//    Input:  three points P0, P1, and P2
-//    Return: >0 for P2 left of the line through P0 and P1
-//            =0 for P2  on the line
-//            <0 for P2  right of the line
-// [#inline_always]
+/// Tests if a point is Left|On|Right of an infinite line,
+/// based on http://geomalgorithms.com/a03-_inclusion.html.
+///
+/// Input:  three points P0, P1, and P2
+///
+/// Return: >0 for P2 left of the line through P0 and P1
+///         =0 for P2  on the line
+///         <0 for P2  right of the line
 pub fn is_left(p0: &Point2D, p1: &Point2D, p2: &Point2D) -> f64 {
     (p1.x - p0.x) * (p2.y - p0.y) - (p2.x -  p0.x) * (p1.y - p0.y)
 }
 
-// point_in_poly: winding number test for a point in a polygon
-//    Input:   p = a point,
-//             v[] = vertex points of a polygon v[n+1] with v[n]=v[0]
-//    Return:  wn = the winding number (=0 only when p is outside)
+/// Calculates the Winding number test for a point in a polygon operation.
+/// 
+/// Input:   p = a point,
+///          v[] = vertex points of a polygon v[n+1] with v[n]=v[0]
+/// 
+/// Return:  wn = the winding number (=0 only when p is outside)
 pub fn point_in_poly(p: &Point2D, v: &[Point2D]) -> bool {
     if v[0] != v[v.len()-1] {
         panic!("Warning, point squence do not form a closed polygon.");

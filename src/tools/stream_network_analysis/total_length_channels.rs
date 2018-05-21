@@ -15,6 +15,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Calculates the total length of channels upstream.
 pub struct LengthOfUpstreamChannels {
     name: String,
     description: String,
