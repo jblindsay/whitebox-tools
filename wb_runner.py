@@ -25,7 +25,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter import filedialog
 from tkinter import messagebox
 import webbrowser
-from whitebox_tools import WhiteboxTools
+from whitebox_tools import WhiteboxTools, to_camelcase
 
 wbt = WhiteboxTools()
 
@@ -664,23 +664,6 @@ class DataInput(tk.Frame):
 
 class WbRunner(tk.Frame):
     def __init__(self, tool_name=None, master=None):
-        # First, try to find the WhiteboxTools exe directory
-        if _platform == 'win32':
-            ext = '.exe'
-        else:
-            ext = ''
-
-        exe_name = "whitebox_tools{}".format(ext)
-
-        self.exe_path = path.dirname(path.abspath(__file__))
-        os.chdir(self.exe_path)
-        for filename in glob.iglob('**/*', recursive=True):
-            if filename.endswith(exe_name):
-                self.exe_path = path.dirname(path.abspath(filename))
-                break
-
-        wbt.set_whitebox_dir(self.exe_path)
-
         ttk.Frame.__init__(self, master)
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.grid()
@@ -1032,13 +1015,12 @@ class WbRunner(tk.Frame):
     def get_tools_list(self):
         list = []
         selected_item = -1
-        for item in wbt.list_tools().splitlines():
+        for item in wbt.list_tools().keys():
             if item:
-                if "available tools" not in item.lower():
-                    value = item.split(":")[0]
-                    list.append(value)
-                    if value == self.tool_name:
-                        selected_item = len(list) - 1
+                value = to_camelcase(item)
+                list.append(value)
+                if value == self.tool_name:
+                    selected_item = len(list) - 1
         if selected_item == -1:
             selected_item = 0
             self.tool_name = list[0]
