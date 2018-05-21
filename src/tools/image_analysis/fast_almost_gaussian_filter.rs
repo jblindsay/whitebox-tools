@@ -28,6 +28,7 @@ use structures::Array2D;
 use std::io::{Error, ErrorKind};
 use tools::*;
 
+/// Performs a fast approximate Gaussian filter on an image.
 pub struct FastAlmostGaussianFilter {
     name: String,
     description: String,

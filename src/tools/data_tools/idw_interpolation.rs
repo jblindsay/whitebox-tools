@@ -65,7 +65,7 @@ impl IdwInterpolation {
             description: "Input field name in attribute table.".to_owned(),
             parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
             default_value: None,
-            optional: true
+            optional: false
         });
 
         parameters.push(ToolParameter{
