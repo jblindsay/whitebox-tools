@@ -60,6 +60,7 @@ Version 0.8.0 (DD-MM-2018)
 - Added the following tools:
     CornerDetection
     FastAlmostGaussianFilter
+    GaussianContrastStretch
     IdwInterpolation
     LidarThin
     StochasticDepressionAnalysis

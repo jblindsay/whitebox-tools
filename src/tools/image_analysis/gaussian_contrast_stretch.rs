@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
-Last Modified: Dec. 15, 2017
+Created: 21/05/2018
+Last Modified: 21/05/2018
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -23,8 +23,8 @@ use std::sync::mpsc;
 use std::thread;
 use tools::*;
 
-/// Performs a percentage linear contrast stretch on input images.
-pub struct PercentageContrastStretch {
+/// Performs a Gaussian contrast stretch on input images.
+pub struct GaussianContrastStretch {
     name: String,
     description: String,
     toolbox: String,
@@ -32,12 +32,12 @@ pub struct PercentageContrastStretch {
     example_usage: String,
 }
 
-impl PercentageContrastStretch {
-    pub fn new() -> PercentageContrastStretch {
+impl GaussianContrastStretch {
+    pub fn new() -> GaussianContrastStretch {
         // public constructor
-        let name = "PercentageContrastStretch".to_string();
+        let name = "GaussianContrastStretch".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Performs a percentage linear contrast stretch on input images."
+        let description = "Performs a Gaussian contrast stretch on input images."
             .to_string();
 
         let mut parameters = vec![];
@@ -60,24 +60,6 @@ impl PercentageContrastStretch {
         });
 
         parameters.push(ToolParameter{
-            name: "Distribution Tail Clip Amount (%)".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("0.0".to_owned()),
-            optional: true
-        });
-
-        parameters.push(ToolParameter{
-            name: "Tail".to_owned(), 
-            flags: vec!["--tail".to_owned()], 
-            description: "Specified which tails to clip; options include 'upper', 'lower', and 'both' (default is 'both').".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["upper".to_owned(), "lower".to_owned(), "both".to_owned()]),
-            default_value: Some("both".to_owned()),
-            optional: true
-        });
-
-        parameters.push(ToolParameter{
             name: "Number of Tones".to_owned(), 
             flags: vec!["--num_tones".to_owned()], 
             description: "Number of tones in the output image.".to_owned(),
@@ -96,9 +78,9 @@ impl PercentageContrastStretch {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --clip=2.0 --tail='both' --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --num_tones=1024", short_exe, name).replace("*", &sep);
 
-        PercentageContrastStretch {
+        GaussianContrastStretch {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -108,7 +90,7 @@ impl PercentageContrastStretch {
     }
 }
 
-impl WhiteboxTool for PercentageContrastStretch {
+impl WhiteboxTool for GaussianContrastStretch {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -150,8 +132,6 @@ impl WhiteboxTool for PercentageContrastStretch {
                -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut tail = String::from("both");
-        let mut clip = f64::NEG_INFINITY;
         let mut num_tones = 256f64;
 
         if args.len() == 0 {
@@ -167,45 +147,25 @@ impl WhiteboxTool for PercentageContrastStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                if keyval {
-                    clip = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-num_tones" {
+                num_tones = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    clip = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-tail" || vec[0].to_lowercase() == "--tail"
-                      || vec[0].to_lowercase() == "--tails" {
-                if keyval {
-                    tail = vec[1].to_string();
-                } else {
-                    tail = args[i + 1].to_string();
-                }
-                if tail.to_lowercase().contains("u") {
-                    tail = String::from("upper");
-                } else if tail.to_lowercase().contains("l") {
-                    tail = String::from("lower");
-                } else {
-                    tail = String::from("both");
-                }
-            } else if vec[0].to_lowercase() == "-num_tones" ||
-                      vec[0].to_lowercase() == "--num_tones" {
-                if keyval {
-                    num_tones = vec[1].to_string().parse::<f64>().unwrap();
-                } else {
-                    num_tones = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -232,15 +192,10 @@ impl WhiteboxTool for PercentageContrastStretch {
             num_tones = 16f64;
         }
 
-        if clip < 0f64 || (tail == "both".to_string() && clip >= 50f64) ||
-           (tail != "both".to_string() && clip >= 100f64) {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Incorrect clip value (correct range is 0.0 to 50.0."));
-        }
+        let num_tones_int = num_tones.ceil() as usize;
+        let num_tones_less_one = num_tones - 1f64;
 
-        if verbose {
-            println!("Reading input data...")
-        };
+        if verbose { println!("Reading input data...") };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -263,36 +218,14 @@ impl WhiteboxTool for PercentageContrastStretch {
 
         let start = time::now();
 
-        if verbose {
-            println!("Calculating clip values...")
-        };
+        // Get the min and max values
+        if verbose { println!("Calculating min and max values...") };
 
         let (min_val, max_val) = if !is_rgb_image {
-            let (a, b) = input.calculate_clip_values(clip);
-            let min_val: f64;
-            let max_val: f64;
-            if tail == "both".to_string() {
-                // let (a, b) = input.calculate_clip_values(clip);
-                min_val = a;
-                max_val = b;
-            } else if tail == "upper".to_string() {
-                // let (_, b) = input.calculate_clip_values(clip);
-                min_val = input.configs.display_min;
-                max_val = b;
-            } else {
-                // tail == lower
-                // let (a, _) = input.calculate_clip_values(clip);
-                min_val = a;
-                max_val = input.configs.display_max;
-            }
-            (min_val, max_val) // return
+            (input.configs.minimum, input.configs.maximum) // return
         } else {
-            // make a histogram of the itensity values
-            let mut histo = vec![0usize; 1000];
             let mut min_val = f64::INFINITY;
             let mut max_val = f64::NEG_INFINITY;
-            let mut n = 0f64;
-            let mut bin: usize;
             let mut value: f64;
             let mut x: f64;
             for row in 0..rows {
@@ -302,62 +235,120 @@ impl WhiteboxTool for PercentageContrastStretch {
                         x = value2i(value); // gets the intensity
                         if x < min_val { min_val = x; }
                         if x > max_val { max_val = x; }
-                        n += 1f64;
-                        bin = (x * 999f64).floor() as usize;
-                        histo[bin] += 1usize;
-                    }
-                }
-                if verbose {
-                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                    if progress != old_progress {
-                        println!("Calculating clip values: {}%", progress);
-                        old_progress = progress;
                     }
                 }
             }
-            let num_cells_in_tail = (n * clip / 100f64).round() as usize;
-            let mut sum = 0usize;
-            let mut a = 0f64;
-            let mut b = 1f64;
-            for j in 0..1000 {
-                sum += histo[j];
-                if sum >= num_cells_in_tail {
-                    a = j as f64 / 999f64;
-                    break;
-                }
-            }
-            sum = 0usize;
-            for j in (0..1000).rev() {
-                sum += histo[j];
-                if sum >= num_cells_in_tail {
-                    b = j as f64 / 999f64;
-                    break;
-                }
-            }
-
-            if tail == "both".to_string() {
-                min_val = min_val.max(a);
-                max_val = max_val.min(b);
-            } else if tail == "upper".to_string() {
-                max_val = max_val.min(b);
-            } else {
-                // tail == lower
-                min_val = min_val.max(a);
-            }
-
             (min_val, max_val) // return
         };
 
-        let value_range = max_val - min_val;
-        if value_range < 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  format!("The calculated clip values ({}, {}) are incorrect.", min_val, max_val)));
+        // Get the input file distribution
+        let num_bins = ((max_val - min_val).max(2048f64)).ceil() as usize; 
+        let bin_size = (max_val - min_val) / num_bins as f64;
+        let mut histogram = vec![0f64; num_bins];
+        let num_bins_less_one = num_bins - 1;
+        let mut z: f64;
+        let mut numcells: f64 = 0f64;
+        let mut bin_num;
+        for row in 0..rows {
+            for col in 0..columns {
+                z = input.get_value(row, col);
+                if z != nodata {
+                    if is_rgb_image {
+                        z = value2i(z); // gets the intensity
+                    }
+                    numcells += 1f64;
+                    bin_num = ((z - min_val) / bin_size) as usize;
+                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    histogram[bin_num] += 1f64;
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Loop 1 of 2: {}%", progress);
+                    old_progress = progress;
+                }
+            }
         }
+
+        let mut cdf = vec![0f64; histogram.len()];
+        cdf[0] = histogram[0];
+        for i in 1..cdf.len() {
+            cdf[i] = cdf[i - 1] + histogram[i];
+        }
+        for i in 0..cdf.len() {
+            cdf[i] = cdf[i] / numcells;
+        }
+
+
+        // Create the reference distribution
+        let mut reference_cdf: Vec<Vec<f64>> = vec![];
+        let p_step = 6f64 / (num_tones - 1f64);
+        for a in 0..num_tones_int {
+            let x = -3.0 + a as f64 * p_step;
+            // Use the standard form (μ = 0.0, σ = 1.0) of:
+            // (1 / sqrt(2σ^2 * π)) * e^(-(x - μ)^2 / 2σ^2)
+            let p = (1f64 / (2f64*PI).sqrt()) * (-x.powi(2) / 2f64).exp();
+            reference_cdf.push(vec![x, p]);
+        }
+
+        // convert the reference histogram to a cdf.
+        for i in 1..num_tones_int {
+            reference_cdf[i][1] += reference_cdf[i - 1][1];
+        }
+        let total_frequency = reference_cdf[num_tones_int - 1][1];
+        for i in 0..num_tones_int {
+            reference_cdf[i][1] = reference_cdf[i][1] / total_frequency;
+        }
+        
+        let mut starting_vals = [0usize; 11];
+        let mut p_val: f64;
+        for i in 0..num_tones_int {
+            p_val = reference_cdf[i][1];
+            if p_val < 0.1 {
+                starting_vals[1] = i;
+            }
+            if p_val < 0.2 {
+                starting_vals[2] = i;
+            }
+            if p_val < 0.3 {
+                starting_vals[3] = i;
+            }
+            if p_val < 0.4 {
+                starting_vals[4] = i;
+            }
+            if p_val < 0.5 {
+                starting_vals[5] = i;
+            }
+            if p_val < 0.6 {
+                starting_vals[6] = i;
+            }
+            if p_val < 0.7 {
+                starting_vals[7] = i;
+            }
+            if p_val < 0.8 {
+                starting_vals[8] = i;
+            }
+            if p_val < 0.9 {
+                starting_vals[9] = i;
+            }
+            if p_val <= 1f64 {
+                starting_vals[10] = i;
+            }
+        }
+
+        // Perform the contrast stretch
+        let starting_vals = Arc::new(starting_vals);
+        let reference_cdf = Arc::new(reference_cdf);
+        let cdf = Arc::new(cdf);
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
+            let starting_vals = starting_vals.clone();
+            let reference_cdf = reference_cdf.clone();
+            let cdf = cdf.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let input_fn: Box<Fn(isize, isize) -> f64> = 
@@ -378,13 +369,13 @@ impl WhiteboxTool for PercentageContrastStretch {
                 
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = 
                     if !is_rgb_image {
-                        Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
+                        Box::new(|_: isize, _: isize, value: f64| -> f64 { ((value + 3f64) / 6f64 * num_tones_less_one).round() })
                     } else {
                         Box::new(
                         |row: isize, col: isize, value: f64| -> f64 {
                             if value != nodata {
                                 let (h, s, _) = value2hsi(input.get_value(row, col));
-                                let ret = hsi2value(h, s, value / num_tones);
+                                let ret = hsi2value(h, s, (value + 3f64) / 6f64);
                                 return ret;
                             }
                             nodata
@@ -392,21 +383,40 @@ impl WhiteboxTool for PercentageContrastStretch {
                         )
                     };
 
-                let mut z_in: f64;
-                let mut z_out: f64;
+                let mut z: f64;
+                let mut bin_num: usize;
+                let mut j: usize;
+                let mut x_val = 0f64;
+                let mut p_val: f64;
+                let (mut x1, mut x2, mut p1, mut p2): (f64, f64, f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z_in = input_fn(row, col);
-                        if z_in != nodata {
-                            z_out = ((z_in - min_val) / value_range * num_tones).floor();
-                            if z_out < 0f64 {
-                                z_out = 0f64;
+                        z = input_fn(row, col);
+                        if z != nodata {
+                            bin_num = ((z - min_val) / bin_size) as usize;
+                            if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                            p_val = cdf[bin_num];
+                            j = ((p_val * 10f64).floor()) as usize;
+                            for i in starting_vals[j]..num_tones_int {
+                                if reference_cdf[i][1] > p_val {
+                                    if i > 0 {
+                                        x1 = reference_cdf[i - 1][0];
+                                        x2 = reference_cdf[i][0];
+                                        p1 = reference_cdf[i - 1][1];
+                                        p2 = reference_cdf[i][1];
+                                        if p1 != p2 {
+                                            x_val = x1 + ((x2 - x1) * ((p_val - p1) / (p2 - p1)));
+                                        } else {
+                                            x_val = x1;
+                                        }
+                                    } else {
+                                        x_val = reference_cdf[i][0];
+                                    }
+                                    break;
+                                }
                             }
-                            if z_out >= num_tones {
-                                z_out = num_tones - 1f64;
-                            }
-                            data[col as usize] = output_fn(row, col, z_out);
+                            data[col as usize] = output_fn(row, col, x_val);
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -421,7 +431,7 @@ impl WhiteboxTool for PercentageContrastStretch {
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Loop 2 of 2: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -429,30 +439,23 @@ impl WhiteboxTool for PercentageContrastStretch {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Percentage clip value: {}", clip));
-        output.add_metadata_entry(format!("Clipped tails: {}", tail));
-        output.add_metadata_entry(format!("Number of tones: {}", num_tones));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Number of tones: {}", num_tones_int));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
 
         if verbose {
             println!("Saving data...")
         };
         let _ = match output.write() {
             Ok(_) => {
-                if verbose {
-                    println!("Output file written")
-                }
+                if verbose { println!("Output file written") }
             }
             Err(e) => return Err(e),
         }; 
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
         }
 
         Ok(())

@@ -132,6 +132,7 @@ impl ToolManager {
         tool_names.push("FastAlmostGaussianFilter".to_string());
         tool_names.push("FlipImage".to_string());
         tool_names.push("GammaCorrection".to_string());
+        tool_names.push("GaussianContrastStretch".to_string());
         tool_names.push("GaussianFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("HistogramEqualization".to_string());
@@ -513,6 +514,7 @@ impl ToolManager {
             "fastalmostgaussianfilter" => Some(Box::new(tools::image_analysis::FastAlmostGaussianFilter::new())),
             "flipimage" => Some(Box::new(tools::image_analysis::FlipImage::new())),
             "gammacorrection" => Some(Box::new(tools::image_analysis::GammaCorrection::new())),
+            "gaussiancontraststretch" => Some(Box::new(tools::image_analysis::GaussianContrastStretch::new())),
             "gaussianfilter" => Some(Box::new(tools::image_analysis::GaussianFilter::new())),
             "highpassfilter" => Some(Box::new(tools::image_analysis::HighPassFilter::new())),
             "histogramequalization" => Some(Box::new(tools::image_analysis::HistogramEqualization::new())),
