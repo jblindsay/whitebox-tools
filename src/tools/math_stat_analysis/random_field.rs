@@ -8,7 +8,8 @@ License: MIT
 
 use time;
 use num_cpus;
-use rand;
+use rand::prelude::*;
+use rand::distributions::StandardNormal;
 use std::env;
 use std::path;
 use std::f64;
@@ -17,7 +18,6 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use tools::*;
-use self::rand::distributions::{Normal, IndependentSample};
 
 pub struct RandomField {
     name: String,
@@ -179,12 +179,13 @@ impl WhiteboxTool for RandomField {
         for tid in 0..num_procs {
             let tx = tx.clone();
             thread::spawn(move || {
-                let mut rng = rand::thread_rng();
-                let normal = Normal::new(0.0, 1.0);
+                // let mut rng = rand::thread_rng();
+                // let normal = Normal::new(0.0, 1.0);
+                let mut rng = SmallRng::from_entropy();
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        data[col as usize] = normal.ind_sample(&mut rng);
+                        data[col as usize] = rng.sample(StandardNormal); //normal.ind_sample(&mut rng);
                     }
                     tx.send((row, data)).unwrap();
                 }

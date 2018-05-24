@@ -7,7 +7,7 @@ License: MIT
 */
 
 use time;
-use rand;
+use rand::prelude::*;
 use num_cpus;
 use std::env;
 use std::path;
@@ -22,7 +22,6 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
-use self::rand::distributions::{IndependentSample, Range};
 use rendering::html::*;
 
 pub struct KMeansClustering {
@@ -338,10 +337,10 @@ impl WhiteboxTool for KMeansClustering {
 
         if initialization_mode == 0 {
             // initialize the class centres randomly
-            let mut rng = rand::thread_rng();
+            let mut rng = thread_rng();
             for a in 0..num_classes {
-                let row = Range::new(0, rows).ind_sample(&mut rng);
-                let col = Range::new(0, columns).ind_sample(&mut rng);
+                let row = rng.gen_range(0, rows); // Range::new(0, rows).ind_sample(&mut rng);
+                let col = rng.gen_range(0, columns); // Range::new(0, columns).ind_sample(&mut rng);
                 for i in 0..num_files {
                     //let between = Range::new(minimum[i], maximum[i]);
                     // class_centres[a][i] = between.ind_sample(&mut rng);
@@ -530,14 +529,14 @@ impl WhiteboxTool for KMeansClustering {
                     // re-initialize the class centre randomly within the space of 
                     // a class that has more than min_class_size cells
                     let mut class_min_size = vec![min_class_size * 2; num_classes];
-                    let mut rng = rand::thread_rng();
-                    let between = Range::new(0, num_classes);
+                    let mut rng = thread_rng();
+                    // let between = Range::new(0, num_classes);
                     let mut large_class = 0;
                     let chances = num_classes * 10;
                     let mut attempt = 1;
                     let mut found_large_class = false;
                     while !found_large_class && attempt < chances {
-                        let val = between.ind_sample(&mut rng);
+                        let val = rng.gen_range(0, num_classes); // between.ind_sample(&mut rng);
                         if class_n[val] > class_min_size[val] {
                             large_class = val;
                             class_min_size[val] += min_class_size;
@@ -547,8 +546,8 @@ impl WhiteboxTool for KMeansClustering {
                     }
 
                     for i in 0..num_files {
-                        let between = Range::new(class_min[large_class][i], class_max[large_class][i]);
-                        class_centres[a][i] = between.ind_sample(&mut rng);
+                        // let between = Range::new(class_min[large_class][i], class_max[large_class][i]);
+                        class_centres[a][i] = rng.gen_range(class_min[large_class][i], class_max[large_class][i]); //between.ind_sample(&mut rng);
                     }
                 }
             }

@@ -8,7 +8,6 @@ License: MIT
 
 use time;
 use num_cpus;
-use rand;
 use std::env;
 use std::path;
 use std::f64;
@@ -18,7 +17,7 @@ use std::thread;
 use raster::*;
 use std::io::{Error, ErrorKind};
 use tools::*;
-use self::rand::distributions::{IndependentSample, Range};
+use rand::prelude::*;
 
 pub struct Rho8Pointer {
     name: String,
@@ -186,8 +185,8 @@ impl WhiteboxTool for Rho8Pointer {
                     false => [ 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64 ],
                 };
                 let (mut z, mut z_n, mut slope): (f64, f64, f64);
-                let between = Range::new(0f64, 1f64);
-                let mut rng = rand::thread_rng();
+                // let between = Range::new(0f64, 1f64);
+                let mut rng = thread_rng();
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -200,7 +199,7 @@ impl WhiteboxTool for Rho8Pointer {
                                 if z_n != nodata {
                                     slope = match i {
                                         1 | 3 | 5 | 7 => (z - z_n),
-                                        _ => (z - z_n) / (2f64 - between.ind_sample(&mut rng)),
+                                        _ => (z - z_n) / (2f64 - rng.gen_range(0f64, 1f64)), //between.ind_sample(&mut rng)),
                                     };
                                     if slope > max_slope && slope > 0f64 {
                                         max_slope = slope;

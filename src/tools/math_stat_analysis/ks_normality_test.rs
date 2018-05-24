@@ -16,7 +16,7 @@ statistical significance says nothing about the practical significance of a diff
 */
 
 use time;
-use rand;
+use rand::prelude::*;
 use std::env;
 use std::path;
 use std::f64;
@@ -29,7 +29,6 @@ use raster::*;
 use tools::*;
 use rendering::html::*;
 use rendering::Histogram;
-use self::rand::distributions::{IndependentSample, Range};
 
 pub struct KSTestForNormality {
     name: String,
@@ -272,15 +271,15 @@ impl WhiteboxTool for KSTestForNormality {
         } else {
             // Calculate the mean and total_deviation from a random sample.
             // Note that this is sampling with replacement.
-            let mut rng = rand::thread_rng();
-            let row_rng = Range::new(0, rows as isize);
-            let col_rng = Range::new(0, columns as isize);
+            let mut rng = thread_rng();
+            // let row_rng = Range::new(0, rows as isize);
+            // let col_rng = Range::new(0, columns as isize);
             let (mut row, mut col, mut cell_index): (isize, isize, isize);
             let mut sample_cells = Vec::with_capacity(num_samples);
             let mut sample_num = 0usize;
             while sample_num < num_samples {
-                row = row_rng.ind_sample(&mut rng);
-                col = col_rng.ind_sample(&mut rng);
+                row = rng.gen_range(0, rows as isize); // row_rng.ind_sample(&mut rng);
+                col = rng.gen_range(0, columns as isize); // col_rng.ind_sample(&mut rng);
                 z = input.get_value(row, col);
                 if z != nodata {
                     bin_num = ((z - min_value) / bin_size).floor() as usize;

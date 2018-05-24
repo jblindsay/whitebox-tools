@@ -31,7 +31,8 @@ NOTES: This tool differs from the original Whitebox GAT tool in a few significan
 
 use time;
 use num_cpus;
-use rand;
+use rand::prelude::*;
+use rand::distributions::StandardNormal;
 use std::env;
 use std::path;
 use std::cmp::Ordering;
@@ -43,7 +44,6 @@ use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use tools::*;
-use self::rand::distributions::{Normal, IndependentSample};
 use structures::Array2D;
 use std::f64::consts::PI;
 
@@ -325,8 +325,10 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             thread::spawn(move || {
                 let mut out: Array2D<u16> = Array2D::new(rows, columns, 0u16, 0u16).unwrap();
                 
-                let mut rng = rand::thread_rng();
-                let normal = Normal::new(0.0, 1.0);
+                // let mut rng = thread_rng();
+                // let normal = Normal::new(0.0, 1.0);
+                let mut rng = SmallRng::from_entropy();
+
                 let mut iter_num = 0;
                     
                 while iter_num < iterations {
@@ -349,7 +351,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
 
                     for row in 0..rows {
                         for col in 0..columns {
-                            error_model.set_value(row, col, normal.ind_sample(&mut rng));
+                            error_model.set_value(row, col, rng.sample(StandardNormal)); //normal.ind_sample(&mut rng));
                         }
                     }
 

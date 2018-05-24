@@ -16,14 +16,13 @@ Only valid, non-nodata, cells in the base raster will be sampled.
 */
 
 use time;
-use rand;
+use rand::prelude::*;
 use std::env;
 use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use raster::*;
 use tools::*;
-use self::rand::distributions::{IndependentSample, Range};
 
 pub struct RandomSample {
     name: String,
@@ -204,14 +203,14 @@ impl WhiteboxTool for RandomSample {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.reinitialize_values(0f64);
 
-        let mut rng = rand::thread_rng();
-        let row_rng = Range::new(0, rows as isize);
-        let col_rng = Range::new(0, columns as isize);
+        let mut rng = thread_rng();
+        // let row_rng = Range::new(0, rows as isize);
+        // let col_rng = Range::new(0, columns as isize);
         let mut sample_num = 0usize;
         let mut num_tries = 0usize;
         while sample_num < num_samples {
-            let row = row_rng.ind_sample(&mut rng);
-            let col = col_rng.ind_sample(&mut rng);
+            let row = rng.gen_range(0, rows as isize); //row_rng.ind_sample(&mut rng);
+            let col = rng.gen_range(0, columns as isize); //col_rng.ind_sample(&mut rng);
             if output.get_value(row, col) == 0f64 && input.get_value(row, col) != nodata {
                 sample_num += 1;
                 output.set_value(row, col, sample_num as f64);

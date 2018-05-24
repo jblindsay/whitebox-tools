@@ -1042,6 +1042,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         writer.write_u32::<LittleEndian>(ifd_start)?;
 
+        // At the moment, categorical and paletted output is not supported.
+        if r.configs.photometric_interp == PhotometricInterpretation::Categorical || 
+        r.configs.photometric_interp == PhotometricInterpretation::Paletted {
+            r.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        }
+        
         //////////////////////////////
         // Write the image the data //
         //////////////////////////////
