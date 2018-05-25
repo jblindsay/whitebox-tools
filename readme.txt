@@ -74,6 +74,8 @@ Version 0.8.0 (DD-MM-2018)
   PrewittFilter, RangeFilter, RobertsCrossFilter, ScharrFilter, SobelFilter, and
   UserDefinedWeightsFilter.
 - Fixed a bug with reading/writing Whitebox Raster files containing RGB data.
+- Modified the MajorityFilter tool to improve efficiency substantially. Also fixed
+  a bug in it and the DiversityFilter tools.
 
 
 Version 0.7.0 (01-05-2018)

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: January 21, 2018
+Last Modified: 25/05/2018
 License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
@@ -224,7 +224,7 @@ impl WhiteboxTool for DiversityFilter {
         let min_val = input.configs.minimum;
         let max_val = input.configs.maximum;
         if min_val.floor() != min_val || max_val.floor() != max_val {
-            multiplier = 10000.0;
+            multiplier = 1000.0;
         }
         let min_val_mult = min_val * multiplier;
         let num_bins = (max_val * multiplier - min_val_mult).ceil() as usize + 1;
@@ -250,8 +250,8 @@ impl WhiteboxTool for DiversityFilter {
                             end_col = col + midpoint_x;
                             
                             // remove the trailing column from the histo
-                            for row2 in start_row..end_row+1 {
-                                z = input.get_value(row2, start_col);
+                            for row2 in start_row..=end_row {
+                                z = input.get_value(row2, start_col-1);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] -= 1;
@@ -262,7 +262,7 @@ impl WhiteboxTool for DiversityFilter {
                             }
                             
                             // add the leading column to the histo
-                            for row2 in start_row..end_row+1 {
+                            for row2 in start_row..=end_row {
                                 z = input.get_value(row2, end_col);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
@@ -276,8 +276,8 @@ impl WhiteboxTool for DiversityFilter {
                             // initialize the filter histo
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
-                            for col2 in start_col..end_col+1 {
-                                for row2 in start_row..end_row+1 {
+                            for col2 in start_col..=end_col {
+                                for row2 in start_row..=end_row {
                                     z = input.get_value(row2, col2);
                                     if z != nodata {
                                         bin_val = (z * multiplier - min_val_mult).floor() as usize;

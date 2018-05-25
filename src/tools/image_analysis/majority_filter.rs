@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: January 21, 2018
+Last Modified: 25/05/2018
 License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
@@ -13,6 +13,7 @@ use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
@@ -223,7 +224,7 @@ impl WhiteboxTool for MajorityFilter {
         let min_val = input.configs.minimum;
         let max_val = input.configs.maximum;
         if min_val.floor() != min_val || max_val.floor() != max_val {
-            multiplier = 1000.0;
+            multiplier = 100.0;
         }
         let min_val_mult = min_val * multiplier;
         let num_bins = (max_val * multiplier - min_val_mult).ceil() as usize + 1;
@@ -241,29 +242,52 @@ impl WhiteboxTool for MajorityFilter {
                     end_row = row + midpoint_y;
                     let mut data = vec![nodata; columns as usize];
                     let mut histo = vec![0; num_bins];
-                    let mut mode_bin: usize;
-                    let mut mode_freq: usize;
+                    let mut mode_bin = 0usize;
+                    let mut mode_freq = 0usize;
+                    let mut column_mode_bin: VecDeque<usize> = VecDeque::with_capacity(filter_size_x);
                     let mut z: f64;
                     for col in 0..columns {
                         if col > 0 {
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
-                            
                             // remove the trailing column from the histo
+                            column_mode_bin.pop_front();
                             for row2 in start_row..end_row+1 {
-                                z = input.get_value(row2, start_col);
+                                z = input.get_value(row2, start_col-1);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] -= 1;
                                 }
                             }
-                            
+
                             // add the leading column to the histo
+                            let mut b = 0;
+                            let mut f = 0;
                             for row2 in start_row..end_row+1 {
                                 z = input.get_value(row2, end_col);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] += 1;
+                                    if histo[bin_val] > mode_freq { 
+                                        mode_freq = histo[bin_val];
+                                        mode_bin = bin_val;
+                                    }
+                                    if histo[bin_val] > f { 
+                                        f = histo[bin_val];
+                                        b = bin_val;
+                                    }
+                                }
+                            }
+                            column_mode_bin.push_back(b);
+
+                            if histo[mode_bin] < mode_freq {
+                                mode_freq = histo[mode_bin];
+                                for a in &column_mode_bin {
+                                    b = *a;
+                                    if histo[b] > mode_freq {
+                                        mode_freq = histo[b];
+                                        mode_bin = b;
+                                    }
                                 }
                             }
                         } else {
@@ -271,24 +295,27 @@ impl WhiteboxTool for MajorityFilter {
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
                             for col2 in start_col..end_col+1 {
+                                let mut b = 0;
+                                let mut f = 0;
                                 for row2 in start_row..end_row+1 {
                                     z = input.get_value(row2, col2);
                                     if z != nodata {
                                         bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                         histo[bin_val] += 1;
+                                        if histo[bin_val] > mode_freq { 
+                                            mode_freq = histo[bin_val];
+                                            mode_bin = bin_val;
+                                        }
+                                        if histo[bin_val] > f { 
+                                            f = histo[bin_val];
+                                            b = bin_val;
+                                        }
                                     }
                                 }
+                                column_mode_bin.push_back(b);
                             }
                         }
                         if input.get_value(row, col) != nodata {
-                            mode_bin = 0;
-                            mode_freq = 0;
-                            for i in 0..num_bins {
-                                if histo[i] > mode_freq {
-                                    mode_freq = histo[i];
-                                    mode_bin = i;
-                                }
-                            }
                             data[col as usize] = (mode_bin as f64 + min_val_mult) / multiplier;
                         }
                     }
