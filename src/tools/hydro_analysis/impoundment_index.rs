@@ -542,21 +542,21 @@ impl WhiteboxTool for ImpoundmentIndex {
                 threshold = crest_elev[(row_n, col_n)]; // crest_elev[(row_n, col_n)]; // input[(row_n, col_n)] + dam_height;
                 num_upslope = 0f64;
                 vol = 0f64;
-                upslope_elevs[row as usize][col as usize].push(z);
+                upslope_elevs[row as usize][col as usize].push(z); // adding the elevation of row, col
                 for up_z in upslope_elevs[row as usize][col as usize].clone() {
                     if up_z < cutoff_z {
                         upslope_elevs[row_n as usize][col_n as usize].push(up_z);
                         if up_z < threshold {
                             num_upslope += 1f64;
-                            vol += up_z - threshold;
+                            vol += threshold - up_z;
                         }
                     }
                 }
                 upslope_elevs[row as usize][col as usize] = vec![];
 
-                if out_type == 0 {
+                if out_type == 0 { // area
                     output.increment(row_n, col_n, num_upslope * grid_area);
-                } else {
+                } else { // volume
                     output.increment(row_n, col_n, vol);
                 }
 
