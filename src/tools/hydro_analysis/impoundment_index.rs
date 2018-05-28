@@ -1,22 +1,27 @@
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: 28/05/2018
+Last Modified: 28/05/2018
+License: MIT
+*/
+
 use time;
 use num_cpus;
-use rand;
 use std::env;
 use std::path;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
 use raster::*;
 use tools::*;
-use self::rand::distributions::{Normal, IndependentSample};
 use structures::Array2D;
-use std::f64::consts::PI;
 
-/// Preforms a stochastic analysis of depressions within a DEM.
+/// Calculates the impoundment size resulting from damming a DEM.
 pub struct ImpoundmentIndex {
     name: String,
     description: String,
@@ -143,13 +148,12 @@ impl WhiteboxTool for ImpoundmentIndex {
                -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut out_type = String::from("area");
-        let mut dheight: f64;
-        let mut dlength: f64;
+        let mut out_type = 0; // 0 = area; 1 = volume
+        let mut dam_height = 1f64;
+        let mut dam_length = 10f64;
         
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -174,37 +178,39 @@ impl WhiteboxTool for ImpoundmentIndex {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-out_type" {
-                out_type = if keyval {
+                let val = if keyval {
                     vec[1].to_lowercase()
                 } else {
                     args[i+1].to_lowercase()
                 };
-                if out_type.contains("v") {
-                    out_type = String::from("volume");
+                out_type = if val.contains("v") {
+                    1
                 } else {
-                    out_type = String::from("area");
-                }
+                    0
+                };
             } else if flag_val == "-damheight" {
-                dheight = if keyval {
+                dam_height = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
                     args[i+1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-damlength" {
-                dlength = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                dam_length = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f32>().unwrap() as usize
+                    args[i+1].to_string().parse::<f64>().unwrap()
                 };
             }
         }
+
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
             println!("* Welcome to {} *", self.get_tool_name());
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
-
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
@@ -215,17 +221,23 @@ impl WhiteboxTool for ImpoundmentIndex {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        if verbose { println!("Reading data...") };
+
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        
+
         let start = time::now();
-        let mut mode: f64
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-        let num_cells = rows * columns;
+        let mut num_cells = rows * columns;
         let nodata = input.configs.nodata;
-        let cell_size_x = input.configs.resoluion_x;
-        let cell_size_y = input.configs.resolution_y;
-        
+        let grid_area = input.configs.resolution_x * input.configs.resolution_y;
+        // let min_val = input.configs.minimum;
+        // let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
+        // let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
+        // let small_num = 1.0 / elev_multiplier as f64;
+
+        let background_val = (i32::min_value() + 1) as f64;
+        let mut filled_dem: Array2D<f64> = Array2D::new(rows, columns, background_val, nodata)?;
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
 
         /*
@@ -254,7 +266,6 @@ impl WhiteboxTool for ImpoundmentIndex {
             queue.push_back((rows, col));
         }
 
-
         /* 
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
@@ -277,15 +288,15 @@ impl WhiteboxTool for ImpoundmentIndex {
                 row_n = row + dy[n];
                 col_n = col + dx[n];
                 zin_n = input[(row_n, col_n)];
-                zout_n = output[(row_n, col_n)];
+                zout_n = filled_dem[(row_n, col_n)];
                 if zout_n == background_val {
                     if zin_n == nodata {
-                        output[(row_n, col_n)] = nodata;
+                        filled_dem[(row_n, col_n)] = nodata;
                         queue.push_back((row_n, col_n));
                     } else {
-                        output[(row_n, col_n)] = zin_n;
+                        filled_dem[(row_n, col_n)] = zin_n;
                         // Push it onto the priority queue for the priority flood operation
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n, priority2: zin_n });
                     }
                     num_solved_cells += 1;
                 }
@@ -294,7 +305,7 @@ impl WhiteboxTool for ImpoundmentIndex {
             if verbose {
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("progress: {}%", progress);
+                    println!("Calculating flow directions: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -302,64 +313,28 @@ impl WhiteboxTool for ImpoundmentIndex {
 
         // Perform the priority flood operation.
         let back_link = [ 4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8 ];
-        let (mut x, mut y): (isize, isize);
-        let mut z_target: f64;
         let mut dir: i8;
-        let mut flag: bool;
 
         while !minheap.is_empty() {
             let cell = minheap.pop().unwrap();
             row = cell.row;
             col = cell.column;
-            zout = output[(row, col)];
+            zout = filled_dem[(row, col)];
             for n in 0..8 {
                 row_n = row + dy[n];
                 col_n = col + dx[n];
-                zout_n = output[(row_n, col_n)];
+                zout_n = filled_dem[(row_n, col_n)];
                 if zout_n == background_val {
                     zin_n = input[(row_n, col_n)];
                     if zin_n != nodata {
                         flow_dir[(row_n, col_n)] = back_link[n];
-                        output[(row_n, col_n)] = zin_n;
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
-                        if zin_n < (zout + small_num) {
-                            // Is it a pit cell?
-                            // is_pit = true;
-                            // for n2 in 0..8 {
-                            //     row_n2 = row + dy[n2];
-                            //     col_n2 = col + dx[n2];
-                            //     zin_n2 = input[(row_n2, col_n2)];
-                            //     if zin_n2 != nodata && zin_n2 < zin_n {
-                            //         is_pit = false;
-                            //         break;
-                            //     }
-                            // }
-                            // if is_pit {
-                                // Trace the flowpath back to a lower cell, if it exists.
-                                x = col_n;
-                                y = row_n;
-                                z_target = output[(row_n, col_n)];
-                                flag = true;
-                                while flag {
-                                    dir = flow_dir[(y, x)];
-                                    if dir >= 0 {
-                                        y += dy[dir as usize];
-                                        x += dx[dir as usize];
-                                        z_target -= small_num;
-                                        if output[(y, x)] > z_target {
-                                            output[(y, x)] = z_target;
-                                        } else {
-                                            flag = false;
-                                        }
-                                    } else {
-                                        flag = false;
-                                    }
-                                }
-                            // }
-                        }
+                        // if zin_n < (zout + small_num) { zin_n = zout + small_num; } // We're in a depression. Raise the elevation.
+                        if zin_n < zout { zin_n = zout; } // We're in a depression. Raise the elevation.
+                        filled_dem[(row_n, col_n)] = zin_n;
+                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n, priority2: input[(row_n, col_n)] });
                     } else {
                         // Interior nodata cells are still treated as nodata and are not filled.
-                        output[(row_n, col_n)] = nodata;
+                        filled_dem[(row_n, col_n)] = nodata;
                         num_solved_cells += 1;
                     }
                 }
@@ -369,7 +344,7 @@ impl WhiteboxTool for ImpoundmentIndex {
                 num_solved_cells += 1;
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress: {}%", progress);
+                    println!("Calculating flow directions: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -377,6 +352,285 @@ impl WhiteboxTool for ImpoundmentIndex {
 
 
 
+        // calculate dam heights
+        let flow_dir = Arc::new(flow_dir);
+        let num_procs = num_cpus::get() as isize;
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let flow_dir = flow_dir.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let perpendicular1 = [ 2, 3, 4, 5, 6, 7, 0, 1 ];
+                let perpendicular2 = [ 6, 7, 0, 1, 2, 3, 4, 5 ];
+                let half_dam_length = (dam_length / 2f64).floor() as usize;
+                let dam_profile_length = half_dam_length * 2 + 1;
+                let mut dam_profile = vec![0f64; dam_profile_length];
+                let mut dam_profile_filled = vec![0f64; dam_profile_length];
+                let (mut perp_dir1, mut perp_dir2): (i8, i8); 
+                let mut z: f64;
+                let mut z_n: f64;
+                let mut dir: i8;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<f64> = vec![nodata; columns as usize];
+                    for col in 0..columns {
+                        z = input[(row, col)];
+                        if z != nodata {
+                            // what's the flow direction?
+                            dir = flow_dir.get_value(row, col);
+                            if dir >= 0 {
+                                // what's the perpendicular flow direction?
+                                perp_dir1 = perpendicular1[dir as usize];
+                                perp_dir2 = perpendicular2[dir as usize];
+                                dam_profile[half_dam_length] = input.get_value(row, col);
+
+                                // find the dam height
+                                let mut r_n = row;
+                                let mut c_n = col;
+                                let mut r_n2 = row;
+                                let mut c_n2 = col;
+                                for i in 1..=half_dam_length {
+                                    r_n += dy[perp_dir1 as usize];
+                                    c_n += dx[perp_dir1 as usize];
+                                    z_n = input[(r_n, c_n)];
+                                    if z_n != nodata {
+                                        dam_profile[half_dam_length + i as usize] = z_n;
+                                    } else {
+                                        dam_profile[half_dam_length + i as usize] = f64::NEG_INFINITY;
+                                    }
+
+                                    r_n2 += dy[perp_dir2 as usize];
+                                    c_n2 += dx[perp_dir2 as usize];
+                                    z_n = input[(r_n2, c_n2)];
+                                    if z_n != nodata {
+                                        dam_profile[half_dam_length - i] = z_n;
+                                    } else {
+                                        dam_profile[half_dam_length - i] = f64::NEG_INFINITY;
+                                    }
+                                }
+
+                                dam_profile_filled[0] = dam_profile[0];
+                                for i in 1..dam_profile_length-1 {
+                                    if dam_profile_filled[i-1] > dam_profile[i] {
+                                        dam_profile_filled[i] = dam_profile_filled[i-1];
+                                    } else {
+                                        dam_profile_filled[i] = dam_profile[i];
+                                    }
+                                }
+
+                                dam_profile_filled[dam_profile_length-1] = dam_profile[dam_profile_length-1];
+                                for i in (1..dam_profile_length-1).rev() {
+                                    if dam_profile_filled[i+1] > dam_profile[i] {
+                                        dam_profile_filled[i] = dam_profile_filled[i+1];
+                                    } else {
+                                        dam_profile_filled[i] = dam_profile[i];
+                                    }
+                                }
+
+                                if dam_profile_filled[half_dam_length] - z > dam_height {
+                                    data[col as usize] = z + dam_height;
+                                } else {
+                                    data[col as usize] = dam_profile_filled[half_dam_length];
+                                }
+                            } else {
+                                data[col as usize] = input.get_value(row, col) + dam_height;
+                            }
+                        }
+                    }
+                    tx.send((row, data)).unwrap();
+                }
+            });
+        }
+
+        let mut crest_elev: Array2D<f64> = Array2D::new(rows, columns, -32768f64, nodata)?;
+        for r in 0..rows {
+            let (row, data) = rx.recv().unwrap();
+            crest_elev.set_row_data(row, data);
+            
+            if verbose {
+                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Calculating local dam crest height: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+
+        // calculate the number of inflowing cells
+        // let flow_dir = Arc::new(flow_dir);
+        // let num_procs = num_cpus::get() as isize;
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let flow_dir = flow_dir.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
+                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
+                let mut z: f64;
+                let mut count: i8;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    let mut data: Vec<i8> = vec![-1i8; columns as usize];
+                    for col in 0..columns {
+                        z = input[(row, col)];
+                        if z != nodata {
+                            count = 0i8;
+							for i in 0..8 {
+                                if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
+                                    count += 1;
+                                }
+                            }
+                            data[col as usize] = count;
+                        } else {
+                            data[col as usize] = -1i8;
+                        }
+                    }
+                    tx.send((row, data)).unwrap();
+                }
+            });
+        }
+
+        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
+        let mut stack = Vec::with_capacity((rows * columns) as usize);
+        let mut upslope_elevs: Vec<Vec<Vec<f64>>> = vec![vec![vec![]; columns as usize]; rows as usize];
+        let mut num_solved_cells = 0;
+        for r in 0..rows {
+            let (row, data) = rx.recv().unwrap();
+            num_inflowing.set_row_data(row, data);
+            for col in 0..columns {
+                if num_inflowing[(row, col)] == 0i8 {
+                    stack.push((row, col));
+                } else if num_inflowing[(row, col)] == -1i8 {
+                    num_solved_cells += 1;
+                }
+            }
+            
+            if verbose {
+                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Num. inflowing neighbours: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        num_cells -= num_solved_cells;
+        let mut z: f64;
+        let mut cutoff_z: f64;
+        let mut threshold: f64;
+        let mut num_upslope: f64;
+        let mut vol: f64;
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.reinitialize_values(0.0);
+        while !stack.is_empty() {
+            let cell = stack.pop().unwrap();
+            row = cell.0;
+            col = cell.1;
+            z = input[(row, col)];
+            num_inflowing.decrement(row, col, 1i8);
+            dir = flow_dir[(row, col)];
+            if dir >= 0 {
+                row_n = row + dy[dir as usize];
+                col_n = col + dx[dir as usize];
+                // Pass the upslope elevations that are lower than
+                // the cutoff elevation downslope
+                cutoff_z = filled_dem[(row_n, col_n)] + dam_height;
+                threshold = crest_elev[(row_n, col_n)]; // crest_elev[(row_n, col_n)]; // input[(row_n, col_n)] + dam_height;
+                num_upslope = 0f64;
+                vol = 0f64;
+                upslope_elevs[row as usize][col as usize].push(z);
+                for up_z in upslope_elevs[row as usize][col as usize].clone() {
+                    if up_z < cutoff_z {
+                        upslope_elevs[row_n as usize][col_n as usize].push(up_z);
+                        if up_z < threshold {
+                            num_upslope += 1f64;
+                            vol += up_z - threshold;
+                        }
+                    }
+                }
+                upslope_elevs[row as usize][col as usize] = vec![];
+
+                if out_type == 0 {
+                    output.increment(row_n, col_n, num_upslope * grid_area);
+                } else {
+                    output.increment(row_n, col_n, vol);
+                }
+
+                num_inflowing.decrement(row_n, col_n, 1i8);
+                if num_inflowing[(row_n, col_n)] == 0i8 {
+                    stack.push((row_n, col_n));
+                }
+            }
+
+            if verbose {
+                num_solved_cells += 1;
+                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Calculating index: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        
+        let end = time::now();
+        let elapsed_time = end - start;
+
+        output.configs.palette = "blueyellow.plt".to_string();
+        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Dam height: {}", dam_height));
+        output.add_metadata_entry(format!("Dam length: {}", dam_length));
+        if out_type == 0 {
+            output.add_metadata_entry(format!("Out type: area"));
+        } else {
+            output.add_metadata_entry(format!("Out type: volume"));
+        }
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+
+        if verbose { println!("Saving accumulation data...") };
+        let _ = match output.write() {
+            Ok(_) => if verbose { println!("Output file written") },
+            Err(e) => return Err(e),
+        };
+        if verbose {
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        }
+
+        Ok(())
     }
 }
 
+#[derive(PartialEq, Debug)]
+struct GridCell {
+    row: isize,
+    column: isize,
+    priority: f64,
+    priority2: f64,
+}
+
+impl Eq for GridCell {}
+
+impl PartialOrd for GridCell {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if other.priority != self.priority {
+            return other.priority.partial_cmp(&self.priority);
+        }
+        return other.priority2.partial_cmp(&self.priority2)
+    }
+}
+
+impl Ord for GridCell {
+    fn cmp(&self, other: &GridCell) -> Ordering {
+        let ord = self.partial_cmp(other).unwrap();
+        match ord {
+            Ordering::Greater => Ordering::Less,
+            Ordering::Less => Ordering::Greater,
+            Ordering::Equal => ord,
+        }
+    }
+}

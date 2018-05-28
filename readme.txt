@@ -62,6 +62,7 @@ Version 0.8.0 (DD-MM-2018)
     FastAlmostGaussianFilter
     GaussianContrastStretch
     IdwInterpolation
+    ImpoundmentIndex
     LidarThin
     StochasticDepressionAnalysis
     UnsharpMasking

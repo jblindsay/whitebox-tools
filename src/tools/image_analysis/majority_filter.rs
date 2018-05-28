@@ -13,7 +13,8 @@ use num_cpus;
 use std::env;
 use std::path;
 use std::f64;
-use std::collections::VecDeque;
+// use std::collections::VecDeque;
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
@@ -242,51 +243,51 @@ impl WhiteboxTool for MajorityFilter {
                     end_row = row + midpoint_y;
                     let mut data = vec![nodata; columns as usize];
                     let mut histo = vec![0; num_bins];
+                    let mut set = HashSet::new();
+                    // I realize that the above two lines could be combined
+                    // to use a HashMap instead of a Vec and a HashSet. Trouble is
+                    // Rust's HashMap is painful to use.
                     let mut mode_bin = 0usize;
                     let mut mode_freq = 0usize;
-                    let mut column_mode_bin: VecDeque<usize> = VecDeque::with_capacity(filter_size_x);
                     let mut z: f64;
                     for col in 0..columns {
                         if col > 0 {
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
                             // remove the trailing column from the histo
-                            column_mode_bin.pop_front();
                             for row2 in start_row..end_row+1 {
                                 z = input.get_value(row2, start_col-1);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] -= 1;
+                                    if histo[bin_val] == 0 {
+                                        set.remove(&bin_val);
+                                    }
                                 }
                             }
 
                             // add the leading column to the histo
-                            let mut b = 0;
-                            let mut f = 0;
                             for row2 in start_row..end_row+1 {
                                 z = input.get_value(row2, end_col);
                                 if z != nodata {
                                     bin_val = (z * multiplier - min_val_mult).floor() as usize;
                                     histo[bin_val] += 1;
-                                    if histo[bin_val] > mode_freq { 
+                                    if histo[bin_val] > histo[mode_bin] { 
                                         mode_freq = histo[bin_val];
                                         mode_bin = bin_val;
                                     }
-                                    if histo[bin_val] > f { 
-                                        f = histo[bin_val];
-                                        b = bin_val;
+                                    if histo[bin_val] == 1 { 
+                                        set.insert(bin_val);
                                     }
                                 }
                             }
-                            column_mode_bin.push_back(b);
 
                             if histo[mode_bin] < mode_freq {
                                 mode_freq = histo[mode_bin];
-                                for a in &column_mode_bin {
-                                    b = *a;
-                                    if histo[b] > mode_freq {
-                                        mode_freq = histo[b];
-                                        mode_bin = b;
+                                for x in &set {
+                                    if histo[*x] > mode_freq {
+                                        mode_freq = histo[*x];
+                                        mode_bin = *x;
                                     }
                                 }
                             }
@@ -295,8 +296,6 @@ impl WhiteboxTool for MajorityFilter {
                             start_col = col - midpoint_x;
                             end_col = col + midpoint_x;
                             for col2 in start_col..end_col+1 {
-                                let mut b = 0;
-                                let mut f = 0;
                                 for row2 in start_row..end_row+1 {
                                     z = input.get_value(row2, col2);
                                     if z != nodata {
@@ -306,13 +305,11 @@ impl WhiteboxTool for MajorityFilter {
                                             mode_freq = histo[bin_val];
                                             mode_bin = bin_val;
                                         }
-                                        if histo[bin_val] > f { 
-                                            f = histo[bin_val];
-                                            b = bin_val;
+                                        if histo[bin_val] == 1 { 
+                                            set.insert(bin_val);
                                         }
                                     }
                                 }
-                                column_mode_bin.push_back(b);
                             }
                         }
                         if input.get_value(row, col) != nodata {

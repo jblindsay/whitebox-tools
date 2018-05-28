@@ -26,6 +26,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.
 pub struct FlowAccumulationFullWorkflow {
     name: String,
     description: String,
@@ -38,7 +39,7 @@ impl FlowAccumulationFullWorkflow {
     pub fn new() -> FlowAccumulationFullWorkflow { // public constructor
         let name = "FlowAccumulationFullWorkflow".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.".to_string();
+        let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.".to_string();
         
         let mut parameters = vec![];
         parameters.push(ToolParameter{
