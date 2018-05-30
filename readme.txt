@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.8.0 (DD-MM-2018)
+Version 0.8.0 (30-05-2018)
 - Added the following tools:
     CornerDetection
     FastAlmostGaussianFilter

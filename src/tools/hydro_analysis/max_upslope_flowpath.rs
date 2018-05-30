@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: January 21, 2018
+Last Modified: 30/05/2018
 License: MIT
 */
 
@@ -19,6 +19,7 @@ use std::io::{Error, ErrorKind};
 use structures::Array2D;
 use tools::*;
 
+/// Measures the maximum length of all upslope flowpaths draining each grid cell.
 pub struct MaxUpslopeFlowpathLength {
     name: String,
     description: String,

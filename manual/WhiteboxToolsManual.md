@@ -35,12 +35,12 @@ header-includes:
 
 <!-- ![*Bringing the power of Whitebox GAT to the world at large*](./img/WhiteboxToolsLogoBlue.png)   -->
 
-WhiteboxTools Version 0.7  \
+WhiteboxTools Version 0.8  \
 Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-May 1, 2018  \
+May 30, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -67,7 +67,7 @@ It is likely that *WhiteboxTools* will work on a wider variety of operating syst
 
 1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
-2. Download the *Whitebox GAT* [source code](https://github.com/jblindsay/whitebox-geospatial-analysis-tools). Note: *WhiteboxTools* is currently housed as a sub-repository of the main *Whitebox GAT* repo. To download the code, click the green Clone or download button on the GitHub repository site.
+2. Download the *WhiteboxTools* [source code](https://github.com/jblindsay/whitebox-tools). To download the code, click the green Clone or download button on the GitHub repository site.
 
 3. Decompress the zipped download file.
 
@@ -461,9 +461,9 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 ## 6. Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
+Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](https://github.com/jblindsay/whitebox-tools/blob/master/tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions. 
 
-The library currently contains the following 293 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the ```toolhelp``` command from the terminal, or the ```tool_help('tool_name')``` function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains the following 323 tools, which are each grouped based on their main function into one of the following categories: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the ```toolhelp``` command from the terminal, or the ```tool_help('tool_name')``` function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 
 
@@ -476,7 +476,7 @@ The library currently contains the following 293 tools, which are each grouped b
 
 #### 7.1.1 ConvertNodataToZero
 
-Converts nodata values in a raster to zero.
+Converts nodata values in a raster to zero..
 
 *Parameters*:
 
@@ -507,7 +507,7 @@ convert_nodata_to_zero(
 
 #### 7.1.2 ConvertRasterFormat
 
-Converts raster data from one format to another.
+Converts raster data from one format to another..
 
 *Parameters*:
 
@@ -538,7 +538,7 @@ convert_raster_format(
 
 #### 7.1.3 ExportTableToCsv
 
-Exports an attribute table to a CSV text file.
+Exports an attribute table to a CSV text file..
 
 *Parameters*:
 
@@ -569,9 +569,61 @@ export_table_to_csv(
 ```
 
 
-#### 7.1.4 NewRasterFromBase
+#### 7.1.4 IdwInterpolation
 
-Creates a new raster using a base image.
+Interpolates vector points into a raster surface using an inverse-distance weighted scheme..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-\-use_z             Use z-coordinate instead of field?
+-o, -\-output        Output raster file
+-\-weight            IDW weight value
+-\-radius            Search Radius
+-\-min_points        Minimum number of points
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+idw_interpolation(
+    i, 
+    field, 
+    output, 
+    use_z=False, 
+    weight=2.0, 
+    radius=None, 
+    min_points=None, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=IdwInterpolation -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--assign=min --nodata ^
+--cell_size=10.0
+        >>./whitebox_tools -r=IdwInterpolation ^
+-v --wd="/path/to/data/" -i=points.shp --field=FID ^
+-o=output.tif --assign=last --base=existing_raster.tif 
+
+
+```
+
+
+#### 7.1.5 NewRasterFromBase
+
+Creates a new raster using a base image..
 
 *Parameters*:
 
@@ -609,9 +661,9 @@ new_raster_from_base(
 ```
 
 
-#### 7.1.5 PrintGeoTiffTags
+#### 7.1.6 PrintGeoTiffTags
 
-Prints the tags within a GeoTIFF.
+Prints the tags within a GeoTIFF..
 
 *Parameters*:
 
@@ -638,9 +690,9 @@ print_geo_tiff_tags(
 ```
 
 
-#### 7.1.6 SetNodataValue
+#### 7.1.7 SetNodataValue
 
-Assign a specified value in an input image to the NoData value.
+Assign a specified value in an input image to the NoData value..
 
 *Parameters*:
 
@@ -671,9 +723,9 @@ set_nodata_value(
 ```
 
 
-#### 7.1.7 VectorLinesToRaster
+#### 7.1.8 VectorLinesToRaster
 
-Converts a vector containing polylines into a raster.
+Converts a vector containing polylines into a raster..
 
 *Parameters*:
 
@@ -716,9 +768,9 @@ vector_lines_to_raster(
 ```
 
 
-#### 7.1.8 VectorPointsToRaster
+#### 7.1.9 VectorPointsToRaster
 
-Converts a vector containing points into a raster.
+Converts a vector containing points into a raster..
 
 *Parameters*:
 
@@ -766,9 +818,9 @@ vector_points_to_raster(
 ```
 
 
-#### 7.1.9 VectorPolygonsToRaster
+#### 7.1.10 VectorPolygonsToRaster
 
-Converts a vector containing polygons into a raster.
+Converts a vector containing polygons into a raster..
 
 *Parameters*:
 
@@ -815,7 +867,7 @@ vector_polygons_to_raster(
 
 #### 7.2.1 AggregateRaster
 
-Aggregates a raster to a lower resolution.
+Aggregates a raster to a lower resolution..
 
 *Parameters*:
 
@@ -851,7 +903,7 @@ aggregate_raster(
 
 #### 7.2.2 Centroid
 
-Calculates the centroid, or average location, of raster polygon objects.
+Calculates the centroid, or average location, of raster polygon objects..
 
 *Parameters*:
 
@@ -887,7 +939,7 @@ centroid(
 
 #### 7.2.3 Clump
 
-Groups cells that form physically discrete areas, assigning them unique identifiers.
+Groups cells that form physically discrete areas, assigning them unique identifiers..
 
 *Parameters*:
 
@@ -922,7 +974,7 @@ clump(
 
 #### 7.2.4 CreatePlane
 
-Creates a raster image based on the equation for a simple plane.
+Creates a raster image based on the equation for a simple plane..
 
 *Parameters*:
 
@@ -960,7 +1012,7 @@ create_plane(
 
 #### 7.2.5 RasterCellAssignment
 
-Assign row or column number to cells.
+Assign row or column number to cells..
 
 *Parameters*:
 
@@ -995,7 +1047,7 @@ raster_cell_assignment(
 
 #### 7.2.6 Reclass
 
-Reclassifies the values in a raster image.
+Reclassifies the values in a raster image..
 
 *Parameters*:
 
@@ -1037,7 +1089,7 @@ reclass(
 
 #### 7.2.7 ReclassEqualInterval
 
-Reclassifies the values in a raster image based on equal-ranges.
+Reclassifies the values in a raster image based on equal-ranges..
 
 *Parameters*:
 
@@ -1075,7 +1127,7 @@ reclass_equal_interval(
 
 #### 7.2.8 ReclassFromFile
 
-Reclassifies the values in a raster image using reclass ranges in a text file.
+Reclassifies the values in a raster image using reclass ranges in a text file..
 
 *Parameters*:
 
@@ -1110,7 +1162,7 @@ reclass_from_file(
 
 #### 7.3.1 BufferRaster
 
-Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
+Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image..
 
 *Parameters*:
 
@@ -1146,7 +1198,7 @@ buffer_raster(
 
 #### 7.3.2 CostAllocation
 
-Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
+Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis..
 
 *Parameters*:
 
@@ -1180,7 +1232,7 @@ cost_allocation(
 
 #### 7.3.3 CostDistance
 
-Performs cost-distance accumulation on a cost surface and a group of source cells.
+Performs cost-distance accumulation on a cost surface and a group of source cells..
 
 *Parameters*:
 
@@ -1216,7 +1268,7 @@ cost_distance(
 
 #### 7.3.4 CostPathway
 
-Performs cost-distance pathway analysis using a series of destination grid cells.
+Performs cost-distance pathway analysis using a series of destination grid cells..
 
 *Parameters*:
 
@@ -1252,7 +1304,7 @@ cost_pathway(
 
 #### 7.3.5 EuclideanAllocation
 
-Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
+Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform..
 
 *Parameters*:
 
@@ -1283,7 +1335,7 @@ euclidean_allocation(
 
 #### 7.3.6 EuclideanDistance
 
-Calculates the Shih and Wu (2004) Euclidean distance transform.
+Calculates the Shih and Wu (2004) Euclidean distance transform..
 
 *Parameters*:
 
@@ -1315,7 +1367,7 @@ euclidean_distance(
 
 #### 7.4.1 AverageOverlay
 
-Calculates the average for each grid cell from a group of raster images.
+Calculates the average for each grid cell from a group of raster images..
 
 *Parameters*:
 
@@ -1346,7 +1398,7 @@ average_overlay(
 
 #### 7.4.2 ClipRasterToPolygon
 
-Clips a raster to a vector polygon.
+Clips a raster to a vector polygon..
 
 *Parameters*:
 
@@ -1382,7 +1434,7 @@ clip_raster_to_polygon(
 
 #### 7.4.3 CountIf
 
-Counts the number of occurrences of a specified value in a cell-stack of rasters.
+Counts the number of occurrences of a specified value in a cell-stack of rasters..
 
 *Parameters*:
 
@@ -1416,7 +1468,7 @@ count_if(
 
 #### 7.4.4 ErasePolygonFromRaster
 
-Erases (cuts out) a vector polygon from a raster.
+Erases (cuts out) a vector polygon from a raster..
 
 *Parameters*:
 
@@ -1450,7 +1502,7 @@ erase_polygon_from_raster(
 
 #### 7.4.5 HighestPosition
 
-Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
+Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis..
 
 *Parameters*:
 
@@ -1482,7 +1534,7 @@ highest_position(
 
 #### 7.4.6 LowestPosition
 
-Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
+Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis..
 
 *Parameters*:
 
@@ -1513,7 +1565,7 @@ lowest_position(
 
 #### 7.4.7 MaxAbsoluteOverlay
 
-Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
+Evaluates the maximum absolute value for each grid cell from a stack of input rasters..
 
 *Parameters*:
 
@@ -1545,7 +1597,7 @@ max_absolute_overlay(
 
 #### 7.4.8 MaxOverlay
 
-Evaluates the maximum value for each grid cell from a stack of input rasters.
+Evaluates the maximum value for each grid cell from a stack of input rasters..
 
 *Parameters*:
 
@@ -1576,7 +1628,7 @@ max_overlay(
 
 #### 7.4.9 MinAbsoluteOverlay
 
-Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
+Evaluates the minimum absolute value for each grid cell from a stack of input rasters..
 
 *Parameters*:
 
@@ -1608,7 +1660,7 @@ min_absolute_overlay(
 
 #### 7.4.10 MinOverlay
 
-Evaluates the minimum value for each grid cell from a stack of input rasters.
+Evaluates the minimum value for each grid cell from a stack of input rasters..
 
 *Parameters*:
 
@@ -1639,7 +1691,7 @@ min_overlay(
 
 #### 7.4.11 PercentEqualTo
 
-Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
+Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis..
 
 *Parameters*:
 
@@ -1673,7 +1725,7 @@ percent_equal_to(
 
 #### 7.4.12 PercentGreaterThan
 
-Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
+Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis..
 
 *Parameters*:
 
@@ -1707,7 +1759,7 @@ percent_greater_than(
 
 #### 7.4.13 PercentLessThan
 
-Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
+Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis..
 
 *Parameters*:
 
@@ -1741,7 +1793,7 @@ percent_less_than(
 
 #### 7.4.14 PickFromList
 
-Outputs the value from a raster stack specified by a position raster.
+Outputs the value from a raster stack specified by a position raster..
 
 *Parameters*:
 
@@ -1773,17 +1825,61 @@ pick_from_list(
 ```
 
 
-#### 7.4.15 WeightedSum
+#### 7.4.15 WeightedOverlay
 
-Performs a weighted-sum overlay on multiple input raster images.
+Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE)..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-factors           Input factor raster files
+-w, -\-weights       Weight values, contained in quotes and separated by commas or semicolons. Must 
+                     have the same number as factors 
+-\-cost              Weight values, contained in quotes and separated by commas or semicolons. Must 
+                     have the same number as factors 
+-\-constraints       Input constraints raster files
+-o, -\-output        Output raster file
+-\-scale_max         Suitability scale maximum value (common values are 1.0, 100.0, and 255.0)
+
+
+*Python function*:
+
+~~~~{.python}
+weighted_overlay(
+    factors, 
+    weights, 
+    output, 
+    cost=None, 
+    constraints=None, 
+    scale_max=1.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=WeightedOverlay -v ^
+--wd='/path/to/data/' ^
+--factors='image1.tif;image2.tif;image3.tif' ^
+--weights='0.3;0.2;0.5' --cost='false;false;true' -o=output.tif ^
+--scale_max=100.0 
+
+
+```
+
+
+#### 7.4.16 WeightedSum
+
+Performs a weighted-sum overlay on multiple input raster images..
 
 *Parameters*:
 
 **Flag**             **Description**
 -------------------  ---------------
 -i, -\-inputs        Input raster files
--o, -\-output        Output raster file
 -w, -\-weights       Weight values, contained in quotes and separated by commas or semicolons
+-o, -\-output        Output raster file
 
 
 *Python function*:
@@ -1791,8 +1887,8 @@ Performs a weighted-sum overlay on multiple input raster images.
 ~~~~{.python}
 weighted_sum(
     inputs, 
-    output, 
     weights, 
+    output, 
     callback=default_callback)
 ~~~~
 
@@ -1800,8 +1896,8 @@ weighted_sum(
 
 ```
 >>./whitebox_tools -r=WeightedSum -v --wd='/path/to/data/' ^
--i='image1.tif;image2.tif;image3.tif' -o=output.tif ^
---weights='0.3;0.2;0.5' 
+-i='image1.tif;image2.tif;image3.tif' --weights='0.3;0.2;0.5' ^
+-o=output.tif 
 
 
 ```
@@ -1810,7 +1906,7 @@ weighted_sum(
 
 #### 7.5.1 EdgeProportion
 
-Calculate the proportion of cells in a raster polygon that are edge cells.
+Calculate the proportion of cells in a raster polygon that are edge cells..
 
 *Parameters*:
 
@@ -1843,7 +1939,7 @@ edge_proportion(
 
 #### 7.5.2 FindPatchOrClassEdgeCells
 
-Finds all cells located on the edge of patch or class features.
+Finds all cells located on the edge of patch or class features..
 
 *Parameters*:
 
@@ -1874,7 +1970,7 @@ find_patch_or_class_edge_cells(
 
 #### 7.5.3 RadiusOfGyration
 
-Calculates the distance of cells from their polygon's centroid.
+Calculates the distance of cells from their polygon's centroid..
 
 *Parameters*:
 
@@ -1909,7 +2005,7 @@ radius_of_gyration(
 
 #### 7.6.1 Aspect
 
-Calculates an aspect raster from an input DEM.
+Calculates an aspect raster from an input DEM..
 
 *Parameters*:
 
@@ -1942,7 +2038,7 @@ aspect(
 
 #### 7.6.2 DevFromMeanElev
 
-Calculates deviation from mean elevation.
+Calculates deviation from mean elevation..
 
 *Parameters*:
 
@@ -1978,7 +2074,7 @@ dev_from_mean_elev(
 
 #### 7.6.3 DiffFromMeanElev
 
-Calculates difference from mean elevation (equivalent to a high-pass filter).
+Calculates difference from mean elevation (equivalent to a high-pass filter)..
 
 *Parameters*:
 
@@ -2014,7 +2110,7 @@ diff_from_mean_elev(
 
 #### 7.6.4 DirectionalRelief
 
-Calculates relief for cells in an input DEM for a specified direction.
+Calculates relief for cells in an input DEM for a specified direction..
 
 *Parameters*:
 
@@ -2050,7 +2146,7 @@ directional_relief(
 
 #### 7.6.5 DownslopeIndex
 
-Calculates the Hjerdt et al. (2004) downslope index.
+Calculates the Hjerdt et al. (2004) downslope index..
 
 *Parameters*:
 
@@ -2086,7 +2182,7 @@ downslope_index(
 
 #### 7.6.6 ElevAbovePit
 
-Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
+Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell..
 
 *Parameters*:
 
@@ -2117,7 +2213,7 @@ elev_above_pit(
 
 #### 7.6.7 ElevPercentile
 
-Calculates the elevation percentile raster from a DEM.
+Calculates the elevation percentile raster from a DEM..
 
 *Parameters*:
 
@@ -2154,7 +2250,7 @@ elev_percentile(
 
 #### 7.6.8 ElevRelativeToMinMax
 
-Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
+Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM..
 
 *Parameters*:
 
@@ -2185,7 +2281,7 @@ elev_relative_to_min_max(
 
 #### 7.6.9 ElevRelativeToWatershedMinMax
 
-Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
+Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed..
 
 *Parameters*:
 
@@ -2219,7 +2315,7 @@ elev_relative_to_watershed_min_max(
 
 #### 7.6.10 FeaturePreservingDenoise
 
-Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
+Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm..
 
 *Parameters*:
 
@@ -2258,7 +2354,7 @@ feature_preserving_denoise(
 
 #### 7.6.11 FetchAnalysis
 
-Performs an analysis of fetch or upwind distance to an obstacle.
+Performs an analysis of fetch or upwind distance to an obstacle..
 
 *Parameters*:
 
@@ -2293,7 +2389,7 @@ fetch_analysis(
 
 #### 7.6.12 FillMissingData
 
-Fills nodata holes in a DEM.
+Fills nodata holes in a DEM..
 
 *Parameters*:
 
@@ -2326,7 +2422,7 @@ fill_missing_data(
 
 #### 7.6.13 FindRidges
 
-Identifies potential ridge and peak grid cells.
+Identifies potential ridge and peak grid cells..
 
 *Parameters*:
 
@@ -2360,7 +2456,7 @@ find_ridges(
 
 #### 7.6.14 Hillshade
 
-Calculates a hillshade raster from an input DEM.
+Calculates a hillshade raster from an input DEM..
 
 *Parameters*:
 
@@ -2397,7 +2493,7 @@ hillshade(
 
 #### 7.6.15 HorizonAngle
 
-Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
+Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM..
 
 *Parameters*:
 
@@ -2432,7 +2528,7 @@ horizon_angle(
 
 #### 7.6.16 HypsometricAnalysis
 
-Calculates a hypsometric curve for one or more DEMs.
+Calculates a hypsometric curve for one or more DEMs..
 
 *Parameters*:
 
@@ -2466,7 +2562,7 @@ hypsometric_analysis(
 
 #### 7.6.17 MaxAnisotropyDev
 
-Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
+Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales..
 
 *Parameters*:
 
@@ -2507,7 +2603,7 @@ max_anisotropy_dev(
 
 #### 7.6.18 MaxAnisotropyDevSignature
 
-Calculates the anisotropy in deviation from mean for points over a range of spatial scales.
+Calculates the anisotropy in deviation from mean for points over a range of spatial scales..
 
 *Parameters*:
 
@@ -2548,7 +2644,7 @@ max_anisotropy_dev_signature(
 
 #### 7.6.19 MaxBranchLength
 
-Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
+Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines..
 
 *Parameters*:
 
@@ -2581,7 +2677,7 @@ max_branch_length(
 
 #### 7.6.20 MaxDownslopeElevChange
 
-Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
+Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors..
 
 *Parameters*:
 
@@ -2612,7 +2708,7 @@ max_downslope_elev_change(
 
 #### 7.6.21 MaxElevDevSignature
 
-Calculates the maximum elevation deviation over a range of spatial scales and for a set of points.
+Calculates the maximum elevation deviation over a range of spatial scales and for a set of points..
 
 *Parameters*:
 
@@ -2653,7 +2749,7 @@ max_elev_dev_signature(
 
 #### 7.6.22 MaxElevationDeviation
 
-Calculates the maximum elevation deviation over a range of spatial scales.
+Calculates the maximum elevation deviation over a range of spatial scales..
 
 *Parameters*:
 
@@ -2694,7 +2790,7 @@ max_elevation_deviation(
 
 #### 7.6.23 MinDownslopeElevChange
 
-Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
+Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors..
 
 *Parameters*:
 
@@ -2725,7 +2821,7 @@ min_downslope_elev_change(
 
 #### 7.6.24 MultiscaleRoughness
 
-Calculates surface roughness over a range of spatial scales.
+Calculates surface roughness over a range of spatial scales..
 
 *Parameters*:
 
@@ -2766,7 +2862,7 @@ multiscale_roughness(
 
 #### 7.6.25 MultiscaleRoughnessSignature
 
-Calculates the surface roughness for points over a range of spatial scales.
+Calculates the surface roughness for points over a range of spatial scales..
 
 *Parameters*:
 
@@ -2807,7 +2903,7 @@ multiscale_roughness_signature(
 
 #### 7.6.26 MultiscaleTopographicPositionImage
 
-Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
+Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges..
 
 *Parameters*:
 
@@ -2845,7 +2941,7 @@ multiscale_topographic_position_image(
 
 #### 7.6.27 NumDownslopeNeighbours
 
-Calculates the number of downslope neighbours to each grid cell in a DEM.
+Calculates the number of downslope neighbours to each grid cell in a DEM..
 
 *Parameters*:
 
@@ -2876,7 +2972,7 @@ num_downslope_neighbours(
 
 #### 7.6.28 NumUpslopeNeighbours
 
-Calculates the number of upslope neighbours to each grid cell in a DEM.
+Calculates the number of upslope neighbours to each grid cell in a DEM..
 
 *Parameters*:
 
@@ -2907,7 +3003,7 @@ num_upslope_neighbours(
 
 #### 7.6.29 PennockLandformClass
 
-Classifies hillslope zones based on slope, profile curvature, and plan curvature.
+Classifies hillslope zones based on slope, profile curvature, and plan curvature..
 
 *Parameters*:
 
@@ -2947,7 +3043,7 @@ pennock_landform_class(
 
 #### 7.6.30 PercentElevRange
 
-Calculates percent of elevation range from a DEM.
+Calculates percent of elevation range from a DEM..
 
 *Parameters*:
 
@@ -2982,7 +3078,7 @@ percent_elev_range(
 
 #### 7.6.31 PlanCurvature
 
-Calculates a plan (contour) curvature raster from an input DEM.
+Calculates a plan (contour) curvature raster from an input DEM..
 
 *Parameters*:
 
@@ -3015,7 +3111,7 @@ plan_curvature(
 
 #### 7.6.32 Profile
 
-Plots profiles from digital surface models.
+Plots profiles from digital surface models..
 
 *Parameters*:
 
@@ -3048,7 +3144,7 @@ profile(
 
 #### 7.6.33 ProfileCurvature
 
-Calculates a profile curvature raster from an input DEM.
+Calculates a profile curvature raster from an input DEM..
 
 *Parameters*:
 
@@ -3081,7 +3177,7 @@ profile_curvature(
 
 #### 7.6.34 RelativeAspect
 
-Calculates relative aspect (relative to a user-specified direction) from an input DEM.
+Calculates relative aspect (relative to a user-specified direction) from an input DEM..
 
 *Parameters*:
 
@@ -3116,7 +3212,7 @@ relative_aspect(
 
 #### 7.6.35 RelativeStreamPowerIndex
 
-Calculates the relative stream power index.
+Calculates the relative stream power index..
 
 *Parameters*:
 
@@ -3152,7 +3248,7 @@ relative_stream_power_index(
 
 #### 7.6.36 RelativeTopographicPosition
 
-Calculates the relative topographic position index from a DEM.
+Calculates the relative topographic position index from a DEM..
 
 *Parameters*:
 
@@ -3188,7 +3284,7 @@ relative_topographic_position(
 
 #### 7.6.37 RemoveOffTerrainObjects
 
-Removes off-terrain objects from a raster digital elevation model (DEM).
+Removes off-terrain objects from a raster digital elevation model (DEM)..
 
 *Parameters*:
 
@@ -3224,7 +3320,7 @@ remove_off_terrain_objects(
 
 #### 7.6.38 RuggednessIndex
 
-Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
+Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM..
 
 *Parameters*:
 
@@ -3257,7 +3353,7 @@ ruggedness_index(
 
 #### 7.6.39 SedimentTransportIndex
 
-Calculates the sediment transport index.
+Calculates the sediment transport index..
 
 *Parameters*:
 
@@ -3296,7 +3392,7 @@ sediment_transport_index(
 
 #### 7.6.40 Slope
 
-Calculates a slope raster from an input DEM.
+Calculates a slope raster from an input DEM..
 
 *Parameters*:
 
@@ -3329,7 +3425,7 @@ slope(
 
 #### 7.6.41 SlopeVsElevationPlot
 
-Creates a slope vs. elevation plot for one or more DEMs.
+Creates a slope vs. elevation plot for one or more DEMs..
 
 *Parameters*:
 
@@ -3363,7 +3459,7 @@ slope_vs_elevation_plot(
 
 #### 7.6.42 TangentialCurvature
 
-Calculates a tangential curvature raster from an input DEM.
+Calculates a tangential curvature raster from an input DEM..
 
 *Parameters*:
 
@@ -3396,7 +3492,7 @@ tangential_curvature(
 
 #### 7.6.43 TotalCurvature
 
-Calculates a total curvature raster from an input DEM.
+Calculates a total curvature raster from an input DEM..
 
 *Parameters*:
 
@@ -3429,7 +3525,7 @@ total_curvature(
 
 #### 7.6.44 Viewshed
 
-Identifies the viewshed for a point or set of points.
+Identifies the viewshed for a point or set of points..
 
 *Parameters*:
 
@@ -3465,7 +3561,7 @@ viewshed(
 
 #### 7.6.45 VisibilityIndex
 
-Estimates the relative visibility of sites in a DEM.
+Estimates the relative visibility of sites in a DEM..
 
 *Parameters*:
 
@@ -3501,7 +3597,7 @@ visibility_index(
 
 #### 7.6.46 WetnessIndex
 
-Calculates the topographic wetness index, Ln(A / tan(slope)).
+Calculates the topographic wetness index, Ln(A / tan(slope))..
 
 *Parameters*:
 
@@ -3535,7 +3631,7 @@ wetness_index(
 
 #### 7.7.1 AverageFlowpathSlope
 
-Measures the average slope gradient from each grid cell to all upslope divide cells.
+Measures the average slope gradient from each grid cell to all upslope divide cells..
 
 *Parameters*:
 
@@ -3566,7 +3662,7 @@ average_flowpath_slope(
 
 #### 7.7.2 AverageUpslopeFlowpathLength
 
-Measures the average length of all upslope flowpaths draining each grid cell.
+Measures the average length of all upslope flowpaths draining each grid cell..
 
 *Parameters*:
 
@@ -3597,7 +3693,7 @@ average_upslope_flowpath_length(
 
 #### 7.7.3 Basins
 
-Identifies drainage basins that drain to the DEM edge.
+Identifies drainage basins that drain to the DEM edge..
 
 *Parameters*:
 
@@ -3630,7 +3726,7 @@ basins(
 
 #### 7.7.4 BreachDepressions
 
-Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
+Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases..
 
 *Parameters*:
 
@@ -3665,7 +3761,7 @@ breach_depressions(
 
 #### 7.7.5 BreachSingleCellPits
 
-Removes single-cell pits from an input DEM by breaching.
+Removes single-cell pits from an input DEM by breaching..
 
 *Parameters*:
 
@@ -3696,7 +3792,7 @@ breach_single_cell_pits(
 
 #### 7.7.6 D8FlowAccumulation
 
-Calculates a D8 flow accumulation raster from an input DEM.
+Calculates a D8 flow accumulation raster from an input DEM..
 
 *Parameters*:
 
@@ -3738,7 +3834,7 @@ d8_flow_accumulation(
 
 #### 7.7.7 D8MassFlux
 
-Performs a D8 mass flux calculation.
+Performs a D8 mass flux calculation..
 
 *Parameters*:
 
@@ -3776,7 +3872,7 @@ d8_mass_flux(
 
 #### 7.7.8 D8Pointer
 
-Calculates a D8 flow pointer raster from an input DEM.
+Calculates a D8 flow pointer raster from an input DEM..
 
 *Parameters*:
 
@@ -3809,7 +3905,7 @@ d8_pointer(
 
 #### 7.7.9 DInfFlowAccumulation
 
-Calculates a D-infinity flow accumulation raster from an input DEM.
+Calculates a D-infinity flow accumulation raster from an input DEM..
 
 *Parameters*:
 
@@ -3852,7 +3948,7 @@ d_inf_flow_accumulation(
 
 #### 7.7.10 DInfMassFlux
 
-Performs a D-infinity mass flux calculation.
+Performs a D-infinity mass flux calculation..
 
 *Parameters*:
 
@@ -3890,7 +3986,7 @@ d_inf_mass_flux(
 
 #### 7.7.11 DInfPointer
 
-Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
+Calculates a D-infinity flow pointer (flow direction) raster from an input DEM..
 
 *Parameters*:
 
@@ -3921,7 +4017,7 @@ d_inf_pointer(
 
 #### 7.7.12 DepthInSink
 
-Measures the depth of sinks (depressions) in a DEM.
+Measures the depth of sinks (depressions) in a DEM..
 
 *Parameters*:
 
@@ -3954,7 +4050,7 @@ depth_in_sink(
 
 #### 7.7.13 DownslopeDistanceToStream
 
-Measures distance to the nearest downslope stream cell.
+Measures distance to the nearest downslope stream cell..
 
 *Parameters*:
 
@@ -3988,7 +4084,7 @@ downslope_distance_to_stream(
 
 #### 7.7.14 DownslopeFlowpathLength
 
-Calculates the downslope flowpath length from each cell to basin outlet.
+Calculates the downslope flowpath length from each cell to basin outlet..
 
 *Parameters*:
 
@@ -4030,7 +4126,7 @@ downslope_flowpath_length(
 
 #### 7.7.15 ElevationAboveStream
 
-Calculates the elevation of cells above the nearest downslope stream cell.
+Calculates the elevation of cells above the nearest downslope stream cell..
 
 *Parameters*:
 
@@ -4064,7 +4160,7 @@ elevation_above_stream(
 
 #### 7.7.16 ElevationAboveStreamEuclidean
 
-Calculates the elevation of cells above the nearest (Euclidean distance) stream cell.
+Calculates the elevation of cells above the nearest (Euclidean distance) stream cell..
 
 *Parameters*:
 
@@ -4096,9 +4192,9 @@ elevation_above_stream_euclidean(
 ```
 
 
-#### 7.7.17 FD8FlowAccumulation
+#### 7.7.17 Fd8FlowAccumulation
 
-Calculates an FD8 flow accumulation raster from an input DEM.
+Calculates an FD8 flow accumulation raster from an input DEM..
 
 *Parameters*:
 
@@ -4143,9 +4239,9 @@ fd8_flow_accumulation(
 ```
 
 
-#### 7.7.18 FD8Pointer
+#### 7.7.18 Fd8Pointer
 
-Calculates an FD8 flow pointer raster from an input DEM.
+Calculates an FD8 flow pointer raster from an input DEM..
 
 *Parameters*:
 
@@ -4176,7 +4272,7 @@ fd8_pointer(
 
 #### 7.7.19 FillBurn
 
-Burns streams into a DEM using the FillBurn (Saunders, 1999) method.
+Burns streams into a DEM using the FillBurn (Saunders, 1999) method..
 
 *Parameters*:
 
@@ -4209,7 +4305,7 @@ fill_burn(
 
 #### 7.7.20 FillDepressions
 
-Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
+Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases..
 
 *Parameters*:
 
@@ -4243,7 +4339,7 @@ fill_depressions(
 
 #### 7.7.21 FillSingleCellPits
 
-Raises pit cells to the elevation of their lowest neighbour.
+Raises pit cells to the elevation of their lowest neighbour..
 
 *Parameters*:
 
@@ -4274,7 +4370,7 @@ fill_single_cell_pits(
 
 #### 7.7.22 FindNoFlowCells
 
-Finds grid cells with no downslope neighbours.
+Finds grid cells with no downslope neighbours..
 
 *Parameters*:
 
@@ -4305,7 +4401,7 @@ find_no_flow_cells(
 
 #### 7.7.23 FindParallelFlow
 
-Finds areas of parallel flow in D8 flow direction rasters.
+Finds areas of parallel flow in D8 flow direction rasters..
 
 *Parameters*:
 
@@ -4342,7 +4438,7 @@ find_parallel_flow(
 
 #### 7.7.24 FlattenLakes
 
-Flattens lake polygons in a raster DEM.
+Flattens lake polygons in a raster DEM..
 
 *Parameters*:
 
@@ -4375,7 +4471,7 @@ flatten_lakes(
 
 #### 7.7.25 FloodOrder
 
-Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
+Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations..
 
 *Parameters*:
 
@@ -4406,7 +4502,7 @@ flood_order(
 
 #### 7.7.26 FlowAccumulationFullWorkflow
 
-Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, a flow accumulation raster.
+Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster..
 
 *Parameters*:
 
@@ -4451,7 +4547,7 @@ flow_accumulation_full_workflow(
 
 #### 7.7.27 FlowLengthDiff
 
-Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
+Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges..
 
 *Parameters*:
 
@@ -4484,7 +4580,7 @@ flow_length_diff(
 
 #### 7.7.28 Hillslopes
 
-Identifies the individual hillslopes draining to each link in a stream network.
+Identifies the individual hillslopes draining to each link in a stream network..
 
 *Parameters*:
 
@@ -4518,9 +4614,47 @@ hillslopes(
 ```
 
 
-#### 7.7.29 Isobasins
+#### 7.7.29 ImpoundmentIndex
 
-Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
+Calculates the impoundment size resulting from damming a DEM..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-o, -\-output        Output file
+-\-out_type          Output type; one of 'area' (default) and 'volume'
+-\-damheight         Maximum height of the dam
+-\-damlength         Maximum length of thr dam
+
+
+*Python function*:
+
+~~~~{.python}
+impoundment_index(
+    dem, 
+    output, 
+    damheight, 
+    damlength, 
+    out_type="area", 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ImpoundmentIndex -v ^
+--wd="/path/to/data/" --dem=DEM.tif -o=out.tif --out_type=area ^
+--damheight --damlength 
+
+
+```
+
+
+#### 7.7.30 Isobasins
+
+Divides a landscape into nearly equal sized drainage basins (i.e. watersheds)..
 
 *Parameters*:
 
@@ -4551,9 +4685,9 @@ isobasins(
 ```
 
 
-#### 7.7.30 JensonSnapPourPoints
+#### 7.7.31 JensonSnapPourPoints
 
-Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
+Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell..
 
 *Parameters*:
 
@@ -4587,9 +4721,9 @@ jenson_snap_pour_points(
 ```
 
 
-#### 7.7.31 MaxUpslopeFlowpathLength
+#### 7.7.32 MaxUpslopeFlowpathLength
 
-Measures the maximum length of all upslope flowpaths draining each grid cell.
+Measures the maximum length of all upslope flowpaths draining each grid cell..
 
 *Parameters*:
 
@@ -4622,9 +4756,9 @@ max_upslope_flowpath_length(
 ```
 
 
-#### 7.7.32 NumInflowingNeighbours
+#### 7.7.33 NumInflowingNeighbours
 
-Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
+Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm..
 
 *Parameters*:
 
@@ -4653,9 +4787,9 @@ num_inflowing_neighbours(
 ```
 
 
-#### 7.7.33 RaiseWalls
+#### 7.7.34 RaiseWalls
 
-Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
+Raises walls in a DEM along a line or around a polygon, e.g. a watershed..
 
 *Parameters*:
 
@@ -4694,9 +4828,9 @@ raise_walls(
 ```
 
 
-#### 7.7.34 Rho8Pointer
+#### 7.7.35 Rho8Pointer
 
-Calculates a stochastic Rho8 flow pointer raster from an input DEM.
+Calculates a stochastic Rho8 flow pointer raster from an input DEM..
 
 *Parameters*:
 
@@ -4727,9 +4861,9 @@ rho8_pointer(
 ```
 
 
-#### 7.7.35 Sink
+#### 7.7.36 Sink
 
-Identifies the depressions in a DEM, giving each feature a unique identifier.
+Identifies the depressions in a DEM, giving each feature a unique identifier..
 
 *Parameters*:
 
@@ -4760,9 +4894,9 @@ sink(
 ```
 
 
-#### 7.7.36 SnapPourPoints
+#### 7.7.37 SnapPourPoints
 
-Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
+Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood..
 
 *Parameters*:
 
@@ -4796,9 +4930,48 @@ snap_pour_points(
 ```
 
 
-#### 7.7.37 StrahlerOrderBasins
+#### 7.7.38 StochasticDepressionAnalysis
 
-Identifies Strahler-order basins from an input stream network.
+Preforms a stochastic analysis of depressions within a DEM..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-o, -\-output        Output file
+-\-rmse              The DEM's root-mean-square-error (RMSE), in z units. This determines error 
+                     magnitude 
+-\-range             The error field's correlation length, in xy-units
+-\-iterations        The number of iterations
+
+
+*Python function*:
+
+~~~~{.python}
+stochastic_depression_analysis(
+    dem, 
+    output, 
+    rmse, 
+    range, 
+    iterations=1000, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=StochasticDepressionAnalysis -v ^
+--wd="/path/to/data/" --dem=DEM.tif -o=out.tif --rmse=10.0 ^
+--range=850.0 --iterations=2500 
+
+
+```
+
+
+#### 7.7.39 StrahlerOrderBasins
+
+Identifies Strahler-order basins from an input stream network..
 
 *Parameters*:
 
@@ -4832,9 +5005,9 @@ strahler_order_basins(
 ```
 
 
-#### 7.7.38 Subbasins
+#### 7.7.40 Subbasins
 
-Identifies the catchments, or sub-basin, draining to each link in a stream network.
+Identifies the catchments, or sub-basin, draining to each link in a stream network..
 
 *Parameters*:
 
@@ -4868,9 +5041,9 @@ subbasins(
 ```
 
 
-#### 7.7.39 TraceDownslopeFlowpaths
+#### 7.7.41 TraceDownslopeFlowpaths
 
-Traces downslope flowpaths from one or more target sites (i.e. seed points).
+Traces downslope flowpaths from one or more target sites (i.e. seed points)..
 
 *Parameters*:
 
@@ -4906,9 +5079,9 @@ trace_downslope_flowpaths(
 ```
 
 
-#### 7.7.40 UnnestBasins
+#### 7.7.42 UnnestBasins
 
-Extract whole watersheds for a set of outlet points.
+Extract whole watersheds for a set of outlet points..
 
 *Parameters*:
 
@@ -4942,9 +5115,9 @@ unnest_basins(
 ```
 
 
-#### 7.7.41 Watershed
+#### 7.7.43 Watershed
 
-Identifies the watershed, or drainage basin, draining to a set of target cells.
+Identifies the watershed, or drainage basin, draining to a set of target cells..
 
 *Parameters*:
 
@@ -4981,7 +5154,7 @@ watershed(
 
 #### 7.8.1 ChangeVectorAnalysis
 
-Performs a change vector analysis on a two-date multi-spectral dataset.
+Performs a change vector analysis on a two-date multi-spectral dataset..
 
 *Parameters*:
 
@@ -5019,7 +5192,7 @@ change_vector_analysis(
 
 #### 7.8.2 Closing
 
-A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
+A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set..
 
 *Parameters*:
 
@@ -5054,7 +5227,7 @@ closing(
 
 #### 7.8.3 CreateColourComposite
 
-Creates a colour-composite image from three bands of multispectral imagery.
+Creates a colour-composite image from three bands of multispectral imagery..
 
 *Parameters*:
 
@@ -5098,7 +5271,7 @@ create_colour_composite(
 
 #### 7.8.4 FlipImage
 
-Reflects an image in the vertical or horizontal axis.
+Reflects an image in the vertical or horizontal axis..
 
 *Parameters*:
 
@@ -5132,7 +5305,7 @@ flip_image(
 
 #### 7.8.5 IhsToRgb
 
-Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
+Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images..
 
 *Parameters*:
 
@@ -5178,7 +5351,7 @@ ihs_to_rgb(
 
 #### 7.8.6 ImageStackProfile
 
-Plots an image stack profile (i.e. signature) for a set of points and multispectral images.
+Plots an image stack profile (i.e. signature) for a set of points and multispectral images..
 
 *Parameters*:
 
@@ -5212,7 +5385,7 @@ image_stack_profile(
 
 #### 7.8.7 IntegralImage
 
-Transforms an input image (summed area table) into its integral image equivalent.
+Transforms an input image (summed area table) into its integral image equivalent..
 
 *Parameters*:
 
@@ -5243,7 +5416,7 @@ integral_image(
 
 #### 7.8.8 KMeansClustering
 
-Performs a k-means clustering operation on a multi-spectral dataset.
+Performs a k-means clustering operation on a multi-spectral dataset..
 
 *Parameters*:
 
@@ -5289,7 +5462,7 @@ k_means_clustering(
 
 #### 7.8.9 LineThinning
 
-Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
+Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool..
 
 *Parameters*:
 
@@ -5320,7 +5493,7 @@ line_thinning(
 
 #### 7.8.10 ModifiedKMeansClustering
 
-Performs a modified k-means clustering operation on a multi-spectral dataset.
+Performs a modified k-means clustering operation on a multi-spectral dataset..
 
 *Parameters*:
 
@@ -5363,7 +5536,7 @@ modified_k_means_clustering(
 
 #### 7.8.11 Mosaic
 
-Mosaics two or more images together.
+Mosaics two or more images together..
 
 *Parameters*:
 
@@ -5397,7 +5570,7 @@ mosaic(
 
 #### 7.8.12 NormalizedDifferenceVegetationIndex
 
-Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
+Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery..
 
 *Parameters*:
 
@@ -5440,7 +5613,7 @@ normalized_difference_vegetation_index(
 
 #### 7.8.13 Opening
 
-An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
+An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set..
 
 *Parameters*:
 
@@ -5475,7 +5648,7 @@ opening(
 
 #### 7.8.14 RemoveSpurs
 
-Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
+Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool..
 
 *Parameters*:
 
@@ -5508,7 +5681,7 @@ remove_spurs(
 
 #### 7.8.15 Resample
 
-Resamples one or more input images into a destination image.
+Resamples one or more input images into a destination image..
 
 *Parameters*:
 
@@ -5542,7 +5715,7 @@ resample(
 
 #### 7.8.16 RgbToIhs
 
-Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
+Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images..
 
 *Parameters*:
 
@@ -5593,7 +5766,7 @@ rgb_to_ihs(
 
 #### 7.8.17 SplitColourComposite
 
-This tool splits an RGB colour composite image into seperate multispectral images.
+This tool splits an RGB colour composite image into seperate multispectral images..
 
 *Parameters*:
 
@@ -5624,7 +5797,7 @@ split_colour_composite(
 
 #### 7.8.18 ThickenRasterLine
 
-Thickens single-cell wide lines within a raster image.
+Thickens single-cell wide lines within a raster image..
 
 *Parameters*:
 
@@ -5655,7 +5828,7 @@ thicken_raster_line(
 
 #### 7.8.19 TophatTransform
 
-Performs either a white or black top-hat transform on an input image.
+Performs either a white or black top-hat transform on an input image..
 
 *Parameters*:
 
@@ -5692,7 +5865,7 @@ tophat_transform(
 
 #### 7.8.20 WriteFunctionMemoryInsertion
 
-Performs a write function memory insertion for single-band multi-date change detection.
+Performs a write function memory insertion for single-band multi-date change detection..
 
 *Parameters*:
 
@@ -5729,7 +5902,7 @@ write_function_memory_insertion(
 
 #### 7.9.1 AdaptiveFilter
 
-Performs an adaptive filter on an image.
+Performs an adaptive filter on an image..
 
 *Parameters*:
 
@@ -5766,7 +5939,7 @@ adaptive_filter(
 
 #### 7.9.2 BilateralFilter
 
-A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
+A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998)..
 
 *Parameters*:
 
@@ -5802,7 +5975,7 @@ bilateral_filter(
 
 #### 7.9.3 ConservativeSmoothingFilter
 
-Performs a conservative-smoothing filter on an image.
+Performs a conservative-smoothing filter on an image..
 
 *Parameters*:
 
@@ -5820,8 +5993,8 @@ Performs a conservative-smoothing filter on an image.
 conservative_smoothing_filter(
     i, 
     output, 
-    filterx=11, 
-    filtery=11, 
+    filterx=3, 
+    filtery=3, 
     callback=default_callback)
 ~~~~
 
@@ -5835,9 +6008,40 @@ conservative_smoothing_filter(
 ```
 
 
-#### 7.9.4 DiffOfGaussianFilter
+#### 7.9.4 CornerDetection
 
-Performs a Difference of Gaussian (DoG) filter on an image.
+Identifies corner patterns in boolean images using hit-and-miss pattern mattching..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input boolean image
+-o, -\-output        Output raster file
+
+
+*Python function*:
+
+~~~~{.python}
+corner_detection(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CornerDetection -v ^
+--wd="/path/to/data/" -i=image.tif -o=output.tif --sigma=2.0 
+
+
+```
+
+
+#### 7.9.5 DiffOfGaussianFilter
+
+Performs a Difference of Gaussian (DoG) filter on an image..
 
 *Parameters*:
 
@@ -5871,9 +6075,9 @@ diff_of_gaussian_filter(
 ```
 
 
-#### 7.9.5 DiversityFilter
+#### 7.9.6 DiversityFilter
 
-Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -5906,9 +6110,9 @@ diversity_filter(
 ```
 
 
-#### 7.9.6 EdgePreservingMeanFilter
+#### 7.9.7 EdgePreservingMeanFilter
 
-Performs a simple edge-preserving mean filter on an input image.
+Performs a simple edge-preserving mean filter on an input image..
 
 *Parameters*:
 
@@ -5942,9 +6146,9 @@ edge_preserving_mean_filter(
 ```
 
 
-#### 7.9.7 EmbossFilter
+#### 7.9.8 EmbossFilter
 
-Performs an emboss filter on an image, similar to a hillshade operation.
+Performs an emboss filter on an image, similar to a hillshade operation..
 
 *Parameters*:
 
@@ -5978,9 +6182,42 @@ emboss_filter(
 ```
 
 
-#### 7.9.8 GaussianFilter
+#### 7.9.9 FastAlmostGaussianFilter
 
-Performs a Gaussian filter on an image.
+Performs a fast approximate Gaussian filter on an image..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output raster file
+-\-sigma             Standard deviation distance in pixels
+
+
+*Python function*:
+
+~~~~{.python}
+fast_almost_gaussian_filter(
+    i, 
+    output, 
+    sigma=1.8, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=FastAlmostGaussianFilter -v ^
+--wd="/path/to/data/" -i=image.tif -o=output.tif --sigma=2.0 
+
+
+```
+
+
+#### 7.9.10 GaussianFilter
+
+Performs a Gaussian filter on an image..
 
 *Parameters*:
 
@@ -6011,9 +6248,9 @@ gaussian_filter(
 ```
 
 
-#### 7.9.9 HighPassFilter
+#### 7.9.11 HighPassFilter
 
-Performs a high-pass filter on an input image.
+Performs a high-pass filter on an input image..
 
 *Parameters*:
 
@@ -6046,9 +6283,9 @@ high_pass_filter(
 ```
 
 
-#### 7.9.10 KNearestMeanFilter
+#### 7.9.12 KNearestMeanFilter
 
-A k-nearest mean filter is a type of edge-preserving smoothing filter.
+A k-nearest mean filter is a type of edge-preserving smoothing filter..
 
 *Parameters*:
 
@@ -6087,9 +6324,9 @@ k_nearest_mean_filter(
 ```
 
 
-#### 7.9.11 LaplacianFilter
+#### 7.9.13 LaplacianFilter
 
-Performs a Laplacian filter on an image.
+Performs a Laplacian filter on an image..
 
 *Parameters*:
 
@@ -6124,9 +6361,9 @@ laplacian_filter(
 ```
 
 
-#### 7.9.12 LaplacianOfGaussianFilter
+#### 7.9.14 LaplacianOfGaussianFilter
 
-Performs a Laplacian-of-Gaussian (LoG) filter on an image.
+Performs a Laplacian-of-Gaussian (LoG) filter on an image..
 
 *Parameters*:
 
@@ -6157,9 +6394,9 @@ laplacian_of_gaussian_filter(
 ```
 
 
-#### 7.9.13 LeeFilter
+#### 7.9.15 LeeFilter
 
-Performs a Lee (Sigma) smoothing filter on an image.
+Performs a Lee (Sigma) smoothing filter on an image..
 
 *Parameters*:
 
@@ -6202,9 +6439,9 @@ lee_filter(
 ```
 
 
-#### 7.9.14 LineDetectionFilter
+#### 7.9.16 LineDetectionFilter
 
-Performs a line-detection filter on an image.
+Performs a line-detection filter on an image..
 
 *Parameters*:
 
@@ -6241,9 +6478,9 @@ line_detection_filter(
 ```
 
 
-#### 7.9.15 MajorityFilter
+#### 7.9.17 MajorityFilter
 
-Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -6276,9 +6513,9 @@ majority_filter(
 ```
 
 
-#### 7.9.16 MaximumFilter
+#### 7.9.18 MaximumFilter
 
-Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -6311,9 +6548,9 @@ maximum_filter(
 ```
 
 
-#### 7.9.17 MeanFilter
+#### 7.9.19 MeanFilter
 
-Performs a mean filter (low-pass filter) on an input image.
+Performs a mean filter (low-pass filter) on an input image..
 
 *Parameters*:
 
@@ -6346,9 +6583,9 @@ mean_filter(
 ```
 
 
-#### 7.9.18 MedianFilter
+#### 7.9.20 MedianFilter
 
-Performs a median filter on an input image.
+Performs a median filter on an input image..
 
 *Parameters*:
 
@@ -6383,9 +6620,9 @@ median_filter(
 ```
 
 
-#### 7.9.19 MinimumFilter
+#### 7.9.21 MinimumFilter
 
-Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -6418,9 +6655,9 @@ minimum_filter(
 ```
 
 
-#### 7.9.20 OlympicFilter
+#### 7.9.22 OlympicFilter
 
-Performs an olympic smoothing filter on an image.
+Performs an olympic smoothing filter on an image..
 
 *Parameters*:
 
@@ -6453,9 +6690,9 @@ olympic_filter(
 ```
 
 
-#### 7.9.21 PercentileFilter
+#### 7.9.23 PercentileFilter
 
-Performs a percentile filter on an input image.
+Performs a percentile filter on an input image..
 
 *Parameters*:
 
@@ -6490,9 +6727,9 @@ percentile_filter(
 ```
 
 
-#### 7.9.22 PrewittFilter
+#### 7.9.24 PrewittFilter
 
-Performs a Prewitt edge-detection filter on an image.
+Performs a Prewitt edge-detection filter on an image..
 
 *Parameters*:
 
@@ -6523,9 +6760,9 @@ prewitt_filter(
 ```
 
 
-#### 7.9.23 RangeFilter
+#### 7.9.25 RangeFilter
 
-Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -6558,9 +6795,9 @@ range_filter(
 ```
 
 
-#### 7.9.24 RobertsCrossFilter
+#### 7.9.26 RobertsCrossFilter
 
-Performs a Robert's cross edge-detection filter on an image.
+Performs a Robert's cross edge-detection filter on an image..
 
 *Parameters*:
 
@@ -6591,9 +6828,9 @@ roberts_cross_filter(
 ```
 
 
-#### 7.9.25 ScharrFilter
+#### 7.9.27 ScharrFilter
 
-Performs a Scharr edge-detection filter on an image.
+Performs a Scharr edge-detection filter on an image..
 
 *Parameters*:
 
@@ -6624,9 +6861,9 @@ scharr_filter(
 ```
 
 
-#### 7.9.26 SobelFilter
+#### 7.9.28 SobelFilter
 
-Performs a Sobel edge-detection filter on an image.
+Performs a Sobel edge-detection filter on an image..
 
 *Parameters*:
 
@@ -6659,9 +6896,9 @@ sobel_filter(
 ```
 
 
-#### 7.9.27 StandardDeviationFilter
+#### 7.9.29 StandardDeviationFilter
 
-Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
+Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster..
 
 *Parameters*:
 
@@ -6694,9 +6931,9 @@ standard_deviation_filter(
 ```
 
 
-#### 7.9.28 TotalFilter
+#### 7.9.30 TotalFilter
 
-Performs a total filter on an input image.
+Performs a total filter on an input image..
 
 *Parameters*:
 
@@ -6729,9 +6966,47 @@ total_filter(
 ```
 
 
-#### 7.9.29 UserDefinedWeightsFilter
+#### 7.9.31 UnsharpMasking
 
-Performs a user-defined weights filter on an image.
+An image sharpening technique that enhances edges..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output raster file
+-\-sigma             Standard deviation distance in pixels
+-\-amount            A percentage and controls the magnitude of each overshoot
+-\-threshold         Controls the minimal brightness change that will be sharpened
+
+
+*Python function*:
+
+~~~~{.python}
+unsharp_masking(
+    i, 
+    output, 
+    sigma=0.75, 
+    amount=100.0, 
+    threshold=0.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=UnsharpMasking -v --wd="/path/to/data/" ^
+-i=image.tif -o=output.tif --sigma=2.0 --amount=50.0 ^
+--threshold=10.0 
+
+
+```
+
+
+#### 7.9.32 UserDefinedWeightsFilter
+
+Performs a user-defined weights filter on an image..
 
 *Parameters*:
 
@@ -6772,7 +7047,7 @@ user_defined_weights_filter(
 
 #### 7.10.1 BalanceContrastEnhancement
 
-Performs a balance contrast enhancement on a colour-composite image of multispectral data.
+Performs a balance contrast enhancement on a colour-composite image of multispectral data..
 
 *Parameters*:
 
@@ -6806,7 +7081,7 @@ balance_contrast_enhancement(
 
 #### 7.10.2 CorrectVignetting
 
-Corrects the darkening of images towards corners.
+Corrects the darkening of images towards corners..
 
 *Parameters*:
 
@@ -6847,7 +7122,7 @@ correct_vignetting(
 
 #### 7.10.3 DirectDecorrelationStretch
 
-Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
+Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data..
 
 *Parameters*:
 
@@ -6883,7 +7158,7 @@ direct_decorrelation_stretch(
 
 #### 7.10.4 GammaCorrection
 
-Performs a sigmoidal contrast stretch on input images.
+Performs a sigmoidal contrast stretch on input images..
 
 *Parameters*:
 
@@ -6914,9 +7189,43 @@ gamma_correction(
 ```
 
 
-#### 7.10.5 HistogramEqualization
+#### 7.10.5 GaussianContrastStretch
 
-Performs a histogram equalization contrast enhancment on an image.
+Performs a Gaussian contrast stretch on input images..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output raster file
+-\-num_tones         Number of tones in the output image
+
+
+*Python function*:
+
+~~~~{.python}
+gaussian_contrast_stretch(
+    i, 
+    output, 
+    num_tones=256, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=GaussianContrastStretch -v ^
+--wd="/path/to/data/" -i=input.tif -o=output.tif ^
+--num_tones=1024 
+
+
+```
+
+
+#### 7.10.6 HistogramEqualization
+
+Performs a histogram equalization contrast enhancment on an image..
 
 *Parameters*:
 
@@ -6948,9 +7257,9 @@ histogram_equalization(
 ```
 
 
-#### 7.10.6 HistogramMatching
+#### 7.10.7 HistogramMatching
 
-Alters the statistical distribution of a raster image matching it to a specified PDF.
+Alters the statistical distribution of a raster image matching it to a specified PDF..
 
 *Parameters*:
 
@@ -6982,9 +7291,9 @@ histogram_matching(
 ```
 
 
-#### 7.10.7 HistogramMatchingTwoImages
+#### 7.10.8 HistogramMatchingTwoImages
 
-This tool alters the cumulative distribution function of a raster image to that of another image.
+This tool alters the cumulative distribution function of a raster image to that of another image..
 
 *Parameters*:
 
@@ -7016,9 +7325,9 @@ histogram_matching_two_images(
 ```
 
 
-#### 7.10.8 MinMaxContrastStretch
+#### 7.10.9 MinMaxContrastStretch
 
-Performs a min-max contrast stretch on an input greytone image.
+Performs a min-max contrast stretch on an input greytone image..
 
 *Parameters*:
 
@@ -7054,9 +7363,9 @@ min_max_contrast_stretch(
 ```
 
 
-#### 7.10.9 PanchromaticSharpening
+#### 7.10.10 PanchromaticSharpening
 
-Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
+Increases the spatial resolution of image data by combining multispectral bands with panchromatic data..
 
 *Parameters*:
 
@@ -7104,9 +7413,9 @@ panchromatic_sharpening(
 ```
 
 
-#### 7.10.10 PercentageContrastStretch
+#### 7.10.11 PercentageContrastStretch
 
-Performs a percentage linear contrast stretch on input images.
+Performs a percentage linear contrast stretch on input images..
 
 *Parameters*:
 
@@ -7143,9 +7452,9 @@ percentage_contrast_stretch(
 ```
 
 
-#### 7.10.11 SigmoidalContrastStretch
+#### 7.10.12 SigmoidalContrastStretch
 
-Performs a sigmoidal contrast stretch on input images.
+Performs a sigmoidal contrast stretch on input images..
 
 *Parameters*:
 
@@ -7181,9 +7490,9 @@ sigmoidal_contrast_stretch(
 ```
 
 
-#### 7.10.12 StandardDeviationContrastStretch
+#### 7.10.13 StandardDeviationContrastStretch
 
-Performs a standard-deviation contrast stretch on input images.
+Performs a standard-deviation contrast stretch on input images..
 
 *Parameters*:
 
@@ -7220,7 +7529,7 @@ standard_deviation_contrast_stretch(
 
 #### 7.11.1 BlockMaximum
 
-Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -7256,7 +7565,7 @@ block_maximum(
 
 #### 7.11.2 BlockMinimum
 
-Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -7292,7 +7601,7 @@ block_minimum(
 
 #### 7.11.3 ClassifyOverlapPoints
 
-Classifies or filters LAS point in regions of overlapping flight lines.
+Classifies or filters LAS points in regions of overlapping flight lines..
 
 *Parameters*:
 
@@ -7300,7 +7609,7 @@ Classifies or filters LAS point in regions of overlapping flight lines.
 -------------------  ---------------
 -i, -\-input         Input LiDAR file
 -o, -\-output        Output LiDAR file
--\-resolution        The distance of the square area used to evaluate nearby points in the LiDAR data
+-\-resolution        The size of the square area used to evaluate nearby points in the LiDAR data
 -\-filter            Filter out points from overlapping flightlines? If false, overlaps will simply 
                      be classified 
 
@@ -7320,11 +7629,8 @@ classify_overlap_points(
 
 ```
 >>./whitebox_tools -r=ClassifyOverlapPoints -v ^
---wd="/path/to/data/" -i=file.las -o=outfile.tif ^
---resolution=2.0"
-./whitebox_tools -r=ClassifyOverlapPoints -v ^
---wd="/path/to/data/" -i=file.las -o=outfile.tif ^
---resolution=5.0 --palette=light_quant.plt 
+--wd="/path/to/data/" -i=file.las -o=outfile.las ^
+--resolution=2.0 
 
 
 ```
@@ -7332,7 +7638,7 @@ classify_overlap_points(
 
 #### 7.11.4 ClipLidarToPolygon
 
-Clips a LiDAR point cloud to a vector polygon or polygons.
+Clips a LiDAR point cloud to a vector polygon or polygons..
 
 *Parameters*:
 
@@ -7366,7 +7672,7 @@ clip_lidar_to_polygon(
 
 #### 7.11.5 ErasePolygonFromLidar
 
-Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
+Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud..
 
 *Parameters*:
 
@@ -7400,7 +7706,7 @@ erase_polygon_from_lidar(
 
 #### 7.11.6 FilterLidarScanAngles
 
-Removes points in a LAS file with scan angles greater than a threshold.
+Removes points in a LAS file with scan angles greater than a threshold..
 
 *Parameters*:
 
@@ -7434,7 +7740,7 @@ filter_lidar_scan_angles(
 
 #### 7.11.7 FindFlightlineEdgePoints
 
-Identifies points along a flightline's edge in a LAS file.
+Identifies points along a flightline's edge in a LAS file..
 
 *Parameters*:
 
@@ -7465,7 +7771,7 @@ find_flightline_edge_points(
 
 #### 7.11.8 FlightlineOverlap
 
-Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
+Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell..
 
 *Parameters*:
 
@@ -7502,7 +7808,7 @@ flightline_overlap(
 
 #### 7.11.9 LasToAscii
 
-Converts one or more LAS files into ASCII text files.
+Converts one or more LAS files into ASCII text files..
 
 *Parameters*:
 
@@ -7531,7 +7837,7 @@ las_to_ascii(
 
 #### 7.11.10 LidarColourize
 
-Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
+Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image..
 
 *Parameters*:
 
@@ -7565,7 +7871,7 @@ lidar_colourize(
 
 #### 7.11.11 LidarElevationSlice
 
-Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
+Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range..
 
 *Parameters*:
 
@@ -7617,7 +7923,7 @@ lidar_elevation_slice(
 
 #### 7.11.12 LidarGroundPointFilter
 
-Identifies ground points within LiDAR dataset using a slope-based method.
+Identifies ground points within LiDAR dataset using a slope-based method..
 
 *Parameters*:
 
@@ -7655,7 +7961,7 @@ lidar_ground_point_filter(
 
 #### 7.11.13 LidarHillshade
 
-Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
+Calculates a hillshade value for points within a LAS file and stores these data in the RGB field..
 
 *Parameters*:
 
@@ -7695,7 +8001,7 @@ lidar_hillshade(
 
 #### 7.11.14 LidarHistogram
 
-Creates a histogram from LiDAR data.
+Creates a histogram from LiDAR data..
 
 *Parameters*:
 
@@ -7731,7 +8037,7 @@ lidar_histogram(
 
 #### 7.11.15 LidarIdwInterpolation
 
-Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
+Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -7785,7 +8091,7 @@ lidar_idw_interpolation(
 
 #### 7.11.16 LidarInfo
 
-Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
+Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys..
 
 *Parameters*:
 
@@ -7822,7 +8128,7 @@ lidar_info(
 
 #### 7.11.17 LidarJoin
 
-Joins multiple LiDAR (LAS) files into a single LAS file.
+Joins multiple LiDAR (LAS) files into a single LAS file..
 
 *Parameters*:
 
@@ -7853,7 +8159,7 @@ lidar_join(
 
 #### 7.11.18 LidarKappaIndex
 
-Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
+Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files..
 
 *Parameters*:
 
@@ -7887,7 +8193,7 @@ lidar_kappa_index(
 
 #### 7.11.19 LidarNearestNeighbourGridding
 
-Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -7939,7 +8245,7 @@ lidar_nearest_neighbour_gridding(
 
 #### 7.11.20 LidarPointDensity
 
-Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -7988,7 +8294,7 @@ lidar_point_density(
 
 #### 7.11.21 LidarPointStats
 
-Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
+Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory..
 
 *Parameters*:
 
@@ -8030,7 +8336,7 @@ lidar_point_stats(
 
 #### 7.11.22 LidarRemoveDuplicates
 
-Removes duplicate points from a LiDAR data set.
+Removes duplicate points from a LiDAR data set..
 
 *Parameters*:
 
@@ -8063,7 +8369,7 @@ lidar_remove_duplicates(
 
 #### 7.11.23 LidarRemoveOutliers
 
-Removes outliers (high and low points) in a LiDAR point cloud.
+Removes outliers (high and low points) in a LiDAR point cloud..
 
 *Parameters*:
 
@@ -8099,7 +8405,7 @@ lidar_remove_outliers(
 
 #### 7.11.24 LidarSegmentation
 
-Segments a LiDAR point cloud based on normal vectors.
+Segments a LiDAR point cloud based on normal vectors..
 
 *Parameters*:
 
@@ -8138,7 +8444,7 @@ lidar_segmentation(
 
 #### 7.11.25 LidarSegmentationBasedFilter
 
-Identifies ground points within LiDAR point clouds using a segmentation based approach.
+Identifies ground points within LiDAR point clouds using a segmentation based approach..
 
 *Parameters*:
 
@@ -8177,9 +8483,45 @@ lidar_segmentation_based_filter(
 ```
 
 
-#### 7.11.26 LidarTile
+#### 7.11.26 LidarThin
 
-Tiles a LiDAR LAS file into multiple LAS files.
+Thins a LiDAR point cloud, reducing point density..
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-o, -\-output        Output LiDAR file
+-\-resolution        The size of the square area used to evaluate nearby points in the LiDAR data
+-\-method            Point selection method; options are 'first', 'last', 'lowest' (default), 
+                     'highest', 'nearest' 
+
+
+*Python function*:
+
+~~~~{.python}
+lidar_thin(
+    i, 
+    output, 
+    resolution=2.0, 
+    method="lowest", 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LidarThin -v --wd="/path/to/data/" ^
+-i=file.las -o=outfile.las --resolution=2.0, --method=first 
+
+
+```
+
+
+#### 7.11.27 LidarTile
+
+Tiles a LiDAR LAS file into multiple LAS files..
 
 *Parameters*:
 
@@ -8216,9 +8558,9 @@ lidar_tile(
 ```
 
 
-#### 7.11.27 LidarTophatTransform
+#### 7.11.28 LidarTophatTransform
 
-Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
+Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy..
 
 *Parameters*:
 
@@ -8250,9 +8592,9 @@ lidar_tophat_transform(
 ```
 
 
-#### 7.11.28 NormalVectors
+#### 7.11.29 NormalVectors
 
-Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
+Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field..
 
 *Parameters*:
 
@@ -8286,7 +8628,7 @@ normal_vectors(
 
 #### 7.12.1 AbsoluteValue
 
-Calculates the absolute value of every cell in a raster.
+Calculates the absolute value of every cell in a raster..
 
 *Parameters*:
 
@@ -8317,7 +8659,7 @@ absolute_value(
 
 #### 7.12.2 Add
 
-Performs an addition operation on two rasters or a raster and a constant value.
+Performs an addition operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -8350,7 +8692,7 @@ add(
 
 #### 7.12.3 And
 
-Performs a logical AND operator on two Boolean raster images.
+Performs a logical AND operator on two Boolean raster images..
 
 *Parameters*:
 
@@ -8383,7 +8725,7 @@ And(
 
 #### 7.12.4 Anova
 
-Performs an analysis of variance (ANOVA) test on a raster dataset.
+Performs an analysis of variance (ANOVA) test on a raster dataset..
 
 *Parameters*:
 
@@ -8416,7 +8758,7 @@ anova(
 
 #### 7.12.5 ArcCos
 
-Returns the inverse cosine (arccos) of each values in a raster.
+Returns the inverse cosine (arccos) of each values in a raster..
 
 *Parameters*:
 
@@ -8447,7 +8789,7 @@ arc_cos(
 
 #### 7.12.6 ArcSin
 
-Returns the inverse sine (arcsin) of each values in a raster.
+Returns the inverse sine (arcsin) of each values in a raster..
 
 *Parameters*:
 
@@ -8478,7 +8820,7 @@ arc_sin(
 
 #### 7.12.7 ArcTan
 
-Returns the inverse tangent (arctan) of each values in a raster.
+Returns the inverse tangent (arctan) of each values in a raster..
 
 *Parameters*:
 
@@ -8509,7 +8851,7 @@ arc_tan(
 
 #### 7.12.8 Atan2
 
-Returns the 2-argument inverse tangent (atan2).
+Returns the 2-argument inverse tangent (atan2)..
 
 *Parameters*:
 
@@ -8542,7 +8884,7 @@ atan2(
 
 #### 7.12.9 AttributeCorrelation
 
-Performs a correlation analysis on attribute fields from a vector database.
+Performs a correlation analysis on attribute fields from a vector database..
 
 *Parameters*:
 
@@ -8573,7 +8915,7 @@ attribute_correlation(
 
 #### 7.12.10 AttributeHistogram
 
-Creates a histogram for the field values of a vector's attribute table.
+Creates a histogram for the field values of a vector's attribute table..
 
 *Parameters*:
 
@@ -8607,7 +8949,7 @@ attribute_histogram(
 
 #### 7.12.11 AttributeScattergram
 
-Creates a scattergram for two field values of a vector's attribute table.
+Creates a scattergram for two field values of a vector's attribute table..
 
 *Parameters*:
 
@@ -8645,7 +8987,7 @@ attribute_scattergram(
 
 #### 7.12.12 Ceil
 
-Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
+Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster..
 
 *Parameters*:
 
@@ -8676,7 +9018,7 @@ ceil(
 
 #### 7.12.13 Cos
 
-Returns the cosine (cos) of each values in a raster.
+Returns the cosine (cos) of each values in a raster..
 
 *Parameters*:
 
@@ -8707,7 +9049,7 @@ cos(
 
 #### 7.12.14 Cosh
 
-Returns the hyperbolic cosine (cosh) of each values in a raster.
+Returns the hyperbolic cosine (cosh) of each values in a raster..
 
 *Parameters*:
 
@@ -8738,7 +9080,7 @@ cosh(
 
 #### 7.12.15 CrispnessIndex
 
-Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
+Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is..
 
 *Parameters*:
 
@@ -8772,7 +9114,7 @@ crispness_index(
 
 #### 7.12.16 CrossTabulation
 
-Performs a cross-tabulation on two categorical images.
+Performs a cross-tabulation on two categorical images..
 
 *Parameters*:
 
@@ -8806,7 +9148,7 @@ cross_tabulation(
 
 #### 7.12.17 CumulativeDistribution
 
-Converts a raster image to its cumulative distribution function.
+Converts a raster image to its cumulative distribution function..
 
 *Parameters*:
 
@@ -8837,7 +9179,7 @@ cumulative_distribution(
 
 #### 7.12.18 Decrement
 
-Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
+Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract)..
 
 *Parameters*:
 
@@ -8868,7 +9210,7 @@ decrement(
 
 #### 7.12.19 Divide
 
-Performs a division operation on two rasters or a raster and a constant value.
+Performs a division operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -8901,7 +9243,7 @@ divide(
 
 #### 7.12.20 EqualTo
 
-Performs a equal-to comparison operation on two rasters or a raster and a constant value.
+Performs a equal-to comparison operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -8934,7 +9276,7 @@ equal_to(
 
 #### 7.12.21 Exp
 
-Returns the exponential (base e) of values in a raster.
+Returns the exponential (base e) of values in a raster..
 
 *Parameters*:
 
@@ -8965,7 +9307,7 @@ exp(
 
 #### 7.12.22 Exp2
 
-Returns the exponential (base 2) of values in a raster.
+Returns the exponential (base 2) of values in a raster..
 
 *Parameters*:
 
@@ -8996,7 +9338,7 @@ exp2(
 
 #### 7.12.23 ExtractRasterStatistics
 
-Extracts descriptive statistics for a group of patches in a raster.
+Extracts descriptive statistics for a group of patches in a raster..
 
 *Parameters*:
 
@@ -9038,7 +9380,7 @@ extract_raster_statistics(
 
 #### 7.12.24 Floor
 
-Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
+Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster..
 
 *Parameters*:
 
@@ -9069,7 +9411,7 @@ floor(
 
 #### 7.12.25 GreaterThan
 
-Performs a greater-than comparison operation on two rasters or a raster and a constant value.
+Performs a greater-than comparison operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9105,7 +9447,7 @@ greater_than(
 
 #### 7.12.26 ImageAutocorrelation
 
-Performs Moran's I analysis on two or more input images.
+Performs Moran's I analysis on two or more input images..
 
 *Parameters*:
 
@@ -9139,7 +9481,7 @@ image_autocorrelation(
 
 #### 7.12.27 ImageCorrelation
 
-Performs image correlation on two or more input images.
+Performs image correlation on two or more input images..
 
 *Parameters*:
 
@@ -9171,7 +9513,7 @@ image_correlation(
 
 #### 7.12.28 ImageRegression
 
-Performs image regression analysis on two input images.
+Performs image regression analysis on two input images..
 
 *Parameters*:
 
@@ -9210,7 +9552,7 @@ image_regression(
 
 #### 7.12.29 InPlaceAdd
 
-Performs an in-place addition operation (input1 += input2).
+Performs an in-place addition operation (input1 += input2)..
 
 *Parameters*:
 
@@ -9244,7 +9586,7 @@ in_place_add(
 
 #### 7.12.30 InPlaceDivide
 
-Performs an in-place division operation (input1 /= input2).
+Performs an in-place division operation (input1 /= input2)..
 
 *Parameters*:
 
@@ -9278,7 +9620,7 @@ in_place_divide(
 
 #### 7.12.31 InPlaceMultiply
 
-Performs an in-place multiplication operation (input1 *= input2).
+Performs an in-place multiplication operation (input1 *= input2)..
 
 *Parameters*:
 
@@ -9312,7 +9654,7 @@ in_place_multiply(
 
 #### 7.12.32 InPlaceSubtract
 
-Performs an in-place subtraction operation (input1 -= input2).
+Performs an in-place subtraction operation (input1 -= input2)..
 
 *Parameters*:
 
@@ -9377,7 +9719,7 @@ increment(
 
 #### 7.12.34 IntegerDivision
 
-Performs an integer division operation on two rasters or a raster and a constant value.
+Performs an integer division operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9411,7 +9753,7 @@ integer_division(
 
 #### 7.12.35 IsNoData
 
-Identifies NoData valued pixels in an image.
+Identifies NoData valued pixels in an image..
 
 *Parameters*:
 
@@ -9440,9 +9782,9 @@ is_no_data(
 ```
 
 
-#### 7.12.36 KSTestForNormality
+#### 7.12.36 KsTestForNormality
 
-Evaluates whether the values in a raster are normally distributed.
+Evaluates whether the values in a raster are normally distributed..
 
 *Parameters*:
 
@@ -9478,7 +9820,7 @@ ks_test_for_normality(
 
 #### 7.12.37 KappaIndex
 
-Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
+Performs a kappa index of agreement (KIA) analysis on two categorical raster files..
 
 *Parameters*:
 
@@ -9511,7 +9853,7 @@ kappa_index(
 
 #### 7.12.38 LessThan
 
-Performs a less-than comparison operation on two rasters or a raster and a constant value.
+Performs a less-than comparison operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9547,7 +9889,7 @@ less_than(
 
 #### 7.12.39 ListUniqueValues
 
-Lists the unique values contained in a field witin a vector's attribute table.
+Lists the unique values contained in a field witin a vector's attribute table..
 
 *Parameters*:
 
@@ -9581,7 +9923,7 @@ list_unique_values(
 
 #### 7.12.40 Ln
 
-Returns the natural logarithm of values in a raster.
+Returns the natural logarithm of values in a raster..
 
 *Parameters*:
 
@@ -9612,7 +9954,7 @@ ln(
 
 #### 7.12.41 Log10
 
-Returns the base-10 logarithm of values in a raster.
+Returns the base-10 logarithm of values in a raster..
 
 *Parameters*:
 
@@ -9643,7 +9985,7 @@ log10(
 
 #### 7.12.42 Log2
 
-Returns the base-2 logarithm of values in a raster.
+Returns the base-2 logarithm of values in a raster..
 
 *Parameters*:
 
@@ -9674,7 +10016,7 @@ log2(
 
 #### 7.12.43 Max
 
-Performs a MAX operation on two rasters or a raster and a constant value.
+Performs a MAX operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9707,7 +10049,7 @@ max(
 
 #### 7.12.44 Min
 
-Performs a MIN operation on two rasters or a raster and a constant value.
+Performs a MIN operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9740,7 +10082,7 @@ min(
 
 #### 7.12.45 Modulo
 
-Performs a modulo operation on two rasters or a raster and a constant value.
+Performs a modulo operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9773,7 +10115,7 @@ modulo(
 
 #### 7.12.46 Multiply
 
-Performs a multiplication operation on two rasters or a raster and a constant value.
+Performs a multiplication operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9806,7 +10148,7 @@ multiply(
 
 #### 7.12.47 Negate
 
-Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
+Changes the sign of values in a raster or the 0-1 values of a Boolean raster..
 
 *Parameters*:
 
@@ -9837,7 +10179,7 @@ negate(
 
 #### 7.12.48 Not
 
-Performs a logical NOT operator on two Boolean raster images.
+Performs a logical NOT operator on two Boolean raster images..
 
 *Parameters*:
 
@@ -9870,7 +10212,7 @@ Not(
 
 #### 7.12.49 NotEqualTo
 
-Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
+Performs a not-equal-to comparison operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -9903,7 +10245,7 @@ not_equal_to(
 
 #### 7.12.50 Or
 
-Performs a logical OR operator on two Boolean raster images.
+Performs a logical OR operator on two Boolean raster images..
 
 *Parameters*:
 
@@ -9936,7 +10278,7 @@ Or(
 
 #### 7.12.51 Power
 
-Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
+Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value..
 
 *Parameters*:
 
@@ -9969,7 +10311,7 @@ power(
 
 #### 7.12.52 PrincipalComponentAnalysis
 
-Performs a principal component analysis (PCA) on a multi-spectral dataset.
+Performs a principal component analysis (PCA) on a multi-spectral dataset..
 
 *Parameters*:
 
@@ -10005,7 +10347,7 @@ principal_component_analysis(
 
 #### 7.12.53 Quantiles
 
-Transforms raster values into quantiles.
+Transforms raster values into quantiles..
 
 *Parameters*:
 
@@ -10038,7 +10380,7 @@ quantiles(
 
 #### 7.12.54 RandomField
 
-Creates an image containing random values.
+Creates an image containing random values..
 
 *Parameters*:
 
@@ -10069,7 +10411,7 @@ random_field(
 
 #### 7.12.55 RandomSample
 
-Creates an image containing randomly located sample grid cells with unique IDs.
+Creates an image containing randomly located sample grid cells with unique IDs..
 
 *Parameters*:
 
@@ -10102,7 +10444,7 @@ random_sample(
 
 #### 7.12.56 RasterHistogram
 
-Creates a histogram from raster values.
+Creates a histogram from raster values..
 
 *Parameters*:
 
@@ -10133,7 +10475,7 @@ raster_histogram(
 
 #### 7.12.57 RasterSummaryStats
 
-Measures a rasters average, standard deviation, num. non-nodata cells, and total.
+Measures a rasters average, standard deviation, num. non-nodata cells, and total..
 
 *Parameters*:
 
@@ -10162,7 +10504,7 @@ raster_summary_stats(
 
 #### 7.12.58 Reciprocal
 
-Returns the reciprocal (i.e. 1 / z) of values in a raster.
+Returns the reciprocal (i.e. 1 / z) of values in a raster..
 
 *Parameters*:
 
@@ -10193,7 +10535,7 @@ reciprocal(
 
 #### 7.12.59 RescaleValueRange
 
-Performs a min-max contrast stretch on an input greytone image.
+Performs a min-max contrast stretch on an input greytone image..
 
 *Parameters*:
 
@@ -10237,7 +10579,7 @@ rescale_value_range(
 
 #### 7.12.60 RootMeanSquareError
 
-Calculates the RMSE and other accuracy statistics.
+Calculates the RMSE and other accuracy statistics..
 
 *Parameters*:
 
@@ -10268,7 +10610,7 @@ root_mean_square_error(
 
 #### 7.12.61 Round
 
-Rounds the values in an input raster to the nearest integer value.
+Rounds the values in an input raster to the nearest integer value..
 
 *Parameters*:
 
@@ -10299,7 +10641,7 @@ round(
 
 #### 7.12.62 Sin
 
-Returns the sine (sin) of each values in a raster.
+Returns the sine (sin) of each values in a raster..
 
 *Parameters*:
 
@@ -10330,7 +10672,7 @@ sin(
 
 #### 7.12.63 Sinh
 
-Returns the hyperbolic sine (sinh) of each values in a raster.
+Returns the hyperbolic sine (sinh) of each values in a raster..
 
 *Parameters*:
 
@@ -10361,7 +10703,7 @@ sinh(
 
 #### 7.12.64 Square
 
-Squares the values in a raster.
+Squares the values in a raster..
 
 *Parameters*:
 
@@ -10392,7 +10734,7 @@ square(
 
 #### 7.12.65 SquareRoot
 
-Returns the square root of the values in a raster.
+Returns the square root of the values in a raster..
 
 *Parameters*:
 
@@ -10423,7 +10765,7 @@ square_root(
 
 #### 7.12.66 Subtract
 
-Performs a differencing operation on two rasters or a raster and a constant value.
+Performs a differencing operation on two rasters or a raster and a constant value..
 
 *Parameters*:
 
@@ -10456,7 +10798,7 @@ subtract(
 
 #### 7.12.67 Tan
 
-Returns the tangent (tan) of each values in a raster.
+Returns the tangent (tan) of each values in a raster..
 
 *Parameters*:
 
@@ -10487,7 +10829,7 @@ tan(
 
 #### 7.12.68 Tanh
 
-Returns the hyperbolic tangent (tanh) of each values in a raster.
+Returns the hyperbolic tangent (tanh) of each values in a raster..
 
 *Parameters*:
 
@@ -10518,7 +10860,7 @@ tanh(
 
 #### 7.12.69 ToDegrees
 
-Converts a raster from radians to degrees.
+Converts a raster from radians to degrees..
 
 *Parameters*:
 
@@ -10549,7 +10891,7 @@ to_degrees(
 
 #### 7.12.70 ToRadians
 
-Converts a raster from degrees to radians.
+Converts a raster from degrees to radians..
 
 *Parameters*:
 
@@ -10580,7 +10922,7 @@ to_radians(
 
 #### 7.12.71 TrendSurface
 
-Estimates the trend surface of an input raster file.
+Estimates the trend surface of an input raster file..
 
 *Parameters*:
 
@@ -10613,7 +10955,7 @@ trend_surface(
 
 #### 7.12.72 TrendSurfaceVectorPoints
 
-Estimates a trend surface from vector points.
+Estimates a trend surface from vector points..
 
 *Parameters*:
 
@@ -10652,7 +10994,7 @@ trend_surface_vector_points(
 
 #### 7.12.73 Truncate
 
-Truncates the values in a raster to the desired number of decimal places.
+Truncates the values in a raster to the desired number of decimal places..
 
 *Parameters*:
 
@@ -10685,7 +11027,7 @@ truncate(
 
 #### 7.12.74 TurningBandsSimulation
 
-Creates an image containing random values based on a turning-bands simulation.
+Creates an image containing random values based on a turning-bands simulation..
 
 *Parameters*:
 
@@ -10721,7 +11063,7 @@ turning_bands_simulation(
 
 #### 7.12.75 Xor
 
-Performs a logical XOR operator on two Boolean raster images.
+Performs a logical XOR operator on two Boolean raster images..
 
 *Parameters*:
 
@@ -10754,7 +11096,7 @@ xor(
 
 #### 7.12.76 ZScores
 
-Standardizes the values in an input raster by converting to z-scores.
+Standardizes the values in an input raster by converting to z-scores..
 
 *Parameters*:
 
@@ -10786,7 +11128,7 @@ z_scores(
 
 #### 7.13.1 DistanceToOutlet
 
-Calculates the distance of stream grid cells to the channel network outlet cell.
+Calculates the distance of stream grid cells to the channel network outlet cell..
 
 *Parameters*:
 
@@ -10827,7 +11169,7 @@ distance_to_outlet(
 
 #### 7.13.2 ExtractStreams
 
-Extracts stream grid cells from a flow accumulation raster.
+Extracts stream grid cells from a flow accumulation raster..
 
 *Parameters*:
 
@@ -10863,7 +11205,7 @@ extract_streams(
 
 #### 7.13.3 ExtractValleys
 
-Identifies potential valley bottom grid cells based on local topolography alone.
+Identifies potential valley bottom grid cells based on local topolography alone..
 
 *Parameters*:
 
@@ -10907,7 +11249,7 @@ extract_valleys(
 
 #### 7.13.4 FarthestChannelHead
 
-Calculates the distance to the furthest upstream channel head for each stream cell.
+Calculates the distance to the furthest upstream channel head for each stream cell..
 
 *Parameters*:
 
@@ -10948,7 +11290,7 @@ farthest_channel_head(
 
 #### 7.13.5 FindMainStem
 
-Finds the main stem, based on stream lengths, of each stream network.
+Finds the main stem, based on stream lengths, of each stream network..
 
 *Parameters*:
 
@@ -10989,7 +11331,7 @@ find_main_stem(
 
 #### 7.13.6 HackStreamOrder
 
-Assigns the Hack stream order to each tributary in a stream network.
+Assigns the Hack stream order to each tributary in a stream network..
 
 *Parameters*:
 
@@ -11030,7 +11372,7 @@ hack_stream_order(
 
 #### 7.13.7 HortonStreamOrder
 
-Assigns the Horton stream order to each tributary in a stream network.
+Assigns the Horton stream order to each tributary in a stream network..
 
 *Parameters*:
 
@@ -11071,7 +11413,7 @@ horton_stream_order(
 
 #### 7.13.8 LengthOfUpstreamChannels
 
-Calculates the total length of channels upstream.
+Calculates the total length of channels upstream..
 
 *Parameters*:
 
@@ -11112,7 +11454,7 @@ length_of_upstream_channels(
 
 #### 7.13.9 LongProfile
 
-Plots the stream longitudinal profiles for one or more rivers.
+Plots the stream longitudinal profiles for one or more rivers..
 
 *Parameters*:
 
@@ -11150,7 +11492,7 @@ long_profile(
 
 #### 7.13.10 LongProfileFromPoints
 
-Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
+Plots the longitudinal profiles from flow-paths initiating from a set of vector points..
 
 *Parameters*:
 
@@ -11188,7 +11530,7 @@ long_profile_from_points(
 
 #### 7.13.11 RasterizeStreams
 
-Rasterizes vector streams based on Lindsay (2016) method.
+Rasterizes vector streams based on Lindsay (2016) method..
 
 *Parameters*:
 
@@ -11226,7 +11568,7 @@ rasterize_streams(
 
 #### 7.13.12 RemoveShortStreams
 
-Removes short first-order streams from a stream network.
+Removes short first-order streams from a stream network..
 
 *Parameters*:
 
@@ -11264,7 +11606,7 @@ remove_short_streams(
 
 #### 7.13.13 ShreveStreamMagnitude
 
-Assigns the Shreve stream magnitude to each link in a stream network.
+Assigns the Shreve stream magnitude to each link in a stream network..
 
 *Parameters*:
 
@@ -11305,7 +11647,7 @@ shreve_stream_magnitude(
 
 #### 7.13.14 StrahlerStreamOrder
 
-Assigns the Strahler stream order to each link in a stream network.
+Assigns the Strahler stream order to each link in a stream network..
 
 *Parameters*:
 
@@ -11346,7 +11688,7 @@ strahler_stream_order(
 
 #### 7.13.15 StreamLinkClass
 
-Identifies the exterior/interior links and nodes in a stream network.
+Identifies the exterior/interior links and nodes in a stream network..
 
 *Parameters*:
 
@@ -11387,7 +11729,7 @@ stream_link_class(
 
 #### 7.13.16 StreamLinkIdentifier
 
-Assigns a unique identifier to each link in a stream network.
+Assigns a unique identifier to each link in a stream network..
 
 *Parameters*:
 
@@ -11428,7 +11770,7 @@ stream_link_identifier(
 
 #### 7.13.17 StreamLinkLength
 
-Estimates the length of each link (or tributary) in a stream network.
+Estimates the length of each link (or tributary) in a stream network..
 
 *Parameters*:
 
@@ -11470,7 +11812,7 @@ stream_link_length(
 
 #### 7.13.18 StreamLinkSlope
 
-Estimates the average slope of each link (or tributary) in a stream network.
+Estimates the average slope of each link (or tributary) in a stream network..
 
 *Parameters*:
 
@@ -11514,7 +11856,7 @@ stream_link_slope(
 
 #### 7.13.19 StreamSlopeContinuous
 
-Estimates the slope of each grid cell in a stream network.
+Estimates the slope of each grid cell in a stream network..
 
 *Parameters*:
 
@@ -11558,7 +11900,7 @@ stream_slope_continuous(
 
 #### 7.13.20 TopologicalStreamOrder
 
-Assigns each link in a stream network its topological order.
+Assigns each link in a stream network its topological order..
 
 *Parameters*:
 
@@ -11599,7 +11941,7 @@ topological_stream_order(
 
 #### 7.13.21 TributaryIdentifier
 
-Assigns a unique identifier to each tributary in a stream network.
+Assigns a unique identifier to each tributary in a stream network..
 
 *Parameters*:
 
@@ -11636,6 +11978,10 @@ tributary_identifier(
 
 
 ```
+
+
+
+
 
 
 
