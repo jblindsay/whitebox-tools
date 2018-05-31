@@ -56,6 +56,10 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 0.9.0 (XX-XX-2018)
+- Added the following tools:
+
+
 Version 0.8.0 (30-05-2018)
 - Added the following tools:
     CornerDetection
