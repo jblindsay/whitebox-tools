@@ -1048,9 +1048,9 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             r.configs.photometric_interp = PhotometricInterpretation::Continuous;
         }
         
-        //////////////////////////////
-        // Write the image the data //
-        //////////////////////////////
+        //////////////////////////
+        // Write the image data //
+        //////////////////////////
         match r.configs.photometric_interp {
             PhotometricInterpretation::Continuous |
             PhotometricInterpretation::Categorical |

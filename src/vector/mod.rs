@@ -23,7 +23,7 @@ pub use self::shapefile::{AttributeField, AttributeHeader, DateData, FieldData, 
 
 
 /// A 2-D point, with x and y fields.
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,
