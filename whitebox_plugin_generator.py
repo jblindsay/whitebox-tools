@@ -140,7 +140,13 @@ for tool, description in tools.items():
     # print(fn)
     tb_dict[toolbox].append(fn)
 
-f = open("/Users/johnlindsay/Documents/deleteme.txt", 'w')
+# f = open("/Users/johnlindsay/Documents/deleteme.txt", 'w')
+out_dir = os.path.join(os.path.expanduser("~"), "Documents")
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+out_file = os.path.join(out_dir, "deleteme.txt")
+f = open(out_file, 'w')
+
 for key, value in sorted(tb_dict.items()):
     f.write("\n    {}\n".format('#' * (len(key) + 4)))
     f.write("    # {} #\n".format(key))
