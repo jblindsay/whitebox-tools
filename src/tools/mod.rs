@@ -356,6 +356,7 @@ impl ToolManager {
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
+        tool_names.push("StandardDeviationOfSlope".to_string());
         tool_names.push("TangentialCurvature".to_string());
         tool_names.push("TotalCurvature".to_string());
         tool_names.push("Viewshed".to_string());
@@ -805,6 +806,7 @@ impl ToolManager {
             }
             "slope" => Some(Box::new(tools::terrain_analysis::Slope::new())),
             "slopevselevationplot" => Some(Box::new(tools::terrain_analysis::SlopeVsElevationPlot::new())),
+            "standarddeviationofslope" => Some(Box::new(tools::terrain_analysis::StandardDeviationOfSlope::new())),
             "tangentialcurvature" => {
                 Some(Box::new(tools::terrain_analysis::TangentialCurvature::new()))
             }
