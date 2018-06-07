@@ -13,6 +13,7 @@ from __future__ import print_function
 import os
 import sys
 from whitebox_tools import WhiteboxTools
+import urllib.request
 
 
 def main():
@@ -21,16 +22,34 @@ def main():
     try:
         wbt = WhiteboxTools()
 
-        # If the WhiteboxTools executable file (whitbox_tools.exe) is not in the same
-        # directory as this script, its path will need to be set, e.g.:
-        wbt.set_whitebox_dir(os.path.dirname(
-            os.path.abspath(__file__)) + "/target/release/")  # or simply wbt.exe_path = ...
+        # Get the root directory of WhiteboxTools source code or executable file
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        # WhiteboxTools executable file name for MS Windows
+        wbt_win_bin = os.path.join(root_dir, "whitebox_tools.exe")
+        # WhiteboxTools executable file name for MacOS/Linux
+        wbt_linux_bin = os.path.join(root_dir, "whitebox_tools")
+
+        # If the WhiteboxTools executable file (whitbox_tools.exe) is in the same
+        # directory as this script, set wbt path to the current directory
+        # otherwise, set wbt path to (root_dir + "/target/release/")
+        if os.path.isfile(wbt_win_bin) or os.path.isfile(wbt_linux_bin):
+            wbt.set_whitebox_dir(root_dir)
+        else:
+            wbt.set_whitebox_dir(root_dir + "/target/release/")  # or simply wbt.exe_path = ...
 
         # Set the working directory. This is the path to the folder containing the data,
         # i.e. files sent to tools as input/output parameters. You don't need to set
         # the working directory if you specify full path names as tool parameters.
         wbt.work_dir = os.path.dirname(
             os.path.abspath(__file__)) + "/testdata/"
+
+        # If test datasets do not exist, download them from the WhiteboxTools repo
+        if not os.path.exists(wbt.work_dir):
+            os.mkdir(wbt.work_dir)
+            dem_url = "https://github.com/jblindsay/whitebox-tools/raw/master/testdata/DEM.tif"
+            dep_url = "https://github.com/jblindsay/whitebox-tools/raw/master/testdata/DEM.dep"
+            urllib.request.urlretrieve(dem_url, "testdata/DEM.tif")
+            urllib.request.urlretrieve(dep_url, "testdata/DEM.dep")
 
         # Sets verbose mode (True or False). Most tools will suppress output (e.g. updating
         # progress) when verbose mode is False. The default is True

@@ -9,8 +9,7 @@ from os import path
 import re
 import json
 import sys
-sys.path.append(
-    '/Users/johnlindsay/Documents/programming/whitebox_tools/whitebox-tools/')
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from whitebox_tools import WhiteboxTools
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
@@ -31,8 +30,11 @@ def to_camelcase(name):
 
 wbt = WhiteboxTools()
 
+# Get the root directory containing the WhiteboxTools repo
+root_dir = path.dirname(path.dirname(path.abspath(__file__)))
 # Set the directory containing the whitebox_tools.exe file
-wbt.exe_path = r'/Users/johnlindsay/Documents/programming/whitebox_tools/whitebox-tools/target/release/'
+wbt.exe_path = path.join(root_dir, "target/release/")
+# wbt.exe_path = r'/Users/johnlindsay/Documents/programming/whitebox_tools/whitebox-tools/target/release/'
 # wbt.ext_path = r'../target/release/'
 
 toolboxes = wbt.toolbox('')
@@ -222,7 +224,12 @@ for tool, description in tools.items():
     # print(fn)
     tb_dict[toolbox].append(fn)
 
-f = open("/Users/johnlindsay/Documents/deleteme2.txt", 'w')
+# f = open("/Users/johnlindsay/Documents/deleteme2.txt", 'w')
+out_dir = os.path.join(os.path.expanduser("~"), "Documents")
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
+out_file = os.path.join(out_dir, "deleteme.txt")
+f = open(out_file, 'w')
 num1 = 1
 num2 = 1
 for key, value in sorted(tb_dict.items()):
