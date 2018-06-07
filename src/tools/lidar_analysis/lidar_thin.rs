@@ -2,17 +2,17 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/05/2018
-Last Modified: 06/05/2018
+Last Modified: 06/06/2018
 License: MIT
 */
 
-use time;
+use lidar::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use lidar::*;
 use structures::Array2D;
+use time;
 use tools::*;
 
 /// Thins a LiDAR point cloud, reducing point density.
@@ -32,31 +32,33 @@ impl LidarThin {
         let description = "Thins a LiDAR point cloud, reducing point density.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output LiDAR file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Sample Resolution".to_owned(), 
-            flags: vec!["--resolution".to_owned()], 
-            description: "The size of the square area used to evaluate nearby points in the LiDAR data.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Sample Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
+            description:
+                "The size of the square area used to evaluate nearby points in the LiDAR data."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -66,6 +68,15 @@ impl LidarThin {
             parameter_type: ParameterType::OptionList(vec!["first".to_string(), "last".to_string(), "lowest".to_string(), "highest".to_string(), "nearest".to_string()]),
             default_value: Some("lowest".to_string()),
             optional: true
+        });
+
+        parameters.push(ToolParameter {
+            name: "Save filtered points to seperate file?".to_owned(),
+            flags: vec!["--save_filtered".to_owned()],
+            description: "Save filtered points to seperate file?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -78,7 +89,7 @@ impl LidarThin {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.las --resolution=2.0, --method=first", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.las --resolution=2.0, --method=first --save_filtered", short_exe, name).replace("*", &sep);
 
         LidarThin {
             name: name,
@@ -94,7 +105,7 @@ impl WhiteboxTool for LidarThin {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,19 +136,24 @@ impl WhiteboxTool for LidarThin {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
         let mut method: String = "first".to_string();
+        let mut save_filtered = false;
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -174,6 +190,8 @@ impl WhiteboxTool for LidarThin {
                     args[i + 1].to_string()
                 };
                 method = method.to_lowercase();
+            } else if flag_val == "-save_filtered" {
+                save_filtered = true;
             }
         }
 
@@ -213,7 +231,7 @@ impl WhiteboxTool for LidarThin {
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
-        let west: f64 = input.header.min_x; 
+        let west: f64 = input.header.min_x;
         let north: f64 = input.header.max_y;
         let rows: isize = (((north - input.header.min_y) / grid_res).ceil()) as isize;
         let columns: isize = (((input.header.max_x - west) / grid_res).ceil()) as isize;
@@ -234,8 +252,10 @@ impl WhiteboxTool for LidarThin {
                 filtered = vec![true; n_points];
                 for i in 0..n_points {
                     p = input.get_point_info(i);
-                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round()) as isize;
-                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round()) as isize;
+                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round())
+                        as isize;
+                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round())
+                        as isize;
                     if pt_id.get_value(row, col) == n_points {
                         pt_id.set_value(row, col, i);
                         filtered[i] = false;
@@ -248,12 +268,14 @@ impl WhiteboxTool for LidarThin {
                         }
                     }
                 }
-            },
+            }
             "last" => {
                 for i in 0..n_points {
                     p = input.get_point_info(i);
-                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round()) as isize;
-                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round()) as isize;
+                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round())
+                        as isize;
+                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round())
+                        as isize;
                     prev_id = pt_id.get_value(row, col);
                     if prev_id == n_points {
                         pt_id.set_value(row, col, i);
@@ -269,12 +291,14 @@ impl WhiteboxTool for LidarThin {
                         }
                     }
                 }
-            },
+            }
             "lowest" => {
                 for i in 0..n_points {
                     p = input.get_point_info(i);
-                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round()) as isize;
-                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round()) as isize;
+                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round())
+                        as isize;
+                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round())
+                        as isize;
                     prev_id = pt_id.get_value(row, col);
                     if prev_id == n_points {
                         pt_id.set_value(row, col, i);
@@ -292,12 +316,14 @@ impl WhiteboxTool for LidarThin {
                         }
                     }
                 }
-            },
+            }
             "highest" => {
                 for i in 0..n_points {
                     p = input.get_point_info(i);
-                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round()) as isize;
-                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round()) as isize;
+                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round())
+                        as isize;
+                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round())
+                        as isize;
                     prev_id = pt_id.get_value(row, col);
                     if prev_id == n_points {
                         pt_id.set_value(row, col, i);
@@ -315,19 +341,23 @@ impl WhiteboxTool for LidarThin {
                         }
                     }
                 }
-            },
+            }
             "nearest" => {
-                let mut min_dist: Array2D<f64> = Array2D::new(rows, columns, f64::INFINITY, -32768f64)?;
+                let mut min_dist: Array2D<f64> =
+                    Array2D::new(rows, columns, f64::INFINITY, -32768f64)?;
                 let mut center_x: f64;
                 let mut center_y: f64;
                 let mut sqrd_dist: f64;
                 for i in 0..n_points {
                     p = input.get_point_info(i);
-                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round()) as isize;
-                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round()) as isize;
+                    col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range).round())
+                        as isize;
+                    row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range).round())
+                        as isize;
                     center_x = west + half_grid_res + col as f64 * grid_res;
                     center_y = north - half_grid_res - row as f64 * grid_res;
-                    sqrd_dist = (p.x - center_x) * (p.x - center_x) + (p.y - center_y) * (p.y - center_y);
+                    sqrd_dist =
+                        (p.x - center_x) * (p.x - center_x) + (p.y - center_y) * (p.y - center_y);
                     prev_id = pt_id.get_value(row, col);
                     if prev_id == n_points {
                         pt_id.set_value(row, col, i);
@@ -347,39 +377,84 @@ impl WhiteboxTool for LidarThin {
                         }
                     }
                 }
-            },
+            }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidInput, format!("Specified 'method' parameter ({}) is not recognized.", method)));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!(
+                        "Specified 'method' parameter ({}) is not recognized.",
+                        method
+                    ),
+                ));
+            }
         }
-        
+
         // now output the data
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
-        for i in 0..n_points {
-            if !filtered[i] {
-                output.add_point_record(input.get_record(i));
-            }
-            if verbose {
-                progress = (100.0_f64 * i as f64 / num_points) as usize;
-                if progress != old_progress {
-                    println!("Saving data: {}%", progress);
-                    old_progress = progress;
+        let end;
+
+        if !save_filtered {
+            for i in 0..n_points {
+                if !filtered[i] {
+                    output.add_point_record(input.get_record(i));
+                }
+                if verbose {
+                    progress = (100.0_f64 * i as f64 / num_points) as usize;
+                    if progress != old_progress {
+                        println!("Saving data: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
+            end = time::now();
+        } else {
+            let p = path::Path::new(&output_file);
+            let mut extension = String::from(".");
+            let ext = p.extension().unwrap().to_str().unwrap();
+            extension.push_str(ext);
+            let filtered_output_file = output_file.replace(&extension, "_filtered_points.las");
+            let mut filtered_output = LasFile::initialize_using_file(&filtered_output_file, &input);
+            filtered_output.header.system_id = "EXTRACTION".to_string();
+
+            for i in 0..n_points {
+                if !filtered[i] {
+                    output.add_point_record(input.get_record(i));
+                } else {
+                    filtered_output.add_point_record(input.get_record(i));
+                }
+                if verbose {
+                    progress = (100.0_f64 * i as f64 / num_points) as usize;
+                    if progress != old_progress {
+                        println!("Saving data: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+
+            end = time::now();
+
+            let _ = match filtered_output.write() {
+                Ok(_) => println!("Filtered points LAS file saved"),
+                Err(e) => println!("error while writing: {:?}", e),
+            };
         }
 
-        let end = time::now();
         let elapsed_time = end - start;
 
-        if verbose { println!("Writing output LAS file..."); }
+        if verbose {
+            println!("Writing output LAS file...");
+        }
         let _ = match output.write() {
             Ok(_) => println!("Complete!"),
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

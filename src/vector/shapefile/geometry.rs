@@ -5,39 +5,46 @@ Created: 10/04/2018
 Last Modified: 10/04/2018
 License: MIT
 */
+use std::f64;
 use std::fmt;
 use vector::Point2D;
-use std::f64;
 
 #[derive(Clone)]
 pub struct ShapefileGeometry {
-  pub shape_type: ShapeType,
-  pub x_min: f64,
-  pub x_max: f64,
-  pub y_min: f64,
-  pub y_max: f64,
-  pub num_parts: i32,
-  pub num_points: i32,
-  pub parts: Vec<i32>,
-  pub points: Vec<Point2D>,
-  pub z_min: f64,
-  pub z_max: f64,
-  pub z_array: Vec<f64>,
-  pub m_min: f64,
-  pub m_max: f64,
-  pub m_array: Vec<f64>,
+    pub shape_type: ShapeType,
+    pub x_min: f64,
+    pub x_max: f64,
+    pub y_min: f64,
+    pub y_max: f64,
+    pub num_parts: i32,
+    pub num_points: i32,
+    pub parts: Vec<i32>,
+    pub points: Vec<Point2D>,
+    pub z_min: f64,
+    pub z_max: f64,
+    pub z_array: Vec<f64>,
+    pub m_min: f64,
+    pub m_max: f64,
+    pub m_array: Vec<f64>,
 }
 
 impl ShapefileGeometry {
-
     /// Adds a single Point2D to the ShapefileGeometry's points array.
     pub fn add_point(&mut self, p: Point2D) {
         self.points.push(p);
         self.num_points += 1;
-        if p.x < self.x_min { self.x_min = p.x; }
-        if p.x > self.x_max { self.x_max = p.x; }
-        if p.y < self.y_min { self.y_min = p.y; }
-        if p.y > self.y_max { self.y_max = p.y; }
+        if p.x < self.x_min {
+            self.x_min = p.x;
+        }
+        if p.x > self.x_max {
+            self.x_max = p.x;
+        }
+        if p.y < self.y_min {
+            self.y_min = p.y;
+        }
+        if p.y > self.y_max {
+            self.y_max = p.y;
+        }
     }
 
     /// Adds a single Point2D and measure to the ShapefileGeometry.
@@ -45,12 +52,24 @@ impl ShapefileGeometry {
         self.points.push(p);
         self.m_array.push(m);
         self.num_points += 1;
-        if p.x < self.x_min { self.x_min = p.x; }
-        if p.x > self.x_max { self.x_max = p.x; }
-        if p.y < self.y_min { self.y_min = p.y; }
-        if p.y > self.y_max { self.y_max = p.y; }
-        if m < self.m_min { self.m_min = m; }
-        if m > self.m_max { self.m_max = m; }
+        if p.x < self.x_min {
+            self.x_min = p.x;
+        }
+        if p.x > self.x_max {
+            self.x_max = p.x;
+        }
+        if p.y < self.y_min {
+            self.y_min = p.y;
+        }
+        if p.y > self.y_max {
+            self.y_max = p.y;
+        }
+        if m < self.m_min {
+            self.m_min = m;
+        }
+        if m > self.m_max {
+            self.m_max = m;
+        }
     }
 
     /// Adds a single Point2D, measure, and z-value to the ShapefileGeometry.
@@ -59,14 +78,30 @@ impl ShapefileGeometry {
         self.m_array.push(m);
         self.z_array.push(z);
         self.num_points += 1;
-        if p.x < self.x_min { self.x_min = p.x; }
-        if p.x > self.x_max { self.x_max = p.x; }
-        if p.y < self.y_min { self.y_min = p.y; }
-        if p.y > self.y_max { self.y_max = p.y; }
-        if m < self.m_min { self.m_min = m; }
-        if m > self.m_max { self.m_max = m; }
-        if z < self.z_min { self.z_min = z; }
-        if z > self.z_max { self.z_max = z; }
+        if p.x < self.x_min {
+            self.x_min = p.x;
+        }
+        if p.x > self.x_max {
+            self.x_max = p.x;
+        }
+        if p.y < self.y_min {
+            self.y_min = p.y;
+        }
+        if p.y > self.y_max {
+            self.y_max = p.y;
+        }
+        if m < self.m_min {
+            self.m_min = m;
+        }
+        if m > self.m_max {
+            self.m_max = m;
+        }
+        if z < self.z_min {
+            self.z_min = z;
+        }
+        if z > self.z_max {
+            self.z_max = z;
+        }
     }
 
     /// Adds a part of Point2Ds to the ShapefileGeometry.
@@ -74,10 +109,18 @@ impl ShapefileGeometry {
         self.parts.push(self.points.len() as i32);
         for p in points {
             self.points.push(*p);
-            if p.x < self.x_min { self.x_min = p.x; }
-            if p.x > self.x_max { self.x_max = p.x; }
-            if p.y < self.y_min { self.y_min = p.y; }
-            if p.y > self.y_max { self.y_max = p.y; }
+            if p.x < self.x_min {
+                self.x_min = p.x;
+            }
+            if p.x > self.x_max {
+                self.x_max = p.x;
+            }
+            if p.y < self.y_min {
+                self.y_min = p.y;
+            }
+            if p.y > self.y_max {
+                self.y_max = p.y;
+            }
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
@@ -95,12 +138,24 @@ impl ShapefileGeometry {
             p = points[i];
             m = measures[i];
             self.points.push(p);
-            if p.x < self.x_min { self.x_min = p.x; }
-            if p.x > self.x_max { self.x_max = p.x; }
-            if p.y < self.y_min { self.y_min = p.y; }
-            if p.y > self.y_max { self.y_max = p.y; }
-            if m < self.m_min { self.m_min = m; }
-            if m > self.m_max { self.m_max = m; }
+            if p.x < self.x_min {
+                self.x_min = p.x;
+            }
+            if p.x > self.x_max {
+                self.x_max = p.x;
+            }
+            if p.y < self.y_min {
+                self.y_min = p.y;
+            }
+            if p.y > self.y_max {
+                self.y_max = p.y;
+            }
+            if m < self.m_min {
+                self.m_min = m;
+            }
+            if m > self.m_max {
+                self.m_max = m;
+            }
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
@@ -112,7 +167,9 @@ impl ShapefileGeometry {
             panic!("Error adding part to ShapefileGeometry. Points and measures array must be equal length.");
         }
         if points.len() != z_values.len() {
-            panic!("Error adding part to ShapefileGeometry. Points and z array must be equal length.");
+            panic!(
+                "Error adding part to ShapefileGeometry. Points and z array must be equal length."
+            );
         }
         self.parts.push(self.points.len() as i32);
         let mut p: Point2D;
@@ -123,14 +180,30 @@ impl ShapefileGeometry {
             m = measures[i];
             z = z_values[i];
             self.points.push(p);
-            if p.x < self.x_min { self.x_min = p.x; }
-            if p.x > self.x_max { self.x_max = p.x; }
-            if p.y < self.y_min { self.y_min = p.y; }
-            if p.y > self.y_max { self.y_max = p.y; }
-            if m < self.m_min { self.m_min = m; }
-            if m > self.m_max { self.m_max = m; }
-            if z < self.z_min { self.z_min = z; }
-            if z > self.z_max { self.z_max = z; }
+            if p.x < self.x_min {
+                self.x_min = p.x;
+            }
+            if p.x > self.x_max {
+                self.x_max = p.x;
+            }
+            if p.y < self.y_min {
+                self.y_min = p.y;
+            }
+            if p.y > self.y_max {
+                self.y_max = p.y;
+            }
+            if m < self.m_min {
+                self.m_min = m;
+            }
+            if m > self.m_max {
+                self.m_max = m;
+            }
+            if z < self.z_min {
+                self.z_min = z;
+            }
+            if z > self.z_max {
+                self.z_max = z;
+            }
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
@@ -138,25 +211,31 @@ impl ShapefileGeometry {
 
     /// Returns the length of the ShapefileGeometry, including the header, in bytes.
     pub fn get_length(&self) -> i32 {
-        let mut ret = 12; // 12 bytes in the record number, content length, and shape type
+        let mut ret = 4; //12; // 12 bytes in the record number, content length, and shape type
 
         ret += match self.shape_type {
             ShapeType::Null => 0i32,
 
             ShapeType::Point => 16i32,
             ShapeType::MultiPoint => 36i32 + self.num_points * 16i32,
-            ShapeType::PolyLine | ShapeType::Polygon => 40i32 + self.num_parts * 4i32 + self.num_points * 16i32,
+            ShapeType::PolyLine | ShapeType::Polygon => {
+                40i32 + self.num_parts * 4i32 + self.num_points * 16i32
+            }
 
             ShapeType::PointM => 24i32,
             ShapeType::MultiPointM => 52i32 + self.num_points * 24i32,
-            ShapeType::PolyLineM | ShapeType::PolygonM => 56i32 + self.num_parts * 4i32 + self.num_points * 24i32,
+            ShapeType::PolyLineM | ShapeType::PolygonM => {
+                56i32 + self.num_parts * 4i32 + self.num_points * 24i32
+            }
 
             ShapeType::PointZ => 32i32,
             ShapeType::MultiPointZ => 68i32 + self.num_points * 32i32,
-            ShapeType::PolyLineZ | ShapeType::PolygonZ => 72i32 + self.num_parts * 4i32 + self.num_points * 32i32,
+            ShapeType::PolyLineZ | ShapeType::PolygonZ => {
+                72i32 + self.num_parts * 4i32 + self.num_points * 32i32
+            }
         };
 
-        ret 
+        ret
     }
 
     /// Checks whether or not a part in a polygon is a hole.
@@ -172,14 +251,21 @@ impl ShapefileGeometry {
             // it's not a real part
             return false;
         }
-        
+
         // Note: holes are polygons that have verticies in counter-clockwise order
 
         // This approach is based on the method described by Paul Bourke, March 1998
         // http://paulbourke.net/geometry/clockwise/index.html
 
-        let (mut x0, mut y0, mut x1, mut y1, mut x2, mut y2): (f64, f64, f64, f64, f64, f64);
-        let mut n1: usize; 
+        let (mut x0, mut y0, mut x1, mut y1, mut x2, mut y2): (
+            f64,
+            f64,
+            f64,
+            f64,
+            f64,
+            f64,
+        );
+        let mut n1: usize;
         let mut n2: usize;
         let mut n3: usize;
 
@@ -236,7 +322,8 @@ impl ShapefileGeometry {
 
         // now see if it is clockwise or counter-clockwise
         if is_convex {
-            if test_sign { // positive means counter-clockwise
+            if test_sign {
+                // positive means counter-clockwise
                 return true;
             } else {
                 return false;
@@ -260,7 +347,8 @@ impl ShapefileGeometry {
             }
             area /= 2.0;
 
-            if area < 0f64 { // a positive area indicates counter-clockwise order
+            if area < 0f64 {
+                // a positive area indicates counter-clockwise order
                 return false;
             } else {
                 return true;
@@ -270,7 +358,7 @@ impl ShapefileGeometry {
 }
 
 impl Default for ShapefileGeometry {
-    fn default() -> ShapefileGeometry { 
+    fn default() -> ShapefileGeometry {
         ShapefileGeometry {
             shape_type: ShapeType::Null,
             x_min: f64::INFINITY,
@@ -286,14 +374,15 @@ impl Default for ShapefileGeometry {
             z_array: vec![],
             m_min: f64::INFINITY,
             m_max: f64::NEG_INFINITY,
-            m_array: vec![]
+            m_array: vec![],
         }
     }
 }
 
 impl fmt::Display for ShapefileGeometry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("shape_type: {}
+        let s = format!(
+            "shape_type: {}
 x_min: {}
 x_max: {}
 y_min: {}
@@ -307,8 +396,8 @@ z_max: {}
 z_array: {:?}
 m_min: {}
 m_max: {}
-m_array: {:?}", 
-            self.shape_type, 
+m_array: {:?}",
+            self.shape_type,
             self.x_min,
             self.x_max,
             self.y_min,
@@ -322,16 +411,17 @@ m_array: {:?}",
             self.z_array,
             self.m_min,
             self.m_max,
-            self.m_array);
+            self.m_array
+        );
         write!(f, "{}", s)
     }
 }
 
 #[repr(u16)]
 #[derive(Copy, Clone, PartialEq)]
-pub enum ShapeType { 
+pub enum ShapeType {
     Null = 0,
-    Point = 1, 
+    Point = 1,
     PolyLine = 3,
     Polygon = 5,
     MultiPoint = 8,
@@ -361,7 +451,7 @@ impl ShapeType {
             23 => return ShapeType::PolyLineM,
             25 => return ShapeType::PolygonM,
             28 => return ShapeType::MultiPointM,
-            _ => panic!("Unrecognized ShapeType")
+            _ => panic!("Unrecognized ShapeType"),
         }
     }
 
@@ -387,20 +477,26 @@ impl ShapeType {
         match self {
             &ShapeType::Null => ShapeType::Null,
             &ShapeType::Point | &ShapeType::PointZ | &ShapeType::PointM => ShapeType::Point,
-            &ShapeType::PolyLine | &ShapeType::PolyLineZ | &ShapeType::PolyLineM => ShapeType::PolyLine,
+            &ShapeType::PolyLine | &ShapeType::PolyLineZ | &ShapeType::PolyLineM => {
+                ShapeType::PolyLine
+            }
             &ShapeType::Polygon | &ShapeType::PolygonZ | &ShapeType::PolygonM => ShapeType::Polygon,
-            &ShapeType::MultiPoint | &ShapeType::MultiPointZ | &ShapeType::MultiPointM => ShapeType::MultiPoint,
+            &ShapeType::MultiPoint | &ShapeType::MultiPointZ | &ShapeType::MultiPointM => {
+                ShapeType::MultiPoint
+            }
         }
     }
 }
 
 impl Default for ShapeType {
-    fn default() -> ShapeType { ShapeType::Null }
+    fn default() -> ShapeType {
+        ShapeType::Null
+    }
 }
 
 impl fmt::Display for ShapeType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-         let printable = match *self {
+        let printable = match *self {
             ShapeType::Null => "Null",
             ShapeType::Point => "Point",
             ShapeType::PolyLine => "PolyLine",

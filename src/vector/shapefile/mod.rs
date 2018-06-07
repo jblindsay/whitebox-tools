@@ -110,6 +110,8 @@ impl Shapefile {
     pub fn initialize_using_file<'a>(
         file_name: &'a str,
         other: &'a Shapefile,
+        shape_type: ShapeType,
+        copy_fields: bool,
     ) -> Result<Shapefile, Error> {
         let new_file_name = if file_name.contains(".") {
             file_name.to_string()
@@ -124,7 +126,11 @@ impl Shapefile {
             projection: other.projection.clone(),
             ..Default::default()
         };
-        sf.header.shape_type = other.header.shape_type;
+        sf.header.shape_type = shape_type;
+        if copy_fields {
+            sf.attributes.fields = other.attributes.fields.clone();
+            sf.attributes.header.num_fields = sf.attributes.fields.len() as u32;
+        }
         Ok(sf)
     }
 
@@ -143,6 +149,24 @@ impl Shapefile {
         }
         if geometry.shape_type == self.header.shape_type {
             self.records.push(geometry);
+            self.num_records += 1;
+        } else {
+            panic!("Attempt to add a ShapefileGeometry record of the wrong ShapeType.");
+        }
+    }
+
+    /// Adds a new Point record.
+    pub fn add_point_record(&mut self, x: f64, y: f64) {
+        if self.file_mode == "r" {
+            panic!("The file was opened in read-only mode.");
+        }
+        if self.header.shape_type == ShapeType::Point {
+            let mut sfg = ShapefileGeometry {
+                shape_type: ShapeType::Point,
+                ..Default::default()
+            };
+            sfg.add_point(Point2D { x: x, y: y });
+            self.records.push(sfg);
             self.num_records += 1;
         } else {
             panic!("Attempt to add a ShapefileGeometry record of the wrong ShapeType.");
@@ -625,7 +649,7 @@ impl Shapefile {
         // file size
         let mut size = 100i32; // initialized to the size of the file header
         for i in 0..self.num_records {
-            size += self.records[i].get_length();
+            size += 8 + self.records[i].get_length();
         }
         let file_length = size / 2i32; // in 16-bit words
         writer.write_i32::<BigEndian>(file_length)?;
@@ -652,14 +676,14 @@ impl Shapefile {
             ShapeType::Null => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(0i32)?; // Shape type
                 }
             }
             ShapeType::Point => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(1i32)?; // Shape type
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -675,7 +699,7 @@ impl Shapefile {
 
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(st)?; // Shape type
 
                     // extent
@@ -703,7 +727,7 @@ impl Shapefile {
             ShapeType::MultiPoint => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(8i32)?; // Shape type
 
                     // extent
@@ -725,7 +749,7 @@ impl Shapefile {
             ShapeType::PointZ => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(11i32)?; // Shape type
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -743,7 +767,7 @@ impl Shapefile {
 
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(st)?; // Shape type
 
                     // extent
@@ -785,7 +809,7 @@ impl Shapefile {
             ShapeType::MultiPointZ => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(18i32)?; // Shape type
 
                     // extent
@@ -821,7 +845,7 @@ impl Shapefile {
             ShapeType::PointM => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(21i32)?; // Shape type
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                     writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -838,7 +862,7 @@ impl Shapefile {
 
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(st)?; // Shape type
 
                     // extent
@@ -873,7 +897,7 @@ impl Shapefile {
             ShapeType::MultiPointM => {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
-                    writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
+                    writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
                     writer.write_i32::<LittleEndian>(28i32)?; // Shape type
 
                     // extent
@@ -917,12 +941,7 @@ impl Shapefile {
             writer.write_i32::<BigEndian>(0i32)?;
         }
 
-        // file size
-        let mut size = 100i32; // initialized to the size of the file header
-        for i in 0..self.num_records {
-            size += self.records[i].get_length();
-        }
-        let file_length = size / 2i32; // in 16-bit words
+        let file_length = (100 + 8 * self.num_records) as i32 / 2i32; // in 16-bit words
         writer.write_i32::<BigEndian>(file_length)?;
 
         // version
@@ -945,9 +964,9 @@ impl Shapefile {
         let mut pos = 100i32;
 
         for i in 0..self.num_records {
-            writer.write_i32::<BigEndian>(pos)?; // Record number
-            writer.write_i32::<BigEndian>(self.records[i].get_length())?; // Content length
-            pos += self.records[i].get_length();
+            writer.write_i32::<BigEndian>(pos / 2)?; // Record number
+            writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
+            pos += 8 + self.records[i].get_length();
         }
 
         ///////////////////////////////
@@ -965,123 +984,76 @@ impl Shapefile {
         // Write the attributes file //
         ///////////////////////////////
 
-        let dbf_file = self.file_name.replace(".shp", ".dbf");
-        let f = File::create(&dbf_file)?;
-        let mut writer = BufWriter::new(f);
+        // let dbf_file = self.file_name.replace(".shp", ".dbf");
+        // let f = File::create(&dbf_file)?;
+        // let mut writer = BufWriter::new(f);
 
-        writer.write_u8(3u8)?;
+        // writer.write_u8(3u8)?;
 
-        // write the date
-        let now = time::now();
-        writer.write_u8(now.tm_year as u8)?;
-        writer.write_u8(now.tm_mon as u8 + 1u8)?;
-        writer.write_u8(now.tm_mday as u8)?;
+        // // write the date
+        // let now = time::now();
+        // writer.write_u8(now.tm_year as u8)?;
+        // writer.write_u8(now.tm_mon as u8 + 1u8)?;
+        // writer.write_u8(now.tm_mday as u8)?;
 
-        writer.write_u32::<LittleEndian>(self.attributes.header.num_records)?; // number of records
-        let header_size = 68u32 + self.attributes.header.num_fields * 32 + 1; // maybe should be 64 instead...check java code.
-        writer.write_u32::<LittleEndian>(header_size)?; // header size
+        // writer.write_u32::<LittleEndian>(self.attributes.header.num_records)?; // number of records
+        // let header_size = 68u32 + self.attributes.header.num_fields * 32 + 1; // maybe should be 64 instead...check java code.
+        // writer.write_u32::<LittleEndian>(header_size)?; // header size
 
-        let bytes_in_record = 0u32;
-        writer.write_u32::<LittleEndian>(bytes_in_record)?; // bytes in record
+        // let bytes_in_record = 0u32;
+        // writer.write_u32::<LittleEndian>(bytes_in_record)?; // bytes in record
 
-        // reserved or unused bytes
-        for _ in 0..20 {
-            writer.write_u8(0u8)?;
-        }
+        // // reserved or unused bytes
+        // for _ in 0..20 {
+        //     writer.write_u8(0u8)?;
+        // }
 
-        // Field descriptor array
-        for field in &self.attributes.fields {
-            let mut s = field.name.clone();
-            if s.len() > 10 {
-                s = field.name[0..10].to_string();
-            }
-            for _ in s.len()..11 {
-                s.push(char::from(0));
-            }
-            writer.write_all(s.as_bytes())?;
-            writer.write_u8(field.field_type as u8)?;
+        // // Field descriptor array
+        // for field in &self.attributes.fields {
+        //     let mut s = field.name.clone();
+        //     if s.len() > 10 {
+        //         s = field.name[0..10].to_string();
+        //     }
+        //     for _ in s.len()..11 {
+        //         s.push(char::from(0));
+        //     }
+        //     writer.write_all(s.as_bytes())?;
+        //     writer.write_u8(field.field_type as u8)?;
 
-            for _ in 0..4 {
-                writer.write_u8(0u8)?;
-            }
+        //     for _ in 0..4 {
+        //         writer.write_u8(0u8)?;
+        //     }
 
-            writer.write_u8(field.field_length)?;
-            writer.write_u8(field.decimal_count)?;
+        //     writer.write_u8(field.field_length)?;
+        //     writer.write_u8(field.decimal_count)?;
 
-            for _ in 0..14 {
-                writer.write_u8(0u8)?;
-            }
-        }
+        //     for _ in 0..14 {
+        //         writer.write_u8(0u8)?;
+        //     }
+        // }
 
-        writer.write_u8(0x0D)?; // terminator byte
+        // writer.write_u8(0x0D)?; // terminator byte
 
-        // write records
-        for i in 0..self.attributes.header.num_records as usize {
-            writer.write_u8(0x20)?;
-            let rec = self.attributes.get_record(i);
-            for j in 0..self.attributes.header.num_fields {
-                let fl = self.attributes.fields[j as usize].field_length;
-                match &rec[j as usize] {
-                    FieldData::Null => {
-                        writer.write_all("?".as_bytes());
-                    }
-                    FieldData::Int(v) => {
-                        writer.write_all(&format!("{}", v).as_bytes());
-                    }
-                    FieldData::Int64(v) => {
-                        writer.write_all(&format!("{}", v).as_bytes());
-                    }
-                    _ => {} // do nothing
-                }
-            }
-        }
-
-        /*
-        let mut str_rep: String;
-        for _ in 0..self.attributes.header.num_records {
-            d = bor.read_u8() as u32 == 0x2A;
-            let mut r: Vec<FieldData> = vec![];
-            for j in 0..self.attributes.header.num_fields {
-                str_rep = bor.read_utf8(self.attributes.fields[j as usize].field_length as usize)
-                    .replace(char::from(0), "")
-                    .replace("*", "")
-                    .trim()
-                    .to_string();
-                if str_rep.replace(" ", "").replace("?", "").is_empty() {
-                    r.push(FieldData::Null);
-                } else {
-                    match self.attributes.fields[j as usize].field_type {
-                        'N' | 'F' | 'I' | 'O' => {
-                            if self.attributes.fields[j as usize].decimal_count == 0 {
-                                r.push(FieldData::Int64(str_rep.parse::<i64>().unwrap()));
-                            } else {
-                                r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
-                            }
-                        }
-                        'D' => {
-                            r.push(FieldData::Date(DateData {
-                                year: str_rep[0..4].parse::<u16>().unwrap(),
-                                month: str_rep[4..6].parse::<u8>().unwrap(),
-                                day: str_rep[6..8].parse::<u8>().unwrap(),
-                            }));
-                        }
-                        'L' => {
-                            if str_rep.to_lowercase().contains("t") {
-                                r.push(FieldData::Bool(true));
-                            } else {
-                                r.push(FieldData::Bool(false));
-                            }
-                        }
-                        _ => {
-                            // treat it like a string
-                            r.push(FieldData::Text(str_rep.clone()));
-                        }
-                    }
-                }
-            }
-            self.attributes.add_record(d, r);
-        }
-        */
+        // // write records
+        // for i in 0..self.attributes.header.num_records as usize {
+        //     writer.write_u8(0x20)?;
+        //     let rec = self.attributes.get_record(i);
+        //     for j in 0..self.attributes.header.num_fields {
+        //         let fl = self.attributes.fields[j as usize].field_length;
+        //         match &rec[j as usize] {
+        //             FieldData::Null => {
+        //                 writer.write_all("?".as_bytes())?;
+        //             }
+        //             FieldData::Int(v) => {
+        //                 writer.write_all(&format!("{}", v).as_bytes())?;
+        //             }
+        //             FieldData::Int64(v) => {
+        //                 writer.write_all(&format!("{}", v).as_bytes())?;
+        //             }
+        //             _ => {} // do nothing
+        //         }
+        //     }
+        // }
 
         Ok(())
     }

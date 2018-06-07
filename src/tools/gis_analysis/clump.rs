@@ -6,12 +6,12 @@ Last Modified: December 14, 2017
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use time;
 use tools::*;
 
 pub struct Clump {
@@ -23,63 +23,74 @@ pub struct Clump {
 }
 
 impl Clump {
-    pub fn new() -> Clump { // public constructor
+    pub fn new() -> Clump {
+        // public constructor
         let name = "Clump".to_string();
         let toolbox = "GIS Analysis".to_string();
-        let description = "Groups cells that form physically discrete areas, assigning them unique identifiers.".to_string();
-        
+        let description =
+            "Groups cells that form physically discrete areas, assigning them unique identifiers."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Include diagonal connections?".to_owned(), 
-            flags: vec!["--diag".to_owned()], 
-            description: "Flag indicating whether diagonal connections should be considered.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Include diagonal connections?".to_owned(),
+            flags: vec!["--diag".to_owned()],
+            description: "Flag indicating whether diagonal connections should be considered."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Treat zero values as background?".to_owned(), 
-            flags: vec!["--zero_back".to_owned()], 
-            description: "Flag indicating whether zero values should be treated as a background.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Treat zero values as background?".to_owned(),
+            flags: vec!["--zero_back".to_owned()],
+            description: "Flag indicating whether zero values should be treated as a background."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --diag", short_exe, name).replace("*", &sep);
-    
-        Clump { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --diag",
+            short_exe, name
+        ).replace("*", &sep);
+
+        Clump {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -88,7 +99,7 @@ impl WhiteboxTool for Clump {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -112,15 +123,22 @@ impl WhiteboxTool for Clump {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut diag = false;
         let mut zero_back = false;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -135,17 +153,19 @@ impl WhiteboxTool for Clump {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-diag" || vec[0].to_lowercase() == "--diag" {
                 diag = true;
-            } else if vec[0].to_lowercase() == "-zero_back" || vec[0].to_lowercase() == "--zero_back" {
+            } else if vec[0].to_lowercase() == "-zero_back"
+                || vec[0].to_lowercase() == "--zero_back"
+            {
                 zero_back = true;
             }
         }
@@ -168,24 +188,27 @@ impl WhiteboxTool for Clump {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
-        
+
         let start = time::now();
-        
+
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-                
-        let mut output = Raster::initialize_using_file(&output_file, &input);
 
-        let mut dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let mut dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I32;
+
+        let mut dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let mut dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let mut num_neighbours = 8;
         if !diag {
-            dx = [ 0, 1, 0, -1, 0, 0, 0, 0 ];
-            dy = [ -1, 0, 1, 0, 0, 0, 0, 0 ];
+            dx = [0, 1, 0, -1, 0, 0, 0, 0];
+            dy = [-1, 0, 1, 0, 0, 0, 0, 0];
             num_neighbours = 4;
         }
         let mut back_val = f64::NEG_INFINITY;
@@ -217,7 +240,9 @@ impl WhiteboxTool for Clump {
                         if count == 1000 {
                             count = 0;
                             if verbose {
-                                progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                                progress = (100.0_f64 * num_solved_cells as f64
+                                    / (num_cells - 1) as f64)
+                                    as usize;
                                 if progress != old_progress {
                                     println!("Performing analysis: {}%", progress);
                                     old_progress = progress;
@@ -254,19 +279,31 @@ impl WhiteboxTool for Clump {
         let elapsed_time = end - start;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Diagonal connectivity: {}", diag));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

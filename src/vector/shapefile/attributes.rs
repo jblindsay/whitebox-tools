@@ -36,10 +36,7 @@ pub struct DateData {
 
 impl fmt::Display for DateData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("{}-{}-{}", 
-            self.year,
-            self.month,
-            self.day);
+        let s = format!("{}-{}-{}", self.year, self.month, self.day);
         write!(f, "{}", s)
     }
 }
@@ -55,7 +52,6 @@ pub enum FieldData {
     Null,
 }
 
-
 #[derive(Debug, Default, Clone)]
 pub struct AttributeField {
     pub name: String,
@@ -68,14 +64,15 @@ pub struct AttributeField {
 }
 
 impl AttributeField {
-    pub fn new<'a>(name: &str, 
-        field_type: char, 
-        field_length: u8, 
+    pub fn new<'a>(
+        name: &str,
+        field_type: char,
+        field_length: u8,
         decimal_count: u8,
-        work_area_id: u8, 
-        set_field_flag: u8, 
-        index_field_flag: u8) -> AttributeField {
-        
+        work_area_id: u8,
+        set_field_flag: u8,
+        index_field_flag: u8,
+    ) -> AttributeField {
         AttributeField {
             name: name.to_string(),
             field_type: field_type,
@@ -97,17 +94,19 @@ pub struct ShapefileAttributes {
 }
 
 impl ShapefileAttributes {
+    /// Adds an attribute record to the table.
     pub fn add_record(&mut self, deleted: bool, rec: Vec<FieldData>) {
         self.data.push(rec);
         self.deleted.push(deleted);
     }
 
+    /// Retrieves an attribute record for a zero-based index.
     pub fn get_record(&self, index: usize) -> Vec<FieldData> {
         if index >= self.header.num_records as usize {
             panic!("Error: Specified record index is greater than the number of records.");
         }
         // if self.deleted[index] {
-            
+
         // }
         self.data[index].clone()
     }
@@ -119,10 +118,10 @@ impl ShapefileAttributes {
     pub fn get_field_num(&self, name: &str) -> Option<usize> {
         for i in 0..self.fields.len() {
             if self.fields[i].name == name {
-                return Some(i)
+                return Some(i);
             }
         }
-        None 
+        None
     }
 
     pub fn get_field_info(&self, index: usize) -> AttributeField {
