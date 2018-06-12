@@ -526,7 +526,7 @@ impl Shapefile {
         self.attributes.fields = vec![];
         let mut flag = true;
         while flag {
-            let name = bor.read_utf8(11).replace(char::from(0), ""); //(cast[string](buf[bor.pos..bor.pos+10])).strip.replaceNullCharacters
+            let name = bor.read_utf8(11).replace(char::from(0), "");
             let field_type = char::from(bor.read_u8());
             bor.pos += 4;
             let field_length = bor.read_u8();
@@ -608,7 +608,7 @@ impl Shapefile {
                     }
                 }
             }
-            self.attributes.add_record(d, r);
+            self.attributes.add_record(r, d);
         }
 
         Ok(())
@@ -630,9 +630,9 @@ impl Shapefile {
             ));
         }
 
-        ///////////////////////////////////////////////
-        // First write the geometry data (.shp file) //
-        ///////////////////////////////////////////////
+        /////////////////////////////////////////
+        // Write the geometry data (.shp file) //
+        /////////////////////////////////////////
 
         // write the header
         let f = File::create(&self.file_name)?;
@@ -984,76 +984,147 @@ impl Shapefile {
         // Write the attributes file //
         ///////////////////////////////
 
-        // let dbf_file = self.file_name.replace(".shp", ".dbf");
-        // let f = File::create(&dbf_file)?;
-        // let mut writer = BufWriter::new(f);
+        let dbf_file = self.file_name.replace(".shp", ".dbf");
+        let f = File::create(&dbf_file)?;
+        let mut writer = BufWriter::new(f);
 
-        // writer.write_u8(3u8)?;
+        self.attributes.header.version = 3;
+        writer.write_u8(3u8)?;
 
-        // // write the date
-        // let now = time::now();
-        // writer.write_u8(now.tm_year as u8)?;
-        // writer.write_u8(now.tm_mon as u8 + 1u8)?;
-        // writer.write_u8(now.tm_mday as u8)?;
+        // write the date
+        let now = time::now();
+        writer.write_u8(now.tm_year as u8)?;
+        writer.write_u8(now.tm_mon as u8 + 1u8)?;
+        writer.write_u8(now.tm_mday as u8)?;
 
-        // writer.write_u32::<LittleEndian>(self.attributes.header.num_records)?; // number of records
-        // let header_size = 68u32 + self.attributes.header.num_fields * 32 + 1; // maybe should be 64 instead...check java code.
-        // writer.write_u32::<LittleEndian>(header_size)?; // header size
+        writer.write_u32::<LittleEndian>(self.attributes.header.num_records)?; // number of records
+        let header_size = 32u16 + self.attributes.header.num_fields as u16 * 32u16 + 1u16;
+        self.attributes.header.bytes_in_header = header_size;
+        writer.write_u16::<LittleEndian>(header_size)?; // header size
 
-        // let bytes_in_record = 0u32;
-        // writer.write_u32::<LittleEndian>(bytes_in_record)?; // bytes in record
+        let mut bytes_in_record = 0u16;
+        for field in &self.attributes.fields {
+            bytes_in_record += field.field_length as u16;
+        }
+        bytes_in_record += 1;
+        self.attributes.header.bytes_in_record = bytes_in_record;
+        writer.write_u16::<LittleEndian>(bytes_in_record)?; // bytes in record
 
-        // // reserved or unused bytes
-        // for _ in 0..20 {
-        //     writer.write_u8(0u8)?;
-        // }
+        // reserved or unused bytes
+        for _ in 0..20 {
+            writer.write_u8(0u8)?;
+        }
 
-        // // Field descriptor array
-        // for field in &self.attributes.fields {
-        //     let mut s = field.name.clone();
-        //     if s.len() > 10 {
-        //         s = field.name[0..10].to_string();
-        //     }
-        //     for _ in s.len()..11 {
-        //         s.push(char::from(0));
-        //     }
-        //     writer.write_all(s.as_bytes())?;
-        //     writer.write_u8(field.field_type as u8)?;
+        // Field descriptor array
+        for field in &self.attributes.fields {
+            let mut s = field.name.clone();
+            if s.len() > 10 {
+                s = field.name[0..10].to_string();
+            }
+            for _ in s.len()..11 {
+                s.push(char::from(0));
+            }
+            writer.write_all(s.as_bytes())?;
+            writer.write_u8(field.field_type as u8)?;
 
-        //     for _ in 0..4 {
-        //         writer.write_u8(0u8)?;
-        //     }
+            for _ in 0..4 {
+                writer.write_u8(0u8)?;
+            }
 
-        //     writer.write_u8(field.field_length)?;
-        //     writer.write_u8(field.decimal_count)?;
+            writer.write_u8(field.field_length)?;
+            writer.write_u8(field.decimal_count)?;
 
-        //     for _ in 0..14 {
-        //         writer.write_u8(0u8)?;
-        //     }
-        // }
+            for _ in 0..14 {
+                writer.write_u8(0u8)?;
+            }
+        }
 
-        // writer.write_u8(0x0D)?; // terminator byte
+        writer.write_u8(0x0D)?; // terminator byte
 
-        // // write records
-        // for i in 0..self.attributes.header.num_records as usize {
-        //     writer.write_u8(0x20)?;
-        //     let rec = self.attributes.get_record(i);
-        //     for j in 0..self.attributes.header.num_fields {
-        //         let fl = self.attributes.fields[j as usize].field_length;
-        //         match &rec[j as usize] {
-        //             FieldData::Null => {
-        //                 writer.write_all("?".as_bytes())?;
-        //             }
-        //             FieldData::Int(v) => {
-        //                 writer.write_all(&format!("{}", v).as_bytes())?;
-        //             }
-        //             FieldData::Int64(v) => {
-        //                 writer.write_all(&format!("{}", v).as_bytes())?;
-        //             }
-        //             _ => {} // do nothing
-        //         }
-        //     }
-        // }
+        // write records
+        for i in 0..self.attributes.header.num_records as usize {
+            if !self.attributes.is_deleted[i] {
+                writer.write_u8(0x20)?;
+            } else {
+                writer.write_u8(0x2A)?;
+            }
+            let rec = self.attributes.get_record(i);
+            for j in 0..self.attributes.header.num_fields {
+                let fl = self.attributes.fields[j as usize].field_length as usize;
+                match &rec[j as usize] {
+                    FieldData::Null => {
+                        writer.write_all("?".as_bytes())?;
+                    }
+                    FieldData::Int(v) => {
+                        let b = v.to_string();
+                        if b.len() < fl {
+                            let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
+                            spcs.push_str(&b);
+                            writer.write_all(&spcs.as_bytes())?;
+                        } else if b.len() > fl {
+                            writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                        } else {
+                            writer.write_all(&b.as_bytes())?;
+                        }
+                    }
+                    FieldData::Int64(v) => {
+                        let b = v.to_string();
+                        if b.len() < fl {
+                            let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
+                            spcs.push_str(&b);
+                            writer.write_all(&spcs.as_bytes())?;
+                        } else if b.len() > fl {
+                            writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                        } else {
+                            writer.write_all(&b.as_bytes())?;
+                        }
+                    }
+                    FieldData::Real(v) => {
+                        let dc = self.attributes.fields[j as usize].decimal_count as usize;
+                        let s = v.to_string();
+                        let d = v.trunc().to_string();
+                        let mut c = s[d.len() + 1..s.len()].to_string();
+                        if c.len() > dc {
+                            c = c[0..dc].to_string();
+                        }
+                        let b = format!("{}.{}", d, c);
+                        if b.len() < fl {
+                            let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
+                            spcs.push_str(&b);
+                            writer.write_all(&spcs.as_bytes())?;
+                        } else if b.len() > fl {
+                            writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                        } else {
+                            writer.write_all(&b.as_bytes())?;
+                        }
+                    }
+                    FieldData::Bool(v) => {
+                        if *v {
+                            writer.write_all("T".as_bytes())?;
+                        } else {
+                            writer.write_all("F".as_bytes())?;
+                        }
+                    }
+                    FieldData::Date(v) => {
+                        writer.write_all(&format!("{}", v).as_bytes())?;
+                    }
+                    FieldData::Text(v) => {
+                        if v.len() < fl {
+                            // add spaces at start
+                            let mut spcs: String = vec![' '; fl - v.len()].into_iter().collect();
+                            spcs.push_str(&v);
+                            writer.write_all(&spcs.as_bytes())?;
+                        } else if v.len() > fl {
+                            writer.write_all(&v[0..fl].as_bytes())?;
+                        } else {
+                            writer.write_all(&v.as_bytes())?;
+                        }
+                    }
+                }
+            }
+        }
+
+        writer.write_u8(0x1A)?; // file terminator byte
 
         Ok(())
     }

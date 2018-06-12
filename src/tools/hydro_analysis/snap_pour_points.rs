@@ -232,8 +232,10 @@ impl WhiteboxTool for SnapPourPoints {
         let (mut x, mut y): (f64, f64);
         for record_num in 0..pourpts.num_records {
             let record = pourpts.get_record(record_num);
-            let attributes = pourpts.attributes.get_record(record_num);
-            output.attributes.add_record(false, attributes);
+            let attr_rec = pourpts.attributes.get_record(record_num);
+            output
+                .attributes
+                .add_record(attr_rec, pourpts.attributes.is_deleted[record_num]);
             row = flow_accum.get_row_from_y(record.points[0].y);
             col = flow_accum.get_column_from_x(record.points[0].x);
             max_accum = 0.0;

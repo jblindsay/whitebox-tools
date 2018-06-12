@@ -36,7 +36,21 @@ pub struct DateData {
 
 impl fmt::Display for DateData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("{}-{}-{}", self.year, self.month, self.day);
+        let mut m = self.month.to_string();
+        if m.len() < 2 {
+            m = format!("0{}", m);
+        }
+        if m.len() > 2 {
+            m = m[m.len() - 2..m.len()].to_string();
+        }
+        let mut d = self.day.to_string();
+        if d.len() < 2 {
+            d = format!("0{}", d);
+        }
+        if d.len() > 2 {
+            d = d[d.len() - 2..d.len()].to_string();
+        }
+        let s = format!("{}{}{}", self.year, m, d);
         write!(f, "{}", s)
     }
 }
@@ -90,14 +104,34 @@ pub struct ShapefileAttributes {
     pub header: AttributeHeader,
     pub fields: Vec<AttributeField>,
     data: Vec<Vec<FieldData>>,
-    deleted: Vec<bool>,
+    pub is_deleted: Vec<bool>,
 }
 
 impl ShapefileAttributes {
+    /// Adds a field to the table
+    pub fn add_field<'a>(&mut self, field: &'a AttributeField) {
+        self.fields.push(field.clone());
+        self.header.num_fields += 1;
+    }
+
+    /// Adds a Vec of fields to the table
+    pub fn add_fields<'a>(&mut self, fields: &'a Vec<AttributeField>) {
+        for field in fields {
+            self.fields.push(field.clone());
+            self.header.num_fields += 1;
+        }
+    }
+
+    /// Returns a field from the table
+    pub fn get_field<'a>(&'a self, index: usize) -> &'a AttributeField {
+        &self.fields[index]
+    }
+
     /// Adds an attribute record to the table.
-    pub fn add_record(&mut self, deleted: bool, rec: Vec<FieldData>) {
+    pub fn add_record(&mut self, rec: Vec<FieldData>, deleted: bool) {
         self.data.push(rec);
-        self.deleted.push(deleted);
+        self.is_deleted.push(deleted);
+        self.header.num_records += 1;
     }
 
     /// Retrieves an attribute record for a zero-based index.
@@ -105,9 +139,6 @@ impl ShapefileAttributes {
         if index >= self.header.num_records as usize {
             panic!("Error: Specified record index is greater than the number of records.");
         }
-        // if self.deleted[index] {
-
-        // }
         self.data[index].clone()
     }
 

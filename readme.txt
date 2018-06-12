@@ -58,6 +58,12 @@ for more details.
 
 Version 0.9.0 (XX-XX-2018)
 - Added the following tools:
+    StandardDeviationOfSlope
+    
+- Support has been added for writing Shapefile vector data.
+- The SnapPourPoints and JensonSnapPourPoints tools have been modified to accept
+  vector inputs and to produce vector outputs. This is more consistent with 
+  the Watershed tool, which requires vector pour point data inputs.
 
 
 Version 0.8.0 (30-05-2018)

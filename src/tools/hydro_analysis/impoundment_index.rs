@@ -6,20 +6,20 @@ Last Modified: 28/05/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
+use raster::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
+use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
-use tools::*;
 use structures::Array2D;
+use time;
+use tools::*;
 
 /// Calculates the impoundment size resulting from damming a DEM.
 pub struct ImpoundmentIndex {
@@ -35,54 +35,54 @@ impl ImpoundmentIndex {
         // public constructor
         let name = "ImpoundmentIndex".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Calculates the impoundment size resulting from damming a DEM.".to_string();
+        let description =
+            "Calculates the impoundment size resulting from damming a DEM.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Type".to_owned(), 
-            flags: vec!["--out_type".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Type".to_owned(),
+            flags: vec!["--out_type".to_owned()],
             description: "Output type; one of 'area' (default) and 'volume'.".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["area".to_owned(), "volume".to_owned()]),
             default_value: Some("area".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Max dam height (z-units)".to_owned(), 
-            flags: vec!["--damheight".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Max dam height (z-units)".to_owned(),
+            flags: vec!["--damheight".to_owned()],
             description: "Maximum height of the dam".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Max dam length (grid cells)".to_owned(), 
-            flags: vec!["--damlength".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Max dam length (grid cells)".to_owned(),
+            flags: vec!["--damlength".to_owned()],
             description: "Maximum length of thr dam.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
-
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -110,7 +110,7 @@ impl WhiteboxTool for ImpoundmentIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -141,19 +141,23 @@ impl WhiteboxTool for ImpoundmentIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut out_type = 0; // 0 = area; 1 = volume
         let mut dam_height = 1f64;
         let mut dam_length = 10f64;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -181,24 +185,20 @@ impl WhiteboxTool for ImpoundmentIndex {
                 let val = if keyval {
                     vec[1].to_lowercase()
                 } else {
-                    args[i+1].to_lowercase()
+                    args[i + 1].to_lowercase()
                 };
-                out_type = if val.contains("v") {
-                    1
-                } else {
-                    0
-                };
+                out_type = if val.contains("v") { 1 } else { 0 };
             } else if flag_val == "-damheight" {
                 dam_height = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-damlength" {
                 dam_length = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             }
         }
@@ -221,7 +221,9 @@ impl WhiteboxTool for ImpoundmentIndex {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
@@ -250,7 +252,8 @@ impl WhiteboxTool for ImpoundmentIndex {
         for nodata values along the raster's edges.
         */
 
-        let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+        let mut queue: VecDeque<(isize, isize)> =
+            VecDeque::with_capacity((rows * columns) as usize);
         for row in 0..rows {
             /*
             Note that this is only possible because Whitebox rasters
@@ -276,8 +279,8 @@ impl WhiteboxTool for ImpoundmentIndex {
         let mut zin_n: f64; // value of neighbour of row, col in input raster
         let mut zout: f64; // value of row, col in output raster
         let mut zout_n: f64; // value of neighbour of row, col in output raster
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         while !queue.is_empty() {
@@ -296,7 +299,12 @@ impl WhiteboxTool for ImpoundmentIndex {
                     } else {
                         filled_dem[(row_n, col_n)] = zin_n;
                         // Push it onto the priority queue for the priority flood operation
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n, priority2: zin_n });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                            priority2: zin_n,
+                        });
                     }
                     num_solved_cells += 1;
                 }
@@ -312,7 +320,7 @@ impl WhiteboxTool for ImpoundmentIndex {
         }
 
         // Perform the priority flood operation.
-        let back_link = [ 4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8 ];
+        let back_link = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
         let mut dir: i8;
 
         while !minheap.is_empty() {
@@ -329,9 +337,16 @@ impl WhiteboxTool for ImpoundmentIndex {
                     if zin_n != nodata {
                         flow_dir[(row_n, col_n)] = back_link[n];
                         // if zin_n < (zout + small_num) { zin_n = zout + small_num; } // We're in a depression. Raise the elevation.
-                        if zin_n < zout { zin_n = zout; } // We're in a depression. Raise the elevation.
+                        if zin_n < zout {
+                            zin_n = zout;
+                        } // We're in a depression. Raise the elevation.
                         filled_dem[(row_n, col_n)] = zin_n;
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n, priority2: input[(row_n, col_n)] });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                            priority2: input[(row_n, col_n)],
+                        });
                     } else {
                         // Interior nodata cells are still treated as nodata and are not filled.
                         filled_dem[(row_n, col_n)] = nodata;
@@ -350,8 +365,6 @@ impl WhiteboxTool for ImpoundmentIndex {
             }
         }
 
-
-
         // calculate dam heights
         let flow_dir = Arc::new(flow_dir);
         let num_procs = num_cpus::get() as isize;
@@ -361,15 +374,15 @@ impl WhiteboxTool for ImpoundmentIndex {
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let perpendicular1 = [ 2, 3, 4, 5, 6, 7, 0, 1 ];
-                let perpendicular2 = [ 6, 7, 0, 1, 2, 3, 4, 5 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let perpendicular1 = [2, 3, 4, 5, 6, 7, 0, 1];
+                let perpendicular2 = [6, 7, 0, 1, 2, 3, 4, 5];
                 let half_dam_length = (dam_length / 2f64).floor() as usize;
                 let dam_profile_length = half_dam_length * 2 + 1;
                 let mut dam_profile = vec![0f64; dam_profile_length];
                 let mut dam_profile_filled = vec![0f64; dam_profile_length];
-                let (mut perp_dir1, mut perp_dir2): (i8, i8); 
+                let (mut perp_dir1, mut perp_dir2): (i8, i8);
                 let mut z: f64;
                 let mut z_n: f64;
                 let mut dir: i8;
@@ -398,7 +411,8 @@ impl WhiteboxTool for ImpoundmentIndex {
                                     if z_n != nodata {
                                         dam_profile[half_dam_length + i as usize] = z_n;
                                     } else {
-                                        dam_profile[half_dam_length + i as usize] = f64::NEG_INFINITY;
+                                        dam_profile[half_dam_length + i as usize] =
+                                            f64::NEG_INFINITY;
                                     }
 
                                     r_n2 += dy[perp_dir2 as usize];
@@ -412,18 +426,21 @@ impl WhiteboxTool for ImpoundmentIndex {
                                 }
 
                                 dam_profile_filled[0] = dam_profile[0];
-                                for i in 1..dam_profile_length-1 {
-                                    if dam_profile_filled[i-1] > dam_profile[i] {
-                                        dam_profile_filled[i] = dam_profile_filled[i-1];
+                                for i in 1..dam_profile_length - 1 {
+                                    if dam_profile_filled[i - 1] > dam_profile[i] {
+                                        dam_profile_filled[i] = dam_profile_filled[i - 1];
                                     } else {
                                         dam_profile_filled[i] = dam_profile[i];
                                     }
                                 }
 
-                                dam_profile_filled[dam_profile_length-1] = dam_profile[dam_profile_length-1];
-                                for i in (1..dam_profile_length-1).rev() {
-                                    if dam_profile_filled[i+1] > dam_profile[i] {
-                                        dam_profile_filled[i] = dam_profile_filled[i+1];
+                                dam_profile_filled[dam_profile_length - 1] =
+                                    dam_profile[dam_profile_length - 1];
+                                for i in (1..dam_profile_length - 1).rev() {
+                                    if dam_profile_filled[i + 1] > dam_profile[i] {
+                                        if dam_profile_filled[i + 1] < dam_profile_filled[i] {
+                                            dam_profile_filled[i] = dam_profile_filled[i + 1];
+                                        }
                                     } else {
                                         dam_profile_filled[i] = dam_profile[i];
                                     }
@@ -448,7 +465,7 @@ impl WhiteboxTool for ImpoundmentIndex {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             crest_elev.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -457,7 +474,6 @@ impl WhiteboxTool for ImpoundmentIndex {
                 }
             }
         }
-
 
         // calculate the number of inflowing cells
         // let flow_dir = Arc::new(flow_dir);
@@ -468,9 +484,9 @@ impl WhiteboxTool for ImpoundmentIndex {
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
                 let mut z: f64;
                 let mut count: i8;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -479,7 +495,7 @@ impl WhiteboxTool for ImpoundmentIndex {
                         z = input[(row, col)];
                         if z != nodata {
                             count = 0i8;
-							for i in 0..8 {
+                            for i in 0..8 {
                                 if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
                                     count += 1;
                                 }
@@ -496,7 +512,8 @@ impl WhiteboxTool for ImpoundmentIndex {
 
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let mut stack = Vec::with_capacity((rows * columns) as usize);
-        let mut upslope_elevs: Vec<Vec<Vec<f64>>> = vec![vec![vec![]; columns as usize]; rows as usize];
+        let mut upslope_elevs: Vec<Vec<Vec<f64>>> =
+            vec![vec![vec![]; columns as usize]; rows as usize];
         let mut num_solved_cells = 0;
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
@@ -508,7 +525,7 @@ impl WhiteboxTool for ImpoundmentIndex {
                     num_solved_cells += 1;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -554,9 +571,11 @@ impl WhiteboxTool for ImpoundmentIndex {
                 }
                 upslope_elevs[row as usize][col as usize] = vec![];
 
-                if out_type == 0 { // area
+                if out_type == 0 {
+                    // area
                     output.increment(row_n, col_n, num_upslope * grid_area);
-                } else { // volume
+                } else {
+                    // volume
                     output.increment(row_n, col_n, vol);
                 }
 
@@ -576,12 +595,14 @@ impl WhiteboxTool for ImpoundmentIndex {
             }
         }
 
-        
         let end = time::now();
         let elapsed_time = end - start;
 
         output.configs.palette = "blueyellow.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Dam height: {}", dam_height));
         output.add_metadata_entry(format!("Dam length: {}", dam_length));
@@ -590,15 +611,24 @@ impl WhiteboxTool for ImpoundmentIndex {
         } else {
             output.add_metadata_entry(format!("Out type: volume"));
         }
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving accumulation data...") };
+        if verbose {
+            println!("Saving accumulation data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
@@ -620,7 +650,7 @@ impl PartialOrd for GridCell {
         if other.priority != self.priority {
             return other.priority.partial_cmp(&self.priority);
         }
-        return other.priority2.partial_cmp(&self.priority2)
+        return other.priority2.partial_cmp(&self.priority2);
     }
 }
 
