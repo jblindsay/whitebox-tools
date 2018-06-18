@@ -25,15 +25,15 @@ non-NoData value. The flow pointer raster should be generated using the D8
 algorithm.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
-use vector::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
+use time;
 use tools::*;
+use vector::*;
 
 pub struct UnnestBasins {
     name: String,
@@ -44,63 +44,69 @@ pub struct UnnestBasins {
 }
 
 impl UnnestBasins {
-    pub fn new() -> UnnestBasins { // public constructor
+    pub fn new() -> UnnestBasins {
+        // public constructor
         let name = "UnnestBasins".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description = "Extract whole watersheds for a set of outlet points.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input D8 pointer raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Pour Points (Outlet) File".to_owned(), 
-            flags: vec!["--pour_pts".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Pour Points (Outlet) File".to_owned(),
+            flags: vec!["--pour_pts".to_owned()],
             description: "Input vector pour points (outlet) file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.tif' --pour_pts='pour_pts.shp' -o='output.tif'", short_exe, name).replace("*", &sep);
-    
-        UnnestBasins { 
-            name: name, 
-            description: description, 
+
+        UnnestBasins {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -109,7 +115,7 @@ impl WhiteboxTool for UnnestBasins {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -133,15 +139,22 @@ impl WhiteboxTool for UnnestBasins {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut pourpts_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -157,19 +170,19 @@ impl WhiteboxTool for UnnestBasins {
                 d8_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-pour_pts" {
                 pourpts_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
@@ -190,7 +203,7 @@ impl WhiteboxTool for UnnestBasins {
         if !d8_file.contains(&sep) && !d8_file.contains("/") {
             d8_file = format!("{}{}", working_directory, d8_file);
         }
-        if !pourpts_file.contains(&sep) && ! pourpts_file.contains("/") {
+        if !pourpts_file.contains(&sep) && !pourpts_file.contains("/") {
             pourpts_file = format!("{}{}", working_directory, pourpts_file);
         }
         if !output_file.contains(&sep) && !output_file.contains("/") {
@@ -199,16 +212,20 @@ impl WhiteboxTool for UnnestBasins {
 
         let start = time::now();
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let pntr = Raster::new(&d8_file, "r")?;
-        
-        let pourpts = Shapefile::new(&pourpts_file, "r")?;
+
+        let pourpts = Shapefile::read(&pourpts_file)?;
 
         // make sure the input vector file is of points type
         if pourpts.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
         }
 
         let rows = pntr.configs.rows as isize;
@@ -216,8 +233,8 @@ impl WhiteboxTool for UnnestBasins {
         let nodata = -32768f64; //pour_pts.configs.nodata;
         let pntr_nodata = pntr.configs.nodata;
 
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
         let mut outlet_points: Array2D<isize> = Array2D::new(rows, columns, 0, 0)?;
         let mut outlet_rows = vec![0isize; pourpts.num_records + 1];
@@ -271,7 +288,7 @@ impl WhiteboxTool for UnnestBasins {
             pntr_matches[64] = 7i8;
             pntr_matches[128] = 0i8;
         }
-        
+
         let mut z: f64;
         for row in 0..rows {
             for col in 0..columns {
@@ -340,13 +357,13 @@ impl WhiteboxTool for UnnestBasins {
             }
         }
 
-        for order in 1..max_nesting_order+1 {
+        for order in 1..max_nesting_order + 1 {
             let start2 = time::now();
             // there will be an output file for each nesting order
             let pos_of_dot = output_file.rfind('.').unwrap_or(0);
             let ext = &output_file[pos_of_dot..];
             let output_file_order = output_file.replace(ext, &format!("_{}{}", order, ext));
-    
+
             let mut output = Raster::initialize_using_file(&output_file_order, &pntr);
             output.configs.nodata = nodata;
             output.configs.data_type = DataType::I16;
@@ -355,7 +372,7 @@ impl WhiteboxTool for UnnestBasins {
             let low_value = f64::MIN;
             output.reinitialize_values(low_value);
 
-            for outlet in 1..pourpts.num_records+1 {
+            for outlet in 1..pourpts.num_records + 1 {
                 if nesting_order[outlet] == order {
                     y = outlet_rows[outlet];
                     x = outlet_columns[outlet];
@@ -419,7 +436,10 @@ impl WhiteboxTool for UnnestBasins {
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
-                        println!("Progress (Loop {} of {}): {}%", order, max_nesting_order, progress);
+                        println!(
+                            "Progress (Loop {} of {}): {}%",
+                            order, max_nesting_order, progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -427,25 +447,37 @@ impl WhiteboxTool for UnnestBasins {
 
             let end2 = time::now();
             let elapsed_time2 = end2 - start2;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
             output.add_metadata_entry(format!("Pour-points file: {}", pourpts_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time2).replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time2).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving data for nesting order {}...", order) };
+            if verbose {
+                println!("Saving data for nesting order {}...", order)
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
         }
 
         let end = time::now();
         let elapsed_time = end - start;
-            
+
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-        
+
         Ok(())
     }
 }

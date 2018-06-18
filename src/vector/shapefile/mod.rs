@@ -11,7 +11,7 @@ extern crate time;
 
 pub mod attributes;
 pub mod geometry;
-pub use self::attributes::{AttributeField, AttributeHeader, DateData, FieldData,
+pub use self::attributes::{AttributeField, AttributeHeader, DateData, FieldData, FieldDataType,
                            ShapefileAttributes};
 pub use self::geometry::{ShapeType, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
@@ -91,19 +91,23 @@ pub struct Shapefile {
 }
 
 impl Shapefile {
-    pub fn new<'a>(file_name: &'a str, file_mode: &'a str) -> Result<Shapefile, Error> {
-        let fm: String = file_mode.to_lowercase();
+    pub fn read<'a>(file_name: &'a str) -> Result<Shapefile, Error> {
         let mut sf = Shapefile {
             file_name: file_name.to_string(),
-            file_mode: fm.clone(),
+            file_mode: "r".to_string(),
             ..Default::default()
         };
-        if sf.file_mode.contains("r") {
-            sf.read()?;
-        } else {
-            // write
-            // return Ok(r);
-        }
+        sf.read_file()?;
+        Ok(sf)
+    }
+
+    pub fn new<'a>(file_name: &'a str, file_type: ShapeType) -> Result<Shapefile, Error> {
+        let mut sf = Shapefile {
+            file_name: file_name.to_string(),
+            file_mode: "w".to_string(),
+            ..Default::default()
+        };
+        sf.header.shape_type = file_type;
         Ok(sf)
     }
 
@@ -173,7 +177,11 @@ impl Shapefile {
         }
     }
 
-    pub fn read(&mut self) -> Result<(), Error> {
+    pub fn get_attributes_table<'a>(&'a mut self) -> &'a mut ShapefileAttributes {
+        &mut self.attributes
+    }
+
+    fn read_file(&mut self) -> Result<(), Error> {
         ///////////////////////////////
         // First read the geometries //
         ///////////////////////////////
@@ -533,23 +541,29 @@ impl Shapefile {
             let decimal_count = bor.read_u8();
             // Skip reserved bytes multi-user dBASE.
             bor.pos += 2;
-            let work_area_id = bor.read_u8();
+            let _work_area_id = bor.read_u8();
             // Skip reserved bytes multi-user dBASE.
             bor.pos += 2;
-            let set_field_flag = bor.read_u8();
+            let _set_field_flag = bor.read_u8();
             // Skip reserved bytes.
             bor.pos += 7;
-            let index_field_flag = bor.read_u8();
+            let _index_field_flag = bor.read_u8();
 
-            let field_data = AttributeField::new(
-                &name,
-                field_type,
-                field_length,
-                decimal_count,
-                work_area_id,
-                set_field_flag,
-                index_field_flag,
-            );
+            let field_data = AttributeField {
+                name: name.clone(),
+                field_type: field_type,
+                field_length: field_length,
+                decimal_count: decimal_count,
+            };
+            // let field_data = AttributeField::new(
+            //     &name,
+            //     field_type,
+            //     field_length,
+            //     decimal_count,
+            //     work_area_id,
+            //     set_field_flag,
+            //     index_field_flag,
+            // );
 
             self.attributes.fields.push(field_data);
 
@@ -560,6 +574,8 @@ impl Shapefile {
                 // break;
             }
         }
+
+        self.attributes.get_field_hashmap();
 
         self.attributes.header.num_fields = self.attributes.fields.len() as u32;
 
@@ -582,7 +598,7 @@ impl Shapefile {
                     match self.attributes.fields[j as usize].field_type {
                         'N' | 'F' | 'I' | 'O' => {
                             if self.attributes.fields[j as usize].decimal_count == 0 {
-                                r.push(FieldData::Int64(str_rep.parse::<i64>().unwrap()));
+                                r.push(FieldData::Int(str_rep.parse::<i32>().unwrap()));
                             } else {
                                 r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
                             }
@@ -1067,18 +1083,18 @@ impl Shapefile {
                             writer.write_all(&b.as_bytes())?;
                         }
                     }
-                    FieldData::Int64(v) => {
-                        let b = v.to_string();
-                        if b.len() < fl {
-                            let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
-                            spcs.push_str(&b);
-                            writer.write_all(&spcs.as_bytes())?;
-                        } else if b.len() > fl {
-                            writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
-                        } else {
-                            writer.write_all(&b.as_bytes())?;
-                        }
-                    }
+                    // FieldData::Int64(v) => {
+                    //     let b = v.to_string();
+                    //     if b.len() < fl {
+                    //         let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
+                    //         spcs.push_str(&b);
+                    //         writer.write_all(&spcs.as_bytes())?;
+                    //     } else if b.len() > fl {
+                    //         writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                    //     } else {
+                    //         writer.write_all(&b.as_bytes())?;
+                    //     }
+                    // }
                     FieldData::Real(v) => {
                         let dc = self.attributes.fields[j as usize].decimal_count as usize;
                         let s = v.to_string();

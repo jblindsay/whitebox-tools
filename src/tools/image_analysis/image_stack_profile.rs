@@ -6,20 +6,20 @@ Last Modified: March 15, 2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::LineGraph;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::env;
-use std::path;
-use std::f64;
-use raster::*;
-use vector::{Shapefile, ShapeType};
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use time;
 use tools::*;
-use rendering::LineGraph;
-use rendering::html::*;
+use vector::{ShapeType, Shapefile};
 
 pub struct ImageStackProfile {
     name: String,
@@ -30,54 +30,60 @@ pub struct ImageStackProfile {
 }
 
 impl ImageStackProfile {
-    pub fn new() -> ImageStackProfile { // public constructor
+    pub fn new() -> ImageStackProfile {
+        // public constructor
         let name = "ImageStackProfile".to_string();
         let toolbox = "Image Processing Tools".to_string();
         let description = "Plots an image stack profile (i.e. signature) for a set of points and multispectral images.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input multispectral image files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Vector Points File".to_owned(), 
-            flags: vec!["--points".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["--points".to_owned()],
             description: "Input vector points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='image1.tif;image2.tif;image3.tif' --points=pts.shp -o=output.html", short_exe, name).replace("*", &sep);
-    
-        ImageStackProfile { 
-            name: name, 
-            description: description, 
+
+        ImageStackProfile {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -86,7 +92,7 @@ impl WhiteboxTool for ImageStackProfile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,14 +123,21 @@ impl WhiteboxTool for ImageStackProfile {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files_str = String::new();
         let mut points_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -140,19 +153,19 @@ impl WhiteboxTool for ImageStackProfile {
                 input_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-points" {
                 points_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -179,7 +192,7 @@ impl WhiteboxTool for ImageStackProfile {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
         }
-        
+
         if !points_file.contains(&sep) && !points_file.contains("/") {
             points_file = format!("{}{}", working_directory, points_file);
         }
@@ -192,21 +205,27 @@ impl WhiteboxTool for ImageStackProfile {
             output_file.push_str(".html");
         }
 
-        if verbose { println!("Reading points data...") };
-        let points = Shapefile::new(&points_file, "r")?;
-        
+        if verbose {
+            println!("Reading points data...")
+        };
+        let points = Shapefile::read(&points_file)?;
+
         let start = time::now();
 
         // make sure the input vector file is of points type
         if points.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
         }
 
         let num_points = points.num_records;
         if num_points == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input points file must contain at least one record."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input points file must contain at least one record.",
+            ));
         }
 
         let mut xdata = vec![vec![0f64; num_files]; num_points];
@@ -228,21 +247,21 @@ impl WhiteboxTool for ImageStackProfile {
 
                 for record_num in 0..num_points {
                     if i == 0 {
-                        series_names.push(format!("Point {}", record_num+1));
+                        series_names.push(format!("Point {}", record_num + 1));
                     }
                     let record = points.get_record(record_num);
                     row = image.get_row_from_y(record.points[0].y);
                     col = image.get_column_from_x(record.points[0].x);
                     z = image.get_value(row, col);
                     if z != nodata {
-                        xdata[record_num][i] = (i+1) as f64;
+                        xdata[record_num][i] = (i + 1) as f64;
                         ydata[record_num][i] = z;
                     } else {
-                        xdata[record_num][i] = (i+1) as f64;
+                        xdata[record_num][i] = (i + 1) as f64;
                         ydata[record_num][i] = 0f64; // I'm not sure about this approach.
-                        // It would be better if it was a break in the line, but this 
-                        // cannot be represented as of yet.
-                    } 
+                                                     // It would be better if it was a break in the line, but this
+                                                     // cannot be represented as of yet.
+                    }
                 }
             }
             if verbose {
@@ -253,8 +272,7 @@ impl WhiteboxTool for ImageStackProfile {
                 }
             }
         }
-        
-        
+
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
@@ -262,19 +280,21 @@ impl WhiteboxTool for ImageStackProfile {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Image Stack Profile</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Image Stack Profile</h1>"#.as_bytes())?;
-        
+
         writer.write_all(("<p>Inputs:<br>").as_bytes())?;
         for i in 0..num_files {
-            writer.write_all((format!("<strong>Image {}</strong>: {}<br>", i+1, file_names[i])).as_bytes())?;
+            writer.write_all(
+                (format!("<strong>Image {}</strong>: {}<br>", i + 1, file_names[i])).as_bytes(),
+            )?;
         }
-        
+
         writer.write_all(("</p>").as_bytes())?;
         let end = time::now();
         let elapsed_time = end - start;
@@ -287,7 +307,7 @@ impl WhiteboxTool for ImageStackProfile {
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: "Image".to_string(),
             y_axis_label: "Value".to_string(),
             draw_points: false,
@@ -296,23 +316,36 @@ impl WhiteboxTool for ImageStackProfile {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write("<p><table>".as_bytes()).unwrap();
-        writer.write("<caption>Profile Data Table</caption>".as_bytes()).unwrap();
-        
+        writer
+            .write("<caption>Profile Data Table</caption>".as_bytes())
+            .unwrap();
+
         writer.write("<tr>".as_bytes()).unwrap();
         writer.write("<th>Image</th>".as_bytes()).unwrap();
         for record_num in 0..num_points {
-            writer.write(&format!("<th>Point {}</th>", record_num + 1).as_bytes()).unwrap();
+            writer
+                .write(&format!("<th>Point {}</th>", record_num + 1).as_bytes())
+                .unwrap();
         }
         writer.write("</tr>".as_bytes()).unwrap();
 
         for i in 0..num_files {
             writer.write("<tr>".as_bytes()).unwrap();
-            writer.write(&format!("<td class=\"numberCell\">{}</td>", i+1).as_bytes()).unwrap();
+            writer
+                .write(&format!("<td class=\"numberCell\">{}</td>", i + 1).as_bytes())
+                .unwrap();
             for record_num in 0..num_points {
-                writer.write(&format!("<td class=\"numberCell\">{}</td>", ydata[record_num][i]).as_bytes()).unwrap();
+                writer
+                    .write(
+                        &format!("<td class=\"numberCell\">{}</td>", ydata[record_num][i])
+                            .as_bytes(),
+                    )
+                    .unwrap();
             }
             writer.write("</tr>".as_bytes()).unwrap();
         }
@@ -321,7 +354,12 @@ impl WhiteboxTool for ImageStackProfile {
 
         let _ = writer.flush();
 
-        if verbose { println!("\n{}",  &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

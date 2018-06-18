@@ -8,15 +8,15 @@ License: MIT
 NOTES: This tool differs from the Whitebox GAT tool in that it only takes a single raster input.
 */
 
-use time;
-use std::env;
-use std::path;
 use raster::*;
-use vector;
-use vector::{Shapefile, ShapeType, Point2D};
+use std::env;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
 use structures::BoundingBox;
+use time;
+use tools::*;
+use vector;
+use vector::{Point2D, ShapeType, Shapefile};
 
 pub struct ClipRasterToPolygon {
     name: String,
@@ -28,63 +28,68 @@ pub struct ClipRasterToPolygon {
 
 impl ClipRasterToPolygon {
     /// public constructor
-    pub fn new() -> ClipRasterToPolygon { 
+    pub fn new() -> ClipRasterToPolygon {
         let name = "ClipRasterToPolygon".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
         let description = "Clips a raster to a vector polygon.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Vector Polygon File".to_owned(), 
-            flags: vec!["--polygons".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Polygon File".to_owned(),
+            flags: vec!["--polygons".to_owned()],
             description: "Input vector polygons file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Polygon)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Polygon,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maintain input raster dimensions?".to_owned(), 
-            flags: vec!["--maintain_dimensions".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Maintain input raster dimensions?".to_owned(),
+            flags: vec!["--maintain_dimensions".to_owned()],
             description: "Maintain input raster dimensions?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=raster.tif --polygons=poly.shp -o=output.tif --maintain_dimensions", short_exe, name).replace("*", &sep);
-    
-        ClipRasterToPolygon { 
-            name: name, 
-            description: description, 
+
+        ClipRasterToPolygon {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -93,7 +98,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,15 +122,22 @@ impl WhiteboxTool for ClipRasterToPolygon {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut polygons_file = String::new();
         let mut output_file = String::new();
         let mut maintain_dimensions = false;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -141,21 +153,21 @@ impl WhiteboxTool for ClipRasterToPolygon {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-polygon" || flag_val == "-polygons" {
                 polygons_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
-            }  else if flag_val == "-maintain_dimensions" {
+            } else if flag_val == "-maintain_dimensions" {
                 maintain_dimensions = true;
             }
         }
@@ -181,7 +193,9 @@ impl WhiteboxTool for ClipRasterToPolygon {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Raster::new(&input_file, "r")?;
 
         let start = time::now();
@@ -189,12 +203,14 @@ impl WhiteboxTool for ClipRasterToPolygon {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let polygons = Shapefile::new(&polygons_file, "r")?;
+        let polygons = Shapefile::read(&polygons_file)?;
 
         // make sure the input vector file is of points type
         if polygons.header.shape_type.base_shape_type() != ShapeType::Polygon {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of polygon base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of polygon base shape type.",
+            ));
         }
 
         if maintain_dimensions {
@@ -205,11 +221,16 @@ impl WhiteboxTool for ClipRasterToPolygon {
             let mut end_point_in_part: usize;
             let (mut row, mut col): (isize, isize);
             let (mut x, mut y): (f64, f64);
-            let (mut starting_row, mut ending_row, mut starting_col, mut ending_col): (isize, isize, isize, isize);
+            let (mut starting_row, mut ending_row, mut starting_col, mut ending_col): (
+                isize,
+                isize,
+                isize,
+                isize,
+            );
             let num_records = polygons.num_records;
             for record_num in 0..polygons.num_records {
                 let record = polygons.get_record(record_num);
-                
+
                 let mut part_num = 1;
                 for part in 0..record.num_parts as usize {
                     if !record.is_hole(part as i32) {
@@ -227,27 +248,46 @@ impl WhiteboxTool for ClipRasterToPolygon {
                         ending_row = 0;
                         starting_col = columns;
                         ending_col = 0;
-                        for p in start_point_in_part..end_point_in_part+1 {
+                        for p in start_point_in_part..end_point_in_part + 1 {
                             row = input.get_row_from_y(record.points[p].y);
                             col = input.get_column_from_x(record.points[p].x);
-                            if row < starting_row { starting_row = row; }
-                            if row > ending_row { ending_row = row; }
-                            if col < starting_col { starting_col = col; }
-                            if col > ending_col { ending_col = col; }
+                            if row < starting_row {
+                                starting_row = row;
+                            }
+                            if row > ending_row {
+                                ending_row = row;
+                            }
+                            if col < starting_col {
+                                starting_col = col;
+                            }
+                            if col > ending_col {
+                                ending_col = col;
+                            }
                         }
 
                         for r in starting_row..ending_row {
                             y = input.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = input.get_x_from_column(c);
-                                if vector::point_in_poly(&Point2D{ x: x, y: y }, &record.points[start_point_in_part..end_point_in_part+1]) {
+                                if vector::point_in_poly(
+                                    &Point2D { x: x, y: y },
+                                    &record.points[start_point_in_part..end_point_in_part + 1],
+                                ) {
                                     output.set_value(r, c, input.get_value(r, c));
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64) as usize;
+                                progress = (100.0_f64 * r as f64
+                                    / (ending_row - starting_row) as f64)
+                                    as usize;
                                 if progress != old_progress {
-                                    println!("Progress (rec {} of {} part {}): {}%", record_num+1, num_records, part_num, progress);
+                                    println!(
+                                        "Progress (rec {} of {} part {}): {}%",
+                                        record_num + 1,
+                                        num_records,
+                                        part_num,
+                                        progress
+                                    );
                                     old_progress = progress;
                                 }
                             }
@@ -272,27 +312,46 @@ impl WhiteboxTool for ClipRasterToPolygon {
                         ending_row = 0;
                         starting_col = columns;
                         ending_col = 0;
-                        for p in start_point_in_part..end_point_in_part+1 {
+                        for p in start_point_in_part..end_point_in_part + 1 {
                             row = input.get_row_from_y(record.points[p].y);
                             col = input.get_column_from_x(record.points[p].x);
-                            if row < starting_row { starting_row = row; }
-                            if row > ending_row { ending_row = row; }
-                            if col < starting_col { starting_col = col; }
-                            if col > ending_col { ending_col = col; }
+                            if row < starting_row {
+                                starting_row = row;
+                            }
+                            if row > ending_row {
+                                ending_row = row;
+                            }
+                            if col < starting_col {
+                                starting_col = col;
+                            }
+                            if col > ending_col {
+                                ending_col = col;
+                            }
                         }
 
                         for r in starting_row..ending_row {
                             y = input.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = input.get_x_from_column(c);
-                                if vector::point_in_poly(&Point2D{ x: x, y: y }, &record.points[start_point_in_part..end_point_in_part+1]) {
+                                if vector::point_in_poly(
+                                    &Point2D { x: x, y: y },
+                                    &record.points[start_point_in_part..end_point_in_part + 1],
+                                ) {
                                     output.set_value(r, c, nodata);
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64) as usize;
+                                progress = (100.0_f64 * r as f64
+                                    / (ending_row - starting_row) as f64)
+                                    as usize;
                                 if progress != old_progress {
-                                    println!("Progress (rec {} of {} part {}): {}%", record_num+1, num_records, part_num, progress);
+                                    println!(
+                                        "Progress (rec {} of {} part {}): {}%",
+                                        record_num + 1,
+                                        num_records,
+                                        part_num,
+                                        progress
+                                    );
                                     old_progress = progress;
                                 }
                             }
@@ -304,33 +363,59 @@ impl WhiteboxTool for ClipRasterToPolygon {
 
             let end = time::now();
             let elapsed_time = end - start;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving data...") };
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
 
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                );
             }
         } else {
             // we'll need to trim the raster to the extent of the polygons.
-            let vec_bb = BoundingBox::new(polygons.header.x_min, polygons.header.x_max, polygons.header.y_min, polygons.header.y_max);
-            let mut rast_bb = BoundingBox::new(input.configs.west, input.configs.east, input.configs.south, input.configs.north);
+            let vec_bb = BoundingBox::new(
+                polygons.header.x_min,
+                polygons.header.x_max,
+                polygons.header.y_min,
+                polygons.header.y_max,
+            );
+            let mut rast_bb = BoundingBox::new(
+                input.configs.west,
+                input.configs.east,
+                input.configs.south,
+                input.configs.north,
+            );
             rast_bb.contract_to(vec_bb);
 
-            let west: f64 = rast_bb.min_x; 
+            let west: f64 = rast_bb.min_x;
             let north: f64 = rast_bb.max_y;
-            let rows: isize = (((north - rast_bb.min_y) / input.configs.resolution_y).ceil()) as isize;
-            let columns: isize = (((rast_bb.max_x - west) / input.configs.resolution_x).ceil()) as isize;
+            let rows: isize =
+                (((north - rast_bb.min_y) / input.configs.resolution_y).ceil()) as isize;
+            let columns: isize =
+                (((rast_bb.max_x - west) / input.configs.resolution_x).ceil()) as isize;
             let south: f64 = north - rows as f64 * input.configs.resolution_y;
             let east = west + columns as f64 * input.configs.resolution_x;
-            
-            let mut configs = RasterConfigs { ..Default::default() };
+
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
             configs.rows = rows as usize;
             configs.columns = columns as usize;
             configs.north = north;
@@ -351,11 +436,16 @@ impl WhiteboxTool for ClipRasterToPolygon {
             let (mut row, mut col): (isize, isize);
             let (mut row_in, mut col_in): (isize, isize);
             let (mut x, mut y): (f64, f64);
-            let (mut starting_row, mut ending_row, mut starting_col, mut ending_col): (isize, isize, isize, isize);
+            let (mut starting_row, mut ending_row, mut starting_col, mut ending_col): (
+                isize,
+                isize,
+                isize,
+                isize,
+            );
             let num_records = polygons.num_records;
             for record_num in 0..polygons.num_records {
                 let record = polygons.get_record(record_num);
-                
+
                 let mut part_num = 1;
                 for part in 0..record.num_parts as usize {
                     if !record.is_hole(part as i32) {
@@ -373,29 +463,48 @@ impl WhiteboxTool for ClipRasterToPolygon {
                         ending_row = 0;
                         starting_col = columns;
                         ending_col = 0;
-                        for p in start_point_in_part..end_point_in_part+1 {
+                        for p in start_point_in_part..end_point_in_part + 1 {
                             row = output.get_row_from_y(record.points[p].y);
                             col = output.get_column_from_x(record.points[p].x);
-                            if row < starting_row { starting_row = row; }
-                            if row > ending_row { ending_row = row; }
-                            if col < starting_col { starting_col = col; }
-                            if col > ending_col { ending_col = col; }
+                            if row < starting_row {
+                                starting_row = row;
+                            }
+                            if row > ending_row {
+                                ending_row = row;
+                            }
+                            if col < starting_col {
+                                starting_col = col;
+                            }
+                            if col > ending_col {
+                                ending_col = col;
+                            }
                         }
 
                         for r in starting_row..ending_row {
                             y = output.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = output.get_x_from_column(c);
-                                if vector::point_in_poly(&Point2D{ x: x, y: y }, &record.points[start_point_in_part..end_point_in_part+1]) {
+                                if vector::point_in_poly(
+                                    &Point2D { x: x, y: y },
+                                    &record.points[start_point_in_part..end_point_in_part + 1],
+                                ) {
                                     row_in = input.get_row_from_y(y);
                                     col_in = input.get_column_from_x(x);
                                     output.set_value(r, c, input.get_value(row_in, col_in));
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64) as usize;
+                                progress = (100.0_f64 * r as f64
+                                    / (ending_row - starting_row) as f64)
+                                    as usize;
                                 if progress != old_progress {
-                                    println!("Progress (rec {} of {} part {}): {}%", record_num+1, num_records, part_num, progress);
+                                    println!(
+                                        "Progress (rec {} of {} part {}): {}%",
+                                        record_num + 1,
+                                        num_records,
+                                        part_num,
+                                        progress
+                                    );
                                     old_progress = progress;
                                 }
                             }
@@ -420,27 +529,46 @@ impl WhiteboxTool for ClipRasterToPolygon {
                         ending_row = 0;
                         starting_col = columns;
                         ending_col = 0;
-                        for p in start_point_in_part..end_point_in_part+1 {
+                        for p in start_point_in_part..end_point_in_part + 1 {
                             row = output.get_row_from_y(record.points[p].y);
                             col = output.get_column_from_x(record.points[p].x);
-                            if row < starting_row { starting_row = row; }
-                            if row > ending_row { ending_row = row; }
-                            if col < starting_col { starting_col = col; }
-                            if col > ending_col { ending_col = col; }
+                            if row < starting_row {
+                                starting_row = row;
+                            }
+                            if row > ending_row {
+                                ending_row = row;
+                            }
+                            if col < starting_col {
+                                starting_col = col;
+                            }
+                            if col > ending_col {
+                                ending_col = col;
+                            }
                         }
 
                         for r in starting_row..ending_row {
                             y = output.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = output.get_x_from_column(c);
-                                if vector::point_in_poly(&Point2D{ x: x, y: y }, &record.points[start_point_in_part..end_point_in_part+1]) {
+                                if vector::point_in_poly(
+                                    &Point2D { x: x, y: y },
+                                    &record.points[start_point_in_part..end_point_in_part + 1],
+                                ) {
                                     output.set_value(r, c, nodata);
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64) as usize;
+                                progress = (100.0_f64 * r as f64
+                                    / (ending_row - starting_row) as f64)
+                                    as usize;
                                 if progress != old_progress {
-                                    println!("Progress (rec {} of {} part {}): {}%", record_num+1, num_records, part_num, progress);
+                                    println!(
+                                        "Progress (rec {} of {} part {}): {}%",
+                                        record_num + 1,
+                                        num_records,
+                                        part_num,
+                                        progress
+                                    );
                                     old_progress = progress;
                                 }
                             }
@@ -452,23 +580,33 @@ impl WhiteboxTool for ClipRasterToPolygon {
 
             let end = time::now();
             let elapsed_time = end - start;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving data...") };
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
 
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                );
             }
-
-
         }
-        
+
         Ok(())
     }
 }

@@ -6,20 +6,20 @@ Last Modified: February 21, 2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::LineGraph;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::env;
-use std::path;
-use std::f64;
-use raster::*;
-use vector::{Shapefile, ShapeType};
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use time;
 use tools::*;
-use rendering::LineGraph;
-use rendering::html::*;
+use vector::{ShapeType, Shapefile};
 
 pub struct Profile {
     name: String,
@@ -30,54 +30,60 @@ pub struct Profile {
 }
 
 impl Profile {
-    pub fn new() -> Profile { // public constructor
+    pub fn new() -> Profile {
+        // public constructor
         let name = "Profile".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Plots profiles from digital surface models.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Vector Line File".to_owned(), 
-            flags: vec!["--lines".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Line File".to_owned(),
+            flags: vec!["--lines".to_owned()],
             description: "Input vector line file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Line)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Line,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Surface File".to_owned(), 
-            flags: vec!["--surface".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Surface File".to_owned(),
+            flags: vec!["--surface".to_owned()],
             description: "Input raster surface file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --lines=profile.shp --surface=dem.tif -o=profile.html", short_exe, name).replace("*", &sep);
-    
-        Profile { 
-            name: name, 
-            description: description, 
+
+        Profile {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -86,7 +92,7 @@ impl WhiteboxTool for Profile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,14 +123,21 @@ impl WhiteboxTool for Profile {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut profile_file = String::new();
         let mut surface_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -140,19 +153,19 @@ impl WhiteboxTool for Profile {
                 profile_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-surface" {
                 surface_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -178,33 +191,43 @@ impl WhiteboxTool for Profile {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading profile data...") };
-        let profile_data = Shapefile::new(&profile_file, "r")?;
-        
-        if verbose { println!("Reading DEM data...") };
+        if verbose {
+            println!("Reading profile data...")
+        };
+        let profile_data = Shapefile::read(&profile_file)?;
+
+        if verbose {
+            println!("Reading DEM data...")
+        };
         let surface = Raster::new(&surface_file, "r")?;
-        
+
         let start = time::now();
 
         // make sure the input vector file is of lines type
         if profile_data.header.shape_type.base_shape_type() != ShapeType::PolyLine {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of polyline base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of polyline base shape type.",
+            ));
         }
-        
+
         let nodata = surface.configs.nodata;
         // let west = surface.configs.west;
         // let north = surface.configs.north;
         // let cell_size_x = surface.configs.resolution_x;
         // let cell_size_y = surface.configs.resolution_y;
-        
 
         let mut xdata = vec![];
         let mut ydata = vec![];
         let mut series_names = vec![];
         // let (mut x_st, mut x_end, mut y_st, mut y_end): (f64, f64, f64, f64);
         // let (mut col_st, mut col_end, mut row_st, mut row_end): (f64, f64, f64, f64);
-        let (mut st_row, mut st_col, mut end_row, mut end_col): (isize, isize, isize, isize);
+        let (mut st_row, mut st_col, mut end_row, mut end_col): (
+            isize,
+            isize,
+            isize,
+            isize,
+        );
         let mut start_point_in_part: usize;
         let mut end_point_in_part: usize;
         let (mut row, mut col): (isize, isize);
@@ -216,7 +239,6 @@ impl WhiteboxTool for Profile {
 
         for record_num in 0..profile_data.num_records {
             let record = profile_data.get_record(record_num);
-
 
             for part in 0..record.num_parts as usize {
                 let mut profile_xdata = vec![];
@@ -234,27 +256,26 @@ impl WhiteboxTool for Profile {
                 // z = surface.get_value(row, col);
                 dist = 0f64;
                 for i in start_point_in_part..end_point_in_part {
-                    st_row = surface.get_row_from_y(record.points[i].y); 
+                    st_row = surface.get_row_from_y(record.points[i].y);
                     st_col = surface.get_column_from_x(record.points[i].x);
-                    end_row = surface.get_row_from_y(record.points[i+1].y); 
-                    end_col = surface.get_column_from_x(record.points[i+1].x);
-                    
+                    end_row = surface.get_row_from_y(record.points[i + 1].y);
+                    end_col = surface.get_column_from_x(record.points[i + 1].x);
+
                     dx = (end_col - st_col) as f64;
                     dy = (end_row - st_row) as f64;
 
                     path_dist = (dx * dx + dy * dy).sqrt();
                     num_steps = path_dist.ceil() as isize;
-                    
+
                     dx = dx / path_dist;
                     dy = dy / path_dist;
 
-                    dist_step = (
-                        (record.points[i].x - record.points[i+1].x) 
-                        * (record.points[i].x - record.points[i+1].x) 
-                        + (record.points[i].y - record.points[i+1].y) 
-                        * (record.points[i].y - record.points[i+1].y)
-                        ).sqrt() / path_dist;
-                    
+                    dist_step = ((record.points[i].x - record.points[i + 1].x)
+                        * (record.points[i].x - record.points[i + 1].x)
+                        + (record.points[i].y - record.points[i + 1].y)
+                            * (record.points[i].y - record.points[i + 1].y))
+                        .sqrt() / path_dist;
+
                     if num_steps > 0 {
                         for j in 1..num_steps {
                             col = (st_col as f64 + j as f64 * dx) as isize;
@@ -267,7 +288,6 @@ impl WhiteboxTool for Profile {
                             }
                         }
                     }
-
                 }
 
                 if profile_xdata.len() > 1 {
@@ -281,9 +301,9 @@ impl WhiteboxTool for Profile {
                 }
             }
 
-            
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (profile_data.num_records - 1) as f64) as usize;
+                progress = (100.0_f64 * record_num as f64 / (profile_data.num_records - 1) as f64)
+                    as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -291,7 +311,6 @@ impl WhiteboxTool for Profile {
             }
         }
 
-        
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
@@ -299,16 +318,21 @@ impl WhiteboxTool for Profile {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Profile</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Profile</h1>"#.as_bytes())?;
-        
-        writer.write_all((format!("<p><strong>Input Surface</strong>: {}<br>", surface.get_short_filename())).as_bytes())?;
-        
+
+        writer.write_all(
+            (format!(
+                "<p><strong>Input Surface</strong>: {}<br>",
+                surface.get_short_filename()
+            )).as_bytes(),
+        )?;
+
         writer.write_all(("</p>").as_bytes())?;
         let end = time::now();
         let elapsed_time = end - start;
@@ -321,7 +345,7 @@ impl WhiteboxTool for Profile {
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: "Distance".to_string(),
             y_axis_label: "Elevation".to_string(),
             draw_points: false,
@@ -330,13 +354,20 @@ impl WhiteboxTool for Profile {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
 
-        if verbose { println!("\n{}",  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

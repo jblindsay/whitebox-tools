@@ -6,19 +6,19 @@ Last Modified: 12/04/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use rendering::html::*;
+use std::collections::HashMap;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::collections::HashMap;
-use std::path;
-use std::f64;
-use std::process::Command;
-use vector::{Shapefile, FieldData};
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use time;
 use tools::*;
-use rendering::html::*;
+use vector::{FieldData, Shapefile};
 
 pub struct ListUniqueValues {
     name: String,
@@ -33,34 +33,43 @@ impl ListUniqueValues {
         // public constructor
         let name = "ListUniqueValues".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Lists the unique values contained in a field witin a vector's attribute table.".to_string();
+        let description =
+            "Lists the unique values contained in a field witin a vector's attribute table."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Any)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Any,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name".to_owned(), 
-            flags: vec!["--field".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name".to_owned(),
+            flags: vec!["--field".to_owned()],
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Any, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Any,
+                "--input".to_string(),
+            ),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -73,8 +82,10 @@ impl ListUniqueValues {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lakes.shp --field=HEIGHT -o=outfile.html",
-                            short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lakes.shp --field=HEIGHT -o=outfile.html",
+            short_exe, name
+        ).replace("*", &sep);
 
         ListUniqueValues {
             name: name,
@@ -90,7 +101,7 @@ impl WhiteboxTool for ListUniqueValues {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -121,17 +132,21 @@ impl WhiteboxTool for ListUniqueValues {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -147,7 +162,7 @@ impl WhiteboxTool for ListUniqueValues {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-field" {
                 field_name = if keyval {
@@ -176,7 +191,7 @@ impl WhiteboxTool for ListUniqueValues {
         let mut old_progress: usize = 1;
 
         let start = time::now();
-        
+
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -184,48 +199,47 @@ impl WhiteboxTool for ListUniqueValues {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading vector data...") };
-        let vector_data = Shapefile::new(&input_file, "r")?;
+        if verbose {
+            println!("Reading vector data...")
+        };
+        let vector_data = Shapefile::read(&input_file)?;
 
         // What is the index of the field to be analyzed?
         let field_index = match vector_data.attributes.get_field_num(&field_name) {
             Some(i) => i,
-            None => return Err(Error::new(ErrorKind::InvalidInput, "The specified field name does not exist in input shapefile.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The specified field name does not exist in input shapefile.",
+                ))
+            }
         };
 
         let mut freq_data = HashMap::new();
         let mut key: String;
         for record_num in 0..vector_data.num_records {
-            key = match vector_data.attributes.get_field_value(record_num, field_index) {
-                FieldData::Int(val) => {
-                    val.to_string()
-                },
-                FieldData::Int64(val) => {
-                    val.to_string()
-                },
-                FieldData::Real(val) => {
-                    val.to_string()
-                },
-                FieldData::Text(val) => {
-                    val.to_string()
-                },
-                FieldData::Date(val) => {
-                    val.to_string()
-                },
-                FieldData::Bool(val) => {
-                    val.to_string()
-                },
-                FieldData::Null => {
-                    "null".to_string()
-                }
+            key = match vector_data
+                .attributes
+                .get_field_value(record_num, field_index)
+            {
+                FieldData::Int(val) => val.to_string(),
+                // FieldData::Int64(val) => {
+                //     val.to_string()
+                // },
+                FieldData::Real(val) => val.to_string(),
+                FieldData::Text(val) => val.to_string(),
+                FieldData::Date(val) => val.to_string(),
+                FieldData::Bool(val) => val.to_string(),
+                FieldData::Null => "null".to_string(),
             };
             if key != "null" {
                 let count = freq_data.entry(key).or_insert(0);
                 *count += 1;
             }
-            
+
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Reading attribute data: {}%", progress);
                     old_progress = progress;
@@ -238,13 +252,16 @@ impl WhiteboxTool for ListUniqueValues {
                 println!("Warning: There are a large number of categories. A continuous attribute variable may have been input incorrectly.");
             }
         }
-        
+
         let end = time::now();
         let elapsed_time = end - start;
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -253,17 +270,21 @@ impl WhiteboxTool for ListUniqueValues {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>List Unique Values</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>List Unique Values</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes())?;
-        writer.write_all(&format!("<p><strong>Field Name</strong>: {}</p>", field_name.clone()).as_bytes())?;
-        
+        writer.write_all(
+            &format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!("<p><strong>Field Name</strong>: {}</p>", field_name.clone()).as_bytes(),
+        )?;
+
         // The output table
         let mut s = "<p><table>
         <caption>Category Data</caption>
@@ -274,12 +295,13 @@ impl WhiteboxTool for ListUniqueValues {
         writer.write_all(s.as_bytes())?;
 
         for (category, count) in &freq_data {
-            let s1 = &format!("<tr>
+            let s1 = &format!(
+                "<tr>
                 <td>{}</td>
                 <td class=\"numberCell\">{}</td>
             </tr>\n",
-            category,
-            count);
+                category, count
+            );
             writer.write_all(s1.as_bytes())?;
         }
 
@@ -289,7 +311,7 @@ impl WhiteboxTool for ListUniqueValues {
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
-        
+
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
                 let output = Command::new("open")

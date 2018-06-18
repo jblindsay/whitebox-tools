@@ -28,7 +28,6 @@
 //     DT_DOUBLE = 12,
 // }
 
-
 // const DT_BYTE: u16 = 1;
 // const DT_ASCII: u16 = 2;
 // const DT_SHORT: u16 = 3;
@@ -167,7 +166,6 @@ pub const IM_RGB: u16 = 5u16;
 pub const IM_RGBA: u16 = 6u16;
 pub const IM_NRGBA: u16 = 7u16;
 
-
 pub const COMPRESS_NONE: u16 = 1;
 pub const COMPRESS_CCITT: u16 = 2;
 pub const COMPRESS_G3: u16 = 3; // Group 3 Fax.
@@ -232,6 +230,9 @@ pub const TAG_PREDICTOR: u16 = 317u16;
 pub const TAG_COLORMAP: u16 = 320u16;
 pub const TAG_EXTRASAMPLES: u16 = 338u16;
 pub const TAG_SAMPLEFORMAT: u16 = 339u16;
+pub const TAG_JPEGTABLES: u16 = 347u16;
+
+pub const TIFFTAG_REFERENCEBLACKWHITE: u16 = 532u16;
 
 pub const TAG_GDAL_METADATA: u16 = 42112u16;
 pub const TAG_GDAL_NODATA: u16 = 42113u16;

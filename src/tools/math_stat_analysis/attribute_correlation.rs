@@ -8,17 +8,17 @@ License: MIT
 NOTES: Correlation is calculated for each pair of numeric attributes.
 */
 
-use time;
-use std::io::BufWriter;
+use rendering::html::*;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use vector::{Shapefile, FieldData};
-use std::io::{Error, ErrorKind};
+use time;
 use tools::*;
-use rendering::html::*;
+use vector::{FieldData, Shapefile};
 
 pub struct AttributeCorrelation {
     name: String,
@@ -33,25 +33,31 @@ impl AttributeCorrelation {
         // public constructor
         let name = "AttributeCorrelation".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs a correlation analysis on attribute fields from a vector database.".to_string();
+        let description =
+            "Performs a correlation analysis on attribute fields from a vector database."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Any)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Any,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -64,10 +70,10 @@ impl AttributeCorrelation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.html",
-                            short_exe,
-                            name)
-                .replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.html",
+            short_exe, name
+        ).replace("*", &sep);
 
         AttributeCorrelation {
             name: name,
@@ -83,7 +89,7 @@ impl WhiteboxTool for AttributeCorrelation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,17 +120,20 @@ impl WhiteboxTool for AttributeCorrelation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -140,7 +149,7 @@ impl WhiteboxTool for AttributeCorrelation {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -179,8 +188,10 @@ impl WhiteboxTool for AttributeCorrelation {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading vector data...") };
-        let vector_data = Shapefile::new(&input_file, "r")?;
+        if verbose {
+            println!("Reading vector data...")
+        };
+        let vector_data = Shapefile::read(&input_file)?;
 
         // how many numeric attributes are in the table?
         let num_fields = vector_data.attributes.header.num_fields as usize;
@@ -204,8 +215,10 @@ impl WhiteboxTool for AttributeCorrelation {
         let mut field_n = vec![0f64; num_fields];
         let mut field_averages = vec![0f64; num_fields];
         let mut correlation_matrix = vec![vec![-99f64; num_fields]; num_fields];
-        if verbose { println!("Calculating attribute averages..."); }
-        
+        if verbose {
+            println!("Calculating attribute averages...");
+        }
+
         for record_num in 0..vector_data.num_records {
             let rec = vector_data.attributes.get_record(record_num);
             for field_num in 0..num_fields {
@@ -214,24 +227,25 @@ impl WhiteboxTool for AttributeCorrelation {
                         FieldData::Int(val) => {
                             field_totals[field_num] += val as f64;
                             field_n[field_num] += 1f64;
-                        },
-                        FieldData::Int64(val) => {
-                            field_totals[field_num] += val as f64;
-                            field_n[field_num] += 1f64;
-                        },
+                        }
+                        // FieldData::Int64(val) => {
+                        //     field_totals[field_num] += val as f64;
+                        //     field_n[field_num] += 1f64;
+                        // },
                         FieldData::Real(val) => {
                             field_totals[field_num] += val;
                             field_n[field_num] += 1f64;
-                        },
+                        }
                         _ => {
                             // do nothing
                         }
                     }
                 }
             }
-            
+
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -245,12 +259,14 @@ impl WhiteboxTool for AttributeCorrelation {
             }
         }
 
-        if verbose { println!("Calculating the correlation matrix:"); }
+        if verbose {
+            println!("Calculating the correlation matrix:");
+        }
         let mut i = 0;
         let nodata = -32768f64;
         for a in 0..num_fields {
             if is_numeric[a] {
-                for b in 0..(i+1) {
+                for b in 0..(i + 1) {
                     if is_numeric[b] {
                         if a == b {
                             correlation_matrix[a][b] = 1.0;
@@ -263,40 +279,28 @@ impl WhiteboxTool for AttributeCorrelation {
                             for record_num in 0..vector_data.num_records {
                                 let rec = vector_data.attributes.get_record(record_num);
                                 z1 = match rec[a] {
-                                    FieldData::Int(val) => {
-                                        val as f64
-                                    },
-                                    FieldData::Int64(val) => {
-                                        val as f64
-                                    },
-                                    FieldData::Real(val) => {
-                                        val
-                                    },
-                                    _ => {
-                                        nodata
-                                    }
+                                    FieldData::Int(val) => val as f64,
+                                    // FieldData::Int64(val) => val as f64,
+                                    FieldData::Real(val) => val,
+                                    _ => nodata,
                                 };
                                 z2 = match rec[b] {
-                                    FieldData::Int(val) => {
-                                        val as f64
-                                    },
-                                    FieldData::Int64(val) => {
-                                        val as f64
-                                    },
-                                    FieldData::Real(val) => {
-                                        val
-                                    },
-                                    _ => {
-                                        nodata
-                                    }
+                                    FieldData::Int(val) => val as f64,
+                                    // FieldData::Int64(val) => val as f64,
+                                    FieldData::Real(val) => val,
+                                    _ => nodata,
                                 };
                                 if z1 != nodata && z2 != nodata {
-                                    field1_total_deviation += (z1 - field_averages[a]) * (z1 - field_averages[a]);
-                                    field2_total_deviation += (z2 - field_averages[b]) * (z2 - field_averages[b]);
-                                    total_product_deviations += (z1 - field_averages[a]) * (z2 - field_averages[b]);
+                                    field1_total_deviation +=
+                                        (z1 - field_averages[a]) * (z1 - field_averages[a]);
+                                    field2_total_deviation +=
+                                        (z2 - field_averages[b]) * (z2 - field_averages[b]);
+                                    total_product_deviations +=
+                                        (z1 - field_averages[a]) * (z2 - field_averages[b]);
                                 }
                             }
-                            correlation_matrix[a][b] = total_product_deviations / (field1_total_deviation * field2_total_deviation).sqrt();
+                            correlation_matrix[a][b] = total_product_deviations
+                                / (field1_total_deviation * field2_total_deviation).sqrt();
                         }
                     }
                 }
@@ -306,20 +310,26 @@ impl WhiteboxTool for AttributeCorrelation {
             if verbose {
                 progress = (100.0_f64 * a as f64 / (num_fields - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Calculating the correlation matrix ({} of {}): {}%", (a + 1), num_fields, progress);
+                    println!(
+                        "Calculating the correlation matrix ({} of {}): {}%",
+                        (a + 1),
+                        num_fields,
+                        progress
+                    );
                     old_progress = progress;
                 }
             }
         }
 
-
         let end = time::now();
         let elapsed_time = end - start;
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
-
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -328,10 +338,10 @@ impl WhiteboxTool for AttributeCorrelation {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Attribute Correlation</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Attributes Correlation Report</h1>"#.as_bytes())?;
@@ -342,7 +352,9 @@ impl WhiteboxTool for AttributeCorrelation {
         for a in 0..num_fields {
             if is_numeric[a] {
                 let value = &field_names[a];
-                writer.write_all(format!("<strong>Field {}</strong>: {}</br>", i + 1, value).as_bytes())?;
+                writer.write_all(
+                    format!("<strong>Field {}</strong>: {}</br>", i + 1, value).as_bytes(),
+                )?;
                 i += 1;
             }
         }
@@ -355,7 +367,7 @@ impl WhiteboxTool for AttributeCorrelation {
         i = 0;
         for a in 0..num_fields {
             if is_numeric[a] {
-                out_string.push_str(&format!("<th>Field {}</th>", i+1));
+                out_string.push_str(&format!("<th>Field {}</th>", i + 1));
                 i += 1;
             }
         }
@@ -365,7 +377,7 @@ impl WhiteboxTool for AttributeCorrelation {
         for a in 0..num_fields {
             if is_numeric[a] {
                 out_string.push_str("<tr>");
-                out_string.push_str(&format!("<td><strong>Field {}</strong></td>", i+1));
+                out_string.push_str(&format!("<td><strong>Field {}</strong></td>", i + 1));
                 for b in 0..num_fields {
                     if is_numeric[b] {
                         let value = correlation_matrix[a][b];

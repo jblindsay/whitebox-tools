@@ -6,22 +6,22 @@ Last Modified: December 26, 2017
 License: MIT
 */
 
+use lidar::*;
 use std;
-use std::io::BufWriter;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::u16;
 use std::process::Command;
-use lidar::*;
+use std::u16;
 use tools::*;
 
 /// This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
-/// data. The reported information will include including data on the header, point return frequency, and classification 
+/// data. The reported information will include including data on the header, point return frequency, and classification
 /// data and information about the variable length records (VLRs) and geokeys.
-/// 
+///
 /// # Input Parameters
 ///
 /// | Flag      | Description                                                     |
@@ -44,64 +44,73 @@ pub struct LidarInfo {
 }
 
 impl LidarInfo {
-    pub fn new() -> LidarInfo { // public constructor
+    pub fn new() -> LidarInfo {
+        // public constructor
         let name = "LidarInfo".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Summary Report File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Summary Report File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file for summary report.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Print the variable length records (VLRs)?".to_owned(), 
-            flags: vec!["--vlr".to_owned()], 
-            description: "Flag indicating whether or not to print the variable length records (VLRs).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Print the variable length records (VLRs)?".to_owned(),
+            flags: vec!["--vlr".to_owned()],
+            description:
+                "Flag indicating whether or not to print the variable length records (VLRs)."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Print the geokeys?".to_owned(), 
-            flags: vec!["--geokeys".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Print the geokeys?".to_owned(),
+            flags: vec!["--geokeys".to_owned()],
             description: "Flag indicating whether or not to print the geokeys.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las", short_exe, name).replace("*", &sep);
-    
-        LidarInfo { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
+.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las",
+            short_exe, name
+        ).replace("*", &sep);
+
+        LidarInfo {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -110,7 +119,7 @@ impl WhiteboxTool for LidarInfo {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -141,14 +150,22 @@ impl WhiteboxTool for LidarInfo {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file = String::new();
         let mut show_vlrs = false;
         let mut show_geokeys = false;
         let mut keyval: bool;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -156,13 +173,15 @@ impl WhiteboxTool for LidarInfo {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
@@ -192,8 +211,9 @@ impl WhiteboxTool for LidarInfo {
             input_file = format!("{}{}", working_directory, input_file);
         }
 
-        if output_file.len() == 0 { output_file = input_file.replace(".las", "_summary.html"); }
-
+        if output_file.len() == 0 {
+            output_file = input_file.replace(".las", "_summary.html");
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -265,12 +285,17 @@ impl WhiteboxTool for LidarInfo {
 
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
-            Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
+            Err(_) => {
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    format!("No such file or directory ({})", input_file),
+                ))
+            }
         };
 
         let s1 = &format!("<h2>File Summary</h2><p>{}", input);
         writer.write_all(s1.replace("\n", "<br>").as_bytes())?;
-        
+
         let num_points = input.header.number_of_points;
         let mut min_i = u16::MAX;
         let mut max_i = u16::MIN;
@@ -304,12 +329,19 @@ impl WhiteboxTool for LidarInfo {
                 num_intermediate += 1;
             }
             intensity = p.intensity;
-            if intensity > max_i { max_i = intensity; }
-            if intensity < min_i { min_i = intensity; }
+            if intensity > max_i {
+                max_i = intensity;
+            }
+            if intensity < min_i {
+                min_i = intensity;
+            }
         }
 
         // println!("\n\nMin I: {}\nMax I: {}", min_i, max_i);
-        let s1 = &format!("<br>Min Intensity: {}<br>Max Intensity: {}</p>", min_i, max_i);
+        let s1 = &format!(
+            "<br>Min Intensity: {}<br>Max Intensity: {}</p>",
+            min_i, max_i
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "<h2>Point Returns Analysis</h2>";
@@ -327,14 +359,16 @@ impl WhiteboxTool for LidarInfo {
 
         for i in 0..5 {
             if ret_array[i] > 0 {
-                let s1 = &format!("<tr>
+                let s1 = &format!(
+                    "<tr>
                     <td>{}</td>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}</td>
                 </tr>\n",
-                i + 1,
-                ret_array[i],
-                format!("{:.1}%", ret_array[i] as f64 / num_points as f64 * 100f64 ));
+                    i + 1,
+                    ret_array[i],
+                    format!("{:.1}%", ret_array[i] as f64 / num_points as f64 * 100f64)
+                );
                 writer.write_all(s1.as_bytes())?;
             }
         }
@@ -352,45 +386,55 @@ impl WhiteboxTool for LidarInfo {
         </tr>";
         writer.write_all(s.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td>Only</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}%</td>
         </tr>\n",
-        num_only,
-        format!("{:.1}", num_only as f64 / num_points as f64 * 100f64 ));
+            num_only,
+            format!("{:.1}", num_only as f64 / num_points as f64 * 100f64)
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td>First</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}%</td>
         </tr>\n",
-        num_first,
-        format!("{:.1}", num_first as f64 / num_points as f64 * 100f64 ));
+            num_first,
+            format!("{:.1}", num_first as f64 / num_points as f64 * 100f64)
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td>Intermediate</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}%</td>
         </tr>\n",
-        num_intermediate,
-        format!("{:.1}", num_intermediate as f64 / num_points as f64 * 100f64 ));
+            num_intermediate,
+            format!(
+                "{:.1}",
+                num_intermediate as f64 / num_points as f64 * 100f64
+            )
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td>Last</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}%</td>
         </tr>\n",
-        num_last,
-        format!("{:.1}", num_last as f64 / num_points as f64 * 100f64 ));
+            num_last,
+            format!("{:.1}", num_last as f64 / num_points as f64 * 100f64)
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table></p>";
         writer.write_all(s.as_bytes())?;
-
 
         // Point Classification Table
         s = "<p><table>
@@ -407,14 +451,14 @@ impl WhiteboxTool for LidarInfo {
                 let percent: f64 = class_array[i] as f64 / num_points as f64 * 100.0;
                 let percent_str = format!("{:.*}", 1, percent);
                 let class_string = convert_class_val_to_class_string(i as u8);
-                let s1 = &format!("<tr>
+                let s1 = &format!(
+                    "<tr>
                     <td>{}</td>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}%</td>
                 </tr>\n",
-                class_string,
-                class_array[i],
-                percent_str);
+                    class_string, class_array[i], percent_str
+                );
                 writer.write_all(s1.as_bytes())?;
             }
         }
@@ -439,7 +483,10 @@ impl WhiteboxTool for LidarInfo {
         if show_geokeys {
             s = "<h2>Geokeys</h2>";
             writer.write_all(s.as_bytes())?;
-            let s1 = &format!("<p>{}</p>", input.geokeys.interpret_geokeys());
+            let s1 = &format!(
+                "<p>{}</p>",
+                input.geokeys.interpret_geokeys().replace("\n", "<br>")
+            );
             writer.write_all(s1.as_bytes())?;
         }
 

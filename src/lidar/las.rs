@@ -578,9 +578,11 @@ impl LasFile {
             }
 
             if vlr.record_id == 34_735 {
-                self.geokeys.add_key_directory(&vlr.binary_data);
+                self.geokeys
+                    .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
             } else if vlr.record_id == 34_736 {
-                self.geokeys.add_double_params(&vlr.binary_data);
+                self.geokeys
+                    .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
             } else if vlr.record_id == 34_737 {
                 self.geokeys.add_ascii_params(&vlr.binary_data);
             }

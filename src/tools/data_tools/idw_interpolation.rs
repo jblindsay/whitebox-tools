@@ -17,20 +17,20 @@ Whitebox GAT tool allows for use of a constant or a quadratic. This tool only al
 former.
 */
 
-use time;
-use std::f64;
-use std::env;
-use std::path;
 use raster::*;
-use vector::{FieldData, Shapefile, ShapeType};
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
 use structures::FixedRadiusSearch2D;
+use time;
+use tools::*;
+use vector::{FieldData, ShapeType, Shapefile};
 // use kdtree::KdTree;
 // use kdtree::distance::squared_euclidean;
 use num_cpus;
-use std::sync::Arc;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 
 /// Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
@@ -44,78 +44,83 @@ pub struct IdwInterpolation {
 
 impl IdwInterpolation {
     /// public constructor
-    pub fn new() -> IdwInterpolation { 
+    pub fn new() -> IdwInterpolation {
         let name = "IdwInterpolation".to_string();
         let toolbox = "Data Tools".to_string();
         let description = "Interpolates vector points into a raster surface using an inverse-distance weighted scheme.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Vector Points File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector Points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name".to_owned(), 
-            flags: vec!["--field".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name".to_owned(),
+            flags: vec!["--field".to_owned()],
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Number,
+                "--input".to_string(),
+            ),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Use z-coordinate instead of field?".to_owned(), 
-            flags: vec!["--use_z".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Use z-coordinate instead of field?".to_owned(),
+            flags: vec!["--use_z".to_owned()],
             description: "Use z-coordinate instead of field?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "IDW Weight (Exponent) Value".to_owned(), 
-            flags: vec!["--weight".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "IDW Weight (Exponent) Value".to_owned(),
+            flags: vec!["--weight".to_owned()],
             description: "IDW weight value.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Search Radius".to_owned(), 
-            flags: vec!["--radius".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Search Radius".to_owned(),
+            flags: vec!["--radius".to_owned()],
             description: "Search Radius.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Min. Number of Points".to_owned(), 
-            flags: vec!["--min_points".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Min. Number of Points".to_owned(),
+            flags: vec!["--min_points".to_owned()],
             description: "Minimum number of points.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         // parameters.push(ToolParameter{
-        //     name: "Max. Distance".to_owned(), 
-        //     flags: vec!["--max_dist".to_owned()], 
+        //     name: "Max. Distance".to_owned(),
+        //     flags: vec!["--max_dist".to_owned()],
         //     description: "Maximum distance (used with min_points).".to_owned(),
         //     parameter_type: ParameterType::Float,
         //     default_value: None,
@@ -143,19 +148,22 @@ impl IdwInterpolation {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=ELEV -o=output.tif --assign=min --nodata --cell_size=10.0
         >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=FID -o=output.tif --assign=last --base=existing_raster.tif", short_exe, name).replace("*", &sep);
-    
-        IdwInterpolation { 
-            name: name, 
-            description: description, 
+
+        IdwInterpolation {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -164,7 +172,7 @@ impl WhiteboxTool for IdwInterpolation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -188,7 +196,12 @@ impl WhiteboxTool for IdwInterpolation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name = String::new();
         let mut use_z = false;
@@ -199,9 +212,12 @@ impl WhiteboxTool for IdwInterpolation {
         let mut radius = 0f64;
         let mut min_points = 0usize;
         // let mut max_dist = f64::INFINITY;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -217,7 +233,7 @@ impl WhiteboxTool for IdwInterpolation {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-field" {
                 field_name = if keyval {
@@ -231,44 +247,44 @@ impl WhiteboxTool for IdwInterpolation {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-cell_size" {
                 grid_res = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-base" {
                 base_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-weight" {
                 weight = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-radius" {
                 radius = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-min_points" {
                 min_points = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap() as usize
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
                 };
-            // } else if flag_val == "-max_dist" {
-            //     max_dist = if keyval {
-            //         vec[1].to_string().parse::<f64>().unwrap()
-            //     } else {
-            //         args[i+1].to_string().parse::<f64>().unwrap()
-            //     };
+                // } else if flag_val == "-max_dist" {
+                //     max_dist = if keyval {
+                //         vec[1].to_string().parse::<f64>().unwrap()
+                //     } else {
+                //         args[i+1].to_string().parse::<f64>().unwrap()
+                //     };
             }
         }
 
@@ -295,18 +311,22 @@ impl WhiteboxTool for IdwInterpolation {
         // if max_dist != f64::INFINITY {
         //     max_dist = max_dist * max_dist; // square the max dist
         // }
-        
-        if verbose { println!("Reading data...") };
-        let vector_data = Shapefile::new(&input_file, "r")?;
-        
+
+        if verbose {
+            println!("Reading data...")
+        };
+        let vector_data = Shapefile::read(&input_file)?;
+
         let start = time::now();
 
         // make sure the input vector file is of points type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
         }
-        
+
         // // Create the kd tree
         let (mut x, mut y, mut z): (f64, f64, f64);
         // let mut points = vec![];
@@ -325,7 +345,7 @@ impl WhiteboxTool for IdwInterpolation {
         //     // What is the index of the field to be analyzed?
         //     let field_index = match vector_data.attributes.get_field_num(&field_name) {
         //         Some(i) => i,
-        //         None => { 
+        //         None => {
         //             // Field not found
         //             return Err(Error::new(ErrorKind::InvalidInput,
         //                 "Attribute not found in table."));
@@ -356,7 +376,7 @@ impl WhiteboxTool for IdwInterpolation {
         //                 // do nothing; likely due to null value for record.
         //             }
         //         }
-                
+
         //         if verbose {
         //             progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
         //             if progress != old_progress {
@@ -369,7 +389,7 @@ impl WhiteboxTool for IdwInterpolation {
         //     kdtree
         // } else {
         //     // use the z dimension of the point data.
-        //     if vector_data.header.shape_type != ShapeType::PointZ && 
+        //     if vector_data.header.shape_type != ShapeType::PointZ &&
         //         vector_data.header.shape_type != ShapeType::PointM &&
         //         vector_data.header.shape_type != ShapeType::MultiPointZ &&
         //         vector_data.header.shape_type != ShapeType::MultiPointM {
@@ -387,7 +407,7 @@ impl WhiteboxTool for IdwInterpolation {
         //             kdtree.add(points[p], z).unwrap();
         //             p += 1;
         //         }
-                
+
         //         if verbose {
         //             progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
         //             if progress != old_progress {
@@ -400,25 +420,28 @@ impl WhiteboxTool for IdwInterpolation {
         //     kdtree
         // };
 
-
         let frs = if !use_z {
             // use the specified attribute
 
             // What is the index of the field to be analyzed?
             let field_index = match vector_data.attributes.get_field_num(&field_name) {
                 Some(i) => i,
-                None => { 
+                None => {
                     // Field not found
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                        "Attribute not found in table."));
-                },
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Attribute not found in table.",
+                    ));
+                }
             };
 
             // Is the field numeric?
             if !vector_data.attributes.is_field_numeric(field_index) {
                 // Warn user of non-numeric
-                return Err(Error::new(ErrorKind::InvalidInput,
-                    "Non-numeric attributes cannot be rasterized."));
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Non-numeric attributes cannot be rasterized.",
+                ));
             }
 
             let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(radius);
@@ -427,23 +450,28 @@ impl WhiteboxTool for IdwInterpolation {
                 let record = vector_data.get_record(record_num);
                 x = record.points[0].x;
                 y = record.points[0].y;
-                match vector_data.attributes.get_field_value(record_num, field_index) {
+                match vector_data
+                    .attributes
+                    .get_field_value(record_num, field_index)
+                {
                     FieldData::Int(val) => {
                         frs.insert(x, y, val as f64);
-                    },
-                    FieldData::Int64(val) => {
-                        frs.insert(x, y, val as f64);
-                    },
+                    }
+                    // FieldData::Int64(val) => {
+                    //     frs.insert(x, y, val as f64);
+                    // },
                     FieldData::Real(val) => {
                         frs.insert(x, y, val);
-                    },
+                    }
                     _ => {
                         // do nothing; likely due to null value for record.
                     }
                 }
-                
+
                 if verbose {
-                    progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                    progress = (100.0_f64 * record_num as f64
+                        / (vector_data.num_records - 1) as f64)
+                        as usize;
                     if progress != old_progress {
                         println!("Creating kd-tree: {}%", progress);
                         old_progress = progress;
@@ -454,10 +482,11 @@ impl WhiteboxTool for IdwInterpolation {
             frs
         } else {
             // use the z dimension of the point data.
-            if vector_data.header.shape_type != ShapeType::PointZ && 
-                vector_data.header.shape_type != ShapeType::PointM &&
-                vector_data.header.shape_type != ShapeType::MultiPointZ &&
-                vector_data.header.shape_type != ShapeType::MultiPointM {
+            if vector_data.header.shape_type != ShapeType::PointZ
+                && vector_data.header.shape_type != ShapeType::PointM
+                && vector_data.header.shape_type != ShapeType::MultiPointZ
+                && vector_data.header.shape_type != ShapeType::MultiPointM
+            {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "The input vector data must be of PointZ, PointM, MultiPointZ, or MultiPointM shape type."));
             }
@@ -474,9 +503,11 @@ impl WhiteboxTool for IdwInterpolation {
                     frs.insert(x, y, z);
                     // p += 1;
                 }
-                
+
                 if verbose {
-                    progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                    progress = (100.0_f64 * record_num as f64
+                        / (vector_data.num_records - 1) as f64)
+                        as usize;
                     if progress != old_progress {
                         println!("Creating kd-tree: {}%", progress);
                         old_progress = progress;
@@ -487,8 +518,7 @@ impl WhiteboxTool for IdwInterpolation {
             frs
         };
 
-
-        // Create the output raster. The process of doing this will 
+        // Create the output raster. The process of doing this will
         // depend on whether a cell size or a base raster were specified.
         // If both are specified, the base raster takes priority.
 
@@ -501,7 +531,7 @@ impl WhiteboxTool for IdwInterpolation {
             let base = Raster::new(&base_file, "r")?;
             Raster::initialize_using_file(&output_file, &base)
         } else {
-            // base the output raster on the grid_res and the 
+            // base the output raster on the grid_res and the
             // extent of the input vector.
             let west: f64 = vector_data.header.x_min;
             let north: f64 = vector_data.header.y_max;
@@ -510,7 +540,9 @@ impl WhiteboxTool for IdwInterpolation {
             let south: f64 = north - rows as f64 * grid_res;
             let east = west + columns as f64 * grid_res;
 
-            let mut configs = RasterConfigs { ..Default::default() };
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
             configs.rows = rows as usize;
             configs.columns = columns as usize;
             configs.north = north;
@@ -626,7 +658,7 @@ impl WhiteboxTool for IdwInterpolation {
                 //                         break;
                 //                     }
                 //                 } else {
-                //                     // There are fewer than the required number of neighbouring 
+                //                     // There are fewer than the required number of neighbouring
                 //                     // points. Assign the output nodata.
                 //                     sum_weights = 0.0;
                 //                     break;
@@ -653,23 +685,35 @@ impl WhiteboxTool for IdwInterpolation {
                 }
             }
         }
-        
+
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-        
+
         Ok(())
     }
 }

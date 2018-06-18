@@ -202,7 +202,7 @@ impl WhiteboxTool for JensonSnapPourPoints {
         };
 
         // let pourpts = Raster::new(&pourpts_file, "r")?;
-        let pourpts = Shapefile::new(&pourpts_file, "r")?;
+        let pourpts = Shapefile::read(&pourpts_file)?;
 
         // make sure the input vector file is of points type
         if pourpts.header.shape_type.base_shape_type() != ShapeType::Point {

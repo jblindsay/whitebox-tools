@@ -8,14 +8,14 @@ License: MIT
 NOTES: Add support for vector seed points.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
-use vector::{Shapefile, ShapeType};
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use time;
 use tools::*;
+use vector::{ShapeType, Shapefile};
 
 pub struct TraceDownslopeFlowpaths {
     name: String,
@@ -26,81 +26,90 @@ pub struct TraceDownslopeFlowpaths {
 }
 
 impl TraceDownslopeFlowpaths {
-    pub fn new() -> TraceDownslopeFlowpaths { // public constructor
+    pub fn new() -> TraceDownslopeFlowpaths {
+        // public constructor
         let name = "TraceDownslopeFlowpaths".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Traces downslope flowpaths from one or more target sites (i.e. seed points).".to_string();
-        
+        let description =
+            "Traces downslope flowpaths from one or more target sites (i.e. seed points)."
+                .to_string();
+
         let mut parameters = vec![];
         // parameters.push(ToolParameter{
-        //     name: "Input Seed Points File".to_owned(), 
-        //     flags: vec!["--seed_pts".to_owned()], 
+        //     name: "Input Seed Points File".to_owned(),
+        //     flags: vec!["--seed_pts".to_owned()],
         //     description: "Input raster seed points file.".to_owned(),
         //     parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
         //     default_value: None,
         //     optional: false
         // });
 
-        parameters.push(ToolParameter{
-            name: "Input Vector Seed Points File".to_owned(), 
-            flags: vec!["--seed_pts".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Seed Points File".to_owned(),
+            flags: vec!["--seed_pts".to_owned()],
             description: "Input vector seed points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input D8 pointer raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Should a background value of zero be used?".to_owned(), 
-            flags: vec!["--zero_background".to_owned()], 
-            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Should a background value of zero be used?".to_owned(),
+            flags: vec!["--zero_background".to_owned()],
+            description: "Flag indicating whether a background value of zero should be used."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --seed_pts=seeds.shp --flow_dir=flow_directions.tif --output=flow_paths.tif", short_exe, name).replace("*", &sep);
-    
-        TraceDownslopeFlowpaths { 
-            name: name, 
-            description: description, 
+
+        TraceDownslopeFlowpaths {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -109,7 +118,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -133,16 +142,23 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut seed_file = String::new();
         let mut flowdir_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
         let mut background_val = f64::NEG_INFINITY;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -157,23 +173,30 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 if keyval {
                     seed_file = vec[1].to_string();
                 } else {
-                    seed_file = args[i+1].to_string();
+                    seed_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "--d8_pntr" || vec[0].to_lowercase() == "-flow_dir" || vec[0].to_lowercase() == "--flow_dir" {
+            } else if vec[0].to_lowercase() == "--d8_pntr" || vec[0].to_lowercase() == "-flow_dir"
+                || vec[0].to_lowercase() == "--flow_dir"
+            {
                 if keyval {
                     flowdir_file = vec[1].to_string();
                 } else {
-                    flowdir_file = args[i+1].to_string();
+                    flowdir_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr"
+                || vec[0].to_lowercase() == "--esri_pntr"
+                || vec[0].to_lowercase() == "--esri_style"
+            {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
+            } else if vec[0].to_lowercase() == "-zero_background"
+                || vec[0].to_lowercase() == "--zero_background"
+            {
                 background_val = 0f64;
             }
         }
@@ -198,11 +221,13 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
-        
+
         // if verbose { println!("Reading destination data...") };
         // let seeds = Raster::new(&seed_file, "r")?;
 
-        if verbose { println!("Reading flow direction data...") };
+        if verbose {
+            println!("Reading flow direction data...")
+        };
         let flowdir = Raster::new(&flowdir_file, "r")?;
 
         // make sure the input files have the same size
@@ -218,16 +243,18 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &flowdir);
         output.reinitialize_values(background_val);
 
-        let seeds = Shapefile::new(&seed_file, "r")?;
+        let seeds = Shapefile::read(&seed_file)?;
 
         // make sure the input vector file is of points type
         if seeds.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
         }
 
         let mut seed_rows = vec![];
@@ -238,16 +265,17 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
             seed_cols.push(flowdir.get_column_from_x(record.points[0].x));
 
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (seeds.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (seeds.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Locating seed points: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
-        
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let mut pntr_matches: [usize; 129] = [0usize; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
@@ -277,37 +305,37 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         let mut dir: f64;
         // for row in 0..rows {
         //     for col in 0..columns {
-            //     if seeds[(row, col)] > 0.0 && flowdir[(row, col)] != nodata {
-            //         flag = false;
-            //         x = col;
-            //         y = row;
-            //         while !flag {
-            //             if output[(y, x)] == background_val {
-            //                 output[(y, x)] = 1.0;
-            //             } else {
-            //                 output.increment(y, x, 1.0);
-            //             }
-            //             // find its downslope neighbour
-            //             dir = flowdir[(y, x)];
-            //             if dir != nodata && dir > 0.0 {
-            //                 // move x and y accordingly
-            //                 x += dx[pntr_matches[dir as usize]];
-            //                 y += dy[pntr_matches[dir as usize]];
-            //             } else {
-            //                 flag = true;
-            //             }
-            //         }
-            //     } else if flowdir[(row, col)] == nodata {
-            //         output[(row, col)] = nodata;
-            //     }
-            // }
-            // if verbose {
-            //     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-            //     if progress != old_progress {
-            //         println!("Progress: {}%", progress);
-            //         old_progress = progress;
-            //     }
-            // }
+        //     if seeds[(row, col)] > 0.0 && flowdir[(row, col)] != nodata {
+        //         flag = false;
+        //         x = col;
+        //         y = row;
+        //         while !flag {
+        //             if output[(y, x)] == background_val {
+        //                 output[(y, x)] = 1.0;
+        //             } else {
+        //                 output.increment(y, x, 1.0);
+        //             }
+        //             // find its downslope neighbour
+        //             dir = flowdir[(y, x)];
+        //             if dir != nodata && dir > 0.0 {
+        //                 // move x and y accordingly
+        //                 x += dx[pntr_matches[dir as usize]];
+        //                 y += dy[pntr_matches[dir as usize]];
+        //             } else {
+        //                 flag = true;
+        //             }
+        //         }
+        //     } else if flowdir[(row, col)] == nodata {
+        //         output[(row, col)] = nodata;
+        //     }
+        // }
+        // if verbose {
+        //     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+        //     if progress != old_progress {
+        //         println!("Progress: {}%", progress);
+        //         old_progress = progress;
+        //     }
+        // }
         // }
 
         for i in 0..seed_cols.len() {
@@ -357,24 +385,39 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 }
             }
         }
-        
+
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.palette = "spectrum.plt".to_string();
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Seed points raster file: {}", seed_file));
-        output.add_metadata_entry(format!("D8 flow direction (pointer) raster: {}", flowdir_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!(
+            "D8 flow direction (pointer) raster: {}",
+            flowdir_file
+        ));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

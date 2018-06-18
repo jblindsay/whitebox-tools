@@ -6,19 +6,19 @@ Last Modified: 05/05/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use rendering::html::*;
+use rendering::Scattergram;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::process::Command;
-use vector::{Shapefile, FieldData};
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use time;
 use tools::*;
-use rendering::Scattergram;
-use rendering::html::*;
+use vector::{FieldData, Shapefile};
 
 pub struct AttributeScattergram {
     name: String,
@@ -33,52 +33,63 @@ impl AttributeScattergram {
         // public constructor
         let name = "AttributeScattergram".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Creates a scattergram for two field values of a vector's attribute table.".to_string();
+        let description =
+            "Creates a scattergram for two field values of a vector's attribute table.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Any)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Any,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name X".to_owned(), 
-            flags: vec!["--fieldx".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name X".to_owned(),
+            flags: vec!["--fieldx".to_owned()],
             description: "Input field name in attribute table for the x-axis.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Number,
+                "--input".to_string(),
+            ),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name Y".to_owned(), 
-            flags: vec!["--fieldy".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name Y".to_owned(),
+            flags: vec!["--fieldy".to_owned()],
             description: "Input field name in attribute table for the y-axis.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Number,
+                "--input".to_string(),
+            ),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Draw the trendline?".to_owned(), 
-            flags: vec!["--trendline".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Draw the trendline?".to_owned(),
+            flags: vec!["--trendline".to_owned()],
             description: "Draw the trendline.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -108,7 +119,7 @@ impl WhiteboxTool for AttributeScattergram {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -139,11 +150,12 @@ impl WhiteboxTool for AttributeScattergram {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name_x = String::new();
         let mut field_name_y = String::new();
@@ -151,7 +163,10 @@ impl WhiteboxTool for AttributeScattergram {
         let mut trendline = false;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -167,7 +182,7 @@ impl WhiteboxTool for AttributeScattergram {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-fieldx" {
                 field_name_x = if keyval {
@@ -204,7 +219,7 @@ impl WhiteboxTool for AttributeScattergram {
         let mut old_progress: usize = 1;
 
         let start = time::now();
-        
+
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -212,29 +227,47 @@ impl WhiteboxTool for AttributeScattergram {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading vector data...") };
-        let vector_data = Shapefile::new(&input_file, "r")?;
+        if verbose {
+            println!("Reading vector data...")
+        };
+        let vector_data = Shapefile::read(&input_file)?;
 
         // What is the index of the x-variable field to be analyzed?
         let field_index_x = match vector_data.attributes.get_field_num(&field_name_x) {
             Some(i) => i,
-            None => return Err(Error::new(ErrorKind::InvalidInput, "The specified x-variable field name does not exist in input shapefile.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The specified x-variable field name does not exist in input shapefile.",
+                ))
+            }
         };
 
         // Is the field numeric?
         if !vector_data.attributes.is_field_numeric(field_index_x) {
-            return Err(Error::new(ErrorKind::InvalidInput, "The specified x-variable attribute field is non-numeric."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The specified x-variable attribute field is non-numeric.",
+            ));
         }
 
         // What is the index of the y-variable field to be analyzed?
         let field_index_y = match vector_data.attributes.get_field_num(&field_name_y) {
             Some(i) => i,
-            None => return Err(Error::new(ErrorKind::InvalidInput, "The specified y-variable field name does not exist in input shapefile.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The specified y-variable field name does not exist in input shapefile.",
+                ))
+            }
         };
 
         // Is the field numeric?
         if !vector_data.attributes.is_field_numeric(field_index_y) {
-            return Err(Error::new(ErrorKind::InvalidInput, "The specified y-variable attribute field is non-numeric."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The specified y-variable attribute field is non-numeric.",
+            ));
         }
 
         let mut xdata = vec![];
@@ -242,37 +275,35 @@ impl WhiteboxTool for AttributeScattergram {
         let mut series_xdata = vec![];
         let mut series_ydata = vec![];
         let mut series_names = vec![];
-        
+
         // Find the min and max values of the field
         let mut x: f64;
         let mut y: f64;
         let nodata = -32768f64;
         for record_num in 0..vector_data.num_records {
-            x = match vector_data.attributes.get_field_value(record_num, field_index_x) {
-                FieldData::Int(val) => {
-                    val as f64
-                },
-                FieldData::Int64(val) => {
-                    val as f64
-                },
-                FieldData::Real(val) => {
-                    val
-                },
+            x = match vector_data
+                .attributes
+                .get_field_value(record_num, field_index_x)
+            {
+                FieldData::Int(val) => val as f64,
+                // FieldData::Int64(val) => {
+                //     val as f64
+                // },
+                FieldData::Real(val) => val,
                 _ => {
                     nodata // likely a null field
                 }
             };
 
-            y = match vector_data.attributes.get_field_value(record_num, field_index_y) {
-                FieldData::Int(val) => {
-                    val as f64
-                },
-                FieldData::Int64(val) => {
-                    val as f64
-                },
-                FieldData::Real(val) => {
-                    val
-                },
+            y = match vector_data
+                .attributes
+                .get_field_value(record_num, field_index_y)
+            {
+                FieldData::Int(val) => val as f64,
+                // FieldData::Int64(val) => {
+                //     val as f64
+                // },
+                FieldData::Real(val) => val,
                 _ => {
                     nodata // likely a null field
                 }
@@ -282,9 +313,10 @@ impl WhiteboxTool for AttributeScattergram {
                 series_xdata.push(x);
                 series_ydata.push(y);
             }
-            
+
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Reading data: {}%", progress);
                     old_progress = progress;
@@ -295,12 +327,16 @@ impl WhiteboxTool for AttributeScattergram {
         xdata.push(series_xdata.clone());
         ydata.push(series_ydata.clone());
         series_names.push(format!("Series {} - {}", field_name_x, field_name_y));
-        
+
         let end = time::now();
         let elapsed_time = end - start;
 
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -309,23 +345,31 @@ impl WhiteboxTool for AttributeScattergram {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Scattergram Analysis</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Scatergram Analysis</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes())?;
-        writer.write_all(&format!("<p><strong>X Field Name</strong>: {}</p>", field_name_x.clone()).as_bytes())?;
-        writer.write_all(&format!("<p><strong>Y Field Name</strong>: {}</p>", field_name_y.clone()).as_bytes())?;
-        
+        writer.write_all(
+            &format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes(),
+        )?;
+        writer.write_all(&format!(
+            "<p><strong>X Field Name</strong>: {}</p>",
+            field_name_x.clone()
+        ).as_bytes())?;
+        writer.write_all(&format!(
+            "<p><strong>Y Field Name</strong>: {}</p>",
+            field_name_y.clone()
+        ).as_bytes())?;
+
         let graph = Scattergram {
             parent_id: "graph".to_string(),
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: field_name_x.to_string(),
             y_axis_label: field_name_y.to_string(),
             width: 700f64,
@@ -336,7 +380,9 @@ impl WhiteboxTool for AttributeScattergram {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 

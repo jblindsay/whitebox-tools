@@ -6,21 +6,21 @@ Last Modified: February 21, 2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::LineGraph;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::env;
-use std::path;
-use std::f64;
-use raster::*;
-use vector::{Shapefile, ShapeType};
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
-use tools::*;
-use rendering::LineGraph;
-use rendering::html::*;
+use std::path;
+use std::process::Command;
 use structures::Array2D;
+use time;
+use tools::*;
+use vector::{ShapeType, Shapefile};
 
 /// Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 pub struct LongProfileFromPoints {
@@ -32,72 +32,78 @@ pub struct LongProfileFromPoints {
 }
 
 impl LongProfileFromPoints {
-    pub fn new() -> LongProfileFromPoints { // public constructor
+    pub fn new() -> LongProfileFromPoints {
+        // public constructor
         let name = "LongProfileFromPoints".to_string();
         let toolbox = "Stream Network Analysis".to_string();
         let description = "Plots the longitudinal profiles from flow-paths initiating from a set of vector points.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input raster D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Vector Points File".to_owned(), 
-            flags: vec!["--points".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["--points".to_owned()],
             description: "Input vector points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --points=stream_head.shp --dem=dem.tif -o=output.html --esri_pntr", short_exe, name).replace("*", &sep);
-    
-        LongProfileFromPoints { 
-            name: name, 
-            description: description, 
+
+        LongProfileFromPoints {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -106,7 +112,7 @@ impl WhiteboxTool for LongProfileFromPoints {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -137,16 +143,23 @@ impl WhiteboxTool for LongProfileFromPoints {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut points_file = String::new();
         let mut dem_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -162,25 +175,25 @@ impl WhiteboxTool for LongProfileFromPoints {
                 d8_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-points" {
                 points_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-dem" {
                 dem_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
@@ -211,30 +224,40 @@ impl WhiteboxTool for LongProfileFromPoints {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading pointer data...") };
+        if verbose {
+            println!("Reading pointer data...")
+        };
         let pntr = Raster::new(&d8_file, "r")?;
 
-        if verbose { println!("Reading points data...") };
-        let points = Shapefile::new(&points_file, "r")?;
-        
-        if verbose { println!("Reading DEM data...") };
+        if verbose {
+            println!("Reading points data...")
+        };
+        let points = Shapefile::read(&points_file)?;
+
+        if verbose {
+            println!("Reading DEM data...")
+        };
         let dem = Raster::new(&dem_file, "r")?;
-        
+
         let start = time::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
-        
+
         // make sure the input files have the same size
         if dem.configs.rows != pntr.configs.rows || dem.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         // make sure the input vector file is of points type
         if points.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
         }
 
         let cell_size_x = pntr.configs.resolution_x;
@@ -247,7 +270,7 @@ impl WhiteboxTool for LongProfileFromPoints {
             let row = dem.get_row_from_y(record.points[0].y);
             let col = dem.get_column_from_x(record.points[0].x);
             heads.push((row, col));
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -257,14 +280,16 @@ impl WhiteboxTool for LongProfileFromPoints {
             }
         }
 
-        if verbose { println!("Traversing flowpaths..."); }
+        if verbose {
+            println!("Traversing flowpaths...");
+        }
         // Now traverse each flowpath starting from each stream head and
         // retrieve the elevation and distance from outlet data.
         let mut xdata = vec![];
         let mut ydata = vec![];
         let series_names = vec![];
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
@@ -294,7 +319,16 @@ impl WhiteboxTool for LongProfileFromPoints {
             pntr_matches[64] = 7usize;
             pntr_matches[128] = 0usize;
         }
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let grid_lengths = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
         let mut flag: bool;
         let (mut x, mut y): (isize, isize);
         let mut dir: usize;
@@ -336,7 +370,7 @@ impl WhiteboxTool for LongProfileFromPoints {
             stream_lengths[h] = dist;
             // update progress here
             if verbose {
-                progress = (100.0_f64 * h as f64 / (num_heads-1) as f64) as usize;
+                progress = (100.0_f64 * h as f64 / (num_heads - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Loop 1 of 2: {}%", progress);
                     old_progress = progress;
@@ -377,9 +411,9 @@ impl WhiteboxTool for LongProfileFromPoints {
 
             let num_cells = profile_xdata.len();
             if num_cells > 1 {
-                if profile_xdata[num_cells-1] == 0f64 {
+                if profile_xdata[num_cells - 1] == 0f64 {
                     // Otherwise the origin of the plot won't be at zero.
-                    profile_xdata[num_cells-1] = 0.0000001f64; 
+                    profile_xdata[num_cells - 1] = 0.0000001f64;
                 }
 
                 xdata.push(profile_xdata.clone());
@@ -389,7 +423,7 @@ impl WhiteboxTool for LongProfileFromPoints {
             }
             // update progress here
             if verbose {
-                progress = (100.0_f64 * h as f64 / (num_heads-1) as f64) as usize;
+                progress = (100.0_f64 * h as f64 / (num_heads - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Loop 2 of 2: {}%", progress);
                     old_progress = progress;
@@ -404,16 +438,21 @@ impl WhiteboxTool for LongProfileFromPoints {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Long Profile From Points</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Long Profile From Points</h1>"#.as_bytes())?;
-        
-        writer.write_all((format!("<p><strong>Input DEM</strong>: {}<br>", dem.get_short_filename())).as_bytes())?;
-        
+
+        writer.write_all(
+            (format!(
+                "<p><strong>Input DEM</strong>: {}<br>",
+                dem.get_short_filename()
+            )).as_bytes(),
+        )?;
+
         writer.write_all(("</p>").as_bytes())?;
         let end = time::now();
         let elapsed_time = end - start;
@@ -426,7 +465,7 @@ impl WhiteboxTool for LongProfileFromPoints {
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: "Distance from Mouth".to_string(),
             y_axis_label: "Elevation".to_string(),
             draw_points: false,
@@ -435,13 +474,20 @@ impl WhiteboxTool for LongProfileFromPoints {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
 
-        if verbose { println!("\n{}",  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

@@ -6,14 +6,14 @@ Last Modified: 05/05/2018
 License: MIT
 */
 
-use time;
-use std::f64;
-use std::env;
-use std::path;
 use raster::*;
-use vector::{FieldData, Shapefile, ShapeType};
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use time;
 use tools::*;
+use vector::{FieldData, ShapeType, Shapefile};
 
 pub struct VectorPointsToRaster {
     name: String,
@@ -25,37 +25,42 @@ pub struct VectorPointsToRaster {
 
 impl VectorPointsToRaster {
     /// public constructor
-    pub fn new() -> VectorPointsToRaster { 
+    pub fn new() -> VectorPointsToRaster {
         let name = "VectorPointsToRaster".to_string();
         let toolbox = "Data Tools".to_string();
         let description = "Converts a vector containing points into a raster.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Vector Points File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector Points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name".to_owned(), 
-            flags: vec!["--field".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name".to_owned(),
+            flags: vec!["--field".to_owned()],
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Number,
+                "--input".to_string(),
+            ),
             default_value: Some("FID".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -67,13 +72,15 @@ impl VectorPointsToRaster {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Background value is NoData?".to_owned(), 
-            flags: vec!["--nodata".to_owned()], 
-            description: "Background value to set to NoData. Without this flag, it will be set to 0.0.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Background value is NoData?".to_owned(),
+            flags: vec!["--nodata".to_owned()],
+            description:
+                "Background value to set to NoData. Without this flag, it will be set to 0.0."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -97,19 +104,22 @@ impl VectorPointsToRaster {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=ELEV -o=output.tif --assign=min --nodata --cell_size=10.0
         >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=FID -o=output.tif --assign=last --base=existing_raster.tif", short_exe, name).replace("*", &sep);
-    
-        VectorPointsToRaster { 
-            name: name, 
-            description: description, 
+
+        VectorPointsToRaster {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -118,7 +128,7 @@ impl WhiteboxTool for VectorPointsToRaster {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -142,7 +152,12 @@ impl WhiteboxTool for VectorPointsToRaster {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name = String::from("FID");
         let mut output_file = String::new();
@@ -151,10 +166,12 @@ impl WhiteboxTool for VectorPointsToRaster {
         let nodata = -32768.0f64;
         let mut background_val = 0f64;
         let mut assign_op = String::from("last");
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -170,7 +187,7 @@ impl WhiteboxTool for VectorPointsToRaster {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-field" {
                 field_name = if keyval {
@@ -182,19 +199,19 @@ impl WhiteboxTool for VectorPointsToRaster {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-cell_size" {
                 cell_size = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-base" {
                 base_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
                 background_val = nodata;
@@ -202,7 +219,7 @@ impl WhiteboxTool for VectorPointsToRaster {
                 assign_op = if keyval {
                     vec[1].to_lowercase()
                 } else {
-                    args[i+1].to_lowercase()
+                    args[i + 1].to_lowercase()
                 };
             }
         }
@@ -224,29 +241,33 @@ impl WhiteboxTool for VectorPointsToRaster {
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
-        
-        if verbose { println!("Reading data...") };
-        let vector_data = Shapefile::new(&input_file, "r")?;
-        
+
+        if verbose {
+            println!("Reading data...")
+        };
+        let vector_data = Shapefile::read(&input_file)?;
+
         let start = time::now();
 
         // make sure the input vector file is of points type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must either be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must either be of point base shape type.",
+            ));
         }
-        
+
         // What is the index of the field to be analyzed?
         let field_index = match vector_data.attributes.get_field_num(&field_name) {
             Some(i) => i,
-            None => { 
+            None => {
                 // Field not found use FID
                 if verbose {
                     println!("Warning: Attribute not found in table. FID will be used instead.");
                 }
                 field_name = "FID".to_string();
-                0 
-            },
+                0
+            }
         };
 
         // Is the field numeric?
@@ -258,7 +279,7 @@ impl WhiteboxTool for VectorPointsToRaster {
             field_name = "FID".to_string(); // Can't use non-numeric field; use FID instead.
         }
 
-        // Create the output raster. The process of doing this will 
+        // Create the output raster. The process of doing this will
         // depend on whether a cell size or a base raster were specified.
         // If both are specified, the base raster takes priority.
 
@@ -269,7 +290,7 @@ impl WhiteboxTool for VectorPointsToRaster {
             let base = Raster::new(&base_file, "r")?;
             Raster::initialize_using_file(&output_file, &base)
         } else {
-            // base the output raster on the cell_size and the 
+            // base the output raster on the cell_size and the
             // extent of the input vector.
             let west: f64 = vector_data.header.x_min;
             let north: f64 = vector_data.header.y_max;
@@ -278,7 +299,9 @@ impl WhiteboxTool for VectorPointsToRaster {
             let south: f64 = north - rows as f64 * cell_size;
             let east = west + columns as f64 * cell_size;
 
-            let mut configs = RasterConfigs { ..Default::default() };
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
             configs.rows = rows as usize;
             configs.columns = columns as usize;
             configs.north = north;
@@ -306,16 +329,19 @@ impl WhiteboxTool for VectorPointsToRaster {
         // get the attribute data
         for record_num in 0..vector_data.num_records {
             if field_name != "FID" {
-                match vector_data.attributes.get_field_value(record_num, field_index) {
+                match vector_data
+                    .attributes
+                    .get_field_value(record_num, field_index)
+                {
                     FieldData::Int(val) => {
                         attribute_data[record_num] = val as f64;
-                    },
-                    FieldData::Int64(val) => {
-                        attribute_data[record_num] = val as f64;
-                    },
+                    }
+                    // FieldData::Int64(val) => {
+                    //     attribute_data[record_num] = val as f64;
+                    // },
                     FieldData::Real(val) => {
                         attribute_data[record_num] = val;
-                    },
+                    }
                     _ => {
                         // do nothing; likely due to null value for record.
                     }
@@ -323,9 +349,10 @@ impl WhiteboxTool for VectorPointsToRaster {
             } else {
                 attribute_data[record_num] = (record_num + 1) as f64;
             }
-            
+
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Reading attributes: {}%", progress);
                     old_progress = progress;
@@ -346,12 +373,16 @@ impl WhiteboxTool for VectorPointsToRaster {
                     row = output.get_row_from_y(y);
                     col = output.get_column_from_x(x);
                     output.set_value(row, col, attribute_data[record_num]);
-                    
                 }
                 if verbose {
-                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                     if progress != old_progress {
-                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -368,12 +399,16 @@ impl WhiteboxTool for VectorPointsToRaster {
                     if z == background_val || z == nodata {
                         output.set_value(row, col, attribute_data[record_num]);
                     }
-                    
                 }
                 if verbose {
-                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                     if progress != old_progress {
-                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -392,9 +427,14 @@ impl WhiteboxTool for VectorPointsToRaster {
                     }
                 }
                 if verbose {
-                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                     if progress != old_progress {
-                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -413,9 +453,14 @@ impl WhiteboxTool for VectorPointsToRaster {
                     }
                 }
                 if verbose {
-                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                     if progress != old_progress {
-                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -436,9 +481,14 @@ impl WhiteboxTool for VectorPointsToRaster {
                     }
                 }
                 if verbose {
-                    progress = (100.0_f64 * (record_num+1) as f64 / num_records as f64) as usize;
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                     if progress != old_progress {
-                        println!("Rasterizing {} of {}: {}%", record_num+1, num_records, progress);
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -447,20 +497,32 @@ impl WhiteboxTool for VectorPointsToRaster {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-        
+
         Ok(())
     }
 }

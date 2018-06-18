@@ -1,27 +1,26 @@
-
 #![allow(unused_assignments, dead_code)]
 pub mod geokeys;
 pub mod tiff_consts;
 
 extern crate lzw;
 
+use std::cmp::min;
 use std::collections::HashMap;
+use std::default::Default;
+use std::fmt;
 use std::io::Error;
 use std::io::ErrorKind;
-use std::fmt;
-use std::default::Default;
-use std::cmp::min;
 // use std::cmp::Ordering;
-use std::io::BufWriter;
-use std::io::prelude::*;
-use std::f64;
-use std::fs::File;
-use std::fs;
-use raster::*;
+use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use io_utils::{ByteOrderReader, Endianness};
 use raster::geotiff::geokeys::*;
 use raster::geotiff::tiff_consts::*;
-use io_utils::{ByteOrderReader, Endianness};
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use raster::*;
+use std::f64;
+use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;
@@ -33,7 +32,7 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     f.read(&mut buffer)?;
 
     //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
-    let endian = match &buffer[0..2] { 
+    let endian = match &buffer[0..2] {
         b"II" => Endianness::LittleEndian,
         b"MM" => Endianness::BigEndian,
         _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
@@ -45,8 +44,10 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     match th.read_u16() {
         42 => (), // do nothing
         43 => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The BigTiff format is not currently supported."))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The BigTiff format is not currently supported.",
+            ))
         }
         _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
     }
@@ -63,7 +64,7 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     while ifd_offset > 0 {
         th.seek(ifd_offset);
         let num_directories = th.read_u16();
-        
+
         for _ in 0..num_directories {
             let tag_id = th.read_u16();
             let field_type = th.read_u16();
@@ -75,7 +76,12 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
                 3u16 | 8u16 => 2,
                 4u16 | 9u16 | 11u16 => 4,
                 5u16 | 10u16 | 12u16 => 8,
-                _ => return Err(Error::new(ErrorKind::InvalidInput, "Error reading the IFDs.")),
+                _ => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Error reading the IFDs.",
+                    ))
+                }
             };
 
             // read the tag data
@@ -98,30 +104,26 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
                 th.seek(cur_pos);
             }
 
-            let ifd = IfdDirectory::new(tag_id,
-                                        field_type,
-                                        num_values,
-                                        value_offset,
-                                        data,
-                                        endian);
+            let ifd = IfdDirectory::new(tag_id, field_type, num_values, value_offset, data, endian);
             ifd_map.insert(tag_id, ifd.clone());
 
             println!("{}", ifd);
-
         }
         ifd_offset = th.read_u32() as usize;
     }
 
     match ifd_map.get(&34735) {
-        Some(ifd) => geokeys.add_key_directory(&ifd.data),
+        Some(ifd) => geokeys.add_key_directory(&ifd.data, endian),
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The TIFF file does not contain geokeys"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The TIFF file does not contain geokeys",
+            ))
         }
     };
 
     match ifd_map.get(&34736) {
-        Some(ifd) => geokeys.add_double_params(&ifd.data),
+        Some(ifd) => geokeys.add_double_params(&ifd.data, endian),
         _ => {}
     };
 
@@ -142,16 +144,17 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     //     _ => vec![0.0],
     // };
 
-    println!("\nGeoKeys:\n");
+    // println!("\nGeoKeys:\n");
     println!("{}", geokeys.interpret_geokeys());
 
     Ok(())
 }
 
-pub fn read_geotiff<'a>(file_name: &'a String,
-                        configs: &'a mut RasterConfigs,
-                        data: &'a mut Vec<f64>)
-                        -> Result<(), Error> {
+pub fn read_geotiff<'a>(
+    file_name: &'a String,
+    configs: &'a mut RasterConfigs,
+    data: &'a mut Vec<f64>,
+) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;
 
     let metadata = fs::metadata(file_name.clone())?;
@@ -162,7 +165,8 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     f.read(&mut buffer)?;
 
     //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
-    match &buffer[0..2] { //byte_order { //LittleEndian::read_u16(&buffer[0..2]) {
+    match &buffer[0..2] {
+        //byte_order { //LittleEndian::read_u16(&buffer[0..2]) {
         b"II" => configs.endian = Endianness::LittleEndian,
         b"MM" => configs.endian = Endianness::BigEndian,
         _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
@@ -174,8 +178,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     match th.read_u16() {
         42 => (), // do nothing
         43 => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The BigTiff format is not currently supported."))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The BigTiff format is not currently supported.",
+            ))
         }
         _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
     }
@@ -189,7 +195,7 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     while ifd_offset > 0 {
         th.seek(ifd_offset);
         let num_directories = th.read_u16();
-        
+
         for _ in 0..num_directories {
             let tag_id = th.read_u16();
             let field_type = th.read_u16();
@@ -201,7 +207,12 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 3u16 | 8u16 => 2,
                 4u16 | 9u16 | 11u16 => 4,
                 5u16 | 10u16 | 12u16 => 8,
-                _ => return Err(Error::new(ErrorKind::InvalidInput, "Error reading the IFDs.")),
+                _ => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Error reading the IFDs.",
+                    ))
+                }
             };
 
             // read the tag data
@@ -224,12 +235,14 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 th.seek(cur_pos);
             }
 
-            let ifd = IfdDirectory::new(tag_id,
-                                        field_type,
-                                        num_values,
-                                        value_offset,
-                                        data,
-                                        configs.endian);
+            let ifd = IfdDirectory::new(
+                tag_id,
+                field_type,
+                num_values,
+                value_offset,
+                data,
+                configs.endian,
+            );
             ifd_map.insert(tag_id, ifd.clone());
         }
         ifd_offset = th.read_u32() as usize;
@@ -245,8 +258,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
             }
         }
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The raster Columns value was not read correctly"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster Columns value was not read correctly",
+            ))
         }
     };
 
@@ -260,8 +275,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
             }
         }
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The raster Rows value was not read correctly"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster Rows value was not read correctly",
+            ))
         }
     };
 
@@ -274,32 +291,40 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     let bits_per_sample = match ifd_map.get(&258) {
         Some(ifd) => ifd.interpret_as_u16(),
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The raster BitsPerSample value was not read correctly"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster BitsPerSample value was not read correctly",
+            ))
         }
     };
 
     let compression = match ifd_map.get(&259) {
         Some(ifd) => ifd.interpret_as_u16()[0],
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The raster Compression method value was not read correctly"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster Compression method value was not read correctly",
+            ))
         }
     };
 
-    if compression != COMPRESS_NONE && 
-        compression != COMPRESS_PACKBITS && 
-        compression != COMPRESS_LZW {
+    if compression != COMPRESS_NONE && compression != COMPRESS_PACKBITS
+        && compression != COMPRESS_LZW
+    {
         println!("Compression: {}", compression);
-        return Err(Error::new(ErrorKind::InvalidData,
-            "The GeoTIFF decoder currently only supports PACKBITS and LZW compression."))
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "The GeoTIFF decoder currently only supports PACKBITS and LZW compression.",
+        ));
     }
 
     let photometric_interp = match ifd_map.get(&262) {
         Some(ifd) => ifd.interpret_as_u16()[0],
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The raster PhotometricInterpretation value was not read correctly"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster PhotometricInterpretation value was not read correctly",
+            ))
         }
     };
 
@@ -319,15 +344,17 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     };
 
     match ifd_map.get(&34735) {
-        Some(ifd) => geokeys.add_key_directory(&ifd.data),
+        Some(ifd) => geokeys.add_key_directory(&ifd.data, configs.endian),
         _ => {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "The TIFF file does not contain geokeys"))
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The TIFF file does not contain geokeys",
+            ))
         }
     };
 
     match ifd_map.get(&34736) {
-        Some(ifd) => geokeys.add_double_params(&ifd.data),
+        Some(ifd) => geokeys.add_double_params(&ifd.data, configs.endian),
         _ => {}
     };
 
@@ -358,19 +385,18 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     }
 
     // Get the EPSG code
-    if geokeys_map.contains_key(&2048) { // geographic coordinate system
+    if geokeys_map.contains_key(&2048) {
+        // geographic coordinate system
         configs.epsg_code = geokeys_map.get(&2048).unwrap().interpret_as_u16()[0];
-    } else if geokeys_map.contains_key(&3072) { // projected coordinate system
+    } else if geokeys_map.contains_key(&3072) {
+        // projected coordinate system
         configs.epsg_code = geokeys_map.get(&3072).unwrap().interpret_as_u16()[0];
     }
 
     // Determine the image mode.
     let kw_map = get_keyword_map();
     let photomet_map = kw_map.get(&262).unwrap();
-    let photomet_str: String = photomet_map
-        .get(&photometric_interp)
-        .unwrap()
-        .to_string();
+    let photomet_str: String = photomet_map.get(&photometric_interp).unwrap().to_string();
     // let mode: ImageMode;
     let mode: u16;
     let mut palette = vec![];
@@ -378,13 +404,17 @@ pub fn read_geotiff<'a>(file_name: &'a String,
         configs.photometric_interp = PhotometricInterpretation::RGB;
         if bits_per_sample[0] == 16 {
             if bits_per_sample[1] != 16 || bits_per_sample[2] != 16 {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "Wrong number of samples for 16bit RGB."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Wrong number of samples for 16bit RGB.",
+                ));
             }
         } else {
             if bits_per_sample[0] != 8 || bits_per_sample[1] != 8 || bits_per_sample[2] != 8 {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "Wrong number of samples for 8bit RGB."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Wrong number of samples for 8bit RGB.",
+                ));
             }
         }
         // RGB images normally have 3 samples per pixel.
@@ -398,24 +428,33 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 match extra_samples {
                     // Not sure why, but some GeoTIFFs have extra samples = 0 even though they are clearly RGBA
                     0 | 1 => IM_RGBA, // ImageMode::RGBA,
-                    2 => IM_NRGBA, //ImageMode::NRGBA,
+                    2 => IM_NRGBA,    //ImageMode::NRGBA,
                     _ => {
-                        return Err(Error::new(ErrorKind::InvalidData,
-                                              "Wrong number of samples for RGB."))
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "Wrong number of samples for RGB.",
+                        ))
                     }
                 }
             }
-            _ => return Err(Error::new(ErrorKind::InvalidData, "Wrong number of samples for RGB.")),
+            _ => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Wrong number of samples for RGB.",
+                ))
+            }
         };
     } else if photomet_str == "Paletted" {
         configs.photometric_interp = PhotometricInterpretation::Categorical;
         mode = IM_PALETTED; //ImageMode::Paletted;
-        // retreive the palette colour data
+                            // retreive the palette colour data
         let color_map = match ifd_map.get(&320) {
             Some(ifd) => ifd.interpret_as_u16(),
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "Colour map not present in Paletted TIFF."))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Colour map not present in Paletted TIFF.",
+                ))
             }
         };
         let num_colors = color_map.len() / 3;
@@ -439,7 +478,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
         configs.photometric_interp = PhotometricInterpretation::Continuous;
         mode = IM_GRAY; //ImageMode::Gray;
     } else {
-        return Err(Error::new(ErrorKind::InvalidData, "Unsupported image format."));
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "Unsupported image format.",
+        ));
     }
 
     let width = configs.columns;
@@ -467,8 +509,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The TileWidth value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The TileWidth value was not read correctly",
+                ))
             }
         };
 
@@ -482,8 +526,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The TileLength value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The TileLength value was not read correctly",
+                ))
             }
         };
 
@@ -493,8 +539,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
         block_offsets = match ifd_map.get(&324) {
             Some(ifd) => ifd.interpret_as_u32(),
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The raster BitsPerSample value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The raster BitsPerSample value was not read correctly",
+                ))
             }
         };
 
@@ -513,8 +561,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The TileLength value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The TileLength value was not read correctly",
+                ))
             }
         };
     } else {
@@ -528,8 +578,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The RowsPerStrip value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The RowsPerStrip value was not read correctly",
+                ))
             }
         };
 
@@ -550,8 +602,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The raster StripOffsets value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The raster StripOffsets value was not read correctly",
+                ))
             }
         };
 
@@ -570,8 +624,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                      "The raster StripByteCounts value was not read correctly"))
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The raster StripByteCounts value was not read correctly",
+                ))
             }
         };
     }
@@ -593,10 +649,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                 COMPRESS_NONE => {
                     // no compression
                     buf = th.buffer[offset..(offset + n)].to_vec();
-                },
+                }
                 COMPRESS_PACKBITS => {
                     buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
-                },
+                }
                 COMPRESS_LZW => {
                     let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
                     let mut compressed = &th.buffer[offset..(offset + n)];
@@ -605,14 +661,15 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                         compressed = &compressed[start..];
                         buf.extend(bytes.iter().map(|&i| i));
                     }
-                },
+                }
                 _ => {
-                    return Err(Error::new(ErrorKind::InvalidData,
-                                      "The GeoTIFF decoder currently only supports PACKBITS compression."))
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The GeoTIFF decoder currently only supports PACKBITS compression.",
+                    ))
                 }
             }
             let mut bor = ByteOrderReader::new(buf, configs.endian);
-
 
             let xmin = i * block_width;
             let ymin = j * block_height;
@@ -625,7 +682,8 @@ pub fn read_geotiff<'a>(file_name: &'a String,
             let mut off = 0;
 
             match mode {
-                IM_GRAYINVERT | IM_GRAY => { //ImageMode::GrayInvert | ImageMode::Gray => {
+                IM_GRAYINVERT | IM_GRAY => {
+                    //ImageMode::GrayInvert | ImageMode::Gray => {
                     match sample_format[0] {
                         1 => {
                             // unsigned integer
@@ -678,8 +736,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     }
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
@@ -734,8 +794,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     }
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
@@ -765,18 +827,23 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     }
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
                         _ => {
-                            return Err(Error::new(ErrorKind::InvalidData,
-                                                  "The raster was not read correctly"))
+                            return Err(Error::new(
+                                ErrorKind::InvalidData,
+                                "The raster was not read correctly",
+                            ))
                         }
                     }
                 }
-                IM_PALETTED => { //ImageMode::Paletted => {
+                IM_PALETTED => {
+                    //ImageMode::Paletted => {
                     for y in ymin..ymax {
                         for x in xmin..xmax {
                             let i = y * width + x;
@@ -785,7 +852,8 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                         }
                     }
                 }
-                IM_RGB => { //ImageMode::RGB => {
+                IM_RGB => {
+                    //ImageMode::RGB => {
                     if bits_per_sample[0] == 8 {
                         for y in ymin..ymax {
                             for x in xmin..xmax {
@@ -815,11 +883,14 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                             }
                         }
                     } else {
-                        return Err(Error::new(ErrorKind::InvalidData,
-                                              "The raster was not read correctly"));
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The raster was not read correctly",
+                        ));
                     }
                 }
-                IM_NRGBA | IM_RGBA => { //ImageMode::NRGBA | ImageMode::RGBA => {
+                IM_NRGBA | IM_RGBA => {
+                    //ImageMode::NRGBA | ImageMode::RGBA => {
                     if bits_per_sample[0] == 8 {
                         for y in ymin..ymax {
                             for x in xmin..xmax {
@@ -849,21 +920,23 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                             }
                         }
                     } else {
-                        return Err(Error::new(ErrorKind::InvalidData,
-                                              "The raster was not read correctly"));
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The raster was not read correctly",
+                        ));
                     }
                 }
                 _ => {
-                    return Err(Error::new(ErrorKind::InvalidData,
-                                          "The raster was not read correctly"))
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster was not read correctly",
+                    ))
                 }
             }
 
-
-
-
             match mode {
-                IM_GRAYINVERT | IM_GRAY => { //ImageMode::GrayInvert | ImageMode::Gray => {
+                IM_GRAYINVERT | IM_GRAY => {
+                    //ImageMode::GrayInvert | ImageMode::Gray => {
                     configs.photometric_interp = PhotometricInterpretation::Continuous;
                     match sample_format[0] {
                         1 => {
@@ -882,8 +955,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     configs.data_type = DataType::U64;
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
@@ -903,8 +978,10 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     configs.data_type = DataType::I64;
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
@@ -918,45 +995,58 @@ pub fn read_geotiff<'a>(file_name: &'a String,
                                     configs.data_type = DataType::F64;
                                 }
                                 _ => {
-                                    return Err(Error::new(ErrorKind::InvalidData,
-                                                          "The raster was not read correctly"))
+                                    return Err(Error::new(
+                                        ErrorKind::InvalidData,
+                                        "The raster was not read correctly",
+                                    ))
                                 }
                             }
                         }
                         _ => {
-                            return Err(Error::new(ErrorKind::InvalidData,
-                                                  "The raster was not read correctly"))
+                            return Err(Error::new(
+                                ErrorKind::InvalidData,
+                                "The raster was not read correctly",
+                            ))
                         }
                     }
                 }
-                IM_PALETTED => { //ImageMode::Paletted => {
+                IM_PALETTED => {
+                    //ImageMode::Paletted => {
                     configs.photometric_interp = PhotometricInterpretation::Categorical;
                     configs.data_type = DataType::U8;
                 }
-                IM_RGB => { //ImageMode::RGB => {
+                IM_RGB => {
+                    //ImageMode::RGB => {
                     configs.photometric_interp = PhotometricInterpretation::RGB;
                     if bits_per_sample[0] == 8 {
                         configs.data_type = DataType::U8;
                     } else if bits_per_sample[0] == 16 {
                         configs.data_type = DataType::U16;
                     } else {
-                        return Err(Error::new(ErrorKind::InvalidData,
-                                              "The raster was not read correctly"));
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The raster was not read correctly",
+                        ));
                     }
                 }
-                IM_NRGBA | IM_RGBA => { //ImageMode::NRGBA | ImageMode::RGBA => {
+                IM_NRGBA | IM_RGBA => {
+                    //ImageMode::NRGBA | ImageMode::RGBA => {
                     if bits_per_sample[0] == 8 {
                         configs.data_type = DataType::U32;
                     } else if bits_per_sample[0] == 16 {
                         configs.data_type = DataType::U64;
                     } else {
-                        return Err(Error::new(ErrorKind::InvalidData,
-                                              "The raster was not read correctly"));
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The raster was not read correctly",
+                        ));
                     }
                 }
                 _ => {
-                    return Err(Error::new(ErrorKind::InvalidData,
-                                          "The raster was not read correctly"))
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster was not read correctly",
+                    ))
                 }
             }
         }
@@ -965,18 +1055,20 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     // Check to see if a predictor is used with LZW
     match ifd_map.get(&317) {
         Some(ifd) => {
-            if ifd.interpret_as_u16()[0] == 2 { // Horizontal predictor
+            if ifd.interpret_as_u16()[0] == 2 {
+                // Horizontal predictor
                 // transform the data
                 let mut idx: usize;
                 for row in 0..configs.rows {
-                    for col in 1..configs.columns { //(0..configs.columns-1).rev() {
+                    for col in 1..configs.columns {
+                        //(0..configs.columns-1).rev() {
                         idx = row * configs.columns + col;
-                        data[idx] += data[idx-1];
+                        data[idx] += data[idx - 1];
                     }
                 }
             }
-        },
-        _ => {}, // do nothing,
+        }
+        _ => {} // do nothing,
     }
 
     // match geokeys_map.get(&1024) {
@@ -1002,7 +1094,6 @@ pub fn read_geotiff<'a>(file_name: &'a String,
     // for key in map_sorter.iter() {
     //     println!("{}", geokeys_map.get(&key).unwrap());
     // }
-
 
     // println!("\nGeoKeys:\n");
     // println!("{}", geokeys.interpret_geokeys());
@@ -1030,11 +1121,17 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // offset to first IFD
         let total_bytes_per_pixel = r.configs.data_type.get_data_size();
         if total_bytes_per_pixel == 0 {
-            return Err(Error::new(ErrorKind::InvalidData, 
-            format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "Unknown data type: {:?}. Photomet interp: {:?}",
+                    r.configs.data_type, r.configs.photometric_interp
+                ),
+            ));
         }
-        let mut ifd_start = (8usize + r.configs.rows as usize * r.configs.columns as usize *
-                        total_bytes_per_pixel) as u32; // plus the 8-byte header
+        let mut ifd_start = (8usize
+            + r.configs.rows as usize * r.configs.columns as usize * total_bytes_per_pixel)
+            as u32; // plus the 8-byte header
         let mut ifd_start_needs_extra_byte = false;
         if ifd_start % 2 == 1 {
             ifd_start += 1;
@@ -1043,113 +1140,117 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         writer.write_u32::<LittleEndian>(ifd_start)?;
 
         // At the moment, categorical and paletted output is not supported.
-        if r.configs.photometric_interp == PhotometricInterpretation::Categorical || 
-        r.configs.photometric_interp == PhotometricInterpretation::Paletted {
+        if r.configs.photometric_interp == PhotometricInterpretation::Categorical
+            || r.configs.photometric_interp == PhotometricInterpretation::Paletted
+        {
             r.configs.photometric_interp = PhotometricInterpretation::Continuous;
         }
-        
+
         //////////////////////////
         // Write the image data //
         //////////////////////////
         match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous |
-            PhotometricInterpretation::Categorical |
-            PhotometricInterpretation::Boolean => {
-                match r.configs.data_type {
-                    DataType::F64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_f64::<LittleEndian>(r.data[i])?;
-                            }
+            PhotometricInterpretation::Continuous
+            | PhotometricInterpretation::Categorical
+            | PhotometricInterpretation::Boolean => match r.configs.data_type {
+                DataType::F64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_f64::<LittleEndian>(r.data[i])?;
                         }
-                    },
-                    DataType::F32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
-                            }
+                    }
+                }
+                DataType::F32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
                         }
-                    },
-                    DataType::U64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u64::<LittleEndian>(r.data[i] as u64)?;
-                            }
+                    }
+                }
+                DataType::U64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u64::<LittleEndian>(r.data[i] as u64)?;
                         }
-                    },
-                    DataType::U32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u32::<LittleEndian>(r.data[i] as u32)?;
-                            }
+                    }
+                }
+                DataType::U32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u32::<LittleEndian>(r.data[i] as u32)?;
                         }
-                    },
-                    DataType::U16 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u16::<LittleEndian>(r.data[i] as u16)?;
-                            }
+                    }
+                }
+                DataType::U16 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u16::<LittleEndian>(r.data[i] as u16)?;
                         }
-                    },
-                    DataType::U8 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write(&[r.data[i] as u8])?;
-                            }
+                    }
+                }
+                DataType::U8 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write(&[r.data[i] as u8])?;
                         }
-                    },
-                    DataType::I64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i64::<LittleEndian>(r.data[i] as i64)?;
-                            }
+                    }
+                }
+                DataType::I64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i64::<LittleEndian>(r.data[i] as i64)?;
                         }
-                    },
-                    DataType::I32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i32::<LittleEndian>(r.data[i] as i32)?;
-                            }
+                    }
+                }
+                DataType::I32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i32::<LittleEndian>(r.data[i] as i32)?;
                         }
-                    },
-                    DataType::I16 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i16::<LittleEndian>(r.data[i] as i16)?;
-                            }
+                    }
+                }
+                DataType::I16 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i16::<LittleEndian>(r.data[i] as i16)?;
                         }
-                    },
-                    DataType::I8 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write(&[r.data[i] as u8])?;
-                            }
+                    }
+                }
+                DataType::I8 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write(&[r.data[i] as u8])?;
                         }
-                    },
-                    _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, 
-                        format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
-                    },
+                    }
+                }
+                _ => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        format!(
+                            "Unknown data type: {:?}. Photomet interp: {:?}",
+                            r.configs.data_type, r.configs.photometric_interp
+                        ),
+                    ));
                 }
             },
             PhotometricInterpretation::RGB => {
@@ -1168,7 +1269,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                                 writer.write(&bytes)?;
                             }
                         }
-                    },
+                    }
                     DataType::RGBA32 | DataType::U32 => {
                         let mut i: usize;
                         let mut bytes: [u8; 4] = [0u8; 4];
@@ -1185,20 +1286,30 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                                 // writer.write_u32::<LittleEndian>(val2)?;
                             }
                         }
-                    },
+                    }
                     _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, 
-                        format!("Unknown data type: {:?}. Photomet interp: {:?}", r.configs.data_type, r.configs.photometric_interp)));
-                    },
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            format!(
+                                "Unknown data type: {:?}. Photomet interp: {:?}",
+                                r.configs.data_type, r.configs.photometric_interp
+                            ),
+                        ));
+                    }
                 }
-            },
+            }
             PhotometricInterpretation::Paletted => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                    "Paletted GeoTIFFs are currently unsupported for writing."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Paletted GeoTIFFs are currently unsupported for writing.",
+                ));
+            }
             PhotometricInterpretation::Unknown => {
-                return Err(Error::new(ErrorKind::InvalidData, "Error while writing GeoTIFF file."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error while writing GeoTIFF file.",
+                ));
+            }
         }
 
         // This is just because the IFD must start on a word (i.e. an even value). If the data are
@@ -1233,10 +1344,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         */
 
         // ImageWidth tag (256)
-        ifd_entries.push(IfdEntry::new(TAG_IMAGEWIDTH, DT_LONG, 1u32, r.configs.columns as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_IMAGEWIDTH,
+            DT_LONG,
+            1u32,
+            r.configs.columns as u32,
+        ));
 
         // ImageLength tag (257)
-        ifd_entries.push(IfdEntry::new(TAG_IMAGELENGTH, DT_LONG, 1u32, r.configs.rows as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_IMAGELENGTH,
+            DT_LONG,
+            1u32,
+            r.configs.rows as u32,
+        ));
 
         let bits_per_sample = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 8u16,
@@ -1267,46 +1388,85 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // BitsPerSample tag (258)
         if r.configs.photometric_interp != PhotometricInterpretation::Boolean {
             if samples_per_pixel == 1 {
-                ifd_entries.push(IfdEntry::new(TAG_BITSPERSAMPLE, DT_SHORT, samples_per_pixel as u32, bits_per_sample as u32));
+                ifd_entries.push(IfdEntry::new(
+                    TAG_BITSPERSAMPLE,
+                    DT_SHORT,
+                    samples_per_pixel as u32,
+                    bits_per_sample as u32,
+                ));
             } else {
-                ifd_entries.push(IfdEntry::new(TAG_BITSPERSAMPLE, DT_SHORT, samples_per_pixel as u32, larger_values_data.len() as u32));
+                ifd_entries.push(IfdEntry::new(
+                    TAG_BITSPERSAMPLE,
+                    DT_SHORT,
+                    samples_per_pixel as u32,
+                    larger_values_data.len() as u32,
+                ));
                 for _ in 0..samples_per_pixel {
                     let _ = larger_values_data.write_u16::<LittleEndian>(bits_per_sample);
                 }
             }
-            
         }
 
         // Compression tag (259)
-        ifd_entries.push(IfdEntry::new(TAG_COMPRESSION, DT_SHORT, 1u32, COMPRESS_NONE as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_COMPRESSION,
+            DT_SHORT,
+            1u32,
+            COMPRESS_NONE as u32,
+        ));
 
         // PhotometricInterpretation tag (262)
         let pi = match r.configs.photometric_interp {
             PhotometricInterpretation::Continuous => PI_BLACKISZERO,
-            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => PI_PALETTED,
+            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
+                PI_PALETTED
+            }
             PhotometricInterpretation::Boolean => PI_BLACKISZERO,
             PhotometricInterpretation::RGB => PI_RGB,
             PhotometricInterpretation::Unknown => {
-                return Err(Error::new(ErrorKind::InvalidData, "Error while writing GeoTIFF file. Unknown Photometric Interpretation."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error while writing GeoTIFF file. Unknown Photometric Interpretation.",
+                ));
+            }
         };
-        ifd_entries.push(IfdEntry::new(TAG_PHOTOMETRICINTERPRETATION, DT_SHORT, 1u32, pi as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_PHOTOMETRICINTERPRETATION,
+            DT_SHORT,
+            1u32,
+            pi as u32,
+        ));
 
         // StripOffsets tag (273)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPOFFSETS, DT_LONG, r.configs.rows as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_STRIPOFFSETS,
+            DT_LONG,
+            r.configs.rows as u32,
+            larger_values_data.len() as u32,
+        ));
         let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
         for i in 0..r.configs.rows as u32 {
             let _ = larger_values_data.write_u32::<LittleEndian>(8u32 + row_length_in_bytes * i);
         }
 
         // SamplesPerPixel tag (277)
-        ifd_entries.push(IfdEntry::new(TAG_SAMPLESPERPIXEL, DT_SHORT, 1u32, samples_per_pixel as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_SAMPLESPERPIXEL,
+            DT_SHORT,
+            1u32,
+            samples_per_pixel as u32,
+        ));
 
         // RowsPerStrip tag (278)
         ifd_entries.push(IfdEntry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u32, 1u32));
 
         // StripByteCounts tag (279)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPBYTECOUNTS, DT_LONG, r.configs.rows as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_STRIPBYTECOUNTS,
+            DT_LONG,
+            r.configs.rows as u32,
+            larger_values_data.len() as u32,
+        ));
         let total_bytes_per_pixel = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 1u32,
             DataType::I16 | DataType::U16 => 2u32,
@@ -1323,15 +1483,25 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         for _ in 0..r.configs.rows as u32 {
             let _ = larger_values_data.write_u32::<LittleEndian>(row_length_in_bytes);
         }
-        
+
         // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
         // XResolution tag (282)
-        ifd_entries.push(IfdEntry::new(TAG_XRESOLUTION, DT_RATIONAL, 1u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_XRESOLUTION,
+            DT_RATIONAL,
+            1u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u32::<LittleEndian>(72u32);
         let _ = larger_values_data.write_u32::<LittleEndian>(1u32);
 
         // YResolution tag (283)
-        ifd_entries.push(IfdEntry::new(TAG_YRESOLUTION, DT_RATIONAL, 1u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_YRESOLUTION,
+            DT_RATIONAL,
+            1u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u32::<LittleEndian>(72u32);
         let _ = larger_values_data.write_u32::<LittleEndian>(1u32);
 
@@ -1342,14 +1512,19 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let software = "WhiteboxTools".to_owned();
         let mut soft_bytes = software.into_bytes();
         soft_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(TAG_SOFTWARE, DT_ASCII, soft_bytes.len() as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_SOFTWARE,
+            DT_ASCII,
+            soft_bytes.len() as u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_all(&soft_bytes);
 
         if samples_per_pixel == 4 {
             // ExtraSamples tag (338)
             ifd_entries.push(IfdEntry::new(TAG_EXTRASAMPLES, DT_SHORT, 1u32, 2u32));
         }
-        
+
         // SampleFormat tag (339)
         let samples_format = match r.configs.data_type {
             DataType::U8 | DataType::U16 | DataType::U32 | DataType::U64 => 1u16,
@@ -1361,22 +1536,42 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         };
         if samples_per_pixel == 1 {
-            ifd_entries.push(IfdEntry::new(TAG_SAMPLEFORMAT, DT_SHORT, samples_per_pixel as u32, samples_format as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_SAMPLEFORMAT,
+                DT_SHORT,
+                samples_per_pixel as u32,
+                samples_format as u32,
+            ));
         } else {
-            ifd_entries.push(IfdEntry::new(TAG_SAMPLEFORMAT, DT_SHORT, samples_per_pixel as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_SAMPLEFORMAT,
+                DT_SHORT,
+                samples_per_pixel as u32,
+                larger_values_data.len() as u32,
+            ));
             for _ in 0..samples_per_pixel {
                 let _ = larger_values_data.write_u16::<LittleEndian>(samples_format);
             }
         }
 
         // ModelTiepointTag tag (33550)
-        ifd_entries.push(IfdEntry::new(TAG_MODELPIXELSCALETAG, DT_DOUBLE, 3u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_MODELPIXELSCALETAG,
+            DT_DOUBLE,
+            3u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_x);
         let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_y);
         let _ = larger_values_data.write_f64::<LittleEndian>(0f64);
-        
+
         // ModelPixelScaleTag tag (33922)
-        ifd_entries.push(IfdEntry::new(TAG_MODELTIEPOINTTAG, DT_DOUBLE, 6u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_MODELTIEPOINTTAG,
+            DT_DOUBLE,
+            6u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // I
         let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // J
         let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // K
@@ -1388,20 +1583,35 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let nodata_str = format!("{}", r.configs.nodata);
         let mut nodata_bytes = nodata_str.into_bytes();
         nodata_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(TAG_GDAL_NODATA, DT_ASCII, nodata_bytes.len() as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_GDAL_NODATA,
+            DT_ASCII,
+            nodata_bytes.len() as u32,
+            larger_values_data.len() as u32,
+        ));
         if nodata_bytes.len() % 2 == 1 {
             nodata_bytes.push(0);
         }
         let _ = larger_values_data.write_all(&nodata_bytes);
-        
+
         let kw_map = get_keyword_map();
         let geographic_type_map = match kw_map.get(&2048u16) {
             Some(map) => map,
-            None => return Err(Error::new(ErrorKind::InvalidData, "Error generating geographic type map.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error generating geographic type map.",
+                ))
+            }
         };
         let projected_cs_type_map = match kw_map.get(&3072u16) {
             Some(map) => map,
-            None => return Err(Error::new(ErrorKind::InvalidData, "Error generating projected coordinate system type map.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error generating projected coordinate system type map.",
+                ))
+            }
         };
 
         //let key_map = get_keys_map();
@@ -1410,62 +1620,142 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let double_params: Vec<f64> = vec![];
         if geographic_type_map.contains_key(&r.configs.epsg_code) {
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 2u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
+
             // tGTCitationGeoKey (1026)
-            let mut v = String::from(geographic_type_map.get(&r.configs.epsg_code).unwrap().clone());
+            let mut v = String::from(
+                geographic_type_map
+                    .get(&r.configs.epsg_code)
+                    .unwrap()
+                    .clone(),
+            );
             v.push_str("|");
             v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTCITATIONGEOKEY, location: 34737u16, count: v.len() as u16, value_offset: ascii_params.len() as u16 });
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTCITATIONGEOKEY,
+                location: 34737u16,
+                count: v.len() as u16,
+                value_offset: ascii_params.len() as u16,
+            });
             ascii_params.push_str(&v);
 
             // tGeographicTypeGeoKey (2048)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GEOGRAPHICTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GEOGRAPHICTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: r.configs.epsg_code,
+            });
+
             if r.configs.z_units.to_lowercase() != "not specified" {
                 // VerticalUnitsGeoKey (4099)
                 let units = r.configs.z_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
         } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 1u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
+
             // tProjectedCSTypeGeoKey (3072)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_PROJECTEDCSTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_PROJECTEDCSTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: r.configs.epsg_code,
+            });
+
             // PCSCitationGeoKey (3073)
-            let mut v = String::from(projected_cs_type_map.get(&r.configs.epsg_code).unwrap().clone());
+            let mut v = String::from(
+                projected_cs_type_map
+                    .get(&r.configs.epsg_code)
+                    .unwrap()
+                    .clone(),
+            );
             v.push_str("|");
             v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry{ tag: 3073u16, location: 34737u16, count: v.len() as u16, value_offset: ascii_params.len() as u16 });
+            gk_entries.push(GeoKeyEntry {
+                tag: 3073u16,
+                location: 34737u16,
+                count: v.len() as u16,
+                value_offset: ascii_params.len() as u16,
+            });
             ascii_params.push_str(&v);
 
             if r.configs.xy_units.to_lowercase() != "not specified" {
                 // ProjLinearUnitsGeoKey (3076)
                 let units = r.configs.xy_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_PROJLINEARUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_PROJLINEARUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_PROJLINEARUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_PROJLINEARUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
 
@@ -1473,28 +1763,57 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 // VerticalUnitsGeoKey (4099)
                 let units = r.configs.z_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
         } else {
             // we don't know much about the coordinate system used.
-            
+
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 0u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 0u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
         }
 
         // create the GeoKeyDirectoryTag tag (34735)
-        ifd_entries.push(IfdEntry::new(TAG_GEOKEYDIRECTORYTAG, DT_SHORT, (4 + gk_entries.len() * 4) as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_GEOKEYDIRECTORYTAG,
+            DT_SHORT,
+            (4 + gk_entries.len() * 4) as u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyDirectoryVersion
         let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyRevision
         let _ = larger_values_data.write_u16::<LittleEndian>(0u16); // MinorRevision
@@ -1509,7 +1828,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         if double_params.len() > 0 {
             // create the GeoDoubleParamsTag tag (34736)
-            ifd_entries.push(IfdEntry::new(TAG_GEODOUBLEPARAMSTAG, DT_DOUBLE, double_params.len() as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_GEODOUBLEPARAMSTAG,
+                DT_DOUBLE,
+                double_params.len() as u32,
+                larger_values_data.len() as u32,
+            ));
             for double_val in double_params {
                 let _ = larger_values_data.write_f64::<LittleEndian>(double_val);
             }
@@ -1519,7 +1843,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             // create the GeoAsciiParamsTag tag (34737)
             let mut ascii_params_bytes = ascii_params.into_bytes();
             ascii_params_bytes.push(0);
-            ifd_entries.push(IfdEntry::new(TAG_GEOASCIIPARAMSTAG, DT_ASCII, ascii_params_bytes.len() as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_GEOASCIIPARAMSTAG,
+                DT_ASCII,
+                ascii_params_bytes.len() as u32,
+                larger_values_data.len() as u32,
+            ));
             if ascii_params_bytes.len() % 2 == 1 {
                 // it has to end on a word so that the next value starts on a word
                 ascii_params_bytes.push(0);
@@ -1536,7 +1865,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         // Sort the IFD entries
         ifd_entries.sort_by(|a, b| a.tag.cmp(&b.tag));
-        
+
         // Write the entries
         let ifd_length = 2u32 + ifd_entries.len() as u32 * 12u32 + 4u32;
 
@@ -1569,8 +1898,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         //////////////////////////////////
         writer.write_all(&larger_values_data)?;
 
-
-        /*
+    /*
             Required Fields for Bilevel Images
             - ImageWidth 
             - ImageLength 
@@ -1584,7 +1912,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             - ResolutionUnit
         */
 
-        /*
+    /*
             Required Fields for Grayscale Images
             - ImageWidth
             - ImageLength
@@ -1599,7 +1927,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             - ResolutionUnit
         */
 
-        /*
+    /*
             Required Fields for Palette Colour Images
             - ImageWidth
             - ImageLength
@@ -1615,7 +1943,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             - ColorMap
         */
 
-        /*
+    /*
             Required Fields for RGB Images
             - ImageWidth
             - ImageLength
@@ -1630,8 +1958,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             - YResolution
             - ResolutionUnit
         */
-
-         
     } else {
         //////////////////////
         // Write the header //
@@ -1644,8 +1970,9 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         if total_bytes_per_pixel == 0 {
             return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
         }
-        let mut ifd_start = (8usize + r.configs.rows as usize * r.configs.columns as usize *
-                        total_bytes_per_pixel) as u32; // plus the 8-byte header
+        let mut ifd_start = (8usize
+            + r.configs.rows as usize * r.configs.columns as usize * total_bytes_per_pixel)
+            as u32; // plus the 8-byte header
         let mut ifd_start_needs_extra_byte = false;
         if ifd_start % 2 == 1 {
             ifd_start += 1;
@@ -1657,103 +1984,101 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // Write the image the data //
         //////////////////////////////
         match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous |
-            PhotometricInterpretation::Categorical |
-            PhotometricInterpretation::Boolean => {
-                match r.configs.data_type {
-                    DataType::F64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_f64::<BigEndian>(r.data[i])?;
-                            }
+            PhotometricInterpretation::Continuous
+            | PhotometricInterpretation::Categorical
+            | PhotometricInterpretation::Boolean => match r.configs.data_type {
+                DataType::F64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_f64::<BigEndian>(r.data[i])?;
                         }
-                    },
-                    DataType::F32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_f32::<BigEndian>(r.data[i] as f32)?;
-                            }
+                    }
+                }
+                DataType::F32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_f32::<BigEndian>(r.data[i] as f32)?;
                         }
-                    },
-                    DataType::U64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u64::<BigEndian>(r.data[i] as u64)?;
-                            }
+                    }
+                }
+                DataType::U64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u64::<BigEndian>(r.data[i] as u64)?;
                         }
-                    },
-                    DataType::U32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u32::<BigEndian>(r.data[i] as u32)?;
-                            }
+                    }
+                }
+                DataType::U32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u32::<BigEndian>(r.data[i] as u32)?;
                         }
-                    },
-                    DataType::U16 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_u16::<BigEndian>(r.data[i] as u16)?;
-                            }
+                    }
+                }
+                DataType::U16 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_u16::<BigEndian>(r.data[i] as u16)?;
                         }
-                    },
-                    DataType::U8 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write(&[r.data[i] as u8])?;
-                            }
+                    }
+                }
+                DataType::U8 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write(&[r.data[i] as u8])?;
                         }
-                    },
-                    DataType::I64 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i64::<BigEndian>(r.data[i] as i64)?;
-                            }
+                    }
+                }
+                DataType::I64 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i64::<BigEndian>(r.data[i] as i64)?;
                         }
-                    },
-                    DataType::I32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i32::<BigEndian>(r.data[i] as i32)?;
-                            }
+                    }
+                }
+                DataType::I32 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i32::<BigEndian>(r.data[i] as i32)?;
                         }
-                    },
-                    DataType::I16 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write_i16::<BigEndian>(r.data[i] as i16)?;
-                            }
+                    }
+                }
+                DataType::I16 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write_i16::<BigEndian>(r.data[i] as i16)?;
                         }
-                    },
-                    DataType::I8 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                writer.write(&[r.data[i] as u8])?;
-                            }
+                    }
+                }
+                DataType::I8 => {
+                    let mut i: usize;
+                    for row in 0..r.configs.rows {
+                        for col in 0..r.configs.columns {
+                            i = row * r.configs.columns + col;
+                            writer.write(&[r.data[i] as u8])?;
                         }
-                    },
-                    _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-                    },
+                    }
+                }
+                _ => {
+                    return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
                 }
             },
             PhotometricInterpretation::RGB => {
@@ -1772,30 +2097,37 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                                 writer.write(&bytes)?;
                             }
                         }
-                    },
+                    }
                     DataType::RGBA32 => {
                         let mut i: usize;
                         for row in 0..r.configs.rows {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
                                 let val = r.data[i] as u32;
-                                let val2 = ((val >> 24u32) & 0xFF) | ((val >> 16u32) & 0xFF) | ((val >> 8u32) & 0xFF) | (val & 0xFF);
+                                let val2 = ((val >> 24u32) & 0xFF) | ((val >> 16u32) & 0xFF)
+                                    | ((val >> 8u32) & 0xFF)
+                                    | (val & 0xFF);
                                 writer.write_u32::<BigEndian>(val2)?;
                             }
                         }
-                    },
+                    }
                     _ => {
                         return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-                    },
+                    }
                 }
-            },
+            }
             PhotometricInterpretation::Paletted => {
-                return Err(Error::new(ErrorKind::InvalidData,
-                                    "Paletted GeoTIFFs are currently unsupported for writing."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Paletted GeoTIFFs are currently unsupported for writing.",
+                ));
+            }
             PhotometricInterpretation::Unknown => {
-                return Err(Error::new(ErrorKind::InvalidData, "Error while writing GeoTIFF file."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error while writing GeoTIFF file.",
+                ));
+            }
         }
 
         // This is just because the IFD must start on a word (i.e. an even value). If the data are
@@ -1830,10 +2162,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         */
 
         // ImageWidth tag (256)
-        ifd_entries.push(IfdEntry::new(TAG_IMAGEWIDTH, DT_LONG, 1u32, r.configs.columns as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_IMAGEWIDTH,
+            DT_LONG,
+            1u32,
+            r.configs.columns as u32,
+        ));
 
         // ImageLength tag (257)
-        ifd_entries.push(IfdEntry::new(TAG_IMAGELENGTH, DT_LONG, 1u32, r.configs.rows as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_IMAGELENGTH,
+            DT_LONG,
+            1u32,
+            r.configs.rows as u32,
+        ));
 
         let bits_per_sample = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 8u16,
@@ -1864,46 +2206,85 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // BitsPerSample tag (258)
         if r.configs.photometric_interp != PhotometricInterpretation::Boolean {
             if samples_per_pixel == 1 {
-                ifd_entries.push(IfdEntry::new(TAG_BITSPERSAMPLE, DT_SHORT, samples_per_pixel as u32, bits_per_sample as u32));
+                ifd_entries.push(IfdEntry::new(
+                    TAG_BITSPERSAMPLE,
+                    DT_SHORT,
+                    samples_per_pixel as u32,
+                    bits_per_sample as u32,
+                ));
             } else {
-                ifd_entries.push(IfdEntry::new(TAG_BITSPERSAMPLE, DT_SHORT, samples_per_pixel as u32, larger_values_data.len() as u32));
+                ifd_entries.push(IfdEntry::new(
+                    TAG_BITSPERSAMPLE,
+                    DT_SHORT,
+                    samples_per_pixel as u32,
+                    larger_values_data.len() as u32,
+                ));
                 for _ in 0..samples_per_pixel {
                     let _ = larger_values_data.write_u16::<BigEndian>(bits_per_sample);
                 }
             }
-            
         }
 
         // Compression tag (259)
-        ifd_entries.push(IfdEntry::new(TAG_COMPRESSION, DT_SHORT, 1u32, COMPRESS_NONE as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_COMPRESSION,
+            DT_SHORT,
+            1u32,
+            COMPRESS_NONE as u32,
+        ));
 
         // PhotometricInterpretation tag (262)
         let pi = match r.configs.photometric_interp {
             PhotometricInterpretation::Continuous => PI_BLACKISZERO,
-            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => PI_PALETTED,
+            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
+                PI_PALETTED
+            }
             PhotometricInterpretation::Boolean => PI_BLACKISZERO,
             PhotometricInterpretation::RGB => PI_RGB,
             PhotometricInterpretation::Unknown => {
-                return Err(Error::new(ErrorKind::InvalidData, "Error while writing GeoTIFF file. Unknown Photometric Interpretation."));
-            },
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error while writing GeoTIFF file. Unknown Photometric Interpretation.",
+                ));
+            }
         };
-        ifd_entries.push(IfdEntry::new(TAG_PHOTOMETRICINTERPRETATION, DT_SHORT, 1u32, pi as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_PHOTOMETRICINTERPRETATION,
+            DT_SHORT,
+            1u32,
+            pi as u32,
+        ));
 
         // StripOffsets tag (273)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPOFFSETS, DT_LONG, r.configs.columns as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_STRIPOFFSETS,
+            DT_LONG,
+            r.configs.columns as u32,
+            larger_values_data.len() as u32,
+        ));
         let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
         for i in 0..r.configs.rows as u32 {
             let _ = larger_values_data.write_u32::<BigEndian>(8u32 + row_length_in_bytes * i);
         }
 
         // SamplesPerPixel tag (277)
-        ifd_entries.push(IfdEntry::new(TAG_SAMPLESPERPIXEL, DT_SHORT, 1u32, samples_per_pixel as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_SAMPLESPERPIXEL,
+            DT_SHORT,
+            1u32,
+            samples_per_pixel as u32,
+        ));
 
         // RowsPerStrip tag (278)
         ifd_entries.push(IfdEntry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u32, 1u32));
 
         // StripByteCounts tag (279)
-        ifd_entries.push(IfdEntry::new(TAG_STRIPBYTECOUNTS, DT_LONG, r.configs.columns as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_STRIPBYTECOUNTS,
+            DT_LONG,
+            r.configs.columns as u32,
+            larger_values_data.len() as u32,
+        ));
         let total_bytes_per_pixel = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 1u32,
             DataType::I16 | DataType::U16 => 2u32,
@@ -1920,15 +2301,25 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         for _ in 0..r.configs.rows as u32 {
             let _ = larger_values_data.write_u32::<BigEndian>(row_length_in_bytes);
         }
-        
+
         // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
         // XResolution tag (282)
-        ifd_entries.push(IfdEntry::new(TAG_XRESOLUTION, DT_RATIONAL, 1u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_XRESOLUTION,
+            DT_RATIONAL,
+            1u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u32::<BigEndian>(72u32);
         let _ = larger_values_data.write_u32::<BigEndian>(1u32);
 
         // YResolution tag (283)
-        ifd_entries.push(IfdEntry::new(TAG_YRESOLUTION, DT_RATIONAL, 1u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_YRESOLUTION,
+            DT_RATIONAL,
+            1u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u32::<BigEndian>(72u32);
         let _ = larger_values_data.write_u32::<BigEndian>(1u32);
 
@@ -1939,7 +2330,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let software = "WhiteboxTools".to_owned();
         let mut soft_bytes = software.into_bytes();
         soft_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(TAG_SOFTWARE, DT_ASCII, soft_bytes.len() as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_SOFTWARE,
+            DT_ASCII,
+            soft_bytes.len() as u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_all(&soft_bytes);
 
         // SampleFormat tag (339)
@@ -1953,22 +2349,42 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         };
         if samples_per_pixel == 1 {
-            ifd_entries.push(IfdEntry::new(TAG_SAMPLEFORMAT, DT_SHORT, samples_per_pixel as u32, samples_format as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_SAMPLEFORMAT,
+                DT_SHORT,
+                samples_per_pixel as u32,
+                samples_format as u32,
+            ));
         } else {
-            ifd_entries.push(IfdEntry::new(TAG_SAMPLEFORMAT, DT_SHORT, samples_per_pixel as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_SAMPLEFORMAT,
+                DT_SHORT,
+                samples_per_pixel as u32,
+                larger_values_data.len() as u32,
+            ));
             for _ in 0..samples_per_pixel {
                 let _ = larger_values_data.write_u16::<BigEndian>(samples_format);
             }
         }
 
         // ModelTiepointTag tag (33550)
-        ifd_entries.push(IfdEntry::new(TAG_MODELPIXELSCALETAG, DT_DOUBLE, 3u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_MODELPIXELSCALETAG,
+            DT_DOUBLE,
+            3u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_f64::<BigEndian>(r.configs.resolution_x);
         let _ = larger_values_data.write_f64::<BigEndian>(r.configs.resolution_y);
         let _ = larger_values_data.write_f64::<BigEndian>(0f64);
-        
+
         // ModelPixelScaleTag tag (33922)
-        ifd_entries.push(IfdEntry::new(TAG_MODELTIEPOINTTAG, DT_DOUBLE, 6u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_MODELTIEPOINTTAG,
+            DT_DOUBLE,
+            6u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_f64::<BigEndian>(0f64); // I
         let _ = larger_values_data.write_f64::<BigEndian>(0f64); // J
         let _ = larger_values_data.write_f64::<BigEndian>(0f64); // K
@@ -1980,20 +2396,35 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let nodata_str = format!("{}", r.configs.nodata);
         let mut nodata_bytes = nodata_str.into_bytes();
         nodata_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(TAG_GDAL_NODATA, DT_ASCII, nodata_bytes.len() as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_GDAL_NODATA,
+            DT_ASCII,
+            nodata_bytes.len() as u32,
+            larger_values_data.len() as u32,
+        ));
         if nodata_bytes.len() % 2 == 1 {
             nodata_bytes.push(0);
         }
         let _ = larger_values_data.write_all(&nodata_bytes);
-        
+
         let kw_map = get_keyword_map();
         let geographic_type_map = match kw_map.get(&2048u16) {
             Some(map) => map,
-            None => return Err(Error::new(ErrorKind::InvalidData, "Error generating geographic type map.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error generating geographic type map.",
+                ))
+            }
         };
         let projected_cs_type_map = match kw_map.get(&3072u16) {
             Some(map) => map,
-            None => return Err(Error::new(ErrorKind::InvalidData, "Error generating projected coordinate system type map.")),
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error generating projected coordinate system type map.",
+                ))
+            }
         };
 
         //let key_map = get_keys_map();
@@ -2002,62 +2433,142 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let double_params: Vec<f64> = vec![];
         if geographic_type_map.contains_key(&r.configs.epsg_code) {
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 2u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
+
             // tGTCitationGeoKey (1026)
-            let mut v = String::from(geographic_type_map.get(&r.configs.epsg_code).unwrap().clone());
+            let mut v = String::from(
+                geographic_type_map
+                    .get(&r.configs.epsg_code)
+                    .unwrap()
+                    .clone(),
+            );
             v.push_str("|");
             v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTCITATIONGEOKEY, location: 34737u16, count: v.len() as u16, value_offset: ascii_params.len() as u16 });
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTCITATIONGEOKEY,
+                location: 34737u16,
+                count: v.len() as u16,
+                value_offset: ascii_params.len() as u16,
+            });
             ascii_params.push_str(&v);
 
             // tGeographicTypeGeoKey (2048)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GEOGRAPHICTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GEOGRAPHICTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: r.configs.epsg_code,
+            });
+
             if r.configs.z_units.to_lowercase() != "not specified" {
                 // VerticalUnitsGeoKey (4099)
                 let units = r.configs.z_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
         } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 1u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
+
             // tProjectedCSTypeGeoKey (3072)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_PROJECTEDCSTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_PROJECTEDCSTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: r.configs.epsg_code,
+            });
+
             // PCSCitationGeoKey (3073)
-            let mut v = String::from(projected_cs_type_map.get(&r.configs.epsg_code).unwrap().clone());
+            let mut v = String::from(
+                projected_cs_type_map
+                    .get(&r.configs.epsg_code)
+                    .unwrap()
+                    .clone(),
+            );
             v.push_str("|");
             v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry{ tag: 3073u16, location: 34737u16, count: v.len() as u16, value_offset: ascii_params.len() as u16 });
+            gk_entries.push(GeoKeyEntry {
+                tag: 3073u16,
+                location: 34737u16,
+                count: v.len() as u16,
+                value_offset: ascii_params.len() as u16,
+            });
             ascii_params.push_str(&v);
 
             if r.configs.xy_units.to_lowercase() != "not specified" {
                 // ProjLinearUnitsGeoKey (3076)
                 let units = r.configs.xy_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_PROJLINEARUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_PROJLINEARUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_PROJLINEARUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_PROJLINEARUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
 
@@ -2065,28 +2576,57 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 // VerticalUnitsGeoKey (4099)
                 let units = r.configs.z_units.to_lowercase();
                 if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9001u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9001u16,
+                    });
                 } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry{ tag: TAG_VERTICALUNITSGEOKEY, location: 0u16, count: 1u16, value_offset: 9002u16 });
+                    gk_entries.push(GeoKeyEntry {
+                        tag: TAG_VERTICALUNITSGEOKEY,
+                        location: 0u16,
+                        count: 1u16,
+                        value_offset: 9002u16,
+                    });
                 }
             }
         } else {
             // we don't know much about the coordinate system used.
-            
+
             // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 0u16 });
-            
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTMODELTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 0u16,
+            });
+
             // GTRasterTypeGeoKey (1025)
             if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 1u16,
+                });
             } else {
-                gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 2u16,
+                });
             }
-            
         }
 
         // create the GeoKeyDirectoryTag tag (34735)
-        ifd_entries.push(IfdEntry::new(TAG_GEOKEYDIRECTORYTAG, DT_SHORT, (4 + gk_entries.len() * 4) as u32, larger_values_data.len() as u32));
+        ifd_entries.push(IfdEntry::new(
+            TAG_GEOKEYDIRECTORYTAG,
+            DT_SHORT,
+            (4 + gk_entries.len() * 4) as u32,
+            larger_values_data.len() as u32,
+        ));
         let _ = larger_values_data.write_u16::<BigEndian>(1u16); // KeyDirectoryVersion
         let _ = larger_values_data.write_u16::<BigEndian>(1u16); // KeyRevision
         let _ = larger_values_data.write_u16::<BigEndian>(0u16); // MinorRevision
@@ -2101,7 +2641,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         if double_params.len() > 0 {
             // create the GeoDoubleParamsTag tag (34736)
-            ifd_entries.push(IfdEntry::new(TAG_GEODOUBLEPARAMSTAG, DT_DOUBLE, double_params.len() as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_GEODOUBLEPARAMSTAG,
+                DT_DOUBLE,
+                double_params.len() as u32,
+                larger_values_data.len() as u32,
+            ));
             for double_val in double_params {
                 let _ = larger_values_data.write_f64::<BigEndian>(double_val);
             }
@@ -2111,7 +2656,12 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             // create the GeoAsciiParamsTag tag (34737)
             let mut ascii_params_bytes = ascii_params.into_bytes();
             ascii_params_bytes.push(0);
-            ifd_entries.push(IfdEntry::new(TAG_GEOASCIIPARAMSTAG, DT_ASCII, ascii_params_bytes.len() as u32, larger_values_data.len() as u32));
+            ifd_entries.push(IfdEntry::new(
+                TAG_GEOASCIIPARAMSTAG,
+                DT_ASCII,
+                ascii_params_bytes.len() as u32,
+                larger_values_data.len() as u32,
+            ));
             if ascii_params_bytes.len() % 2 == 1 {
                 // it has to end on a word so that the next value starts on a word
                 ascii_params_bytes.push(0);
@@ -2128,7 +2678,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         // Sort the IFD entries
         ifd_entries.sort_by(|a, b| a.tag.cmp(&b.tag));
-        
+
         // Write the entries
         let ifd_length = 2u32 + ifd_entries.len() as u32 * 12u32 + 4u32;
 
@@ -2160,9 +2710,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         // Write the larger_values_data //
         //////////////////////////////////
         writer.write_all(&larger_values_data)?;
-
     }
-
 
     // if little_endian {
     //     //////////////////////
@@ -2339,7 +2887,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     ///////////////////
     //     // write the IFD //
     //     ///////////////////
-        
+
     //     // Number of Directory Entries. This will depend on type (photometric interp)
     //     // and must include the required tags for the image type, the software tag (305),
     //     // and the 5 geokeys: ModelTiepointTag, ModelPixelScaleTag,
@@ -2358,7 +2906,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     let ifd_length = 2u32 + num_ifd_entries as u32 * 12u32 + 4u32;
     //     let mut larger_values_data: Vec<u8> = vec![];
 
-    //     /* 
+    //     /*
     //     Write the IFD entries
 
     //     Bytes 0-1 The Tag that identifies the field.
@@ -2367,7 +2915,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
     //     The Value is expected to begin on a word boundary; the corresponding
     //     Value Offset will thus be an even number. This file offset may
-    //     point anywhere in the file, even after the image data. 
+    //     point anywhere in the file, even after the image data.
 
     //     To save time and space the Value Offset contains the Value instead of pointing to
     //     the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
@@ -2428,7 +2976,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //                 let _ = larger_values_data.write_u16::<LittleEndian>(bits_per_sample);
     //             }
     //         }
-            
+
     //     }
 
     //     // Compression tag (259)
@@ -2499,7 +3047,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     for _ in 0..r.configs.rows as u32 {
     //         let _ = larger_values_data.write_u32::<LittleEndian>(row_length_in_bytes);
     //     }
-        
+
     //     // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
     //     // XResolution tag (282)
     //     writer.write_u16::<LittleEndian>(TAG_XRESOLUTION)?; // Tag
@@ -2565,7 +3113,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_x);
     //     let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_y);
     //     let _ = larger_values_data.write_f64::<LittleEndian>(0f64);
-        
+
     //     // ModelPixelScaleTag tag (33922)
     //     writer.write_u16::<LittleEndian>(TAG_MODELTIEPOINTTAG)?; // Tag
     //     writer.write_u16::<LittleEndian>(DT_DOUBLE)?; // Field type
@@ -2590,7 +3138,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     }
     //     writer.write_u32::<LittleEndian>(ifd_start + ifd_length + larger_values_data.len() as u32)?; // Value/offset -- No compression
     //     let _ = larger_values_data.write_all(&nodata_bytes);
-        
+
     //     let kw_map = get_keyword_map();
     //     let geographic_type_map = match kw_map.get(&2048u16) {
     //         Some(map) => map,
@@ -2608,14 +3156,14 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     if geographic_type_map.contains_key(&r.configs.epsg_code) {
     //         // tGTModelTypeGeoKey (1024)
     //         gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
-            
+
     //         // GTRasterTypeGeoKey (1025)
     //         if r.configs.pixel_is_area {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
     //         } else {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
     //         }
-            
+
     //         // tGTCitationGeoKey (1026)
     //         let mut v = String::from(geographic_type_map.get(&r.configs.epsg_code).unwrap().clone());
     //         v.push_str("|");
@@ -2625,7 +3173,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     //         // tGeographicTypeGeoKey (2048)
     //         gk_entries.push(GeoKeyEntry{ tag: TAG_GEOGRAPHICTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+
     //         if r.configs.z_units.to_lowercase() != "not specified" {
     //             println!("I'm here 4");
     //             // VerticalUnitsGeoKey (4099)
@@ -2639,17 +3187,17 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
     //         // tGTModelTypeGeoKey (1024)
     //         gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
-            
+
     //         // GTRasterTypeGeoKey (1025)
     //         if r.configs.pixel_is_area {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
     //         } else {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
     //         }
-            
+
     //         // tProjectedCSTypeGeoKey (3072)
     //         gk_entries.push(GeoKeyEntry{ tag: TAG_PROJECTEDCSTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: r.configs.epsg_code });
-            
+
     //         // PCSCitationGeoKey (3073)
     //         let mut v = String::from(projected_cs_type_map.get(&r.configs.epsg_code).unwrap().clone());
     //         v.push_str("|");
@@ -2678,17 +3226,17 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         }
     //     } else {
     //         // we don't know much about the coordinate system used.
-            
+
     //         // tGTModelTypeGeoKey (1024)
     //         gk_entries.push(GeoKeyEntry{ tag: TAG_GTMODELTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 0u16 });
-            
+
     //         // GTRasterTypeGeoKey (1025)
     //         if r.configs.pixel_is_area {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 1u16 });
     //         } else {
     //             gk_entries.push(GeoKeyEntry{ tag: TAG_GTRASTERTYPEGEOKEY, location: 0u16, count: 1u16, value_offset: 2u16 });
     //         }
-            
+
     //     }
 
     //     // create the GeoKeyDirectoryTag tag (34735)
@@ -2739,18 +3287,17 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     //////////////////////////////////
     //     writer.write_all(&larger_values_data)?;
 
-
     //     /*
     //         Required Fields for Bilevel Images
-    //         - ImageWidth 
-    //         - ImageLength 
-    //         - Compression 
-    //         - PhotometricInterpretation 
-    //         - StripOffsets 
-    //         - RowsPerStrip 
-    //         - StripByteCounts 
-    //         - XResolution 
-    //         - YResolution 
+    //         - ImageWidth
+    //         - ImageLength
+    //         - Compression
+    //         - PhotometricInterpretation
+    //         - StripOffsets
+    //         - RowsPerStrip
+    //         - StripByteCounts
+    //         - XResolution
+    //         - YResolution
     //         - ResolutionUnit
     //     */
 
@@ -2801,11 +3348,9 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         - ResolutionUnit
     //     */
 
-         
     // } else {
-        
-    // }
 
+    // }
 
     let _ = writer.flush();
 
@@ -2822,7 +3367,12 @@ struct IfdEntry {
 
 impl IfdEntry {
     fn new(tag: u16, ifd_type: u16, num_values: u32, offset: u32) -> IfdEntry {
-        IfdEntry{ tag, ifd_type, num_values, offset }
+        IfdEntry {
+            tag,
+            ifd_type,
+            num_values,
+            offset,
+        }
     }
 }
 
@@ -2860,8 +3410,8 @@ impl fmt::Display for IfdEntry {
 
 struct GeoKeyEntry {
     tag: u16,
-    location: u16, 
-    count: u16, 
+    location: u16,
+    count: u16,
     value_offset: u16,
 }
 
@@ -2876,13 +3426,14 @@ pub struct IfdDirectory {
 }
 
 impl IfdDirectory {
-    pub fn new(tag: u16,
-               ifd_type: u16,
-               num_values: u32,
-               offset: u32,
-               data: Vec<u8>,
-               byte_order: Endianness)
-               -> IfdDirectory {
+    pub fn new(
+        tag: u16,
+        ifd_type: u16,
+        num_values: u32,
+        offset: u32,
+        data: Vec<u8>,
+        byte_order: Endianness,
+    ) -> IfdDirectory {
         IfdDirectory {
             tag: tag,
             ifd_type: ifd_type,
@@ -2930,7 +3481,6 @@ impl IfdDirectory {
         } else {
             return String::from_utf8(self.data.clone()).unwrap();
         }
-
     }
 
     pub fn interpret_data(&self) -> String {
@@ -2986,7 +3536,34 @@ impl fmt::Display for IfdDirectory {
         //let kw_map = get_keyword_map();
         let ft_map = get_field_type_map();
 
-        let mut s = format!("\nTag {}", tag_map[&self.tag]);
+        if tag_map.get(&self.tag).is_some() {
+            let off = if self.num_values > 1 || self.ifd_type > 3 {
+                format!(" offset={}", self.offset)
+            } else {
+                String::from("")
+            };
+
+            let mut d = if self.ifd_type != 2 {
+                format!("{}", self.interpret_data())
+            } else {
+                format!("{}", self.interpret_data().replace("\0", ""))
+            };
+
+            let c = if self.num_values > 1 {
+                format!(" count={}", self.num_values)
+            } else {
+                d = d.replace("[", "").replace("]", "");
+                String::from("")
+            };
+
+            let s = format!(
+                "{} (code={} type={}{}{}): {}",
+                tag_map[&self.tag].name, tag_map[&self.tag].code, ft_map[&self.ifd_type], c, off, d
+            );
+            return write!(f, "{}", s);
+        }
+
+        let mut s = format!("\nUnrecognized Tag ({})", &self.tag);
         s = s + &format!("\nIFD_type: {} ({})", ft_map[&self.ifd_type], self.ifd_type);
         s = s + &format!("\nNum_values: {}", self.num_values);
         if self.num_values > 1 || self.ifd_type > 3 {
@@ -3000,7 +3577,6 @@ impl fmt::Display for IfdDirectory {
         write!(f, "{}", s)
     }
 }
-
 
 // An implimentation of a PackBits reader
 #[inline]
@@ -3140,7 +3716,6 @@ pub fn packbits_decoder(input_data: Vec<u8>) -> Vec<u8> {
 // const TAG_VERTICALUNITSGEOKEY: u16 = 4099u16;
 
 // const TAG_PHOTOSHOP: u16 = 34377u16;
-
 
 // const PI_WHITEISZERO: u16 = 0;
 // const PI_BLACKISZERO: u16 = 1;

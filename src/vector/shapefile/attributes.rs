@@ -9,6 +9,7 @@ NOTE: Structures and functions for handling the Shapefile attribute table info
 contained with the associated .dbf file.
 */
 
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug, Default, Clone)]
@@ -58,12 +59,34 @@ impl fmt::Display for DateData {
 #[derive(Debug, Clone)]
 pub enum FieldData {
     Int(i32),
-    Int64(i64),
+    // Int64(i64),
     Real(f64),
     Text(String),
     Date(DateData),
     Bool(bool),
     Null,
+}
+
+#[derive(Debug, Clone)]
+pub enum FieldDataType {
+    Int,
+    Real,
+    Text,
+    Date,
+    Bool,
+}
+
+impl FieldDataType {
+    pub fn to_char(&self) -> char {
+        let c = match *self {
+            FieldDataType::Int => 'N',
+            FieldDataType::Real => 'F',
+            FieldDataType::Text => 'C',
+            FieldDataType::Date => 'D',
+            FieldDataType::Bool => 'L',
+        };
+        c
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -72,29 +95,29 @@ pub struct AttributeField {
     pub field_type: char,
     pub field_length: u8,
     pub decimal_count: u8,
-    work_area_id: u8,
-    set_field_flag: u8,
-    index_field_flag: u8,
+    // pub work_area_id: u8,
+    // pub set_field_flag: u8,
+    // pub index_field_flag: u8,
 }
 
 impl AttributeField {
     pub fn new<'a>(
-        name: &str,
-        field_type: char,
+        name: &'a str,
+        field_type: FieldDataType,
         field_length: u8,
         decimal_count: u8,
-        work_area_id: u8,
-        set_field_flag: u8,
-        index_field_flag: u8,
+        // work_area_id: u8,
+        // set_field_flag: u8,
+        // index_field_flag: u8,
     ) -> AttributeField {
         AttributeField {
             name: name.to_string(),
-            field_type: field_type,
+            field_type: field_type.to_char(),
             field_length: field_length,
             decimal_count: decimal_count,
-            work_area_id: work_area_id,
-            set_field_flag: set_field_flag,
-            index_field_flag: index_field_flag,
+            // work_area_id: work_area_id,
+            // set_field_flag: set_field_flag,
+            // index_field_flag: index_field_flag,
         }
     }
 }
@@ -105,6 +128,7 @@ pub struct ShapefileAttributes {
     pub fields: Vec<AttributeField>,
     data: Vec<Vec<FieldData>>,
     pub is_deleted: Vec<bool>,
+    field_map: HashMap<String, usize>,
 }
 
 impl ShapefileAttributes {
@@ -112,6 +136,7 @@ impl ShapefileAttributes {
     pub fn add_field<'a>(&mut self, field: &'a AttributeField) {
         self.fields.push(field.clone());
         self.header.num_fields += 1;
+        self.get_field_hashmap();
     }
 
     /// Adds a Vec of fields to the table
@@ -120,6 +145,7 @@ impl ShapefileAttributes {
             self.fields.push(field.clone());
             self.header.num_fields += 1;
         }
+        self.get_field_hashmap();
     }
 
     /// Returns a field from the table
@@ -142,6 +168,14 @@ impl ShapefileAttributes {
         self.data[index].clone()
     }
 
+    pub fn get_value(&self, record_index: usize, field_name: &str) -> FieldData {
+        if record_index >= self.header.num_records as usize {
+            panic!("Error: Specified record index is greater than the number of records.");
+        }
+        let field_index = self.field_map[field_name].unwrap();
+        self.data[record_index][field_index].clone()
+    }
+
     pub fn get_field_value(&self, record_index: usize, field_index: usize) -> FieldData {
         self.data[record_index][field_index].clone()
     }
@@ -153,6 +187,13 @@ impl ShapefileAttributes {
             }
         }
         None
+    }
+
+    fn get_field_hashmap(&mut self) {
+        self.field_map.clear();
+        for i in 0..self.fields.len() {
+            self.field_map.insert(self.fields[i].name.clone(), i);
+        }
     }
 
     pub fn get_field_info(&self, index: usize) -> AttributeField {

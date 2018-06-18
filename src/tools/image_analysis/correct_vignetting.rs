@@ -24,20 +24,20 @@ If an RGB image is input, the analysis will be performed on the intensity compon
 of the HSI transform.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use raster::*;
-use vector::{Shapefile, ShapeType};
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use tools::*;
 use structures::Array2D;
+use time;
+use tools::*;
+use vector::{ShapeType, Shapefile};
 
 pub struct CorrectVignetting {
     name: String,
@@ -48,81 +48,87 @@ pub struct CorrectVignetting {
 }
 
 impl CorrectVignetting {
-    pub fn new() -> CorrectVignetting { // public constructor
+    pub fn new() -> CorrectVignetting {
+        // public constructor
         let name = "CorrectVignetting".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description = "Corrects the darkening of images towards corners.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Principal Point File".to_owned(), 
-            flags: vec!["--pp".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Principal Point File".to_owned(),
+            flags: vec!["--pp".to_owned()],
             description: "Input principal point file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
-        parameters.push(ToolParameter{
-            name: "Camera Focal Length (mm)".to_owned(), 
-            flags: vec!["--focal_length".to_owned()], 
+
+        parameters.push(ToolParameter {
+            name: "Camera Focal Length (mm)".to_owned(),
+            flags: vec!["--focal_length".to_owned()],
             description: "Camera focal length, in millimeters.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("304.8".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Distance Between Left-Right Edges (mm)".to_owned(), 
-            flags: vec!["--image_width".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Distance Between Left-Right Edges (mm)".to_owned(),
+            flags: vec!["--image_width".to_owned()],
             description: "Distance between photograph edges, in millimeters.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("228.6".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "n Parameter".to_owned(), 
-            flags: vec!["-n".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "n Parameter".to_owned(),
+            flags: vec!["-n".to_owned()],
             description: "The 'n' parameter.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("4.0".to_owned()),
-            optional: true
+            optional: true,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif --pp=princ_pt.shp -o=output.tif --focal_length=304.8 --image_width=228.6 -n=4.0", short_exe, name).replace("*", &sep);
-    
-        CorrectVignetting { 
-            name: name, 
-            description: description, 
+
+        CorrectVignetting {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -131,7 +137,7 @@ impl WhiteboxTool for CorrectVignetting {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -155,17 +161,24 @@ impl WhiteboxTool for CorrectVignetting {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut pp_file = String::new();
         let mut output_file = String::new();
         let mut focal_length = 304.8f64;
         let mut image_width = 228.6f64;
         let mut n_param = 4f64;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -181,19 +194,19 @@ impl WhiteboxTool for CorrectVignetting {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-pp" {
                 pp_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-focal_length" {
                 focal_length = if keyval {
@@ -237,36 +250,41 @@ impl WhiteboxTool for CorrectVignetting {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input data...") };
+        if verbose {
+            println!("Reading input data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         let scale_factor = image_width / columns as f64;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
 
         if input.configs.data_type == DataType::RGB48 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "This tool cannot be applied to 48-bit RGB colour-composite images."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "This tool cannot be applied to 48-bit RGB colour-composite images.",
+            ));
         }
 
-
-        let vector_data = Shapefile::new(&pp_file, "r")?;
+        let vector_data = Shapefile::read(&pp_file)?;
 
         // make sure the input vector file is of point base type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must be of a point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of a point base shape type.",
+            ));
         }
-        
+
         let start = time::now();
 
         // get the row/column of the principal point
@@ -279,20 +297,17 @@ impl WhiteboxTool for CorrectVignetting {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = 
-                    if !is_rgb_image {
-                        Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
-                    } else {
-                        Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                        )
-                    };
+                        nodata
+                    })
+                };
                 let mut z_in: f64;
                 let mut z_out: f64;
                 let mut dist: f64;
@@ -306,17 +321,28 @@ impl WhiteboxTool for CorrectVignetting {
                     for col in 0..columns {
                         z_in = input_fn(row, col);
                         if z_in != nodata {
-                            dist = ((row as f64 - pp_y) * (row as f64 - pp_y) + (col as f64 - pp_x) * (col as f64 - pp_x)).sqrt();
-                            theta = ((dist * scale_factor / focal_length)).atan();
+                            dist = ((row as f64 - pp_y) * (row as f64 - pp_y)
+                                + (col as f64 - pp_x) * (col as f64 - pp_x))
+                                .sqrt();
+                            theta = (dist * scale_factor / focal_length).atan();
                             z_out = z_in / theta.cos().powf(n_param);
                             data[col as usize] = z_out;
-                            if z_in < min_in { min_in = z_in; }
-                            if z_in > max_in { max_in = z_in; }
-                            if z_out < min_out { min_out = z_out; }
-                            if z_out > max_out { max_out = z_out; }
+                            if z_in < min_in {
+                                min_in = z_in;
+                            }
+                            if z_in > max_in {
+                                max_in = z_in;
+                            }
+                            if z_out < min_out {
+                                min_out = z_out;
+                            }
+                            if z_out > max_out {
+                                max_out = z_out;
+                            }
                         }
                     }
-                    tx.send((row, data, min_in, max_in, min_out, max_out)).unwrap();
+                    tx.send((row, data, min_in, max_in, min_out, max_out))
+                        .unwrap();
                 }
             });
         }
@@ -328,10 +354,18 @@ impl WhiteboxTool for CorrectVignetting {
         let mut max_out = f64::NEG_INFINITY;
         for r in 0..rows {
             let (row, data, a, b, c, d) = rx.recv().unwrap();
-            if a < min_in { min_in = a; }
-            if b > max_in { max_in = b; }
-            if c < min_out { min_out = c; }
-            if d > max_out { max_out = d; }
+            if a < min_in {
+                min_in = a;
+            }
+            if b > max_in {
+                max_in = b;
+            }
+            if c < min_out {
+                min_out = c;
+            }
+            if d > max_out {
+                max_out = d;
+            }
             unscaled_data.set_row_data(row, data);
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
@@ -351,23 +385,20 @@ impl WhiteboxTool for CorrectVignetting {
             let unscaled_data = unscaled_data.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = 
-                    if !is_rgb_image {
-                        // simply return the value.
-                        Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
-                    } else {
-                        // convert it back into an rgb value, using the modified intensity value.
-                        Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                let ret = hsi2value(h, s, value);
-                                return ret;
-                            }
-                            nodata
+                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                    // simply return the value.
+                    Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
+                } else {
+                    // convert it back into an rgb value, using the modified intensity value.
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            let ret = hsi2value(h, s, value);
+                            return ret;
                         }
-                        )
-                    };
+                        nodata
+                    })
+                };
                 let mut z_in: f64;
                 let mut z_out: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -403,21 +434,33 @@ impl WhiteboxTool for CorrectVignetting {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("PP file: {}", pp_file));
         output.add_metadata_entry(format!("Focal length: {}", focal_length));
         output.add_metadata_entry(format!("Image width: {}", image_width));
         output.add_metadata_entry(format!("n-parameter: {}", n_param));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
@@ -441,21 +484,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -465,33 +509,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

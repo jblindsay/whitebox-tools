@@ -25,20 +25,20 @@ values before performing the regression analysis. These transform parameters
 are also reported in the output report.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
-use raster::*;
-use vector::{FieldData, Shapefile, ShapeType};
-use std::io::{Error, ErrorKind};
-use tools::*;
 use na::{DMatrix, DVector};
+use raster::*;
 use rendering::html::*;
-use std::io::BufWriter;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
+use std::path;
 use std::process::Command;
+use time;
+use tools::*;
+use vector::{FieldData, ShapeType, Shapefile};
 
 /// Estimates a trend surface from vector points.
 pub struct TrendSurfaceVectorPoints {
@@ -50,46 +50,52 @@ pub struct TrendSurfaceVectorPoints {
 }
 
 impl TrendSurfaceVectorPoints {
-    pub fn new() -> TrendSurfaceVectorPoints { // public constructor
+    pub fn new() -> TrendSurfaceVectorPoints {
+        // public constructor
         let name = "TrendSurfaceVectorPoints".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description = "Estimates a trend surface from vector points.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Vector Points File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector Points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(VectorGeometryType::Point)),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Field Name".to_owned(), 
-            flags: vec!["--field".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Field Name".to_owned(),
+            flags: vec!["--field".to_owned()],
             description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(AttributeType::Number, "--input".to_string()),
+            parameter_type: ParameterType::VectorAttributeField(
+                AttributeType::Number,
+                "--input".to_string(),
+            ),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Polynomial Order".to_owned(), 
-            flags: vec!["--order".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Polynomial Order".to_owned(),
+            flags: vec!["--order".to_owned()],
             description: "Polynomial order (1 to 10).".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1".to_string()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -104,18 +110,21 @@ impl TrendSurfaceVectorPoints {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.shp' --field=ELEV  -o='output.tif' --order=2 --cell_size=10.0", short_exe, name).replace("*", &sep);
-    
-        TrendSurfaceVectorPoints { 
-            name: name, 
-            description: description, 
+
+        TrendSurfaceVectorPoints {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -124,7 +133,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -148,16 +157,23 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name = String::new();
         let mut output_file = String::new();
         let mut order = 1usize;
         let mut cell_size = 0f64;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -173,7 +189,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-field" {
                 field_name = if keyval {
@@ -185,19 +201,19 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-order" {
                 order = if keyval {
                     vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    args[i+1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
                 };
             } else if flag_val == "-cell_size" {
                 cell_size = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             }
         }
@@ -220,41 +236,55 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if order < 1 { order = 1; }
-        if order > 10 { order = 10; }
+        if order < 1 {
+            order = 1;
+        }
+        if order > 10 {
+            order = 10;
+        }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
-        let vector_data = Shapefile::new(&input_file, "r")?;
-        
+        let vector_data = Shapefile::read(&input_file)?;
+
         let start = time::now();
 
         // make sure the input vector file is of points type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input vector data must either be of point base shape type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must either be of point base shape type.",
+            ));
         }
-        
+
         // What is the index of the field to be analyzed?
         let field_index = match vector_data.attributes.get_field_num(&field_name) {
             Some(i) => i,
-            None => { 
-                return Err(Error::new(ErrorKind::InvalidInput,
-                    "ERROR: The input field could not be located within the attribute table."));
-            },
+            None => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "ERROR: The input field could not be located within the attribute table.",
+                ));
+            }
         };
 
         // Is the field numeric?
         if !vector_data.attributes.is_field_numeric(field_index) {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "ERROR: The input field is non-numeric."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "ERROR: The input field is non-numeric.",
+            ));
         }
 
-        // base the output raster on the cell_size and the 
+        // base the output raster on the cell_size and the
         // extent of the input vector.
         if cell_size <= 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                    "ERROR: The input cell-size must be >= 0.0."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "ERROR: The input cell-size must be >= 0.0.",
+            ));
         }
         let west: f64 = vector_data.header.x_min;
         let north: f64 = vector_data.header.y_max;
@@ -264,7 +294,9 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         let east = west + columns as f64 * cell_size;
         let nodata = -32768.0f64;
 
-        let mut configs = RasterConfigs { ..Default::default() };
+        let mut configs = RasterConfigs {
+            ..Default::default()
+        };
         configs.rows = rows as usize;
         configs.columns = columns as usize;
         configs.north = north;
@@ -278,7 +310,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         configs.photometric_interp = PhotometricInterpretation::Continuous;
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
-        
+
         // get the input data
         let num_recs = vector_data.num_records as usize;
         let min_x = vector_data.header.x_min;
@@ -288,32 +320,32 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         let mut y: Vec<f64> = Vec::with_capacity(num_recs);
         let mut z: Vec<f64> = Vec::with_capacity(num_recs);
         let (mut x_val, mut y_val, mut z_val): (f64, f64, f64);
-        
+
         for record_num in 0..num_recs {
             let record = vector_data.get_record(record_num);
             x_val = record.points[0].x - min_x;
             y_val = record.points[0].y - min_y;
-            z_val = match vector_data.attributes.get_field_value(record_num, field_index) {
-                FieldData::Int(val) => {
-                    val as f64
-                },
-                FieldData::Int64(val) => {
-                    val as f64
-                },
-                FieldData::Real(val) => {
-                    val
-                },
-                _ => {
-                    nodata
-                }
+            z_val = match vector_data
+                .attributes
+                .get_field_value(record_num, field_index)
+            {
+                FieldData::Int(val) => val as f64,
+                // FieldData::Int64(val) => {
+                //     val as f64
+                // },
+                FieldData::Real(val) => val,
+                _ => nodata,
             };
-            if z_val < min_z { min_z = z_val; }
+            if z_val < min_z {
+                min_z = z_val;
+            }
             x.push(x_val);
             y.push(y_val);
             z.push(z_val);
-            
+
             if verbose {
-                progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Reading attributes: {}%", progress);
                     old_progress = progress;
@@ -330,7 +362,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
 
         // How many coefficients are there?
         let mut num_coefficients = 0;
-        for j in 0..(order+1) {
+        for j in 0..(order + 1) {
             for _k in 0..(order - j + 1) {
                 num_coefficients += 1;
             }
@@ -340,32 +372,40 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         let mut forward_coefficient_matrix = vec![0f64; n * num_coefficients];
         for i in 0..n {
             let mut m = 0;
-            for j in 0..(order+1) {
+            for j in 0..(order + 1) {
                 for k in 0..(order - j + 1) {
-                    forward_coefficient_matrix[i * num_coefficients + m] = x[i].powf(j as f64) * y[i].powf(k as f64);
+                    forward_coefficient_matrix[i * num_coefficients + m] =
+                        x[i].powf(j as f64) * y[i].powf(k as f64);
                     m += 1;
                 }
             }
         }
-        
-        let coefficients = DMatrix::from_row_slice(n, num_coefficients, &forward_coefficient_matrix);
+
+        let coefficients =
+            DMatrix::from_row_slice(n, num_coefficients, &forward_coefficient_matrix);
         let qr = coefficients.clone().qr();
-        let q  = qr.q();
-        let r  = qr.r();
+        let q = qr.q();
+        let r = qr.r();
         if !r.is_invertible() {
-            return Err(Error::new(ErrorKind::InvalidInput,  "Matrix is not invertible."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Matrix is not invertible.",
+            ));
         }
-        
+
         let b = DVector::from_row_slice(n, &z);
-        let regress_coefficents = (r.try_inverse().unwrap() * q.transpose() * b).as_slice().to_vec(); //inv(R).dot(Q.T).dot(y)
-        
+        let regress_coefficents = (r.try_inverse().unwrap() * q.transpose() * b)
+            .as_slice()
+            .to_vec(); //inv(R).dot(Q.T).dot(y)
+
         let mut residuals = vec![0f64; n];
         let mut ss_resid = 0f64;
         let mut y_hat: f64;
         for i in 0..n {
             y_hat = 0f64;
             for j in 0..num_coefficients {
-                y_hat += forward_coefficient_matrix[i * num_coefficients + j] * regress_coefficents[j];
+                y_hat +=
+                    forward_coefficient_matrix[i * num_coefficients + j] * regress_coefficents[j];
             }
             residuals[i] = z[i] - y_hat;
             ss_resid += residuals[i] * residuals[i];
@@ -396,10 +436,10 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
                 <title>Trend Surface Analysis Report</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"
             </head>
             <body>
@@ -407,15 +447,20 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
                 "#.as_bytes())?;
 
         writer.write_all((format!("<p><strong>Input</strong>: {}</p>", input_file)).as_bytes())?;
-        writer.write_all((format!("<p><strong>Polynomial Order</strong>: {}</p>", order)).as_bytes())?;
+        writer.write_all(
+            (format!("<p><strong>Polynomial Order</strong>: {}</p>", order)).as_bytes(),
+        )?;
         writer.write_all((format!("<p><strong>R-sqr</strong>: {:.*}</p>", 5, r_sqr)).as_bytes())?;
 
         //////////////////////////
         // Transformation Table //
         //////////////////////////
         writer.write_all("<p><table>".as_bytes())?;
-        writer.write_all("<caption>Pre-calculation Transformation Coefficients</caption>".as_bytes())?;
-        writer.write_all("<tr><th>&Delta;X</th><th>&Delta;Y</th><th>&Delta;Z</th></tr>".as_bytes())?;
+        writer.write_all(
+            "<caption>Pre-calculation Transformation Coefficients</caption>".as_bytes(),
+        )?;
+        writer
+            .write_all("<tr><th>&Delta;X</th><th>&Delta;Y</th><th>&Delta;Z</th></tr>".as_bytes())?;
         writer.write_all(&format!("<tr><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td></tr>", min_x, min_y, min_z).as_bytes())?;
         writer.write_all("</table></p>".as_bytes())?;
 
@@ -424,7 +469,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         //////////////
         let mut s = "z = ".to_string();
         let mut b_val = 1;
-        for j in 0..(order+1) {
+        for j in 0..(order + 1) {
             for k in 0..(order - j + 1) {
                 let x_exp = if j > 1 {
                     format!("<sup>{}</sup>", j)
@@ -458,7 +503,12 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!("<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
+            let mut s = format!(
+                "<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>",
+                (j + 1),
+                12,
+                regress_coefficents[j]
+            );
             writer.write_all(&format!("<tr>{}</tr>", s).as_bytes())?;
         }
         writer.write_all("</table></p>".as_bytes())?;
@@ -495,17 +545,16 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             println!("Please see {} for output report.", output_html_file);
         }
 
-
         // create the output trend-surface raster
         let mut term: f64;
-        let mut m: usize;   
+        let mut m: usize;
         for row in 0..rows {
             for col in 0..columns {
                 x_val = output.get_x_from_column(col) - min_x;
                 y_val = output.get_y_from_row(row) - min_y;
                 z_val = min_z; // 0f64;
                 m = 0;
-                for j in 0..(order+1) {
+                for j in 0..(order + 1) {
                     for k in 0..(order - j + 1) {
                         term = x_val.powf(j as f64) * y_val.powf(k as f64);
                         z_val += term * regress_coefficents[m];
@@ -525,22 +574,34 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Polynomial order: {}", order));
         output.add_metadata_entry(format!("r-squared: {}", r_sqr));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
-           
+
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-        
+
         Ok(())
     }
 }
