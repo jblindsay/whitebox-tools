@@ -6,16 +6,16 @@ Last Modified: Dec. 15, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct LineDetectionFilter {
@@ -34,22 +34,22 @@ impl LineDetectionFilter {
         let description = "Performs a line-detection filter on an image.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -61,22 +61,24 @@ impl LineDetectionFilter {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Output absolute values?".to_owned(), 
-            flags: vec!["--absvals".to_owned()], 
-            description: "Optional flag indicating whether outputs should be absolute values.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output absolute values?".to_owned(),
+            flags: vec!["--absvals".to_owned()],
+            description: "Optional flag indicating whether outputs should be absolute values."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Distribution Tail Clip Amount (%)".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Distribution Tail Clip Amount (%)".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional amount to clip the distribution tails by, in percent."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -105,7 +107,7 @@ impl WhiteboxTool for LineDetectionFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -129,14 +131,17 @@ impl WhiteboxTool for LineDetectionFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
 
         let mut input_file = String::new();
@@ -189,7 +194,7 @@ impl WhiteboxTool for LineDetectionFilter {
                     clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
                 if clip_amount < 0.0 {
-                    clip_amount == 0.0;
+                    clip_amount = 0.0;
                 }
             }
         }
@@ -310,14 +315,17 @@ impl WhiteboxTool for LineDetectionFilter {
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Variant: {}", variant));
         output.add_metadata_entry(format!("Absolute values: {}", absvals));
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -332,8 +340,10 @@ impl WhiteboxTool for LineDetectionFilter {
         };
 
         if verbose {
-            println!("{}",
-                     &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

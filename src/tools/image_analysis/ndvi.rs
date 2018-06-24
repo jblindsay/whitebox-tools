@@ -6,16 +6,16 @@ Last Modified: January 21, 2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct NormalizedDifferenceVegetationIndex {
@@ -27,46 +27,48 @@ pub struct NormalizedDifferenceVegetationIndex {
 }
 
 impl NormalizedDifferenceVegetationIndex {
-    pub fn new() -> NormalizedDifferenceVegetationIndex { // public constructor
+    pub fn new() -> NormalizedDifferenceVegetationIndex {
+        // public constructor
         let name = "NormalizedDifferenceVegetationIndex".to_string();
         let toolbox = "Image Processing Tools".to_string();
         let description = "Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Near-Infrared File".to_owned(), 
-            flags: vec!["--nir".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Near-Infrared File".to_owned(),
+            flags: vec!["--nir".to_owned()],
             description: "Input near-infrared band image.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Red File".to_owned(), 
-            flags: vec!["--red".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Red File".to_owned(),
+            flags: vec!["--red".to_owned()],
             description: "Input red band image.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Distribution Tail Clip Amount (%)".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Distribution Tail Clip Amount (%)".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional amount to clip the distribution tails by, in percent."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -81,19 +83,22 @@ impl NormalizedDifferenceVegetationIndex {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif --clip=1.0 --osavi", short_exe, name).replace("*", &sep);
-    
-        NormalizedDifferenceVegetationIndex { 
-            name: name, 
-            description: description, 
+
+        NormalizedDifferenceVegetationIndex {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -102,7 +107,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -133,7 +138,12 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut nir_file = String::new();
         let mut red_file = String::new();
         let mut output_file = String::new();
@@ -141,8 +151,10 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         let mut osavi_mode = false;
         let mut correction_factor = 0.0;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -157,19 +169,19 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
                 if keyval {
                     nir_file = vec[1].to_string();
                 } else {
-                    nir_file = args[i+1].to_string();
+                    nir_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-red" || vec[0].to_lowercase() == "--red" {
                 if keyval {
                     red_file = vec[1].to_string();
                 } else {
-                    red_file = args[i+1].to_string();
+                    red_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 if keyval {
@@ -177,7 +189,9 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
                 } else {
                     clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-                if clip_amount < 0.0 { clip_amount == 0.0; }
+                if clip_amount < 0.0 {
+                    clip_amount = 0.0;
+                }
             } else if vec[0].to_lowercase() == "-osavi" || vec[0].to_lowercase() == "--osavi" {
                 osavi_mode = true;
                 correction_factor = 0.16;
@@ -205,7 +219,9 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let nir = Arc::new(Raster::new(&nir_file, "r")?);
         let rows = nir.configs.rows as isize;
@@ -217,8 +233,10 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
 
         // make sure the input files have the same size
         if nir.configs.rows != red.configs.rows || nir.configs.columns != red.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let start = time::now();
@@ -232,7 +250,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             let red = red.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let (mut z_nir, mut z_red) : (f64, f64);
+                let (mut z_nir, mut z_red): (f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nir_nodata; columns as usize];
                     for col in 0..columns {
@@ -240,7 +258,8 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
                         z_red = red[(row, col)];
                         if z_nir != nir_nodata && z_red != red_nodata {
                             if z_nir + z_red != 0.0 {
-                                data[col as usize] = (z_nir - z_red) / (z_nir + z_red + correction_factor); 
+                                data[col as usize] =
+                                    (z_nir - z_red) / (z_nir + z_red + correction_factor);
                             } else {
                                 data[col as usize] = nir_nodata;
                             }
@@ -270,19 +289,34 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("NIR file: {}", nir_file));
         output.add_metadata_entry(format!("Red file: {}", red_file));
-        output.add_metadata_entry(format!("Optimised Soil-Adjusted Vegetation Index (OSAVI) mode: {}", osavi_mode));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!(
+            "Optimised Soil-Adjusted Vegetation Index (OSAVI) mode: {}",
+            osavi_mode
+        ));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

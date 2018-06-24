@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct FixedRadiusSearchKey2D {
@@ -15,7 +15,7 @@ struct FixedRadiusSearchEntry2D {
 }
 
 /// A simple 2D hash-based fixed radius search data structure.
-/// 
+///
 /// ## Example
 ///     let mut frs: FixedRadiusSearch2D<i32> = FixedRadiusSearch2D::new(5.0);
 ///     frs.insert(45.3, 32.5, 1i32);
@@ -44,7 +44,7 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
         let values: Vec<T> = vec![];
         FixedRadiusSearch2D {
             r: radius,
-            r_sqr: radius*radius,
+            r_sqr: radius * radius,
             hm: map,
             values: values,
             length: 0usize,
@@ -53,12 +53,19 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
 
     /// Inserts a point (x, y, value).
     pub fn insert(&mut self, x: f64, y: f64, value: T) {
-        let k = FixedRadiusSearchKey2D { col: (x / self.r).floor() as isize, row: (y / self.r).floor() as isize };
-        let val = match self.hm.entry(k) {
-           Vacant(entry) => entry.insert(vec![]),
-           Occupied(entry) => entry.into_mut(),
+        let k = FixedRadiusSearchKey2D {
+            col: (x / self.r).floor() as isize,
+            row: (y / self.r).floor() as isize,
         };
-        val.push(FixedRadiusSearchEntry2D { x: x, y: y, index: self.length}); //, dist: -1f64});
+        let val = match self.hm.entry(k) {
+            Vacant(entry) => entry.insert(vec![]),
+            Occupied(entry) => entry.into_mut(),
+        };
+        val.push(FixedRadiusSearchEntry2D {
+            x: x,
+            y: y,
+            index: self.length,
+        }); //, dist: -1f64});
         self.values.push(value);
         self.length += 1;
     }
@@ -71,10 +78,13 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
 
         for m in -1..2 {
             for n in -1..2 {
-                if let Some(vals) = self.hm.get(&FixedRadiusSearchKey2D{ col: i+m, row: j+n }) {
+                if let Some(vals) = self.hm.get(&FixedRadiusSearchKey2D {
+                    col: i + m,
+                    row: j + n,
+                }) {
                     for val in vals {
                         // calculate the squared distance to (x,y)
-                        let dist = (x - val.x)*(x - val.x) + (y - val.y)*(y - val.y);
+                        let dist = (x - val.x) * (x - val.x) + (y - val.y) * (y - val.y);
                         if dist <= self.r_sqr {
                             ret.push((self.values[val.index], dist.sqrt()));
                         }
@@ -118,7 +128,7 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         let values: Vec<T> = vec![];
         FixedRadiusSearch3D {
             r: radius,
-            r_sqr: radius*radius,
+            r_sqr: radius * radius,
             hm: map,
             values: values,
             length: 0usize,
@@ -127,16 +137,21 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
 
     /// Inserts a point (x, y, z, value).
     pub fn insert(&mut self, x: f64, y: f64, z: f64, value: T) {
-        let k = FixedRadiusSearchKey3D { 
-            col: (x / self.r).floor() as isize, 
+        let k = FixedRadiusSearchKey3D {
+            col: (x / self.r).floor() as isize,
             row: (y / self.r).floor() as isize,
-            layer: (z / self.r).floor() as isize
+            layer: (z / self.r).floor() as isize,
         };
         let val = match self.hm.entry(k) {
-           Vacant(entry) => entry.insert(vec![]),
-           Occupied(entry) => entry.into_mut(),
+            Vacant(entry) => entry.insert(vec![]),
+            Occupied(entry) => entry.into_mut(),
         };
-        val.push(FixedRadiusSearchEntry3D { x: x, y: y, z: z, index: self.length}); //, dist: -1f64});
+        val.push(FixedRadiusSearchEntry3D {
+            x: x,
+            y: y,
+            z: z,
+            index: self.length,
+        }); //, dist: -1f64});
         self.values.push(value);
         self.length += 1;
     }
@@ -151,10 +166,16 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         for m in -1..2 {
             for n in -1..2 {
                 for p in -1..2 {
-                    if let Some(vals) = self.hm.get(&FixedRadiusSearchKey3D{ col: i+m, row: j+n, layer: k+p }) {
+                    if let Some(vals) = self.hm.get(&FixedRadiusSearchKey3D {
+                        col: i + m,
+                        row: j + n,
+                        layer: k + p,
+                    }) {
                         for val in vals {
                             // calculate the squared distance to (x,y, z)
-                            let dist = (x - val.x)*(x - val.x) + (y - val.y)*(y - val.y) + (z - val.z)*(z - val.z);
+                            let dist = (x - val.x) * (x - val.x)
+                                + (y - val.y) * (y - val.y)
+                                + (z - val.z) * (z - val.z);
                             if dist <= self.r_sqr {
                                 ret.push((self.values[val.index], dist.sqrt()));
                             }

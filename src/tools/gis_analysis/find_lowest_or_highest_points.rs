@@ -171,13 +171,13 @@ impl WhiteboxTool for FindLowestOrHighestPoints {
                     args[i + 1].to_lowercase()
                 };
                 if out_type.contains("low") {
-                    out_type == "lowest".to_owned();
+                    out_type = "lowest".to_owned();
                 }
                 if out_type.contains("hi") {
-                    out_type == "highest".to_owned();
+                    out_type = "highest".to_owned();
                 }
                 if out_type.contains("b") {
-                    out_type == "both".to_owned();
+                    out_type = "both".to_owned();
                 }
             }
         }

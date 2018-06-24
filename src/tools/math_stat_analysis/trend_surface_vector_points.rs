@@ -325,10 +325,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             let record = vector_data.get_record(record_num);
             x_val = record.points[0].x - min_x;
             y_val = record.points[0].y - min_y;
-            z_val = match vector_data
-                .attributes
-                .get_field_value(record_num, field_index)
-            {
+            z_val = match vector_data.attributes.get_value(record_num, &field_name) {
                 FieldData::Int(val) => val as f64,
                 // FieldData::Int64(val) => {
                 //     val as f64

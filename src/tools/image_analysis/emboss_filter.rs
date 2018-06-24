@@ -6,16 +6,16 @@ Last Modified: 06/05/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct EmbossFilter {
@@ -27,30 +27,32 @@ pub struct EmbossFilter {
 }
 
 impl EmbossFilter {
-    pub fn new() -> EmbossFilter { // public constructor
+    pub fn new() -> EmbossFilter {
+        // public constructor
         let name = "EmbossFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
-        let description = "Performs an emboss filter on an image, similar to a hillshade operation.".to_string();
-        
+        let description =
+            "Performs an emboss filter on an image, similar to a hillshade operation.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         parameters.push(ToolParameter{
             name: "Direction".to_owned(), 
             flags: vec!["--direction".to_owned()], 
@@ -60,30 +62,34 @@ impl EmbossFilter {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Percent to clip the distribution tails".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Percent to clip the distribution tails".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional amount to clip the distribution tails by, in percent."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --direction='s' --clip=1.0", short_exe, name).replace("*", &sep);
-    
-        EmbossFilter { 
-            name: name, 
-            description: description, 
+
+        EmbossFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -92,7 +98,7 @@ impl WhiteboxTool for EmbossFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -116,12 +122,19 @@ impl WhiteboxTool for EmbossFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
-        
+
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut direction = "n".to_string();
@@ -161,7 +174,9 @@ impl WhiteboxTool for EmbossFilter {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
-                if clip_amount < 0.0 { clip_amount == 0.0; }
+                if clip_amount < 0.0 {
+                    clip_amount = 0.0;
+                }
             }
         }
 
@@ -188,26 +203,25 @@ impl WhiteboxTool for EmbossFilter {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        
+
         let start = time::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
-    
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -219,29 +233,27 @@ impl WhiteboxTool for EmbossFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
-                
+
                 let weights = match &direction as &str {
-                    "n" => [ 0f64, -1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64 ],
-                    "s" => [ 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, -1f64, 0f64 ],
-                    "e" => [ 0f64, 0f64, 0f64, 1f64, 0f64, -1f64, 0f64, 0f64, 0f64 ],
-                    "w" => [ 0f64, 0f64, 0f64, -1f64, 0f64, 1f64, 0f64, 0f64, 0f64 ],
-                    "ne" => [ 0f64, 0f64, -1f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64 ],
-                    "nw" => [ -1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64 ],
-                    "se" => [ 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, -1f64 ],
-                    _ => [ 0f64, 0f64, 1f64, 0f64, 0f64, 0f64, -1f64, 0f64, 0f64 ], // sw
+                    "n" => [0f64, -1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64],
+                    "s" => [0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, -1f64, 0f64],
+                    "e" => [0f64, 0f64, 0f64, 1f64, 0f64, -1f64, 0f64, 0f64, 0f64],
+                    "w" => [0f64, 0f64, 0f64, -1f64, 0f64, 1f64, 0f64, 0f64, 0f64],
+                    "ne" => [0f64, 0f64, -1f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64],
+                    "nw" => [-1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64],
+                    "se" => [1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, -1f64],
+                    _ => [0f64, 0f64, 1f64, 0f64, 0f64, 0f64, -1f64, 0f64, 0f64], // sw
                 };
-                let dx = [ -1, 0, 1, -1, 0, 1, -1, 0, 1 ];
-                let dy = [ -1, -1, -1, 0, 0, 0, 1, 1, 1 ];
+                let dx = [-1, 0, 1, -1, 0, 1, -1, 0, 1];
+                let dy = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 let num_pixels_in_filter = dx.len();
                 let mut sum: f64;
                 let mut z: f64;
@@ -254,7 +266,9 @@ impl WhiteboxTool for EmbossFilter {
                             sum = 0.0;
                             for n in 0..num_pixels_in_filter {
                                 zn = input_fn(row + dy[n], col + dx[n]);
-                                if zn == nodata { zn = z; }
+                                if zn == nodata {
+                                    zn = z;
+                                }
                                 sum += zn * weights[n];
                             }
                             data[col as usize] = sum;
@@ -285,11 +299,16 @@ impl WhiteboxTool for EmbossFilter {
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Direction: {}", direction));
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -304,8 +323,10 @@ impl WhiteboxTool for EmbossFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

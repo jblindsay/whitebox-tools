@@ -204,24 +204,10 @@ impl WhiteboxTool for ListUniqueValues {
         };
         let vector_data = Shapefile::read(&input_file)?;
 
-        // What is the index of the field to be analyzed?
-        let field_index = match vector_data.attributes.get_field_num(&field_name) {
-            Some(i) => i,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidInput,
-                    "The specified field name does not exist in input shapefile.",
-                ))
-            }
-        };
-
         let mut freq_data = HashMap::new();
         let mut key: String;
         for record_num in 0..vector_data.num_records {
-            key = match vector_data
-                .attributes
-                .get_field_value(record_num, field_index)
-            {
+            key = match vector_data.attributes.get_value(record_num, &field_name) {
                 FieldData::Int(val) => val.to_string(),
                 // FieldData::Int64(val) => {
                 //     val.to_string()

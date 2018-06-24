@@ -6,16 +6,16 @@ Last Modified: 05/05/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct LaplacianFilter {
@@ -27,28 +27,29 @@ pub struct LaplacianFilter {
 }
 
 impl LaplacianFilter {
-    pub fn new() -> LaplacianFilter { // public constructor
+    pub fn new() -> LaplacianFilter {
+        // public constructor
         let name = "LaplacianFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Laplacian filter on an image.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -60,30 +61,34 @@ impl LaplacianFilter {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Distribution Tail Clip Amount (%)".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Distribution Tail Clip Amount (%)".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional amount to clip the distribution tails by, in percent."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --variant='3x3(1)' --clip=1.0", short_exe, name).replace("*", &sep);
-    
-        LaplacianFilter { 
-            name: name, 
-            description: description, 
+
+        LaplacianFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -92,7 +97,7 @@ impl WhiteboxTool for LaplacianFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -116,12 +121,19 @@ impl WhiteboxTool for LaplacianFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
-        
+
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut variant = "3x3(1)".to_string();
@@ -159,7 +171,9 @@ impl WhiteboxTool for LaplacianFilter {
                 } else {
                     clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-                if clip_amount < 0.0 { clip_amount == 0.0; }
+                if clip_amount < 0.0 {
+                    clip_amount = 0.0;
+                }
             }
         }
 
@@ -186,22 +200,22 @@ impl WhiteboxTool for LaplacianFilter {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        
+
         let start = time::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
-    
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
@@ -216,52 +230,63 @@ impl WhiteboxTool for LaplacianFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
                 let mut z: f64;
                 let mut zn: f64;
                 let weights: Vec<f64>;
                 let dx: Vec<isize>;
-                let dy: Vec<isize>; 
+                let dy: Vec<isize>;
 
                 if variant.contains("3x3(1)") {
-                    weights = vec![ 0.0, -1.0, 0.0, -1.0, 4.0, -1.0, 0.0, -1.0, 0.0 ];
-                    dx = vec![ -1, 0, 1, -1, 0, 1, -1, 0, 1 ];
-                    dy = vec![ -1, -1, -1, 0, 0, 0, 1, 1, 1 ];
+                    weights = vec![0.0, -1.0, 0.0, -1.0, 4.0, -1.0, 0.0, -1.0, 0.0];
+                    dx = vec![-1, 0, 1, -1, 0, 1, -1, 0, 1];
+                    dy = vec![-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 } else if variant.contains("3x3(2)") {
-                    weights = vec![ 0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0 ];
-                    dx = vec![ -1, 0, 1, -1, 0, 1, -1, 0, 1 ];
-                    dy = vec![ -1, -1, -1, 0, 0, 0, 1, 1, 1 ];
+                    weights = vec![0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0];
+                    dx = vec![-1, 0, 1, -1, 0, 1, -1, 0, 1];
+                    dy = vec![-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 } else if variant.contains("3x3(3)") {
-                    weights = vec![ -1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0 ];
-                    dx = vec![ -1, 0, 1, -1, 0, 1, -1, 0, 1 ];
-                    dy = vec![ -1, -1, -1, 0, 0, 0, 1, 1, 1 ];
+                    weights = vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0];
+                    dx = vec![-1, 0, 1, -1, 0, 1, -1, 0, 1];
+                    dy = vec![-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 } else if variant.contains("3x3(4)") {
-                    weights = vec![ 1.0, -2.0, 1.0, -2.0, 4.0, -2.0, 1.0, -2.0, 1.0 ];
-                    dx = vec![ -1, 0, 1, -1, 0, 1, -1, 0, 1 ];
-                    dy = vec![ -1, -1, -1, 0, 0, 0, 1, 1, 1 ];
+                    weights = vec![1.0, -2.0, 1.0, -2.0, 4.0, -2.0, 1.0, -2.0, 1.0];
+                    dx = vec![-1, 0, 1, -1, 0, 1, -1, 0, 1];
+                    dy = vec![-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 } else if variant.contains("5x5(1)") {
-                    weights = vec![ 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0, 0.0, -1.0, -2.0, 
-                        17.0, -2.0, -1.0, 0.0, -1.0, -2.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0 ];
-                    dx = vec![ -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 
-                        2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2 ];
-                    dy = vec![ -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, 0, 0, 0, 
-                        0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2 ];
-                } else { // 5 x 5 (2)
-                    weights = vec![ 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0, 0.0, -1.0, -2.0, 
-                        16.0, -2.0, -1.0, 0.0, -1.0, -2.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0 ];
-                    dx = vec![ -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 
-                        2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2 ];
-                    dy = vec![ -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, 0, 0, 0, 
-                        0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2 ];
+                    weights = vec![
+                        0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0, 0.0, -1.0, -2.0, 17.0,
+                        -2.0, -1.0, 0.0, -1.0, -2.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+                    ];
+                    dx = vec![
+                        -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1,
+                        0, 1, 2,
+                    ];
+                    dy = vec![
+                        -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2,
+                        2, 2, 2,
+                    ];
+                } else {
+                    // 5 x 5 (2)
+                    weights = vec![
+                        0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0, 0.0, -1.0, -2.0, 16.0,
+                        -2.0, -1.0, 0.0, -1.0, -2.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+                    ];
+                    dx = vec![
+                        -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1, 0, 1, 2, -2, -1,
+                        0, 1, 2,
+                    ];
+                    dy = vec![
+                        -2, -2, -2, -2, -2, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2,
+                        2, 2, 2,
+                    ];
                 }
 
                 let num_pixels_in_filter = dx.len();
@@ -307,11 +332,16 @@ impl WhiteboxTool for LaplacianFilter {
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Variant: {}", variant));
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -326,8 +356,10 @@ impl WhiteboxTool for LaplacianFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

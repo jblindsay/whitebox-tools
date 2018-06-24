@@ -281,10 +281,7 @@ impl WhiteboxTool for AttributeScattergram {
         let mut y: f64;
         let nodata = -32768f64;
         for record_num in 0..vector_data.num_records {
-            x = match vector_data
-                .attributes
-                .get_field_value(record_num, field_index_x)
-            {
+            x = match vector_data.attributes.get_value(record_num, &field_name_x) {
                 FieldData::Int(val) => val as f64,
                 // FieldData::Int64(val) => {
                 //     val as f64
@@ -295,10 +292,7 @@ impl WhiteboxTool for AttributeScattergram {
                 }
             };
 
-            y = match vector_data
-                .attributes
-                .get_field_value(record_num, field_index_y)
-            {
+            y = match vector_data.attributes.get_value(record_num, &field_name_y) {
                 FieldData::Int(val) => val as f64,
                 // FieldData::Int64(val) => {
                 //     val as f64

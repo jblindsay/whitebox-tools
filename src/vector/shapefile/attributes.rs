@@ -137,6 +137,17 @@ impl ShapefileAttributes {
         self.fields.push(field.clone());
         self.header.num_fields += 1;
         self.get_field_hashmap();
+        // println!("{}", field.name);
+        for record_index in 0..self.data.len() {
+            self.data[record_index].push(FieldData::Null);
+            // println!("{:?}", self.data[record_index]);
+        }
+        // println!(
+        //     "{} {} {}",
+        //     self.header.num_records,
+        //     self.header.num_fields,
+        //     self.data.len(),
+        // );
     }
 
     /// Adds a Vec of fields to the table
@@ -144,6 +155,11 @@ impl ShapefileAttributes {
         for field in fields {
             self.fields.push(field.clone());
             self.header.num_fields += 1;
+        }
+        for record_index in 0..self.data.len() {
+            for _ in 0..fields.len() {
+                self.data[record_index].push(FieldData::Null);
+            }
         }
         self.get_field_hashmap();
     }
@@ -156,8 +172,9 @@ impl ShapefileAttributes {
     /// Adds an attribute record to the table.
     pub fn add_record(&mut self, rec: Vec<FieldData>, deleted: bool) {
         self.data.push(rec);
+        // println!("{} {:?}", self.data.len(), self.data);
         self.is_deleted.push(deleted);
-        self.header.num_records += 1;
+        self.header.num_records = self.data.len() as u32; //+= 1;
     }
 
     /// Retrieves an attribute record for a zero-based index.
@@ -172,13 +189,27 @@ impl ShapefileAttributes {
         if record_index >= self.header.num_records as usize {
             panic!("Error: Specified record index is greater than the number of records.");
         }
-        let field_index = self.field_map[field_name].unwrap();
+        let field_index = self.field_map[field_name];
+        if field_index >= self.fields.len() {
+            panic!("Error: Specified field does not appear in attribute table.");
+        }
         self.data[record_index][field_index].clone()
     }
 
-    pub fn get_field_value(&self, record_index: usize, field_index: usize) -> FieldData {
-        self.data[record_index][field_index].clone()
+    pub fn set_value(&mut self, record_index: usize, field_name: &str, field_data: FieldData) {
+        if record_index >= self.header.num_records as usize {
+            panic!("Error: Specified record index is greater than the number of records.");
+        }
+        let field_index = self.field_map[field_name];
+        if field_index >= self.fields.len() {
+            panic!("Error: Specified field does not appear in attribute table.");
+        }
+        self.data[record_index][field_index] = field_data.clone();
     }
+
+    // pub fn get_field_value(&self, record_index: usize, field_index: usize) -> FieldData {
+    //     self.data[record_index][field_index].clone()
+    // }
 
     pub fn get_field_num(&self, name: &str) -> Option<usize> {
         for i in 0..self.fields.len() {

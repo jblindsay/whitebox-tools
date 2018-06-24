@@ -6,19 +6,19 @@ Last Modified: December 15, 2017
 License: MIT
 */
 
-use time;
+use lidar::*;
 use num_cpus;
 use std::env;
 use std::f64;
-use std::path;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use lidar::*;
+use time;
 // use lidar::point_data::*;
-use tools::*;
 use structures::FixedRadiusSearch2D;
+use tools::*;
 
 pub struct LidarGroundPointFilter {
     name: String,
@@ -29,72 +29,79 @@ pub struct LidarGroundPointFilter {
 }
 
 impl LidarGroundPointFilter {
-    pub fn new() -> LidarGroundPointFilter { // public constructor
+    pub fn new() -> LidarGroundPointFilter {
+        // public constructor
         let name = "LidarGroundPointFilter".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Identifies ground points within LiDAR dataset using a slope-based method.".to_string();
-        
+        let description =
+            "Identifies ground points within LiDAR dataset using a slope-based method.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output LiDAR file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Search Radius".to_owned(), 
-            flags: vec!["--radius".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Search Radius".to_owned(),
+            flags: vec!["--radius".to_owned()],
             description: "Search Radius.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Inter-point Slope Threshold".to_owned(), 
-            flags: vec!["--slope_threshold".to_owned()], 
-            description: "Maximum inter-point slope to be considered an off-terrain point.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Inter-point Slope Threshold".to_owned(),
+            flags: vec!["--slope_threshold".to_owned()],
+            description: "Maximum inter-point slope to be considered an off-terrain point."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("45.0".to_owned()),
-            optional: true
+            optional: true,
         });
-        
-        parameters.push(ToolParameter{
-            name: "Off-terrain Point Height Threshold".to_owned(), 
-            flags: vec!["--height_threshold".to_owned()], 
-            description: "Inter-point height difference to be considered an off-terrain point.".to_owned(),
+
+        parameters.push(ToolParameter {
+            name: "Off-terrain Point Height Threshold".to_owned(),
+            flags: vec!["--height_threshold".to_owned()],
+            description: "Inter-point height difference to be considered an off-terrain point."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
-    
-        LidarGroundPointFilter { 
-            name: name, 
-            description: description, 
+
+        LidarGroundPointFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -103,7 +110,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -134,16 +141,24 @@ impl WhiteboxTool for LidarGroundPointFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut search_radius: f64 = -1.0;
         let mut height_threshold: f64 = 1.0;
         let mut slope_threshold: f64 = 15.0;
-        
+
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -151,36 +166,42 @@ impl WhiteboxTool for LidarGroundPointFilter {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
                 if keyval {
                     search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    search_radius = args[i+1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-height_threshold" || vec[0].to_lowercase() == "--height_threshold" {
+            } else if vec[0].to_lowercase() == "-height_threshold"
+                || vec[0].to_lowercase() == "--height_threshold"
+            {
                 if keyval {
                     height_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    height_threshold = args[i+1].to_string().parse::<f64>().unwrap();
+                    height_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-slope_threshold" || vec[0].to_lowercase() == "--slope_threshold" {
+            } else if vec[0].to_lowercase() == "-slope_threshold"
+                || vec[0].to_lowercase() == "--slope_threshold"
+            {
                 if keyval {
                     slope_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    slope_threshold = args[i+1].to_string().parse::<f64>().unwrap();
+                    slope_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -199,7 +220,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
@@ -207,7 +230,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
 
         let start = time::now();
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
 
         slope_threshold = slope_threshold.to_radians().tan();
 
@@ -233,7 +258,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
 
         let mut neighbourhood_min = vec![f64::MAX; n_points];
         let mut residuals = vec![f64::MIN; n_points];
-        
+
         /////////////
         // Erosion //
         /////////////
@@ -347,7 +372,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 let mut dist: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    if residuals[point_num] < height_threshold && p.is_late_return() && !p.is_classified_noise() {
+                    if residuals[point_num] < height_threshold && p.is_late_return()
+                        && !p.is_classified_noise()
+                    {
                         let ret = frs.search(p.x, p.y);
                         max_slope = f64::MIN;
                         for j in 0..ret.len() {
@@ -385,7 +412,6 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
         }
 
-
         // now output the data
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
@@ -406,16 +432,22 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let end = time::now();
         let elapsed_time = end - start;
 
-        if verbose { println!("Writing output LAS file..."); }
+        if verbose {
+            println!("Writing output LAS file...");
+        }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => if verbose {
+                println!("Complete!")
+            },
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
     }
 }
-

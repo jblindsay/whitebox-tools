@@ -177,9 +177,9 @@ impl Shapefile {
         }
     }
 
-    pub fn get_attributes_table<'a>(&'a mut self) -> &'a mut ShapefileAttributes {
-        &mut self.attributes
-    }
+    // pub fn get_attributes_table<'a>(&'a mut self) -> &'a mut ShapefileAttributes {
+    //     &mut self.attributes
+    // }
 
     fn read_file(&mut self) -> Result<(), Error> {
         ///////////////////////////////
@@ -565,7 +565,7 @@ impl Shapefile {
             //     index_field_flag,
             // );
 
-            self.attributes.fields.push(field_data);
+            self.attributes.add_field(&field_data); //.fields.push(field_data);
 
             // Checks for end of field descriptor array (0x0d). Valid .dbf files
             // will have this flag.
@@ -575,7 +575,7 @@ impl Shapefile {
             }
         }
 
-        self.attributes.get_field_hashmap();
+        // self.attributes.get_field_hashmap();
 
         self.attributes.header.num_fields = self.attributes.fields.len() as u32;
 

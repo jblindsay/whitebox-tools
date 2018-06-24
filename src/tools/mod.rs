@@ -212,6 +212,7 @@ impl ToolManager {
         tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
         tool_names.push("LidarThin".to_string());
+        tool_names.push("LidarThinHighDensity".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
@@ -698,6 +699,9 @@ impl ToolManager {
                 tools::lidar_analysis::LidarSegmentationBasedFilter::new(),
             )),
             "lidarthin" => Some(Box::new(tools::lidar_analysis::LidarThin::new())),
+            "lidarthinhighdensity" => {
+                Some(Box::new(tools::lidar_analysis::LidarThinHighDensity::new()))
+            }
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
             "lidartophattransform" => {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))

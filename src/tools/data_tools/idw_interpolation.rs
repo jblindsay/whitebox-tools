@@ -450,10 +450,7 @@ impl WhiteboxTool for IdwInterpolation {
                 let record = vector_data.get_record(record_num);
                 x = record.points[0].x;
                 y = record.points[0].y;
-                match vector_data
-                    .attributes
-                    .get_field_value(record_num, field_index)
-                {
+                match vector_data.attributes.get_value(record_num, &field_name) {
                     FieldData::Int(val) => {
                         frs.insert(x, y, val as f64);
                     }

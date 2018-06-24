@@ -329,10 +329,7 @@ impl WhiteboxTool for VectorPointsToRaster {
         // get the attribute data
         for record_num in 0..vector_data.num_records {
             if field_name != "FID" {
-                match vector_data
-                    .attributes
-                    .get_field_value(record_num, field_index)
-                {
+                match vector_data.attributes.get_value(record_num, &field_name) {
                     FieldData::Int(val) => {
                         attribute_data[record_num] = val as f64;
                     }

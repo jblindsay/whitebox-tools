@@ -226,10 +226,7 @@ impl WhiteboxTool for AttributeHistogram {
         let mut min = f64::INFINITY;
         let mut max = f64::NEG_INFINITY;
         for record_num in 0..vector_data.num_records {
-            match vector_data
-                .attributes
-                .get_field_value(record_num, field_index)
-            {
+            match vector_data.attributes.get_value(record_num, &field_name) {
                 FieldData::Int(val) => {
                     let valf64 = val as f64;
                     if valf64 < min {
@@ -274,10 +271,7 @@ impl WhiteboxTool for AttributeHistogram {
 
         let mut bin: usize;
         for record_num in 0..vector_data.num_records {
-            match vector_data
-                .attributes
-                .get_field_value(record_num, field_index)
-            {
+            match vector_data.attributes.get_value(record_num, &field_name) {
                 FieldData::Int(val) => {
                     let valf64 = val as f64;
                     bin = ((valf64 - min) / bin_width).floor() as usize;

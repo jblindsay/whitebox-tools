@@ -169,9 +169,9 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
             vec = cmd.collect::<Vec<&str>>();
         }
         let num_files = vec.len();
-        if num_files < 2 {
+        if num_files < 1 {
             return Err(Error::new(ErrorKind::InvalidInput,
-                                "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
+                                "There is something incorrect about the input files. At least one input is required to operate this tool."));
         }
 
         let mut points = Shapefile::read(&points_file)?;
@@ -186,15 +186,26 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
             ));
         }
 
+        let (mut row, mut col): (isize, isize);
+        let mut x_vals = vec![];
+        let mut y_vals = vec![];
+        for record_num in 0..num_records {
+            let record = points.get_record(record_num);
+            y_vals.push(record.points[0].y);
+            x_vals.push(record.points[0].x);
+        }
+
         // add the attributes for each raster
         for i in 0..vec.len() {
-            let val =
-                AttributeField::new(&format!("Value{}", i + 1), FieldDataType::Real, 12u8, 4u8);
-            points.attributes.add_field(&val);
+            if !vec[i].trim().is_empty() {
+                let val =
+                    AttributeField::new(&format!("VALUE{}", i + 1), FieldDataType::Real, 12u8, 4u8);
+                points.attributes.add_field(&val);
+            }
         }
 
         let mut z: f64;
-        let (mut row, mut col): (isize, isize);
+        let mut i = 1;
         for value in vec {
             if !value.trim().is_empty() {
                 if verbose {
@@ -208,18 +219,20 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
                 let input = Raster::new(&input_file, "r")?;
 
                 for record_num in 0..num_records {
-                    let mut record = points.get_record(record_num);
-                    // let mut attributes = points.get_attributes_table();
-                    // let mut attr_rec = attributes.get_record(record_num);
-                    row = input.get_row_from_y(record.points[0].y);
-                    col = input.get_column_from_x(record.points[0].x);
+                    row = input.get_row_from_y(y_vals[record_num]);
+                    col = input.get_column_from_x(x_vals[record_num]);
                     z = input.get_value(row, col);
-                    // attr_rec.push(FieldData::Real(z));
-                    // let mut is_deleted = attributes.is_deleted[record_num];
-                    // attributes.add_record(attr_rec, is_deleted);
+                    points.attributes.set_value(
+                        record_num,
+                        &format!("VALUE{}", i),
+                        FieldData::Real(z),
+                    );
                 }
+
+                i += 1;
             }
         }
+        // drop(attributes);
 
         // let start = time::now();
         // let rows = input.configs.rows as isize;
