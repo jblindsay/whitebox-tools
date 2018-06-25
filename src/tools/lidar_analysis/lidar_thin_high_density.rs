@@ -63,7 +63,7 @@ impl LidarThinHighDensity {
         });
 
         parameters.push(ToolParameter {
-            name: "Max. Point Density (pts/m)".to_owned(),
+            name: "Max. Point Density (pts/m^2)".to_owned(),
             flags: vec!["--density".to_owned()],
             description: "Max. point density (points / m).".to_owned(),
             parameter_type: ParameterType::Float,
@@ -283,7 +283,10 @@ impl WhiteboxTool for LidarThinHighDensity {
                                 maxz = val.z;
                             }
                         }
-                        let num_bins = ((maxz - minz) / grid_res).ceil() as usize;
+                        let mut num_bins = ((maxz - minz) / grid_res).ceil() as usize;
+                        if num_bins == 0 {
+                            num_bins = 1;
+                        }
                         let mut histo = vec![0f64; num_bins];
                         let mut bin: usize;
                         for val in vals {
