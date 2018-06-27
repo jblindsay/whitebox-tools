@@ -16,7 +16,7 @@ use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+// use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Seek;
 use std::io::{Error, ErrorKind};
@@ -443,15 +443,29 @@ impl LasFile {
                 let metadata = fs::metadata(&self.file_name)?;
                 let file_size: usize = metadata.len() as usize;
                 let mut buffer = vec![0; file_size]; // Vec::with_capacity(file_size);
-                if file_size < 1024 * 1024 * 100 {
+                if file_size < 1024 * 1024 * 500 {
                     // 2147483646 is the actual maximum file read on Mac
                     f.read(&mut buffer)?;
                 } else {
-                    let br = BufReader::new(f);
-                    let mut i = 0;
-                    for byte in br.bytes() {
-                        buffer[i] = byte.unwrap();
-                        i += 1;
+                    // let br = BufReader::new(f);
+                    // let mut i = 0;
+                    // for byte in br.bytes() {
+                    //     buffer[i] = byte.unwrap();
+                    //     i += 1;
+                    // }
+
+                    let mut block_size = 1024 * 1024 * 500;
+                    let mut start_byte = 0usize;
+                    let mut end_byte = block_size;
+                    let mut bytes_read = 0;
+                    while bytes_read < file_size {
+                        f.read(&mut buffer[start_byte..end_byte])?;
+                        start_byte += block_size;
+                        end_byte += block_size;
+                        if end_byte > file_size {
+                            end_byte = file_size;
+                        }
+                        bytes_read += block_size;
                     }
                 }
 
