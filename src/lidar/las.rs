@@ -16,6 +16,7 @@ use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Seek;
 use std::io::{Error, ErrorKind};
@@ -441,10 +442,19 @@ impl LasFile {
                 let mut f = File::open(&self.file_name)?;
                 let metadata = fs::metadata(&self.file_name)?;
                 let file_size: usize = metadata.len() as usize;
-                let mut buffer = vec![0; file_size];
+                let mut buffer = vec![0; file_size]; // Vec::with_capacity(file_size);
+                if file_size < 1024 * 1024 * 100 {
+                    // 2147483646 is the actual maximum file read on Mac
+                    f.read(&mut buffer)?;
+                } else {
+                    let br = BufReader::new(f);
+                    let mut i = 0;
+                    for byte in br.bytes() {
+                        buffer[i] = byte.unwrap();
+                        i += 1;
+                    }
+                }
 
-                // read the file's bytes into a buffer
-                f.read(&mut buffer)?;
                 buffer
             }
             true => {
@@ -475,14 +485,16 @@ impl LasFile {
         self.header.project_id_used = true;
         self.header.version_major = buffer[24];
         self.header.version_minor = buffer[25];
-        if self.header.version_major < 1 || self.header.version_major > 2
+        if self.header.version_major < 1
+            || self.header.version_major > 2
             || self.header.version_minor > 5
         {
             // There's something wrong. It could be that the project ID values, which are optional,
             // are not included in the header.
             self.header.version_major = buffer[8];
             self.header.version_minor = buffer[9];
-            if self.header.version_major < 1 || self.header.version_major > 2
+            if self.header.version_major < 1
+                || self.header.version_major > 2
                 || self.header.version_minor > 5
             {
                 // There's something very wrong. Throw an error.

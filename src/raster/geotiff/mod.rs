@@ -162,7 +162,18 @@ pub fn read_geotiff<'a>(
     let mut buffer = vec![0; file_size];
 
     // read the file's bytes into a buffer
-    f.read(&mut buffer)?;
+    // f.read(&mut buffer)?;
+    if file_size < 1024 * 1024 * 100 {
+        // 2147483646 is the actual maximum file read on Mac
+        f.read(&mut buffer)?;
+    } else {
+        let br = BufReader::new(f);
+        let mut i = 0;
+        for byte in br.bytes() {
+            buffer[i] = byte.unwrap();
+            i += 1;
+        }
+    }
 
     //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
     match &buffer[0..2] {
@@ -308,7 +319,8 @@ pub fn read_geotiff<'a>(
         }
     };
 
-    if compression != COMPRESS_NONE && compression != COMPRESS_PACKBITS
+    if compression != COMPRESS_NONE
+        && compression != COMPRESS_PACKBITS
         && compression != COMPRESS_LZW
     {
         println!("Compression: {}", compression);
@@ -2104,7 +2116,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
                                 let val = r.data[i] as u32;
-                                let val2 = ((val >> 24u32) & 0xFF) | ((val >> 16u32) & 0xFF)
+                                let val2 = ((val >> 24u32) & 0xFF)
+                                    | ((val >> 16u32) & 0xFF)
                                     | ((val >> 8u32) & 0xFF)
                                     | (val & 0xFF);
                                 writer.write_u32::<BigEndian>(val2)?;

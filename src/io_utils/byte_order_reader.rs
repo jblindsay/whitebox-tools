@@ -1,5 +1,5 @@
 // extern crate byteorder;
-use byteorder::{ByteOrder, LittleEndian, BigEndian};
+use byteorder::{BigEndian, ByteOrder, LittleEndian};
 
 pub struct ByteOrderReader {
     pub byte_order: Endianness,
@@ -20,12 +20,16 @@ impl ByteOrderReader {
         self.pos = position;
     }
 
+    pub fn pos(&self) -> usize {
+        self.pos
+    }
+
     pub fn len(&mut self) -> usize {
         self.buffer.len()
     }
 
     pub fn read_utf8(&mut self, length: usize) -> String {
-        let val = String::from_utf8_lossy(&self.buffer[self.pos..self.pos+length]).to_string();
+        let val = String::from_utf8_lossy(&self.buffer[self.pos..self.pos + length]).to_string();
         self.pos += length;
         val
     }
@@ -145,7 +149,11 @@ impl Default for Endianness {
 impl Endianness {
     pub fn from_str<'a>(val: &'a str) -> Endianness {
         let val_lc: &str = &val.to_lowercase();
-        if val_lc.contains("lsb") || val_lc.contains("little") || val_lc.contains("intel") || val_lc.contains("least") {
+        if val_lc.contains("lsb")
+            || val_lc.contains("little")
+            || val_lc.contains("intel")
+            || val_lc.contains("least")
+        {
             return Endianness::LittleEndian;
         } else {
             return Endianness::BigEndian;

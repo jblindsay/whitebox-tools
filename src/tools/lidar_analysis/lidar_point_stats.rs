@@ -15,20 +15,20 @@ Notes:
 4. The memory requirements of this tool are high.
 */
 
-use time;
+use lidar::*;
 use num_cpus;
+use raster::*;
 use std::env;
 use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
-use std::thread;
 use std::path;
-use lidar::*;
-use raster::*;
-use tools::*;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use structures::Array2D;
+use time;
+use tools::*;
 
 pub struct LidarPointStats {
     name: String,
@@ -46,67 +46,73 @@ impl LidarPointStats {
         let description = "Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Grid Resolution".to_owned(), 
-            flags: vec!["--resolution".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Grid Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
             description: "Output raster's grid resolution.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output number of points?".to_owned(), 
-            flags: vec!["--num_points".to_owned()], 
-            description: "Flag indicating whether or not to output the number of points raster.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output number of points?".to_owned(),
+            flags: vec!["--num_points".to_owned()],
+            description: "Flag indicating whether or not to output the number of points raster."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: None,
-            optional: true
+            default_value: Some("True".to_owned()),
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output number of pulses?".to_owned(), 
-            flags: vec!["--num_pulses".to_owned()], 
-            description: "Flag indicating whether or not to output the number of pulses raster.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output number of pulses?".to_owned(),
+            flags: vec!["--num_pulses".to_owned()],
+            description: "Flag indicating whether or not to output the number of pulses raster."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output elevation range?".to_owned(), 
-            flags: vec!["--z_range".to_owned()], 
-            description: "Flag indicating whether or not to output the elevation range raster.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output elevation range?".to_owned(),
+            flags: vec!["--z_range".to_owned()],
+            description: "Flag indicating whether or not to output the elevation range raster."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output intensity range?".to_owned(), 
-            flags: vec!["--intensity_range".to_owned()], 
-            description: "Flag indicating whether or not to output the intensity range raster.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output intensity range?".to_owned(),
+            flags: vec!["--intensity_range".to_owned()],
+            description: "Flag indicating whether or not to output the intensity range raster."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output predominant class?".to_owned(), 
-            flags: vec!["--predom_class".to_owned()], 
-            description: "Flag indicating whether or not to output the predominant classification raster.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output predominant class?".to_owned(),
+            flags: vec!["--predom_class".to_owned()],
+            description:
+                "Flag indicating whether or not to output the predominant classification raster."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -119,7 +125,10 @@ impl LidarPointStats {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --resolution=1.0 --num_points", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --resolution=1.0 --num_points",
+            short_exe, name
+        ).replace("*", &sep);
 
         LidarPointStats {
             name: name,
@@ -135,7 +144,7 @@ impl WhiteboxTool for LidarPointStats {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -166,11 +175,12 @@ impl WhiteboxTool for LidarPointStats {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
         let mut num_points = false;
@@ -178,11 +188,13 @@ impl WhiteboxTool for LidarPointStats {
         let mut z_range = false;
         let mut intensity_range = false;
         let mut predominant_class = false;
-        
+
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -271,10 +283,10 @@ impl WhiteboxTool for LidarPointStats {
                 while tile < num_tiles {
                     // Get the next tile up for interpolation
                     tile = match tile_list.lock().unwrap().next() {
-                        Some(val) => val, 
+                        Some(val) => val,
                         None => break, // There are no more tiles to interpolate
                     };
-                    
+
                     let input_file = inputs[tile].replace("\"", "").clone();
                     if verbose && inputs.len() == 1 {
                         println!("Reading input LAS file...");
@@ -298,7 +310,9 @@ impl WhiteboxTool for LidarPointStats {
                     let ns_range = north - south;
                     let ew_range = east - west;
 
-                    let mut configs = RasterConfigs { ..Default::default() };
+                    let mut configs = RasterConfigs {
+                        ..Default::default()
+                    };
                     configs.rows = rows as usize;
                     configs.columns = columns as usize;
                     configs.north = north;
@@ -310,17 +324,20 @@ impl WhiteboxTool for LidarPointStats {
                     configs.nodata = nodata;
                     configs.data_type = DataType::F64;
                     configs.photometric_interp = PhotometricInterpretation::Continuous;
-                    
+
                     let n_points = input.header.number_of_points as usize;
                     let num_points_float: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
-                        
+
                     if num_points || num_pulses {
                         let out_file_num_pnts = input_file.replace(".las", "_num_pnts.tif").clone();
-                        let mut out_num_pnts = Raster::initialize_using_config(&out_file_num_pnts, &configs);
+                        let mut out_num_pnts =
+                            Raster::initialize_using_config(&out_file_num_pnts, &configs);
                         out_num_pnts.reinitialize_values(0f64);
 
-                        let out_file_num_pulses = input_file.replace(".las", "_num_pulses.tif").clone();
-                        let mut out_num_pulses = Raster::initialize_using_config(&out_file_num_pulses, &configs);
+                        let out_file_num_pulses =
+                            input_file.replace(".las", "_num_pulses.tif").clone();
+                        let mut out_num_pulses =
+                            Raster::initialize_using_config(&out_file_num_pulses, &configs);
                         out_num_pulses.reinitialize_values(0f64);
 
                         let start_run = time::now();
@@ -329,9 +346,9 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             let p: PointData = input.get_point_info(i);
                             col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                    .round()) as isize;
+                                .round()) as isize;
                             row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                    .round()) as isize;
+                                .round()) as isize;
 
                             out_num_pnts.increment(row, col, 1f64);
 
@@ -349,39 +366,69 @@ impl WhiteboxTool for LidarPointStats {
                         }
 
                         let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;  
+                        let elapsed_time_run = end_run - start_run;
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
                         };
 
                         if num_points {
-                            out_num_pnts.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
+                            out_num_pnts.add_metadata_entry(format!(
+                                "Created by whitebox_tools\' {} tool",
+                                tool_name
+                            ));
                             out_num_pnts.add_metadata_entry(format!("Input file: {}", input_file));
-                            out_num_pnts.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_num_pnts.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
+                            out_num_pnts
+                                .add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                            out_num_pnts.add_metadata_entry(
+                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
+                                    .replace("PT", ""),
+                            );
                             let _ = out_num_pnts.write().unwrap();
                         }
-                        
+
                         if num_pulses {
-                            out_num_pulses.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
-                            out_num_pulses.add_metadata_entry(format!("Input file: {}", input_file));
-                            out_num_pulses.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_num_pulses.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
+                            out_num_pulses.add_metadata_entry(format!(
+                                "Created by whitebox_tools\' {} tool",
+                                tool_name
+                            ));
+                            out_num_pulses
+                                .add_metadata_entry(format!("Input file: {}", input_file));
+                            out_num_pulses
+                                .add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                            out_num_pulses.add_metadata_entry(
+                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
+                                    .replace("PT", ""),
+                            );
                             let _ = out_num_pulses.write().unwrap();
                         }
                     }
 
                     if z_range || intensity_range {
-                        let mut min_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata).unwrap();
-                        let mut max_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::NEG_INFINITY, nodata).unwrap();
-                        let out_file_elev_range = input_file.replace(".las", "_elev_range.tif").clone();
-                        let mut out_elev_range = Raster::initialize_using_config(&out_file_elev_range, &configs);
+                        let mut min_z: Array2D<f64> =
+                            Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata)
+                                .unwrap();
+                        let mut max_z: Array2D<f64> = Array2D::new(
+                            rows as isize,
+                            columns as isize,
+                            f64::NEG_INFINITY,
+                            nodata,
+                        ).unwrap();
+                        let out_file_elev_range =
+                            input_file.replace(".las", "_elev_range.tif").clone();
+                        let mut out_elev_range =
+                            Raster::initialize_using_config(&out_file_elev_range, &configs);
 
-                        let mut min_i: Array2D<u16> = Array2D::new(rows as isize, columns as isize, u16::max_value(), 0u16).unwrap();
-                        let mut max_i: Array2D<u16> = Array2D::new(rows as isize, columns as isize, u16::min_value(), 0u16).unwrap();
-                        let out_file_intensity_range = input_file.replace(".las", "_intensity_range.tif").clone();
-                        let mut out_intensity_range = Raster::initialize_using_config(&out_file_intensity_range, &configs);
+                        let mut min_i: Array2D<u16> =
+                            Array2D::new(rows as isize, columns as isize, u16::max_value(), 0u16)
+                                .unwrap();
+                        let mut max_i: Array2D<u16> =
+                            Array2D::new(rows as isize, columns as isize, u16::min_value(), 0u16)
+                                .unwrap();
+                        let out_file_intensity_range =
+                            input_file.replace(".las", "_intensity_range.tif").clone();
+                        let mut out_intensity_range =
+                            Raster::initialize_using_config(&out_file_intensity_range, &configs);
 
                         let start_run = time::now();
 
@@ -391,11 +438,10 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             let p: PointData = input.get_point_info(i);
                             col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                    .round()) as isize;
+                                .round()) as isize;
                             row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                    .round()) as isize;
+                                .round()) as isize;
 
-                            
                             new_min_max_z = false;
                             if p.z < min_z.get_value(row, col) {
                                 min_z.set_value(row, col, p.z);
@@ -408,7 +454,11 @@ impl WhiteboxTool for LidarPointStats {
                             }
 
                             if new_min_max_z {
-                                out_elev_range.set_value(row, col, max_z.get_value(row, col) - min_z.get_value(row, col));
+                                out_elev_range.set_value(
+                                    row,
+                                    col,
+                                    max_z.get_value(row, col) - min_z.get_value(row, col),
+                                );
                             }
 
                             new_min_max_i = false;
@@ -423,7 +473,11 @@ impl WhiteboxTool for LidarPointStats {
                             }
 
                             if new_min_max_i {
-                                out_intensity_range.set_value(row, col, (max_i.get_value(row, col) - min_i.get_value(row, col)) as f64);
+                                out_intensity_range.set_value(
+                                    row,
+                                    col,
+                                    (max_i.get_value(row, col) - min_i.get_value(row, col)) as f64,
+                                );
                             }
 
                             if verbose && inputs.len() == 1 {
@@ -436,37 +490,59 @@ impl WhiteboxTool for LidarPointStats {
                         }
 
                         let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;  
+                        let elapsed_time_run = end_run - start_run;
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
                         };
 
                         if z_range {
-                            out_elev_range.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
-                            out_elev_range.add_metadata_entry(format!("Input file: {}", input_file));
-                            out_elev_range.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_elev_range.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
+                            out_elev_range.add_metadata_entry(format!(
+                                "Created by whitebox_tools\' {} tool",
+                                tool_name
+                            ));
+                            out_elev_range
+                                .add_metadata_entry(format!("Input file: {}", input_file));
+                            out_elev_range
+                                .add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                            out_elev_range.add_metadata_entry(
+                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
+                                    .replace("PT", ""),
+                            );
                             let _ = out_elev_range.write().unwrap();
                         }
 
                         if intensity_range {
-                            out_intensity_range.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
-                            out_intensity_range.add_metadata_entry(format!("Input file: {}", input_file));
-                            out_intensity_range.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_intensity_range.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
+                            out_intensity_range.add_metadata_entry(format!(
+                                "Created by whitebox_tools\' {} tool",
+                                tool_name
+                            ));
+                            out_intensity_range
+                                .add_metadata_entry(format!("Input file: {}", input_file));
+                            out_intensity_range
+                                .add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                            out_intensity_range.add_metadata_entry(
+                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
+                                    .replace("PT", ""),
+                            );
                             let _ = out_intensity_range.write().unwrap();
                         }
                     }
 
                     if predominant_class {
-                        let mut max_class: Array2D<u16> = Array2D::new(rows as isize, columns as isize, u16::min_value(), 0u16).unwrap();
+                        let mut max_class: Array2D<u16> =
+                            Array2D::new(rows as isize, columns as isize, u16::min_value(), 0u16)
+                                .unwrap();
                         let mut class_histo: Vec<Array2D<u16>> = vec![];
                         for _ in 0..19 {
-                            class_histo.push(Array2D::new(rows as isize, columns as isize, 0u16, 0u16).unwrap());
+                            class_histo.push(
+                                Array2D::new(rows as isize, columns as isize, 0u16, 0u16).unwrap(),
+                            );
                         }
-                        let out_file_predominant_class = input_file.replace(".las", "_predominant_class.tif").clone();
-                        let mut out_predominant_class = Raster::initialize_using_config(&out_file_predominant_class, &configs);
+                        let out_file_predominant_class =
+                            input_file.replace(".las", "_predominant_class.tif").clone();
+                        let mut out_predominant_class =
+                            Raster::initialize_using_config(&out_file_predominant_class, &configs);
 
                         let start_run = time::now();
 
@@ -476,9 +552,9 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             let p: PointData = input.get_point_info(i);
                             col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                    .round()) as isize;
+                                .round()) as isize;
                             row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                    .round()) as isize;
+                                .round()) as isize;
 
                             class = p.classification();
                             class_histo[class as usize].increment(row, col, 1u16);
@@ -498,20 +574,27 @@ impl WhiteboxTool for LidarPointStats {
                         }
 
                         let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;  
+                        let elapsed_time_run = end_run - start_run;
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
                         };
 
-                        out_predominant_class.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", tool_name));
-                        out_predominant_class.add_metadata_entry(format!("Input file: {}", input_file));
-                        out_predominant_class.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                        out_predominant_class.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""));
+                        out_predominant_class.add_metadata_entry(format!(
+                            "Created by whitebox_tools\' {} tool",
+                            tool_name
+                        ));
+                        out_predominant_class
+                            .add_metadata_entry(format!("Input file: {}", input_file));
+                        out_predominant_class
+                            .add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                        out_predominant_class.add_metadata_entry(
+                            format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
+                                .replace("PT", ""),
+                        );
                         let _ = out_predominant_class.write().unwrap();
-
                     }
-                    
+
                     tx2.send(tile).unwrap();
                 }
             });
@@ -522,7 +605,15 @@ impl WhiteboxTool for LidarPointStats {
         for tile in 0..inputs.len() {
             let tile_completed = rx2.recv().unwrap();
             if verbose {
-                    println!("Finished {} ({} of {})", inputs[tile_completed].replace("\"", "").replace(working_directory, "").replace(".las", ""), tile+1, inputs.len());
+                println!(
+                    "Finished {} ({} of {})",
+                    inputs[tile_completed]
+                        .replace("\"", "")
+                        .replace(working_directory, "")
+                        .replace(".las", ""),
+                    tile + 1,
+                    inputs.len()
+                );
             }
             if verbose {
                 progress = (100.0_f64 * tile as f64 / (inputs.len() - 1) as f64) as i32;
@@ -534,10 +625,13 @@ impl WhiteboxTool for LidarPointStats {
         }
 
         let end = time::now();
-        let elapsed_time = end - start;    
+        let elapsed_time = end - start;
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

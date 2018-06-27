@@ -11,8 +11,9 @@ extern crate time;
 
 pub mod attributes;
 pub mod geometry;
-pub use self::attributes::{AttributeField, AttributeHeader, DateData, FieldData, FieldDataType,
-                           ShapefileAttributes};
+pub use self::attributes::{
+    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, ShapefileAttributes,
+};
 pub use self::geometry::{ShapeType, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use io_utils::{ByteOrderReader, Endianness};
@@ -193,7 +194,7 @@ impl Shapefile {
         let mut buffer = vec![0; file_size];
 
         // read the file's bytes into a buffer
-        f.read(&mut buffer).unwrap(); //?;
+        f.read(&mut buffer).unwrap();
 
         // Note: the shapefile format uses mixed endianness for whatever reason.
         // The ByteOrderReader was set up to have one consistent endianness. As
