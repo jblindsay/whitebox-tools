@@ -8,15 +8,15 @@ License: MIT
 NOTES: This tool needs to be parallelized.
 */
 
-use time;
+use lidar::*;
+use raster::*;
 use std::env;
 use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
-use lidar::*;
-use raster::*;
 use structures::FixedRadiusSearch2D;
+use time;
 use tools::*;
 
 pub struct FlightlineOverlap {
@@ -35,31 +35,31 @@ impl FlightlineOverlap {
         let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Grid Resolution".to_owned(), 
-            flags: vec!["--resolution".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Grid Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
             description: "Output raster's grid resolution.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -89,7 +89,7 @@ impl WhiteboxTool for FlightlineOverlap {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -120,11 +120,12 @@ impl WhiteboxTool for FlightlineOverlap {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
@@ -132,8 +133,10 @@ impl WhiteboxTool for FlightlineOverlap {
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -187,14 +190,21 @@ impl WhiteboxTool for FlightlineOverlap {
                     let s = format!("{:?}", path.unwrap().path());
                     if s.replace("\"", "").to_lowercase().ends_with(".las") {
                         inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(inputs[inputs.len()-1].replace(".las", ".tif").replace(".LAS", ".tif"))
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".las", ".tif")
+                                .replace(".LAS", ".tif"),
+                        )
                     }
                 },
             }
         } else {
             inputs.push(input_file.clone());
             if output_file.is_empty() {
-                output_file = input_file.clone().replace(".las", ".tif").replace(".LAS", ".tif");
+                output_file = input_file
+                    .clone()
+                    .replace(".las", ".tif")
+                    .replace(".LAS", ".tif");
             }
             outputs.push(output_file);
         }
@@ -210,7 +220,12 @@ impl WhiteboxTool for FlightlineOverlap {
             output_file = outputs[k].replace("\"", "").clone();
 
             if verbose && inputs.len() > 1 {
-                println!("Gridding {} of {} ({})", k+1, inputs.len(), input_file.clone());
+                println!(
+                    "Gridding {} of {} ({})",
+                    k + 1,
+                    inputs.len(),
+                    input_file.clone()
+                );
             }
 
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
@@ -243,72 +258,109 @@ impl WhiteboxTool for FlightlineOverlap {
             let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
             // let search_dist = grid_res / 2.0;
-            let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(grid_res);
+            let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(grid_res as f32);
+            frs.is_distance_squared(true);
             let mut gps_times = vec![-1f64; n_points];
             let (mut x, mut y, mut gps_time): (f64, f64, f64);
             let mut progress: usize;
             let mut old_progress: usize = 1;
             for i in 0..n_points {
                 match input.get_record(i) {
-                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                    LidarPointRecord::PointRecord1 {
+                        mut point_data,
+                        gps_data,
+                    } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
-                    },
-                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, colour_data } => {
+                    }
+                    LidarPointRecord::PointRecord3 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
                         let _ = colour_data;
-                    },
-                    LidarPointRecord::PointRecord4 { mut point_data, gps_data, wave_packet } => {
+                    }
+                    LidarPointRecord::PointRecord4 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
                         let _ = wave_packet;
-                    },
-                    LidarPointRecord::PointRecord5 { mut point_data, gps_data, colour_data, wave_packet } => {
-                        x = point_data.x;
-                        y = point_data.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                        let _ = wave_packet;
-                    },
-                    LidarPointRecord::PointRecord6 { mut point_data, gps_data } => {
-                        x = point_data.x;
-                        y = point_data.y;
-                        gps_time = gps_data;
-                    },
-                    LidarPointRecord::PointRecord7 { mut point_data, gps_data, colour_data } => {
-                        x = point_data.x;
-                        y = point_data.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                    },
-                    LidarPointRecord::PointRecord8 { mut point_data, gps_data, colour_data } => {
-                        x = point_data.x;
-                        y = point_data.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                    },
-                    LidarPointRecord::PointRecord9 { mut point_data, gps_data, wave_packet } => {
-                        x = point_data.x;
-                        y = point_data.y;
-                        gps_time = gps_data;
-                        let _ = wave_packet;
-                    },
-                    LidarPointRecord::PointRecord10 { mut point_data, gps_data, colour_data, wave_packet } => {
+                    }
+                    LidarPointRecord::PointRecord5 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
                         x = point_data.x;
                         y = point_data.y;
                         gps_time = gps_data;
                         let _ = colour_data;
                         let _ = wave_packet;
-                    },
+                    }
+                    LidarPointRecord::PointRecord6 {
+                        mut point_data,
+                        gps_data,
+                    } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                    }
+                    LidarPointRecord::PointRecord7 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                    }
+                    LidarPointRecord::PointRecord8 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                    }
+                    LidarPointRecord::PointRecord9 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = wave_packet;
+                    }
+                    LidarPointRecord::PointRecord10 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
+                        x = point_data.x;
+                        y = point_data.y;
+                        gps_time = gps_data;
+                        let _ = colour_data;
+                        let _ = wave_packet;
+                    }
                     _ => {
                         panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
                     }
                 };
-                frs.insert(x, y, i);
+                frs.insert(x as f32, y as f32, i);
                 gps_times[i] = gps_time;
                 if verbose {
                     progress = (100.0_f64 * i as f64 / num_points) as usize;
@@ -327,7 +379,9 @@ impl WhiteboxTool for FlightlineOverlap {
             let east = west + columns as f64 * grid_res;
             let nodata = -32768.0f64;
 
-            let mut configs = RasterConfigs { ..Default::default() };
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
             configs.rows = rows;
             configs.columns = columns;
             configs.north = north;
@@ -355,7 +409,7 @@ impl WhiteboxTool for FlightlineOverlap {
                 for col in 0..columns as isize {
                     x = west + col as f64 * grid_res + 0.5;
                     y = north - row as f64 * grid_res - 0.5;
-                    let ret = frs.search(x, y);
+                    let ret = frs.search(x as f32, y as f32);
                     if ret.len() > 0 {
                         let mut times = vec![];
                         for j in 0..ret.len() {
@@ -363,8 +417,9 @@ impl WhiteboxTool for FlightlineOverlap {
                             let p = input[index_n];
                             x_n = p.x;
                             y_n = p.y;
-                            if (x_n - x) * (x_n - x) <= half_res_sqrd &&
-                            (y_n - y) * (y_n - y) <= half_res_sqrd {
+                            if (x_n - x) * (x_n - x) <= half_res_sqrd
+                                && (y_n - y) * (y_n - y) <= half_res_sqrd
+                            {
                                 // it falls within the grid cell
                                 times.push(gps_times[ret[j].0]);
                             }
@@ -395,12 +450,15 @@ impl WhiteboxTool for FlightlineOverlap {
             }
 
             let end_run = time::now();
-            let elapsed_time_run = end_run - start_run; 
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                            self.get_tool_name()));
+            let elapsed_time_run = end_run - start_run;
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                        .replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""),
+            );
 
             if verbose {
                 println!("Saving data...")
@@ -418,8 +476,10 @@ impl WhiteboxTool for FlightlineOverlap {
         let end = time::now();
         let elapsed_time = end - start;
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

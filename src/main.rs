@@ -29,38 +29,36 @@ by the WhiteboxTools library:
 | --viewcode        | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".                       |
 | --version         | Prints the version information.                                                                   |
 
-*/ 
-
+*/
 
 extern crate byteorder;
 extern crate kdtree;
 extern crate lzw;
 extern crate nalgebra as na;
 extern crate num_cpus;
+extern crate rand;
 extern crate serde;
 extern crate serde_json;
-extern crate time;
-extern crate rand;
 extern crate statrs;
+extern crate time;
 
 pub mod io_utils;
 pub mod lidar;
 pub mod raster;
 pub mod rendering;
-pub mod tools;
 pub mod structures;
+pub mod tools;
 pub mod vector;
 
-use std::io::Error;
 use std::env;
+use std::io::Error;
 use std::path;
 use tools::ToolManager;
 
 #[macro_use]
 extern crate serde_derive;
 
-
-/// WhiteboxTools is an advanced geospatial data analysis engine. 
+/// WhiteboxTools is an advanced geospatial data analysis engine.
 ///
 /// # Examples
 ///
@@ -82,7 +80,7 @@ fn main() {
 //     // let file_name = "/Users/johnlindsay/Documents/data/whitebox_cities.shp";
 //     let file_name = "/Users/johnlindsay/Documents/data/world_map.shp";
 //     // let file_name = "/Users/johnlindsay/Documents/data/Minnesota/HUC07inside08_buff25m.shp";
-  
+
 //     let sf = vector::Shapefile::new(file_name, "r").unwrap();
 //     println!("{}", sf.header);
 //     for i in 0..sf.num_records {
@@ -112,7 +110,7 @@ fn run() -> Result<(), Error> {
         // list tools
         let tm = ToolManager::new(&working_dir, &verbose)?;
         tm.list_tools();
-        
+
         return Ok(());
     }
     for arg in args {
@@ -177,10 +175,11 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             toolbox = true;
-        } else if arg.starts_with("-listtools") || 
-            arg.starts_with("--listtools") || 
-            arg.starts_with("-list_tools") ||
-            arg.starts_with("--list_tools")  {
+        } else if arg.starts_with("-listtools")
+            || arg.starts_with("--listtools")
+            || arg.starts_with("-list_tools")
+            || arg.starts_with("--list_tools")
+        {
             // let mut v = arg.replace("--listtools", "")
             //     .replace("-listtools", "")
             //     .replace("\"", "")
@@ -200,9 +199,12 @@ fn run() -> Result<(), Error> {
             }
             tool_name = v;
             view_code = true;
-        } else if arg.starts_with("-license") || arg.starts_with("-licence") ||
-                  arg.starts_with("--license") ||
-                  arg.starts_with("--licence") || arg.starts_with("-l") {
+        } else if arg.starts_with("-license")
+            || arg.starts_with("-licence")
+            || arg.starts_with("--license")
+            || arg.starts_with("--licence")
+            || arg.starts_with("-l")
+        {
             license();
             return Ok(());
         } else if arg.starts_with("-version") || arg.starts_with("--version") {
@@ -218,10 +220,10 @@ fn run() -> Result<(), Error> {
             // add it to the keywords list
             keywords.push(
                 arg.trim()
-                .replace("\"", "")
-                .replace("\'", "")
-                .to_string()
-                .clone()
+                    .replace("\"", "")
+                    .replace("\'", "")
+                    .to_string()
+                    .clone(),
             );
             if finding_working_dir {
                 working_dir = arg.trim().to_string().clone();
@@ -238,17 +240,27 @@ fn run() -> Result<(), Error> {
     }
     let tm = ToolManager::new(&working_dir, &verbose)?;
     if run_tool {
-        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        if tool_name.is_empty() && keywords.len() > 0 {
+            tool_name = keywords[0].clone();
+        }
         return tm.run_tool(tool_name, tool_args_vec);
     } else if tool_help {
-        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        if tool_name.is_empty() && keywords.len() > 0 {
+            tool_name = keywords[0].clone();
+        }
         return tm.tool_help(tool_name);
     } else if tool_parameters {
-        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        if tool_name.is_empty() && keywords.len() > 0 {
+            tool_name = keywords[0].clone();
+        }
         return tm.tool_parameters(tool_name);
     } else if toolbox {
-        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
-        if tool_name.is_empty() { tool_name = String::new(); }
+        if tool_name.is_empty() && keywords.len() > 0 {
+            tool_name = keywords[0].clone();
+        }
+        if tool_name.is_empty() {
+            tool_name = String::new();
+        }
         return tm.toolbox(tool_name);
     } else if list_tools {
         if keywords.len() == 0 {
@@ -257,7 +269,9 @@ fn run() -> Result<(), Error> {
             tm.list_tools_with_keywords(keywords);
         }
     } else if view_code {
-        if tool_name.is_empty() && keywords.len() > 0 { tool_name = keywords[0].clone(); }
+        if tool_name.is_empty() && keywords.len() > 0 {
+            tool_name = keywords[0].clone();
+        }
         return tm.get_tool_source_code(tool_name);
     }
 
@@ -318,5 +332,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-    println!("whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2018", VERSION.unwrap_or("unknown"));
+    println!(
+        "whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2018",
+        VERSION.unwrap_or("unknown")
+    );
 }

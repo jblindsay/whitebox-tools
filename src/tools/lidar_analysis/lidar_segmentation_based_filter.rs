@@ -6,21 +6,21 @@ Last Modified: February 14, 2018
 License: MIT
 */
 
-use time;
+use self::na::Vector3;
+use lidar::*;
 use na;
 use num_cpus;
 use std::env;
 use std::f64;
 use std::f64::NEG_INFINITY;
-use std::path;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use lidar::*;
+use structures::{FixedRadiusSearch2D, FixedRadiusSearch3D};
+use time;
 use tools::*;
-use self::na::Vector3;
-use structures::{ FixedRadiusSearch2D, FixedRadiusSearch3D };
 
 pub struct LidarSegmentationBasedFilter {
     name: String,
@@ -31,48 +31,49 @@ pub struct LidarSegmentationBasedFilter {
 }
 
 impl LidarSegmentationBasedFilter {
-    pub fn new() -> LidarSegmentationBasedFilter { // public constructor
+    pub fn new() -> LidarSegmentationBasedFilter {
+        // public constructor
         let name = "LidarSegmentationBasedFilter".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Identifies ground points within LiDAR point clouds using a segmentation based approach.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Search Radius".to_owned(), 
-            flags: vec!["--dist".to_owned(), "--radius".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Search Radius".to_owned(),
+            flags: vec!["--dist".to_owned(), "--radius".to_owned()],
             description: "Search Radius.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("5.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Normal Difference Threshold".to_owned(), 
-            flags: vec!["--norm_diff".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Normal Difference Threshold".to_owned(),
+            flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: true
+            optional: true,
         });
-        
+
         parameters.push(ToolParameter{
             name: "Maximum Elevation Difference Between Points".to_owned(), 
             flags: vec!["--maxzdiff".to_owned()], 
@@ -82,30 +83,33 @@ impl LidarSegmentationBasedFilter {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Classify Points".to_owned(), 
-            flags: vec!["--classify".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Classify Points".to_owned(),
+            flags: vec!["--classify".to_owned()],
             description: "Classify points as ground (2) or off-ground (1).".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classify", short_exe, name).replace("*", &sep);
-    
-        LidarSegmentationBasedFilter { 
-            name: name, 
-            description: description, 
+
+        LidarSegmentationBasedFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -114,7 +118,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -145,10 +149,15 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut search_radius = 5f64;
+        let mut search_radius = 5f32;
         let mut max_norm_diff = 2f64;
         let mut max_z_diff = 1f64;
         let ground_class_value = 2u8;
@@ -157,7 +166,10 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -165,54 +177,56 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-dist" || flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                    search_radius = vec[1].to_string().parse::<f32>().unwrap();
                 } else {
-                    search_radius = args[i+1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f32>().unwrap();
                 }
             } else if flag_val == "-norm_diff" {
                 if keyval {
                     max_norm_diff = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_norm_diff = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_norm_diff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-maxzdiff" {
                 if keyval {
                     max_z_diff = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_z_diff = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_z_diff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-classify" {
                 filter = false;
-            // } else if flag_val == "-groundclass" {
-            //     filter = false;
-            //     if keyval {
-            //         ground_class_value = vec[1].to_string().parse::<u8>().unwrap();
-            //     } else {
-            //         ground_class_value = args[i+1].to_string().parse::<u8>().unwrap();
-            //     }
-            // } else if flag_val == "-otp_class_value" {
-            //     filter = false;
-            //     if keyval {
-            //         otp_class_value = vec[1].to_string().parse::<u8>().unwrap();
-            //     } else {
-            //         otp_class_value = args[i+1].to_string().parse::<u8>().unwrap();
-            //     }
+                // } else if flag_val == "-groundclass" {
+                //     filter = false;
+                //     if keyval {
+                //         ground_class_value = vec[1].to_string().parse::<u8>().unwrap();
+                //     } else {
+                //         ground_class_value = args[i+1].to_string().parse::<u8>().unwrap();
+                //     }
+                // } else if flag_val == "-otp_class_value" {
+                //     filter = false;
+                //     if keyval {
+                //         otp_class_value = vec[1].to_string().parse::<u8>().unwrap();
+                //     } else {
+                //         otp_class_value = args[i+1].to_string().parse::<u8>().unwrap();
+                //     }
             }
         }
 
@@ -230,7 +244,9 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
@@ -240,22 +256,28 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
 
         let start = time::now();
 
-        if verbose { println!("Performing tophat transform..."); }
+        if verbose {
+            println!("Performing tophat transform...");
+        }
 
-        if max_norm_diff < 0f64 { max_norm_diff = 0f64; }
-        if max_norm_diff > 90f64 { max_norm_diff = 90f64; }
+        if max_norm_diff < 0f64 {
+            max_norm_diff = 0f64;
+        }
+        if max_norm_diff > 90f64 {
+            max_norm_diff = 90f64;
+        }
         max_norm_diff = max_norm_diff.to_radians();
-        
+
         let mut progress: i32;
         let mut old_progress: i32 = -1;
         let num_procs = num_cpus::get();
 
         // We'll eventually need the ability to do fixed radius searches around
         // each point in the point cloud in both 2D and 3D.
-        let mut frs2d: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius * 2f64);
+        let mut frs2d: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius * 2f32);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            frs2d.insert(p.x, p.y, i);
+            frs2d.insert(p.x as f32, p.y as f32, i);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -266,14 +288,14 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         }
 
         let input = Arc::new(input); // wrap input in an Arc
-        
+
         /////////////////////////////////////////////
         // Perform a top-hat transform on the data //
         /////////////////////////////////////////////
 
         let mut neighbourhood_min = vec![f64::MAX; n_points];
         let mut residuals = vec![f64::MIN; n_points];
-        
+
         // Erosion
         let frs = Arc::new(frs2d); // wrap FRS in an Arc
         let (tx, rx) = mpsc::channel();
@@ -287,7 +309,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 let mut min_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x, p.y);
+                    let ret = frs.search(p.x as f32, p.y as f32);
                     min_z = f64::MAX;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -326,7 +348,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 let mut max_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x, p.y);
+                    let ret = frs.search(p.x as f32, p.y as f32);
                     max_z = f64::MIN;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -356,11 +378,13 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         /////////////////////////////////////////////////////////
         // Calculate the normals for each point in the dataset //
         /////////////////////////////////////////////////////////
-        if verbose { println!("Calculating point normals..."); }
-        let mut frs3d: FixedRadiusSearch3D<usize> = FixedRadiusSearch3D::new(search_radius);
+        if verbose {
+            println!("Calculating point normals...");
+        }
+        let mut frs3d: FixedRadiusSearch3D<usize> = FixedRadiusSearch3D::new(search_radius as f64);
         for point_num in 0..n_points {
             let p: PointData = input.get_point_info(point_num);
-            frs3d.insert(p.x, p.y, residuals[point_num], point_num); 
+            frs3d.insert(p.x, p.y, residuals[point_num], point_num);
             // using the top-hat transformed data to calculate normals
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;
@@ -417,7 +441,9 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         ////////////////////////////////////////
         // Perform the segmentation operation //
         ////////////////////////////////////////
-        if verbose { println!("Segmenting the point cloud..."); }
+        if verbose {
+            println!("Segmenting the point cloud...");
+        }
         let mut point_id: usize;
         let mut norm_diff: f64;
         let mut height_diff: f64;
@@ -433,7 +459,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
             let ret = frs.search(p.x, p.y, residuals[point_id]);
             for j in 0..ret.len() {
                 index_n = ret[j].0;
-                if !is_ground_point[index_n] { 
+                if !is_ground_point[index_n] {
                     // It hasn't already been identified as a ground point.
                     // Calculate height difference.
                     height_diff = (residuals[index_n] - z).abs();
@@ -480,7 +506,8 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                     }
                 }
             }
-        } else { // classify
+        } else {
+            // classify
             for point_num in 0..n_points {
                 let class_val = match is_ground_point[point_num] {
                     true => ground_class_value,
@@ -489,59 +516,130 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 let pr = input.get_record(point_num);
                 let pr2: LidarPointRecord;
                 match pr {
-                    LidarPointRecord::PointRecord0 { mut point_data }  => {
+                    LidarPointRecord::PointRecord0 { mut point_data } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord0 { point_data: point_data };
-
-                    },
-                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                        pr2 = LidarPointRecord::PointRecord0 {
+                            point_data: point_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord1 {
+                        mut point_data,
+                        gps_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
-                    },
-                    LidarPointRecord::PointRecord2 { mut point_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord1 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord2 {
+                        mut point_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, colour_data: colour_data };
-                    },
-                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord2 {
+                            point_data: point_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord3 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord4 { mut point_data, gps_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord3 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord4 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord4 { point_data: point_data,
-                            gps_data: gps_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord5 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord4 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord5 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord5 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord6 { mut point_data, gps_data } => {
+                        pr2 = LidarPointRecord::PointRecord5 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord6 {
+                        mut point_data,
+                        gps_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord6 { point_data: point_data,
-                            gps_data: gps_data};
-                    },
-                    LidarPointRecord::PointRecord7 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord6 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord7 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord7 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord8 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord7 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord8 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord8 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord9 { mut point_data, gps_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord8 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord9 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord9 { point_data: point_data,
-                            gps_data: gps_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord10 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord9 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord10 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord10 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
-                    },
+                        pr2 = LidarPointRecord::PointRecord10 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
                 }
                 output.add_point_record(pr2);
                 if verbose {
@@ -563,13 +661,18 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let elapsed_time = end - start;
 
         println!("");
-        if verbose { println!("Writing output LAS file..."); }
+        if verbose {
+            println!("Writing output LAS file...");
+        }
         let _ = match output.write() {
             Ok(_) => println!("Complete!"),
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
@@ -586,12 +689,16 @@ struct Normal {
 impl Normal {
     fn new() -> Normal {
         // angle_between won't work with perfectly flat normals so add a small delta.
-        Normal { a: 0.0000001, b: 0f64, c: 0f64}
+        Normal {
+            a: 0.0000001,
+            b: 0f64,
+            c: 0f64,
+        }
     }
 
     // fn from_vector3(v: Vector3<f64>) -> Normal {
     //     if v.x == 0f64 && v.y == 0f64 && v.z == 0f64 {
-    //         return Normal { a: 0.0000001, b: 0f64, c: 0f64}; 
+    //         return Normal { a: 0.0000001, b: 0f64, c: 0f64};
     //         // angle_between won't work with perfectly flat normals so add a small delta.
     //     }
     //     Normal { a: v.x, b: v.y, c: v.z }
@@ -601,7 +708,7 @@ impl Normal {
         let numerator = self.a * other.a + self.b * other.b + self.c * other.c;
         let denom1 = (self.a * self.a + self.b * self.b + self.c * self.c).sqrt();
         let denom2 = (other.a * other.a + other.b * other.b + other.c * other.c).sqrt();
-        if denom1*denom2 != 0f64 {
+        if denom1 * denom2 != 0f64 {
             return (numerator / (denom1 * denom2)).acos();
         }
         NEG_INFINITY
@@ -615,7 +722,11 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
     let n = points.len();
     // assert!(n >= 3, "At least three points required");
     if n < 3 {
-        return Normal { a: 0f64, b: 0f64, c: 0f64 };
+        return Normal {
+            a: 0f64,
+            b: 0f64,
+            c: 0f64,
+        };
     }
 
     let mut sum = Vector3::new(0.0, 0.0, 0.0);
@@ -625,8 +736,12 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
     let centroid = sum * (1.0 / (n as f64));
 
     // Calc full 3x3 covariance matrix, excluding symmetries:
-    let mut xx = 0.0; let mut xy = 0.0; let mut xz = 0.0;
-    let mut yy = 0.0; let mut yz = 0.0; let mut zz = 0.0;
+    let mut xx = 0.0;
+    let mut xy = 0.0;
+    let mut xz = 0.0;
+    let mut yy = 0.0;
+    let mut yz = 0.0;
+    let mut zz = 0.0;
 
     for p in points {
         let r = p - &centroid;
@@ -638,27 +753,26 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
         zz += r.z * r.z;
     }
 
-    let det_x = yy*zz - yz*yz;
-    let det_y = xx*zz - xz*xz;
-    let det_z = xx*yy - xy*xy;
+    let det_x = yy * zz - yz * yz;
+    let det_y = xx * zz - xz * xz;
+    let det_z = xx * yy - xy * xy;
 
     let det_max = det_x.max(det_y).max(det_z);
 
     // Pick path with best conditioning:
-    let dir =
-        if det_max == det_x {
-            let a = (xz*yz - xy*zz) / det_x;
-            let b = (xy*yz - xz*yy) / det_x;
-            Vector3::new(1.0, a, b)
-        } else if det_max == det_y {
-            let a = (yz*xz - xy*zz) / det_y;
-            let b = (xy*xz - yz*xx) / det_y;
-            Vector3::new(a, 1.0, b)
-        } else {
-            let a = (yz*xy - xz*yy) / det_z;
-            let b = (xz*xy - yz*xx) / det_z;
-            Vector3::new(a, b, 1.0)
-        };
+    let dir = if det_max == det_x {
+        let a = (xz * yz - xy * zz) / det_x;
+        let b = (xy * yz - xz * yy) / det_x;
+        Vector3::new(1.0, a, b)
+    } else if det_max == det_y {
+        let a = (yz * xz - xy * zz) / det_y;
+        let b = (xy * xz - yz * xx) / det_y;
+        Vector3::new(a, 1.0, b)
+    } else {
+        let a = (yz * xy - xz * yy) / det_z;
+        let b = (xz * xy - yz * xx) / det_z;
+        Vector3::new(a, b, 1.0)
+    };
 
     normalize(dir)
 }
@@ -666,5 +780,9 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
 #[inline]
 fn normalize(v: Vector3<f64>) -> Normal {
     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
-    Normal { a: v.x/norm, b: v.y/norm, c: v.z/norm }
+    Normal {
+        a: v.x / norm,
+        b: v.y / norm,
+        c: v.z / norm,
+    }
 }

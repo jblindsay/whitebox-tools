@@ -658,13 +658,16 @@ impl LasFile {
                 self.use_point_userdata = false;
             }
 
+            self.point_data = Vec::with_capacity(self.header.number_of_points as usize);
+            let mut p: PointData = Default::default();
+            bor.seek(self.header.offset_to_points as usize);
             if self.header.point_format == 0 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                for _ in 0..self.header.number_of_points {
+                    // bor.seek(
+                    //     self.header.offset_to_points as usize
+                    //         + (i as usize) * (self.header.point_record_length as usize),
+                    // );
+                    // p = Default::default();
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -681,12 +684,8 @@ impl LasFile {
                     self.point_data.push(p);
                 }
             } else if self.header.point_format == 1 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                for _ in 0..self.header.number_of_points {
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -705,12 +704,9 @@ impl LasFile {
                     self.gps_data.push(bor.read_f64());
                 }
             } else if self.header.point_format == 2 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                for _ in 0..self.header.number_of_points {
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -726,19 +722,17 @@ impl LasFile {
                     p.point_source_id = bor.read_u16();
                     self.point_data.push(p);
                     // read the RGB data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
                 }
             } else if self.header.point_format == 3 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                bor.seek(self.header.offset_to_points as usize);
+                for _ in 0..self.header.number_of_points {
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -756,19 +750,16 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the RGB data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
                 }
             } else if self.header.point_format == 4 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut wfp: WaveformPacket;
+                for _ in 0..self.header.number_of_points {
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -786,7 +777,7 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the waveform data
-                    let mut wfp: WaveformPacket = Default::default();
+                    wfp = Default::default();
                     wfp.packet_descriptor_index = bor.read_u8();
                     wfp.offset_to_waveform_data = bor.read_u64();
                     wfp.waveform_packet_size = bor.read_u32();
@@ -797,12 +788,12 @@ impl LasFile {
                     self.waveform_data.push(wfp);
                 }
             } else if self.header.point_format == 5 {
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                let mut wfp: WaveformPacket;
+                for _ in 0..self.header.number_of_points {
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
                     p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
@@ -820,13 +811,12 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the RGB data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
                     // read the waveform data
-                    let mut wfp: WaveformPacket = Default::default();
+                    wfp = Default::default();
                     wfp.packet_descriptor_index = bor.read_u8();
                     wfp.offset_to_waveform_data = bor.read_u64();
                     wfp.waveform_packet_size = bor.read_u32();
@@ -838,12 +828,8 @@ impl LasFile {
                 }
             } else if self.header.point_format == 6 {
                 // 64-bit
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
@@ -865,12 +851,10 @@ impl LasFile {
                 }
             } else if self.header.point_format == 7 {
                 // 64-bit
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
@@ -890,7 +874,6 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the RGB data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
@@ -899,12 +882,10 @@ impl LasFile {
             } else if self.header.point_format == 8 {
                 // 64-bit
                 // adds a NIR band to Point Format 7
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
@@ -924,7 +905,6 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the RGBNIR data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
@@ -934,12 +914,10 @@ impl LasFile {
             } else if self.header.point_format == 9 {
                 // 64-bit
                 // adds waveform packets to Point Format 6
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut wfp: WaveformPacket;
+                for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
@@ -959,7 +937,7 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the waveform data
-                    let mut wfp: WaveformPacket = Default::default();
+                    wfp = Default::default();
                     wfp.packet_descriptor_index = bor.read_u8();
                     wfp.offset_to_waveform_data = bor.read_u64();
                     wfp.waveform_packet_size = bor.read_u32();
@@ -971,13 +949,13 @@ impl LasFile {
                 }
             } else if self.header.point_format == 10 {
                 // 64-bit
-                // Everythin in one record
-                for i in 0..self.header.number_of_points {
-                    bor.seek(
-                        self.header.offset_to_points as usize
-                            + (i as usize) * (self.header.point_record_length as usize),
-                    );
-                    let mut p: PointData = Default::default();
+                // Everything in one record
+                self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+                self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
+                let mut rgb: ColourData = Default::default();
+                let mut wfp: WaveformPacket;
+                for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
                     p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
                     p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
@@ -997,14 +975,13 @@ impl LasFile {
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
                     // read the RGBNIR data
-                    let mut rgb: ColourData = Default::default();
                     rgb.red = bor.read_u16();
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     rgb.nir = bor.read_u16();
                     self.colour_data.push(rgb);
                     // read the waveform data
-                    let mut wfp: WaveformPacket = Default::default();
+                    wfp = Default::default();
                     wfp.packet_descriptor_index = bor.read_u8();
                     wfp.offset_to_waveform_data = bor.read_u64();
                     wfp.waveform_packet_size = bor.read_u32();

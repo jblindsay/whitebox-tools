@@ -444,7 +444,7 @@ impl WhiteboxTool for IdwInterpolation {
                 ));
             }
 
-            let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(radius);
+            let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(radius as f32);
 
             for record_num in 0..vector_data.num_records {
                 let record = vector_data.get_record(record_num);
@@ -452,13 +452,13 @@ impl WhiteboxTool for IdwInterpolation {
                 y = record.points[0].y;
                 match vector_data.attributes.get_value(record_num, &field_name) {
                     FieldData::Int(val) => {
-                        frs.insert(x, y, val as f64);
+                        frs.insert(x as f32, y as f32, val as f64);
                     }
                     // FieldData::Int64(val) => {
                     //     frs.insert(x, y, val as f64);
                     // },
                     FieldData::Real(val) => {
-                        frs.insert(x, y, val);
+                        frs.insert(x as f32, y as f32, val);
                     }
                     _ => {
                         // do nothing; likely due to null value for record.
@@ -488,7 +488,7 @@ impl WhiteboxTool for IdwInterpolation {
                     "The input vector data must be of PointZ, PointM, MultiPointZ, or MultiPointM shape type."));
             }
 
-            let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(radius);
+            let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(radius as f32);
 
             // let mut p = 0;
             for record_num in 0..vector_data.num_records {
@@ -497,7 +497,7 @@ impl WhiteboxTool for IdwInterpolation {
                     x = record.points[i].x;
                     y = record.points[i].y;
                     z = record.z_array[i];
-                    frs.insert(x, y, z);
+                    frs.insert(x as f32, y as f32, z);
                     // p += 1;
                 }
 
@@ -581,13 +581,13 @@ impl WhiteboxTool for IdwInterpolation {
                     for col in 0..columns {
                         x = west + col as f64 * grid_res + 0.5;
                         y = north - row as f64 * grid_res - 0.5;
-                        let ret = frs.search(x, y);
+                        let ret = frs.search(x as f32, y as f32);
                         if ret.len() >= min_points {
                             sum_weights = 0.0;
                             val = 0.0;
                             for j in 0..ret.len() {
                                 zn = ret[j].0;
-                                dist = ret[j].1;
+                                dist = ret[j].1 as f64;
                                 if dist > 0.0 {
                                     val += zn / dist.powf(weight);
                                     sum_weights += 1.0 / dist.powf(weight);

@@ -6,18 +6,18 @@ Last Modified: January 21, 2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::FixedRadiusSearch2D;
+use time;
+use tools::*;
 
 pub struct FillMissingData {
     name: String,
@@ -28,54 +28,61 @@ pub struct FillMissingData {
 }
 
 impl FillMissingData {
-    pub fn new() -> FillMissingData { // public constructor
+    pub fn new() -> FillMissingData {
+        // public constructor
         let name = "FillMissingData".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Fills nodata holes in a DEM.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter Dimension".to_owned(), 
-            flags: vec!["--filter".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter Dimension".to_owned(),
+            flags: vec!["--filter".to_owned()],
             description: "Filter size (cells).".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --filter=25", short_exe, name).replace("*", &sep);
-    
-        FillMissingData { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --filter=25",
+            short_exe, name
+        ).replace("*", &sep);
+
+        FillMissingData {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -84,7 +91,7 @@ impl WhiteboxTool for FillMissingData {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -115,13 +122,20 @@ impl WhiteboxTool for FillMissingData {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 11usize;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -136,19 +150,19 @@ impl WhiteboxTool for FillMissingData {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
                     filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    filter_size = args[i+1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }
@@ -178,7 +192,9 @@ impl WhiteboxTool for FillMissingData {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
         let mut output = Raster::initialize_using_file(&output_file, &input);
@@ -188,12 +204,14 @@ impl WhiteboxTool for FillMissingData {
         let nodata = input.configs.nodata;
         let columns = input.configs.columns as isize;
         let rows = input.configs.rows as isize;
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         // Interpolate the data holes. Start by locating all the edge cells.
-        if verbose { println!("Interpolating data holes...") };
-        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(filter_size as f64);
+        if verbose {
+            println!("Interpolating data holes...")
+        };
+        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(filter_size as f32);
         for row in 0..rows {
             for col in 0..columns {
                 if input[(row, col)] != nodata {
@@ -201,7 +219,7 @@ impl WhiteboxTool for FillMissingData {
                         row_n = row + d_y[i];
                         col_n = col + d_x[i];
                         if input[(row_n, col_n)] == nodata {
-                            frs.insert(col as f64, row as f64, input[(row, col)]);
+                            frs.insert(col as f32, row as f32, input[(row, col)]);
                             break;
                         }
                     }
@@ -216,43 +234,8 @@ impl WhiteboxTool for FillMissingData {
             }
         }
 
-        // let mut sum_weights: f64;
-        // let mut dist: f64;
-        // for row in 0..rows {
-        //     for col in 0..columns {
-        //         if input[(row, col)] == nodata {
-        //             sum_weights = 0f64;
-        //             let ret = frs.search(col as f64, row as f64);
-        //             for j in 0..ret.len() {
-        //                 dist = ret[j].1;
-        //                 if dist > 0.0 {
-        //                     sum_weights += 1.0 / (dist * dist);
-        //                 }
-        //             }
-        //             z = 0.0;
-        //             for j in 0..ret.len() {
-        //                 dist = ret[j].1;
-        //                 if dist > 0.0 {
-        //                     z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
-        //                 }
-        //             }
-        //             output[(row, col)] = z;
-        //         } else {
-        //             output[(row, col)] = input[(row, col)];
-        //         }
-        //     }
-        //     if verbose {
-        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-        //         if progress != old_progress {
-        //             println!("Interpolating data holes: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
-
         let input = Arc::new(input);
         let frs = Arc::new(frs);
-
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -270,16 +253,16 @@ impl WhiteboxTool for FillMissingData {
                     for col in 0..columns {
                         if input[(row, col)] == nodata {
                             sum_weights = 0f64;
-                            let ret = frs.search(col as f64, row as f64);
+                            let ret = frs.search(col as f32, row as f32);
                             for j in 0..ret.len() {
-                                dist = ret[j].1;
+                                dist = ret[j].1 as f64;
                                 if dist > 0.0 {
                                     sum_weights += 1.0 / (dist * dist);
                                 }
                             }
                             z = 0.0;
                             for j in 0..ret.len() {
-                                dist = ret[j].1;
+                                dist = ret[j].1 as f64;
                                 if dist > 0.0 {
                                     z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
                                 }
@@ -313,20 +296,32 @@ impl WhiteboxTool for FillMissingData {
         let end = time::now();
         let elapsed_time = end - start;
 
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-        
-        if verbose { println!("Saving data...") };
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
+
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-        
+
         Ok(())
     }
 }
