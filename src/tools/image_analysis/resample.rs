@@ -18,16 +18,16 @@ images. Grid cells in the output image that do not overlap with any of the input
 will be assigned the NoData value.
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct Resample {
@@ -39,34 +39,36 @@ pub struct Resample {
 }
 
 impl Resample {
-    pub fn new() -> Resample { // public constructor
+    pub fn new() -> Resample {
+        // public constructor
         let name = "Resample".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Resamples one or more input images into a destination image.".to_string();
-        
+        let description =
+            "Resamples one or more input images into a destination image.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Destination File".to_owned(), 
-            flags: vec!["--destination".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Destination File".to_owned(),
+            flags: vec!["--destination".to_owned()],
             description: "Destination raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
             name: "Resampling Method".to_owned(), 
             flags: vec!["--method".to_owned()], 
-            description: "Resampling method".to_owned(),
+            description: "Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 'cc' (cubic convolution)".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["nn".to_owned(), "bilinear".to_owned(), "cc".to_owned()]),
             default_value: Some("cc".to_owned()),
             optional: true
@@ -75,18 +77,21 @@ impl Resample {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --destination=dest.tif --method='cc", short_exe, name).replace("*", &sep);
-    
-        Resample { 
-            name: name, 
-            description: description, 
+
+        Resample {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -95,7 +100,7 @@ impl WhiteboxTool for Resample {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -119,13 +124,21 @@ impl WhiteboxTool for Resample {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut destination_file = String::new();
         let mut method = String::from("cc");
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -141,25 +154,30 @@ impl WhiteboxTool for Resample {
                 input_files = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-destination" {
                 destination_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-method" {
                 method = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
-                if method.to_lowercase().contains("nn") || method.to_lowercase().contains("nearest") {
+                if method.to_lowercase().contains("nn") || method.to_lowercase().contains("nearest")
+                {
                     method = "nn".to_string();
-                } else if method.to_lowercase().contains("bilinear") || method.to_lowercase().contains("bi") {
+                } else if method.to_lowercase().contains("bilinear")
+                    || method.to_lowercase().contains("bi")
+                {
                     method = "bilinear".to_string();
-                } else if method.to_lowercase().contains("cc") || method.to_lowercase().contains("cubic") {
+                } else if method.to_lowercase().contains("cc")
+                    || method.to_lowercase().contains("cubic")
+                {
                     method = "cc".to_string();
                 }
             }
@@ -207,7 +225,9 @@ impl WhiteboxTool for Resample {
         let nodata = destination.configs.nodata;
 
         // read the input files
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let mut inputs: Vec<Raster> = Vec::with_capacity(num_files);
         let mut nodata_vals: Vec<f64> = Vec::with_capacity(num_files);
         for i in 0..num_files {
@@ -312,11 +332,15 @@ impl WhiteboxTool for Resample {
                         for col in 0..columns {
                             let mut flag = true;
                             for i in 0..num_files {
-                                if !flag { break; }
+                                if !flag {
+                                    break;
+                                }
                                 // row_src = inputs[i].get_row_from_y(y[row as usize]);
                                 // col_src = inputs[i].get_column_from_x(x[col as usize]);
-                                row_src = (inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y;
-                                col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
+                                row_src = (inputs[i].configs.north - y[row as usize])
+                                    / inputs[i].configs.resolution_y;
+                                col_src = (x[col as usize] - inputs[i].configs.west)
+                                    / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
                                 sum_dist = 0f64;
@@ -326,7 +350,7 @@ impl WhiteboxTool for Resample {
                                     neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
-                                    
+
                                     if (dx + dy) != 0f64 && neighbour[n][0] != nodata_vals[i] {
                                         neighbour[n][1] = 1f64 / (dx * dx + dy * dy);
                                         sum_dist += neighbour[n][1];
@@ -336,15 +360,15 @@ impl WhiteboxTool for Resample {
                                         data[col as usize] = neighbour[n][0];
                                         flag = false;
                                     }
-                                }               
-                                
-                                if sum_dist > 0f64 { 
+                                }
+
+                                if sum_dist > 0f64 {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false; 
+                                    flag = false;
                                 }
                             }
                         }
@@ -367,8 +391,8 @@ impl WhiteboxTool for Resample {
                     }
                 }
             }
-
-        } else { // bilinear
+        } else {
+            // bilinear
             destination.configs.photometric_interp = PhotometricInterpretation::Continuous;
             destination.configs.data_type = DataType::F32;
             for tid in 0..num_procs {
@@ -393,9 +417,13 @@ impl WhiteboxTool for Resample {
                         for col in 0..columns {
                             let mut flag = true;
                             for i in 0..num_files {
-                                if !flag { break; }
-                                row_src = (inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y;
-                                col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
+                                if !flag {
+                                    break;
+                                }
+                                row_src = (inputs[i].configs.north - y[row as usize])
+                                    / inputs[i].configs.resolution_y;
+                                col_src = (x[col as usize] - inputs[i].configs.west)
+                                    / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
                                 sum_dist = 0f64;
@@ -405,7 +433,7 @@ impl WhiteboxTool for Resample {
                                     neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
-                                    
+
                                     if (dx + dy) != 0f64 && neighbour[n][0] != nodata_vals[i] {
                                         neighbour[n][1] = 1f64 / (dx * dx + dy * dy);
                                         sum_dist += neighbour[n][1];
@@ -415,15 +443,15 @@ impl WhiteboxTool for Resample {
                                         data[col as usize] = neighbour[n][0];
                                         flag = false;
                                     }
-                                }               
-                                
+                                }
+
                                 if sum_dist > 0f64 {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false; 
+                                    flag = false;
                                 }
                             }
                         }
@@ -447,18 +475,28 @@ impl WhiteboxTool for Resample {
                 }
             }
         }
-        
+
         let end = time::now();
         let elapsed_time = end - start;
-        destination.add_metadata_entry(format!("Modified by whitebox_tools\' {} tool", self.get_tool_name()));
-        
-        if verbose { println!("Saving data...") };
+        destination.add_metadata_entry(format!(
+            "Modified by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match destination.write() {
-            Ok(_) => if verbose { println!("Destination file written") },
+            Ok(_) => if verbose {
+                println!("Destination file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

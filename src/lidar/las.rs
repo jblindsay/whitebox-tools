@@ -441,7 +441,12 @@ impl LasFile {
             false => {
                 let mut f = File::open(&self.file_name)?;
                 let metadata = fs::metadata(&self.file_name)?;
-                let file_size: usize = metadata.len() as usize;
+                let file_size: usize = if self.file_mode != "rh" {
+                    metadata.len() as usize
+                } else {
+                    375 // the size of the header
+                };
+
                 let mut buffer = vec![0; file_size]; // Vec::with_capacity(file_size);
                 if file_size < 1024 * 1024 * 500 {
                     // 2147483646 is the actual maximum file read on Mac
@@ -587,36 +592,37 @@ impl LasFile {
             }
         }
 
-        ///////////////////////
-        // Read the VLR data //
-        ///////////////////////
-        bor.seek(self.header.header_size as usize);
-        for _ in 0..self.header.number_of_vlrs {
-            let mut vlr: Vlr = Default::default();
-            vlr.reserved = bor.read_u16();
-            vlr.user_id = bor.read_utf8(16);
-            vlr.record_id = bor.read_u16();
-            vlr.record_length_after_header = bor.read_u16();
-            vlr.description = bor.read_utf8(32);
-            // get the byte data
-            for _ in 0..vlr.record_length_after_header {
-                vlr.binary_data.push(bor.read_u8());
-            }
-
-            if vlr.record_id == 34_735 {
-                self.geokeys
-                    .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
-            } else if vlr.record_id == 34_736 {
-                self.geokeys
-                    .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
-            } else if vlr.record_id == 34_737 {
-                self.geokeys.add_ascii_params(&vlr.binary_data);
-            }
-            self.vlr_data.push(vlr);
-        }
-
         if self.file_mode != "rh" {
-            // file_mode = "rh" does not read points, only the header.
+            // file_mode = "rh" does not read points or the VLR data, only the header.
+
+            ///////////////////////
+            // Read the VLR data //
+            ///////////////////////
+            bor.seek(self.header.header_size as usize);
+            for _ in 0..self.header.number_of_vlrs {
+                let mut vlr: Vlr = Default::default();
+                vlr.reserved = bor.read_u16();
+                vlr.user_id = bor.read_utf8(16);
+                vlr.record_id = bor.read_u16();
+                vlr.record_length_after_header = bor.read_u16();
+                vlr.description = bor.read_utf8(32);
+                // get the byte data
+                for _ in 0..vlr.record_length_after_header {
+                    vlr.binary_data.push(bor.read_u8());
+                }
+
+                if vlr.record_id == 34_735 {
+                    self.geokeys
+                        .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
+                } else if vlr.record_id == 34_736 {
+                    self.geokeys
+                        .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
+                } else if vlr.record_id == 34_737 {
+                    self.geokeys.add_ascii_params(&vlr.binary_data);
+                }
+                self.vlr_data.push(vlr);
+            }
+
             /////////////////////////
             // Read the point data //
             /////////////////////////
@@ -1780,18 +1786,27 @@ impl PointRecord10 {
 }
 
 fn fixed_length_string(s: &str, len: usize) -> String {
-    //let array: &[u8: 32];
-    let l = s.len();
-    let mut ret: String = "".to_owned();
-    if l < len {
-        // add spaces to end
-        ret = s.to_string();
-        for _ in 0..len - l {
-            ret.push_str("\0");
+    let mut ret = "".to_string();
+    let mut n = 0;
+    for b in s.as_bytes() {
+        let mut c = *b as char;
+        if *b == 0u8 {
+            break;
         }
-    } else {
-        // truncate string
-        ret = s[0..len].to_string(); // could use 'truncate' method as well.
+        if *b > 127u8 {
+            // Sorry, but it has to be ASCII data
+            c = ' ';
+        }
+        if n < len {
+            ret.push(c);
+        } else {
+            break;
+        }
+        n += 1;
+    }
+
+    for _ in n..len {
+        ret.push('\0');
     }
     ret
 }

@@ -24,16 +24,16 @@ cells in the output image that do not overlap with any of the input images will 
 assigned the NoData value.
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct Mosaic {
@@ -45,34 +45,35 @@ pub struct Mosaic {
 }
 
 impl Mosaic {
-    pub fn new() -> Mosaic { // public constructor
+    pub fn new() -> Mosaic {
+        // public constructor
         let name = "Mosaic".to_string();
         let toolbox = "Image Processing Tools".to_string();
         let description = "Mosaics two or more images together.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
             name: "Resampling Method".to_owned(), 
             flags: vec!["--method".to_owned()], 
-            description: "Resampling method".to_owned(),
+            description: "Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 'cc' (cubic convolution)".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["nn".to_owned(), "bilinear".to_owned(), "cc".to_owned()]),
             default_value: Some("cc".to_owned()),
             optional: true
@@ -81,18 +82,21 @@ impl Mosaic {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=dest.tif --method='cc", short_exe, name).replace("*", &sep);
-    
-        Mosaic { 
-            name: name, 
-            description: description, 
+
+        Mosaic {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -101,7 +105,7 @@ impl WhiteboxTool for Mosaic {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,14 +129,21 @@ impl WhiteboxTool for Mosaic {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut output_file = String::new();
         let mut method = String::from("cc");
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -148,25 +159,30 @@ impl WhiteboxTool for Mosaic {
                 input_files = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-method" {
                 method = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
-                if method.to_lowercase().contains("nn") || method.to_lowercase().contains("nearest") {
+                if method.to_lowercase().contains("nn") || method.to_lowercase().contains("nearest")
+                {
                     method = "nn".to_string();
-                } else if method.to_lowercase().contains("bilinear") || method.to_lowercase().contains("bi") {
+                } else if method.to_lowercase().contains("bilinear")
+                    || method.to_lowercase().contains("bi")
+                {
                     method = "bilinear".to_string();
-                } else if method.to_lowercase().contains("cc") || method.to_lowercase().contains("cubic") {
+                } else if method.to_lowercase().contains("cc")
+                    || method.to_lowercase().contains("cubic")
+                {
                     method = "cc".to_string();
                 }
             }
@@ -202,7 +218,9 @@ impl WhiteboxTool for Mosaic {
         let start = time::now();
 
         // read the input files
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let mut inputs: Vec<Raster> = Vec::with_capacity(num_files);
         let mut nodata_vals: Vec<f64> = Vec::with_capacity(num_files);
         let mut north = f64::NEG_INFINITY;
@@ -235,28 +253,44 @@ impl WhiteboxTool for Mosaic {
                         west = f64::NEG_INFINITY;
                     }
                 }
-                
+
                 if north_greater_than_south {
-                    if inputs[i].configs.north > north { north = inputs[i].configs.north; }
-                    if inputs[i].configs.south < south { south = inputs[i].configs.south; }
+                    if inputs[i].configs.north > north {
+                        north = inputs[i].configs.north;
+                    }
+                    if inputs[i].configs.south < south {
+                        south = inputs[i].configs.south;
+                    }
                 } else {
-                    if inputs[i].configs.north < north { north = inputs[i].configs.north; }
-                    if inputs[i].configs.south > south { south = inputs[i].configs.south; }
+                    if inputs[i].configs.north < north {
+                        north = inputs[i].configs.north;
+                    }
+                    if inputs[i].configs.south > south {
+                        south = inputs[i].configs.south;
+                    }
                 }
-                
+
                 if east_greater_than_west {
-                    if inputs[i].configs.east > east { east = inputs[i].configs.east; }
-                    if inputs[i].configs.west < west { west = inputs[i].configs.west; }
+                    if inputs[i].configs.east > east {
+                        east = inputs[i].configs.east;
+                    }
+                    if inputs[i].configs.west < west {
+                        west = inputs[i].configs.west;
+                    }
                 } else {
-                    if inputs[i].configs.east < east { east = inputs[i].configs.east; }
-                    if inputs[i].configs.west > west { west = inputs[i].configs.west; }
+                    if inputs[i].configs.east < east {
+                        east = inputs[i].configs.east;
+                    }
+                    if inputs[i].configs.west > west {
+                        west = inputs[i].configs.west;
+                    }
                 }
-                
-                if inputs[i].configs.resolution_x < resolution_x { 
-                    resolution_x = inputs[i].configs.resolution_x; 
+
+                if inputs[i].configs.resolution_x < resolution_x {
+                    resolution_x = inputs[i].configs.resolution_x;
                 }
-                if inputs[i].configs.resolution_y < resolution_y { 
-                    resolution_y = inputs[i].configs.resolution_y; 
+                if inputs[i].configs.resolution_y < resolution_y {
+                    resolution_y = inputs[i].configs.resolution_y;
                 }
             } else {
                 return Err(Error::new(ErrorKind::InvalidInput,
@@ -271,7 +305,9 @@ impl WhiteboxTool for Mosaic {
         let east = west + columns as f64 * resolution_x;
         let nodata = -32768.0f64;
 
-        let mut configs = RasterConfigs { ..Default::default() };
+        let mut configs = RasterConfigs {
+            ..Default::default()
+        };
         configs.rows = rows as usize;
         configs.columns = columns as usize;
         configs.north = north;
@@ -285,7 +321,7 @@ impl WhiteboxTool for Mosaic {
         configs.photometric_interp = inputs[0].configs.photometric_interp;
         configs.palette = inputs[0].configs.palette.clone();
 
-        let mut output = Raster::initialize_using_config(&output_file, &configs);        
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
 
         // create the x and y arrays
         let mut x: Vec<f64> = Vec::with_capacity(columns as usize);
@@ -374,11 +410,15 @@ impl WhiteboxTool for Mosaic {
                         for col in 0..columns {
                             let mut flag = true;
                             for i in 0..num_files {
-                                if !flag { break; }
+                                if !flag {
+                                    break;
+                                }
                                 // row_src = inputs[i].get_row_from_y(y[row as usize]);
                                 // col_src = inputs[i].get_column_from_x(x[col as usize]);
-                                row_src = (inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y;
-                                col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
+                                row_src = (inputs[i].configs.north - y[row as usize])
+                                    / inputs[i].configs.resolution_y;
+                                col_src = (x[col as usize] - inputs[i].configs.west)
+                                    / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
                                 // if origin_row < 0 || origin_col < 0 { break; }
@@ -390,7 +430,7 @@ impl WhiteboxTool for Mosaic {
                                     neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
-                                    
+
                                     if (dx + dy) != 0f64 && neighbour[n][0] != nodata_vals[i] {
                                         neighbour[n][1] = 1f64 / (dx * dx + dy * dy);
                                         sum_dist += neighbour[n][1];
@@ -400,15 +440,15 @@ impl WhiteboxTool for Mosaic {
                                         data[col as usize] = neighbour[n][0];
                                         flag = false;
                                     }
-                                }               
-                                
-                                if sum_dist > 0f64 { 
+                                }
+
+                                if sum_dist > 0f64 {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false; 
+                                    flag = false;
                                 }
                             }
                         }
@@ -431,8 +471,8 @@ impl WhiteboxTool for Mosaic {
                     }
                 }
             }
-
-        } else { // bilinear
+        } else {
+            // bilinear
             output.configs.photometric_interp = PhotometricInterpretation::Continuous;
             output.configs.data_type = DataType::F32;
             for tid in 0..num_procs {
@@ -457,9 +497,13 @@ impl WhiteboxTool for Mosaic {
                         for col in 0..columns {
                             let mut flag = true;
                             for i in 0..num_files {
-                                if !flag { break; }
-                                row_src = (inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y;
-                                col_src = (x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x;
+                                if !flag {
+                                    break;
+                                }
+                                row_src = (inputs[i].configs.north - y[row as usize])
+                                    / inputs[i].configs.resolution_y;
+                                col_src = (x[col as usize] - inputs[i].configs.west)
+                                    / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
                                 // if origin_row < 0 || origin_col < 0 { break; }
@@ -471,7 +515,7 @@ impl WhiteboxTool for Mosaic {
                                     neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
-                                    
+
                                     if (dx + dy) != 0f64 && neighbour[n][0] != nodata_vals[i] {
                                         neighbour[n][1] = 1f64 / (dx * dx + dy * dy);
                                         sum_dist += neighbour[n][1];
@@ -481,15 +525,15 @@ impl WhiteboxTool for Mosaic {
                                         data[col as usize] = neighbour[n][0];
                                         flag = false;
                                     }
-                                }               
-                                
+                                }
+
                                 if sum_dist > 0f64 {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false; 
+                                    flag = false;
                                 }
                             }
                         }
@@ -513,19 +557,29 @@ impl WhiteboxTool for Mosaic {
                 }
             }
         }
-        
+
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Modified by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Modified by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Resampling method: {}", method));
-        
-        if verbose { println!("Saving data...") };
+
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

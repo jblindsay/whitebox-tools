@@ -216,6 +216,7 @@ impl ToolManager {
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
+        tool_names.push("SelectTilesByPolygon".to_string());
 
         // mathematical and statistical_analysis
         tool_names.push("AbsoluteValue".to_string());
@@ -707,6 +708,7 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
             }
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
+            "selecttilesbypolygon" => Some(Box::new(tools::lidar_analysis::SelectTilesByPolygon::new())),
 
             // mathematical and statistical_analysis
             "absolutevalue" => Some(Box::new(tools::math_stat_analysis::AbsoluteValue::new())),

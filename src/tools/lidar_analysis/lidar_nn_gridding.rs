@@ -356,6 +356,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                 .replace(".LAS", ".tif"),
                         )
                     } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                        // assumes the zip file contains LAS data.
                         inputs.push(format!("{:?}", s.replace("\"", "")));
                         outputs.push(
                             inputs[inputs.len() - 1]
@@ -671,7 +672,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                     configs.resolution_x = grid_res;
                     configs.resolution_y = grid_res;
                     configs.nodata = nodata;
-                    configs.data_type = DataType::F64;
+                    configs.data_type = DataType::F32;
                     configs.photometric_interp = PhotometricInterpretation::Continuous;
                     configs.palette = palette.clone();
 

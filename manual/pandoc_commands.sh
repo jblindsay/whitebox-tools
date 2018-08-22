@@ -18,7 +18,28 @@ pandoc \
 --variable papersize=letterpaper \
 --variable urlcolor=blue \
 -s WhiteboxToolsManual.md \
+-H setup.tex \
 --toc \
---toc-depth=4 \
+--toc-depth=5 \
 --highlight-style=my_style.theme \
 -o ../WhiteboxToolsManual.pdf
+
+# pandoc \
+# --variable classoption=twoside \
+# --variable papersize=letterpaper \
+# --variable urlcolor=blue \
+# -s WhiteboxToolsManual.md \
+# --toc \
+# --toc-depth=5 \
+# --highlight-style=my_style.theme \
+# -o ./WhiteboxToolsManual.docx
+
+# pandoc \
+# --variable classoption=twoside \
+# --variable papersize=letterpaper \
+# --variable urlcolor=blue \
+# -s WhiteboxToolsManual.md \
+# --toc \
+# --toc-depth=5 \
+# --highlight-style=my_style.theme \
+# -o ./WhiteboxToolsManual.html

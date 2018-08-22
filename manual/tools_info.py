@@ -233,14 +233,14 @@ f = open(out_file, 'w')
 num1 = 1
 num2 = 1
 for key, value in sorted(tb_dict.items()):
-    f.write("### 7.{} {}\n".format(num1, key.replace("/", " => ")))
+    f.write("### 8.{} {}\n".format(num1, key.replace("/", " => ")))
     # print("* 6.{} [{}](#{})".format(num1, key.replace("/", " = "),
     #                                 key.replace("/", " = ").lower().replace(" ", "-")))
     num2 = 1
     for v in value:
         # print(v)
         f.write("{}\n".format(
-            v.replace("insertNumHere", "7.{}.{}".format(num1, num2))))
+            v.replace("insertNumHere", "8.{}.{}".format(num1, num2))))
         num2 += 1
 
     num1 += 1

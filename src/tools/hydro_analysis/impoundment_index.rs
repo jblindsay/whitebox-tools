@@ -61,9 +61,13 @@ impl ImpoundmentIndex {
         parameters.push(ToolParameter {
             name: "Output Type".to_owned(),
             flags: vec!["--out_type".to_owned()],
-            description: "Output type; one of 'area' (default) and 'volume'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["volume".to_owned(), "area".to_owned()]),
-            default_value: Some("volume".to_owned()),
+            description: "Output type; one of 'depth' (default), 'volume', and 'area'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec![
+                "depth".to_owned(),
+                "volume".to_owned(),
+                "area".to_owned(),
+            ]),
+            default_value: Some("depth".to_owned()),
             optional: true,
         });
 
@@ -79,14 +83,15 @@ impl ImpoundmentIndex {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif --out_type=area --damlength=11", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif --out_type=depth --damlength=11", short_exe, name).replace("*", &sep);
 
         ImpoundmentIndex {
             name: name,
@@ -178,7 +183,13 @@ impl WhiteboxTool for ImpoundmentIndex {
                 } else {
                     args[i + 1].to_lowercase()
                 };
-                out_type = if val.contains("v") { 1 } else { 0 };
+                out_type = if val.contains("v") {
+                    1
+                } else if val.contains("depth") {
+                    2
+                } else {
+                    0 // area
+                };
             } else if flag_val == "-damlength" {
                 dam_length = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
@@ -578,9 +589,12 @@ impl WhiteboxTool for ImpoundmentIndex {
                 if out_type == 0 {
                     // area
                     output.increment(row_n, col_n, num_upslope * grid_area);
-                } else {
+                } else if out_type == 1 {
                     // volume
                     output.increment(row_n, col_n, vol);
+                } else {
+                    // mean depth
+                    output.increment(row_n, col_n, vol / (num_upslope * grid_area));
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1i8);

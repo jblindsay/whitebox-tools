@@ -192,7 +192,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
 
         let start = time::now();
 
-        // make sure the input vector file is of points type
+        // make sure the input vector file is of polygon type
         if polygons.header.shape_type.base_shape_type() != ShapeType::Polygon {
             return Err(Error::new(
                 ErrorKind::InvalidInput,

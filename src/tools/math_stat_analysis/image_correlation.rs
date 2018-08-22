@@ -6,22 +6,22 @@ Last Modified: 29/04/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
-use rendering::html::*;
 
 pub struct ImageCorrelation {
     name: String,
@@ -39,22 +39,24 @@ impl ImageCorrelation {
         let description = "Performs image correlation on two or more input images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -86,7 +88,7 @@ impl WhiteboxTool for ImageCorrelation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,17 +119,20 @@ impl WhiteboxTool for ImageCorrelation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files: String = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -143,7 +148,7 @@ impl WhiteboxTool for ImageCorrelation {
                 input_files = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -209,7 +214,9 @@ impl WhiteboxTool for ImageCorrelation {
         let mut correlation_matrix = vec![vec![-99f64; num_files]; num_files];
         let mut rows: isize = 0;
         let mut columns: isize = 0;
-        if verbose { println!("Calculating image averages..."); }
+        if verbose {
+            println!("Calculating image averages...");
+        }
         for a in 0..num_files {
             let value = &file_names[a]; //files_vec[a];
             let input_file = value.trim(); //.to_owned();
@@ -219,10 +226,12 @@ impl WhiteboxTool for ImageCorrelation {
                 rows = input.configs.rows as isize;
                 columns = input.configs.columns as isize;
             } else {
-                if input.configs.columns as isize != columns || 
-                        input.configs.rows as isize != rows {
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                        "All input images must have the same dimensions (rows and columns)."));
+                if input.configs.columns as isize != columns || input.configs.rows as isize != rows
+                {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "All input images must have the same dimensions (rows and columns).",
+                    ));
                 }
             }
 
@@ -253,24 +262,31 @@ impl WhiteboxTool for ImageCorrelation {
                 image_n[a] += n;
             }
             image_averages[a] = image_totals[a] / image_n[a];
-            
+
             if verbose {
                 progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Calculating image averages ({} of {}): {}%", (a + 1), files_vec.len(), progress);
+                    println!(
+                        "Calculating image averages ({} of {}): {}%",
+                        (a + 1),
+                        files_vec.len(),
+                        progress
+                    );
                     old_progress = progress;
                 }
             }
         }
         let image_averages = Arc::new(image_averages);
 
-        if verbose { println!("Calculating the correlation matrix:"); }
+        if verbose {
+            println!("Calculating the correlation matrix:");
+        }
         let mut i = 0;
         for a in 0..num_files {
             let value = &file_names[a];
             let image1 = Arc::new(Raster::new(&value, "r")?);
             let nodata1 = image1.configs.nodata;
-            for b in 0..(i+1) {
+            for b in 0..(i + 1) {
                 if a == b {
                     correlation_matrix[a][b] = 1.0;
                 } else {
@@ -294,13 +310,20 @@ impl WhiteboxTool for ImageCorrelation {
                                     z1 = image1[(row, col)];
                                     z2 = image2[(row, col)];
                                     if z1 != nodata1 && z2 != nodata2 {
-                                        image1_total_deviation += (z1 - image_averages[a]) * (z1 - image_averages[a]);
-                                        image2_total_deviation += (z2 - image_averages[b]) * (z2 - image_averages[b]);
-                                        total_product_deviations += (z1 - image_averages[a]) * (z2 - image_averages[b]);
+                                        image1_total_deviation +=
+                                            (z1 - image_averages[a]) * (z1 - image_averages[a]);
+                                        image2_total_deviation +=
+                                            (z2 - image_averages[b]) * (z2 - image_averages[b]);
+                                        total_product_deviations +=
+                                            (z1 - image_averages[a]) * (z2 - image_averages[b]);
                                     }
                                 }
                             }
-                            tx.send((image1_total_deviation, image2_total_deviation, total_product_deviations)).unwrap();
+                            tx.send((
+                                image1_total_deviation,
+                                image2_total_deviation,
+                                total_product_deviations,
+                            )).unwrap();
                         });
                     }
                     let mut image1_total_deviation = 0f64;
@@ -312,7 +335,8 @@ impl WhiteboxTool for ImageCorrelation {
                         image2_total_deviation += val2;
                         total_product_deviations += val3;
                     }
-                    correlation_matrix[a][b] = total_product_deviations / (image1_total_deviation * image2_total_deviation).sqrt();
+                    correlation_matrix[a][b] = total_product_deviations
+                        / (image1_total_deviation * image2_total_deviation).sqrt();
                 }
             }
             i += 1;
@@ -320,7 +344,12 @@ impl WhiteboxTool for ImageCorrelation {
             if verbose {
                 progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Calculating the correlation matrix ({} of {}): {}%", (a + 1), files_vec.len(), progress);
+                    println!(
+                        "Calculating the correlation matrix ({} of {}): {}%",
+                        (a + 1),
+                        files_vec.len(),
+                        progress
+                    );
                     old_progress = progress;
                 }
             }
@@ -329,10 +358,12 @@ impl WhiteboxTool for ImageCorrelation {
         let end = time::now();
         let elapsed_time = end - start;
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
-
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -341,20 +372,20 @@ impl WhiteboxTool for ImageCorrelation {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Image Correlation</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
+
         writer.write_all(&r#"</head>
         <body>
             <h1>Image Correlation Report</h1>"#.as_bytes())?;
-
 
         // output the names of the input files.
         writer.write_all("<p><strong>Input files</strong>:</br>".as_bytes())?;
         for a in 0..num_files {
             let value = &file_names[a]; //files_vec[a];
-            writer.write_all(format!("<strong>Image {}</strong>: {}</br>", a + 1, value).as_bytes())?;
+            writer
+                .write_all(format!("<strong>Image {}</strong>: {}</br>", a + 1, value).as_bytes())?;
         }
         writer.write_all("</p>".as_bytes())?;
 
@@ -363,13 +394,13 @@ impl WhiteboxTool for ImageCorrelation {
 
         let mut out_string = String::from("<tr><th></th>");
         for a in 0..num_files {
-            out_string.push_str(&format!("<th>Image {}</th>", a+1));
+            out_string.push_str(&format!("<th>Image {}</th>", a + 1));
         }
         out_string.push_str("</tr>");
 
         for a in 0..num_files {
             out_string.push_str("<tr>");
-            out_string.push_str(&format!("<td><strong>Image {}</strong></td>", a+1));
+            out_string.push_str(&format!("<td><strong>Image {}</strong></td>", a + 1));
             for b in 0..num_files {
                 let value = correlation_matrix[a][b];
                 if value != -99f64 {

@@ -58,8 +58,10 @@ for more details.
 
 Version 0.9.0 (XX-XX-2018)
 - Added the following tools:
+    ExtractRasterValuesAtPoints
     FindLowestOrHighestPoints
     LidarThinHighDensity
+    SelectTilesByPolygon
     StandardDeviationOfSlope
     
 - Support has been added for writing Shapefile vector data.

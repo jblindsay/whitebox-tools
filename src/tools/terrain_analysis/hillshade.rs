@@ -2,20 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: January 21, 2018
+Last Modified: 06/08/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
 pub struct Hillshade {
@@ -27,72 +27,78 @@ pub struct Hillshade {
 }
 
 impl Hillshade {
-    pub fn new() -> Hillshade { // public constructor
+    pub fn new() -> Hillshade {
+        // public constructor
         let name = "Hillshade".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates a hillshade raster from an input DEM.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Azimuth (degrees)".to_owned(), 
-            flags: vec!["--azimuth".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Azimuth (degrees)".to_owned(),
+            flags: vec!["--azimuth".to_owned()],
             description: "Illumination source azimuth in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("315.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Altitude (degrees)".to_owned(), 
-            flags: vec!["--altitude".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Altitude (degrees)".to_owned(),
+            flags: vec!["--altitude".to_owned()],
             description: "Illumination source altitude in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("30.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Z Conversion Factor".to_owned(), 
-            flags: vec!["--zfactor".to_owned()], 
-            description: "Optional multiplier for when the vertical and horizontal units are not the same.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Z Conversion Factor".to_owned(),
+            flags: vec!["--zfactor".to_owned()],
+            description:
+                "Optional multiplier for when the vertical and horizontal units are not the same."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e.replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
-    
-        Hillshade { 
-            name: name, 
-            description: description, 
+
+        Hillshade {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -101,7 +107,7 @@ impl WhiteboxTool for Hillshade {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -132,7 +138,12 @@ impl WhiteboxTool for Hillshade {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 315.0f64;
@@ -140,8 +151,10 @@ impl WhiteboxTool for Hillshade {
         let mut z_factor = 1f64;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -152,35 +165,39 @@ impl WhiteboxTool for Hillshade {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-azimuth" || vec[0].to_lowercase() == "--azimuth" {
                 if keyval {
                     azimuth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    azimuth = args[i+1].to_string().parse::<f64>().unwrap();
+                    azimuth = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-altitude" || vec[0].to_lowercase() == "--altitude" {
+            } else if vec[0].to_lowercase() == "-altitude" || vec[0].to_lowercase() == "--altitude"
+            {
                 if keyval {
                     altitude = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    altitude = args[i+1].to_string().parse::<f64>().unwrap();
+                    altitude = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
                 if keyval {
                     z_factor = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    z_factor = args[i+1].to_string().parse::<f64>().unwrap();
+                    z_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -203,7 +220,9 @@ impl WhiteboxTool for Hillshade {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
@@ -223,8 +242,9 @@ impl WhiteboxTool for Hillshade {
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I16;
         let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;
@@ -235,8 +255,8 @@ impl WhiteboxTool for Hillshade {
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
                 let (mut term1, mut term2, mut term3): (f64, f64, f64);
@@ -262,7 +282,9 @@ impl WhiteboxTool for Hillshade {
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
-                                aspect = (180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs())).to_radians();
+                                aspect = (180f64 - ((fy / fx).atan()).to_degrees()
+                                    + 90f64 * (fx / (fx).abs()))
+                                    .to_radians();
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;
                                 term3 = cos_theta * (azimuth - aspect).sin();
@@ -270,11 +292,11 @@ impl WhiteboxTool for Hillshade {
                             } else {
                                 z = 0.5;
                             }
-                            z = z * 255.0;
+                            z = z * 32767.0;
                             if z < 0.0 {
                                 z = 0.0;
                             }
-                            data[col as usize] = z;
+                            data[col as usize] = z.round();
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -282,7 +304,7 @@ impl WhiteboxTool for Hillshade {
             });
         }
 
-        let mut histo: [f64; 256] = [0.0; 256];
+        let mut histo: [f64; 32768] = [0.0; 32768];
         let nodata = input.configs.nodata;
         let mut num_cells = 0.0;
         for row in 0..rows {
@@ -290,13 +312,13 @@ impl WhiteboxTool for Hillshade {
             let mut bin: usize;
             for col in 0..data.1.len() {
                 if data.1[col] != nodata {
-                    bin = data.1[col].round() as usize;
+                    bin = data.1[col] as usize;
                     histo[bin] += 1.0;
                     num_cells += 1.0;
                 }
             }
             output.set_row_data(data.0, data.1);
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -311,7 +333,7 @@ impl WhiteboxTool for Hillshade {
         let clip_percent = 0.01;
         let target_cell_num = num_cells * clip_percent;
         let mut sum = 0.0;
-        for c in 0..256 {
+        for c in 0..32768 {
             sum += histo[c];
             if sum >= target_cell_num {
                 new_min = c;
@@ -320,7 +342,7 @@ impl WhiteboxTool for Hillshade {
         }
 
         sum = 0.0;
-        for c in (0..256).rev() {
+        for c in (0..32768).rev() {
             sum += histo[c];
             if sum >= target_cell_num {
                 new_max = c;
@@ -336,20 +358,32 @@ impl WhiteboxTool for Hillshade {
         let end = time::now();
         let elapsed_time = end - start;
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Altitude: {}", altitude));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

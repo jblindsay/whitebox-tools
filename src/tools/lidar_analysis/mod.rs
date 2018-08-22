@@ -29,6 +29,7 @@ mod lidar_tile;
 mod lidar_tophat_transform;
 mod normal_vectors;
 mod remove_duplicates;
+mod select_tiles_by_polygon;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::block_maximum::BlockMaximum;
@@ -61,3 +62,4 @@ pub use self::lidar_tile::LidarTile;
 pub use self::lidar_tophat_transform::LidarTophatTransform;
 pub use self::normal_vectors::NormalVectors;
 pub use self::remove_duplicates::LidarRemoveDuplicates;
+pub use self::select_tiles_by_polygon::SelectTilesByPolygon;

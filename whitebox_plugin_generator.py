@@ -123,7 +123,7 @@ for tool, description in tools.items():
 
     # fn_def = fn_def.rstrip(', ')
     fn_def += "callback=default_callback):"
-    doc_str += "{}callback -- Custom functon for handling tool text outputs.".format(
+    doc_str += "{}callback -- Custom function for handling tool text outputs.".format(
         st_val)
 
     fn = """

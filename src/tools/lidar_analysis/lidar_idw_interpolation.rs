@@ -658,7 +658,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     configs.resolution_x = grid_res;
                     configs.resolution_y = grid_res;
                     configs.nodata = nodata;
-                    configs.data_type = DataType::F64;
+                    configs.data_type = DataType::F32;
                     configs.photometric_interp = PhotometricInterpretation::Continuous;
                     configs.palette = palette.clone();
 

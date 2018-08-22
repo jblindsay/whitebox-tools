@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 326 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 328 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -245,9 +245,10 @@ The library currently contains the following 326 tools, which are each grouped b
 - ***CreatePlane***: Creates a raster image based on the equation for a simple plane.
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
 - ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
-- ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
+- ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform. 
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
- -***FindLowestOrHighestPoints***: Locates the lowest and/or highest valued cells in a raster.
+- ***ExtractRasterValuesAtPoints***: Extracts the values of raster(s) at vector point locations.
+- ***FindLowestOrHighestPoints***: Locates the lowest and/or highest valued cells in a raster.
 - ***FindPatchOrClassEdgeCells***: Finds all cells located on the edge of patch or class features.
 - ***HighestPosition***: Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 - ***LowestPosition***: Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
@@ -413,6 +414,7 @@ The library currently contains the following 326 tools, which are each grouped b
 - ***LidarTile***: Tiles a LiDAR LAS file into multiple LAS files.
 - ***LidarTophatTransform***: Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 - ***NormalVectors***: Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
+- ***SelectTilesByPolygon***: Copies LiDAR tiles overlapping with a polygon into an output directory.
 
 **Mathematical and Statistical Analysis**
 
