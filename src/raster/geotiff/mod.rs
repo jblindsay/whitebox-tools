@@ -358,6 +358,11 @@ pub fn read_geotiff<'a>(
         _ => [0].to_vec(),
     };
 
+    configs.nodata = match ifd_map.get(&TAG_GDAL_NODATA) {
+        Some(ifd) => ifd.interpret_as_ascii().parse::<f64>().unwrap(),
+        _ => -32768f64,
+    };
+
     match ifd_map.get(&34735) {
         Some(ifd) => geokeys.add_key_directory(&ifd.data, configs.endian),
         _ => {

@@ -339,6 +339,7 @@ impl ToolManager {
         tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxAnisotropyDevSignature".to_string());
         tool_names.push("MaxBranchLength".to_string());
+        tool_names.push("MaxDifferenceFromMean".to_string());
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
@@ -708,7 +709,9 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
             }
             "normalvectors" => Some(Box::new(tools::lidar_analysis::NormalVectors::new())),
-            "selecttilesbypolygon" => Some(Box::new(tools::lidar_analysis::SelectTilesByPolygon::new())),
+            "selecttilesbypolygon" => {
+                Some(Box::new(tools::lidar_analysis::SelectTilesByPolygon::new()))
+            }
 
             // mathematical and statistical_analysis
             "absolutevalue" => Some(Box::new(tools::math_stat_analysis::AbsoluteValue::new())),
@@ -911,6 +914,9 @@ impl ToolManager {
                 tools::terrain_analysis::MaxAnisotropyDevSignature::new(),
             )),
             "maxbranchlength" => Some(Box::new(tools::terrain_analysis::MaxBranchLength::new())),
+            "maxdifferencefrommean" => Some(Box::new(
+                tools::terrain_analysis::MaxDifferenceFromMean::new(),
+            )),
             "maxdownslopeelevchange" => Some(Box::new(
                 tools::terrain_analysis::MaxDownslopeElevChange::new(),
             )),

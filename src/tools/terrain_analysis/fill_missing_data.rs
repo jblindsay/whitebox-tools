@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 14, 2017
-Last Modified: January 21, 2018
+Last Modified: 23/08/2018
 License: MIT
 */
 
@@ -62,10 +62,20 @@ impl FillMissingData {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "IDW Weight (Exponent) Value".to_owned(),
+            flags: vec!["--weight".to_owned()],
+            description: "IDW weight value.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.0".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -73,7 +83,7 @@ impl FillMissingData {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --filter=25",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --filter=25 --weight=1.0",
             short_exe, name
         ).replace("*", &sep);
 
@@ -131,6 +141,7 @@ impl WhiteboxTool for FillMissingData {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 11usize;
+        let mut weight = 2.0f64;
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -146,24 +157,31 @@ impl WhiteboxTool for FillMissingData {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if flag_val == "-filter" {
                 if keyval {
                     filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
                     filter_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
+            } else if flag_val == "-weight" {
+                weight = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -248,36 +266,134 @@ impl WhiteboxTool for FillMissingData {
                 let mut z: f64;
                 let mut sum_weights: f64;
                 let mut dist: f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        if input[(row, col)] == nodata {
-                            sum_weights = 0f64;
-                            let ret = frs.search(col as f32, row as f32);
-                            for j in 0..ret.len() {
-                                dist = ret[j].1 as f64;
-                                if dist > 0.0 {
-                                    sum_weights += 1.0 / (dist * dist);
+                match weight {
+                    x if x == 1f64 => {
+                        for row in (0..rows).filter(|r| r % num_procs == tid) {
+                            let mut data = vec![nodata; columns as usize];
+                            for col in 0..columns {
+                                if input[(row, col)] == nodata {
+                                    sum_weights = 0f64;
+                                    let ret = frs.search(col as f32, row as f32);
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            sum_weights += 1.0 / dist;
+                                        }
+                                    }
+                                    z = 0.0;
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            z += ret[j].0 * (1.0 / dist) / sum_weights;
+                                        }
+                                    }
+                                    if ret.len() > 0 {
+                                        data[col as usize] = z;
+                                    } else {
+                                        data[col as usize] = nodata;
+                                    }
+                                } else {
+                                    data[col as usize] = input[(row, col)];
                                 }
                             }
-                            z = 0.0;
-                            for j in 0..ret.len() {
-                                dist = ret[j].1 as f64;
-                                if dist > 0.0 {
-                                    z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
-                                }
-                            }
-                            if ret.len() > 0 {
-                                data[col as usize] = z;
-                            } else {
-                                data[col as usize] = nodata;
-                            }
-                        } else {
-                            data[col as usize] = input[(row, col)];
+                            tx1.send((row, data)).unwrap();
                         }
                     }
-                    tx1.send((row, data)).unwrap();
+                    x if x == 2f64 => {
+                        for row in (0..rows).filter(|r| r % num_procs == tid) {
+                            let mut data = vec![nodata; columns as usize];
+                            for col in 0..columns {
+                                if input[(row, col)] == nodata {
+                                    sum_weights = 0f64;
+                                    let ret = frs.search(col as f32, row as f32);
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            sum_weights += 1.0 / (dist * dist);
+                                        }
+                                    }
+                                    z = 0.0;
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
+                                        }
+                                    }
+                                    if ret.len() > 0 {
+                                        data[col as usize] = z;
+                                    } else {
+                                        data[col as usize] = nodata;
+                                    }
+                                } else {
+                                    data[col as usize] = input[(row, col)];
+                                }
+                            }
+                            tx1.send((row, data)).unwrap();
+                        }
+                    }
+                    _ => {
+                        for row in (0..rows).filter(|r| r % num_procs == tid) {
+                            let mut data = vec![nodata; columns as usize];
+                            for col in 0..columns {
+                                if input[(row, col)] == nodata {
+                                    sum_weights = 0f64;
+                                    let ret = frs.search(col as f32, row as f32);
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            sum_weights += 1.0 / dist.powf(weight); //(dist * dist);
+                                        }
+                                    }
+                                    z = 0.0;
+                                    for j in 0..ret.len() {
+                                        dist = ret[j].1 as f64;
+                                        if dist > 0.0 {
+                                            z += ret[j].0 * (1.0 / dist.powf(weight)) / sum_weights; //(dist * dist)) / sum_weights;
+                                        }
+                                    }
+                                    if ret.len() > 0 {
+                                        data[col as usize] = z;
+                                    } else {
+                                        data[col as usize] = nodata;
+                                    }
+                                } else {
+                                    data[col as usize] = input[(row, col)];
+                                }
+                            }
+                            tx1.send((row, data)).unwrap();
+                        }
+                    }
                 }
+                // for row in (0..rows).filter(|r| r % num_procs == tid) {
+                //     let mut data = vec![nodata; columns as usize];
+                //     for col in 0..columns {
+                //         if input[(row, col)] == nodata {
+                //             sum_weights = 0f64;
+                //             let ret = frs.search(col as f32, row as f32);
+                //             for j in 0..ret.len() {
+                //                 dist = ret[j].1 as f64;
+                //                 if dist > 0.0 {
+                //                     sum_weights += 1.0 / dist.powf(weight); //(dist * dist);
+                //                 }
+                //             }
+                //             z = 0.0;
+                //             for j in 0..ret.len() {
+                //                 dist = ret[j].1 as f64;
+                //                 if dist > 0.0 {
+                //                     z += ret[j].0 * (1.0 / dist.powf(weight)) / sum_weights; //(dist * dist)) / sum_weights;
+                //                 }
+                //             }
+                //             if ret.len() > 0 {
+                //                 data[col as usize] = z;
+                //             } else {
+                //                 data[col as usize] = nodata;
+                //             }
+                //         } else {
+                //             data[col as usize] = input[(row, col)];
+                //         }
+                //     }
+                //     tx1.send((row, data)).unwrap();
+                // }
             });
         }
 

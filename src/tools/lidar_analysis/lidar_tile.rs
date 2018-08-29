@@ -2,16 +2,16 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 29/08/2018
 License: MIT
 */
+use lidar::*;
 use std;
 use std::env;
-use std::io::{Error, ErrorKind};
 use std::fs::DirBuilder;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
-use lidar::*;
 use tools::*;
 
 /// Tiles a LiDAR LAS file into multiple LAS files.
@@ -24,81 +24,87 @@ pub struct LidarTile {
 }
 
 impl LidarTile {
-    pub fn new() -> LidarTile { // public constructor
+    pub fn new() -> LidarTile {
+        // public constructor
         let name = "LidarTile".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Tiles a LiDAR LAS file into multiple LAS files.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Tile Width in X Dimension".to_owned(), 
-            flags: vec!["--width_x".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Tile Width in X Dimension".to_owned(),
+            flags: vec!["--width_x".to_owned()],
             description: "Width of tiles in the X dimension; default 1000.0.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1000.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Tile Width in Y Dimension".to_owned(), 
-            flags: vec!["--width_y".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Tile Width in Y Dimension".to_owned(),
+            flags: vec!["--width_y".to_owned()],
             description: "Width of tiles in the Y dimension.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1000.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Origin Point X-Coordinate".to_owned(), 
-            flags: vec!["--origin_x".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Origin Point X-Coordinate".to_owned(),
+            flags: vec!["--origin_x".to_owned()],
             description: "Origin point X coordinate for tile grid.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Origin Point Y-Coordinate".to_owned(), 
-            flags: vec!["--origin_y".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Origin Point Y-Coordinate".to_owned(),
+            flags: vec!["--origin_y".to_owned()],
             description: "Origin point Y coordinate for tile grid.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Minimum Number of Tile Points".to_owned(), 
-            flags: vec!["--min_points".to_owned()], 
-            description: "Minimum number of points contained in a tile for it to be saved.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Minimum Number of Tile Points".to_owned(),
+            flags: vec!["--min_points".to_owned()],
+            description: "Minimum number of points contained in a tile for it to be saved."
+                .to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("0".to_owned()),
-            optional: true
+            default_value: Some("2".to_owned()),
+            optional: true,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v -i=*path*to*data*input.las --width_x=1000.0 --width_y=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
-    
-        LidarTile { 
-            name: name, 
-            description: description, 
+
+        LidarTile {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -107,7 +113,7 @@ impl WhiteboxTool for LidarTile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -138,17 +144,25 @@ impl WhiteboxTool for LidarTile {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = String::new();
         let mut width_x = 1000.0;
         let mut width_y = 1000.0;
         let mut origin_x = 0.0;
         let mut origin_y = 0.0;
-        let mut min_points = 0;
+        let mut min_points = 2;
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -156,42 +170,45 @@ impl WhiteboxTool for LidarTile {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            if vec.len() > 1 {
+                keyval = true;
+            }
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-width_x" || vec[0].to_lowercase() == "--width_x" {
+            } else if flag_val == "-width_x" {
                 if keyval {
                     width_x = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    width_x = args[i+1].to_string().parse::<f64>().unwrap();
+                    width_x = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-width_y" || vec[0].to_lowercase() == "--width_y" {
+            } else if flag_val == "-width_y" {
                 if keyval {
                     width_y = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    width_y = args[i+1].to_string().parse::<f64>().unwrap();
+                    width_y = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-origin_x" || vec[0].to_lowercase() == "--origin_x" {
+            } else if flag_val == "-origin_x" {
                 if keyval {
                     origin_x = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    origin_x = args[i+1].to_string().parse::<f64>().unwrap();
+                    origin_x = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-origin_y" || vec[0].to_lowercase() == "--origin_y" {
+            } else if flag_val == "-origin_y" {
                 if keyval {
                     origin_y = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    origin_y = args[i+1].to_string().parse::<f64>().unwrap();
+                    origin_y = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-min_points" || vec[0].to_lowercase() == "--min_points" {
+            } else if flag_val == "-min_points" {
                 if keyval {
                     min_points = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    min_points = args[i+1].to_string().parse::<f32>().unwrap() as usize;
+                    min_points = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }
@@ -204,11 +221,17 @@ impl WhiteboxTool for LidarTile {
 
         let sep = std::path::MAIN_SEPARATOR;
 
+        if min_points < 2 {
+            min_points = 2;
+        }
+
         if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
 
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
@@ -232,7 +255,10 @@ impl WhiteboxTool for LidarTile {
         let num_tiles = rows * cols;
 
         if num_tiles > 32767usize {
-            return Err(Error::new(ErrorKind::InvalidInput, "There are too many output tiles. Try choosing a larger grid width."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "There are too many output tiles. Try choosing a larger grid width.",
+            ));
         }
 
         let mut tile_data = vec![0usize; n_points];
@@ -289,8 +315,12 @@ impl WhiteboxTool for LidarTile {
             if output_tile[tile_num] {
                 row = (tile_num as f64 / cols as f64).floor() as usize;
                 col = tile_num % cols;
-                if row < min_row { min_row = row; }
-                if col < min_col { min_col = col; }
+                if row < min_row {
+                    min_row = row;
+                }
+                if col < min_col {
+                    min_col = col;
+                }
             }
         }
 
@@ -304,13 +334,22 @@ impl WhiteboxTool for LidarTile {
             None => "".to_string(),
         };
         let output_dir: String = format!("{}{}{}{}", dir.to_string(), sep, name, sep);
-        DirBuilder::new().recursive(true).create(output_dir.clone()).unwrap();
+        DirBuilder::new()
+            .recursive(true)
+            .create(output_dir.clone())
+            .unwrap();
         let mut num_tiles_created = 0;
         for tile_num in 0..num_tiles {
             if output_tile[tile_num] {
                 row = (tile_num as f64 / cols as f64).floor() as usize;
                 col = tile_num % cols;
-                let output_file = format!("{}{}_row{}_col{}.las", output_dir, name, row - min_row + 1, col - min_col + 1);
+                let output_file = format!(
+                    "{}{}_row{}_col{}.las",
+                    output_dir,
+                    name,
+                    row - min_row + 1,
+                    col - min_col + 1
+                );
                 let mut output = LasFile::initialize_using_file(&output_file, &input);
                 output.header.system_id = "EXTRACTION".to_string();
 
@@ -321,7 +360,12 @@ impl WhiteboxTool for LidarTile {
                 }
                 let _ = match output.write() {
                     Ok(_) => (), // do nothing
-                    Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error while writing: {:?}", e))),
+                    Err(e) => {
+                        return Err(Error::new(
+                            ErrorKind::Other,
+                            format!("Error while writing: {:?}", e),
+                        ))
+                    }
                 };
                 num_tiles_created += 1;
             }
@@ -340,7 +384,10 @@ impl WhiteboxTool for LidarTile {
                 println!("Successfully created {} tiles.", num_tiles_created);
             }
         } else if num_tiles_created == 0 {
-            return Err(Error::new(ErrorKind::Other, "Error: No tiles were created."));
+            return Err(Error::new(
+                ErrorKind::Other,
+                "Error: No tiles were created.",
+            ));
         }
 
         Ok(())

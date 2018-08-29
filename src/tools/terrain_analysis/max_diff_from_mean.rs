@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 20, 2017
-Last Modified: Dec. 15, 2017
+Created: 28/08/2018
+Last Modified: 29/08/2018
 License: MIT
 */
 
@@ -19,7 +19,7 @@ use structures::Array2D;
 use time;
 use tools::*;
 
-pub struct MaxElevationDeviation {
+pub struct MaxDifferenceFromMean {
     name: String,
     description: String,
     toolbox: String,
@@ -27,13 +27,13 @@ pub struct MaxElevationDeviation {
     example_usage: String,
 }
 
-impl MaxElevationDeviation {
-    pub fn new() -> MaxElevationDeviation {
+impl MaxDifferenceFromMean {
+    pub fn new() -> MaxDifferenceFromMean {
         // public constructor
-        let name = "MaxElevationDeviation".to_string();
+        let name = "MaxDifferenceFromMean".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
-            "Calculates the maximum elevation deviation over a range of spatial scales."
+            "Calculates the maximum difference from mean elevation over a range of spatial scales."
                 .to_string();
 
         let mut parameters = vec![];
@@ -47,18 +47,18 @@ impl MaxElevationDeviation {
         });
 
         parameters.push(ToolParameter {
-            name: "Output DEVmax Magnitude File".to_owned(),
+            name: "Output DIFFmax Magnitude File".to_owned(),
             flags: vec!["--out_mag".to_owned()],
-            description: "Output raster DEVmax magnitude file.".to_owned(),
+            description: "Output raster DIFFmax magnitude file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
         });
 
         parameters.push(ToolParameter {
-            name: "Output DEVmax Scale File".to_owned(),
+            name: "Output DIFFmax Scale File".to_owned(),
             flags: vec!["--out_scale".to_owned()],
-            description: "Output raster DEVmax scale file.".to_owned(),
+            description: "Output raster DIFFmax scale file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -104,7 +104,7 @@ impl MaxElevationDeviation {
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --out_mag=DEVmax_mag.tif --out_scale=DEVmax_scale.tif --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
 
-        MaxElevationDeviation {
+        MaxDifferenceFromMean {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -114,7 +114,7 @@ impl MaxElevationDeviation {
     }
 }
 
-impl WhiteboxTool for MaxElevationDeviation {
+impl WhiteboxTool for MaxDifferenceFromMean {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -176,32 +176,26 @@ impl WhiteboxTool for MaxElevationDeviation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_mag" || vec[0].to_lowercase() == "--out_mag" {
+            } else if flag_val == "-out_mag" {
                 if keyval {
                     output_mag_file = vec[1].to_string();
                 } else {
                     output_mag_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_scale"
-                || vec[0].to_lowercase() == "--out_scale"
-            {
+            } else if flag_val == "-out_scale" {
                 if keyval {
                     output_scale_file = vec[1].to_string();
                 } else {
                     output_scale_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-min_scale"
-                || vec[0].to_lowercase() == "--min_scale"
-            {
+            } else if flag_val == "-min_scale" {
                 if keyval {
                     min_scale = vec[1].to_string().parse::<isize>().unwrap();
                 } else {
@@ -210,9 +204,7 @@ impl WhiteboxTool for MaxElevationDeviation {
                 if min_scale < 1 {
                     min_scale = 1;
                 }
-            } else if vec[0].to_lowercase() == "-max_scale"
-                || vec[0].to_lowercase() == "--max_scale"
-            {
+            } else if flag_val == "-max_scale" {
                 if keyval {
                     max_scale = vec[1].to_string().parse::<isize>().unwrap();
                 } else {
@@ -221,7 +213,7 @@ impl WhiteboxTool for MaxElevationDeviation {
                 if max_scale < 5 {
                     max_scale = 5;
                 }
-            } else if vec[0].to_lowercase() == "-step" || vec[0].to_lowercase() == "--step" {
+            } else if flag_val == "-step" {
                 if keyval {
                     step = vec[1].to_string().parse::<isize>().unwrap();
                 } else {
@@ -266,18 +258,15 @@ impl WhiteboxTool for MaxElevationDeviation {
 
         // create the integral images
         let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
-        let mut integral2: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
 
         let mut val: f64;
         let mut sum: f64;
-        let mut sum_sqr: f64;
         let mut sum_n: i32;
-        let (mut i_prev, mut i2_prev): (f64, f64);
+        let mut i_prev: f64;
         let mut n_prev: i32;
         for row in 0..rows {
             sum = 0f64;
-            sum_sqr = 0f64;
             sum_n = 0;
             for col in 0..columns {
                 val = input[(row, col)];
@@ -287,17 +276,13 @@ impl WhiteboxTool for MaxElevationDeviation {
                     sum_n += 1;
                 }
                 sum += val;
-                sum_sqr += val * val;
                 if row > 0 {
                     i_prev = integral[(row - 1, col)];
-                    i2_prev = integral2[(row - 1, col)];
                     n_prev = integral_n[(row - 1, col)];
                     integral[(row, col)] = sum + i_prev;
-                    integral2[(row, col)] = sum_sqr + i2_prev;
                     integral_n[(row, col)] = sum_n + n_prev;
                 } else {
                     integral[(row, col)] = sum;
-                    integral2[(row, col)] = sum_sqr;
                     integral_n[(row, col)] = sum_n;
                 }
             }
@@ -311,7 +296,6 @@ impl WhiteboxTool for MaxElevationDeviation {
         }
 
         let i = Arc::new(integral); // wrap integral in an Arc
-        let i2 = Arc::new(integral2); // wrap integral2 in an Arc
         let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
 
         let num_procs = num_cpus::get() as isize;
@@ -328,7 +312,6 @@ impl WhiteboxTool for MaxElevationDeviation {
             for tid in 0..num_procs {
                 let input_data = input.clone();
                 let i = i.clone();
-                let i2 = i2.clone();
                 let i_n = i_n.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
@@ -339,8 +322,7 @@ impl WhiteboxTool for MaxElevationDeviation {
                         isize,
                     );
                     let mut n: i32;
-                    let (mut mean, mut sum, mut sum_sqr): (f64, f64, f64);
-                    let (mut v, mut s): (f64, f64);
+                    let (mut mean, mut sum): (f64, f64);
                     let mut z: f64;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         y1 = row - midpoint - 1;
@@ -368,16 +350,8 @@ impl WhiteboxTool for MaxElevationDeviation {
                                 n = i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)] - i_n[(y2, x1)];
                                 if n > 0 {
                                     sum = i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)];
-                                    sum_sqr =
-                                        i2[(y2, x2)] + i2[(y1, x1)] - i2[(y1, x2)] - i2[(y2, x1)];
-                                    v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
-                                    if v > 0f64 {
-                                        s = v.sqrt();
-                                        mean = sum / n as f64;
-                                        data[col as usize] = (z - mean) / s;
-                                    } else {
-                                        data[col as usize] = 0f64;
-                                    }
+                                    mean = sum / n as f64;
+                                    data[col as usize] = z - mean;
                                 } else {
                                     data[col as usize] = 0f64;
                                 }
@@ -422,8 +396,8 @@ impl WhiteboxTool for MaxElevationDeviation {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output_mag.configs.display_min = -3.0;
-        output_mag.configs.display_max = 3.0;
+        // output_mag.configs.display_min = -3.0;
+        // output_mag.configs.display_max = 3.0;
         output_mag.configs.palette = "blue_white_red.plt".to_string();
         output_mag.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",

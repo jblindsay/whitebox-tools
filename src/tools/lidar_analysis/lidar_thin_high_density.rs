@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 6, 2018
-Last Modified: February 6, 2018
+Last Modified: 28/08/2018
 License: MIT
 */
 
@@ -65,7 +65,7 @@ impl LidarThinHighDensity {
         parameters.push(ToolParameter {
             name: "Max. Point Density (pts/m^2)".to_owned(),
             flags: vec!["--density".to_owned()],
-            description: "Max. point density (points / m).".to_owned(),
+            description: "Max. point density (points / m^3).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
             optional: false,
@@ -83,7 +83,8 @@ impl LidarThinHighDensity {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -284,8 +285,8 @@ impl WhiteboxTool for LidarThinHighDensity {
                             }
                         }
                         let mut num_bins = ((maxz - minz) / grid_res).ceil() as usize;
-                        if num_bins == 0 {
-                            num_bins = 1;
+                        if (maxz - minz) % grid_res == 0f64 {
+                            num_bins += 1;
                         }
                         let mut histo = vec![0f64; num_bins];
                         let mut bin: usize;

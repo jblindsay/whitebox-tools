@@ -56,6 +56,7 @@ class WhiteboxTools(object):
         self.exe_name = "whitebox_tools{}".format(self.ext)
         # self.exe_path = os.path.dirname(shutil.which(
         #     self.exe_name) or path.dirname(path.abspath(__file__)))
+        # self.exe_path = os.path.dirname(os.path.join(os.path.realpath(__file__)))
         self.exe_path = path.dirname(path.abspath(__file__))
         self.work_dir = ""
         self.verbose = True
