@@ -43,6 +43,7 @@ extern crate serde_json;
 extern crate statrs;
 extern crate time;
 
+pub mod algorithms;
 pub mod io_utils;
 pub mod lidar;
 pub mod raster;

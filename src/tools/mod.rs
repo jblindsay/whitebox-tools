@@ -214,6 +214,7 @@ impl ToolManager {
         tool_names.push("LidarThin".to_string());
         tool_names.push("LidarThinHighDensity".to_string());
         tool_names.push("LidarTile".to_string());
+        tool_names.push("LidarTileFootprint".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
         tool_names.push("SelectTilesByPolygon".to_string());
@@ -705,6 +706,9 @@ impl ToolManager {
                 Some(Box::new(tools::lidar_analysis::LidarThinHighDensity::new()))
             }
             "lidartile" => Some(Box::new(tools::lidar_analysis::LidarTile::new())),
+            "lidartilefootprint" => {
+                Some(Box::new(tools::lidar_analysis::LidarTileFootprint::new()))
+            }
             "lidartophattransform" => {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
             }

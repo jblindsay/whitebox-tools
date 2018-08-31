@@ -56,7 +56,18 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.9.0 (XX-XX-2018)
+Version 0.10.0 (XX-XX-2018)
+- Added the following tools:
+    LidarTileFootprint
+    MaxDifferenceFromMean
+
+- Refactoring of some data related to Point2D, and common algorithms (e.g. 
+  point-in-poly, convex hull).
+- Added unit tests to BoundingBox, point_in_poly, and convex_hull.
+- Fixed a bug in LiDAR join related to tiles with fewer than two points. LAS files
+  now issue a warning upon saving when they contain less than two points.
+
+Version 0.9.0 (22-08-2018)
 - Added the following tools:
     ExtractRasterValuesAtPoints
     FindLowestOrHighestPoints

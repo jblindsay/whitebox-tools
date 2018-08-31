@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/03/2018
-Last Modified: 29/03/2018
+Last Modified: 30/08/2018
 License: MIT
 
 NOTES: When support is provided for reading vector attributes tables, this tool should be modified so
@@ -11,16 +11,16 @@ a lake elevation attribute is not specified, the tool would then default to chec
 elevation on each lake's coastline.
 */
 
+use algorithms;
 use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::BoundingBox;
+use structures::{BoundingBox, Point2D};
 use time;
 use tools::*;
-use vector;
-use vector::{Point2D, ShapeType, Shapefile};
+use vector::{ShapeType, Shapefile};
 
 pub struct FlattenLakes {
     name: String,
@@ -70,7 +70,8 @@ impl FlattenLakes {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -377,7 +378,7 @@ impl WhiteboxTool for FlattenLakes {
                         y = input.get_y_from_row(r);
                         for c in starting_col..ending_col {
                             x = input.get_x_from_column(c);
-                            if vector::point_in_poly(
+                            if algorithms::point_in_poly(
                                 &Point2D { x: x, y: y },
                                 &record.points[start_point_in_part..end_point_in_part + 1],
                             ) {
@@ -438,7 +439,7 @@ impl WhiteboxTool for FlattenLakes {
                         y = input.get_y_from_row(r);
                         for c in starting_col..ending_col {
                             x = input.get_x_from_column(c);
-                            if vector::point_in_poly(
+                            if algorithms::point_in_poly(
                                 &Point2D { x: x, y: y },
                                 &record.points[start_point_in_part..end_point_in_part + 1],
                             ) {

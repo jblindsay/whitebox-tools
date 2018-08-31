@@ -2,19 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/04/2018
-Last Modified: 25/04/2018
+Last Modified: 30/08/2018
 License: MIT
 */
 
+use algorithms;
 use lidar::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::BoundingBox;
+use structures::{BoundingBox, Point2D};
 use time;
 use tools::*;
-use vector;
-use vector::{Point2D, ShapeType, Shapefile};
+use vector::{ShapeType, Shapefile};
 
 pub struct ClipLidarToPolygon {
     name: String,
@@ -64,7 +64,8 @@ impl ClipLidarToPolygon {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -238,7 +239,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
                                 record.num_points as usize - 1
                             };
 
-                            if vector::point_in_poly(
+                            if algorithms::point_in_poly(
                                 &Point2D { x: p.x, y: p.y },
                                 &record.points[start_point_in_part..end_point_in_part + 1],
                             ) {
@@ -258,7 +259,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
                                 record.num_points as usize - 1
                             };
 
-                            if vector::point_in_poly(
+                            if algorithms::point_in_poly(
                                 &Point2D { x: p.x, y: p.y },
                                 &record.points[start_point_in_part..end_point_in_part + 1],
                             ) {

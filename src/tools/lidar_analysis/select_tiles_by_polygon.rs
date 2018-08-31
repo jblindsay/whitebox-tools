@@ -2,10 +2,11 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/08/2018
-Last Modified: 02/08/2018
+Last Modified: 30/08/2018
 License: MIT
 */
 
+use algorithms;
 use lidar::*;
 use num_cpus;
 use std::env;
@@ -16,11 +17,10 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::BoundingBox;
+use structures::{BoundingBox, Point2D};
 use time;
 use tools::*;
-use vector;
-use vector::{Point2D, ShapeType, Shapefile};
+use vector::{ShapeType, Shapefile};
 
 /// Copies LiDAR tiles overlapping with a polygon into an output directory.
 pub struct SelectTilesByPolygon {
@@ -73,7 +73,8 @@ impl SelectTilesByPolygon {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -292,7 +293,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                                         record.num_points as usize - 1
                                     };
 
-                                    if vector::point_in_poly(
+                                    if algorithms::point_in_poly(
                                         &Point2D { x: east, y: north },
                                         &record.points[start_point_in_part..end_point_in_part + 1],
                                     ) {
@@ -300,7 +301,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                                         break;
                                     }
 
-                                    if vector::point_in_poly(
+                                    if algorithms::point_in_poly(
                                         &Point2D { x: west, y: north },
                                         &record.points[start_point_in_part..end_point_in_part + 1],
                                     ) {
@@ -308,7 +309,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                                         break;
                                     }
 
-                                    if vector::point_in_poly(
+                                    if algorithms::point_in_poly(
                                         &Point2D { x: east, y: south },
                                         &record.points[start_point_in_part..end_point_in_part + 1],
                                     ) {
@@ -316,7 +317,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                                         break;
                                     }
 
-                                    if vector::point_in_poly(
+                                    if algorithms::point_in_poly(
                                         &Point2D { x: west, y: south },
                                         &record.points[start_point_in_part..end_point_in_part + 1],
                                     ) {

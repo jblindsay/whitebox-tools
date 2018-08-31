@@ -2,12 +2,12 @@
 This file is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/04/2018
-Last Modified: 10/04/2018
+Last Modified: 31/08/2018
 License: MIT
 */
 use std::f64;
 use std::fmt;
-use vector::Point2D;
+use structures::Point2D;
 
 #[derive(Clone)]
 pub struct ShapefileGeometry {
@@ -29,6 +29,14 @@ pub struct ShapefileGeometry {
 }
 
 impl ShapefileGeometry {
+    /// ShapefileGeometry constructor method.
+    pub fn new(shape_type: ShapeType) -> ShapefileGeometry {
+        ShapefileGeometry {
+            shape_type: shape_type,
+            ..Default::default()
+        }
+    }
+
     /// Adds a single Point2D to the ShapefileGeometry's points array.
     pub fn add_point(&mut self, p: Point2D) {
         self.points.push(p);

@@ -19,6 +19,7 @@ use structures::Array2D;
 use time;
 use tools::*;
 
+/// Calculates the maximum difference from mean elevation over a range of spatial scales.
 pub struct MaxDifferenceFromMean {
     name: String,
     description: String,

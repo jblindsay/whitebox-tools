@@ -65,7 +65,7 @@ impl LasFile {
         };
         lf.file_mode = file_mode.to_lowercase();
         if lf.file_mode == "r" || lf.file_mode == "rh" {
-            try!(lf.read());
+            lf.read()?;
         } else {
             lf.file_mode = "w".to_string();
         }
@@ -427,6 +427,13 @@ impl LasFile {
         }
     }
 
+    pub fn get_short_filename(&self) -> String {
+        let path = Path::new(&self.file_name);
+        let file_name = path.file_stem().unwrap();
+        let f = file_name.to_str().unwrap();
+        f.to_string()
+    }
+
     pub fn get_extent(&self) -> BoundingBox {
         BoundingBox {
             min_x: self.header.min_x,
@@ -500,6 +507,13 @@ impl LasFile {
                 buffer
             }
         };
+
+        if buffer.len() < 375 { 
+            // The buffer is less than the header size. This is a sign
+            // that there is something wrong with the file. Issue an error
+            return Err(Error::new(ErrorKind::InvalidData, 
+                    format!("The file {} appears to be formatted incorrectly. Buffer size is smaller than the LAS header size.", self.get_short_filename())))
+        }
 
         self.header.project_id_used = true;
         self.header.version_major = buffer[24];
@@ -1012,6 +1026,11 @@ impl LasFile {
         }
         if !self.header_is_set {
             return Err(Error::new(ErrorKind::Other, "The header of a LAS file must be added before any point records. Please see add_header()."));
+        }
+
+        // Issue a warning if there are fewer than two points in the dataset. Many tools won't work correctly if this is the case.
+        if self.header.number_of_points < 2 {
+            println!("WARNING: There are fewer than two points in the LAS file. This may cause some tools to fail when reading these data.");
         }
 
         self.header.x_offset = self.header.min_x;

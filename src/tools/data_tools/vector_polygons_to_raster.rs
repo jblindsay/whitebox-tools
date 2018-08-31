@@ -2,20 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/04/2018
-Last Modified: 05/05/2018
+Last Modified: 30/08/2018
 License: MIT
 */
 
+use algorithms::point_in_poly;
 use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::BoundingBox;
+use structures::{BoundingBox, Point2D};
 use time;
 use tools::*;
-use vector;
-use vector::{FieldData, Point2D, ShapeType, Shapefile};
+use vector::{FieldData, ShapeType, Shapefile};
 
 pub struct VectorPolygonsToRaster {
     name: String,
@@ -97,7 +97,8 @@ impl VectorPolygonsToRaster {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -430,7 +431,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             y = output.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = output.get_x_from_column(c);
-                                if vector::point_in_poly(
+                                if point_in_poly(
                                     &Point2D { x: x, y: y },
                                     &record.points[start_point_in_part..end_point_in_part + 1],
                                 ) {
@@ -517,7 +518,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             y = output.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = output.get_x_from_column(c);
-                                if vector::point_in_poly(
+                                if point_in_poly(
                                     &Point2D { x: x, y: y },
                                     &record.points[start_point_in_part..end_point_in_part + 1],
                                 ) {
