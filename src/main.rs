@@ -48,6 +48,7 @@ pub mod io_utils;
 pub mod lidar;
 pub mod raster;
 pub mod rendering;
+pub mod spatial_ref_system;
 pub mod structures;
 pub mod tools;
 pub mod vector;

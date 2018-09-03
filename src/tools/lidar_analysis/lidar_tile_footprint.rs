@@ -199,12 +199,14 @@ impl WhiteboxTool for LidarTileFootprint {
 
         let num_tiles = inputs.len();
         let tile_list = Arc::new(Mutex::new(0..num_tiles));
+        let wkt = Arc::new(Mutex::new(String::new()));
         let inputs = Arc::new(inputs);
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = channel();
         for _ in 0..num_procs {
             let inputs = inputs.clone();
             let tile_list = tile_list.clone();
+            let wkt = wkt.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut tile = 0;
@@ -230,7 +232,7 @@ impl WhiteboxTool for LidarTileFootprint {
                         println!("Performing analysis...");
                     }
                     match LasFile::new(&input_file, "r") {
-                        Ok(input) => {
+                        Ok(mut input) => {
                             let n_points = input.header.number_of_points as usize;
 
                             // read the points into a Vec<Point2D>
@@ -247,6 +249,11 @@ impl WhiteboxTool for LidarTileFootprint {
                             // now add a last point same as the first.
                             let p = hull_points[0];
                             hull_points.push(p);
+
+                            if tile == 0 {
+                                let mut data = wkt.lock().unwrap();
+                                *data = input.get_wkt();
+                            }
                             // send the data to the main thread to be output
                             tx.send((hull_points, short_filename, n_points)).unwrap();
                         }
@@ -291,23 +298,12 @@ impl WhiteboxTool for LidarTileFootprint {
                             false,
                         );
                     } else {
+                        // there was an error, likely reading a LAS file.
                         println!("{}", data.1);
                     }
                 }
                 Err(val) => println!("Error: {:?}", val),
             }
-            // let data = rx.recv().unwrap();
-            // let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            // sfg.add_part(&data.0);
-            // output.add_record(sfg);
-            // output.attributes.add_record(
-            //     vec![
-            //         FieldData::Int(tile as i32 + 1i32),
-            //         FieldData::Text(data.1),
-            //         FieldData::Int(data.2 as i32),
-            //     ],
-            //     false,
-            // );
             if verbose {
                 progress = (100.0_f64 * tile as f64 / (num_tiles - 1) as f64) as i32;
                 if progress != old_progress {
@@ -315,6 +311,11 @@ impl WhiteboxTool for LidarTileFootprint {
                     old_progress = progress;
                 }
             }
+        }
+
+        let data = wkt.lock().unwrap();
+        if *data != "" && *data != "Unknown EPSG Code" && output.projection.is_empty() {
+            output.projection = data.to_string();
         }
 
         let end = time::now();

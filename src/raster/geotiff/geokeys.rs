@@ -122,6 +122,34 @@ impl GeoKeys {
 		ifd_map
 	}
 
+	pub fn find_epsg_code(&self) -> u16 {
+		if self.geo_key_directory.len() == 0 {
+			return 0u16;
+		}
+		let keys = get_keys_map();
+		let number_of_keys = self.geo_key_directory[3];
+
+		let mut epsg_code = 0u16;
+
+		for i in 0..number_of_keys as usize {
+			let offset = 4 * (i + 1);
+			let key_id = self.geo_key_directory[offset];
+			let unknown_tag = TiffTag::new_unknown_tag();
+			let key = match keys.get(&key_id) {
+				Some(key) => key,
+				None => &unknown_tag,
+			};
+
+			if key.code == 3072 || key.code == 2048 {
+				epsg_code = self.geo_key_directory[offset + 3];
+			} else if key.code == 2048 && epsg_code == 0u16 {
+				epsg_code = self.geo_key_directory[offset + 3];
+			}
+		}
+
+		epsg_code
+	}
+
 	pub fn interpret_geokeys(&self) -> String {
 		if self.geo_key_directory.len() == 0 {
 			return "GeoKeys have not been set.".to_string();
@@ -165,17 +193,24 @@ impl GeoKeys {
 			} else if tiff_tag_location == 34736 {
 				let value =
 					&self.geo_double_params[value_offset as usize..(value_offset + count) as usize];
-				s = s + &format!(
-					"\n{} (code={}, type=Double, count={}): {:?}",
-					key.name, key.code, count, value
-				);
+				if count > 1 {
+					s = s + &format!(
+						"\n{} (code={}, type=Double, count={}): {:?}",
+						key.name, key.code, count, value
+					);
+				} else {
+					s = s + &format!(
+						"\n{} (code={}, type=Double, count={}): {}",
+						key.name, key.code, count, value[0]
+					);
+				}
 			} else if tiff_tag_location == 0 {
 				let key_code = key.code;
 				let value: String;
 				if keyword_map.contains_key(&key_code) {
 					match keyword_map.get(&key_code) {
 						Some(hm) => match hm.get(&value_offset) {
-							Some(v) => value = v.to_string(),
+							Some(v) => value = format!("{} ({})", v.to_string(), value_offset), //v.to_string(),
 							None => value = format!("Unrecognized value ({})", value_offset),
 						},
 						None => value = format!("Unrecognized value ({})", key_code),
@@ -867,7 +902,7 @@ pub fn get_keyword_map() -> HashMap<u16, HashMap<u16, &'static str>> {
 	kw.insert(339u16, sample_format_map);
 
 	let model_type_map = hashmap![
-        1u16=>"ModelTypeProjected",
+    	1u16=>"ModelTypeProjected",
         2u16=>"ModelTypeGeographic",
         3u16=>"ModelTypeGeocentric"
     ];

@@ -25,6 +25,7 @@ use std::ops::Index;
 use std::path::Path;
 use std::str;
 use structures::BoundingBox;
+use spatial_ref_system::esri_wkt_from_epsg;
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -38,6 +39,7 @@ pub struct LasFile {
     colour_data: Vec<ColourData>,
     waveform_data: Vec<WaveformPacket>,
     pub geokeys: GeoKeys,
+    wkt: String,
     // starting_point: usize,
     header_is_set: bool,
     pub use_point_intensity: bool,
@@ -61,6 +63,7 @@ impl LasFile {
         //LasFile {
         let mut lf = LasFile {
             file_name: file_name.to_string(),
+            wkt: String::new(),
             ..Default::default()
         };
         lf.file_mode = file_mode.to_lowercase();
@@ -86,6 +89,7 @@ impl LasFile {
     pub fn initialize_using_file<'a>(file_name: &'a str, input: &'a LasFile) -> LasFile {
         let mut output = LasFile {
             file_name: file_name.to_string(),
+            wkt: String::new(),
             ..Default::default()
         };
         output.file_mode = "w".to_string();
@@ -443,6 +447,14 @@ impl LasFile {
         }
     }
 
+    pub fn get_wkt(&mut self) -> String {
+        if self.wkt.is_empty() {
+            let epsg_code = self.geokeys.find_epsg_code();
+            self.wkt = esri_wkt_from_epsg(epsg_code);
+        }
+        self.wkt.clone()
+    }
+
     pub fn read(&mut self) -> Result<(), Error> {
         let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
             false => {
@@ -633,6 +645,13 @@ impl LasFile {
                         .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
                 } else if vlr.record_id == 34_737 {
                     self.geokeys.add_ascii_params(&vlr.binary_data);
+                } else if vlr.record_id == 2112 {
+                    let skip = if vlr.binary_data[vlr.binary_data.len()-1] == 0u8 {
+                        1
+                    } else {
+                        0
+                    };
+                    self.wkt = String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len()-skip]).trim().to_string();
                 }
                 self.vlr_data.push(vlr);
             }
