@@ -36,7 +36,7 @@ impl MinimumConvexHull {
         parameters.push(ToolParameter {
             name: "Input Vector File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input LiDAR file.".to_owned(),
+            description: "Input vector file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
                 VectorGeometryType::Any,
             )),
@@ -190,6 +190,12 @@ impl WhiteboxTool for MinimumConvexHull {
         }
 
         let input = Shapefile::read(&input_file)?;
+
+        if input.header.shape_type.base_shape_type() == ShapeType::Point {
+            // Finding hulls around individual points makes no sense. Likely
+            // the user didn't intend to supply the --hull flag.
+            individual_feature_hulls = false;
+        }
 
         if individual_feature_hulls {
             // create output file

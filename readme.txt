@@ -58,14 +58,22 @@ for more details.
 
 Version 0.10.0 (XX-XX-2018)
 - Added the following tools:
+    ExtractNodes
     LidarTileFootprint
     MaxDifferenceFromMean
+    MinimumConvexHull
 
 - Refactoring of some data related to Point2D, and common algorithms (e.g. 
   point-in-poly, convex hull).
 - Added unit tests to BoundingBox, point_in_poly, and convex_hull.
 - Fixed a bug in LiDAR join related to tiles with fewer than two points. LAS files
   now issue a warning upon saving when they contain less than two points.
+- The default callback can now be modified in whitebox_tools.py, such that
+  a single custom callback can be used without having to specify it for each
+  tool function call.
+- Added initial support for getting projection ESPG and WKT info from LAS files 
+  and GeoTiff data. This is the start of a more fullsome approach to handling
+  spatial reference system information in the library.
 
 Version 0.9.0 (22-08-2018)
 - Added the following tools:
