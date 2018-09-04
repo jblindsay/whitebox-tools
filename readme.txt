@@ -64,6 +64,7 @@ Version 0.10.0 (XX-XX-2018)
     MaxDifferenceFromMean
     MinimumConvexHull
     PolygonsToLines
+    ReinitializeAttributeTable
 
 - Refactoring of some data related to Point2D, and common algorithms (e.g. 
   point-in-poly, convex hull).
@@ -76,6 +77,7 @@ Version 0.10.0 (XX-XX-2018)
 - Added initial support for getting projection ESPG and WKT info from LAS files 
   and GeoTiff data. This is the start of a more fullsome approach to handling
   spatial reference system information in the library.
+- Fixed a bug in saving Shapefile m and z data.
 
 Version 0.9.0 (22-08-2018)
 - Added the following tools:
