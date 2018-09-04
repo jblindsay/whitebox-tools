@@ -164,6 +164,7 @@ impl ShapefileGeometry {
             if m > self.m_max {
                 self.m_max = m;
             }
+            self.m_array.push(m);
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
@@ -206,12 +207,14 @@ impl ShapefileGeometry {
             if m > self.m_max {
                 self.m_max = m;
             }
+            self.m_array.push(m);
             if z < self.z_min {
                 self.z_min = z;
             }
             if z > self.z_max {
                 self.z_max = z;
             }
+            self.z_array.push(z);
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;

@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 333 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 334 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -396,9 +396,10 @@ The library currently contains the following 333 tools, which are each grouped b
 - ***FilterLidarScanAngles***: Removes points in a LAS file with scan angles greater than a threshold.
 - ***FindFlightlineEdgePoints***: Identifies points along a flightline's edge in a LAS file.
 - ***FlightlineOverlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
-- ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 - ***LasToAscii***: Converts one or more LAS files into ASCII text files.
+- **LasToMultipointShapefile**: Converts one or more LAS files into MultipointZ vector Shapefiles.
 - ***LidarColourize***: Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
+- ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 - ***LidarGroundPointFilter***: Identifies ground points within LiDAR dataset.
 - ***LidarIdwInterpolation***: Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
 - ***LidarHillshade***: Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.

@@ -198,6 +198,7 @@ impl ToolManager {
         tool_names.push("FindFlightlineEdgePoints".to_string());
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LasToAscii".to_string());
+        tool_names.push("LasToMultipointShapefile".to_string());
         tool_names.push("LidarColourize".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
@@ -677,6 +678,9 @@ impl ToolManager {
             )),
             "flightlineoverlap" => Some(Box::new(tools::lidar_analysis::FlightlineOverlap::new())),
             "lastoascii" => Some(Box::new(tools::lidar_analysis::LasToAscii::new())),
+            "lastomultipointshapefile" => Some(Box::new(
+                tools::lidar_analysis::LasToMultipointShapefile::new(),
+            )),
             "lidarcolourize" => Some(Box::new(tools::lidar_analysis::LidarColourize::new())),
             "lidarelevationslice" => {
                 Some(Box::new(tools::lidar_analysis::LidarElevationSlice::new()))

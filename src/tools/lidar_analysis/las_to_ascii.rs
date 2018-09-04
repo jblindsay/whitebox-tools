@@ -2,19 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 16, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 04/09/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
-use std::fs::File;
-use std::io::prelude::*;
+use lidar::*;
 use std;
 use std::env;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
-use lidar::*;
+use time;
 use tools::*;
 
 pub struct LasToAscii {
@@ -26,36 +26,41 @@ pub struct LasToAscii {
 }
 
 impl LasToAscii {
-    pub fn new() -> LasToAscii { // public constructor
+    pub fn new() -> LasToAscii {
+        // public constructor
         let name = "LasToAscii".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Converts one or more LAS files into ASCII text files.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input LiDAR files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\"", short_exe, name).replace("*", &sep);
-    
-        LasToAscii { 
-            name: name, 
-            description: description, 
+
+        LasToAscii {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -64,7 +69,7 @@ impl WhiteboxTool for LasToAscii {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -95,12 +100,20 @@ impl WhiteboxTool for LasToAscii {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files: String = String::new();
-    
+
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -108,12 +121,15 @@ impl WhiteboxTool for LasToAscii {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--inputs" {
+            if vec.len() > 1 {
+                keyval = true;
+            }
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-inputs" || flag_val == "-input" {
                 if keyval {
                     input_files = vec[1].to_string();
                 } else {
-                    input_files = args[i+1].to_string();
+                    input_files = args[i + 1].to_string();
                 }
             }
         }
@@ -125,7 +141,7 @@ impl WhiteboxTool for LasToAscii {
         }
 
         let sep = std::path::MAIN_SEPARATOR;
-        
+
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
@@ -148,27 +164,43 @@ impl WhiteboxTool for LasToAscii {
 
                 let input: LasFile = match LasFile::new(&input_file, "r") {
                     Ok(lf) => lf,
-                    Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
+                    Err(_) => {
+                        return Err(Error::new(
+                            ErrorKind::NotFound,
+                            format!("No such file or directory ({})", input_file),
+                        ))
+                    }
                 };
-                
+
                 let output_file = if input_file.to_lowercase().ends_with(".las") {
                     input_file.replace(".las", ".txt")
                 } else if input_file.to_lowercase().ends_with(".zip") {
                     input_file.replace(".zip", ".txt")
                 } else {
-                    return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file)));
+                    return Err(Error::new(
+                        ErrorKind::NotFound,
+                        format!("No such file or directory ({})", input_file),
+                    ));
                 };
 
                 let f = File::create(output_file)?;
                 let mut writer = BufWriter::new(f);
 
-                
                 let n_points = input.header.number_of_points as usize;
 
                 writer.write_all("X Y Z Intensity Class Return Num_returns\n".as_bytes())?;
                 for k in 0..n_points {
                     let pd = input[k];
-                    let s = format!("{} {} {} {} {} {} {}\n", pd.x, pd.y, pd.z, pd.intensity, pd.classification(), pd.return_number(), pd.number_of_returns());
+                    let s = format!(
+                        "{} {} {} {} {} {} {}\n",
+                        pd.x,
+                        pd.y,
+                        pd.z,
+                        pd.intensity,
+                        pd.classification(),
+                        pd.return_number(),
+                        pd.number_of_returns()
+                    );
                     writer.write_all(s.as_bytes())?;
 
                     if verbose {
@@ -191,7 +223,10 @@ impl WhiteboxTool for LasToAscii {
         if verbose {
             let end = time::now();
             let elapsed_time = end - start;
-            println!("{}", &format!("Elapsed Time: {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
