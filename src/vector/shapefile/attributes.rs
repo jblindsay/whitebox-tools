@@ -169,15 +169,19 @@ impl ShapefileAttributes {
         &self.fields[index]
     }
 
+    /// Returns the fields of a table
+    pub fn get_fields<'a>(&'a self) -> &'a Vec<AttributeField> {
+        &self.fields
+    }
+
     /// Adds an attribute record to the table.
     pub fn add_record(&mut self, rec: Vec<FieldData>, deleted: bool) {
         self.data.push(rec);
-        // println!("{} {:?}", self.data.len(), self.data);
         self.is_deleted.push(deleted);
         self.header.num_records = self.data.len() as u32; //+= 1;
     }
 
-    /// Retrieves an attribute record for a zero-based index.
+    /// Retrieves an attribute record for a zero-based index. The returned data is a copy of the original.
     pub fn get_record(&self, index: usize) -> Vec<FieldData> {
         if index >= self.header.num_records as usize {
             panic!("Error: Specified record index is greater than the number of records.");

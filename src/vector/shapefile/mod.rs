@@ -1101,7 +1101,11 @@ impl Shapefile {
                         let dc = self.attributes.fields[j as usize].decimal_count as usize;
                         let s = v.to_string();
                         let d = v.trunc().to_string();
-                        let mut c = s[d.len() + 1..s.len()].to_string();
+                        let mut c = if s.len() > d.len() {
+                            s[d.len() + 1..s.len()].to_string()
+                        } else {
+                            String::new()
+                        };
                         if c.len() > dc {
                             c = c[0..dc].to_string();
                         }
