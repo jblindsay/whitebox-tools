@@ -30,6 +30,7 @@ impl ToolManager {
         tool_names.push("ExportTableToCsv".to_string());
         tool_names.push("IdwInterpolation".to_string());
         tool_names.push("NewRasterFromBase".to_string());
+        tool_names.push("PolygonsToLines".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("SetNodataValue".to_string());
         tool_names.push("VectorLinesToRaster".to_string());
@@ -390,6 +391,7 @@ impl ToolManager {
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
             "idwinterpolation" => Some(Box::new(tools::data_tools::IdwInterpolation::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
+            "polygonstolines" => Some(Box::new(tools::data_tools::PolygonsToLines::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
             "vectorlinestoraster" => Some(Box::new(tools::data_tools::VectorLinesToRaster::new())),

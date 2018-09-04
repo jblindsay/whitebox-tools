@@ -62,6 +62,7 @@ Version 0.10.0 (XX-XX-2018)
     LidarTileFootprint
     MaxDifferenceFromMean
     MinimumConvexHull
+    PolygonsToLines
 
 - Refactoring of some data related to Point2D, and common algorithms (e.g. 
   point-in-poly, convex hull).
