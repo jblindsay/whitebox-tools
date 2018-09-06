@@ -1,18 +1,19 @@
-use std::io::Error;
-use std::io::ErrorKind;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
+use byteorder::{LittleEndian, WriteBytesExt};
+use io_utils::Endianness;
+use raster::*;
 use std::f64;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::Error;
+use std::io::ErrorKind;
+use std::io::{BufReader, BufWriter};
 use std::mem;
-use raster::*;
-use io_utils::Endianness;
 
-pub fn read_whitebox(file_name: &String,
-                     configs: &mut RasterConfigs,
-                     data: &mut Vec<f64>)
-                     -> Result<(), Error> {
+pub fn read_whitebox(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".tas", ".dep");
     let f = File::open(header_file)?;
@@ -41,68 +42,44 @@ pub fn read_whitebox(file_name: &String,
             configs.display_min = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("display max") {
             configs.display_max = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("min") &&
-                  !vec[0].to_lowercase().contains("display") {
+        } else if vec[0].to_lowercase().contains("min")
+            && !vec[0].to_lowercase().contains("display")
+        {
             configs.minimum = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else if vec[0].to_lowercase().contains("max") &&
-                  !vec[0].to_lowercase().contains("display") {
+        } else if vec[0].to_lowercase().contains("max")
+            && !vec[0].to_lowercase().contains("display")
+        {
             configs.maximum = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("data type") {
-            if vec[1]
-                   .trim()
-                   .to_lowercase()
-                   .to_string()
-                   .contains("double") {
+            if vec[1].trim().to_lowercase().to_string().contains("double") {
                 configs.data_type = DataType::F64;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("float") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("float") {
                 configs.data_type = DataType::F32;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("integer") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("integer") {
                 configs.data_type = DataType::I16;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("byte") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("byte") {
                 configs.data_type = DataType::U8;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("i32") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("i32") {
                 configs.data_type = DataType::I32;
             }
         } else if vec[0].to_lowercase().contains("data scale") {
             if vec[1]
-                   .trim()
-                   .to_lowercase()
-                   .to_string()
-                   .contains("continuous") {
+                .trim()
+                .to_lowercase()
+                .to_string()
+                .contains("continuous")
+            {
                 configs.photometric_interp = PhotometricInterpretation::Continuous;
             } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("categorical") {
+                .trim()
+                .to_lowercase()
+                .to_string()
+                .contains("categorical")
+            {
                 configs.photometric_interp = PhotometricInterpretation::Categorical;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("boolean") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("boolean") {
                 configs.photometric_interp = PhotometricInterpretation::Boolean;
-            } else if vec[1]
-                          .trim()
-                          .to_lowercase()
-                          .to_string()
-                          .contains("rgb") {
+            } else if vec[1].trim().to_lowercase().to_string().contains("rgb") {
                 configs.photometric_interp = PhotometricInterpretation::RGB;
                 configs.data_type = DataType::RGBA32;
             }
@@ -119,8 +96,9 @@ pub fn read_whitebox(file_name: &String,
         } else if vec[0].to_lowercase().contains("nonlinearity") {
             configs.palette_nonlinearity = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("byte order") {
-            if vec[1].trim().to_lowercase().contains("little") ||
-               vec[1].trim().to_lowercase().contains("lsb") {
+            if vec[1].trim().to_lowercase().contains("little")
+                || vec[1].trim().to_lowercase().contains("lsb")
+            {
                 configs.endian = Endianness::LittleEndian;
             } else {
                 configs.endian = Endianness::BigEndian;
@@ -143,9 +121,10 @@ pub fn read_whitebox(file_name: &String,
 
     let data_size = if configs.data_type == DataType::F64 {
         8
-    } else if configs.data_type == DataType::F32 ||
-              configs.data_type == DataType::I32 ||
-              configs.data_type == DataType::RGBA32 {
+    } else if configs.data_type == DataType::F32
+        || configs.data_type == DataType::I32
+        || configs.data_type == DataType::RGBA32
+    {
         4
     } else if configs.data_type == DataType::I16 {
         2
@@ -153,7 +132,6 @@ pub fn read_whitebox(file_name: &String,
         // DataType::Byte
         1
     };
-
 
     let num_cells = configs.rows * configs.columns;
     let buf_size = 1_000_000usize;
@@ -174,15 +152,17 @@ pub fn read_whitebox(file_name: &String,
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe {
-                                  mem::transmute::<[u8; 8], f64>([buffer[offset],
-                                                                  buffer[offset + 1],
-                                                                  buffer[offset + 2],
-                                                                  buffer[offset + 3],
-                                                                  buffer[offset + 4],
-                                                                  buffer[offset + 5],
-                                                                  buffer[offset + 6],
-                                                                  buffer[offset + 7]])
-                              });
+                        mem::transmute::<[u8; 8], f64>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                            buffer[offset + 4],
+                            buffer[offset + 5],
+                            buffer[offset + 6],
+                            buffer[offset + 7],
+                        ])
+                    });
                     j += 1;
                     if j == num_cells {
                         break;
@@ -217,11 +197,13 @@ pub fn read_whitebox(file_name: &String,
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe {
-                                  mem::transmute::<[u8; 4], i32>([buffer[offset],
-                                                                  buffer[offset + 1],
-                                                                  buffer[offset + 2],
-                                                                  buffer[offset + 3]])
-                              } as f64);
+                        mem::transmute::<[u8; 4], i32>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                        ])
+                    } as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -232,9 +214,8 @@ pub fn read_whitebox(file_name: &String,
                 for i in 0..buf_size {
                     offset = i * data_size;
                     data.push(unsafe {
-                                  mem::transmute::<[u8; 2], i16>([buffer[offset],
-                                                                  buffer[offset + 1]])
-                              } as f64);
+                        mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset + 1]])
+                    } as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -286,7 +267,10 @@ pub fn read_whitebox(file_name: &String,
                 // }
             }
             _ => {
-                return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    "Raster data type is unknown.",
+                ));
             }
         }
     }
@@ -373,9 +357,13 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             writer.write_all("Data Type:\tBYTE\n".as_bytes())?;
         }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound,
-                                  format!("Raster data type {:?} not supported in this format.",
-                                          r.configs.data_type)));
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                format!(
+                    "Raster data type {:?} not supported in this format.",
+                    r.configs.data_type
+                ),
+            ));
         }
     }
 
@@ -392,10 +380,8 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
         PhotometricInterpretation::Continuous => {
             writer.write_all("Data Scale:\tcontinuous\n".as_bytes())?;
         }
-        PhotometricInterpretation::Categorical |
-        PhotometricInterpretation::Paletted => {
-            writer
-                .write_all("Data Scale:\tcategorical\n".as_bytes())?;
+        PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
+            writer.write_all("Data Scale:\tcategorical\n".as_bytes())?;
         }
         PhotometricInterpretation::Boolean => {
             writer.write_all("Data Scale:\tBoolean\n".as_bytes())?;
@@ -424,8 +410,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     writer.write_all(s.as_bytes())?;
 
     if r.configs.endian == Endianness::LittleEndian {
-        writer
-            .write_all("Byte Order:\tLITTLE_ENDIAN\n".as_bytes())?;
+        writer.write_all("Byte Order:\tLITTLE_ENDIAN\n".as_bytes())?;
     } else {
         writer.write_all("Byte Order:\tBIG_ENDIAN\n".as_bytes())?;
     }
@@ -433,8 +418,10 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     if r.configs.palette_nonlinearity < 0.0 {
         r.configs.palette_nonlinearity = 1.0;
     }
-    let s = format!("Palette Nonlinearity:\t{}\n",
-                    r.configs.palette_nonlinearity);
+    let s = format!(
+        "Palette Nonlinearity:\t{}\n",
+        r.configs.palette_nonlinearity
+    );
     writer.write_all(s.as_bytes())?;
 
     for md in &r.configs.metadata {
@@ -443,7 +430,6 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     let _ = writer.flush();
-
 
     // write the data file
     let data_file = r.file_name.replace(".dep", ".tas");
@@ -471,14 +457,17 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::F32 => {
             for i in 0..num_cells {
-                u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
-                writer.write(&u32_bytes)?;
+                writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
             }
         }
-        DataType::I32 | DataType::U16 => {
+        DataType::I32 => {
             for i in 0..num_cells {
-                u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
-                writer.write(&u32_bytes)?;
+                writer.write_f64::<LittleEndian>(r.data[i])?;
+            }
+        }
+        DataType::U16 => {
+            for i in 0..num_cells {
+                writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
             }
         }
         DataType::RGBA32 => {
@@ -488,7 +477,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::RGB24 => {
-            // The Whitebox raster format doesn't really support a 24-bit RGB; 
+            // The Whitebox raster format doesn't really support a 24-bit RGB;
             // instead use a 32-bit RGBa with saturated alpha channel.
             let mut val: u32;
             let alpha_mask = (255 << 24) as u32;
@@ -510,7 +499,10 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                "Raster data type is unknown.",
+            ));
         }
     }
 
