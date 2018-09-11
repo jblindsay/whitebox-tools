@@ -152,7 +152,8 @@ impl LidarIdwInterpolation {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -569,7 +570,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                         }
                                     }
                                 }
-                                "classs" => {
+                                "class" => {
                                     for i in 0..n_points {
                                         let p: PointData = input[i];
                                         if !p.withheld() {

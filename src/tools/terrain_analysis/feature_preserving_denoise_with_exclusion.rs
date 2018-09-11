@@ -84,7 +84,7 @@ impl FeaturePreservingDenoiseWithExclusions {
             flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("15.0".to_owned()),
+            default_value: Some("8.0".to_owned()),
             optional: true,
         });
 
@@ -179,7 +179,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
         let mut output_file = String::new();
         let mut exclusions_file = String::new();
         let mut filter_size = 11usize;
-        let mut max_norm_diff = 15f64;
+        let mut max_norm_diff = 8f64;
         let mut num_iter = 5;
         let mut z_factor = 1f64;
 
@@ -260,6 +260,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
             max_norm_diff = 90f64;
         }
         let threshold = max_norm_diff.to_radians().cos();
+        // let threshold2 = (max_norm_diff / 4f64).to_radians().cos();
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
@@ -306,7 +307,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
-            let exclusions = exclusions.clone();
+            // let exclusions = exclusions.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
@@ -314,7 +315,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                 let eight_grid_res = input.configs.resolution_x * 8f64;
                 let mut z: f64;
                 let mut zn: f64;
-                let mut exclusion: f64;
+                // let mut exclusion: f64;
                 let (mut a, mut b): (f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![
@@ -328,8 +329,9 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                     let mut values = [0f64; 9];
                     for col in 0..columns {
                         z = input.get_value(row, col);
-                        exclusion = exclusions.get_value(row, col);
-                        if z != nodata && exclusion == 0f64 {
+                        // exclusion = exclusions.get_value(row, col);
+                        if z != nodata {
+                            //&& exclusion == 0f64 {
                             for i in 0..8 {
                                 zn = input.get_value(row + dy[i], col + dx[i]);
                                 if zn != nodata {
@@ -406,6 +408,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                 }
                 let mut z: f64;
                 let mut exclusion: f64;
+                let mut threshold_adj: f64;
                 let (mut xn, mut yn): (isize, isize);
                 let (mut a, mut b, mut c): (f64, f64, f64);
                 let mut diff: f64;
@@ -423,7 +426,42 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         exclusion = exclusions.get_value(row, col);
-                        if z != nodata && exclusion == 0f64 {
+                        threshold_adj = if exclusion < 0f64 {
+                            (max_norm_diff / (exclusion.abs() * 10f64))
+                                .to_radians()
+                                .cos()
+                        } else {
+                            threshold
+                        };
+                        // if z != nodata && exclusion == 0f64 {
+                        //     sum_w = 0f64;
+                        //     a = 0f64;
+                        //     b = 0f64;
+                        //     c = 0f64;
+                        //     for n in 0..num_pixels_in_filter {
+                        //         xn = col + dx[n];
+                        //         yn = row + dy[n];
+                        //         if input.get_value(yn, xn) != nodata {
+                        //             //     && exclusions.get_value(yn, xn) == 0f64
+                        //             // {
+                        //             diff =
+                        //                 nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
+                        //             if diff > threshold {
+                        //                 w = (diff - threshold) * (diff - threshold);
+                        //                 sum_w += w;
+                        //                 a += nv.get_value(yn, xn).a * w;
+                        //                 b += nv.get_value(yn, xn).b * w;
+                        //                 c += nv.get_value(yn, xn).c * w;
+                        //             }
+                        //         }
+                        //     }
+
+                        //     a /= sum_w;
+                        //     b /= sum_w;
+                        //     c /= sum_w;
+                        //     data[col as usize] = Normal { a: a, b: b, c: c };
+                        // } else if z != nodata {
+                        if z != nodata {
                             sum_w = 0f64;
                             a = 0f64;
                             b = 0f64;
@@ -431,13 +469,13 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                             for n in 0..num_pixels_in_filter {
                                 xn = col + dx[n];
                                 yn = row + dy[n];
-                                if input.get_value(yn, xn) != nodata
-                                    && exclusions.get_value(yn, xn) == 0f64
-                                {
+                                if input.get_value(yn, xn) != nodata {
+                                    //     && exclusions.get_value(yn, xn) == 0f64
+                                    // {
                                     diff =
                                         nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
-                                    if diff > threshold {
-                                        w = (diff - threshold) * (diff - threshold);
+                                    if diff > threshold_adj {
+                                        w = (diff - threshold_adj) * (diff - threshold_adj);
                                         sum_w += w;
                                         a += nv.get_value(yn, xn).a * w;
                                         b += nv.get_value(yn, xn).b * w;
@@ -491,6 +529,7 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
         let mut diff: f64;
         let mut z: f64;
         let mut exclusion: f64;
+        let mut threshold_adj: f64;
         let (mut xn, mut yn): (isize, isize);
         let mut zn: f64;
         let mut output = Raster::initialize_using_file(&output_file, &input);
@@ -503,19 +542,57 @@ impl WhiteboxTool for FeaturePreservingDenoiseWithExclusions {
                 for col in 0..columns {
                     z = output.get_value(row, col);
                     exclusion = exclusions.get_value(row, col);
-                    if z != nodata && exclusion == 0f64 {
+                    // if z != nodata && exclusion == 0f64 {
+                    //     sum_w = 0f64;
+                    //     z = 0f64;
+                    //     for n in 0..8 {
+                    //         xn = col + dx[n];
+                    //         yn = row + dy[n];
+                    //         zn = output.get_value(yn, xn);
+                    //         if zn != nodata {
+                    //             //&& exclusions.get_value(yn, xn) == 0f64 {
+                    //             diff = nv_smooth
+                    //                 .get_value(row, col)
+                    //                 .angle_between(nv_smooth.get_value(yn, xn));
+                    //             if diff > threshold {
+                    //                 w = (diff - threshold) * (diff - threshold);
+                    //                 sum_w += w;
+                    //                 z += -(nv_smooth.get_value(yn, xn).a * x[n]
+                    //                     + nv_smooth.get_value(yn, xn).b * y[n]
+                    //                     - nv_smooth.get_value(yn, xn).c * zn)
+                    //                     / nv_smooth.get_value(yn, xn).c
+                    //                     * w;
+                    //             }
+                    //         }
+                    //     }
+                    //     if sum_w > 0f64 {
+                    //         // this is a division-by-zero safeguard and must be in place.
+                    //         output.set_value(row, col, z / sum_w);
+                    //     } else {
+                    //         output.set_value(row, col, input.get_value(row, col));
+                    //     }
+                    // } else if z != nodata {
+                    if z != nodata {
+                        threshold_adj = if exclusion < 0f64 {
+                            (max_norm_diff / (exclusion.abs() * 10f64))
+                                .to_radians()
+                                .cos()
+                        } else {
+                            threshold
+                        };
                         sum_w = 0f64;
                         z = 0f64;
                         for n in 0..8 {
                             xn = col + dx[n];
                             yn = row + dy[n];
                             zn = output.get_value(yn, xn);
-                            if zn != nodata && exclusions.get_value(yn, xn) == 0f64 {
+                            if zn != nodata {
+                                //&& exclusions.get_value(yn, xn) == 0f64 {
                                 diff = nv_smooth
                                     .get_value(row, col)
                                     .angle_between(nv_smooth.get_value(yn, xn));
-                                if diff > threshold {
-                                    w = (diff - threshold) * (diff - threshold);
+                                if diff > threshold_adj {
+                                    w = (diff - threshold_adj) * (diff - threshold_adj);
                                     sum_w += w;
                                     z += -(nv_smooth.get_value(yn, xn).a * x[n]
                                         + nv_smooth.get_value(yn, xn).b * y[n]

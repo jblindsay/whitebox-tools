@@ -72,7 +72,7 @@ impl FeaturePreservingDenoise {
             flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("15.0".to_owned()),
+            default_value: Some("8.0".to_owned()),
             optional: true,
         });
 
@@ -166,7 +166,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 11usize;
-        let mut max_norm_diff = 15f64;
+        let mut max_norm_diff = 8f64;
         let mut num_iter = 5;
         let mut z_factor = 1f64;
 

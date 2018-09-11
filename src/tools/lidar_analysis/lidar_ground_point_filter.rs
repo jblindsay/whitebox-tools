@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: December 15, 2017
+Last Modified: 10/09/2018
 License: MIT
 */
 
@@ -84,10 +84,20 @@ impl LidarGroundPointFilter {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Classify Points".to_owned(),
+            flags: vec!["--classify".to_owned()],
+            description: "Classify points as ground (2) or off-ground (1).".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -152,6 +162,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let mut search_radius: f32 = -1.0;
         let mut height_threshold: f32 = 1.0;
         let mut slope_threshold: f32 = 15.0;
+        let ground_class_value = 2u8;
+        let otp_class_value = 1u8;
+        let mut filter = true;
 
         // read the arguments
         if args.len() == 0 {
@@ -169,40 +182,39 @@ impl WhiteboxTool for LidarGroundPointFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
+            } else if flag_val == "-radius" {
                 if keyval {
                     search_radius = vec[1].to_string().parse::<f32>().unwrap();
                 } else {
                     search_radius = args[i + 1].to_string().parse::<f32>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-height_threshold"
-                || vec[0].to_lowercase() == "--height_threshold"
-            {
+            } else if flag_val == "-height_threshold" {
                 if keyval {
                     height_threshold = vec[1].to_string().parse::<f32>().unwrap();
                 } else {
                     height_threshold = args[i + 1].to_string().parse::<f32>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-slope_threshold"
-                || vec[0].to_lowercase() == "--slope_threshold"
-            {
+            } else if flag_val == "-slope_threshold" {
                 if keyval {
                     slope_threshold = vec[1].to_string().parse::<f32>().unwrap();
                 } else {
                     slope_threshold = args[i + 1].to_string().parse::<f32>().unwrap();
                 }
+            } else if flag_val == "-classify" {
+                filter = false;
             }
         }
 
@@ -418,17 +430,190 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
-        for i in 0..n_points {
-            if !is_off_terrain[i] {
-                output.add_point_record(input.get_record(i));
-            }
-            if verbose {
-                progress = (100.0_f64 * i as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Saving data: {}%", progress);
-                    old_progress = progress;
+        // for i in 0..n_points {
+        //     if !is_off_terrain[i] {
+        //         output.add_point_record(input.get_record(i));
+        //     }
+        //     if verbose {
+        //         progress = (100.0_f64 * i as f64 / num_points) as i32;
+        //         if progress != old_progress {
+        //             println!("Saving data: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
+
+        /////////////////////
+        // Output the data //
+        /////////////////////
+        let mut output = LasFile::initialize_using_file(&output_file, &input);
+        let mut num_points_filtered = 0;
+        if filter {
+            output.header.system_id = "EXTRACTION".to_string();
+
+            for point_num in 0..n_points {
+                if !is_off_terrain[point_num] {
+                    output.add_point_record(input.get_record(point_num));
+                } else {
+                    num_points_filtered += 1;
+                }
+                if verbose {
+                    progress = (100.0_f64 * point_num as f64 / num_points) as i32;
+                    if progress != old_progress {
+                        println!("Saving data: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
+        } else {
+            // classify
+            for point_num in 0..n_points {
+                let class_val = match !is_off_terrain[point_num] {
+                    true => ground_class_value,
+                    false => otp_class_value,
+                };
+                let pr = input.get_record(point_num);
+                let pr2: LidarPointRecord;
+                match pr {
+                    LidarPointRecord::PointRecord0 { mut point_data } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord0 {
+                            point_data: point_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord1 {
+                        mut point_data,
+                        gps_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord1 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord2 {
+                        mut point_data,
+                        colour_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord2 {
+                            point_data: point_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord3 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord3 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord4 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord4 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord5 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord5 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord6 {
+                        mut point_data,
+                        gps_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord6 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord7 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord7 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord8 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord8 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord9 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord9 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord10 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
+                        point_data.set_classification(class_val);
+                        pr2 = LidarPointRecord::PointRecord10 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                }
+                output.add_point_record(pr2);
+                if verbose {
+                    progress = (100.0_f64 * point_num as f64 / num_points) as i32;
+                    if progress != old_progress {
+                        println!("Saving data: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+            num_points_filtered = 1; // so it passes the saving
+        }
+
+        if num_points_filtered == 0 {
+            println!("Warning: No points were filtered from the point cloud.");
         }
 
         let end = time::now();

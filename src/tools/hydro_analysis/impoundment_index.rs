@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/05/2018
-Last Modified: 27/07/2018
+Last Modified: 10/09/2018
 License: MIT
 */
 
@@ -594,7 +594,9 @@ impl WhiteboxTool for ImpoundmentIndex {
                     output.increment(row_n, col_n, vol);
                 } else {
                     // mean depth
-                    output.increment(row_n, col_n, vol / (num_upslope * grid_area));
+                    if num_upslope > 0f64 {
+                        output.increment(row_n, col_n, vol / (num_upslope * grid_area));
+                    }
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1i8);
@@ -653,8 +655,10 @@ impl WhiteboxTool for ImpoundmentIndex {
         output.add_metadata_entry(format!("Dam length: {}", dam_length));
         if out_type == 0 {
             output.add_metadata_entry(format!("Out type: flooded area"));
-        } else {
+        } else if out_type == 1 {
             output.add_metadata_entry(format!("Out type: reservoir volume"));
+        } else {
+            output.add_metadata_entry(format!("Out type: average reservoir depth"));
         }
         output.add_metadata_entry(
             format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),

@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 15, 2017
-Last Modified: 09/09/2018
+Created: 10/09/2018
+Last Modified: 10/09/2018
 License: MIT
 
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
@@ -23,8 +23,8 @@ use structures::Array2D;
 use time;
 use tools::*;
 
-/// Performs an efficient median filter based on Huang, Yang, and Tang's (1979) method.
-pub struct MedianFilter {
+/// Performs a high pass filter based on a median filter.
+pub struct HighPassMedianFilter {
     name: String,
     description: String,
     toolbox: String,
@@ -32,12 +32,12 @@ pub struct MedianFilter {
     example_usage: String,
 }
 
-impl MedianFilter {
+impl HighPassMedianFilter {
     /// Public constructor.
-    pub fn new() -> MedianFilter {
-        let name = "MedianFilter".to_string();
+    pub fn new() -> HighPassMedianFilter {
+        let name = "HighPassMedianFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
-        let description = "Performs a median filter on an input image.".to_string();
+        let description = "Performs a high pass median filter on an input image.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -101,7 +101,7 @@ impl MedianFilter {
             short_exe, name
         ).replace("*", &sep);
 
-        MedianFilter {
+        HighPassMedianFilter {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -111,7 +111,7 @@ impl MedianFilter {
     }
 }
 
-impl WhiteboxTool for MedianFilter {
+impl WhiteboxTool for HighPassMedianFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -255,7 +255,6 @@ impl WhiteboxTool for MedianFilter {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        // let input = Raster::new(&input_file, "r")?;
 
         let start = time::now();
 
@@ -276,16 +275,6 @@ impl WhiteboxTool for MedianFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        let display_min = if !is_rgb_image {
-            input.configs.display_min
-        } else {
-            0f64
-        };
-        let display_max = if !is_rgb_image {
-            input.configs.display_max
-        } else {
-            1f64
-        };
         let multiplier = 10f64.powi(num_sig_digits);
         let min_val = if !is_rgb_image {
             input.configs.minimum
@@ -364,7 +353,7 @@ impl WhiteboxTool for MedianFilter {
                     Box::new(|row: isize, col: isize, value: f64| -> f64 {
                         if value != nodata {
                             let (h, s, _) = value2hsi(input.get_value(row, col));
-                            return hsi2value(h, s, value);
+                            return hsi2value(h, s, value + 0.5f64); // includes an offset of 0.5 so there are no negative i values.
                         }
                         nodata
                     })
@@ -471,7 +460,7 @@ impl WhiteboxTool for MedianFilter {
 
                             if n > 0f64 {
                                 data[col as usize] =
-                                    output_fn(row, col, (median + min_bin) as f64 / multiplier);
+                                    output_fn(row, col, (bin_val - median) as f64 / multiplier);
                             } else {
                                 data[col as usize] = nodata;
                             }
@@ -500,8 +489,6 @@ impl WhiteboxTool for MedianFilter {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.configs.display_min = display_min;
-        output.configs.display_max = display_max;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()

@@ -59,6 +59,7 @@ for more details.
 Version 0.10.0 (XX-XX-2018)
 - Added the following tools:
     ExtractNodes
+    HighPassMedianFilter
     LasToMultipointShapefile
     LidarTileFootprint
     MaxDifferenceFromMean
@@ -78,6 +79,11 @@ Version 0.10.0 (XX-XX-2018)
   and GeoTiff data. This is the start of a more fullsome approach to handling
   spatial reference system information in the library.
 - Fixed a bug in saving Shapefile m and z data.
+- Fixed a bug that wouldn't allow the LidarIdwInterpolation and 
+  LidarNearestNeighbourGridding tool to interpolate point classification data.
+- LidarGroundPointFilter now has the ability to output a classified LAS file rather 
+  than merely filtering non-ground points. Ground points are assigned classification
+  values of 2 while non-ground points are classified as 1.
 
 Version 0.9.0 (22-08-2018)
 - Added the following tools:
