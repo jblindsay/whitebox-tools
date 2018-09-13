@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017, 2017
-Last Modified: February 14, 2018
+Last Modified: 13/09/2018
 License: MIT
 */
 
@@ -18,7 +18,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{FixedRadiusSearch2D, FixedRadiusSearch3D};
+use structures::{DistanceMetric, FixedRadiusSearch2D, FixedRadiusSearch3D};
 use time;
 use tools::*;
 
@@ -95,7 +95,8 @@ impl LidarSegmentationBasedFilter {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -157,7 +158,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut search_radius = 5f32;
+        let mut search_radius = 5f64;
         let mut max_norm_diff = 2f64;
         let mut max_z_diff = 1f64;
         let ground_class_value = 2u8;
@@ -195,9 +196,9 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 }
             } else if flag_val == "-dist" || flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f32>().unwrap();
+                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f32>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-norm_diff" {
                 if keyval {
@@ -274,10 +275,11 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
 
         // We'll eventually need the ability to do fixed radius searches around
         // each point in the point cloud in both 2D and 3D.
-        let mut frs2d: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius * 2f32);
+        let mut frs2d: FixedRadiusSearch2D<usize> =
+            FixedRadiusSearch2D::new(search_radius * 2f64, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            frs2d.insert(p.x as f32, p.y as f32, i);
+            frs2d.insert(p.x, p.y, i);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -309,7 +311,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 let mut min_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x as f32, p.y as f32);
+                    let ret = frs.search(p.x, p.y);
                     min_z = f64::MAX;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -348,7 +350,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                 let mut max_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x as f32, p.y as f32);
+                    let ret = frs.search(p.x, p.y);
                     max_z = f64::MIN;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -381,7 +383,8 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         if verbose {
             println!("Calculating point normals...");
         }
-        let mut frs3d: FixedRadiusSearch3D<usize> = FixedRadiusSearch3D::new(search_radius as f64);
+        let mut frs3d: FixedRadiusSearch3D<usize> =
+            FixedRadiusSearch3D::new(search_radius as f64, DistanceMetric::SquaredEuclidean);
         for point_num in 0..n_points {
             let p: PointData = input.get_point_info(point_num);
             frs3d.insert(p.x, p.y, residuals[point_num], point_num);

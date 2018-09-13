@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: February 14, 2018
+Last Modified: 13/09/2018
 License: MIT
 */
 
@@ -15,7 +15,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::FixedRadiusSearch2D;
+use structures::{DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -66,7 +66,8 @@ impl LidarTophatTransform {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -128,7 +129,7 @@ impl WhiteboxTool for LidarTophatTransform {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut search_radius: f32 = -1.0;
+        let mut search_radius = -1f64;
 
         // read the arguments
         if args.len() == 0 {
@@ -160,9 +161,9 @@ impl WhiteboxTool for LidarTophatTransform {
                 }
             } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f32>().unwrap();
+                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f32>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -200,11 +201,11 @@ impl WhiteboxTool for LidarTophatTransform {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius);
-        frs.is_distance_squared(true);
+        let mut frs: FixedRadiusSearch2D<usize> =
+            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            frs.insert(p.x as f32, p.y as f32, i);
+            frs.insert(p.x, p.y, i);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -235,7 +236,7 @@ impl WhiteboxTool for LidarTophatTransform {
                 let mut min_z: f64;
                 for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
-                    let ret = frs.search(p.x as f32, p.y as f32);
+                    let ret = frs.search(p.x, p.y);
                     min_z = f64::MAX;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -276,7 +277,7 @@ impl WhiteboxTool for LidarTophatTransform {
                 let mut max_z: f64;
                 for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
-                    let ret = frs.search(p.x as f32, p.y as f32);
+                    let ret = frs.search(p.x, p.y);
                     max_z = f64::MIN;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;

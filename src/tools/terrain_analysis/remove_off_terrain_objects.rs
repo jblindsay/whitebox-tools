@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 6, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/09/2018
 License: MIT
 
 Note: This algorithm could be parallelized
@@ -14,8 +14,7 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use structures::FixedRadiusSearch2D;
+use structures::{Array2D, DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -75,7 +74,8 @@ impl RemoveOffTerrainObjects {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -416,8 +416,10 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         if verbose {
             println!("Interpolating data holes...")
         };
-        let mut frs: FixedRadiusSearch2D<f64> =
-            FixedRadiusSearch2D::new(filter_size as f32 / 1.5f32);
+        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(
+            filter_size as f64 / 1.5f64,
+            DistanceMetric::SquaredEuclidean,
+        );
         for row in 0..rows {
             for col in 0..columns {
                 if tophat[(row, col)] != nodata && out[(row, col)] != initial_value {
@@ -427,8 +429,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                         if tophat[(row_n, col_n)] != nodata && out[(row_n, col_n)] == initial_value
                         {
                             frs.insert(
-                                col as f32,
-                                row as f32,
+                                col as f64,
+                                row as f64,
                                 opening[(row, col)] + tophat[(row, col)],
                             );
                             break;
@@ -451,18 +453,18 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             for col in 0..columns {
                 if out[(row, col)] == initial_value {
                     sum_weights = 0f64;
-                    let ret = frs.search(col as f32, row as f32);
+                    let ret = frs.search(col as f64, row as f64);
                     for j in 0..ret.len() {
                         dist = ret[j].1 as f64;
                         if dist > 0.0 {
-                            sum_weights += 1.0 / (dist * dist);
+                            sum_weights += 1.0 / dist;
                         }
                     }
                     z = 0.0;
                     for j in 0..ret.len() {
                         dist = ret[j].1 as f64;
                         if dist > 0.0 {
-                            z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
+                            z += ret[j].0 * (1.0 / dist) / sum_weights;
                         }
                     }
                     if ret.len() > 0 {

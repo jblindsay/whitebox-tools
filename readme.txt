@@ -69,7 +69,7 @@ Version 0.10.0 (XX-XX-2018)
 
 - Refactoring of some data related to Point2D, and common algorithms (e.g. 
   point-in-poly, convex hull).
-- Added unit tests to BoundingBox, point_in_poly, and convex_hull.
+- Added unit tests to BoundingBox, point_in_poly, convex_hull, and elsewhere.
 - Fixed a bug in LiDAR join related to tiles with fewer than two points. LAS files
   now issue a warning upon saving when they contain less than two points.
 - The default callback can now be modified in whitebox_tools.py, such that
@@ -84,6 +84,12 @@ Version 0.10.0 (XX-XX-2018)
 - LidarGroundPointFilter now has the ability to output a classified LAS file rather 
   than merely filtering non-ground points. Ground points are assigned classification
   values of 2 while non-ground points are classified as 1.
+- Updated the LidarKappaIndex tool to use a NN-search to find matching points between
+  the compared point clouds.
+- Modified the FixedRadiusSearch structure to use 64-bit floats for storing coordinates.
+  This impacts performance efficiency but is needed for the fine precision of 
+  positional information found in terrestrial LiDAR data. FixedRadiusSearch structures
+  have also had approximate kNN search methods added.
 
 Version 0.9.0 (22-08-2018)
 - Added the following tools:

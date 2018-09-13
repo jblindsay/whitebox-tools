@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: Feb. 15, 2018
+Last Modified: 13/09/2018
 License: MIT
 
 NOTES:
@@ -22,8 +22,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::BoundingBox;
-use structures::FixedRadiusSearch2D;
+use structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -233,55 +232,50 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-parameter"
-                || vec[0].to_lowercase() == "--parameter"
-            {
+            } else if flag_val == "-parameter" {
                 if keyval {
                     interp_parameter = vec[1].to_string();
                 } else {
                     interp_parameter = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-returns" || vec[0].to_lowercase() == "--returns" {
+            } else if flag_val == "-returns" {
                 if keyval {
                     return_type = vec[1].to_string();
                 } else {
                     return_type = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-resolution"
-                || vec[0].to_lowercase() == "--resolution"
-            {
+            } else if flag_val == "-resolution" {
                 if keyval {
                     grid_res = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
+            } else if flag_val == "-radius" {
                 if keyval {
                     search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-palette" || vec[0].to_lowercase() == "--palette" {
+            } else if flag_val == "-palette" {
                 if keyval {
                     palette = vec[1].to_string();
                 } else {
                     palette = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-exclude_cls"
-                || vec[0].to_lowercase() == "--exclude_cls"
-            {
+            } else if flag_val == "-exclude_cls" {
                 if keyval {
                     exclude_cls_str = vec[1].to_string();
                 } else {
@@ -299,13 +293,13 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         include_class_vals[c] = false;
                     }
                 }
-            } else if vec[0].to_lowercase() == "-minz" || vec[0].to_lowercase() == "--minz" {
+            } else if flag_val == "-minz" {
                 if keyval {
                     min_z = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     min_z = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-maxz" || vec[0].to_lowercase() == "--maxz" {
+            } else if flag_val == "-maxz" {
                 if keyval {
                     max_z = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
@@ -470,7 +464,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         max_y: bounding_boxes[tile].max_y + search_radius,
                     };
                     let mut frs: FixedRadiusSearch2D<f64> =
-                        FixedRadiusSearch2D::new(search_radius as f32);
+                        FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
 
                     if verbose && inputs.len() == 1 {
                         println!("Reading input LAS file...");
@@ -508,7 +502,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x as f32, p.y as f32, p.z);
+                                                        frs.insert(p.x, p.y, p.z);
                                                     }
                                                 }
                                             }
@@ -535,11 +529,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.intensity as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.intensity as f64);
                                                     }
                                                 }
                                             }
@@ -566,11 +556,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.scan_angle as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.scan_angle as f64);
                                                     }
                                                 }
                                             }
@@ -598,8 +584,8 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                         && p.z <= max_z
                                                     {
                                                         frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
+                                                            p.x,
+                                                            p.y,
                                                             p.classification() as f64,
                                                         );
                                                     }
@@ -629,11 +615,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.user_data as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.user_data as f64);
                                                     }
                                                 }
                                             }
@@ -689,7 +671,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                             for col in 0..columns {
                                 x = west + col as f64 * grid_res + 0.5;
                                 y = north - row as f64 * grid_res - 0.5;
-                                let ret = frs.search(x as f32, y as f32);
+                                let ret = frs.search(x, y);
                                 if ret.len() > 0 {
                                     min_dist = f64::INFINITY;
                                     val = nodata;
@@ -731,7 +713,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                     for col in 0..columns {
                                         x = west + col as f64 * grid_res + 0.5;
                                         y = north - row as f64 * grid_res - 0.5;
-                                        let ret = frs.search(x as f32, y as f32);
+                                        let ret = frs.search(x, y);
                                         if ret.len() > 0 {
                                             min_dist = f64::INFINITY;
                                             val = nodata;

@@ -1,5 +1,5 @@
 /* 
-This tool is part of the WhiteboxTools geospatial analysis library.
+This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/08/2018
 Last Modified: 30/08/2018

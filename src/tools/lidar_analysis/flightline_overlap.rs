@@ -15,7 +15,7 @@ use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::FixedRadiusSearch2D;
+use structures::{DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -65,7 +65,8 @@ impl FlightlineOverlap {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -257,9 +258,8 @@ impl WhiteboxTool for FlightlineOverlap {
             let n_points = input.header.number_of_points as usize;
             let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
-            // let search_dist = grid_res / 2.0;
-            let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(grid_res as f32);
-            frs.is_distance_squared(true);
+            let mut frs: FixedRadiusSearch2D<usize> =
+                FixedRadiusSearch2D::new(grid_res, DistanceMetric::SquaredEuclidean);
             let mut gps_times = vec![-1f64; n_points];
             let (mut x, mut y, mut gps_time): (f64, f64, f64);
             let mut progress: usize;
@@ -360,7 +360,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
                     }
                 };
-                frs.insert(x as f32, y as f32, i);
+                frs.insert(x, y, i);
                 gps_times[i] = gps_time;
                 if verbose {
                     progress = (100.0_f64 * i as f64 / num_points) as usize;
@@ -409,7 +409,7 @@ impl WhiteboxTool for FlightlineOverlap {
                 for col in 0..columns as isize {
                     x = west + col as f64 * grid_res + 0.5;
                     y = north - row as f64 * grid_res - 0.5;
-                    let ret = frs.search(x as f32, y as f32);
+                    let ret = frs.search(x, y);
                     if ret.len() > 0 {
                         let mut times = vec![];
                         for j in 0..ret.len() {

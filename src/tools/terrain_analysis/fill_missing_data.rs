@@ -15,7 +15,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::FixedRadiusSearch2D;
+use structures::{DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -229,7 +229,11 @@ impl WhiteboxTool for FillMissingData {
         if verbose {
             println!("Interpolating data holes...")
         };
-        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(filter_size as f32);
+        let mut frs: FixedRadiusSearch2D<f64> =
+            FixedRadiusSearch2D::new(filter_size as f64, DistanceMetric::Euclidean);
+        if weight == 2f64 {
+            frs.set_distance_metric(DistanceMetric::SquaredEuclidean);
+        }
         for row in 0..rows {
             for col in 0..columns {
                 if input[(row, col)] != nodata {
@@ -237,7 +241,7 @@ impl WhiteboxTool for FillMissingData {
                         row_n = row + d_y[i];
                         col_n = col + d_x[i];
                         if input[(row_n, col_n)] == nodata {
-                            frs.insert(col as f32, row as f32, input[(row, col)]);
+                            frs.insert(col as f64, row as f64, input[(row, col)]);
                             break;
                         }
                     }
@@ -267,13 +271,13 @@ impl WhiteboxTool for FillMissingData {
                 let mut sum_weights: f64;
                 let mut dist: f64;
                 match weight {
-                    x if x == 1f64 => {
+                    x if (x == 1f64 || x == 2f64) => {
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
                                 if input[(row, col)] == nodata {
                                     sum_weights = 0f64;
-                                    let ret = frs.search(col as f32, row as f32);
+                                    let ret = frs.search(col as f64, row as f64);
                                     for j in 0..ret.len() {
                                         dist = ret[j].1 as f64;
                                         if dist > 0.0 {
@@ -299,45 +303,13 @@ impl WhiteboxTool for FillMissingData {
                             tx1.send((row, data)).unwrap();
                         }
                     }
-                    x if x == 2f64 => {
-                        for row in (0..rows).filter(|r| r % num_procs == tid) {
-                            let mut data = vec![nodata; columns as usize];
-                            for col in 0..columns {
-                                if input[(row, col)] == nodata {
-                                    sum_weights = 0f64;
-                                    let ret = frs.search(col as f32, row as f32);
-                                    for j in 0..ret.len() {
-                                        dist = ret[j].1 as f64;
-                                        if dist > 0.0 {
-                                            sum_weights += 1.0 / (dist * dist);
-                                        }
-                                    }
-                                    z = 0.0;
-                                    for j in 0..ret.len() {
-                                        dist = ret[j].1 as f64;
-                                        if dist > 0.0 {
-                                            z += ret[j].0 * (1.0 / (dist * dist)) / sum_weights;
-                                        }
-                                    }
-                                    if ret.len() > 0 {
-                                        data[col as usize] = z;
-                                    } else {
-                                        data[col as usize] = nodata;
-                                    }
-                                } else {
-                                    data[col as usize] = input[(row, col)];
-                                }
-                            }
-                            tx1.send((row, data)).unwrap();
-                        }
-                    }
                     _ => {
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
                                 if input[(row, col)] == nodata {
                                     sum_weights = 0f64;
-                                    let ret = frs.search(col as f32, row as f32);
+                                    let ret = frs.search(col as f64, row as f64);
                                     for j in 0..ret.len() {
                                         dist = ret[j].1 as f64;
                                         if dist > 0.0 {
@@ -369,7 +341,7 @@ impl WhiteboxTool for FillMissingData {
                 //     for col in 0..columns {
                 //         if input[(row, col)] == nodata {
                 //             sum_weights = 0f64;
-                //             let ret = frs.search(col as f32, row as f32);
+                //             let ret = frs.search(col as f64, row as f64);
                 //             for j in 0..ret.len() {
                 //                 dist = ret[j].1 as f64;
                 //                 if dist > 0.0 {

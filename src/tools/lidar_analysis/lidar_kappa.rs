@@ -6,16 +6,17 @@ Last Modified: December 15, 2017
 License: MIT
 */
 
-use time;
+use lidar::*;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::env;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
-use std::f64;
-use lidar::*;
-use std::io::{Error, ErrorKind};
+use std::process::Command;
+use structures::{DistanceMetric, FixedRadiusSearch3D};
+use time;
 use tools::*;
 
 pub struct LidarKappaIndex {
@@ -27,54 +28,59 @@ pub struct LidarKappaIndex {
 }
 
 impl LidarKappaIndex {
-    pub fn new() -> LidarKappaIndex { // public constructor
+    pub fn new() -> LidarKappaIndex {
+        // public constructor
         let name = "LidarKappaIndex".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File (Classification)".to_owned(), 
-            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File (Classification)".to_owned(),
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()],
             description: "Input LiDAR classification file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File (Reference)".to_owned(), 
-            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File (Reference)".to_owned(),
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()],
             description: "Input LiDAR reference file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=class.tif --i2=reference.tif -o=kia.html", short_exe, name).replace("*", &sep);
-    
-        LidarKappaIndex { 
-            name: name, 
-            description: description, 
+
+        LidarKappaIndex {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -83,7 +89,7 @@ impl WhiteboxTool for LidarKappaIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,14 +120,21 @@ impl WhiteboxTool for LidarKappaIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file1 = String::new();
         let mut input_file2 = String::new();
         let mut output_file = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -137,19 +150,19 @@ impl WhiteboxTool for LidarKappaIndex {
                 input_file1 = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-i2" || flag_val == "-input2" {
                 input_file2 = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -178,7 +191,9 @@ impl WhiteboxTool for LidarKappaIndex {
             output_file = output_file + ".html";
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let start = time::now();
 
         let input1: LasFile = match LasFile::new(&input_file1, "r") {
@@ -191,26 +206,44 @@ impl WhiteboxTool for LidarKappaIndex {
             Err(err) => panic!("Error: {}", err),
         };
 
-        let num_points = input1.header.number_of_points;
-        if input2.header.number_of_points != num_points {
-            panic!("Error: The input files do not contain the same number of points.");
-        }
-        let mut error_matrix: [[usize; 256]; 256] = [[0; 256]; 256];
-        let mut active_class: [bool; 256] = [false; 256];
+        let num_points1 = input1.header.number_of_points;
+        let num_points2 = input2.header.number_of_points;
+
+        // Place all the input1 points into a FixedRadiusSearch3D
         let mut p1: PointData;
         let mut p2: PointData;
+        let mut frs: FixedRadiusSearch3D<usize> =
+            FixedRadiusSearch3D::new(0.1f64, DistanceMetric::SquaredEuclidean);
+        for i in 0..num_points2 as usize {
+            p1 = input2.get_point_info(i);
+            frs.insert(p1.x, p1.y, p1.z, i);
+            if verbose {
+                progress = (100.0_f64 * i as f64 / num_points2 as f64) as i32;
+                if progress != old_progress {
+                    println!("Binning points: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let mut error_matrix: [[usize; 256]; 256] = [[0; 256]; 256];
+        let mut active_class: [bool; 256] = [false; 256];
         let (mut class1, mut class2): (usize, usize);
-        for i in 0..num_points as usize {
+        for i in 0..num_points1 as usize {
             p1 = input1.get_point_info(i);
-            p2 = input2.get_point_info(i);
-            class1 = p1.classification() as usize;
-            class2 = p2.classification() as usize;
-            error_matrix[class1][class2] += 1;
-            active_class[class1] = true;
-            active_class[class2] = true;
+            // find the nearest point in input2 to p1
+            let ret = frs.knn_search(p1.x, p1.y, p1.z, 1);
+            if ret.len() > 0 {
+                p2 = input2.get_point_info(ret[0].0);
+                class1 = p1.classification() as usize;
+                class2 = p2.classification() as usize;
+                error_matrix[class1][class2] += 1;
+                active_class[class1] = true;
+                active_class[class2] = true;
+            }
 
             if verbose {
-                progress = (100.0_f64 * i as f64 / num_points as f64) as i32;
+                progress = (100.0_f64 * i as f64 / num_points1 as f64) as i32;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -220,7 +253,9 @@ impl WhiteboxTool for LidarKappaIndex {
 
         let mut num_classes = 0;
         for a in 0..256usize {
-            if active_class[a] { num_classes += 1; }
+            if active_class[a] {
+                num_classes += 1;
+            }
         }
 
         let mut agreements = 0usize;
@@ -248,7 +283,8 @@ impl WhiteboxTool for LidarKappaIndex {
             expected_frequency += (col_total as f64 * row_total as f64) / (n as f64);
         }
 
-        kappa = (agreements as f64 - expected_frequency as f64) / (n as f64 - expected_frequency as f64);
+        kappa = (agreements as f64 - expected_frequency as f64)
+            / (n as f64 - expected_frequency as f64);
         overall_accuracy = agreements as f64 / n as f64;
 
         let mut f = File::create(output_file.as_str()).unwrap();
@@ -325,10 +361,16 @@ impl WhiteboxTool for LidarKappaIndex {
         s = "<body><h1>Kappa Index of Agreement</h1>";
         f.write(s.as_bytes()).unwrap();
         let path = Path::new(&input_file1);
-        let s1 = &format!("<p><strong>Classification Data:</strong> {}</p>", path.file_name().unwrap().to_str().unwrap());
+        let s1 = &format!(
+            "<p><strong>Classification Data:</strong> {}</p>",
+            path.file_name().unwrap().to_str().unwrap()
+        );
         f.write_all(s1.as_bytes())?;
         let path = Path::new(&input_file2);
-        let s1 = &format!("<p><strong>Reference Data:</strong> {}</p><br>", path.file_name().unwrap().to_str().unwrap());
+        let s1 = &format!(
+            "<p><strong>Reference Data:</strong> {}</p><br>",
+            path.file_name().unwrap().to_str().unwrap()
+        );
         f.write_all(s1.as_bytes())?;
         // let s2 = &format!("{}{}{}{}{}", "<p><b>Input Data:</b> <br><br><b>Classification Data:</b> ", input_file1, "<br><br><b>Reference Data:</b> ", input_file2, "<p>");
         // f.write(s2.as_bytes()).unwrap();
@@ -339,7 +381,12 @@ impl WhiteboxTool for LidarKappaIndex {
         f.write(s.as_bytes()).unwrap();
         s = "<tr>";
         f.write(s.as_bytes()).unwrap();
-        let s3 = &format!("{}{}{}", "<th colspan=\"2\" rowspan=\"2\"></th><th colspan=\"", num_classes, "\">Reference Data</th><th rowspan=\"2\">Row<br>Totals</th>");
+        let s3 = &format!(
+            "{}{}{}",
+            "<th colspan=\"2\" rowspan=\"2\"></th><th colspan=\"",
+            num_classes,
+            "\">Reference Data</th><th rowspan=\"2\">Row<br>Totals</th>"
+        );
         f.write(s3.as_bytes()).unwrap();
         s = "</tr>";
         f.write(s.as_bytes()).unwrap();
@@ -347,7 +394,12 @@ impl WhiteboxTool for LidarKappaIndex {
         f.write(s.as_bytes()).unwrap();
         for a in 0..256 {
             if active_class[a] {
-                let s = &format!("{}{}{}", "<th>", convert_class_val_to_class_string(a as u8), "</th>");
+                let s = &format!(
+                    "{}{}{}",
+                    "<th>",
+                    convert_class_val_to_class_string(a as u8),
+                    "</th>"
+                );
                 f.write(s.as_bytes()).unwrap();
             }
         }
@@ -358,17 +410,32 @@ impl WhiteboxTool for LidarKappaIndex {
         for a in 0..256 {
             if active_class[a] {
                 if first_entry {
-                    let s = format!("{}{}{}{}{}", "<tr><td rowspan=\"", num_classes, "\" valign=\"center\"><b>Class<br>Data</b></td> <td><b>", convert_class_val_to_class_string(a as u8), "</b></td>");
+                    let s = format!(
+                        "{}{}{}{}{}",
+                        "<tr><td rowspan=\"",
+                        num_classes,
+                        "\" valign=\"center\"><b>Class<br>Data</b></td> <td><b>",
+                        convert_class_val_to_class_string(a as u8),
+                        "</b></td>"
+                    );
                     f.write(s.as_bytes()).unwrap();
                 } else {
-                    let s = format!("{}{}{}", "<tr><td><b>", convert_class_val_to_class_string(a as u8), "</b></td>");
+                    let s = format!(
+                        "{}{}{}",
+                        "<tr><td><b>",
+                        convert_class_val_to_class_string(a as u8),
+                        "</b></td>"
+                    );
                     f.write(s.as_bytes()).unwrap();
                 }
                 row_total = 0;
                 for b in 0..256 {
                     if active_class[b] {
                         row_total += error_matrix[a][b];
-                        let s = format!("{}{}{}", "<td class=\"numberCell\">", error_matrix[a][b], "</td>");
+                        let s = format!(
+                            "{}{}{}",
+                            "<td class=\"numberCell\">", error_matrix[a][b], "</td>"
+                        );
                         f.write(s.as_bytes()).unwrap();
                     }
                 }
@@ -397,7 +464,10 @@ impl WhiteboxTool for LidarKappaIndex {
             }
         }
 
-        let s4 = &format!("{}{}{}", "<td class=\"numberCell\"><b>N</b>=", n, "</td></tr>");
+        let s4 = &format!(
+            "{}{}{}",
+            "<td class=\"numberCell\"><b>N</b>=", n, "</td></tr>"
+        );
         f.write(s4.as_bytes()).unwrap();
         s = "</table>";
         f.write(s.as_bytes()).unwrap();
@@ -424,20 +494,42 @@ impl WhiteboxTool for LidarKappaIndex {
                 }
                 average_users += 100.0 * error_matrix[a][a] as f64 / col_total as f64;
                 average_producers += 100.0 * error_matrix[a][a] as f64 / row_total as f64;
-                let s = &format!("{}{}{}{}{}{}{}", "<tr><td>",  convert_class_val_to_class_string(a as u8), "</td><td class=\"numberCell\">", format!("{:.*}", 2, (100.0 * error_matrix[a][a] as f64 / col_total as f64)),
-                        "%</td><td class=\"numberCell\">", format!("{:.*}", 2, (100.0 * error_matrix[a][a] as f64 / row_total as f64)), "%</td></tr>");
+                let s = &format!(
+                    "{}{}{}{}{}{}{}",
+                    "<tr><td>",
+                    convert_class_val_to_class_string(a as u8),
+                    "</td><td class=\"numberCell\">",
+                    format!(
+                        "{:.*}",
+                        2,
+                        (100.0 * error_matrix[a][a] as f64 / col_total as f64)
+                    ),
+                    "%</td><td class=\"numberCell\">",
+                    format!(
+                        "{:.*}",
+                        2,
+                        (100.0 * error_matrix[a][a] as f64 / row_total as f64)
+                    ),
+                    "%</td></tr>"
+                );
                 f.write(s.as_bytes()).unwrap();
             }
         }
         f.write(format!("<tr><td>Average</td><td class=\"numberCell\">{}%</td><td class=\"numberCell\">{}%</td></tr>", format!("{:.*}", 2, average_users / num_active),
                 format!("{:.*}", 2, average_producers / num_active)).as_bytes()).unwrap();
 
-
         s = "</table>";
         f.write(s.as_bytes()).unwrap();
-        let s6 = &format!("<p>{}{}</p>", "<p><b>Overall Accuracy</b> = ", format!("{:.*}%", 2, overall_accuracy * 100.0));
+        let s6 = &format!(
+            "<p>{}{}</p>",
+            "<p><b>Overall Accuracy</b> = ",
+            format!("{:.*}%", 2, overall_accuracy * 100.0)
+        );
         f.write(s6.as_bytes()).unwrap();
-        let s7 = &format!("<p><b>Kappa</b><sup>2</sup> = {}</p>", format!("{:.*}", 3, kappa));
+        let s7 = &format!(
+            "<p><b>Kappa</b><sup>2</sup> = {}</p>",
+            format!("{:.*}", 3, kappa)
+        );
         f.write(s7.as_bytes()).unwrap();
         let s5 = &format!("{}{}", "<p><br>Notes:<br>1. User's accuracy refers to the proportion of points correctly assigned to a class (i.e. the number of points correctly classified for a category divided by the row total in the contingency table) and is a measure of the reliability. ",
                 "Producer's accuracy is a measure of the proportion of the points in each category correctly classified (i.e. the number of points correctly classified for a category divided by the column total in the contingency table) and is a measure of the accuracy.<br>");
@@ -477,13 +569,16 @@ impl WhiteboxTool for LidarKappaIndex {
                 let _ = output.stdout;
             }
 
-            println!("Complete! Please see {} for output.", output_file);
+            println!("Complete!\nPlease see {} for output.", output_file);
         }
 
         let end = time::now();
         let elapsed_time = end - start;
         if verbose {
-            println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

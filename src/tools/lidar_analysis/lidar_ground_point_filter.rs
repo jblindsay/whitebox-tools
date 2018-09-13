@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: 10/09/2018
+Last Modified: 13/09/2018
 License: MIT
 */
 
 use lidar::*;
 use num_cpus;
 use std::env;
-// use std::f64;
-use std::f32;
+use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::FixedRadiusSearch2D;
+use structures::{DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -159,9 +158,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut search_radius: f32 = -1.0;
-        let mut height_threshold: f32 = 1.0;
-        let mut slope_threshold: f32 = 15.0;
+        let mut search_radius: f64 = -1.0;
+        let mut height_threshold: f64 = 1.0;
+        let mut slope_threshold: f64 = 15.0;
         let ground_class_value = 2u8;
         let otp_class_value = 1u8;
         let mut filter = true;
@@ -197,21 +196,21 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 }
             } else if flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f32>().unwrap();
+                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f32>().unwrap();
+                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-height_threshold" {
                 if keyval {
-                    height_threshold = vec[1].to_string().parse::<f32>().unwrap();
+                    height_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    height_threshold = args[i + 1].to_string().parse::<f32>().unwrap();
+                    height_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-slope_threshold" {
                 if keyval {
-                    slope_threshold = vec[1].to_string().parse::<f32>().unwrap();
+                    slope_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    slope_threshold = args[i + 1].to_string().parse::<f32>().unwrap();
+                    slope_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-classify" {
                 filter = false;
@@ -253,12 +252,12 @@ impl WhiteboxTool for LidarGroundPointFilter {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius);
-        frs.is_distance_squared(true);
+        let mut frs: FixedRadiusSearch2D<usize> =
+            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
             if p.is_late_return() && !p.is_classified_noise() {
-                frs.insert(p.x as f32, p.y as f32, i);
+                frs.insert(p.x, p.y, i);
             }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
@@ -269,8 +268,8 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
         }
 
-        let mut neighbourhood_min = vec![f32::MAX; n_points];
-        let mut residuals = vec![f32::MIN; n_points];
+        let mut neighbourhood_min = vec![f64::MAX; n_points];
+        let mut residuals = vec![f64::MIN; n_points];
 
         /////////////
         // Erosion //
@@ -286,23 +285,23 @@ impl WhiteboxTool for LidarGroundPointFilter {
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
-                let mut z_n: f32;
-                let mut min_z: f32;
+                let mut z_n: f64;
+                let mut min_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if p.is_late_return() && !p.is_classified_noise() {
-                        let ret = frs.search(p.x as f32, p.y as f32);
-                        min_z = f32::MAX;
+                        let ret = frs.search(p.x, p.y);
+                        min_z = f64::MAX;
                         for j in 0..ret.len() {
                             index_n = ret[j].0;
-                            z_n = input.get_point_info(index_n).z as f32;
+                            z_n = input.get_point_info(index_n).z;
                             if z_n < min_z {
                                 min_z = z_n;
                             }
                         }
                         tx.send((point_num, min_z)).unwrap();
                     } else {
-                        tx.send((point_num, f32::MAX)).unwrap();
+                        tx.send((point_num, f64::MAX)).unwrap();
                     }
                 }
             });
@@ -331,23 +330,23 @@ impl WhiteboxTool for LidarGroundPointFilter {
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
-                let mut z_n: f32;
-                let mut max_z: f32;
+                let mut z_n: f64;
+                let mut max_z: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if p.is_late_return() && !p.is_classified_noise() {
-                        let ret = frs.search(p.x as f32, p.y as f32);
-                        max_z = f32::MIN;
+                        let ret = frs.search(p.x, p.y);
+                        max_z = f64::MIN;
                         for j in 0..ret.len() {
                             index_n = ret[j].0;
-                            z_n = neighbourhood_min[index_n] as f32;
+                            z_n = neighbourhood_min[index_n];
                             if z_n > max_z {
                                 max_z = z_n;
                             }
                         }
                         tx.send((point_num, max_z)).unwrap();
                     } else {
-                        tx.send((point_num, f32::MIN)).unwrap();
+                        tx.send((point_num, f64::MIN)).unwrap();
                     }
                 }
             });
@@ -355,8 +354,8 @@ impl WhiteboxTool for LidarGroundPointFilter {
 
         for i in 0..n_points {
             let data = rx.recv().unwrap();
-            if data.1 != f32::MIN {
-                let z = input.get_point_info(data.0).z as f32;
+            if data.1 != f64::MIN {
+                let z = input.get_point_info(data.0).z;
                 residuals[data.0] = z - data.1;
             }
             if verbose {
@@ -380,20 +379,20 @@ impl WhiteboxTool for LidarGroundPointFilter {
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut index_n: usize;
-                let mut max_slope: f32;
-                let mut slope: f32;
-                let mut dist: f32;
+                let mut max_slope: f64;
+                let mut slope: f64;
+                let mut dist: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if residuals[point_num] < height_threshold
                         && p.is_late_return()
                         && !p.is_classified_noise()
                     {
-                        let ret = frs.search(p.x as f32, p.y as f32);
-                        max_slope = f32::MIN;
+                        let ret = frs.search(p.x, p.y);
+                        max_slope = f64::MIN;
                         for j in 0..ret.len() {
                             dist = ret[j].1;
-                            if dist > 0f32 {
+                            if dist > 0f64 {
                                 index_n = ret[j].0;
                                 slope = (residuals[point_num] - residuals[index_n]) / dist.sqrt();
                                 if slope > max_slope {

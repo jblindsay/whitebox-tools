@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: Feb. 15, 2018
+Last Modified: 13/09/2018
 License: MIT
 
 NOTES: 
@@ -22,8 +22,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::BoundingBox;
-use structures::FixedRadiusSearch2D;
+use structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D};
 use time;
 use tools::*;
 
@@ -456,7 +455,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                         max_y: bounding_boxes[tile].max_y + search_radius,
                     };
                     let mut frs: FixedRadiusSearch2D<f64> =
-                        FixedRadiusSearch2D::new(search_radius as f32);
+                        FixedRadiusSearch2D::new(search_radius, DistanceMetric::Euclidean);
 
                     if verbose && inputs.len() == 1 {
                         println!("Reading input LAS file...");
@@ -494,7 +493,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x as f32, p.y as f32, p.z);
+                                                        frs.insert(p.x, p.y, p.z);
                                                     }
                                                 }
                                             }
@@ -521,11 +520,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.intensity as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.intensity as f64);
                                                     }
                                                 }
                                             }
@@ -552,11 +547,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.scan_angle as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.scan_angle as f64);
                                                     }
                                                 }
                                             }
@@ -584,8 +575,8 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z <= max_z
                                                     {
                                                         frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
+                                                            p.x,
+                                                            p.y,
                                                             p.classification() as f64,
                                                         );
                                                     }
@@ -615,11 +606,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(
-                                                            p.x as f32,
-                                                            p.y as f32,
-                                                            p.user_data as f64,
-                                                        );
+                                                        frs.insert(p.x, p.y, p.user_data as f64);
                                                     }
                                                 }
                                             }
@@ -675,7 +662,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                             for col in 0..columns {
                                 x = west + col as f64 * grid_res + 0.5;
                                 y = north - row as f64 * grid_res - 0.5;
-                                let ret = frs.search(x as f32, y as f32);
+                                let ret = frs.search(x, y);
                                 if ret.len() > 0 {
                                     sum_weights = 0.0;
                                     val = 0.0;
@@ -723,7 +710,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                     for col in 0..columns {
                                         x = west + col as f64 * grid_res + 0.5;
                                         y = north - row as f64 * grid_res - 0.5;
-                                        let ret = frs.search(x as f32, y as f32);
+                                        let ret = frs.search(x, y);
                                         if ret.len() > 0 {
                                             sum_weights = 0.0;
                                             val = 0.0;

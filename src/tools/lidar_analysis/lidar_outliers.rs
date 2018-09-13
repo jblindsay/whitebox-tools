@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 6, 2018
-Last Modified: February 6, 2018
+Last Modified: 13/09/2018
 License: MIT
 
 Notes: This tool will filter out points from a LiDAR point cloud if the absolute elevation
@@ -19,9 +19,8 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use structures::{DistanceMetric, FixedRadiusSearch2D};
 use time;
-// use lidar::point_data::*;
-use structures::FixedRadiusSearch2D;
 use tools::*;
 
 pub struct LidarRemoveOutliers {
@@ -80,7 +79,8 @@ impl LidarRemoveOutliers {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -142,8 +142,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut search_radius: f32 = 2.0;
-        let mut elev_diff: f64 = 50.0;
+        let mut search_radius = 2f64;
+        let mut elev_diff = 50f64;
 
         // read the arguments
         if args.len() == 0 {
@@ -176,9 +176,9 @@ impl WhiteboxTool for LidarRemoveOutliers {
                 };
             } else if flag_val == "-radius" {
                 search_radius = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap()
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-elev_diff" {
                 elev_diff = if keyval {
@@ -222,11 +222,11 @@ impl WhiteboxTool for LidarRemoveOutliers {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius);
-        frs.is_distance_squared(true);
+        let mut frs: FixedRadiusSearch2D<usize> =
+            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            frs.insert(p.x as f32, p.y as f32, i);
+            frs.insert(p.x, p.y, i);
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -250,11 +250,11 @@ impl WhiteboxTool for LidarRemoveOutliers {
                 let mut n: f64;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    let ret = frs.search(p.x as f32, p.y as f32);
+                    let ret = frs.search(p.x, p.y);
                     avg_z = 0f64;
                     n = 0f64;
                     for j in 0..ret.len() {
-                        if ret[j].1 != 0f32 {
+                        if ret[j].1 != 0f64 {
                             index_n = ret[j].0;
                             avg_z += input.get_point_info(index_n).z;
                             n += 1f64;
