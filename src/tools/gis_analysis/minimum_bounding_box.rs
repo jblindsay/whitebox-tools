@@ -1,12 +1,12 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 03/09/2018
-Last Modified: 04/09/2018
+Created: 14/09/2018
+Last Modified: 14/09/2018
 License: MIT
 */
 
-use algorithms::convex_hull;
+use algorithms::minimum_bounding_box;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
@@ -16,8 +16,8 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// Creates a vector convex polygon around vector features.
-pub struct MinimumConvexHull {
+/// Creates a vector minimum bounding rectangle around vector features.
+pub struct MinimumBoundingBox {
     name: String,
     description: String,
     toolbox: String,
@@ -25,12 +25,13 @@ pub struct MinimumConvexHull {
     example_usage: String,
 }
 
-impl MinimumConvexHull {
-    pub fn new() -> MinimumConvexHull {
+impl MinimumBoundingBox {
+    pub fn new() -> MinimumBoundingBox {
         // public constructor
-        let name = "MinimumConvexHull".to_string();
+        let name = "MinimumBoundingBox".to_string();
         let toolbox = "GIS Tools".to_string();
-        let description = "Creates a vector convex polygon around vector features.".to_string();
+        let description =
+            "Creates a vector minimum bounding rectangle around vector features.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -56,9 +57,11 @@ impl MinimumConvexHull {
         });
 
         parameters.push(ToolParameter {
-            name: "Find hulls around each individual feature.".to_owned(),
+            name: "Find bounding rectangles around each individual feature.".to_owned(),
             flags: vec!["--features".to_owned()],
-            description: "Find the hulls around each vector feature".to_owned(),
+            description:
+                "Find the minimum bounding rectangles around each individual vector feature"
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_owned()),
             optional: true,
@@ -80,7 +83,7 @@ impl MinimumConvexHull {
             short_exe, name
         ).replace("*", &sep);
 
-        MinimumConvexHull {
+        MinimumBoundingBox {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -90,7 +93,7 @@ impl MinimumConvexHull {
     }
 }
 
-impl WhiteboxTool for MinimumConvexHull {
+impl WhiteboxTool for MinimumBoundingBox {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -208,15 +211,15 @@ impl WhiteboxTool for MinimumConvexHull {
                 for i in 0..record.num_points as usize {
                     points.push(Point2D::new(record.points[i].x, record.points[i].y));
                 }
-                let mut hull_points = convex_hull(&mut points);
-                // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
-                hull_points.reverse();
+                let mut mbb_points = minimum_bounding_box(&mut points);
+                // // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
+                // hull_points.reverse();
                 // now add a last point same as the first.
-                let p = hull_points[0];
-                hull_points.push(p);
+                let p = mbb_points[0];
+                mbb_points.push(p);
 
                 let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                sfg.add_part(&hull_points);
+                sfg.add_part(&mbb_points);
                 output.add_record(sfg);
 
                 let atts = input.attributes.get_record(record_num);
@@ -270,15 +273,15 @@ impl WhiteboxTool for MinimumConvexHull {
             if progress != old_progress {
                 println!("Finding convex hull...");
             }
-            let mut hull_points = convex_hull(&mut points);
+            let mut mbb_points = minimum_bounding_box(&mut points);
             // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
-            hull_points.reverse();
+            // hull_points.reverse();
             // now add a last point same as the first.
-            let p = hull_points[0];
-            hull_points.push(p);
+            let p = mbb_points[0];
+            mbb_points.push(p);
 
             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            sfg.add_part(&hull_points);
+            sfg.add_part(&mbb_points);
             output.add_record(sfg);
             output
                 .attributes

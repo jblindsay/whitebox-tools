@@ -1,8 +1,8 @@
 /* 
-This tool is part of the WhiteboxTools geospatial analysis library.
+This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/09/2018
-Last Modified: 04/09/2018
+Last Modified: 14/09/2018
 License: MIT
 */
 
@@ -19,16 +19,6 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     // Get the convex hull
     let hull = convex_hull(points);
     let num_hull_pts = hull.len();
-
-    println!("Raw Points...");
-    for p in points {
-        println!("{}, {}", p.x, p.y);
-    }
-
-    println!("Hull Points...");
-    for p in &hull {
-        println!("{}, {}", p.x, p.y);
-    }
 
     // find the mid-point of the points
     let mut east = f64::NEG_INFINITY;
@@ -54,8 +44,6 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     let midx = west + (east - west) / 2f64;
     let midy = south + (north - south) / 2f64;
 
-    // let mut vertices_rotated = vec![Point2D { x: 0f64, y: 0f64 }; num_hull_pts];
-
     let mut x_axis = 9999999f64;
     let mut y_axis = 9999999f64;
     let mut slope = 0f64;
@@ -70,7 +58,7 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
 
     // Rotate the hull points to align with the orientation of each side in order.
     for m in 0..num_hull_pts - 1 {
-        let psi = -((hull[m + 1].x - hull[m].x).atan2(hull[m + 1].y - hull[m].y));
+        let psi = -((hull[m + 1].y - hull[m].y).atan2(hull[m + 1].x - hull[m].x));
 
         // rotate the hull points and find the axis-aligned bounding box
         east = f64::NEG_INFINITY;
@@ -97,36 +85,27 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
             }
         }
 
-        new_x_axis = east - west;
-        new_y_axis = north - south;
+        new_x_axis = (east - west).abs();
+        new_y_axis = (north - south).abs();
         current_area = new_x_axis * new_y_axis;
         if current_area < min_area {
             min_area = current_area;
             x_axis = new_x_axis;
             y_axis = new_y_axis;
-            slope = if x_axis < y_axis {
+            slope = if x_axis > y_axis {
                 -psi
             } else {
                 -(right_angle + psi)
             };
             x = west + x_axis / 2f64;
-            y = north + y_axis / 2f64;
+            y = north - y_axis / 2f64;
             box_centre_x = midx + (x * (-psi).cos()) - (y * (-psi).sin());
             box_centre_y = midy + (x * (-psi).sin()) + (y * (-psi).cos());
         }
     }
+
     let long_axis = x_axis.max(y_axis);
     let short_axis = x_axis.min(y_axis);
-
-    // double[][] axesEndPoints = new double[4][2];
-    // axesEndPoints[0][0] = box_centre_x + long_axis / 2.0 * slope.cos();
-    // axesEndPoints[0][1] = box_centre_y + long_axis / 2.0 * slope.sin();
-    // axesEndPoints[1][0] = box_centre_x - long_axis / 2.0 * slope.cos();
-    // axesEndPoints[1][1] = box_centre_y - long_axis / 2.0 * slope.sin();
-    // axesEndPoints[2][0] = box_centre_x + short_axis / 2.0 * (right_angle + slope).cos();
-    // axesEndPoints[2][1] = box_centre_y + short_axis / 2.0 * (right_angle + slope).sin();
-    // axesEndPoints[3][0] = box_centre_x - short_axis / 2.0 * (right_angle + slope).cos();
-    // axesEndPoints[3][1] = box_centre_y - short_axis / 2.0 * (right_angle + slope).sin();
 
     let mut ret: Vec<Point2D> = Vec::with_capacity(4);
 
@@ -162,11 +141,6 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
             + short_axis / 2.0 * (right_angle + slope).sin(),
     });
 
-    println!("Hull Points...");
-    for p in &ret {
-        println!("{}, {}", p.x, p.y);
-    }
-
     ret
 }
 
@@ -189,10 +163,10 @@ mod test {
         let mbb = minimum_bounding_box(&mut points);
 
         let mbb_should_be = vec![
-            Point2D::new(-10.0, 10.0),
-            Point2D::new(10.0, 10.0),
-            Point2D::new(-10.0, -10.0),
-            Point2D::new(10.0, -10.0),
+            Point2D::new(15f64, 15.000000000000002f64),
+            Point2D::new(19.615384615384613f64, -8.076923076923078f64),
+            Point2D::new(-15f64, -15.000000000000002f64),
+            Point2D::new(-19.615384615384613f64, 8.076923076923078f64),
         ];
         assert_eq!(mbb, mbb_should_be);
     }

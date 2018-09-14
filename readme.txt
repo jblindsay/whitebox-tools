@@ -63,6 +63,7 @@ Version 0.10.0 (XX-XX-2018)
     LasToMultipointShapefile
     LidarTileFootprint
     MaxDifferenceFromMean
+    MinimumBoundingBox
     MinimumConvexHull
     PolygonsToLines
     ReinitializeAttributeTable
