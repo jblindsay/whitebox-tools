@@ -32,7 +32,6 @@ by the WhiteboxTools library:
 */
 
 extern crate byteorder;
-// extern crate flate2;
 extern crate kdtree;
 extern crate lzw;
 extern crate nalgebra as na;

@@ -149,8 +149,8 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
         let mut lows = NMinimizer::new(neighbours);
 
         // first start with the centre bin
-        for m in -2i32..=2i32 {
-            for n in -2i32..=2i32 {
+        for m in -1i32..=1i32 {
+            for n in -1i32..=1i32 {
                 if let Some(vals) = self.hm.get(&[i + m, j + n]) {
                     for val in vals {
                         // calculate the squared distance to (x, y)
@@ -165,7 +165,7 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
             }
         }
 
-        let mut shell = 3i32;
+        let mut shell = 2i32;
         while lows.size() < neighbours {
             for m in -shell..=shell {
                 for n in -shell..=shell {
@@ -295,7 +295,8 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
         self.size += 1;
     }
 
-    /// Performs a fixed-radius search operation on point (x, y, z), returning a vector of data (type T), distance tuples.
+    /// Performs a fixed-radius search operation on point (x, y, z), returning a vector of
+    /// data (type T), distance tuples.
     pub fn search(&self, x: f64, y: f64, z: f64) -> Vec<(T, f64)> {
         let mut ret = vec![];
         let i = (x * self.inv_r).floor() as i32;
@@ -429,9 +430,7 @@ impl<T: Copy> FixedRadiusSearch3D<T> {
     }
 }
 
-///////////////////////////////////////////////////////////////
-// MinDistValue is used for the NMinimizer in KNN searching. //
-///////////////////////////////////////////////////////////////
+/// MinDistValue is used for the NMinimizer in KNN searching.
 #[derive(Clone, Copy)]
 struct MinDistValue<T: Copy> {
     value: T,

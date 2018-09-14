@@ -20,6 +20,16 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     let hull = convex_hull(points);
     let num_hull_pts = hull.len();
 
+    println!("Raw Points...");
+    for p in points {
+        println!("{}, {}", p.x, p.y);
+    }
+
+    println!("Hull Points...");
+    for p in &hull {
+        println!("{}, {}", p.x, p.y);
+    }
+
     // find the mid-point of the points
     let mut east = f64::NEG_INFINITY;
     let mut west = f64::INFINITY;
@@ -151,41 +161,40 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
         y: box_centre_y - long_axis / 2.0 * slope.sin()
             + short_axis / 2.0 * (right_angle + slope).sin(),
     });
+
+    println!("Hull Points...");
+    for p in &ret {
+        println!("{}, {}", p.x, p.y);
+    }
+
     ret
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::minimum_bounding_box;
-//     use structures::Point2D;
-//     #[test]
-//     fn test_minimum_bounding_box() {
-//         let mut points: Vec<Point2D> = Vec::new();
-//         points.push(Point2D::new(-10.0, 10.0));
-//         points.push(Point2D::new(10.0, 10.0));
-//         points.push(Point2D::new(-10.0, -10.0));
-//         points.push(Point2D::new(10.0, -10.0));
-//         points.push(Point2D::new(0.0, 0.0));
-//         points.push(Point2D::new(1.0, 1.0));
-//         points.push(Point2D::new(15.0, 15.0));
-//         points.push(Point2D::new(-15.0, -15.0));
+#[cfg(test)]
+mod test {
+    use super::minimum_bounding_box;
+    use structures::Point2D;
+    #[test]
+    fn test_minimum_bounding_box() {
+        let mut points: Vec<Point2D> = Vec::new();
+        points.push(Point2D::new(-10.0, 10.0));
+        points.push(Point2D::new(10.0, 10.0));
+        points.push(Point2D::new(-10.0, -10.0));
+        points.push(Point2D::new(10.0, -10.0));
+        points.push(Point2D::new(0.0, 0.0));
+        points.push(Point2D::new(1.0, 1.0));
+        points.push(Point2D::new(15.0, 15.0));
+        points.push(Point2D::new(-15.0, -15.0));
 
-//         for p in &points {
-//             println!("{}, {}", p.x, p.y);
-//         }
+        let mbb = minimum_bounding_box(&mut points);
 
-//         let mbb = minimum_bounding_box(&mut points);
-//         for p in &mbb {
-//             println!("{}, {}", p.x, p.y);
-//         }
+        let mbb_should_be = vec![
+            Point2D::new(-10.0, 10.0),
+            Point2D::new(10.0, 10.0),
+            Point2D::new(-10.0, -10.0),
+            Point2D::new(10.0, -10.0),
+        ];
+        assert_eq!(mbb, mbb_should_be);
+    }
 
-//         let mbb_should_be = vec![
-//             Point2D::new(-10.0, 10.0),
-//             Point2D::new(10.0, 10.0),
-//             Point2D::new(-10.0, -10.0),
-//             Point2D::new(10.0, -10.0),
-//         ];
-//         assert_eq!(mbb, mbb_should_be);
-//     }
-
-// }
+}

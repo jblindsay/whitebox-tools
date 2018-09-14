@@ -14,7 +14,6 @@ license = "MIT"
 
 [dependencies]
 byteorder = "^1.1.0"
-# flate2 = "1.0.2"
 kdtree = "0.5.1"
 lzw = "0.10.0"
 nalgebra = "0.14.0"

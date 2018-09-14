@@ -91,6 +91,7 @@ Version 0.10.0 (XX-XX-2018)
   positional information found in terrestrial LiDAR data. FixedRadiusSearch structures
   have also had approximate kNN search methods added.
 
+
 Version 0.9.0 (22-08-2018)
 - Added the following tools:
     ExtractRasterValuesAtPoints

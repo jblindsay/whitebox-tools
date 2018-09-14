@@ -97,6 +97,11 @@ impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
     pub fn n(&self) -> usize {
         self.n
     }
+
+    /// Returns true if the NMinimizer has no current values.
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
 }
 
 #[cfg(test)]
