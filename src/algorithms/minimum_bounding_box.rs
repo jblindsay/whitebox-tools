@@ -15,6 +15,8 @@ use structures::Point2D;
 /// will be aligned with one of the sides of the convex hull. If minimize_area
 /// is set to true, the bounding box will be selected to minimize box area;
 /// otherwise, it will minimize box perimeter.
+///
+/// The return is a Vec<Point2D> of the four corner points of the MBB.
 pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     // Get the convex hull
     let hull = convex_hull(points);
@@ -107,9 +109,9 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     let long_axis = x_axis.max(y_axis);
     let short_axis = x_axis.min(y_axis);
 
-    let mut ret: Vec<Point2D> = Vec::with_capacity(4);
+    let mut corner_pnts: Vec<Point2D> = Vec::with_capacity(4);
 
-    ret.push(Point2D {
+    corner_pnts.push(Point2D {
         x: box_centre_x
             + long_axis / 2.0 * slope.cos()
             + short_axis / 2.0 * (right_angle + slope).cos(),
@@ -118,14 +120,14 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
             + short_axis / 2.0 * (right_angle + slope).sin(),
     });
 
-    ret.push(Point2D {
+    corner_pnts.push(Point2D {
         x: box_centre_x + long_axis / 2.0 * slope.cos()
             - short_axis / 2.0 * (right_angle + slope).cos(),
         y: box_centre_y + long_axis / 2.0 * slope.sin()
             - short_axis / 2.0 * (right_angle + slope).sin(),
     });
 
-    ret.push(Point2D {
+    corner_pnts.push(Point2D {
         x: box_centre_x
             - long_axis / 2.0 * slope.cos()
             - short_axis / 2.0 * (right_angle + slope).cos(),
@@ -134,14 +136,14 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
             - short_axis / 2.0 * (right_angle + slope).sin(),
     });
 
-    ret.push(Point2D {
+    corner_pnts.push(Point2D {
         x: box_centre_x - long_axis / 2.0 * slope.cos()
             + short_axis / 2.0 * (right_angle + slope).cos(),
         y: box_centre_y - long_axis / 2.0 * slope.sin()
             + short_axis / 2.0 * (right_angle + slope).sin(),
     });
 
-    ret
+    corner_pnts
 }
 
 #[cfg(test)]

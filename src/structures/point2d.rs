@@ -23,16 +23,39 @@ impl fmt::Display for Point2D {
 }
 
 impl Point2D {
+    /// Creates a new Point2D,
     pub fn new(x: f64, y: f64) -> Point2D {
         Point2D { x: x, y: y }
     }
 
-    // Euclidean distance
+    /// Calculates the midpoint between two Point2Ds.
+    pub fn midpoint(p1: &Point2D, p2: &Point2D) -> Point2D {
+        Point2D::new((p1.x + p2.x) / 2f64, (p1.y + p2.y) / 2f64)
+    }
+
+    /// Calculates the centre point of a set of Point2Ds.
+    pub fn centre_point(points: &Vec<Point2D>) -> Point2D {
+        let mut x = 0f64;
+        let mut y = 0f64;
+
+        for p in points {
+            x += p.x;
+            y += p.y;
+        }
+
+        x /= points.len() as f64;
+        y /= points.len() as f64;
+
+        Point2D::new(x, y)
+    }
+
+    /// Calculate Euclidean distance between the point and another.
     pub fn distance(&self, other: &Point2D) -> f64 {
         ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y)).sqrt()
     }
 
-    // Draw a horizontal line through this point, connect this point with the other, and measure the angle between these two lines.
+    /// Draw a horizontal line through this point, connect this point with the other,
+    /// and measure the angle between these two lines.
     pub fn angle(&self, other: &Point2D) -> f64 {
         if self == other {
             0.0
@@ -41,6 +64,7 @@ impl Point2D {
         }
     }
 
+    /// Calculates the magnitude sqrt(x^2 + y^2) of the point.
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
     }
@@ -60,6 +84,10 @@ impl Point2D {
         let x1 = x_cos_theta - y_sin_theta;
         let y1 = x_sin_theta + y_cos_theta;
         Point2D::new(x1, y1)
+    }
+
+    pub fn translate(&self, delta_x: f64, delta_y: f64) -> Point2D {
+        Point2D::new(self.x + delta_x, self.y + delta_y)
     }
 
     pub fn direction(&self, p1: &Point2D, p2: &Point2D) -> Direction {

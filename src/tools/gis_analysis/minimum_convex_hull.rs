@@ -76,7 +76,7 @@ impl MinimumConvexHull {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --hulls",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
             short_exe, name
         ).replace("*", &sep);
 

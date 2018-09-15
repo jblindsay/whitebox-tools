@@ -16,7 +16,13 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// Creates a vector minimum bounding rectangle around vector features.
+/// This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
+/// completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
+/// bounding box for each rotation, and finding the box with the smallest area. The minimum bounding boxes are
+/// output as polylines by default, but can optionally be output as vector polygons. The MBB is needed to compute
+/// several shape indices, such as the Elongation Ratio, Patch Orientation, and the Patch Orientation Vector Field.
+/// In addition, the MBB is related to the Layer Footprint, which is an axis-aligned bounding box, and the Minimum
+/// Convex Hull, which is the enclosing convex polygon of a feature.
 pub struct MinimumBoundingBox {
     name: String,
     description: String,
@@ -79,7 +85,7 @@ impl MinimumBoundingBox {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --hulls",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
             short_exe, name
         ).replace("*", &sep);
 
@@ -212,8 +218,6 @@ impl WhiteboxTool for MinimumBoundingBox {
                     points.push(Point2D::new(record.points[i].x, record.points[i].y));
                 }
                 let mut mbb_points = minimum_bounding_box(&mut points);
-                // // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
-                // hull_points.reverse();
                 // now add a last point same as the first.
                 let p = mbb_points[0];
                 mbb_points.push(p);
@@ -274,8 +278,6 @@ impl WhiteboxTool for MinimumBoundingBox {
                 println!("Finding convex hull...");
             }
             let mut mbb_points = minimum_bounding_box(&mut points);
-            // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
-            // hull_points.reverse();
             // now add a last point same as the first.
             let p = mbb_points[0];
             mbb_points.push(p);

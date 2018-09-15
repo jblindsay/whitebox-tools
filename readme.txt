@@ -65,6 +65,7 @@ Version 0.10.0 (XX-XX-2018)
     MaxDifferenceFromMean
     MinimumBoundingBox
     MinimumConvexHull
+    PolygonLongAxis and PolygonShortAxis
     PolygonsToLines
     ReinitializeAttributeTable
 
