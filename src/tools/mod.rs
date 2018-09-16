@@ -49,7 +49,9 @@ impl ToolManager {
         tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
         tool_names.push("CostPathway".to_string());
+        tool_names.push("CreateHexagonalVectorGrid".to_string());
         tool_names.push("CreatePlane".to_string());
+        tool_names.push("CreateRectangularVectorGrid".to_string());
         tool_names.push("EdgeProportion".to_string());
         tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
@@ -425,7 +427,13 @@ impl ToolManager {
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
             "costpathway" => Some(Box::new(tools::gis_analysis::CostPathway::new())),
+            "createhexagonalvectorgrid" => Some(Box::new(
+                tools::gis_analysis::CreateHexagonalVectorGrid::new(),
+            )),
             "createplane" => Some(Box::new(tools::gis_analysis::CreatePlane::new())),
+            "createrectangularvectorgrid" => Some(Box::new(
+                tools::gis_analysis::CreateRectangularVectorGrid::new(),
+            )),
             "edgeproportion" => Some(Box::new(tools::gis_analysis::EdgeProportion::new())),
             "erasepolygonfromraster" => {
                 Some(Box::new(tools::gis_analysis::ErasePolygonFromRaster::new()))

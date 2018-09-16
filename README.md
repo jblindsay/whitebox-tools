@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 338 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 341 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -245,7 +245,9 @@ The library currently contains the following 338 tools, which are each grouped b
 - ***CostAllocation***: Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
 - ***CostDistance***: Performs cost-distance accumulation on a cost surface and a group of source cells.
 - ***CostPathway***: Performs cost-distance pathway analysis using a series of destination grid cells.
+- ***CreateHexagonalVectorGrid***: Creates an hexagonal vector grid.
 - ***CreatePlane***: Creates a raster image based on the equation for a simple plane.
+- ***CreateRectangularVectorGrid***: Creates a rectangular vector grid.
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
 - ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform. 

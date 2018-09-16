@@ -6,24 +6,23 @@ extern crate lzw;
 // extern crate flate2;
 
 // use flate2::read::GzDecoder;
-use std::cmp::min;
-use std::collections::HashMap;
-use std::default::Default;
-use std::fmt;
-// use std::io::prelude::*;
-use std::io::Error;
-use std::io::ErrorKind;
-// use std::cmp::Ordering;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use io_utils::{ByteOrderReader, Endianness};
 use raster::geotiff::geokeys::*;
 use raster::geotiff::tiff_consts::*;
 use raster::*;
+use spatial_ref_system::esri_wkt_from_epsg;
+use std::cmp::min;
+use std::collections::HashMap;
+use std::default::Default;
 use std::f64;
+use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufWriter;
+use std::io::Error;
+use std::io::ErrorKind;
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;
@@ -404,14 +403,16 @@ pub fn read_geotiff<'a>(
         configs.south = configs.north - configs.resolution_y * configs.rows as f64;
     }
 
-    // Get the EPSG code
-    if geokeys_map.contains_key(&2048) {
-        // geographic coordinate system
-        configs.epsg_code = geokeys_map.get(&2048).unwrap().interpret_as_u16()[0];
-    } else if geokeys_map.contains_key(&3072) {
-        // projected coordinate system
-        configs.epsg_code = geokeys_map.get(&3072).unwrap().interpret_as_u16()[0];
-    }
+    // Get the EPSG code and WKT CRS
+    configs.epsg_code = geokeys.find_epsg_code();
+    configs.coordinate_ref_system_wkt = esri_wkt_from_epsg(configs.epsg_code);
+    // if geokeys_map.contains_key(&2048) {
+    //     // geographic coordinate system
+    //     configs.epsg_code = geokeys_map.get(&2048).unwrap().interpret_as_u16()[0];
+    // } else if geokeys_map.contains_key(&3072) {
+    //     // projected coordinate system
+    //     configs.epsg_code = geokeys_map.get(&3072).unwrap().interpret_as_u16()[0];
+    // }
 
     // Determine the image mode.
     let kw_map = get_keyword_map();

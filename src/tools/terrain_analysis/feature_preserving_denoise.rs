@@ -187,41 +187,41 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-filter" {
-                if keyval {
-                    filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                filter_size = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             } else if flag_val == "-norm_diff" {
-                if keyval {
-                    max_norm_diff = vec[1].to_string().parse::<f64>().unwrap();
+                max_norm_diff = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    max_norm_diff = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-num_iter" {
-                if keyval {
-                    num_iter = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                num_iter = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    num_iter = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             } else if flag_val == "-zfactor" {
-                if keyval {
-                    z_factor = vec[1].to_string().parse::<f64>().unwrap();
+                z_factor = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    z_factor = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -314,9 +314,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                     values[i] = z * z_factor;
                                 }
                             }
-                            a = -(values[2] - values[4] + 2f64 * (values[1] - values[5]) + values[0]
+                            a = -(values[2] - values[4]
+                                + 2f64 * (values[1] - values[5])
+                                + values[0]
                                 - values[6]);
-                            b = -(values[6] - values[4] + 2f64 * (values[7] - values[3]) + values[0]
+                            b = -(values[6] - values[4]
+                                + 2f64 * (values[7] - values[3])
+                                + values[0]
                                 - values[2]);
                             data[col as usize] = Normal {
                                 a: a,

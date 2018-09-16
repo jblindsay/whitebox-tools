@@ -18,19 +18,7 @@ pub mod surfer7_raster;
 pub mod surfer_ascii_raster;
 pub mod whitebox_raster;
 
-use std::cmp::Ordering::Equal;
-use std::default::Default;
-use std::io::Error;
-use std::io::prelude::*;
-use std::io::ErrorKind;
-use std::io::BufReader;
-use std::fs::File;
-use std::f64;
-use std::path::Path;
-use std::ops::{Index, IndexMut};
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
+use io_utils::*;
 use raster::arcascii_raster::*;
 use raster::arcbinary_raster::*;
 use raster::geotiff::*;
@@ -40,9 +28,35 @@ use raster::saga_raster::*;
 use raster::surfer7_raster::*;
 use raster::surfer_ascii_raster::*;
 use raster::whitebox_raster::*;
-use io_utils::*;
+use std::cmp::Ordering::Equal;
+use std::default::Default;
+use std::f64;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::Error;
+use std::io::ErrorKind;
+use std::ops::{Index, IndexMut};
+use std::path::Path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
 
+/// Raster is a common data structure that abstracts over several raster data formats,
+/// including GeoTIFFs, ArcGIS ASCII and binary rasters, Whitebox rasters, Idrisi
+/// rasters, Saga rasters, and GRASS ASCII rasters.
+///
+/// Examples:
+///
+/// ```
+/// // Read an existing raster file
+/// let input = Raster::new(&input_file, "r")?;
+///
+/// // Create a new raster file with the dimensions
+/// // and location of an existing file.
+/// let mut output = Raster::initialize_using_file(&output_file, &input);
+/// ```
 #[derive(Default, Clone)]
 pub struct Raster {
     pub file_name: String,
@@ -104,6 +118,13 @@ impl IndexMut<(isize, isize)> for Raster {
 }
 
 impl Raster {
+    /// Creates an in-memory `Raster` object. The data are either
+    /// read from an existing file (`file_name`; `file_mode` is 'r') or
+    /// prepared for new file creation (`file_mode` is 'w') The raster format
+    /// will be determined by the file extension of the `file_name` string.
+    ///
+    /// To create a new `Raster` file, most applications should prefer the
+    /// `initialize_using_config` or `initialize_using_file` functions instead.
     pub fn new<'a>(file_name: &'a str, file_mode: &'a str) -> Result<Raster, Error> {
         let fm: String = file_mode.to_lowercase();
         let mut r = Raster {
@@ -162,10 +183,13 @@ impl Raster {
         // Err(Error::new(ErrorKind::Other, "Error creating raster"))
     }
 
+    /// Creates a new in-memory `Raster` object with grid extent and location
+    /// based on specified configurations contained within a `RasterConfigs`.
     pub fn initialize_using_config<'a>(file_name: &'a str, configs: &'a RasterConfigs) -> Raster {
         let new_file_name = if file_name.contains(".") {
             file_name.to_string()
-        } else { // likely no extension provided; default to .tif
+        } else {
+            // likely no extension provided; default to .tif
             format!("{}.tif", file_name)
         };
         let mut output = Raster {
@@ -181,10 +205,13 @@ impl Raster {
         output
     }
 
+    /// Creates a new in-memory `Raster` object with grid extent and location based
+    /// on an existing `Raster` contained within `file_name`.
     pub fn initialize_using_file<'a>(file_name: &'a str, input: &'a Raster) -> Raster {
         let new_file_name = if file_name.contains(".") {
             file_name.to_string()
-        } else { // likely no extension provided; default to .tif
+        } else {
+            // likely no extension provided; default to .tif
             format!("{}.tif", file_name)
         };
         let mut output = Raster {
@@ -214,8 +241,9 @@ impl Raster {
         output.configs.epsg_code = input.configs.epsg_code;
         output.configs.coordinate_ref_system_wkt = input.configs.coordinate_ref_system_wkt.clone();
 
-        if output.raster_type == RasterType::SurferAscii ||
-           output.raster_type == RasterType::Surfer7Binary {
+        if output.raster_type == RasterType::SurferAscii
+            || output.raster_type == RasterType::Surfer7Binary
+        {
             output.configs.nodata = 1.71041e38;
         }
 
@@ -224,6 +252,7 @@ impl Raster {
         output
     }
 
+    /// Returns the file name of the `Raster`, without the directory.
     pub fn get_short_filename(&self) -> String {
         let path = Path::new(&self.file_name);
         let file_name = path.file_stem().unwrap();
@@ -231,15 +260,21 @@ impl Raster {
         f.to_string()
     }
 
+    /// Returns the value contained within a grid cell specified
+    /// by `row` and `column`.
     pub fn get_value(&self, row: isize, column: isize) -> f64 {
         // if row < 0 || column < 0 { return self.configs.nodata; }
         // if row as usize >= self.configs.rows || column as usize >= self.configs.columns { return self.configs.nodata; }
         // self.data[row as usize * self.configs.columns + column as usize]
 
-        if column >= 0 && row >= 0 && column < self.configs.columns as isize && row < self.configs.rows as isize {
+        if column >= 0
+            && row >= 0
+            && column < self.configs.columns as isize
+            && row < self.configs.rows as isize
+        {
             let c: usize = column as usize;
             let r: usize = row as usize;
-        
+
             let idx: usize = r * self.configs.columns + c;
             return self.data[idx];
         }
@@ -265,17 +300,16 @@ impl Raster {
         if c >= self.configs.columns as isize {
             c = self.configs.columns as isize - (c - self.configs.columns as isize) - 1;
         }
-        if c >= 0 && c < self.configs.columns as isize && row >= 0 && row < self.configs.rows as isize {
+        if c >= 0
+            && c < self.configs.columns as isize
+            && row >= 0
+            && row < self.configs.rows as isize
+        {
             return self.get_value(r, c);
         }
 
         // it was too off grid to be reflected.
         self.configs.nodata
-
-
-
-
-
 
         // if column < 0 {
         //     return self.configs.nodata;
@@ -388,9 +422,12 @@ impl Raster {
     }
 
     pub fn set_data_from_raster(&mut self, other: &Raster) -> Result<(), Error> {
-        if self.configs.rows != other.configs.rows || self.configs.columns != other.configs.columns {
-            return Err(Error::new(ErrorKind::Other,
-                                  "Rasters must have the same dimensions and extent."));
+        if self.configs.rows != other.configs.rows || self.configs.columns != other.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "Rasters must have the same dimensions and extent.",
+            ));
         }
         for row in 0..self.configs.rows as isize {
             self.set_row_data(row, other.get_row_data(row));
@@ -399,11 +436,12 @@ impl Raster {
     }
 
     pub fn get_data_as_array2d(&self) -> Array2D<f64> {
-        let mut data: Array2D<f64> = Array2D::new(self.configs.rows as isize,
-                                                  self.configs.columns as isize,
-                                                  self.configs.nodata,
-                                                  self.configs.nodata)
-                .unwrap();
+        let mut data: Array2D<f64> = Array2D::new(
+            self.configs.rows as isize,
+            self.configs.columns as isize,
+            self.configs.nodata,
+            self.configs.nodata,
+        ).unwrap();
         for row in 0..self.configs.rows as isize {
             data.set_row_data(row, self.get_row_data(row));
         }
@@ -458,13 +496,15 @@ impl Raster {
         // self.configs.west - self.configs.resolution_x / 2f64 +
         // column as f64 * self.configs.resolution_x
         // Not sure why it must be + 1/2 resolution rather than minus
-        self.configs.west + self.configs.resolution_x / 2f64 + 
-        column as f64 * self.configs.resolution_x
+        self.configs.west
+            + self.configs.resolution_x / 2f64
+            + column as f64 * self.configs.resolution_x
     }
 
     pub fn get_y_from_row(&self, row: isize) -> f64 {
-        self.configs.north - self.configs.resolution_y / 2f64 -
-        row as f64 * self.configs.resolution_y
+        self.configs.north
+            - self.configs.resolution_y / 2f64
+            - row as f64 * self.configs.resolution_y
     }
 
     pub fn get_column_from_x(&self, x: f64) -> isize {
@@ -568,7 +608,6 @@ impl Raster {
         //         break;
         //     }
         // }
-
     }
 
     pub fn clip_min_by_percent(&mut self, percent: f64) {
@@ -865,7 +904,10 @@ impl Raster {
 
     pub fn write(&mut self) -> Result<(), Error> {
         if !self.file_mode.contains("w") {
-            return Err(Error::new(ErrorKind::Other, "Cannot write raster that is not created in write mmode ('w')."));
+            return Err(Error::new(
+                ErrorKind::Other,
+                "Cannot write raster that is not created in write mmode ('w').",
+            ));
         }
         match self.raster_type {
             RasterType::ArcAscii => {
@@ -941,8 +983,11 @@ impl Raster {
     }
 
     pub fn is_in_geographic_coordinates(&self) -> bool {
-        if self.configs.epsg_code == 4322 || self.configs.epsg_code == 4326 ||
-           self.configs.epsg_code == 4629 || self.configs.epsg_code == 4277 {
+        if self.configs.epsg_code == 4322
+            || self.configs.epsg_code == 4326
+            || self.configs.epsg_code == 4629
+            || self.configs.epsg_code == 4277
+        {
             return true;
         }
         let wkt = self.configs.coordinate_ref_system_wkt.to_lowercase();
@@ -1085,12 +1130,18 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
             let mut line_count = 0;
             for line in file.lines() {
                 let l = line.unwrap();
-                if l.contains("north") || l.contains("south") || l.contains("east") ||
-                   l.contains("west") {
+                if l.contains("north")
+                    || l.contains("south")
+                    || l.contains("east")
+                    || l.contains("west")
+                {
                     return RasterType::GrassAscii;
                 }
-                if l.contains("xllcorner") || l.contains("yllcorner") ||
-                   l.contains("xllcenter") || l.contains("yllcenter") {
+                if l.contains("xllcorner")
+                    || l.contains("yllcorner")
+                    || l.contains("xllcenter")
+                    || l.contains("yllcenter")
+                {
                     return RasterType::ArcAscii;;
                 }
                 if line_count > 7 {
@@ -1106,7 +1157,6 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
 
     RasterType::Unknown
 }
-
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DataType {

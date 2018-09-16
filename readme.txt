@@ -58,6 +58,8 @@ for more details.
 
 Version 0.10.0 (XX-XX-2018)
 - Added the following tools:
+    CreateHexagonalVectorGrid
+    CreateRectangularVectorGrid
     ExtractNodes
     HighPassMedianFilter
     LasToMultipointShapefile

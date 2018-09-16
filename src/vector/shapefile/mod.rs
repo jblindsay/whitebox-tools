@@ -26,7 +26,7 @@ use std::io::{BufReader, BufWriter, Error, ErrorKind};
 use std::str;
 use structures::Point2D;
 
-// 100 bytes in size
+/// ```ShapefileHeader``` stores the header variables of a ShapeFile header.
 #[derive(Default, Clone)]
 pub struct ShapefileHeader {
     file_code: i32,            // BigEndian; value is 9994
@@ -80,6 +80,24 @@ m_max: {}",
     }
 }
 
+/// `Shapefile` is an in-memory ESRI Shapefile.
+///
+/// Examples:
+///
+/// ```
+/// // Read a Shapefile from a file.
+/// let input = Shapefile::read(&input_file)?;
+///
+/// // Create a new output Shapefile
+/// let mut output = Shapefile::initialize_using_file(&output_file, &input, ShapeType::PolyLine, true)?;
+///
+/// // add attributes
+/// let fid = AttributeField::new("FID", FieldDataType::Int, 2u8, 0u8);
+/// let val = AttributeField::new("Value", FieldDataType::Real, 12u8, 4u8);
+/// output.attributes.add_field(&fid);
+/// output.attributes.add_field(&val);
+///
+/// ```
 #[derive(Default, Clone)]
 pub struct Shapefile {
     pub file_name: String,
