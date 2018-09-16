@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 341 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 343 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -275,6 +275,7 @@ The library currently contains the following 341 tools, which are each grouped b
 - ***Reclass***: Reclassifies the values in a raster image.
 - ***ReclassEqualInterval***: Reclassifies the values in a raster image based on equal-ranges.
 - ***ReclassFromFile***: Reclassifies the values in a raster image using reclass ranges in a text file.
+- ***VectorHexBinning***: Hex-bins a set of vector points.
 - ***WeightedOverlay***: Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 
@@ -409,6 +410,7 @@ The library currently contains the following 341 tools, which are each grouped b
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 - ***LidarGroundPointFilter***: Identifies ground points within LiDAR dataset.
 - ***LidarIdwInterpolation***: Interpolates LAS files using an inverse-distance weighted (IDW) scheme.
+- ***LidarHexBinning***: Hex-bins a set of LiDAR points.
 - ***LidarHillshade***: Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 - ***LidarHistogram***: Creates a histogram from LiDAR data.
 - ***LidarInfo***: Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.

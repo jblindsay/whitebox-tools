@@ -57,12 +57,13 @@ for more details.
 ******************
 
 Version 0.10.0 (XX-XX-2018)
-- Added the following tools:
+- The following tools were added to the project:
     CreateHexagonalVectorGrid
     CreateRectangularVectorGrid
     ExtractNodes
     HighPassMedianFilter
     LasToMultipointShapefile
+    LidarHexBinning and VectorHexBinning
     LidarTileFootprint
     MaxDifferenceFromMean
     MinimumBoundingBox

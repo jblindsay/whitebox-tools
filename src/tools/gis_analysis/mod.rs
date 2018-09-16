@@ -39,6 +39,7 @@ mod raster_cell_assignment;
 mod reclass;
 mod reclass_equal_interval;
 mod reclass_from_file;
+mod vector_hex_bin;
 mod weighted_overlay;
 mod weighted_sum;
 
@@ -83,5 +84,6 @@ pub use self::raster_cell_assignment::RasterCellAssignment;
 pub use self::reclass::Reclass;
 pub use self::reclass_equal_interval::ReclassEqualInterval;
 pub use self::reclass_from_file::ReclassFromFile;
+pub use self::vector_hex_bin::VectorHexBinning;
 pub use self::weighted_overlay::WeightedOverlay;
 pub use self::weighted_sum::WeightedSum;
