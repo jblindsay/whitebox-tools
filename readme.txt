@@ -60,6 +60,8 @@ Version 0.10.0 (XX-XX-2018)
 - The following tools were added to the project:
     CreateHexagonalVectorGrid
     CreateRectangularVectorGrid
+    DrainagePreservingSmoothing
+    EliminateCoincidentPoints
     ExtractNodes
     HighPassMedianFilter
     LasToMultipointShapefile

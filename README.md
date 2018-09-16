@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 343 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 345 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -188,6 +188,7 @@ The library currently contains the following 343 tools, which are each grouped b
 - ***DevFromMeanElev***: Calculates deviation from mean elevation.
 - ***DiffFromMeanElev***: Calculates difference from mean elevation (equivalent to a high-pass filter).
 - ***DirectionalRelief***: Calculates relief for cells in an input DEM for a specified direction.
+- ***DrainagePreservingSmoothing***: Reduces short-scale variation in an input DEM while preserving breaks-in-slope and small drainage features using a modified Sun et al. (2007) algorithm.
 - ***DownslopeIndex***: Calculates the Hjerdt et al. (2004) downslope index.
 - ***ElevAbovePit***: Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
 - ***ElevPercentile***: Calculates the elevation percentile raster from a DEM.
@@ -249,6 +250,7 @@ The library currently contains the following 343 tools, which are each grouped b
 - ***CreatePlane***: Creates a raster image based on the equation for a simple plane.
 - ***CreateRectangularVectorGrid***: Creates a rectangular vector grid.
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
+- ***EliminateCoincidentPoints***: Removes any coincident, or nearly coincident, points from a vector points file.
 - ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform. 
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.

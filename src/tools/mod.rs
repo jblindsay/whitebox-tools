@@ -53,6 +53,7 @@ impl ToolManager {
         tool_names.push("CreatePlane".to_string());
         tool_names.push("CreateRectangularVectorGrid".to_string());
         tool_names.push("EdgeProportion".to_string());
+        tool_names.push("EliminateCoincidentPoints".to_string());
         tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
@@ -339,12 +340,12 @@ impl ToolManager {
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
         tool_names.push("DownslopeIndex".to_string());
+        tool_names.push("DrainagePreservingSmoothing".to_string());
         tool_names.push("ElevAbovePit".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("ElevRelativeToMinMax".to_string());
         tool_names.push("ElevRelativeToWatershedMinMax".to_string());
         tool_names.push("FeaturePreservingDenoise".to_string());
-        tool_names.push("FeaturePreservingDenoiseWithExclusions".to_string());
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
@@ -437,6 +438,9 @@ impl ToolManager {
                 tools::gis_analysis::CreateRectangularVectorGrid::new(),
             )),
             "edgeproportion" => Some(Box::new(tools::gis_analysis::EdgeProportion::new())),
+            "eliminatecoincidentpoints" => Some(Box::new(
+                tools::gis_analysis::EliminateCoincidentPoints::new(),
+            )),
             "erasepolygonfromraster" => {
                 Some(Box::new(tools::gis_analysis::ErasePolygonFromRaster::new()))
             }
@@ -931,6 +935,9 @@ impl ToolManager {
                 Some(Box::new(tools::terrain_analysis::DirectionalRelief::new()))
             }
             "downslopeindex" => Some(Box::new(tools::terrain_analysis::DownslopeIndex::new())),
+            "drainagepreservingsmoothing" => Some(Box::new(
+                tools::terrain_analysis::DrainagePreservingSmoothing::new(),
+            )),
             "elevabovepit" => Some(Box::new(tools::terrain_analysis::ElevAbovePit::new())),
             "elevpercentile" => Some(Box::new(tools::terrain_analysis::ElevPercentile::new())),
             "elevrelativetominmax" => Some(Box::new(
@@ -941,9 +948,6 @@ impl ToolManager {
             )),
             "featurepreservingdenoise" => Some(Box::new(
                 tools::terrain_analysis::FeaturePreservingDenoise::new(),
-            )),
-            "featurepreservingdenoisewithexclusions" => Some(Box::new(
-                tools::terrain_analysis::FeaturePreservingDenoiseWithExclusions::new(),
             )),
             "fetchanalysis" => Some(Box::new(tools::terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(tools::terrain_analysis::FillMissingData::new())),

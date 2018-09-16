@@ -35,7 +35,7 @@ use vector::*;
 /// also specify the orientation of the grid with options of horizontal (pointy side up) and
 /// vertical (flat side up).
 ///
-/// See also: `LidarHexBinning`.
+/// See also: `LidarHexBinning`, `PointDensity`, `CreateHexagonalVectorGrid`
 pub struct VectorHexBinning {
     name: String,
     description: String,
