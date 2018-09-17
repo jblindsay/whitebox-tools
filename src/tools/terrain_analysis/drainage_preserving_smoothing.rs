@@ -1,6 +1,6 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
-Authors: Dr. John Lindsay
+Authors: Dr. John Lindsay and Anthony Francioni
 Created: 06/09/2018
 Last Modified: 16/09/2018
 License: MIT

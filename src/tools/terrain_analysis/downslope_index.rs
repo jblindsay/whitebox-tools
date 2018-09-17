@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 17, 2017
-Last Modified: 14/09/2018
+Last Modified: 16/09/2018
 License: MIT
 */
 
@@ -19,7 +19,36 @@ use structures::Array2D;
 use time;
 use tools::*;
 
-/// Calculates the Hjerdt et al. (2004) downslope index.
+/// This tool can be used to calculate the downslope index described by Hjerdt et al. (2004).
+/// The downslope index is a measure of the slope gradient between a grid cell and some
+/// downslope location (along the flowpath passing through the upslope grid cell) that
+/// represents a specified vertical drop (i.e. a potential head drop). The index has been
+/// shown to be useful for hydrological, geomorphological, and biogeochemical applications.
+///
+/// The user must specify the name of a digital elevaton model (DEM) raster. This DEM
+/// should be have been pre-processed to remove artifact topographic depressions and flat
+/// areas. The user must also specify the head potential drop (d), and the output type. The
+/// output type can be either '`tangent`', '`degrees`', '`radians`', or '`distance`'. If
+/// '`distance`' is selected as the output type, the output grid actually represents the
+/// downslope flowpath length required to drop d meters from each grid cell. Linear
+/// interpolation is used when the specified drop value is encountered between two adjacent
+/// grid cells along a flowpath traverse.
+///
+/// Notice that this algorithm is affected by edge contamination. That is, for some grid cells,
+/// the edge of the grid will be encountered along a flowpath traverse before the specified
+/// vertical drop occurs. In these cases, the value of the downslope index is approximated by
+/// replacing d with the actual elevation drop observed along the flowpath. To avoid this problem,
+/// the entire watershed containing an area of interest should be contained in the DEM.
+///
+/// Grid cells containing NoData values in any of the input images are assigned the NoData
+/// value in the output raster. The output raster is of the float data type and continuous
+/// data scale.
+///
+/// **Reference**:
+///
+/// Hjerdt, K.N., McDonnell, J.J., Seibert, J. Rodhe, A. (2004) *A new topographic index to
+/// quantify downslope controls on local drainage*, **Water Resources Research**, 40, W05602,
+/// doi:10.1029/2004WR003130.
 pub struct DownslopeIndex {
     name: String,
     description: String,
@@ -158,7 +187,7 @@ impl WhiteboxTool for DownslopeIndex {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-dem" || vec[0].to_lowercase() == "-input" {
+            if flag_val == "-i" || flag_val == "-dem" || flag_val == "-input" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -233,6 +262,8 @@ impl WhiteboxTool for DownslopeIndex {
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
 
+        // Calculate the D8 flow directions
+
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -260,13 +291,13 @@ impl WhiteboxTool for DownslopeIndex {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
-                            dir = 0i8;
+                            dir = -1i8;
                             max_slope = f64::MIN;
                             neighbouring_nodata = false;
                             for i in 0..8 {
-                                z_n = input[(row + dy[i], col + dx[i])];
+                                z_n = input.get_value(row + dy[i], col + dx[i]);
                                 if z_n != nodata {
                                     slope = (z - z_n) / grid_lengths[i];
                                     if slope > max_slope && slope > 0f64 {
@@ -337,7 +368,7 @@ impl WhiteboxTool for DownslopeIndex {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             row_n = row;
                             col_n = col;
@@ -346,12 +377,12 @@ impl WhiteboxTool for DownslopeIndex {
                             flag = true;
                             while flag {
                                 // find the downstream cell
-                                dir = flow_dir[(row, col)];
-                                if dir > 0 {
+                                dir = flow_dir.get_value(row, col);
+                                if dir >= 0 {
                                     dist += grid_lengths[dir as usize];
                                     row_n += dy[dir as usize];
                                     col_n += dx[dir as usize];
-                                    zn = input[(row_n, col_n)];
+                                    zn = input.get_value(row_n, col_n);
                                     if zn != nodata {
                                         if (z - zn) >= drop_val {
                                             z_drop = zn;
