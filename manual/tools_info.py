@@ -237,7 +237,7 @@ for key, value in sorted(tb_dict.items()):
     # print("* 6.{} [{}](#{})".format(num1, key.replace("/", " = "),
     #                                 key.replace("/", " = ").lower().replace(" ", "-")))
     num2 = 1
-    for v in value:
+    for v in sorted(value):
         # print(v)
         f.write("{}\n".format(
             v.replace("insertNumHere", "8.{}.{}".format(num1, num2))))

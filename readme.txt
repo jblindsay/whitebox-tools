@@ -56,7 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.10.0 (XX-XX-2018)
+Version 0.11.0 (XX-XX-2018)
+
+Version 0.10.0 (16-09-2018)
 - The following tools were added to the project:
     CreateHexagonalVectorGrid
     CreateRectangularVectorGrid

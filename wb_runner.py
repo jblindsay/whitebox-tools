@@ -1129,7 +1129,7 @@ class WbRunner(tk.Frame):
     def refresh_tools(self):
         (self.toolslist, selected_item) = self.get_tools_list()
         self.tools_listbox.delete(0, len(self.toolslist))
-        for item in self.toolslist:
+        for item in sorted(self.toolslist):
             self.tools_listbox.insert(len(self.toolslist), item)
 
         self.tools_frame["text"] = "{} Available Tools".format(
