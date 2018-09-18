@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 2, 2017
-Last Modified: 13/09/2018
+Created: 02/06/2017
+Last Modified: 18/09/2018
 License: MIT
 */
 
@@ -64,6 +64,15 @@ impl LidarGroundPointFilter {
         });
 
         parameters.push(ToolParameter {
+            name: "Minimum Number of Neighbours".to_owned(),
+            flags: vec!["--min_neighbours".to_owned()],
+            description: "The minimum number of neighbouring points within search areas. If fewer points than this threshold are idenfied during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("0".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
             name: "Inter-point Slope Threshold".to_owned(),
             flags: vec!["--slope_threshold".to_owned()],
             description: "Maximum inter-point slope to be considered an off-terrain point."
@@ -103,7 +112,7 @@ impl LidarGroundPointFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --min_neighbours=10 --slope_threshold=30.0 --height_threshold=0.5 --classify", short_exe, name).replace("*", &sep);
 
         LidarGroundPointFilter {
             name: name,
@@ -159,6 +168,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut search_radius: f64 = -1.0;
+        let mut min_points = 0usize;
         let mut height_threshold: f64 = 1.0;
         let mut slope_threshold: f64 = 15.0;
         let ground_class_value = 2u8;
@@ -183,35 +193,41 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-radius" {
-                if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                search_radius = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-height_threshold" {
-                if keyval {
-                    height_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                height_threshold = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    height_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-slope_threshold" {
-                if keyval {
-                    slope_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                slope_threshold = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    slope_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-min_neighbours" || flag_val == "-min_neighbors" {
+                min_points = if keyval {
+                    vec[1].to_string().parse::<usize>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<usize>().unwrap()
+                };
             } else if flag_val == "-classify" {
                 filter = false;
             }
@@ -287,10 +303,14 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut min_z: f64;
+                let mut ret: Vec<(usize, f64)>;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if p.is_late_return() && !p.is_classified_noise() {
-                        let ret = frs.search(p.x, p.y);
+                        ret = frs.search(p.x, p.y);
+                        if ret.len() < min_points {
+                            ret = frs.knn_search(p.x, p.y, min_points);
+                        }
                         min_z = f64::MAX;
                         for j in 0..ret.len() {
                             index_n = ret[j].0;
@@ -332,10 +352,14 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut max_z: f64;
+                let mut ret: Vec<(usize, f64)>;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if p.is_late_return() && !p.is_classified_noise() {
-                        let ret = frs.search(p.x, p.y);
+                        ret = frs.search(p.x, p.y);
+                        if ret.len() < min_points {
+                            ret = frs.knn_search(p.x, p.y, min_points);
+                        }
                         max_z = f64::MIN;
                         for j in 0..ret.len() {
                             index_n = ret[j].0;
@@ -382,13 +406,17 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 let mut max_slope: f64;
                 let mut slope: f64;
                 let mut dist: f64;
+                let mut ret: Vec<(usize, f64)>;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
                     if residuals[point_num] < height_threshold
                         && p.is_late_return()
                         && !p.is_classified_noise()
                     {
-                        let ret = frs.search(p.x, p.y);
+                        ret = frs.search(p.x, p.y);
+                        if ret.len() < min_points {
+                            ret = frs.knn_search(p.x, p.y, min_points);
+                        }
                         max_slope = f64::MIN;
                         for j in 0..ret.len() {
                             dist = ret[j].1;
@@ -428,19 +456,6 @@ impl WhiteboxTool for LidarGroundPointFilter {
         // now output the data
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
-
-        // for i in 0..n_points {
-        //     if !is_off_terrain[i] {
-        //         output.add_point_record(input.get_record(i));
-        //     }
-        //     if verbose {
-        //         progress = (100.0_f64 * i as f64 / num_points) as i32;
-        //         if progress != old_progress {
-        //             println!("Saving data: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
 
         /////////////////////
         // Output the data //
