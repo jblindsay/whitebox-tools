@@ -57,6 +57,7 @@ impl ToolManager {
         tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
+        tool_names.push("ExtendVectorLines".to_string());
         tool_names.push("ExtractNodes".to_string());
         tool_names.push("ExtractRasterValuesAtPoints".to_string());
         tool_names.push("FindLowestOrHighestPoints".to_string());
@@ -448,6 +449,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::EuclideanAllocation::new()))
             }
             "euclideandistance" => Some(Box::new(tools::gis_analysis::EuclideanDistance::new())),
+            "extendvectorlines" => Some(Box::new(tools::gis_analysis::ExtendVectorLines::new())),
             "extractnodes" => Some(Box::new(tools::gis_analysis::ExtractNodes::new())),
             "extractrastervaluesatpoints" => Some(Box::new(
                 tools::gis_analysis::ExtractRasterValuesAtPoints::new(),

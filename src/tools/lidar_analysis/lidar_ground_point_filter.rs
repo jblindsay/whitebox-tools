@@ -101,6 +101,15 @@ impl LidarGroundPointFilter {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Perform initial ground slope normalization?".to_owned(),
+            flags: vec!["--slope_norm".to_owned()],
+            description: "Perform initial ground slope normalization?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -112,7 +121,7 @@ impl LidarGroundPointFilter {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --min_neighbours=10 --slope_threshold=30.0 --height_threshold=0.5 --classify", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --min_neighbours=10 --slope_threshold=30.0 --height_threshold=0.5 --classify --slope_norm", short_exe, name).replace("*", &sep);
 
         LidarGroundPointFilter {
             name: name,
@@ -168,12 +177,13 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut search_radius: f64 = -1.0;
-        let mut min_points = 0usize;
+        let mut min_neighbours = 0usize;
         let mut height_threshold: f64 = 1.0;
         let mut slope_threshold: f64 = 15.0;
         let ground_class_value = 2u8;
         let otp_class_value = 1u8;
         let mut filter = true;
+        let mut slope_norm = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -210,6 +220,12 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
+            } else if flag_val == "-min_neighbours" || flag_val == "-min_neighbors" {
+                min_neighbours = if keyval {
+                    vec[1].to_string().parse::<usize>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<usize>().unwrap()
+                };
             } else if flag_val == "-height_threshold" {
                 height_threshold = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
@@ -222,14 +238,10 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
-            } else if flag_val == "-min_neighbours" || flag_val == "-min_neighbors" {
-                min_points = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
-                } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
-                };
             } else if flag_val == "-classify" {
                 filter = false;
+            } else if flag_val == "-slope_norm" {
+                slope_norm = true;
             }
         }
 
@@ -266,14 +278,21 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
-        let mut progress: i32;
-        let mut old_progress: i32 = -1;
+        let mut residuals = vec![f64::MIN; n_points];
+        let mut is_off_terrain = vec![false; n_points];
+
         let mut frs: FixedRadiusSearch2D<usize> =
             FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
+
+        let mut progress: i32;
+        let mut old_progress: i32 = -1;
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
             if p.is_late_return() && !p.is_classified_noise() {
                 frs.insert(p.x, p.y, i);
+                if !slope_norm {
+                    residuals[i] = p.z;
+                }
             }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
@@ -284,111 +303,109 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
         }
 
-        let mut neighbourhood_min = vec![f64::MAX; n_points];
-        let mut residuals = vec![f64::MIN; n_points];
-
-        /////////////
-        // Erosion //
-        /////////////
-
         let frs = Arc::new(frs); // wrap FRS in an Arc
-        let input = Arc::new(input); // wrap input in an Arc
         let num_procs = num_cpus::get();
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let frs = frs.clone();
-            let input = input.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut index_n: usize;
-                let mut z_n: f64;
-                let mut min_z: f64;
-                let mut ret: Vec<(usize, f64)>;
-                for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
-                    let p: PointData = input.get_point_info(point_num);
-                    if p.is_late_return() && !p.is_classified_noise() {
-                        ret = frs.search(p.x, p.y);
-                        if ret.len() < min_points {
-                            ret = frs.knn_search(p.x, p.y, min_points);
-                        }
-                        min_z = f64::MAX;
-                        for j in 0..ret.len() {
-                            index_n = ret[j].0;
-                            z_n = input.get_point_info(index_n).z;
-                            if z_n < min_z {
-                                min_z = z_n;
+        let input = Arc::new(input); // wrap input in an Arc
+
+        if slope_norm {
+            /////////////
+            // Erosion //
+            /////////////
+            let mut neighbourhood_min = vec![f64::MAX; n_points];
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let frs = frs.clone();
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut index_n: usize;
+                    let mut z_n: f64;
+                    let mut min_z: f64;
+                    let mut ret: Vec<(usize, f64)>;
+                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid)
+                    {
+                        let p: PointData = input.get_point_info(point_num);
+                        if p.is_late_return() && !p.is_classified_noise() {
+                            ret = frs.search(p.x, p.y);
+                            min_z = f64::MAX;
+                            for j in 0..ret.len() {
+                                index_n = ret[j].0;
+                                z_n = input.get_point_info(index_n).z;
+                                if z_n < min_z {
+                                    min_z = z_n;
+                                }
                             }
+                            tx.send((point_num, min_z)).unwrap();
+                        } else {
+                            tx.send((point_num, f64::MAX)).unwrap();
                         }
-                        tx.send((point_num, min_z)).unwrap();
-                    } else {
-                        tx.send((point_num, f64::MAX)).unwrap();
+                    }
+                });
+            }
+
+            for i in 0..n_points {
+                let data = rx.recv().unwrap();
+                neighbourhood_min[data.0] = data.1;
+                if verbose {
+                    progress = (100.0_f64 * i as f64 / num_points) as i32;
+                    if progress != old_progress {
+                        println!("Erosion: {}%", progress);
+                        old_progress = progress;
                     }
                 }
-            });
-        }
-
-        for i in 0..n_points {
-            let data = rx.recv().unwrap();
-            neighbourhood_min[data.0] = data.1;
-            if verbose {
-                progress = (100.0_f64 * i as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Erosion: {}%", progress);
-                    old_progress = progress;
-                }
             }
-        }
 
-        //////////////
-        // Dilation //
-        //////////////
-        let neighbourhood_min = Arc::new(neighbourhood_min); // wrap neighbourhood_min in an Arc
-        for tid in 0..num_procs {
-            let frs = frs.clone();
-            let input = input.clone();
-            let neighbourhood_min = neighbourhood_min.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut index_n: usize;
-                let mut z_n: f64;
-                let mut max_z: f64;
-                let mut ret: Vec<(usize, f64)>;
-                for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
-                    let p: PointData = input.get_point_info(point_num);
-                    if p.is_late_return() && !p.is_classified_noise() {
-                        ret = frs.search(p.x, p.y);
-                        if ret.len() < min_points {
-                            ret = frs.knn_search(p.x, p.y, min_points);
-                        }
-                        max_z = f64::MIN;
-                        for j in 0..ret.len() {
-                            index_n = ret[j].0;
-                            z_n = neighbourhood_min[index_n];
-                            if z_n > max_z {
-                                max_z = z_n;
+            //////////////
+            // Dilation //
+            //////////////
+            let neighbourhood_min = Arc::new(neighbourhood_min); // wrap neighbourhood_min in an Arc
+            for tid in 0..num_procs {
+                let frs = frs.clone();
+                let input = input.clone();
+                let neighbourhood_min = neighbourhood_min.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut index_n: usize;
+                    let mut z_n: f64;
+                    let mut max_z: f64;
+                    let mut ret: Vec<(usize, f64)>;
+                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid)
+                    {
+                        let p: PointData = input.get_point_info(point_num);
+                        if p.is_late_return() && !p.is_classified_noise() {
+                            ret = frs.search(p.x, p.y);
+                            max_z = f64::MIN;
+                            for j in 0..ret.len() {
+                                index_n = ret[j].0;
+                                z_n = neighbourhood_min[index_n];
+                                if z_n > max_z {
+                                    max_z = z_n;
+                                }
                             }
+                            tx.send((point_num, max_z)).unwrap();
+                        } else {
+                            tx.send((point_num, f64::MIN)).unwrap();
                         }
-                        tx.send((point_num, max_z)).unwrap();
-                    } else {
-                        tx.send((point_num, f64::MIN)).unwrap();
+                    }
+                });
+            }
+
+            for i in 0..n_points {
+                let data = rx.recv().unwrap();
+                if data.1 != f64::MIN {
+                    let z = input.get_point_info(data.0).z;
+                    residuals[data.0] = z - data.1;
+                }
+                if verbose {
+                    progress = (100.0_f64 * i as f64 / num_points) as i32;
+                    if progress != old_progress {
+                        println!("Dilation: {}%", progress);
+                        old_progress = progress;
                     }
                 }
-            });
-        }
+            }
+        } else {
 
-        for i in 0..n_points {
-            let data = rx.recv().unwrap();
-            if data.1 != f64::MIN {
-                let z = input.get_point_info(data.0).z;
-                residuals[data.0] = z - data.1;
-            }
-            if verbose {
-                progress = (100.0_f64 * i as f64 / num_points) as i32;
-                if progress != old_progress {
-                    println!("Dilation: {}%", progress);
-                    old_progress = progress;
-                }
-            }
         }
 
         ////////////////////////
@@ -409,13 +426,13 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 let mut ret: Vec<(usize, f64)>;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(point_num);
-                    if residuals[point_num] < height_threshold
+                    if (!slope_norm || residuals[point_num] < height_threshold)
                         && p.is_late_return()
                         && !p.is_classified_noise()
                     {
                         ret = frs.search(p.x, p.y);
-                        if ret.len() < min_points {
-                            ret = frs.knn_search(p.x, p.y, min_points);
+                        if ret.len() < min_neighbours {
+                            ret = frs.knn_search(p.x, p.y, min_neighbours);
                         }
                         max_slope = f64::MIN;
                         for j in 0..ret.len() {
@@ -440,7 +457,6 @@ impl WhiteboxTool for LidarGroundPointFilter {
             });
         }
 
-        let mut is_off_terrain = vec![false; n_points];
         for i in 0..n_points {
             let data = rx.recv().unwrap();
             is_off_terrain[data.0] = data.1;

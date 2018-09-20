@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
-Last Modified: 13/09/2018
+Created: 22/09/2017
+Last Modified: 18/09/2018
 License: MIT
 */
 
@@ -147,24 +147,25 @@ impl WhiteboxTool for LidarTophatTransform {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-radius" || vec[0].to_lowercase() == "--radius" {
-                if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-radius" {
+                search_radius = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -221,7 +222,6 @@ impl WhiteboxTool for LidarTophatTransform {
         /////////////
         // Erosion //
         /////////////
-
         let frs = Arc::new(frs); // wrap FRS in an Arc
         let input = Arc::new(input); // wrap input in an Arc
         let num_procs = num_cpus::get();
@@ -234,9 +234,10 @@ impl WhiteboxTool for LidarTophatTransform {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut min_z: f64;
+                let mut ret: Vec<(usize, f64)>;
                 for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
-                    let ret = frs.search(p.x, p.y);
+                    ret = frs.search(p.x, p.y);
                     min_z = f64::MAX;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;
@@ -275,9 +276,10 @@ impl WhiteboxTool for LidarTophatTransform {
                 let mut index_n: usize;
                 let mut z_n: f64;
                 let mut max_z: f64;
+                let mut ret: Vec<(usize, f64)>;
                 for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                     let p: PointData = input.get_point_info(i);
-                    let ret = frs.search(p.x, p.y);
+                    ret = frs.search(p.x, p.y);
                     max_z = f64::MIN;
                     for j in 0..ret.len() {
                         index_n = ret[j].0;

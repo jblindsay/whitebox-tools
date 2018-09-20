@@ -58,6 +58,7 @@ for more details.
 
 Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
+    ExtendVectorLines
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
   LidarGroundPointFilter tool. In this way, if the fixed-radius search yields fewer
@@ -65,7 +66,6 @@ Version 0.11.0 (XX-XX-2018)
   out to identify the k nearest neighbours. This can be preferable for cases where
   the point density varies significantly in the data set, e.g. in the case of 
   terrestrial LiDAR point clouds.
-
 
 
 Version 0.10.0 (16-09-2018)

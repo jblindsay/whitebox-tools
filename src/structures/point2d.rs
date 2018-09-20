@@ -50,13 +50,13 @@ impl Point2D {
     }
 
     /// Calculate Euclidean distance between the point and another.
-    pub fn distance(&self, other: &Point2D) -> f64 {
+    pub fn distance(&self, other: &Self) -> f64 {
         ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y)).sqrt()
     }
 
     /// Draw a horizontal line through this point, connect this point with the other,
     /// and measure the angle between these two lines.
-    pub fn angle(&self, other: &Point2D) -> f64 {
+    pub fn angle(&self, other: &Self) -> f64 {
         if self == other {
             0.0
         } else {
@@ -90,7 +90,7 @@ impl Point2D {
         Point2D::new(self.x + delta_x, self.y + delta_y)
     }
 
-    pub fn direction(&self, p1: &Point2D, p2: &Point2D) -> Direction {
+    pub fn direction(&self, p1: &Self, p2: &Self) -> Direction {
         let v1 = *p1 - *self;
         let v2 = *p2 - *self;
         let x1 = v1.x;
@@ -111,7 +111,7 @@ impl Point2D {
 impl Eq for Point2D {}
 
 impl PartialEq for Point2D {
-    fn eq(&self, other: &Point2D) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.x == other.x && self.y == other.y
     }
 }
@@ -149,7 +149,7 @@ impl PartialEq for Point2D {
 
 impl Add for Point2D {
     type Output = Point2D;
-    fn add(self, rhs: Point2D) -> Point2D {
+    fn add(self, rhs: Self) -> Point2D {
         Point2D {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
@@ -159,7 +159,7 @@ impl Add for Point2D {
 
 impl Sub for Point2D {
     type Output = Point2D;
-    fn sub(self, rhs: Point2D) -> Point2D {
+    fn sub(self, rhs: Self) -> Point2D {
         Point2D {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
@@ -170,7 +170,7 @@ impl Sub for Point2D {
 // dot product
 impl Mul for Point2D {
     type Output = f64;
-    fn mul(self, rhs: Point2D) -> f64 {
+    fn mul(self, rhs: Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y
     }
 }

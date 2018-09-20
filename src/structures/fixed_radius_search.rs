@@ -165,6 +165,20 @@ impl<T: Copy> FixedRadiusSearch2D<T> {
             }
         }
 
+        // for k in 0..25 {
+        //     if let Some(vals) = self.hm.get(&[i + self.dx[k], j + self.dy[k]]) {
+        //         for val in vals {
+        //             // calculate the squared distance to (x, y)
+        //             dist = (x - val.x) * (x - val.x) + (y - val.y) * (y - val.y);
+
+        //             lows.insert(MinDistValue {
+        //                 value: val.value,
+        //                 dist: dist,
+        //             });
+        //         }
+        //     }
+        // }
+
         let mut shell = 2i32;
         while lows.size() < neighbours {
             for m in -shell..=shell {
