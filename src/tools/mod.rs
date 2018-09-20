@@ -66,6 +66,7 @@ impl ToolManager {
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
+        tool_names.push("Medoid".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinimumBoundingBox".to_string());
         tool_names.push("MinimumConvexHull".to_string());
@@ -464,6 +465,7 @@ impl ToolManager {
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
+            "medoid" => Some(Box::new(tools::gis_analysis::Medoid::new())),
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minimumboundingbox" => Some(Box::new(tools::gis_analysis::MinimumBoundingBox::new())),
             "minimumconvexhull" => Some(Box::new(tools::gis_analysis::MinimumConvexHull::new())),

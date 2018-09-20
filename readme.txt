@@ -59,6 +59,7 @@ for more details.
 Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     ExtendVectorLines
+    Medoid
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
   LidarGroundPointFilter tool. In this way, if the fixed-radius search yields fewer
