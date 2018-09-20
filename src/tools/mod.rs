@@ -43,6 +43,7 @@ impl ToolManager {
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BufferRaster".to_string());
         tool_names.push("Centroid".to_string());
+        tool_names.push("CentroidVector".to_string());
         tool_names.push("ClipRasterToPolygon".to_string());
         tool_names.push("Clump".to_string());
         tool_names.push("CountIf".to_string());
@@ -424,6 +425,7 @@ impl ToolManager {
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "centroid" => Some(Box::new(tools::gis_analysis::Centroid::new())),
+            "centroidvector" => Some(Box::new(tools::gis_analysis::CentroidVector::new())),
             "cliprastertopolygon" => {
                 Some(Box::new(tools::gis_analysis::ClipRasterToPolygon::new()))
             }

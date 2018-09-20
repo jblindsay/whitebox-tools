@@ -6,7 +6,6 @@ Last Modified: 20/09/2018
 License: MIT
 */
 
-use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,21 +14,13 @@ use time;
 use tools::*;
 use vector::*;
 
-/// This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
-/// of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid
-/// is always a members of the input feature data set. Thus, the medoid is a measure of central tendency
-/// that is robust in the presence of outliers. If the input vector is of a POLYLINE or POLYGON ShapeType,
-/// the nodes of each feature will be used to estimate the feature medoid. If the input vector is of a
-/// POINT base ShapeType, the medoid will be calculated for the collection of points. While there are
-/// more than one competing method of calculating the medoid, this tool uses an algorithm that works as follows:
+/// This can be used to identify the centroid point of a vector polyline or polygon feature or a group of
+/// vector points. The output is a vector shapefile of points. For multi-part polyline or polygon features,
+/// the user can optionally specify whether to identify the centroid of each part. The default is to treat
+/// multi-part features a single entity.
 ///
-/// 1. The x-coordinate and y-coordinate of each point/node are placed into two arrays.
-/// 2. The x- and y-coordinate arrays are then sorted and the median x-coordinate (Med X) and median
-/// y-coordinate (Med Y) are calculated.
-/// 3. The point/node in the dataset that is nearest the point (Med X, Med Y) is identified as the medoid.
-///
-/// See Also: Centroid
-pub struct Medoid {
+/// See Also: CentroidVector
+pub struct CentroidVector {
     name: String,
     description: String,
     toolbox: String,
@@ -37,13 +28,13 @@ pub struct Medoid {
     example_usage: String,
 }
 
-impl Medoid {
-    pub fn new() -> Medoid {
+impl CentroidVector {
+    pub fn new() -> CentroidVector {
         // public constructor
-        let name = "Medoid".to_string();
+        let name = "CentroidVector".to_string();
         let toolbox = "GIS Tools".to_string();
         let description =
-            "Calculates the medoid for a series of vector features contained in a shapefile."
+            "Identifes the centroid point of a vector polyline or polygon feature or a group of vector points."
                 .to_string();
 
         let mut parameters = vec![];
@@ -85,7 +76,7 @@ impl Medoid {
             short_exe, name
         ).replace("*", &sep);
 
-        Medoid {
+        CentroidVector {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -95,7 +86,7 @@ impl Medoid {
     }
 }
 
-impl WhiteboxTool for Medoid {
+impl WhiteboxTool for CentroidVector {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -193,67 +184,26 @@ impl WhiteboxTool for Medoid {
 
         let input = Shapefile::read(&input_file)?;
 
-        let (mut x, mut y): (f64, f64);
-        let (mut medx, mut medy): (f64, f64);
-        let mut medoid: usize;
-        let mut med: usize;
-        let (mut dist, mut min_dist): (f64, f64);
+        let (mut x_total, mut y_total): (f64, f64);
 
         if input.header.shape_type.base_shape_type() == ShapeType::Point {
             // create output file
-            let mut output = Shapefile::initialize_using_file(
-                &output_file,
-                &input,
-                input.header.shape_type,
-                true,
-            )?;
+            let mut output =
+                Shapefile::initialize_using_file(&output_file, &input, ShapeType::Point, false)?;
+
+            // add the attributes
+            output
+                .attributes
+                .add_field(&AttributeField::new("FID", FieldDataType::Int, 2u8, 0u8));
 
             // read in the coordinates and find the median x and y coordinates
-            let mut x_coordinates: Vec<f64> = Vec::with_capacity(input.num_records);
-            let mut y_coordinates: Vec<f64> = Vec::with_capacity(input.num_records);
+            x_total = 0f64;
+            y_total = 0f64;
 
             for record_num in 0..input.num_records {
                 let record = input.get_record(record_num);
-                x_coordinates.push(record.points[0].x);
-                y_coordinates.push(record.points[0].y);
-
-                if verbose {
-                    progress =
-                        (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
-                    if progress != old_progress {
-                        println!("Progress: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-
-            x_coordinates.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-            y_coordinates.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-
-            med = (input.num_records as f64 / 2f64).floor() as usize;
-            if input.num_records % 2 == 1 {
-                // odd number; med is middle element
-                medx = x_coordinates[med];
-                medy = y_coordinates[med];
-            } else {
-                // even number; average the two middle elements.
-                medx = (x_coordinates[med - 1] + x_coordinates[med]) / 2f64;
-                medy = (y_coordinates[med - 1] + y_coordinates[med]) / 2f64;
-            }
-
-            // find the nearest point to the median coordinates
-            min_dist = f64::INFINITY;
-            medoid = 0;
-            for record_num in 0..input.num_records {
-                let record = input.get_record(record_num);
-                x = record.points[0].x;
-                y = record.points[0].y;
-
-                dist = (x - medx) * (x - medx) + (y - medy) * (y - medy);
-                if dist < min_dist {
-                    min_dist = dist;
-                    medoid = record_num;
-                }
+                x_total += record.points[0].x;
+                y_total += record.points[0].y;
 
                 if verbose {
                     progress =
@@ -266,10 +216,13 @@ impl WhiteboxTool for Medoid {
             }
 
             // output the medoid point
-            let record = input.get_record(medoid);
-            output.add_point_record(record.points[0].x, record.points[0].y);
-            let atts = input.attributes.get_record(medoid);
-            output.attributes.add_record(atts.clone(), false);
+            x_total /= input.num_records as f64;
+            y_total /= input.num_records as f64;
+
+            output.add_point_record(x_total, y_total);
+            output
+                .attributes
+                .add_record(vec![FieldData::Int(1i32)], false);
 
             if verbose {
                 println!("Saving data...")
@@ -295,40 +248,17 @@ impl WhiteboxTool for Medoid {
             for record_num in 0..input.num_records {
                 let record = input.get_record(record_num);
                 num_points = record.points.len();
-                let mut x_coordinates: Vec<f64> = Vec::with_capacity(num_points);
-                let mut y_coordinates: Vec<f64> = Vec::with_capacity(num_points);
+                x_total = 0f64;
+                y_total = 0f64;
                 for p in &record.points {
-                    x_coordinates.push(p.x);
-                    y_coordinates.push(p.y);
-                }
-                x_coordinates.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-                y_coordinates.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-
-                med = (num_points as f64 / 2f64).floor() as usize;
-                if input.num_records % 2 == 1 {
-                    // odd number; med is middle element
-                    medx = x_coordinates[med];
-                    medy = y_coordinates[med];
-                } else {
-                    // even number; average the two middle elements.
-                    medx = (x_coordinates[med - 1] + x_coordinates[med]) / 2f64;
-                    medy = (y_coordinates[med - 1] + y_coordinates[med]) / 2f64;
+                    x_total += p.x;
+                    y_total += p.y;
                 }
 
-                // find the nearest point to the median coordinates
-                min_dist = f64::INFINITY;
-                medoid = 0;
-                for i in 0..record.points.len() {
-                    x = record.points[i].x;
-                    y = record.points[i].y;
-                    dist = (x - medx) * (x - medx) + (y - medy) * (y - medy);
-                    if dist < min_dist {
-                        min_dist = dist;
-                        medoid = i;
-                    }
-                }
+                x_total /= num_points as f64;
+                y_total /= num_points as f64;
 
-                output.add_point_record(record.points[medoid].x, record.points[medoid].y);
+                output.add_point_record(x_total, y_total);
                 output
                     .attributes
                     .add_record(vec![FieldData::Int(record_num as i32 + 1i32)], false);
