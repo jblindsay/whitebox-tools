@@ -59,9 +59,9 @@ for more details.
 Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     CentroidVector
-    ConstructVectorTIN
     ExtendVectorLines
-    LidarTINGridding
+    LidarConstructVectorTIN and ConstructVectorTIN
+    LidarTINGridding and TINGridding
     Medoid
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
@@ -70,6 +70,7 @@ Version 0.11.0 (XX-XX-2018)
   out to identify the k nearest neighbours. This can be preferable for cases where
   the point density varies significantly in the data set, e.g. in the case of 
   terrestrial LiDAR point clouds.
+- Fixed a bug that resulted in a 0.5 m offset in the positioning of interpolated grids.
 
 
 Version 0.10.0 (16-09-2018)

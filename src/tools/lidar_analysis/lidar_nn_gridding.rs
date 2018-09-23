@@ -140,7 +140,7 @@ impl LidarNearestNeighbourGridding {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --radius=5.0\"
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --returns=last --resolution=2.0 --radius=5.0\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18'", short_exe, name).replace("*", &sep);
 
         LidarNearestNeighbourGridding {

@@ -163,9 +163,9 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 ## 4 Available Tools
 
-Eventually most of *Whitebox GAT's* approximately 450 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
+Eventually most of *Whitebox GAT's* approximately 430 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 350 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 352 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -281,6 +281,7 @@ The library currently contains the following 350 tools, which are each grouped b
 - ***Reclass***: Reclassifies the values in a raster image.
 - ***ReclassEqualInterval***: Reclassifies the values in a raster image based on equal-ranges.
 - ***ReclassFromFile***: Reclassifies the values in a raster image using reclass ranges in a text file.
+- ***TINGridding***: Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 - ***VectorHexBinning***: Hex-bins a set of vector points.
 - ***WeightedOverlay***: Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
@@ -413,6 +414,7 @@ The library currently contains the following 350 tools, which are each grouped b
 - ***LasToAscii***: Converts one or more LAS files into ASCII text files.
 - **LasToMultipointShapefile**: Converts one or more LAS files into MultipointZ vector Shapefiles.
 - ***LidarColourize***: Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
+- ***LidarConstructVectorTIN***: Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 - ***LidarGroundPointFilter***: Identifies ground points within LiDAR dataset.
 - ***LidarIdwInterpolation***: Interpolates LAS files using an inverse-distance weighted (IDW) scheme.

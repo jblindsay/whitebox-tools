@@ -1,14 +1,15 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 21/09/2018
-Last Modified: 21/09/2018
+Created: 23/09/2018
+Last Modified: 23/09/2018
 License: MIT
 */
 
 use self::na::Vector3;
-use algorithms::triangulate;
+use algorithms::{point_in_poly, triangulate};
 use na;
+use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -16,11 +17,12 @@ use std::path;
 use structures::Point2D;
 use time;
 use tools::*;
-use vector::ShapefileGeometry;
 use vector::*;
 
-/// This tool creates a vector triangular irregular network (TIN) for a set of vector points.
-pub struct ConstructVectorTIN {
+/// Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
+///
+/// See Also: LidarTINGridding, ConstructVectorTIN
+pub struct TINGridding {
     name: String,
     description: String,
     toolbox: String,
@@ -28,13 +30,13 @@ pub struct ConstructVectorTIN {
     example_usage: String,
 }
 
-impl ConstructVectorTIN {
-    pub fn new() -> ConstructVectorTIN {
+impl TINGridding {
+    pub fn new() -> TINGridding {
         // public constructor
-        let name = "ConstructVectorTIN".to_string();
+        let name = "TINGridding".to_string();
         let toolbox = "GIS Tools".to_string();
         let description =
-            "Creates a vector triangular irregular network (TIN) for a set of vector points."
+            "Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points."
                 .to_string();
 
         let mut parameters = vec![];
@@ -83,6 +85,15 @@ impl ConstructVectorTIN {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Grid Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
+            description: "Output raster's grid resolution.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -95,12 +106,12 @@ impl ConstructVectorTIN {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=HEIGHT -o=tin.shp
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --use_z -o=tin.shp",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=HEIGHT -o=tin.shp --resolution=10.0
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --use_z -o=tin.shp --resolution=5.0",
             short_exe, name
         ).replace("*", &sep);
 
-        ConstructVectorTIN {
+        TINGridding {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -110,7 +121,7 @@ impl ConstructVectorTIN {
     }
 }
 
-impl WhiteboxTool for ConstructVectorTIN {
+impl WhiteboxTool for TINGridding {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -156,6 +167,7 @@ impl WhiteboxTool for ConstructVectorTIN {
         let mut use_z = false;
         let mut use_field = false;
         let mut output_file: String = "".to_string();
+        let mut grid_res: f64 = 1.0;
 
         // read the arguments
         if args.len() == 0 {
@@ -195,6 +207,12 @@ impl WhiteboxTool for ConstructVectorTIN {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-resolution" {
+                grid_res = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -230,6 +248,13 @@ impl WhiteboxTool for ConstructVectorTIN {
             ));
         }
 
+        if !use_z && !use_field {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "If vector data 'Z' data are unavailable (--use_z), an attribute field must be specified (--field=).",
+            ));
+        }
+
         if use_z && input.header.shape_type.dimension() != ShapeTypeDimension::Z {
             return Err(Error::new(
                     ErrorKind::InvalidInput,
@@ -256,37 +281,30 @@ impl WhiteboxTool for ConstructVectorTIN {
             }
         }
 
-        let azimuth = (315f64 - 90f64).to_radians();
-        let altitude = 30f64.to_radians();
-        let sin_theta = altitude.sin();
-        let cos_theta = altitude.cos();
+        let west: f64 = input.header.x_min;
+        let north: f64 = input.header.y_max;
+        let rows: isize = (((north - input.header.y_min) / grid_res).ceil()) as isize;
+        let columns: isize = (((input.header.x_max - west) / grid_res).ceil()) as isize;
+        let south: f64 = north - rows as f64 * grid_res;
+        let east = west + columns as f64 * grid_res;
+        let nodata = -32768.0f64;
 
-        // create output file
-        let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
+        let mut configs = RasterConfigs {
+            ..Default::default()
+        };
+        configs.rows = rows as usize;
+        configs.columns = columns as usize;
+        configs.north = north;
+        configs.south = south;
+        configs.east = east;
+        configs.west = west;
+        configs.resolution_x = grid_res;
+        configs.resolution_y = grid_res;
+        configs.nodata = nodata;
+        configs.data_type = DataType::F32;
+        configs.photometric_interp = PhotometricInterpretation::Continuous;
 
-        // set the projection information
-        output.projection = input.projection.clone();
-
-        // add the attributes
-        output
-            .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 5u8, 0u8));
-
-        if use_field || use_z {
-            output.attributes.add_field(&AttributeField::new(
-                "CENTROID_Z",
-                FieldDataType::Real,
-                10u8,
-                4u8,
-            ));
-
-            output.attributes.add_field(&AttributeField::new(
-                "HILLSHADE",
-                FieldDataType::Int,
-                4u8,
-                0u8,
-            ));
-        }
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
 
         let mut points: Vec<Point2D> = vec![];
         let mut z_values: Vec<f64> = vec![];
@@ -328,84 +346,85 @@ impl WhiteboxTool for ConstructVectorTIN {
         }
         // this is where the heavy-lifting is
         let result = triangulate(&points).expect("No triangulation exists.");
+        let num_triangles = result.triangles.len() / 3;
 
         let (mut p1, mut p2, mut p3): (usize, usize, usize);
-        let (mut fx, mut fy): (f64, f64);
-        let (mut tan_slope, mut aspect): (f64, f64);
-        let (mut term1, mut term2, mut term3): (f64, f64, f64);
-        let mut hillshade: f64;
-        let mut rec_num = 1i32;
-        for i in (0..result.triangles.len()).step_by(3) {
-            // the points in triangles are counter clockwise ordered and we need clockwise
-            p1 = result.triangles[i + 2];
+        let (mut top, mut bottom, mut left, mut right): (f64, f64, f64, f64);
+
+        let (mut top_row, mut bottom_row, mut left_col, mut right_col): (
+            isize,
+            isize,
+            isize,
+            isize,
+        );
+        let mut tri_points: Vec<Point2D> = vec![Point2D::new(0f64, 0f64); 4];
+        let mut k: f64;
+        let mut norm: Vector3<f64>;
+        let (mut a, mut b, mut c): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
+        let (mut x, mut y): (f64, f64);
+        let mut zn: f64;
+        let mut i: usize;
+        for triangle in 0..num_triangles {
+            i = triangle * 3;
+            p1 = result.triangles[i];
             p2 = result.triangles[i + 1];
-            p3 = result.triangles[i];
+            p3 = result.triangles[i + 2];
+            tri_points[0] = points[p1].clone();
+            tri_points[1] = points[p2].clone();
+            tri_points[2] = points[p3].clone();
+            tri_points[3] = points[p1].clone();
 
-            let mut tri_points: Vec<Point2D> = Vec::with_capacity(4);
-            tri_points.push(points[p1].clone());
-            tri_points.push(points[p2].clone());
-            tri_points.push(points[p3].clone());
-            tri_points.push(points[p1].clone());
+            // get the equation of the plane
+            a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
+            b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
+            c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
+            norm = (b - a).cross(&(c - a));
+            k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
 
-            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            sfg.add_part(&tri_points);
-            output.add_record(sfg);
+            // find grid intersections with this triangle
+            bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+            top = points[p1].y.max(points[p2].y.max(points[p3].y));
+            left = points[p1].x.min(points[p2].x.min(points[p3].x));
+            right = points[p1].x.max(points[p2].x.max(points[p3].x));
 
-            if use_field || use_z {
-                // calculate the hillshade value
-                let a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
-                let b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
-                let c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
-                let norm = (b - a).cross(&(c - a)); //).normalize();
-                let centroid = (a + b + c) / 3f64;
-                // k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
-                // centroid_z = -(norm.x * centroid.x + norm.y * centroid.y + k) / norm.z;
+            bottom_row = ((north - bottom) / grid_res).ceil() as isize;
+            top_row = ((north - top) / grid_res).floor() as isize;
+            left_col = ((left - west) / grid_res).floor() as isize;
+            right_col = ((right - west) / grid_res).ceil() as isize;
 
-                hillshade = 0f64;
-                if norm.z != 0f64 {
-                    fx = -norm.x / norm.z;
-                    fy = -norm.y / norm.z;
-                    if fx != 0f64 {
-                        tan_slope = (fx * fx + fy * fy).sqrt();
-                        aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                            + 90f64 * (fx / (fx).abs())).to_radians();
-                        term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
-                        term2 = sin_theta / tan_slope;
-                        term3 = cos_theta * (azimuth - aspect).sin();
-                        hillshade = term1 * (term2 - term3);
-                    } else {
-                        hillshade = 0.5;
-                    }
-                    hillshade = hillshade * 1024f64;
-                    if hillshade < 0f64 {
-                        hillshade = 0f64;
+            for row in top_row..=bottom_row {
+                for col in left_col..=right_col {
+                    x = west + (col as f64 + 0.5) * grid_res;
+                    y = north - (row as f64 + 0.5) * grid_res;
+                    if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                        // calculate the z values
+                        zn = -(norm.x * x + norm.y * y + k) / norm.z;
+                        output.set_value(row, col, zn);
                     }
                 }
-
-                output.attributes.add_record(
-                    vec![
-                        FieldData::Int(rec_num),
-                        FieldData::Real(centroid.z),
-                        FieldData::Int(hillshade as i32),
-                    ],
-                    false,
-                );
-            } else {
-                output
-                    .attributes
-                    .add_record(vec![FieldData::Int(rec_num)], false);
             }
 
-            rec_num += 1i32;
-
             if verbose {
-                progress = (100.0_f64 * i as f64 / (result.triangles.len() - 1) as f64) as usize;
+                progress = (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Creating polygons: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
+
+        let end = time::now();
+        let elapsed_time = end - start;
+
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
+        output.add_metadata_entry(
+            format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")

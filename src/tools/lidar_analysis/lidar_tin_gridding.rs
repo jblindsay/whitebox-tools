@@ -126,7 +126,7 @@ impl LidarTINGridding {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --exclude_cls='3,4,5,6,7,18'", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --returns=last --resolution=2.0 --exclude_cls='3,4,5,6,7,18'", short_exe, name).replace("*", &sep);
 
         LidarTINGridding {
             name: name,
@@ -236,12 +236,6 @@ impl WhiteboxTool for LidarTINGridding {
                 } else {
                     grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            // } else if flag_val == "-palette" {
-            //     if keyval {
-            //         palette = vec[1].to_string();
-            //     } else {
-            //         palette = args[i + 1].to_string();
-            //     }
             } else if flag_val == "-exclude_cls" {
                 if keyval {
                     exclude_cls_str = vec[1].to_string();
