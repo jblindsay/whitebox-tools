@@ -74,7 +74,8 @@ impl AttributeHistogram {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -236,11 +237,6 @@ impl WhiteboxTool for AttributeHistogram {
                         max = valf64;
                     }
                 }
-                // FieldData::Int64(val) => {
-                //     let valf64 = val as f64;
-                //     if valf64 < min { min = valf64; }
-                //     if valf64 > max { max = valf64; }
-                // },
                 FieldData::Real(val) => {
                     if val < min {
                         min = val;
@@ -322,9 +318,12 @@ impl WhiteboxTool for AttributeHistogram {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Histogram Analysis</h1>"#.as_bytes())?;
+            <h1>Histogram Analysis</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(
             &format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes(),

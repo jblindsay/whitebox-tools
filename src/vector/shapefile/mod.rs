@@ -14,7 +14,7 @@ pub mod geometry;
 pub use self::attributes::{
     AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, ShapefileAttributes,
 };
-pub use self::geometry::{ShapeType, ShapefileGeometry};
+pub use self::geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use io_utils::{ByteOrderReader, Endianness};
 use std::f64;

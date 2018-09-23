@@ -46,6 +46,7 @@ impl ToolManager {
         tool_names.push("CentroidVector".to_string());
         tool_names.push("ClipRasterToPolygon".to_string());
         tool_names.push("Clump".to_string());
+        tool_names.push("ConstructVectorTIN".to_string());
         tool_names.push("CountIf".to_string());
         tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
@@ -232,6 +233,7 @@ impl ToolManager {
         tool_names.push("LidarThinHighDensity".to_string());
         tool_names.push("LidarTile".to_string());
         tool_names.push("LidarTileFootprint".to_string());
+        tool_names.push("LidarTINGridding".to_string());
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
         tool_names.push("SelectTilesByPolygon".to_string());
@@ -430,6 +432,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::ClipRasterToPolygon::new()))
             }
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
+            "constructvectortin" => Some(Box::new(tools::gis_analysis::ConstructVectorTIN::new())),
             "countif" => Some(Box::new(tools::gis_analysis::CountIf::new())),
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),
@@ -756,6 +759,7 @@ impl ToolManager {
             "lidartilefootprint" => {
                 Some(Box::new(tools::lidar_analysis::LidarTileFootprint::new()))
             }
+            "lidartingridding" => Some(Box::new(tools::lidar_analysis::LidarTINGridding::new())),
             "lidartophattransform" => {
                 Some(Box::new(tools::lidar_analysis::LidarTophatTransform::new()))
             }

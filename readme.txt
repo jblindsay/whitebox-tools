@@ -59,7 +59,9 @@ for more details.
 Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     CentroidVector
+    ConstructVectorTIN
     ExtendVectorLines
+    LidarTINGridding
     Medoid
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the

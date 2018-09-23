@@ -5,11 +5,13 @@ Created: 30/08/2018
 Last Modified: 30/08/2018
 License: MIT
 */
-use std::fmt;
 use std::ops::{Add, Mul, Sub};
+use std::{f64, fmt};
+
+const EPSILON: f64 = f64::EPSILON * 2.0;
 
 /// A 2-D point, with x and y fields.
-#[derive(Default, Copy, Clone, Debug)]
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,
@@ -17,7 +19,7 @@ pub struct Point2D {
 
 impl fmt::Display for Point2D {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = format!("(x: {}, y: {})", self.x, self.y);
+        let s = format!("[{}, {}]", self.x, self.y);
         write!(f, "{}", s)
     }
 }
@@ -106,15 +108,72 @@ impl Point2D {
             Direction::Ahead
         }
     }
+
+    pub fn distance_squared(&self, p: &Self) -> f64 {
+        let dx = self.x - p.x;
+        let dy = self.y - p.y;
+        dx * dx + dy * dy
+    }
+
+    pub fn orient(&self, q: &Self, r: &Self) -> bool {
+        (q.y - self.y) * (r.x - q.x) - (q.x - self.x) * (r.y - q.y) < 0.0
+    }
+
+    pub fn circumdelta(&self, b: &Self, c: &Self) -> (f64, f64) {
+        let dx = b.x - self.x;
+        let dy = b.y - self.y;
+        let ex = c.x - self.x;
+        let ey = c.y - self.y;
+
+        let bl = dx * dx + dy * dy;
+        let cl = ex * ex + ey * ey;
+        let d = 0.5 / (dx * ey - dy * ex);
+
+        let x = (ey * bl - dy * cl) * d;
+        let y = (dx * cl - ex * bl) * d;
+        (x, y)
+    }
+
+    pub fn circumradius2(&self, b: &Self, c: &Self) -> f64 {
+        let (x, y) = self.circumdelta(b, c);
+        x * x + y * y
+    }
+
+    pub fn circumcenter(&self, b: &Self, c: &Self) -> Self {
+        let (x, y) = self.circumdelta(b, c);
+        Self {
+            x: self.x + x,
+            y: self.y + y,
+        }
+    }
+
+    pub fn in_circle(&self, b: &Self, c: &Self, p: &Self) -> bool {
+        let dx = self.x - p.x;
+        let dy = self.y - p.y;
+        let ex = b.x - p.x;
+        let ey = b.y - p.y;
+        let fx = c.x - p.x;
+        let fy = c.y - p.y;
+
+        let ap = dx * dx + dy * dy;
+        let bp = ex * ex + ey * ey;
+        let cp = fx * fx + fy * fy;
+
+        dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0.0
+    }
+
+    pub fn nearly_equals(&self, p: &Self) -> bool {
+        (self.x - p.x).abs() <= EPSILON && (self.y - p.y).abs() <= EPSILON
+    }
 }
 
 impl Eq for Point2D {}
 
-impl PartialEq for Point2D {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x && self.y == other.y
-    }
-}
+// impl PartialEq for Point2D {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.x == other.x && self.y == other.y
+//     }
+// }
 
 // impl PartialOrd for Point2D {
 //     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {

@@ -497,6 +497,32 @@ impl ShapeType {
             }
         }
     }
+
+    pub fn dimension(&self) -> ShapeTypeDimension {
+        match self {
+            &ShapeType::Null
+            | &ShapeType::MultiPoint
+            | &ShapeType::Point
+            | &ShapeType::Polygon
+            | &ShapeType::PolyLine => ShapeTypeDimension::Normal,
+            &ShapeType::MultiPointM
+            | &ShapeType::PointM
+            | &ShapeType::PolygonM
+            | &ShapeType::PolyLineM => ShapeTypeDimension::Measure,
+            &ShapeType::MultiPointZ
+            | &ShapeType::PointZ
+            | &ShapeType::PolygonZ
+            | &ShapeType::PolyLineZ => ShapeTypeDimension::Z,
+        }
+    }
+}
+
+#[repr(u16)]
+#[derive(Copy, Clone, PartialEq)]
+pub enum ShapeTypeDimension {
+    Normal,
+    Measure,
+    Z,
 }
 
 impl Default for ShapeType {

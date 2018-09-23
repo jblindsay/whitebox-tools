@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: 13/09/2018
+Last Modified: 21/09/2018
 License: MIT
 
 NOTES:
@@ -111,15 +111,6 @@ impl LidarNearestNeighbourGridding {
             optional: true
         });
 
-        // parameters.push(ToolParameter{
-        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(),
-        //     flags: vec!["--palette".to_owned()],
-        //     description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
-        //     parameter_type: ParameterType::String,
-        //     default_value: None,
-        //     optional: true
-        // });
-
         parameters.push(ToolParameter {
             name: "Minimum Elevation Value (optional)".to_owned(),
             flags: vec!["--minz".to_owned()],
@@ -150,7 +141,7 @@ impl LidarNearestNeighbourGridding {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --radius=5.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18'", short_exe, name).replace("*", &sep);
 
         LidarNearestNeighbourGridding {
             name: name,
@@ -669,8 +660,8 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         let mut min_dist: f64;
                         for row in 0..rows {
                             for col in 0..columns {
-                                x = west + col as f64 * grid_res + 0.5;
-                                y = north - row as f64 * grid_res - 0.5;
+                                x = west + (col as f64 + 0.5) * grid_res;
+                                y = north - (row as f64 + 0.5) * grid_res;
                                 let ret = frs.search(x, y);
                                 if ret.len() > 0 {
                                     min_dist = f64::INFINITY;
@@ -711,8 +702,8 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                                     let mut data = vec![nodata; columns as usize];
                                     for col in 0..columns {
-                                        x = west + col as f64 * grid_res + 0.5;
-                                        y = north - row as f64 * grid_res - 0.5;
+                                        x = west + (col as f64 + 0.5) * grid_res;
+                                        y = north - (row as f64 + 0.5) * grid_res;
                                         let ret = frs.search(x, y);
                                         if ret.len() > 0 {
                                             min_dist = f64::INFINITY;
