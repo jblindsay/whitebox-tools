@@ -25,10 +25,10 @@ impl ToolManager {
     ) -> Result<ToolManager, Error> {
         let mut tool_names = vec![];
         // data_tools
+        tool_names.push("AddPointCoordinatesToTable".to_string());
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
-        tool_names.push("IdwInterpolation".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
@@ -66,6 +66,7 @@ impl ToolManager {
         tool_names.push("FindLowestOrHighestPoints".to_string());
         tool_names.push("FindPatchOrClassEdgeCells".to_string());
         tool_names.push("HighestPosition".to_string());
+        tool_names.push("IdwInterpolation".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
@@ -407,10 +408,12 @@ impl ToolManager {
     fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool + 'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // data_tools
+            "addpointcoordinatestotable" => Some(Box::new(
+                tools::data_tools::AddPointCoordinatesToTable::new(),
+            )),
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
-            "idwinterpolation" => Some(Box::new(tools::data_tools::IdwInterpolation::new())),
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "polygonstolines" => Some(Box::new(tools::data_tools::PolygonsToLines::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
@@ -474,6 +477,7 @@ impl ToolManager {
                 tools::gis_analysis::FindPatchOrClassEdgeCells::new(),
             )),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
+            "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),

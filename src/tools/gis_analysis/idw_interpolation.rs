@@ -44,7 +44,7 @@ impl IdwInterpolation {
     /// public constructor
     pub fn new() -> IdwInterpolation {
         let name = "IdwInterpolation".to_string();
-        let toolbox = "Data Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Interpolates vector points into a raster surface using an inverse-distance weighted scheme.".to_string();
 
         let mut parameters = vec![];
