@@ -79,13 +79,16 @@ impl ToolManager {
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
         tool_names.push("PickFromList".to_string());
+        tool_names.push("PolygonArea".to_string());
         tool_names.push("PolygonLongAxis".to_string());
+        tool_names.push("PolygonPerimeter".to_string());
         tool_names.push("PolygonShortAxis".to_string());
         tool_names.push("RadiusOfGyration".to_string());
         tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
         tool_names.push("ReclassFromFile".to_string());
+        tool_names.push("ShapeComplexityIndex".to_string());
         tool_names.push("TINGridding".to_string());
         tool_names.push("VectorHexBinning".to_string());
         tool_names.push("WeightedOverlay".to_string());
@@ -490,7 +493,9 @@ impl ToolManager {
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
+            "polygonarea" => Some(Box::new(tools::gis_analysis::PolygonArea::new())),
             "polygonlongaxis" => Some(Box::new(tools::gis_analysis::PolygonLongAxis::new())),
+            "polygonperimeter" => Some(Box::new(tools::gis_analysis::PolygonPerimeter::new())),
             "polygonshortaxis" => Some(Box::new(tools::gis_analysis::PolygonShortAxis::new())),
             "radiusofgyration" => Some(Box::new(tools::gis_analysis::RadiusOfGyration::new())),
             "rastercellassignment" => {
@@ -501,6 +506,9 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new()))
             }
             "reclassfromfile" => Some(Box::new(tools::gis_analysis::ReclassFromFile::new())),
+            "shapecomplexityindex" => {
+                Some(Box::new(tools::gis_analysis::ShapeComplexityIndex::new()))
+            }
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),
             "weightedoverlay" => Some(Box::new(tools::gis_analysis::WeightedOverlay::new())),

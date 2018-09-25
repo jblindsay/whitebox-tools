@@ -6,7 +6,7 @@ Last Modified: 30/08/2018
 License: MIT
 */
 
-pub use structures::Point2D;
+use structures::Point2D;
 
 /// Tests if a point is Left|On|Right of an infinite line,
 /// based on http://geomalgorithms.com/a03-_inclusion.html.
