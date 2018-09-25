@@ -64,6 +64,7 @@ Version 0.11.0 (XX-XX-2018)
     LidarTINGridding and TINGridding
     Medoid
     RasterStreamsToVector
+    RasterToVectorPoints
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
   LidarGroundPointFilter tool. In this way, if the fixed-radius search yields fewer

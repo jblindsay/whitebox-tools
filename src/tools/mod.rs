@@ -32,6 +32,7 @@ impl ToolManager {
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
+        tool_names.push("RasterToVectorPoints".to_string());
         tool_names.push("ReinitializeAttributeTable".to_string());
         tool_names.push("SetNodataValue".to_string());
         tool_names.push("VectorLinesToRaster".to_string());
@@ -413,6 +414,9 @@ impl ToolManager {
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "polygonstolines" => Some(Box::new(tools::data_tools::PolygonsToLines::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
+            "rastertovectorpoints" => {
+                Some(Box::new(tools::data_tools::RasterToVectorPoints::new()))
+            }
             "reinitializeattributetable" => Some(Box::new(
                 tools::data_tools::ReinitializeAttributeTable::new(),
             )),
