@@ -8,6 +8,7 @@ mod hack_order;
 mod horton_order;
 mod long_profile;
 mod long_profile_from_points;
+mod raster_streams_to_vector;
 mod rasterize_streams;
 mod remove_short_streams;
 mod shreve_magnitude;
@@ -21,7 +22,6 @@ mod topological_stream_order;
 mod total_length_channels;
 mod tributary_id;
 
-
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::dist_to_outlet::DistanceToOutlet;
 pub use self::extract_streams::ExtractStreams;
@@ -32,6 +32,7 @@ pub use self::hack_order::HackStreamOrder;
 pub use self::horton_order::HortonStreamOrder;
 pub use self::long_profile::LongProfile;
 pub use self::long_profile_from_points::LongProfileFromPoints;
+pub use self::raster_streams_to_vector::RasterStreamsToVector;
 pub use self::rasterize_streams::RasterizeStreams;
 pub use self::remove_short_streams::RemoveShortStreams;
 pub use self::shreve_magnitude::ShreveStreamMagnitude;

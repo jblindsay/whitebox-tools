@@ -330,6 +330,7 @@ impl ToolManager {
         tool_names.push("LongProfile".to_string());
         tool_names.push("LongProfileFromPoints".to_string());
         tool_names.push("RasterizeStreams".to_string());
+        tool_names.push("RasterStreamsToVector".to_string());
         tool_names.push("RemoveShortStreams".to_string());
         tool_names.push("ShreveStreamMagnitude".to_string());
         tool_names.push("StrahlerStreamOrder".to_string());
@@ -911,6 +912,9 @@ impl ToolManager {
             )),
             "rasterizestreams" => Some(Box::new(
                 tools::stream_network_analysis::RasterizeStreams::new(),
+            )),
+            "rasterstreamstovector" => Some(Box::new(
+                tools::stream_network_analysis::RasterStreamsToVector::new(),
             )),
             "removeshortstreams" => Some(Box::new(
                 tools::stream_network_analysis::RemoveShortStreams::new(),

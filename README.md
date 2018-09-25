@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 430 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains the following 352 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains the following 353 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -532,6 +532,7 @@ The library currently contains the following 352 tools, which are each grouped b
 - ***LongProfile***: Plots the stream longitudinal profiles for one or more rivers.
 - ***LongProfileFromPoints***: Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 - ***RasterizeStreams***: Rasterizes vector streams based on Lindsay (2016) method.
+- ***RasterStreamsToVector***: Converts a raster stream file into a vector file.
 - ***RemoveShortStreams***: Removes short first-order streams from a stream network.
 - ***ShreveStreamMagnitude***: Assigns the Shreve stream magnitude to each link in a stream network.
 - ***StrahlerStreamOrder***: Assigns the Strahler stream order to each link in a stream network.

@@ -220,7 +220,7 @@ for tool, description in tools.items():
 
 
 ```
-""".format(tool, description, doc_str, fn_def, example)
+""".format(tool, description.strip().rstrip('.'), doc_str, fn_def, example)
     # print(fn)
     tb_dict[toolbox].append(fn)
 

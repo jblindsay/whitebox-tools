@@ -20,7 +20,7 @@ use structures::{BoundingBox, Point2D};
 use time;
 use tools::*;
 
-/// Creates a raster grid based on a triangular irregular network (TIN) fitted to LiDAR points.
+/// Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 pub struct LidarTINGridding {
     name: String,
     description: String,
@@ -34,7 +34,7 @@ impl LidarTINGridding {
         // public constructor
         let name = "LidarTINGridding".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Creates a raster grid based on a triangular irregular network (TIN) fitted to LiDAR points.".to_string();
+        let description = "Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

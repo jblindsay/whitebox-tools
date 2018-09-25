@@ -359,6 +359,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1161,6 +1162,38 @@ callback -- Custom function for handling tool text outputs.
     # GIS Tools #
     #############
 
+    def centroid_vector(self, i, output, callback=None):
+        """Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('centroid_vector', args, callback) # returns 1 if error
+
+    def construct_vector_tin(self, i, output, field=None, use_z=False, callback=None):
+        """Creates a vector triangular irregular network (TIN) for a set of vector points.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        return self.run_tool('construct_vector_tin', args, callback) # returns 1 if error
+
     def create_hexagonal_vector_grid(self, i, output, width, orientation="horizontal", callback=None):
         """Creates a hexagonal vector grid.
 
@@ -1217,6 +1250,24 @@ callback -- Custom function for handling tool text outputs.
         args.append("--tolerance='{}'".format(tolerance))
         return self.run_tool('eliminate_coincident_points', args, callback) # returns 1 if error
 
+    def extend_vector_lines(self, i, output, dist, extend="both ends", callback=None):
+        """Extends vector lines by a specified distance.
+
+        Keyword arguments:
+
+        i -- Input vector polyline file. 
+        output -- Output vector polyline file. 
+        dist -- The distance to extend. 
+        extend -- Extend direction, 'both ends' (default), 'line start', 'line end'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--dist='{}'".format(dist))
+        args.append("--extend={}".format(extend))
+        return self.run_tool('extend_vector_lines', args, callback) # returns 1 if error
+
     def extract_nodes(self, i, output, callback=None):
         """Converts vector lines or polygons into vertex points.
 
@@ -1230,6 +1281,20 @@ callback -- Custom function for handling tool text outputs.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('extract_nodes', args, callback) # returns 1 if error
+
+    def medoid(self, i, output, callback=None):
+        """Calculates the medoid for a series of vector features contained in a shapefile.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('medoid', args, callback) # returns 1 if error
 
     def minimum_bounding_box(self, i, output, features=True, callback=None):
         """Creates a vector minimum bounding rectangle around vector features.
@@ -1290,6 +1355,26 @@ callback -- Custom function for handling tool text outputs.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('polygon_short_axis', args, callback) # returns 1 if error
+
+    def tin_gridding(self, i, output, resolution, field=None, use_z=False, callback=None):
+        """Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
+        output -- Output vector polygon file. 
+        resolution -- Output raster's grid resolution. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        args.append("--resolution='{}'".format(resolution))
+        return self.run_tool('tin_gridding', args, callback) # returns 1 if error
 
     def vector_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
         """Hex-bins a set of vector points.
@@ -4327,6 +4412,28 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_colourize', args, callback) # returns 1 if error
 
+    def lidar_construct_vector_tin(self, i=None, output=None, returns="all", exclude_cls=None, minz=None, maxz=None, callback=None):
+        """Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
+        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--returns={}".format(returns))
+        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        return self.run_tool('lidar_construct_vector_tin', args, callback) # returns 1 if error
+
     def lidar_elevation_slice(self, i, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=None):
         """Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -4351,7 +4458,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--outclassval={}".format(outclassval))
         return self.run_tool('lidar_elevation_slice', args, callback) # returns 1 if error
 
-    def lidar_ground_point_filter(self, i, output, radius=2.0, slope_threshold=45.0, height_threshold=1.0, classify=False, callback=None):
+    def lidar_ground_point_filter(self, i, output, radius=2.0, min_neighbours=0, slope_threshold=45.0, height_threshold=1.0, classify=False, slope_norm=True, callback=None):
         """Identifies ground points within LiDAR dataset using a slope-based method.
 
         Keyword arguments:
@@ -4359,18 +4466,22 @@ callback -- Custom function for handling tool text outputs.
         i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
+        min_neighbours -- The minimum number of neighbouring points within search areas. If fewer points than this threshold are idenfied during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours. 
         slope_threshold -- Maximum inter-point slope to be considered an off-terrain point. 
         height_threshold -- Inter-point height difference to be considered an off-terrain point. 
         classify -- Classify points as ground (2) or off-ground (1). 
+        slope_norm -- Perform initial ground slope normalization?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
+        args.append("--min_neighbours={}".format(min_neighbours))
         args.append("--slope_threshold={}".format(slope_threshold))
         args.append("--height_threshold={}".format(height_threshold))
         if classify: args.append("--classify")
+        if slope_norm: args.append("--slope_norm")
         return self.run_tool('lidar_ground_point_filter', args, callback) # returns 1 if error
 
     def lidar_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
@@ -4736,6 +4847,32 @@ callback -- Custom function for handling tool text outputs.
         if i is not None: args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_tile_footprint', args, callback) # returns 1 if error
+
+    def lidar_tin_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, callback=None):
+        """Creates a raster grid based on a triangular irregular network (TIN) fitted to LiDAR points.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
+        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
+        resolution -- Output raster's grid resolution. 
+        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--parameter={}".format(parameter))
+        args.append("--returns={}".format(returns))
+        args.append("--resolution={}".format(resolution))
+        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        return self.run_tool('lidar_tin_gridding', args, callback) # returns 1 if error
 
     def lidar_tophat_transform(self, i, output, radius=1.0, callback=None):
         """Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
@@ -6154,6 +6291,24 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('long_profile_from_points', args, callback) # returns 1 if error
+
+    def raster_streams_to_vector(self, streams, d8_pntr, output, esri_pntr=False, callback=None):
+        """Converts a raster stream file into a vector file.
+
+        Keyword arguments:
+
+        streams -- Input raster streams file. 
+        d8_pntr -- Input raster D8 pointer file. 
+        output -- Output raster file. 
+        esri_pntr -- D8 pointer uses the ESRI style scheme. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--streams='{}'".format(streams))
+        args.append("--d8_pntr='{}'".format(d8_pntr))
+        args.append("--output='{}'".format(output))
+        if esri_pntr: args.append("--esri_pntr")
+        return self.run_tool('raster_streams_to_vector', args, callback) # returns 1 if error
 
     def rasterize_streams(self, streams, base, output, nodata=True, feature_id=False, callback=None):
         """Rasterizes vector streams based on Lindsay (2016) method.
