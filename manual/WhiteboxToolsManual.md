@@ -640,7 +640,73 @@ export_table_to_csv(
 ```
 
 
-#### 8.1.5 NewRasterFromBase
+#### 8.1.5 LinesToPolygons
+
+Converts vector polylines to polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector line file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+lines_to_polygons(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LinesToPolygons -v ^
+--wd="/path/to/data/" -i=input.shp -o=output.shp 
+
+
+```
+
+
+#### 8.1.6 MultiPartToSinglePart
+
+Converts a vector file containing multi-part features into a vector containing only single-part features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector line or polygon file
+-o, -\-output        Output vector line or polygon file
+-\-exclude_holes     Exclude hole parts from the feature splitting? (holes will continue to belong 
+                     to their features in output.) 
+
+
+*Python function*:
+
+~~~~{.python}
+multi_part_to_single_part(
+    i, 
+    output, 
+    exclude_holes=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MultiPartToSinglePart -v ^
+--wd="/path/to/data/" -i=input.shp -o=output.shp ^
+--exclude_holes 
+
+
+```
+
+
+#### 8.1.7 NewRasterFromBase
 
 Creates a new raster using a base image.
 
@@ -680,7 +746,7 @@ new_raster_from_base(
 ```
 
 
-#### 8.1.6 PolygonsToLines
+#### 8.1.8 PolygonsToLines
 
 Converts vector polygons to polylines.
 
@@ -711,7 +777,7 @@ polygons_to_lines(
 ```
 
 
-#### 8.1.7 PrintGeoTiffTags
+#### 8.1.9 PrintGeoTiffTags
 
 Prints the tags within a GeoTIFF.
 
@@ -740,7 +806,7 @@ print_geo_tiff_tags(
 ```
 
 
-#### 8.1.8 RasterToVectorPoints
+#### 8.1.10 RasterToVectorPoints
 
 Converts a raster dataset to a vector of the POINT shapetype.
 
@@ -771,7 +837,7 @@ raster_to_vector_points(
 ```
 
 
-#### 8.1.9 ReinitializeAttributeTable
+#### 8.1.11 ReinitializeAttributeTable
 
 Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
 
@@ -800,7 +866,39 @@ reinitialize_attribute_table(
 ```
 
 
-#### 8.1.10 SetNodataValue
+#### 8.1.12 RemovePolygonHoles
+
+Removes holes within the features of a vector polygon file.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+remove_polygon_holes(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=RemovePolygonHoles -v ^
+--wd="/path/to/data/" --input=polygons.shp ^
+--output=no_holes.shp 
+
+
+```
+
+
+#### 8.1.13 SetNodataValue
 
 Assign a specified value in an input image to the NoData value.
 
@@ -833,7 +931,7 @@ set_nodata_value(
 ```
 
 
-#### 8.1.11 VectorLinesToRaster
+#### 8.1.14 VectorLinesToRaster
 
 Converts a vector containing polylines into a raster.
 
@@ -878,7 +976,7 @@ vector_lines_to_raster(
 ```
 
 
-#### 8.1.12 VectorPointsToRaster
+#### 8.1.15 VectorPointsToRaster
 
 Converts a vector containing points into a raster.
 
@@ -928,7 +1026,7 @@ vector_points_to_raster(
 ```
 
 
-#### 8.1.13 VectorPolygonsToRaster
+#### 8.1.16 VectorPolygonsToRaster
 
 Converts a vector containing polygons into a raster.
 
@@ -1525,6 +1623,8 @@ Creates a vector minimum bounding rectangle around vector features.
 -------------------  ---------------
 -i, -\-input         Input vector file
 -o, -\-output        Output vector polygon file
+-\-criterion         Minimization criterion; options include 'area' (default), 'length', 'width', 
+                     and 'perimeter' 
 -\-features          Find the minimum bounding rectangles around each individual vector feature
 
 
@@ -1534,6 +1634,7 @@ Creates a vector minimum bounding rectangle around vector features.
 minimum_bounding_box(
     i, 
     output, 
+    criterion="area", 
     features=True, 
     callback=default_callback)
 ~~~~
@@ -1542,13 +1643,47 @@ minimum_bounding_box(
 
 ```
 >>./whitebox_tools -r=MinimumBoundingBox -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp ^
+--criterion=length --features 
+
+
+```
+
+
+#### 8.2.17 MinimumBoundingCircle
+
+Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector polygon file
+-\-features          Find the minimum bounding rectangles around each individual vector feature
+
+
+*Python function*:
+
+~~~~{.python}
+minimum_bounding_circle(
+    i, 
+    output, 
+    features=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MinimumBoundingCircle -v ^
 --wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
 
 
 ```
 
 
-#### 8.2.17 MinimumConvexHull
+#### 8.2.18 MinimumConvexHull
 
 Creates a vector convex polygon around vector features.
 
@@ -1581,7 +1716,7 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.18 PolygonArea
+#### 8.2.19 PolygonArea
 
 Calculates the area of vector polygons.
 
@@ -1604,13 +1739,13 @@ polygon_area(
 
 ```
 >>./whitebox_tools -r=PolygonArea -v --wd="/path/to/data/" ^
---input=points.shp 
+--input=polygons.shp 
 
 
 ```
 
 
-#### 8.2.19 PolygonLongAxis
+#### 8.2.20 PolygonLongAxis
 
 This tool can be used to map the long axis of polygon features.
 
@@ -1641,7 +1776,7 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.20 PolygonPerimeter
+#### 8.2.21 PolygonPerimeter
 
 Calculates the perimeter of vector polygons.
 
@@ -1664,13 +1799,13 @@ polygon_perimeter(
 
 ```
 >>./whitebox_tools -r=PolygonPerimeter -v ^
---wd="/path/to/data/" --input=points.shp 
+--wd="/path/to/data/" --input=polygons.shp 
 
 
 ```
 
 
-#### 8.2.21 PolygonShortAxis
+#### 8.2.22 PolygonShortAxis
 
 This tool can be used to map the short axis of polygon features.
 
@@ -1701,7 +1836,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.22 RasterCellAssignment
+#### 8.2.23 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -1736,7 +1871,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.23 Reclass
+#### 8.2.24 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -1778,7 +1913,7 @@ reclass(
 ```
 
 
-#### 8.2.24 ReclassEqualInterval
+#### 8.2.25 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -1816,7 +1951,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.25 ReclassFromFile
+#### 8.2.26 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -1850,7 +1985,7 @@ reclass_from_file(
 ```
 
 
-#### 8.2.26 TinGridding
+#### 8.2.27 TinGridding
 
 Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 
@@ -1891,7 +2026,7 @@ tin_gridding(
 ```
 
 
-#### 8.2.27 VectorHexBinning
+#### 8.2.28 VectorHexBinning
 
 Hex-bins a set of vector points.
 
@@ -2593,7 +2728,38 @@ pick_from_list(
 ```
 
 
-#### 8.4.15 WeightedOverlay
+#### 8.4.15 SumOverlay
+
+Calculates the sum for each grid cell from a group of raster images.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-inputs        Input raster files
+-o, -\-output        Output raster file
+
+
+*Python function*:
+
+~~~~{.python}
+sum_overlay(
+    inputs, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=SumOverlay -v --wd='/path/to/data/' ^
+-i='image1.dep;image2.dep;image3.tif' -o=output.tif 
+
+
+```
+
+
+#### 8.4.16 WeightedOverlay
 
 Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 
@@ -2637,7 +2803,7 @@ weighted_overlay(
 ```
 
 
-#### 8.4.16 WeightedSum
+#### 8.4.17 WeightedSum
 
 Performs a weighted-sum overlay on multiple input raster images.
 
@@ -2672,7 +2838,36 @@ weighted_sum(
 
 ### 8.5 GIS Analysis => Patch Shape Tools
 
-#### 8.5.1 EdgeProportion
+#### 8.5.1 CompactnessRatio
+
+Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+compactness_ratio(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CompactnessRatio -v ^
+--wd="/path/to/data/" --input=polygons.shp 
+
+
+```
+
+
+#### 8.5.2 EdgeProportion
 
 Calculate the proportion of cells in a raster polygon that are edge cells.
 
@@ -2705,7 +2900,7 @@ edge_proportion(
 ```
 
 
-#### 8.5.2 ElongationRatio
+#### 8.5.3 ElongationRatio
 
 Calculates the elongation ratio for vector polygons.
 
@@ -2734,7 +2929,7 @@ elongation_ratio(
 ```
 
 
-#### 8.5.3 FindPatchOrClassEdgeCells
+#### 8.5.4 FindPatchOrClassEdgeCells
 
 Finds all cells located on the edge of patch or class features.
 
@@ -2765,7 +2960,36 @@ find_patch_or_class_edge_cells(
 ```
 
 
-#### 8.5.4 PerimeterAreaRatio
+#### 8.5.5 HoleProportion
+
+Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+hole_proportion(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=HoleProportion -v --wd="/path/to/data/" ^
+--input=polygons.shp 
+
+
+```
+
+
+#### 8.5.6 PerimeterAreaRatio
 
 Calculates the perimeter-area ratio of vector polygons.
 
@@ -2788,13 +3012,13 @@ perimeter_area_ratio(
 
 ```
 >>./whitebox_tools -r=PerimeterAreaRatio -v ^
---wd="/path/to/data/" --input=points.shp 
+--wd="/path/to/data/" --input=polygons.shp 
 
 
 ```
 
 
-#### 8.5.5 RadiusOfGyration
+#### 8.5.7 RadiusOfGyration
 
 Calculates the distance of cells from their polygon's centroid.
 
@@ -2828,7 +3052,36 @@ radius_of_gyration(
 ```
 
 
-#### 8.5.6 ShapeComplexityIndex
+#### 8.5.8 RelatedCircumscribingCircle
+
+Calculates the related circumscribing circle of vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+related_circumscribing_circle(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=RelatedCircumscribingCircle -v ^
+--wd="/path/to/data/" --input=polygons.shp 
+
+
+```
+
+
+#### 8.5.9 ShapeComplexityIndex
 
 Calculates overall polygon shape complexity or irregularity.
 
@@ -2851,7 +3104,7 @@ shape_complexity_index(
 
 ```
 >>./whitebox_tools -r=ShapeComplexityIndex -v ^
---wd="/path/to/data/" --input=points.shp 
+--wd="/path/to/data/" --input=polygons.shp 
 
 
 ```

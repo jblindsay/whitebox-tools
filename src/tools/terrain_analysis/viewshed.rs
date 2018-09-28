@@ -88,7 +88,8 @@ impl Viewshed {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -301,6 +302,13 @@ impl WhiteboxTool for Viewshed {
             stn_y = station_y.pop().unwrap();
             stn_row = dem.get_row_from_y(stn_y);
             stn_z = dem.get_value(stn_row, stn_col) + height;
+
+            if (stn_col < 0 || stn_col >= columns) && (stn_row < 0 || stn_row >= rows) {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The input stations is not located within the footprint of the DEM.",
+                ));
+            }
 
             // now calculate the view angle
             let (tx, rx) = mpsc::channel();
