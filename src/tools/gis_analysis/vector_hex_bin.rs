@@ -48,7 +48,7 @@ impl VectorHexBinning {
     pub fn new() -> VectorHexBinning {
         // public constructor
         let name = "VectorHexBinning".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Hex-bins a set of vector points.".to_string();
 
         let mut parameters = vec![];

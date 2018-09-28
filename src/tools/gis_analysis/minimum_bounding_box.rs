@@ -2,11 +2,11 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 14/09/2018
-Last Modified: 14/09/2018
+Last Modified: 27/09/2018
 License: MIT
 */
 
-use algorithms::minimum_bounding_box;
+use algorithms::{minimum_bounding_box, MinimizationCriterion};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
@@ -18,11 +18,8 @@ use vector::*;
 
 /// This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
 /// completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
-/// bounding box for each rotation, and finding the box with the smallest area. The minimum bounding boxes are
-/// output as polylines by default, but can optionally be output as vector polygons. The MBB is needed to compute
-/// several shape indices, such as the Elongation Ratio, Patch Orientation, and the Patch Orientation Vector Field.
-/// In addition, the MBB is related to the Layer Footprint, which is an axis-aligned bounding box, and the Minimum
-/// Convex Hull, which is the enclosing convex polygon of a feature.
+/// bounding box for each rotation, and finding the box with the smallest area, length, width, or perimeter. The
+/// MBB is needed to compute several shape indices, such as the Elongation Ratio.
 pub struct MinimumBoundingBox {
     name: String,
     description: String,
@@ -35,7 +32,7 @@ impl MinimumBoundingBox {
     pub fn new() -> MinimumBoundingBox {
         // public constructor
         let name = "MinimumBoundingBox".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Creates a vector minimum bounding rectangle around vector features.".to_string();
 
@@ -63,6 +60,16 @@ impl MinimumBoundingBox {
         });
 
         parameters.push(ToolParameter {
+            name: "Minimization Criterion".to_owned(),
+            flags: vec!["--criterion".to_owned()],
+            description: "Minimization criterion; options include 'area' (default), 'length', 'width', and 'perimeter'."
+                .to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["area".to_owned(), "length".to_owned(), "width".to_owned(), "perimeter".to_owned()]),
+            default_value: Some("area".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
             name: "Find bounding rectangles around each individual feature.".to_owned(),
             flags: vec!["--features".to_owned()],
             description:
@@ -85,7 +92,7 @@ impl MinimumBoundingBox {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --criterion=length --features",
             short_exe, name
         ).replace("*", &sep);
 
@@ -143,6 +150,7 @@ impl WhiteboxTool for MinimumBoundingBox {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut individual_feature_hulls = true;
+        let mut min_criterion = MinimizationCriterion::Area;
 
         // read the arguments
         if args.len() == 0 {
@@ -172,6 +180,21 @@ impl WhiteboxTool for MinimumBoundingBox {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
+                };
+            } else if flag_val == "-criterion" {
+                let criteria_str = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+                min_criterion = if criteria_str.contains("len") {
+                    MinimizationCriterion::Length
+                } else if criteria_str.contains("wi") {
+                    MinimizationCriterion::Width
+                } else if criteria_str.contains("per") {
+                    MinimizationCriterion::Perimeter
+                } else {
+                    MinimizationCriterion::Area
                 };
             } else if flag_val == "-features" || flag_val == "-feature" {
                 individual_feature_hulls = true;
@@ -217,7 +240,7 @@ impl WhiteboxTool for MinimumBoundingBox {
                 for i in 0..record.num_points as usize {
                     points.push(Point2D::new(record.points[i].x, record.points[i].y));
                 }
-                let mut mbb_points = minimum_bounding_box(&mut points);
+                let mut mbb_points = minimum_bounding_box(&mut points, min_criterion);
                 // now add a last point same as the first.
                 let p = mbb_points[0];
                 mbb_points.push(p);
@@ -277,7 +300,7 @@ impl WhiteboxTool for MinimumBoundingBox {
             if progress != old_progress {
                 println!("Finding convex hull...");
             }
-            let mut mbb_points = minimum_bounding_box(&mut points);
+            let mut mbb_points = minimum_bounding_box(&mut points, min_criterion);
             // now add a last point same as the first.
             let p = mbb_points[0];
             mbb_points.push(p);

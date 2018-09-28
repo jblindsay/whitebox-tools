@@ -57,13 +57,23 @@ pub fn point_in_poly(p: &Point2D, v: &[Point2D]) -> bool {
     wn != 0i32
 }
 
+/// Tests whether one polygon is contained within another polygon.
+pub fn poly_in_poly(contained_poly: &[Point2D], containing_poly: &[Point2D]) -> bool {
+    for p in contained_poly {
+        if !point_in_poly(p, containing_poly) {
+            return false;
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod test {
-    use super::point_in_poly;
+    use super::{point_in_poly, poly_in_poly};
     use structures::Point2D;
     #[test]
     fn test_point_in_poly() {
-        let poly = vec![
+        let poly = [
             Point2D::new(0.0, 0.0),
             Point2D::new(5.0, 0.0),
             Point2D::new(5.0, 5.0),
@@ -73,6 +83,27 @@ mod test {
         assert!(point_in_poly(&Point2D::new(2.0, 2.0), &poly));
         // point outside rectangle
         assert_eq!(point_in_poly(&Point2D::new(12.0, 12.0), &poly), false);
+    }
+
+    #[test]
+    fn test_poly_in_poly() {
+        let poly1 = [
+            Point2D::new(0.0, 0.0),
+            Point2D::new(5.0, 0.0),
+            Point2D::new(5.0, 5.0),
+            Point2D::new(0.0, 0.0),
+        ];
+
+        let poly2 = [
+            Point2D::new(-1.0, -1.0),
+            Point2D::new(6.0, -1.0),
+            Point2D::new(6.0, 6.0),
+            Point2D::new(-1.0, -1.0),
+        ];
+
+        assert!(poly_in_poly(&poly1, &poly2));
+
+        assert_eq!(poly_in_poly(&poly2, &poly1), false);
     }
 
 }

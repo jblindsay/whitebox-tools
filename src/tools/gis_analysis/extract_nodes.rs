@@ -26,7 +26,7 @@ impl ExtractNodes {
     pub fn new() -> ExtractNodes {
         // public constructor
         let name = "ExtractNodes".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Converts vector lines or polygons into vertex points.".to_string();
 
         let mut parameters = vec![];

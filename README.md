@@ -165,7 +165,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 430 tools [will be ported](tool_porting.md) to *WhiteboxTools*, although this is an immense task. Support for vector data (Shapefile/GeoJSON) reading/writing and a topological analysis library (like the Java Topology Suite) will need to be added in order to port the tools involving vector spatial data. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains more than 350 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
+The library currently contains more than 360 tools, which are each grouped based on their main function into one of the following categories: Data Tools, GIS Analysis, Hydrological Analysis, Image Analysis, LiDAR Analysis, Mathematical and Statistical Analysis, Stream Network Analysis, and Terrain Analysis. The following is a complete listing of available tools, with brief tool descriptions.
 
 **Data Tools**
 
@@ -173,11 +173,14 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
+- ***LinesToPolygons***: Converts vector polylines to polygons.
+- ***MultiPartToSinglePart**: Converts a vector file containing multi-part features into a vector containing only single-part features.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PolygonsToLines***: Converts vector polygons into polylines.
 - ***PrintGeoTiffTags***: Prints the tags within a GeoTIFF.
 - ***RasterToVectorPoints***: Converts a raster dataset to a vector of the POINT shapetype.
 - ***ReinitializeAttributeTable***: initializes a vector's attribute table deleting all fields but the feature ID (FID).
+- ***RemovePolygonHoles***: Removes holes within the features of a vector polygon file.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
 - ***VectorLinesToRaster***: Converts a vector containing polylines into a raster.
 - ***VectorPointsToRaster***: Converts a vector containing points into a raster.
@@ -244,6 +247,7 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***CentroidVector***: Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
 - ***ClipRasterToPolygon***: Clips a raster to a vector polygon.
 - ***Clump***: Groups cells that form physically discrete areas, assigning them unique identifiers.
+- ***CompactnessRatio***: Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
 - ***ConstructVectorTin***: This tool creates a vector triangular irregular network (TIN) for a set of vector points.
 - ***CountIf***: Counts the number of occurrences of a specified value in a cell-stack of rasters.
 - ***CostAllocation***: Identifies the source cell to which each grid cell is connected by a least-cost pathway in a cost-distance analysis.
@@ -254,6 +258,7 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***CreateRectangularVectorGrid***: Creates a rectangular vector grid.
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
 - ***EliminateCoincidentPoints***: Removes any coincident, or nearly coincident, points from a vector points file.
+- ***ElongationRatio***: Calculates the elongation ratio for vector polygons.
 - ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform. 
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.
@@ -263,6 +268,7 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***FindLowestOrHighestPoints***: Locates the lowest and/or highest valued cells in a raster.
 - ***FindPatchOrClassEdgeCells***: Finds all cells located on the edge of patch or class features.
 - ***HighestPosition***: Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
+- ***HoleProportion***: Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
 - ***IdwInterpolation***: Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 - ***LowestPosition***: Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 - ***MaxAbsoluteOverlay***: Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
@@ -270,11 +276,13 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***Medoid***: Calculates the medoid for a series of vector features contained in a shapefile.
 - ***MinAbsoluteOverlay***: Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 - ***MinimumBoundingBox***: Creates a vector minimum bounding rectangle around vector features.
+- ***MinimumBoundingCircle***: Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.
 - ***MinimumConvexHull***: Creates a vector convex polygon around vector features.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
 - ***PercentEqualTo***: Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 - ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 - ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
+- ***PerimeterAreaRatio***: Calculates the perimeter-area ratio of vector polygons.
 - ***PickFromList***: Outputs the value from a raster stack specified by a position raster.
 - ***PolygonArea***: Calculates the area of vector polygons.
 - ***PolygonLongAxis***: This tool can be used to map the long axis of polygon features.
@@ -285,7 +293,9 @@ The library currently contains more than 350 tools, which are each grouped based
 - ***Reclass***: Reclassifies the values in a raster image.
 - ***ReclassEqualInterval***: Reclassifies the values in a raster image based on equal-ranges.
 - ***ReclassFromFile***: Reclassifies the values in a raster image using reclass ranges in a text file.
+- ***RelatedCircumscribingCircle***: Calculates the related circumscribing circle of vector polygons.
 - ***ShapeComplexityIndex***: Calculates overall polygon shape complexity or irregularity.
+- ***SumOverlay***: Calculates the sum for each grid cell from a group of raster images.
 - ***TINGridding***: Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 - ***VectorHexBinning***: Hex-bins a set of vector points.
 - ***WeightedOverlay***: Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).

@@ -15,16 +15,12 @@ pub fn polygon_perimeter(vertices: &[Point2D]) -> f64 {
     let mut perimeter = 0f64;
 
     for i in 0..num_vertices - 1 {
-        perimeter += (vertices[i].x - vertices[i + 1].x) * (vertices[i].x - vertices[i + 1].x)
-            + (vertices[i].y - vertices[i + 1].y) * (vertices[i].y - vertices[i + 1].y);
+        perimeter += vertices[i].distance(&vertices[i + 1]);
     }
 
-    perimeter += (vertices[num_vertices - 1].x - vertices[0].x)
-        * (vertices[num_vertices - 1].x - vertices[0].x)
-        + (vertices[num_vertices - 1].y - vertices[0].y)
-            * (vertices[num_vertices - 1].y - vertices[0].y);
+    perimeter += vertices[num_vertices - 1].distance(&vertices[0]);
 
-    perimeter.sqrt()
+    perimeter
 }
 
 #[cfg(test)]

@@ -41,7 +41,7 @@ impl Medoid {
     pub fn new() -> Medoid {
         // public constructor
         let name = "Medoid".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Calculates the medoid for a series of vector features contained in a shapefile."
                 .to_string();

@@ -29,11 +29,14 @@ impl ToolManager {
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
+        tool_names.push("LinesToPolygons".to_string());
+        tool_names.push("MultiPartToSinglePart".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("RasterToVectorPoints".to_string());
         tool_names.push("ReinitializeAttributeTable".to_string());
+        tool_names.push("RemovePolygonHoles".to_string());
         tool_names.push("SetNodataValue".to_string());
         tool_names.push("VectorLinesToRaster".to_string());
         tool_names.push("VectorPointsToRaster".to_string());
@@ -47,6 +50,7 @@ impl ToolManager {
         tool_names.push("CentroidVector".to_string());
         tool_names.push("ClipRasterToPolygon".to_string());
         tool_names.push("Clump".to_string());
+        tool_names.push("CompactnessRatio".to_string());
         tool_names.push("ConstructVectorTIN".to_string());
         tool_names.push("CountIf".to_string());
         tool_names.push("CostAllocation".to_string());
@@ -57,6 +61,7 @@ impl ToolManager {
         tool_names.push("CreateRectangularVectorGrid".to_string());
         tool_names.push("EdgeProportion".to_string());
         tool_names.push("EliminateCoincidentPoints".to_string());
+        tool_names.push("ElongationRatio".to_string());
         tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
@@ -66,6 +71,7 @@ impl ToolManager {
         tool_names.push("FindLowestOrHighestPoints".to_string());
         tool_names.push("FindPatchOrClassEdgeCells".to_string());
         tool_names.push("HighestPosition".to_string());
+        tool_names.push("HoleProportion".to_string());
         tool_names.push("IdwInterpolation".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
@@ -73,11 +79,13 @@ impl ToolManager {
         tool_names.push("Medoid".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinimumBoundingBox".to_string());
+        tool_names.push("MinimumBoundingCircle".to_string());
         tool_names.push("MinimumConvexHull".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PercentEqualTo".to_string());
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
+        tool_names.push("PerimeterAreaRatio".to_string());
         tool_names.push("PickFromList".to_string());
         tool_names.push("PolygonArea".to_string());
         tool_names.push("PolygonLongAxis".to_string());
@@ -88,7 +96,9 @@ impl ToolManager {
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
         tool_names.push("ReclassFromFile".to_string());
+        tool_names.push("RelatedCircumscribingCircle".to_string());
         tool_names.push("ShapeComplexityIndex".to_string());
+        tool_names.push("SumOverlay".to_string());
         tool_names.push("TINGridding".to_string());
         tool_names.push("VectorHexBinning".to_string());
         tool_names.push("WeightedOverlay".to_string());
@@ -417,6 +427,10 @@ impl ToolManager {
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
+            "linestopolygons" => Some(Box::new(tools::data_tools::LinesToPolygons::new())),
+            "multiparttosinglepart" => {
+                Some(Box::new(tools::data_tools::MultiPartToSinglePart::new()))
+            }
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "polygonstolines" => Some(Box::new(tools::data_tools::PolygonsToLines::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
@@ -426,6 +440,7 @@ impl ToolManager {
             "reinitializeattributetable" => Some(Box::new(
                 tools::data_tools::ReinitializeAttributeTable::new(),
             )),
+            "removepolygonholes" => Some(Box::new(tools::data_tools::RemovePolygonHoles::new())),
             "setnodatavalue" => Some(Box::new(tools::data_tools::SetNodataValue::new())),
             "vectorlinestoraster" => Some(Box::new(tools::data_tools::VectorLinesToRaster::new())),
             "vectorpointstoraster" => {
@@ -445,6 +460,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::ClipRasterToPolygon::new()))
             }
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
+            "compactnessratio" => Some(Box::new(tools::gis_analysis::CompactnessRatio::new())),
             "constructvectortin" => Some(Box::new(tools::gis_analysis::ConstructVectorTIN::new())),
             "countif" => Some(Box::new(tools::gis_analysis::CountIf::new())),
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
@@ -461,6 +477,7 @@ impl ToolManager {
             "eliminatecoincidentpoints" => Some(Box::new(
                 tools::gis_analysis::EliminateCoincidentPoints::new(),
             )),
+            "elongationratio" => Some(Box::new(tools::gis_analysis::ElongationRatio::new())),
             "erasepolygonfromraster" => {
                 Some(Box::new(tools::gis_analysis::ErasePolygonFromRaster::new()))
             }
@@ -480,6 +497,7 @@ impl ToolManager {
                 tools::gis_analysis::FindPatchOrClassEdgeCells::new(),
             )),
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
+            "holeproportion" => Some(Box::new(tools::gis_analysis::HoleProportion::new())),
             "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
@@ -487,11 +505,15 @@ impl ToolManager {
             "medoid" => Some(Box::new(tools::gis_analysis::Medoid::new())),
             "minabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MinAbsoluteOverlay::new())),
             "minimumboundingbox" => Some(Box::new(tools::gis_analysis::MinimumBoundingBox::new())),
+            "minimumboundingcircle" => {
+                Some(Box::new(tools::gis_analysis::MinimumBoundingCircle::new()))
+            }
             "minimumconvexhull" => Some(Box::new(tools::gis_analysis::MinimumConvexHull::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
             "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),
+            "perimeterarearatio" => Some(Box::new(tools::gis_analysis::PerimeterAreaRatio::new())),
             "pickfromlist" => Some(Box::new(tools::gis_analysis::PickFromList::new())),
             "polygonarea" => Some(Box::new(tools::gis_analysis::PolygonArea::new())),
             "polygonlongaxis" => Some(Box::new(tools::gis_analysis::PolygonLongAxis::new())),
@@ -506,9 +528,13 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::ReclassEqualInterval::new()))
             }
             "reclassfromfile" => Some(Box::new(tools::gis_analysis::ReclassFromFile::new())),
+            "relatedcircumscribingcircle" => Some(Box::new(
+                tools::gis_analysis::RelatedCircumscribingCircle::new(),
+            )),
             "shapecomplexityindex" => {
                 Some(Box::new(tools::gis_analysis::ShapeComplexityIndex::new()))
             }
+            "sumoverlay" => Some(Box::new(tools::gis_analysis::SumOverlay::new())),
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),
             "weightedoverlay" => Some(Box::new(tools::gis_analysis::WeightedOverlay::new())),

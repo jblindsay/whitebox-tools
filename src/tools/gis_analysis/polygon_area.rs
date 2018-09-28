@@ -58,7 +58,7 @@ impl PolygonArea {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=points.shp",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=polygons.shp",
             short_exe, name
         ).replace("*", &sep);
 

@@ -510,9 +510,42 @@ The library currently contains more than 350 tools, which are each grouped into 
 
 
 
+
+
+
+
 ### 8.1 Data Tools
 
-#### 8.1.1 ConvertNodataToZero
+#### 8.1.1 AddPointCoordinatesToTable
+
+Modifies the attribute table of a point vector by adding fields containing each point's X and Y coordinates.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+
+
+*Python function*:
+
+~~~~{.python}
+add_point_coordinates_to_table(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=AddPointCoordinatesToTable -v ^
+--wd="/path/to/data/" --input=points.shp 
+
+
+```
+
+
+#### 8.1.2 ConvertNodataToZero
 
 Converts nodata values in a raster to zero.
 
@@ -543,7 +576,7 @@ convert_nodata_to_zero(
 ```
 
 
-#### 8.1.2 ConvertRasterFormat
+#### 8.1.3 ConvertRasterFormat
 
 Converts raster data from one format to another.
 
@@ -574,7 +607,7 @@ convert_raster_format(
 ```
 
 
-#### 8.1.3 ExportTableToCsv
+#### 8.1.4 ExportTableToCsv
 
 Exports an attribute table to a CSV text file.
 
@@ -602,58 +635,6 @@ export_table_to_csv(
 ```
 >>./whitebox_tools -r=ExportTableToCsv -v ^
 --wd="/path/to/data/" -i=lines.shp -o=output.csv --headers 
-
-
-```
-
-
-#### 8.1.4 IdwInterpolation
-
-Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector Points file
--\-field             Input field name in attribute table
--\-use_z             Use z-coordinate instead of field?
--o, -\-output        Output raster file
--\-weight            IDW weight value
--\-radius            Search Radius
--\-min_points        Minimum number of points
--\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
-                     specified 
--\-base              Optionally specified input base raster file. Not used when a cell size is 
-                     specified 
-
-
-*Python function*:
-
-~~~~{.python}
-idw_interpolation(
-    i, 
-    field, 
-    output, 
-    use_z=False, 
-    weight=2.0, 
-    radius=None, 
-    min_points=None, 
-    cell_size=None, 
-    base=None, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=IdwInterpolation -v ^
---wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
---assign=min --nodata ^
---cell_size=10.0
-        >>./whitebox_tools -r=IdwInterpolation ^
--v --wd="/path/to/data/" -i=points.shp --field=FID ^
--o=output.tif --assign=last --base=existing_raster.tif 
 
 
 ```
@@ -759,7 +740,38 @@ print_geo_tiff_tags(
 ```
 
 
-#### 8.1.8 ReinitializeAttributeTable
+#### 8.1.8 RasterToVectorPoints
+
+Converts a raster dataset to a vector of the POINT shapetype.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster file
+-o, -\-output        Output vector points file
+
+
+*Python function*:
+
+~~~~{.python}
+raster_to_vector_points(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=RasterToVectorPoints -v ^
+--wd="/path/to/data/" --input=points.tif -o=out.shp 
+
+
+```
+
+
+#### 8.1.9 ReinitializeAttributeTable
 
 Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
 
@@ -788,7 +800,7 @@ reinitialize_attribute_table(
 ```
 
 
-#### 8.1.9 SetNodataValue
+#### 8.1.10 SetNodataValue
 
 Assign a specified value in an input image to the NoData value.
 
@@ -821,7 +833,7 @@ set_nodata_value(
 ```
 
 
-#### 8.1.10 VectorLinesToRaster
+#### 8.1.11 VectorLinesToRaster
 
 Converts a vector containing polylines into a raster.
 
@@ -866,7 +878,7 @@ vector_lines_to_raster(
 ```
 
 
-#### 8.1.11 VectorPointsToRaster
+#### 8.1.12 VectorPointsToRaster
 
 Converts a vector containing points into a raster.
 
@@ -916,7 +928,7 @@ vector_points_to_raster(
 ```
 
 
-#### 8.1.12 VectorPolygonsToRaster
+#### 8.1.13 VectorPolygonsToRaster
 
 Converts a vector containing polygons into a raster.
 
@@ -1035,7 +1047,38 @@ centroid(
 ```
 
 
-#### 8.2.3 Clump
+#### 8.2.3 CentroidVector
+
+Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+centroid_vector(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CentroidVector -v --wd="/path/to/data/" ^
+-i=in_file.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.2.4 Clump
 
 Groups cells that form physically discrete areas, assigning them unique identifiers.
 
@@ -1070,7 +1113,81 @@ clump(
 ```
 
 
-#### 8.2.4 CreatePlane
+#### 8.2.5 ConstructVectorTin
+
+Creates a vector triangular irregular network (TIN) for a set of vector points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector points file
+-\-field             Input field name in attribute table
+-\-use_z             Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+construct_vector_tin(
+    i, 
+    output, 
+    field=None, 
+    use_z=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ConstructVectorTIN -v ^
+--wd="/path/to/data/" -i=points.shp --field=HEIGHT ^
+-o=tin.shp
+>>./whitebox_tools -r=ConstructVectorTIN -v ^
+--wd="/path/to/data/" -i=points.shp --use_z -o=tin.shp 
+
+
+```
+
+
+#### 8.2.6 CreateHexagonalVectorGrid
+
+Creates a hexagonal vector grid.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input base file
+-o, -\-output        Output vector polygon file
+-\-width             The grid cell width
+-\-orientation       Grid Orientation, 'horizontal' or 'vertical'
+
+
+*Python function*:
+
+~~~~{.python}
+create_hexagonal_vector_grid(
+    i, 
+    output, 
+    width, 
+    orientation="horizontal", 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CreateHexagonalVectorGrid -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
+--orientation=vertical 
+
+
+```
+
+
+#### 8.2.7 CreatePlane
 
 Creates a raster image based on the equation for a simple plane.
 
@@ -1108,7 +1225,148 @@ create_plane(
 ```
 
 
-#### 8.2.5 ExtractRasterValuesAtPoints
+#### 8.2.8 CreateRectangularVectorGrid
+
+Creates a rectangular vector grid.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input base file
+-o, -\-output        Output vector polygon file
+-\-width             The grid cell width
+-\-height            The grid cell height
+-\-xorig             The grid origin x-coordinate
+-\-yorig             The grid origin y-coordinate
+
+
+*Python function*:
+
+~~~~{.python}
+create_rectangular_vector_grid(
+    i, 
+    output, 
+    width, 
+    height, 
+    xorig=0, 
+    yorig=0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=CreateRectangularVectorGrid -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
+--height=10.0 --xorig=0.0 --yorig=0.0 
+
+
+```
+
+
+#### 8.2.9 EliminateCoincidentPoints
+
+Removes any coincident, or nearly coincident, points from a vector points file.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector polygon file
+-\-tolerance         The distance tolerance for points
+
+
+*Python function*:
+
+~~~~{.python}
+eliminate_coincident_points(
+    i, 
+    output, 
+    tolerance, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=EliminateCoincidentPoints -v ^
+--wd="/path/to/data/" -i=input_file.shp -o=out_file.shp ^
+--tolerance=0.01 
+
+
+```
+
+
+#### 8.2.10 ExtendVectorLines
+
+Extends vector lines by a specified distance.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polyline file
+-o, -\-output        Output vector polyline file
+-\-dist              The distance to extend
+-\-extend            Extend direction, 'both ends' (default), 'line start', 'line end'
+
+
+*Python function*:
+
+~~~~{.python}
+extend_vector_lines(
+    i, 
+    output, 
+    dist, 
+    extend="both ends", 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ExtendVectorLines -v ^
+--wd="/path/to/data/" -i=in_file.shp -o=out_file.shp ^
+--dist=10.0 --extend='both ends' 
+
+
+```
+
+
+#### 8.2.11 ExtractNodes
+
+Converts vector lines or polygons into vertex points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector lines or polygon file
+-o, -\-output        Output vector points file
+
+
+*Python function*:
+
+~~~~{.python}
+extract_nodes(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ExtractNodes -v --wd="/path/to/data/" ^
+-i=file.shp -o=outfile.shp 
+
+
+```
+
+
+#### 8.2.12 ExtractRasterValuesAtPoints
 
 Extracts the values of raster(s) at vector point locations.
 
@@ -1140,7 +1398,7 @@ extract_raster_values_at_points(
 ```
 
 
-#### 8.2.6 FindLowestOrHighestPoints
+#### 8.2.13 FindLowestOrHighestPoints
 
 Locates the lowest and/or highest valued cells in a raster.
 
@@ -1174,7 +1432,276 @@ find_lowest_or_highest_points(
 ```
 
 
-#### 8.2.7 RasterCellAssignment
+#### 8.2.14 IdwInterpolation
+
+Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-\-use_z             Use z-coordinate instead of field?
+-o, -\-output        Output raster file
+-\-weight            IDW weight value
+-\-radius            Search Radius
+-\-min_points        Minimum number of points
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+idw_interpolation(
+    i, 
+    field, 
+    output, 
+    use_z=False, 
+    weight=2.0, 
+    radius=None, 
+    min_points=None, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=IdwInterpolation -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--assign=min --nodata ^
+--cell_size=10.0
+        >>./whitebox_tools -r=IdwInterpolation ^
+-v --wd="/path/to/data/" -i=points.shp --field=FID ^
+-o=output.tif --assign=last --base=existing_raster.tif 
+
+
+```
+
+
+#### 8.2.15 Medoid
+
+Calculates the medoid for a series of vector features contained in a shapefile.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+medoid(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Medoid -v --wd="/path/to/data/" ^
+-i=in_file.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.2.16 MinimumBoundingBox
+
+Creates a vector minimum bounding rectangle around vector features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector polygon file
+-\-features          Find the minimum bounding rectangles around each individual vector feature
+
+
+*Python function*:
+
+~~~~{.python}
+minimum_bounding_box(
+    i, 
+    output, 
+    features=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MinimumBoundingBox -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
+
+
+```
+
+
+#### 8.2.17 MinimumConvexHull
+
+Creates a vector convex polygon around vector features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector polygon file
+-\-features          Find the hulls around each vector feature
+
+
+*Python function*:
+
+~~~~{.python}
+minimum_convex_hull(
+    i, 
+    output, 
+    features=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MinimumConvexHull -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
+
+
+```
+
+
+#### 8.2.18 PolygonArea
+
+Calculates the area of vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+polygon_area(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PolygonArea -v --wd="/path/to/data/" ^
+--input=points.shp 
+
+
+```
+
+
+#### 8.2.19 PolygonLongAxis
+
+This tool can be used to map the long axis of polygon features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygons file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+polygon_long_axis(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PolygonLongAxis -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp 
+
+
+```
+
+
+#### 8.2.20 PolygonPerimeter
+
+Calculates the perimeter of vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+polygon_perimeter(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PolygonPerimeter -v ^
+--wd="/path/to/data/" --input=points.shp 
+
+
+```
+
+
+#### 8.2.21 PolygonShortAxis
+
+This tool can be used to map the short axis of polygon features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygons file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+polygon_short_axis(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PolygonShortAxis -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp 
+
+
+```
+
+
+#### 8.2.22 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -1209,7 +1736,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.8 Reclass
+#### 8.2.23 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -1251,7 +1778,7 @@ reclass(
 ```
 
 
-#### 8.2.9 ReclassEqualInterval
+#### 8.2.24 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -1289,7 +1816,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.10 ReclassFromFile
+#### 8.2.25 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -1318,6 +1845,83 @@ reclass_from_file(
 >>./whitebox_tools -r=ReclassFromFile -v ^
 --wd="/path/to/data/" -i='input.tif' ^
 --reclass_file='reclass.txt' -o=output.tif 
+
+
+```
+
+
+#### 8.2.26 TinGridding
+
+Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector points file
+-\-field             Input field name in attribute table
+-\-use_z             Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?
+-o, -\-output        Output vector polygon file
+-\-resolution        Output raster's grid resolution
+
+
+*Python function*:
+
+~~~~{.python}
+tin_gridding(
+    i, 
+    output, 
+    resolution, 
+    field=None, 
+    use_z=False, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=TINGridding -v --wd="/path/to/data/" ^
+-i=points.shp --field=HEIGHT -o=tin.shp ^
+--resolution=10.0
+>>./whitebox_tools -r=TINGridding -v ^
+--wd="/path/to/data/" -i=points.shp --use_z -o=tin.shp ^
+--resolution=5.0 
+
+
+```
+
+
+#### 8.2.27 VectorHexBinning
+
+Hex-bins a set of vector points.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input base file
+-o, -\-output        Output vector polygon file
+-\-width             The grid cell width
+-\-orientation       Grid Orientation, 'horizontal' or 'vertical'
+
+
+*Python function*:
+
+~~~~{.python}
+vector_hex_binning(
+    i, 
+    output, 
+    width, 
+    orientation="horizontal", 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VectorHexBinning -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
+--orientation=vertical 
 
 
 ```
@@ -2101,7 +2705,36 @@ edge_proportion(
 ```
 
 
-#### 8.5.2 FindPatchOrClassEdgeCells
+#### 8.5.2 ElongationRatio
+
+Calculates the elongation ratio for vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+elongation_ratio(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=ElongationRatio -v ^
+--wd="/path/to/data/" --input=points.shp 
+
+
+```
+
+
+#### 8.5.3 FindPatchOrClassEdgeCells
 
 Finds all cells located on the edge of patch or class features.
 
@@ -2132,7 +2765,36 @@ find_patch_or_class_edge_cells(
 ```
 
 
-#### 8.5.3 RadiusOfGyration
+#### 8.5.4 PerimeterAreaRatio
+
+Calculates the perimeter-area ratio of vector polygons.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+perimeter_area_ratio(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PerimeterAreaRatio -v ^
+--wd="/path/to/data/" --input=points.shp 
+
+
+```
+
+
+#### 8.5.5 RadiusOfGyration
 
 Calculates the distance of cells from their polygon's centroid.
 
@@ -2165,492 +2827,38 @@ radius_of_gyration(
 
 ```
 
-### 8.6 GIS Tools
 
-#### 8.6.1 CentroidVector
+#### 8.5.6 ShapeComplexityIndex
 
-Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+Calculates overall polygon shape complexity or irregularity.
 
 *Parameters*:
 
 **Flag**             **Description**
 -------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector file
+-i, -\-input         Input vector polygon file
 
 
 *Python function*:
 
 ~~~~{.python}
-centroid_vector(
+shape_complexity_index(
     i, 
-    output, 
     callback=default_callback)
 ~~~~
 
 *Command-line Interface*:
 
 ```
->>./whitebox_tools -r=CentroidVector -v --wd="/path/to/data/" ^
--i=in_file.shp -o=out_file.shp 
+>>./whitebox_tools -r=ShapeComplexityIndex -v ^
+--wd="/path/to/data/" --input=points.shp 
 
 
 ```
 
+### 8.6 Geomorphometric Analysis
 
-#### 8.6.2 ConstructVectorTin
-
-Creates a vector triangular irregular network (TIN) for a set of vector points.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector points file
--\-field             Input field name in attribute table
--\-use_z             Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?
--o, -\-output        Output vector polygon file
-
-
-*Python function*:
-
-~~~~{.python}
-construct_vector_tin(
-    i, 
-    output, 
-    field=None, 
-    use_z=False, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=ConstructVectorTIN -v ^
---wd="/path/to/data/" -i=points.shp --field=HEIGHT ^
--o=tin.shp
->>./whitebox_tools -r=ConstructVectorTIN -v ^
---wd="/path/to/data/" -i=points.shp --use_z -o=tin.shp 
-
-
-```
-
-
-#### 8.6.3 CreateHexagonalVectorGrid
-
-Creates a hexagonal vector grid.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input base file
--o, -\-output        Output vector polygon file
--\-width             The grid cell width
--\-orientation       Grid Orientation, 'horizontal' or 'vertical'
-
-
-*Python function*:
-
-~~~~{.python}
-create_hexagonal_vector_grid(
-    i, 
-    output, 
-    width, 
-    orientation="horizontal", 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=CreateHexagonalVectorGrid -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
---orientation=vertical 
-
-
-```
-
-
-#### 8.6.4 CreateRectangularVectorGrid
-
-Creates a rectangular vector grid.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input base file
--o, -\-output        Output vector polygon file
--\-width             The grid cell width
--\-height            The grid cell height
--\-xorig             The grid origin x-coordinate
--\-yorig             The grid origin y-coordinate
-
-
-*Python function*:
-
-~~~~{.python}
-create_rectangular_vector_grid(
-    i, 
-    output, 
-    width, 
-    height, 
-    xorig=0, 
-    yorig=0, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=CreateRectangularVectorGrid -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
---height=10.0 --xorig=0.0 --yorig=0.0 
-
-
-```
-
-
-#### 8.6.5 EliminateCoincidentPoints
-
-Removes any coincident, or nearly coincident, points from a vector points file.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector polygon file
--\-tolerance         The distance tolerance for points
-
-
-*Python function*:
-
-~~~~{.python}
-eliminate_coincident_points(
-    i, 
-    output, 
-    tolerance, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=EliminateCoincidentPoints -v ^
---wd="/path/to/data/" -i=input_file.shp -o=out_file.shp ^
---tolerance=0.01 
-
-
-```
-
-
-#### 8.6.6 ExtendVectorLines
-
-Extends vector lines by a specified distance.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector polyline file
--o, -\-output        Output vector polyline file
--\-dist              The distance to extend
--\-extend            Extend direction, 'both ends' (default), 'line start', 'line end'
-
-
-*Python function*:
-
-~~~~{.python}
-extend_vector_lines(
-    i, 
-    output, 
-    dist, 
-    extend="both ends", 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=ExtendVectorLines -v ^
---wd="/path/to/data/" -i=in_file.shp -o=out_file.shp ^
---dist=10.0 --extend='both ends' 
-
-
-```
-
-
-#### 8.6.7 ExtractNodes
-
-Converts vector lines or polygons into vertex points.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector lines or polygon file
--o, -\-output        Output vector points file
-
-
-*Python function*:
-
-~~~~{.python}
-extract_nodes(
-    i, 
-    output, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=ExtractNodes -v --wd="/path/to/data/" ^
--i=file.shp -o=outfile.shp 
-
-
-```
-
-
-#### 8.6.8 Medoid
-
-Calculates the medoid for a series of vector features contained in a shapefile.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector file
-
-
-*Python function*:
-
-~~~~{.python}
-medoid(
-    i, 
-    output, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=Medoid -v --wd="/path/to/data/" ^
--i=in_file.shp -o=out_file.shp 
-
-
-```
-
-
-#### 8.6.9 MinimumBoundingBox
-
-Creates a vector minimum bounding rectangle around vector features.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector polygon file
--\-features          Find the minimum bounding rectangles around each individual vector feature
-
-
-*Python function*:
-
-~~~~{.python}
-minimum_bounding_box(
-    i, 
-    output, 
-    features=True, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=MinimumBoundingBox -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
-
-
-```
-
-
-#### 8.6.10 MinimumConvexHull
-
-Creates a vector convex polygon around vector features.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector polygon file
--\-features          Find the hulls around each vector feature
-
-
-*Python function*:
-
-~~~~{.python}
-minimum_convex_hull(
-    i, 
-    output, 
-    features=True, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=MinimumConvexHull -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
-
-
-```
-
-
-#### 8.6.11 PolygonLongAxis
-
-This tool can be used to map the long axis of polygon features.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector polygons file
--o, -\-output        Output vector polygon file
-
-
-*Python function*:
-
-~~~~{.python}
-polygon_long_axis(
-    i, 
-    output, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=PolygonLongAxis -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp 
-
-
-```
-
-
-#### 8.6.12 PolygonShortAxis
-
-This tool can be used to map the short axis of polygon features.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector polygons file
--o, -\-output        Output vector polygon file
-
-
-*Python function*:
-
-~~~~{.python}
-polygon_short_axis(
-    i, 
-    output, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=PolygonShortAxis -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp 
-
-
-```
-
-
-#### 8.6.13 TinGridding
-
-Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector points file
--\-field             Input field name in attribute table
--\-use_z             Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?
--o, -\-output        Output vector polygon file
--\-resolution        Output raster's grid resolution
-
-
-*Python function*:
-
-~~~~{.python}
-tin_gridding(
-    i, 
-    output, 
-    resolution, 
-    field=None, 
-    use_z=False, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=TINGridding -v --wd="/path/to/data/" ^
--i=points.shp --field=HEIGHT -o=tin.shp ^
---resolution=10.0
->>./whitebox_tools -r=TINGridding -v ^
---wd="/path/to/data/" -i=points.shp --use_z -o=tin.shp ^
---resolution=5.0 
-
-
-```
-
-
-#### 8.6.14 VectorHexBinning
-
-Hex-bins a set of vector points.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input base file
--o, -\-output        Output vector polygon file
--\-width             The grid cell width
--\-orientation       Grid Orientation, 'horizontal' or 'vertical'
-
-
-*Python function*:
-
-~~~~{.python}
-vector_hex_binning(
-    i, 
-    output, 
-    width, 
-    orientation="horizontal", 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=VectorHexBinning -v ^
---wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
---orientation=vertical 
-
-
-```
-
-### 8.7 Geomorphometric Analysis
-
-#### 8.7.1 Aspect
+#### 8.6.1 Aspect
 
 Calculates an aspect raster from an input DEM.
 
@@ -2683,7 +2891,7 @@ aspect(
 ```
 
 
-#### 8.7.2 DevFromMeanElev
+#### 8.6.2 DevFromMeanElev
 
 Calculates deviation from mean elevation.
 
@@ -2719,7 +2927,7 @@ dev_from_mean_elev(
 ```
 
 
-#### 8.7.3 DiffFromMeanElev
+#### 8.6.3 DiffFromMeanElev
 
 Calculates difference from mean elevation (equivalent to a high-pass filter).
 
@@ -2755,7 +2963,7 @@ diff_from_mean_elev(
 ```
 
 
-#### 8.7.4 DirectionalRelief
+#### 8.6.4 DirectionalRelief
 
 Calculates relief for cells in an input DEM for a specified direction.
 
@@ -2791,7 +2999,7 @@ directional_relief(
 ```
 
 
-#### 8.7.5 DownslopeIndex
+#### 8.6.5 DownslopeIndex
 
 Calculates the Hjerdt et al. (2004) downslope index.
 
@@ -2827,7 +3035,7 @@ downslope_index(
 ```
 
 
-#### 8.7.6 DrainagePreservingSmoothing
+#### 8.6.6 DrainagePreservingSmoothing
 
 Reduces short-scale variation in an input DEM while preserving breaks-in-slope and small drainage features using a modified Sun et al. (2007) algorithm.
 
@@ -2873,7 +3081,7 @@ drainage_preserving_smoothing(
 ```
 
 
-#### 8.7.7 ElevAbovePit
+#### 8.6.7 ElevAbovePit
 
 Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
 
@@ -2904,7 +3112,7 @@ elev_above_pit(
 ```
 
 
-#### 8.7.8 ElevPercentile
+#### 8.6.8 ElevPercentile
 
 Calculates the elevation percentile raster from a DEM.
 
@@ -2941,7 +3149,7 @@ elev_percentile(
 ```
 
 
-#### 8.7.9 ElevRelativeToMinMax
+#### 8.6.9 ElevRelativeToMinMax
 
 Calculates the elevation of a location relative to the minimum and maximum elevations in a DEM.
 
@@ -2972,7 +3180,7 @@ elev_relative_to_min_max(
 ```
 
 
-#### 8.7.10 ElevRelativeToWatershedMinMax
+#### 8.6.10 ElevRelativeToWatershedMinMax
 
 Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.
 
@@ -3006,7 +3214,7 @@ elev_relative_to_watershed_min_max(
 ```
 
 
-#### 8.7.11 FeaturePreservingDenoise
+#### 8.6.11 FeaturePreservingDenoise
 
 Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
@@ -3046,7 +3254,7 @@ feature_preserving_denoise(
 ```
 
 
-#### 8.7.12 FetchAnalysis
+#### 8.6.12 FetchAnalysis
 
 Performs an analysis of fetch or upwind distance to an obstacle.
 
@@ -3081,7 +3289,7 @@ fetch_analysis(
 ```
 
 
-#### 8.7.13 FillMissingData
+#### 8.6.13 FillMissingData
 
 Fills nodata holes in a DEM.
 
@@ -3117,7 +3325,7 @@ fill_missing_data(
 ```
 
 
-#### 8.7.14 FindRidges
+#### 8.6.14 FindRidges
 
 Identifies potential ridge and peak grid cells.
 
@@ -3151,7 +3359,7 @@ find_ridges(
 ```
 
 
-#### 8.7.15 Hillshade
+#### 8.6.15 Hillshade
 
 Calculates a hillshade raster from an input DEM.
 
@@ -3188,7 +3396,7 @@ hillshade(
 ```
 
 
-#### 8.7.16 HorizonAngle
+#### 8.6.16 HorizonAngle
 
 Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 
@@ -3223,7 +3431,7 @@ horizon_angle(
 ```
 
 
-#### 8.7.17 HypsometricAnalysis
+#### 8.6.17 HypsometricAnalysis
 
 Calculates a hypsometric curve for one or more DEMs.
 
@@ -3257,7 +3465,7 @@ hypsometric_analysis(
 ```
 
 
-#### 8.7.18 MaxAnisotropyDev
+#### 8.6.18 MaxAnisotropyDev
 
 Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 
@@ -3298,7 +3506,7 @@ max_anisotropy_dev(
 ```
 
 
-#### 8.7.19 MaxAnisotropyDevSignature
+#### 8.6.19 MaxAnisotropyDevSignature
 
 Calculates the anisotropy in deviation from mean for points over a range of spatial scales.
 
@@ -3339,7 +3547,7 @@ max_anisotropy_dev_signature(
 ```
 
 
-#### 8.7.20 MaxBranchLength
+#### 8.6.20 MaxBranchLength
 
 Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
 
@@ -3372,7 +3580,7 @@ max_branch_length(
 ```
 
 
-#### 8.7.21 MaxDifferenceFromMean
+#### 8.6.21 MaxDifferenceFromMean
 
 Calculates the maximum difference from mean elevation over a range of spatial scales.
 
@@ -3413,7 +3621,7 @@ max_difference_from_mean(
 ```
 
 
-#### 8.7.22 MaxDownslopeElevChange
+#### 8.6.22 MaxDownslopeElevChange
 
 Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors.
 
@@ -3444,7 +3652,7 @@ max_downslope_elev_change(
 ```
 
 
-#### 8.7.23 MaxElevDevSignature
+#### 8.6.23 MaxElevDevSignature
 
 Calculates the maximum elevation deviation over a range of spatial scales and for a set of points.
 
@@ -3485,7 +3693,7 @@ max_elev_dev_signature(
 ```
 
 
-#### 8.7.24 MaxElevationDeviation
+#### 8.6.24 MaxElevationDeviation
 
 Calculates the maximum elevation deviation over a range of spatial scales.
 
@@ -3526,7 +3734,7 @@ max_elevation_deviation(
 ```
 
 
-#### 8.7.25 MinDownslopeElevChange
+#### 8.6.25 MinDownslopeElevChange
 
 Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
 
@@ -3557,7 +3765,7 @@ min_downslope_elev_change(
 ```
 
 
-#### 8.7.26 MultiscaleRoughness
+#### 8.6.26 MultiscaleRoughness
 
 Calculates surface roughness over a range of spatial scales.
 
@@ -3598,7 +3806,7 @@ multiscale_roughness(
 ```
 
 
-#### 8.7.27 MultiscaleRoughnessSignature
+#### 8.6.27 MultiscaleRoughnessSignature
 
 Calculates the surface roughness for points over a range of spatial scales.
 
@@ -3639,7 +3847,7 @@ multiscale_roughness_signature(
 ```
 
 
-#### 8.7.28 MultiscaleTopographicPositionImage
+#### 8.6.28 MultiscaleTopographicPositionImage
 
 Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 
@@ -3677,7 +3885,7 @@ multiscale_topographic_position_image(
 ```
 
 
-#### 8.7.29 NumDownslopeNeighbours
+#### 8.6.29 NumDownslopeNeighbours
 
 Calculates the number of downslope neighbours to each grid cell in a DEM.
 
@@ -3708,7 +3916,7 @@ num_downslope_neighbours(
 ```
 
 
-#### 8.7.30 NumUpslopeNeighbours
+#### 8.6.30 NumUpslopeNeighbours
 
 Calculates the number of upslope neighbours to each grid cell in a DEM.
 
@@ -3739,7 +3947,7 @@ num_upslope_neighbours(
 ```
 
 
-#### 8.7.31 PennockLandformClass
+#### 8.6.31 PennockLandformClass
 
 Classifies hillslope zones based on slope, profile curvature, and plan curvature.
 
@@ -3779,7 +3987,7 @@ pennock_landform_class(
 ```
 
 
-#### 8.7.32 PercentElevRange
+#### 8.6.32 PercentElevRange
 
 Calculates percent of elevation range from a DEM.
 
@@ -3814,7 +4022,7 @@ percent_elev_range(
 ```
 
 
-#### 8.7.33 PlanCurvature
+#### 8.6.33 PlanCurvature
 
 Calculates a plan (contour) curvature raster from an input DEM.
 
@@ -3847,7 +4055,7 @@ plan_curvature(
 ```
 
 
-#### 8.7.34 Profile
+#### 8.6.34 Profile
 
 Plots profiles from digital surface models.
 
@@ -3880,7 +4088,7 @@ profile(
 ```
 
 
-#### 8.7.35 ProfileCurvature
+#### 8.6.35 ProfileCurvature
 
 Calculates a profile curvature raster from an input DEM.
 
@@ -3913,7 +4121,7 @@ profile_curvature(
 ```
 
 
-#### 8.7.36 RelativeAspect
+#### 8.6.36 RelativeAspect
 
 Calculates relative aspect (relative to a user-specified direction) from an input DEM.
 
@@ -3948,7 +4156,7 @@ relative_aspect(
 ```
 
 
-#### 8.7.37 RelativeStreamPowerIndex
+#### 8.6.37 RelativeStreamPowerIndex
 
 Calculates the relative stream power index.
 
@@ -3984,7 +4192,7 @@ relative_stream_power_index(
 ```
 
 
-#### 8.7.38 RelativeTopographicPosition
+#### 8.6.38 RelativeTopographicPosition
 
 Calculates the relative topographic position index from a DEM.
 
@@ -4020,7 +4228,7 @@ relative_topographic_position(
 ```
 
 
-#### 8.7.39 RemoveOffTerrainObjects
+#### 8.6.39 RemoveOffTerrainObjects
 
 Removes off-terrain objects from a raster digital elevation model (DEM).
 
@@ -4056,7 +4264,7 @@ remove_off_terrain_objects(
 ```
 
 
-#### 8.7.40 RuggednessIndex
+#### 8.6.40 RuggednessIndex
 
 Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 
@@ -4089,7 +4297,7 @@ ruggedness_index(
 ```
 
 
-#### 8.7.41 SedimentTransportIndex
+#### 8.6.41 SedimentTransportIndex
 
 Calculates the sediment transport index.
 
@@ -4128,7 +4336,7 @@ sediment_transport_index(
 ```
 
 
-#### 8.7.42 Slope
+#### 8.6.42 Slope
 
 Calculates a slope raster from an input DEM.
 
@@ -4161,7 +4369,7 @@ slope(
 ```
 
 
-#### 8.7.43 SlopeVsElevationPlot
+#### 8.6.43 SlopeVsElevationPlot
 
 Creates a slope vs. elevation plot for one or more DEMs.
 
@@ -4195,7 +4403,7 @@ slope_vs_elevation_plot(
 ```
 
 
-#### 8.7.44 StandardDeviationOfSlope
+#### 8.6.44 StandardDeviationOfSlope
 
 Calculates the standard deviation of slope from an input DEM.
 
@@ -4232,7 +4440,7 @@ standard_deviation_of_slope(
 ```
 
 
-#### 8.7.45 TangentialCurvature
+#### 8.6.45 TangentialCurvature
 
 Calculates a tangential curvature raster from an input DEM.
 
@@ -4265,7 +4473,7 @@ tangential_curvature(
 ```
 
 
-#### 8.7.46 TotalCurvature
+#### 8.6.46 TotalCurvature
 
 Calculates a total curvature raster from an input DEM.
 
@@ -4298,7 +4506,7 @@ total_curvature(
 ```
 
 
-#### 8.7.47 Viewshed
+#### 8.6.47 Viewshed
 
 Identifies the viewshed for a point or set of points.
 
@@ -4334,7 +4542,7 @@ viewshed(
 ```
 
 
-#### 8.7.48 VisibilityIndex
+#### 8.6.48 VisibilityIndex
 
 Estimates the relative visibility of sites in a DEM.
 
@@ -4370,7 +4578,7 @@ visibility_index(
 ```
 
 
-#### 8.7.49 WetnessIndex
+#### 8.6.49 WetnessIndex
 
 Calculates the topographic wetness index, Ln(A / tan(slope)).
 
@@ -4402,9 +4610,9 @@ wetness_index(
 
 ```
 
-### 8.8 Hydrological Analysis
+### 8.7 Hydrological Analysis
 
-#### 8.8.1 AverageFlowpathSlope
+#### 8.7.1 AverageFlowpathSlope
 
 Measures the average slope gradient from each grid cell to all upslope divide cells.
 
@@ -4435,7 +4643,7 @@ average_flowpath_slope(
 ```
 
 
-#### 8.8.2 AverageUpslopeFlowpathLength
+#### 8.7.2 AverageUpslopeFlowpathLength
 
 Measures the average length of all upslope flowpaths draining each grid cell.
 
@@ -4466,7 +4674,7 @@ average_upslope_flowpath_length(
 ```
 
 
-#### 8.8.3 Basins
+#### 8.7.3 Basins
 
 Identifies drainage basins that drain to the DEM edge.
 
@@ -4499,7 +4707,7 @@ basins(
 ```
 
 
-#### 8.8.4 BreachDepressions
+#### 8.7.4 BreachDepressions
 
 Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
 
@@ -4534,7 +4742,7 @@ breach_depressions(
 ```
 
 
-#### 8.8.5 BreachSingleCellPits
+#### 8.7.5 BreachSingleCellPits
 
 Removes single-cell pits from an input DEM by breaching.
 
@@ -4565,7 +4773,7 @@ breach_single_cell_pits(
 ```
 
 
-#### 8.8.6 D8FlowAccumulation
+#### 8.7.6 D8FlowAccumulation
 
 Calculates a D8 flow accumulation raster from an input DEM.
 
@@ -4607,7 +4815,7 @@ d8_flow_accumulation(
 ```
 
 
-#### 8.8.7 D8MassFlux
+#### 8.7.7 D8MassFlux
 
 Performs a D8 mass flux calculation.
 
@@ -4645,7 +4853,7 @@ d8_mass_flux(
 ```
 
 
-#### 8.8.8 D8Pointer
+#### 8.7.8 D8Pointer
 
 Calculates a D8 flow pointer raster from an input DEM.
 
@@ -4678,7 +4886,7 @@ d8_pointer(
 ```
 
 
-#### 8.8.9 DInfFlowAccumulation
+#### 8.7.9 DInfFlowAccumulation
 
 Calculates a D-infinity flow accumulation raster from an input DEM.
 
@@ -4721,7 +4929,7 @@ d_inf_flow_accumulation(
 ```
 
 
-#### 8.8.10 DInfMassFlux
+#### 8.7.10 DInfMassFlux
 
 Performs a D-infinity mass flux calculation.
 
@@ -4759,7 +4967,7 @@ d_inf_mass_flux(
 ```
 
 
-#### 8.8.11 DInfPointer
+#### 8.7.11 DInfPointer
 
 Calculates a D-infinity flow pointer (flow direction) raster from an input DEM.
 
@@ -4790,7 +4998,7 @@ d_inf_pointer(
 ```
 
 
-#### 8.8.12 DepthInSink
+#### 8.7.12 DepthInSink
 
 Measures the depth of sinks (depressions) in a DEM.
 
@@ -4823,7 +5031,7 @@ depth_in_sink(
 ```
 
 
-#### 8.8.13 DownslopeDistanceToStream
+#### 8.7.13 DownslopeDistanceToStream
 
 Measures distance to the nearest downslope stream cell.
 
@@ -4857,7 +5065,7 @@ downslope_distance_to_stream(
 ```
 
 
-#### 8.8.14 DownslopeFlowpathLength
+#### 8.7.14 DownslopeFlowpathLength
 
 Calculates the downslope flowpath length from each cell to basin outlet.
 
@@ -4899,7 +5107,7 @@ downslope_flowpath_length(
 ```
 
 
-#### 8.8.15 ElevationAboveStream
+#### 8.7.15 ElevationAboveStream
 
 Calculates the elevation of cells above the nearest downslope stream cell.
 
@@ -4933,7 +5141,7 @@ elevation_above_stream(
 ```
 
 
-#### 8.8.16 ElevationAboveStreamEuclidean
+#### 8.7.16 ElevationAboveStreamEuclidean
 
 Calculates the elevation of cells above the nearest (Euclidean distance) stream cell.
 
@@ -4967,7 +5175,7 @@ elevation_above_stream_euclidean(
 ```
 
 
-#### 8.8.17 Fd8FlowAccumulation
+#### 8.7.17 Fd8FlowAccumulation
 
 Calculates an FD8 flow accumulation raster from an input DEM.
 
@@ -5014,7 +5222,7 @@ fd8_flow_accumulation(
 ```
 
 
-#### 8.8.18 Fd8Pointer
+#### 8.7.18 Fd8Pointer
 
 Calculates an FD8 flow pointer raster from an input DEM.
 
@@ -5045,7 +5253,7 @@ fd8_pointer(
 ```
 
 
-#### 8.8.19 FillBurn
+#### 8.7.19 FillBurn
 
 Burns streams into a DEM using the FillBurn (Saunders, 1999) method.
 
@@ -5078,7 +5286,7 @@ fill_burn(
 ```
 
 
-#### 8.8.20 FillDepressions
+#### 8.7.20 FillDepressions
 
 Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 
@@ -5112,7 +5320,7 @@ fill_depressions(
 ```
 
 
-#### 8.8.21 FillSingleCellPits
+#### 8.7.21 FillSingleCellPits
 
 Raises pit cells to the elevation of their lowest neighbour.
 
@@ -5143,7 +5351,7 @@ fill_single_cell_pits(
 ```
 
 
-#### 8.8.22 FindNoFlowCells
+#### 8.7.22 FindNoFlowCells
 
 Finds grid cells with no downslope neighbours.
 
@@ -5174,7 +5382,7 @@ find_no_flow_cells(
 ```
 
 
-#### 8.8.23 FindParallelFlow
+#### 8.7.23 FindParallelFlow
 
 Finds areas of parallel flow in D8 flow direction rasters.
 
@@ -5211,7 +5419,7 @@ find_parallel_flow(
 ```
 
 
-#### 8.8.24 FlattenLakes
+#### 8.7.24 FlattenLakes
 
 Flattens lake polygons in a raster DEM.
 
@@ -5244,7 +5452,7 @@ flatten_lakes(
 ```
 
 
-#### 8.8.25 FloodOrder
+#### 8.7.25 FloodOrder
 
 Assigns each DEM grid cell its order in the sequence of inundations that are encountered during a search starting from the edges, moving inward at increasing elevations.
 
@@ -5275,7 +5483,7 @@ flood_order(
 ```
 
 
-#### 8.8.26 FlowAccumulationFullWorkflow
+#### 8.7.26 FlowAccumulationFullWorkflow
 
 Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.
 
@@ -5320,7 +5528,7 @@ flow_accumulation_full_workflow(
 ```
 
 
-#### 8.8.27 FlowLengthDiff
+#### 8.7.27 FlowLengthDiff
 
 Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
 
@@ -5353,7 +5561,7 @@ flow_length_diff(
 ```
 
 
-#### 8.8.28 Hillslopes
+#### 8.7.28 Hillslopes
 
 Identifies the individual hillslopes draining to each link in a stream network.
 
@@ -5389,7 +5597,7 @@ hillslopes(
 ```
 
 
-#### 8.8.29 ImpoundmentIndex
+#### 8.7.29 ImpoundmentIndex
 
 Calculates the impoundment size resulting from damming a DEM.
 
@@ -5425,7 +5633,7 @@ impoundment_index(
 ```
 
 
-#### 8.8.30 Isobasins
+#### 8.7.30 Isobasins
 
 Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 
@@ -5458,7 +5666,7 @@ isobasins(
 ```
 
 
-#### 8.8.31 JensonSnapPourPoints
+#### 8.7.31 JensonSnapPourPoints
 
 Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 
@@ -5494,7 +5702,7 @@ jenson_snap_pour_points(
 ```
 
 
-#### 8.8.32 MaxUpslopeFlowpathLength
+#### 8.7.32 MaxUpslopeFlowpathLength
 
 Measures the maximum length of all upslope flowpaths draining each grid cell.
 
@@ -5529,7 +5737,7 @@ max_upslope_flowpath_length(
 ```
 
 
-#### 8.8.33 NumInflowingNeighbours
+#### 8.7.33 NumInflowingNeighbours
 
 Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 
@@ -5560,7 +5768,7 @@ num_inflowing_neighbours(
 ```
 
 
-#### 8.8.34 RaiseWalls
+#### 8.7.34 RaiseWalls
 
 Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
 
@@ -5601,7 +5809,7 @@ raise_walls(
 ```
 
 
-#### 8.8.35 Rho8Pointer
+#### 8.7.35 Rho8Pointer
 
 Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
@@ -5634,7 +5842,7 @@ rho8_pointer(
 ```
 
 
-#### 8.8.36 Sink
+#### 8.7.36 Sink
 
 Identifies the depressions in a DEM, giving each feature a unique identifier.
 
@@ -5667,7 +5875,7 @@ sink(
 ```
 
 
-#### 8.8.37 SnapPourPoints
+#### 8.7.37 SnapPourPoints
 
 Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
 
@@ -5703,7 +5911,7 @@ snap_pour_points(
 ```
 
 
-#### 8.8.38 StochasticDepressionAnalysis
+#### 8.7.38 StochasticDepressionAnalysis
 
 Preforms a stochastic analysis of depressions within a DEM.
 
@@ -5742,7 +5950,7 @@ stochastic_depression_analysis(
 ```
 
 
-#### 8.8.39 StrahlerOrderBasins
+#### 8.7.39 StrahlerOrderBasins
 
 Identifies Strahler-order basins from an input stream network.
 
@@ -5778,7 +5986,7 @@ strahler_order_basins(
 ```
 
 
-#### 8.8.40 Subbasins
+#### 8.7.40 Subbasins
 
 Identifies the catchments, or sub-basin, draining to each link in a stream network.
 
@@ -5814,7 +6022,7 @@ subbasins(
 ```
 
 
-#### 8.8.41 TraceDownslopeFlowpaths
+#### 8.7.41 TraceDownslopeFlowpaths
 
 Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
@@ -5852,7 +6060,7 @@ trace_downslope_flowpaths(
 ```
 
 
-#### 8.8.42 UnnestBasins
+#### 8.7.42 UnnestBasins
 
 Extract whole watersheds for a set of outlet points.
 
@@ -5888,7 +6096,7 @@ unnest_basins(
 ```
 
 
-#### 8.8.43 Watershed
+#### 8.7.43 Watershed
 
 Identifies the watershed, or drainage basin, draining to a set of target cells.
 
@@ -5923,9 +6131,9 @@ watershed(
 
 ```
 
-### 8.9 Image Processing Tools
+### 8.8 Image Processing Tools
 
-#### 8.9.1 ChangeVectorAnalysis
+#### 8.8.1 ChangeVectorAnalysis
 
 Performs a change vector analysis on a two-date multi-spectral dataset.
 
@@ -5963,7 +6171,7 @@ change_vector_analysis(
 ```
 
 
-#### 8.9.2 Closing
+#### 8.8.2 Closing
 
 A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
 
@@ -5998,7 +6206,7 @@ closing(
 ```
 
 
-#### 8.9.3 CreateColourComposite
+#### 8.8.3 CreateColourComposite
 
 Creates a colour-composite image from three bands of multispectral imagery.
 
@@ -6042,7 +6250,7 @@ create_colour_composite(
 ```
 
 
-#### 8.9.4 FlipImage
+#### 8.8.4 FlipImage
 
 Reflects an image in the vertical or horizontal axis.
 
@@ -6076,7 +6284,7 @@ flip_image(
 ```
 
 
-#### 8.9.5 IhsToRgb
+#### 8.8.5 IhsToRgb
 
 Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 
@@ -6122,7 +6330,7 @@ ihs_to_rgb(
 ```
 
 
-#### 8.9.6 ImageStackProfile
+#### 8.8.6 ImageStackProfile
 
 Plots an image stack profile (i.e. signature) for a set of points and multispectral images.
 
@@ -6156,7 +6364,7 @@ image_stack_profile(
 ```
 
 
-#### 8.9.7 IntegralImage
+#### 8.8.7 IntegralImage
 
 Transforms an input image (summed area table) into its integral image equivalent.
 
@@ -6187,7 +6395,7 @@ integral_image(
 ```
 
 
-#### 8.9.8 KMeansClustering
+#### 8.8.8 KMeansClustering
 
 Performs a k-means clustering operation on a multi-spectral dataset.
 
@@ -6233,7 +6441,7 @@ k_means_clustering(
 ```
 
 
-#### 8.9.9 LineThinning
+#### 8.8.9 LineThinning
 
 Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 
@@ -6264,7 +6472,7 @@ line_thinning(
 ```
 
 
-#### 8.9.10 ModifiedKMeansClustering
+#### 8.8.10 ModifiedKMeansClustering
 
 Performs a modified k-means clustering operation on a multi-spectral dataset.
 
@@ -6307,7 +6515,7 @@ modified_k_means_clustering(
 ```
 
 
-#### 8.9.11 Mosaic
+#### 8.8.11 Mosaic
 
 Mosaics two or more images together.
 
@@ -6342,7 +6550,7 @@ mosaic(
 ```
 
 
-#### 8.9.12 NormalizedDifferenceVegetationIndex
+#### 8.8.12 NormalizedDifferenceVegetationIndex
 
 Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 
@@ -6385,7 +6593,7 @@ normalized_difference_vegetation_index(
 ```
 
 
-#### 8.9.13 Opening
+#### 8.8.13 Opening
 
 An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
 
@@ -6420,7 +6628,7 @@ opening(
 ```
 
 
-#### 8.9.14 RemoveSpurs
+#### 8.8.14 RemoveSpurs
 
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
@@ -6453,7 +6661,7 @@ remove_spurs(
 ```
 
 
-#### 8.9.15 Resample
+#### 8.8.15 Resample
 
 Resamples one or more input images into a destination image.
 
@@ -6488,7 +6696,7 @@ resample(
 ```
 
 
-#### 8.9.16 RgbToIhs
+#### 8.8.16 RgbToIhs
 
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 
@@ -6539,7 +6747,7 @@ rgb_to_ihs(
 ```
 
 
-#### 8.9.17 SplitColourComposite
+#### 8.8.17 SplitColourComposite
 
 This tool splits an RGB colour composite image into seperate multispectral images.
 
@@ -6570,7 +6778,7 @@ split_colour_composite(
 ```
 
 
-#### 8.9.18 ThickenRasterLine
+#### 8.8.18 ThickenRasterLine
 
 Thickens single-cell wide lines within a raster image.
 
@@ -6601,7 +6809,7 @@ thicken_raster_line(
 ```
 
 
-#### 8.9.19 TophatTransform
+#### 8.8.19 TophatTransform
 
 Performs either a white or black top-hat transform on an input image.
 
@@ -6638,7 +6846,7 @@ tophat_transform(
 ```
 
 
-#### 8.9.20 WriteFunctionMemoryInsertion
+#### 8.8.20 WriteFunctionMemoryInsertion
 
 Performs a write function memory insertion for single-band multi-date change detection.
 
@@ -6673,9 +6881,9 @@ write_function_memory_insertion(
 
 ```
 
-### 8.10 Image Processing Tools => Filters
+### 8.9 Image Processing Tools => Filters
 
-#### 8.10.1 AdaptiveFilter
+#### 8.9.1 AdaptiveFilter
 
 Performs an adaptive filter on an image.
 
@@ -6712,7 +6920,7 @@ adaptive_filter(
 ```
 
 
-#### 8.10.2 BilateralFilter
+#### 8.9.2 BilateralFilter
 
 A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).
 
@@ -6748,7 +6956,7 @@ bilateral_filter(
 ```
 
 
-#### 8.10.3 ConservativeSmoothingFilter
+#### 8.9.3 ConservativeSmoothingFilter
 
 Performs a conservative-smoothing filter on an image.
 
@@ -6783,7 +6991,7 @@ conservative_smoothing_filter(
 ```
 
 
-#### 8.10.4 CornerDetection
+#### 8.9.4 CornerDetection
 
 Identifies corner patterns in boolean images using hit-and-miss pattern mattching.
 
@@ -6814,7 +7022,7 @@ corner_detection(
 ```
 
 
-#### 8.10.5 DiffOfGaussianFilter
+#### 8.9.5 DiffOfGaussianFilter
 
 Performs a Difference of Gaussian (DoG) filter on an image.
 
@@ -6850,7 +7058,7 @@ diff_of_gaussian_filter(
 ```
 
 
-#### 8.10.6 DiversityFilter
+#### 8.9.6 DiversityFilter
 
 Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 
@@ -6885,7 +7093,7 @@ diversity_filter(
 ```
 
 
-#### 8.10.7 EdgePreservingMeanFilter
+#### 8.9.7 EdgePreservingMeanFilter
 
 Performs a simple edge-preserving mean filter on an input image.
 
@@ -6921,7 +7129,7 @@ edge_preserving_mean_filter(
 ```
 
 
-#### 8.10.8 EmbossFilter
+#### 8.9.8 EmbossFilter
 
 Performs an emboss filter on an image, similar to a hillshade operation.
 
@@ -6957,7 +7165,7 @@ emboss_filter(
 ```
 
 
-#### 8.10.9 FastAlmostGaussianFilter
+#### 8.9.9 FastAlmostGaussianFilter
 
 Performs a fast approximate Gaussian filter on an image.
 
@@ -6990,7 +7198,7 @@ fast_almost_gaussian_filter(
 ```
 
 
-#### 8.10.10 GaussianFilter
+#### 8.9.10 GaussianFilter
 
 Performs a Gaussian filter on an image.
 
@@ -7023,7 +7231,7 @@ gaussian_filter(
 ```
 
 
-#### 8.10.11 HighPassFilter
+#### 8.9.11 HighPassFilter
 
 Performs a high-pass filter on an input image.
 
@@ -7058,7 +7266,7 @@ high_pass_filter(
 ```
 
 
-#### 8.10.12 HighPassMedianFilter
+#### 8.9.12 HighPassMedianFilter
 
 Performs a high pass median filter on an input image.
 
@@ -7095,7 +7303,7 @@ high_pass_median_filter(
 ```
 
 
-#### 8.10.13 KNearestMeanFilter
+#### 8.9.13 KNearestMeanFilter
 
 A k-nearest mean filter is a type of edge-preserving smoothing filter.
 
@@ -7136,7 +7344,7 @@ k_nearest_mean_filter(
 ```
 
 
-#### 8.10.14 LaplacianFilter
+#### 8.9.14 LaplacianFilter
 
 Performs a Laplacian filter on an image.
 
@@ -7173,7 +7381,7 @@ laplacian_filter(
 ```
 
 
-#### 8.10.15 LaplacianOfGaussianFilter
+#### 8.9.15 LaplacianOfGaussianFilter
 
 Performs a Laplacian-of-Gaussian (LoG) filter on an image.
 
@@ -7206,7 +7414,7 @@ laplacian_of_gaussian_filter(
 ```
 
 
-#### 8.10.16 LeeFilter
+#### 8.9.16 LeeFilter
 
 Performs a Lee (Sigma) smoothing filter on an image.
 
@@ -7251,7 +7459,7 @@ lee_filter(
 ```
 
 
-#### 8.10.17 LineDetectionFilter
+#### 8.9.17 LineDetectionFilter
 
 Performs a line-detection filter on an image.
 
@@ -7290,7 +7498,7 @@ line_detection_filter(
 ```
 
 
-#### 8.10.18 MajorityFilter
+#### 8.9.18 MajorityFilter
 
 Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
 
@@ -7325,7 +7533,7 @@ majority_filter(
 ```
 
 
-#### 8.10.19 MaximumFilter
+#### 8.9.19 MaximumFilter
 
 Assigns each cell in the output grid the maximum value in a moving window centred on each grid cell in the input raster.
 
@@ -7360,7 +7568,7 @@ maximum_filter(
 ```
 
 
-#### 8.10.20 MeanFilter
+#### 8.9.20 MeanFilter
 
 Performs a mean filter (low-pass filter) on an input image.
 
@@ -7395,7 +7603,7 @@ mean_filter(
 ```
 
 
-#### 8.10.21 MedianFilter
+#### 8.9.21 MedianFilter
 
 Performs a median filter on an input image.
 
@@ -7432,7 +7640,7 @@ median_filter(
 ```
 
 
-#### 8.10.22 MinimumFilter
+#### 8.9.22 MinimumFilter
 
 Assigns each cell in the output grid the minimum value in a moving window centred on each grid cell in the input raster.
 
@@ -7467,7 +7675,7 @@ minimum_filter(
 ```
 
 
-#### 8.10.23 OlympicFilter
+#### 8.9.23 OlympicFilter
 
 Performs an olympic smoothing filter on an image.
 
@@ -7502,7 +7710,7 @@ olympic_filter(
 ```
 
 
-#### 8.10.24 PercentileFilter
+#### 8.9.24 PercentileFilter
 
 Performs a percentile filter on an input image.
 
@@ -7539,7 +7747,7 @@ percentile_filter(
 ```
 
 
-#### 8.10.25 PrewittFilter
+#### 8.9.25 PrewittFilter
 
 Performs a Prewitt edge-detection filter on an image.
 
@@ -7572,7 +7780,7 @@ prewitt_filter(
 ```
 
 
-#### 8.10.26 RangeFilter
+#### 8.9.26 RangeFilter
 
 Assigns each cell in the output grid the range of values in a moving window centred on each grid cell in the input raster.
 
@@ -7607,7 +7815,7 @@ range_filter(
 ```
 
 
-#### 8.10.27 RobertsCrossFilter
+#### 8.9.27 RobertsCrossFilter
 
 Performs a Robert's cross edge-detection filter on an image.
 
@@ -7640,7 +7848,7 @@ roberts_cross_filter(
 ```
 
 
-#### 8.10.28 ScharrFilter
+#### 8.9.28 ScharrFilter
 
 Performs a Scharr edge-detection filter on an image.
 
@@ -7673,7 +7881,7 @@ scharr_filter(
 ```
 
 
-#### 8.10.29 SobelFilter
+#### 8.9.29 SobelFilter
 
 Performs a Sobel edge-detection filter on an image.
 
@@ -7708,7 +7916,7 @@ sobel_filter(
 ```
 
 
-#### 8.10.30 StandardDeviationFilter
+#### 8.9.30 StandardDeviationFilter
 
 Assigns each cell in the output grid the standard deviation of values in a moving window centred on each grid cell in the input raster.
 
@@ -7743,7 +7951,7 @@ standard_deviation_filter(
 ```
 
 
-#### 8.10.31 TotalFilter
+#### 8.9.31 TotalFilter
 
 Performs a total filter on an input image.
 
@@ -7778,7 +7986,7 @@ total_filter(
 ```
 
 
-#### 8.10.32 UnsharpMasking
+#### 8.9.32 UnsharpMasking
 
 An image sharpening technique that enhances edges.
 
@@ -7816,7 +8024,7 @@ unsharp_masking(
 ```
 
 
-#### 8.10.33 UserDefinedWeightsFilter
+#### 8.9.33 UserDefinedWeightsFilter
 
 Performs a user-defined weights filter on an image.
 
@@ -7855,9 +8063,9 @@ user_defined_weights_filter(
 
 ```
 
-### 8.11 Image Processing Tools => Image Enhancement
+### 8.10 Image Processing Tools => Image Enhancement
 
-#### 8.11.1 BalanceContrastEnhancement
+#### 8.10.1 BalanceContrastEnhancement
 
 Performs a balance contrast enhancement on a colour-composite image of multispectral data.
 
@@ -7891,7 +8099,7 @@ balance_contrast_enhancement(
 ```
 
 
-#### 8.11.2 CorrectVignetting
+#### 8.10.2 CorrectVignetting
 
 Corrects the darkening of images towards corners.
 
@@ -7932,7 +8140,7 @@ correct_vignetting(
 ```
 
 
-#### 8.11.3 DirectDecorrelationStretch
+#### 8.10.3 DirectDecorrelationStretch
 
 Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 
@@ -7968,7 +8176,7 @@ direct_decorrelation_stretch(
 ```
 
 
-#### 8.11.4 GammaCorrection
+#### 8.10.4 GammaCorrection
 
 Performs a sigmoidal contrast stretch on input images.
 
@@ -8001,7 +8209,7 @@ gamma_correction(
 ```
 
 
-#### 8.11.5 GaussianContrastStretch
+#### 8.10.5 GaussianContrastStretch
 
 Performs a Gaussian contrast stretch on input images.
 
@@ -8035,7 +8243,7 @@ gaussian_contrast_stretch(
 ```
 
 
-#### 8.11.6 HistogramEqualization
+#### 8.10.6 HistogramEqualization
 
 Performs a histogram equalization contrast enhancment on an image.
 
@@ -8069,7 +8277,7 @@ histogram_equalization(
 ```
 
 
-#### 8.11.7 HistogramMatching
+#### 8.10.7 HistogramMatching
 
 Alters the statistical distribution of a raster image matching it to a specified PDF.
 
@@ -8103,7 +8311,7 @@ histogram_matching(
 ```
 
 
-#### 8.11.8 HistogramMatchingTwoImages
+#### 8.10.8 HistogramMatchingTwoImages
 
 This tool alters the cumulative distribution function of a raster image to that of another image.
 
@@ -8137,7 +8345,7 @@ histogram_matching_two_images(
 ```
 
 
-#### 8.11.9 MinMaxContrastStretch
+#### 8.10.9 MinMaxContrastStretch
 
 Performs a min-max contrast stretch on an input greytone image.
 
@@ -8175,7 +8383,7 @@ min_max_contrast_stretch(
 ```
 
 
-#### 8.11.10 PanchromaticSharpening
+#### 8.10.10 PanchromaticSharpening
 
 Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
 
@@ -8225,7 +8433,7 @@ panchromatic_sharpening(
 ```
 
 
-#### 8.11.11 PercentageContrastStretch
+#### 8.10.11 PercentageContrastStretch
 
 Performs a percentage linear contrast stretch on input images.
 
@@ -8264,7 +8472,7 @@ percentage_contrast_stretch(
 ```
 
 
-#### 8.11.12 SigmoidalContrastStretch
+#### 8.10.12 SigmoidalContrastStretch
 
 Performs a sigmoidal contrast stretch on input images.
 
@@ -8302,7 +8510,7 @@ sigmoidal_contrast_stretch(
 ```
 
 
-#### 8.11.13 StandardDeviationContrastStretch
+#### 8.10.13 StandardDeviationContrastStretch
 
 Performs a standard-deviation contrast stretch on input images.
 
@@ -8337,9 +8545,9 @@ standard_deviation_contrast_stretch(
 
 ```
 
-### 8.12 LiDAR Tools
+### 8.11 LiDAR Tools
 
-#### 8.12.1 BlockMaximum
+#### 8.11.1 BlockMaximum
 
 Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -8375,7 +8583,7 @@ block_maximum(
 ```
 
 
-#### 8.12.2 BlockMinimum
+#### 8.11.2 BlockMinimum
 
 Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -8411,7 +8619,7 @@ block_minimum(
 ```
 
 
-#### 8.12.3 ClassifyOverlapPoints
+#### 8.11.3 ClassifyOverlapPoints
 
 Classifies or filters LAS points in regions of overlapping flight lines.
 
@@ -8448,7 +8656,7 @@ classify_overlap_points(
 ```
 
 
-#### 8.12.4 ClipLidarToPolygon
+#### 8.11.4 ClipLidarToPolygon
 
 Clips a LiDAR point cloud to a vector polygon or polygons.
 
@@ -8482,7 +8690,7 @@ clip_lidar_to_polygon(
 ```
 
 
-#### 8.12.5 ErasePolygonFromLidar
+#### 8.11.5 ErasePolygonFromLidar
 
 Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
 
@@ -8516,7 +8724,7 @@ erase_polygon_from_lidar(
 ```
 
 
-#### 8.12.6 FilterLidarScanAngles
+#### 8.11.6 FilterLidarScanAngles
 
 Removes points in a LAS file with scan angles greater than a threshold.
 
@@ -8550,7 +8758,7 @@ filter_lidar_scan_angles(
 ```
 
 
-#### 8.12.7 FindFlightlineEdgePoints
+#### 8.11.7 FindFlightlineEdgePoints
 
 Identifies points along a flightline's edge in a LAS file.
 
@@ -8581,7 +8789,7 @@ find_flightline_edge_points(
 ```
 
 
-#### 8.12.8 FlightlineOverlap
+#### 8.11.8 FlightlineOverlap
 
 Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 
@@ -8618,7 +8826,7 @@ flightline_overlap(
 ```
 
 
-#### 8.12.9 LasToAscii
+#### 8.11.9 LasToAscii
 
 Converts one or more LAS files into ASCII text files.
 
@@ -8647,7 +8855,7 @@ las_to_ascii(
 ```
 
 
-#### 8.12.10 LasToMultipointShapefile
+#### 8.11.10 LasToMultipointShapefile
 
 Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is not specified, the tool grids all LAS files contained within the working directory.
 
@@ -8676,7 +8884,7 @@ las_to_multipoint_shapefile(
 ```
 
 
-#### 8.12.11 LidarColourize
+#### 8.11.11 LidarColourize
 
 Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
@@ -8710,7 +8918,7 @@ lidar_colourize(
 ```
 
 
-#### 8.12.12 LidarConstructVectorTin
+#### 8.11.12 LidarConstructVectorTin
 
 Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -8751,7 +8959,7 @@ lidar_construct_vector_tin(
 ```
 
 
-#### 8.12.13 LidarElevationSlice
+#### 8.11.13 LidarElevationSlice
 
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -8803,7 +9011,7 @@ lidar_elevation_slice(
 ```
 
 
-#### 8.12.14 LidarGroundPointFilter
+#### 8.11.14 LidarGroundPointFilter
 
 Identifies ground points within LiDAR dataset using a slope-based method.
 
@@ -8850,7 +9058,7 @@ lidar_ground_point_filter(
 ```
 
 
-#### 8.12.15 LidarHexBinning
+#### 8.11.15 LidarHexBinning
 
 Hex-bins a set of LiDAR points.
 
@@ -8886,7 +9094,7 @@ lidar_hex_binning(
 ```
 
 
-#### 8.12.16 LidarHillshade
+#### 8.11.16 LidarHillshade
 
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
@@ -8926,7 +9134,7 @@ lidar_hillshade(
 ```
 
 
-#### 8.12.17 LidarHistogram
+#### 8.11.17 LidarHistogram
 
 Creates a histogram from LiDAR data.
 
@@ -8962,7 +9170,7 @@ lidar_histogram(
 ```
 
 
-#### 8.12.18 LidarIdwInterpolation
+#### 8.11.18 LidarIdwInterpolation
 
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
 
@@ -9016,7 +9224,7 @@ lidar_idw_interpolation(
 ```
 
 
-#### 8.12.19 LidarInfo
+#### 8.11.19 LidarInfo
 
 Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
@@ -9053,7 +9261,7 @@ lidar_info(
 ```
 
 
-#### 8.12.20 LidarJoin
+#### 8.11.20 LidarJoin
 
 Joins multiple LiDAR (LAS) files into a single LAS file.
 
@@ -9084,7 +9292,7 @@ lidar_join(
 ```
 
 
-#### 8.12.21 LidarKappaIndex
+#### 8.11.21 LidarKappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
@@ -9118,7 +9326,7 @@ lidar_kappa_index(
 ```
 
 
-#### 8.12.22 LidarNearestNeighbourGridding
+#### 8.11.22 LidarNearestNeighbourGridding
 
 Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -9170,7 +9378,7 @@ lidar_nearest_neighbour_gridding(
 ```
 
 
-#### 8.12.23 LidarPointDensity
+#### 8.11.23 LidarPointDensity
 
 Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -9219,7 +9427,7 @@ lidar_point_density(
 ```
 
 
-#### 8.12.24 LidarPointStats
+#### 8.11.24 LidarPointStats
 
 Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
@@ -9261,7 +9469,7 @@ lidar_point_stats(
 ```
 
 
-#### 8.12.25 LidarRemoveDuplicates
+#### 8.11.25 LidarRemoveDuplicates
 
 Removes duplicate points from a LiDAR data set.
 
@@ -9294,7 +9502,7 @@ lidar_remove_duplicates(
 ```
 
 
-#### 8.12.26 LidarRemoveOutliers
+#### 8.11.26 LidarRemoveOutliers
 
 Removes outliers (high and low points) in a LiDAR point cloud.
 
@@ -9330,7 +9538,7 @@ lidar_remove_outliers(
 ```
 
 
-#### 8.12.27 LidarSegmentation
+#### 8.11.27 LidarSegmentation
 
 Segments a LiDAR point cloud based on normal vectors.
 
@@ -9369,7 +9577,7 @@ lidar_segmentation(
 ```
 
 
-#### 8.12.28 LidarSegmentationBasedFilter
+#### 8.11.28 LidarSegmentationBasedFilter
 
 Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
@@ -9410,7 +9618,7 @@ lidar_segmentation_based_filter(
 ```
 
 
-#### 8.12.29 LidarThin
+#### 8.11.29 LidarThin
 
 Thins a LiDAR point cloud, reducing point density.
 
@@ -9449,7 +9657,7 @@ lidar_thin(
 ```
 
 
-#### 8.12.30 LidarThinHighDensity
+#### 8.11.30 LidarThinHighDensity
 
 Thins points from high density areas within a LiDAR point cloud.
 
@@ -9487,7 +9695,7 @@ lidar_thin_high_density(
 ```
 
 
-#### 8.12.31 LidarTile
+#### 8.11.31 LidarTile
 
 Tiles a LiDAR LAS file into multiple LAS files.
 
@@ -9526,7 +9734,7 @@ lidar_tile(
 ```
 
 
-#### 8.12.32 LidarTileFootprint
+#### 8.11.32 LidarTileFootprint
 
 Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters are not specified, the tool works with all LAS files contained within the working directory.
 
@@ -9557,7 +9765,7 @@ lidar_tile_footprint(
 ```
 
 
-#### 8.12.33 LidarTinGridding
+#### 8.11.33 LidarTinGridding
 
 Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -9603,7 +9811,7 @@ lidar_tin_gridding(
 ```
 
 
-#### 8.12.34 LidarTophatTransform
+#### 8.11.34 LidarTophatTransform
 
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
@@ -9637,7 +9845,7 @@ lidar_tophat_transform(
 ```
 
 
-#### 8.12.35 NormalVectors
+#### 8.11.35 NormalVectors
 
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
@@ -9670,7 +9878,7 @@ normal_vectors(
 ```
 
 
-#### 8.12.36 SelectTilesByPolygon
+#### 8.11.36 SelectTilesByPolygon
 
 Copies LiDAR tiles overlapping with a polygon into an output directory.
 
@@ -9703,9 +9911,9 @@ select_tiles_by_polygon(
 
 ```
 
-### 8.13 Math and Stats Tools
+### 8.12 Math and Stats Tools
 
-#### 8.13.1 AbsoluteValue
+#### 8.12.1 AbsoluteValue
 
 Calculates the absolute value of every cell in a raster.
 
@@ -9736,7 +9944,7 @@ absolute_value(
 ```
 
 
-#### 8.13.2 Add
+#### 8.12.2 Add
 
 Performs an addition operation on two rasters or a raster and a constant value.
 
@@ -9769,7 +9977,7 @@ add(
 ```
 
 
-#### 8.13.3 And
+#### 8.12.3 And
 
 Performs a logical AND operator on two Boolean raster images.
 
@@ -9802,7 +10010,7 @@ And(
 ```
 
 
-#### 8.13.4 Anova
+#### 8.12.4 Anova
 
 Performs an analysis of variance (ANOVA) test on a raster dataset.
 
@@ -9835,7 +10043,7 @@ anova(
 ```
 
 
-#### 8.13.5 ArcCos
+#### 8.12.5 ArcCos
 
 Returns the inverse cosine (arccos) of each values in a raster.
 
@@ -9866,7 +10074,7 @@ arc_cos(
 ```
 
 
-#### 8.13.6 ArcSin
+#### 8.12.6 ArcSin
 
 Returns the inverse sine (arcsin) of each values in a raster.
 
@@ -9897,7 +10105,7 @@ arc_sin(
 ```
 
 
-#### 8.13.7 ArcTan
+#### 8.12.7 ArcTan
 
 Returns the inverse tangent (arctan) of each values in a raster.
 
@@ -9928,7 +10136,7 @@ arc_tan(
 ```
 
 
-#### 8.13.8 Atan2
+#### 8.12.8 Atan2
 
 Returns the 2-argument inverse tangent (atan2).
 
@@ -9961,7 +10169,7 @@ atan2(
 ```
 
 
-#### 8.13.9 AttributeCorrelation
+#### 8.12.9 AttributeCorrelation
 
 Performs a correlation analysis on attribute fields from a vector database.
 
@@ -9992,7 +10200,7 @@ attribute_correlation(
 ```
 
 
-#### 8.13.10 AttributeHistogram
+#### 8.12.10 AttributeHistogram
 
 Creates a histogram for the field values of a vector's attribute table.
 
@@ -10026,7 +10234,7 @@ attribute_histogram(
 ```
 
 
-#### 8.13.11 AttributeScattergram
+#### 8.12.11 AttributeScattergram
 
 Creates a scattergram for two field values of a vector's attribute table.
 
@@ -10064,7 +10272,7 @@ attribute_scattergram(
 ```
 
 
-#### 8.13.12 Ceil
+#### 8.12.12 Ceil
 
 Returns the smallest (closest to negative infinity) value that is greater than or equal to the values in a raster.
 
@@ -10095,7 +10303,7 @@ ceil(
 ```
 
 
-#### 8.13.13 Cos
+#### 8.12.13 Cos
 
 Returns the cosine (cos) of each values in a raster.
 
@@ -10126,7 +10334,7 @@ cos(
 ```
 
 
-#### 8.13.14 Cosh
+#### 8.12.14 Cosh
 
 Returns the hyperbolic cosine (cosh) of each values in a raster.
 
@@ -10157,7 +10365,7 @@ cosh(
 ```
 
 
-#### 8.13.15 CrispnessIndex
+#### 8.12.15 CrispnessIndex
 
 Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
 
@@ -10191,7 +10399,7 @@ crispness_index(
 ```
 
 
-#### 8.13.16 CrossTabulation
+#### 8.12.16 CrossTabulation
 
 Performs a cross-tabulation on two categorical images.
 
@@ -10225,7 +10433,7 @@ cross_tabulation(
 ```
 
 
-#### 8.13.17 CumulativeDistribution
+#### 8.12.17 CumulativeDistribution
 
 Converts a raster image to its cumulative distribution function.
 
@@ -10256,7 +10464,7 @@ cumulative_distribution(
 ```
 
 
-#### 8.13.18 Decrement
+#### 8.12.18 Decrement
 
 Decreases the values of each grid cell in an input raster by 1.0 (see also InPlaceSubtract).
 
@@ -10287,7 +10495,7 @@ decrement(
 ```
 
 
-#### 8.13.19 Divide
+#### 8.12.19 Divide
 
 Performs a division operation on two rasters or a raster and a constant value.
 
@@ -10320,7 +10528,7 @@ divide(
 ```
 
 
-#### 8.13.20 EqualTo
+#### 8.12.20 EqualTo
 
 Performs a equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -10353,7 +10561,7 @@ equal_to(
 ```
 
 
-#### 8.13.21 Exp
+#### 8.12.21 Exp
 
 Returns the exponential (base e) of values in a raster.
 
@@ -10384,7 +10592,7 @@ exp(
 ```
 
 
-#### 8.13.22 Exp2
+#### 8.12.22 Exp2
 
 Returns the exponential (base 2) of values in a raster.
 
@@ -10415,7 +10623,7 @@ exp2(
 ```
 
 
-#### 8.13.23 ExtractRasterStatistics
+#### 8.12.23 ExtractRasterStatistics
 
 Extracts descriptive statistics for a group of patches in a raster.
 
@@ -10457,7 +10665,7 @@ extract_raster_statistics(
 ```
 
 
-#### 8.13.24 Floor
+#### 8.12.24 Floor
 
 Returns the largest (closest to positive infinity) value that is less than or equal to the values in a raster.
 
@@ -10488,7 +10696,7 @@ floor(
 ```
 
 
-#### 8.13.25 GreaterThan
+#### 8.12.25 GreaterThan
 
 Performs a greater-than comparison operation on two rasters or a raster and a constant value.
 
@@ -10524,7 +10732,7 @@ greater_than(
 ```
 
 
-#### 8.13.26 ImageAutocorrelation
+#### 8.12.26 ImageAutocorrelation
 
 Performs Moran's I analysis on two or more input images.
 
@@ -10558,7 +10766,7 @@ image_autocorrelation(
 ```
 
 
-#### 8.13.27 ImageCorrelation
+#### 8.12.27 ImageCorrelation
 
 Performs image correlation on two or more input images.
 
@@ -10590,7 +10798,7 @@ image_correlation(
 ```
 
 
-#### 8.13.28 ImageRegression
+#### 8.12.28 ImageRegression
 
 Performs image regression analysis on two input images.
 
@@ -10629,7 +10837,7 @@ image_regression(
 ```
 
 
-#### 8.13.29 InPlaceAdd
+#### 8.12.29 InPlaceAdd
 
 Performs an in-place addition operation (input1 += input2).
 
@@ -10663,7 +10871,7 @@ in_place_add(
 ```
 
 
-#### 8.13.30 InPlaceDivide
+#### 8.12.30 InPlaceDivide
 
 Performs an in-place division operation (input1 /= input2).
 
@@ -10697,7 +10905,7 @@ in_place_divide(
 ```
 
 
-#### 8.13.31 InPlaceMultiply
+#### 8.12.31 InPlaceMultiply
 
 Performs an in-place multiplication operation (input1 *= input2).
 
@@ -10731,7 +10939,7 @@ in_place_multiply(
 ```
 
 
-#### 8.13.32 InPlaceSubtract
+#### 8.12.32 InPlaceSubtract
 
 Performs an in-place subtraction operation (input1 -= input2).
 
@@ -10765,7 +10973,7 @@ in_place_subtract(
 ```
 
 
-#### 8.13.33 Increment
+#### 8.12.33 Increment
 
 Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd).
 
@@ -10796,7 +11004,7 @@ increment(
 ```
 
 
-#### 8.13.34 IntegerDivision
+#### 8.12.34 IntegerDivision
 
 Performs an integer division operation on two rasters or a raster and a constant value.
 
@@ -10830,7 +11038,7 @@ integer_division(
 ```
 
 
-#### 8.13.35 IsNoData
+#### 8.12.35 IsNoData
 
 Identifies NoData valued pixels in an image.
 
@@ -10861,7 +11069,7 @@ is_no_data(
 ```
 
 
-#### 8.13.36 KappaIndex
+#### 8.12.36 KappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on two categorical raster files.
 
@@ -10894,7 +11102,7 @@ kappa_index(
 ```
 
 
-#### 8.13.37 KsTestForNormality
+#### 8.12.37 KsTestForNormality
 
 Evaluates whether the values in a raster are normally distributed.
 
@@ -10930,7 +11138,7 @@ ks_test_for_normality(
 ```
 
 
-#### 8.13.38 LessThan
+#### 8.12.38 LessThan
 
 Performs a less-than comparison operation on two rasters or a raster and a constant value.
 
@@ -10966,7 +11174,7 @@ less_than(
 ```
 
 
-#### 8.13.39 ListUniqueValues
+#### 8.12.39 ListUniqueValues
 
 Lists the unique values contained in a field witin a vector's attribute table.
 
@@ -11000,7 +11208,7 @@ list_unique_values(
 ```
 
 
-#### 8.13.40 Ln
+#### 8.12.40 Ln
 
 Returns the natural logarithm of values in a raster.
 
@@ -11031,7 +11239,7 @@ ln(
 ```
 
 
-#### 8.13.41 Log10
+#### 8.12.41 Log10
 
 Returns the base-10 logarithm of values in a raster.
 
@@ -11062,7 +11270,7 @@ log10(
 ```
 
 
-#### 8.13.42 Log2
+#### 8.12.42 Log2
 
 Returns the base-2 logarithm of values in a raster.
 
@@ -11093,7 +11301,7 @@ log2(
 ```
 
 
-#### 8.13.43 Max
+#### 8.12.43 Max
 
 Performs a MAX operation on two rasters or a raster and a constant value.
 
@@ -11126,7 +11334,7 @@ max(
 ```
 
 
-#### 8.13.44 Min
+#### 8.12.44 Min
 
 Performs a MIN operation on two rasters or a raster and a constant value.
 
@@ -11159,7 +11367,7 @@ min(
 ```
 
 
-#### 8.13.45 Modulo
+#### 8.12.45 Modulo
 
 Performs a modulo operation on two rasters or a raster and a constant value.
 
@@ -11192,7 +11400,7 @@ modulo(
 ```
 
 
-#### 8.13.46 Multiply
+#### 8.12.46 Multiply
 
 Performs a multiplication operation on two rasters or a raster and a constant value.
 
@@ -11225,7 +11433,7 @@ multiply(
 ```
 
 
-#### 8.13.47 Negate
+#### 8.12.47 Negate
 
 Changes the sign of values in a raster or the 0-1 values of a Boolean raster.
 
@@ -11256,7 +11464,7 @@ negate(
 ```
 
 
-#### 8.13.48 Not
+#### 8.12.48 Not
 
 Performs a logical NOT operator on two Boolean raster images.
 
@@ -11289,7 +11497,7 @@ Not(
 ```
 
 
-#### 8.13.49 NotEqualTo
+#### 8.12.49 NotEqualTo
 
 Performs a not-equal-to comparison operation on two rasters or a raster and a constant value.
 
@@ -11322,7 +11530,7 @@ not_equal_to(
 ```
 
 
-#### 8.13.50 Or
+#### 8.12.50 Or
 
 Performs a logical OR operator on two Boolean raster images.
 
@@ -11355,7 +11563,7 @@ Or(
 ```
 
 
-#### 8.13.51 Power
+#### 8.12.51 Power
 
 Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
 
@@ -11388,7 +11596,7 @@ power(
 ```
 
 
-#### 8.13.52 PrincipalComponentAnalysis
+#### 8.12.52 PrincipalComponentAnalysis
 
 Performs a principal component analysis (PCA) on a multi-spectral dataset.
 
@@ -11424,7 +11632,7 @@ principal_component_analysis(
 ```
 
 
-#### 8.13.53 Quantiles
+#### 8.12.53 Quantiles
 
 Transforms raster values into quantiles.
 
@@ -11457,7 +11665,7 @@ quantiles(
 ```
 
 
-#### 8.13.54 RandomField
+#### 8.12.54 RandomField
 
 Creates an image containing random values.
 
@@ -11488,7 +11696,7 @@ random_field(
 ```
 
 
-#### 8.13.55 RandomSample
+#### 8.12.55 RandomSample
 
 Creates an image containing randomly located sample grid cells with unique IDs.
 
@@ -11521,7 +11729,7 @@ random_sample(
 ```
 
 
-#### 8.13.56 RasterHistogram
+#### 8.12.56 RasterHistogram
 
 Creates a histogram from raster values.
 
@@ -11552,7 +11760,7 @@ raster_histogram(
 ```
 
 
-#### 8.13.57 RasterSummaryStats
+#### 8.12.57 RasterSummaryStats
 
 Measures a rasters average, standard deviation, num. non-nodata cells, and total.
 
@@ -11581,7 +11789,7 @@ raster_summary_stats(
 ```
 
 
-#### 8.13.58 Reciprocal
+#### 8.12.58 Reciprocal
 
 Returns the reciprocal (i.e. 1 / z) of values in a raster.
 
@@ -11612,7 +11820,7 @@ reciprocal(
 ```
 
 
-#### 8.13.59 RescaleValueRange
+#### 8.12.59 RescaleValueRange
 
 Performs a min-max contrast stretch on an input greytone image.
 
@@ -11656,7 +11864,7 @@ rescale_value_range(
 ```
 
 
-#### 8.13.60 RootMeanSquareError
+#### 8.12.60 RootMeanSquareError
 
 Calculates the RMSE and other accuracy statistics.
 
@@ -11687,7 +11895,7 @@ root_mean_square_error(
 ```
 
 
-#### 8.13.61 Round
+#### 8.12.61 Round
 
 Rounds the values in an input raster to the nearest integer value.
 
@@ -11718,7 +11926,7 @@ round(
 ```
 
 
-#### 8.13.62 Sin
+#### 8.12.62 Sin
 
 Returns the sine (sin) of each values in a raster.
 
@@ -11749,7 +11957,7 @@ sin(
 ```
 
 
-#### 8.13.63 Sinh
+#### 8.12.63 Sinh
 
 Returns the hyperbolic sine (sinh) of each values in a raster.
 
@@ -11780,7 +11988,7 @@ sinh(
 ```
 
 
-#### 8.13.64 Square
+#### 8.12.64 Square
 
 Squares the values in a raster.
 
@@ -11811,7 +12019,7 @@ square(
 ```
 
 
-#### 8.13.65 SquareRoot
+#### 8.12.65 SquareRoot
 
 Returns the square root of the values in a raster.
 
@@ -11842,7 +12050,7 @@ square_root(
 ```
 
 
-#### 8.13.66 Subtract
+#### 8.12.66 Subtract
 
 Performs a differencing operation on two rasters or a raster and a constant value.
 
@@ -11875,7 +12083,7 @@ subtract(
 ```
 
 
-#### 8.13.67 Tan
+#### 8.12.67 Tan
 
 Returns the tangent (tan) of each values in a raster.
 
@@ -11906,7 +12114,7 @@ tan(
 ```
 
 
-#### 8.13.68 Tanh
+#### 8.12.68 Tanh
 
 Returns the hyperbolic tangent (tanh) of each values in a raster.
 
@@ -11937,7 +12145,7 @@ tanh(
 ```
 
 
-#### 8.13.69 ToDegrees
+#### 8.12.69 ToDegrees
 
 Converts a raster from radians to degrees.
 
@@ -11968,7 +12176,7 @@ to_degrees(
 ```
 
 
-#### 8.13.70 ToRadians
+#### 8.12.70 ToRadians
 
 Converts a raster from degrees to radians.
 
@@ -11999,7 +12207,7 @@ to_radians(
 ```
 
 
-#### 8.13.71 TrendSurface
+#### 8.12.71 TrendSurface
 
 Estimates the trend surface of an input raster file.
 
@@ -12032,7 +12240,7 @@ trend_surface(
 ```
 
 
-#### 8.13.72 TrendSurfaceVectorPoints
+#### 8.12.72 TrendSurfaceVectorPoints
 
 Estimates a trend surface from vector points.
 
@@ -12071,7 +12279,7 @@ trend_surface_vector_points(
 ```
 
 
-#### 8.13.73 Truncate
+#### 8.12.73 Truncate
 
 Truncates the values in a raster to the desired number of decimal places.
 
@@ -12104,7 +12312,7 @@ truncate(
 ```
 
 
-#### 8.13.74 TurningBandsSimulation
+#### 8.12.74 TurningBandsSimulation
 
 Creates an image containing random values based on a turning-bands simulation.
 
@@ -12140,7 +12348,7 @@ turning_bands_simulation(
 ```
 
 
-#### 8.13.75 Xor
+#### 8.12.75 Xor
 
 Performs a logical XOR operator on two Boolean raster images.
 
@@ -12173,7 +12381,7 @@ xor(
 ```
 
 
-#### 8.13.76 ZScores
+#### 8.12.76 ZScores
 
 Standardizes the values in an input raster by converting to z-scores.
 
@@ -12203,9 +12411,9 @@ z_scores(
 
 ```
 
-### 8.14 Stream Network Analysis
+### 8.13 Stream Network Analysis
 
-#### 8.14.1 DistanceToOutlet
+#### 8.13.1 DistanceToOutlet
 
 Calculates the distance of stream grid cells to the channel network outlet cell.
 
@@ -12246,7 +12454,7 @@ distance_to_outlet(
 ```
 
 
-#### 8.14.2 ExtractStreams
+#### 8.13.2 ExtractStreams
 
 Extracts stream grid cells from a flow accumulation raster.
 
@@ -12282,7 +12490,7 @@ extract_streams(
 ```
 
 
-#### 8.14.3 ExtractValleys
+#### 8.13.3 ExtractValleys
 
 Identifies potential valley bottom grid cells based on local topolography alone.
 
@@ -12326,7 +12534,7 @@ extract_valleys(
 ```
 
 
-#### 8.14.4 FarthestChannelHead
+#### 8.13.4 FarthestChannelHead
 
 Calculates the distance to the furthest upstream channel head for each stream cell.
 
@@ -12367,7 +12575,7 @@ farthest_channel_head(
 ```
 
 
-#### 8.14.5 FindMainStem
+#### 8.13.5 FindMainStem
 
 Finds the main stem, based on stream lengths, of each stream network.
 
@@ -12408,7 +12616,7 @@ find_main_stem(
 ```
 
 
-#### 8.14.6 HackStreamOrder
+#### 8.13.6 HackStreamOrder
 
 Assigns the Hack stream order to each tributary in a stream network.
 
@@ -12449,7 +12657,7 @@ hack_stream_order(
 ```
 
 
-#### 8.14.7 HortonStreamOrder
+#### 8.13.7 HortonStreamOrder
 
 Assigns the Horton stream order to each tributary in a stream network.
 
@@ -12490,7 +12698,7 @@ horton_stream_order(
 ```
 
 
-#### 8.14.8 LengthOfUpstreamChannels
+#### 8.13.8 LengthOfUpstreamChannels
 
 Calculates the total length of channels upstream.
 
@@ -12531,7 +12739,7 @@ length_of_upstream_channels(
 ```
 
 
-#### 8.14.9 LongProfile
+#### 8.13.9 LongProfile
 
 Plots the stream longitudinal profiles for one or more rivers.
 
@@ -12569,7 +12777,7 @@ long_profile(
 ```
 
 
-#### 8.14.10 LongProfileFromPoints
+#### 8.13.10 LongProfileFromPoints
 
 Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
 
@@ -12607,7 +12815,7 @@ long_profile_from_points(
 ```
 
 
-#### 8.14.11 RasterStreamsToVector
+#### 8.13.11 RasterStreamsToVector
 
 Converts a raster stream file into a vector file.
 
@@ -12646,7 +12854,7 @@ raster_streams_to_vector(
 ```
 
 
-#### 8.14.12 RasterizeStreams
+#### 8.13.12 RasterizeStreams
 
 Rasterizes vector streams based on Lindsay (2016) method.
 
@@ -12684,7 +12892,7 @@ rasterize_streams(
 ```
 
 
-#### 8.14.13 RemoveShortStreams
+#### 8.13.13 RemoveShortStreams
 
 Removes short first-order streams from a stream network.
 
@@ -12722,7 +12930,7 @@ remove_short_streams(
 ```
 
 
-#### 8.14.14 ShreveStreamMagnitude
+#### 8.13.14 ShreveStreamMagnitude
 
 Assigns the Shreve stream magnitude to each link in a stream network.
 
@@ -12763,7 +12971,7 @@ shreve_stream_magnitude(
 ```
 
 
-#### 8.14.15 StrahlerStreamOrder
+#### 8.13.15 StrahlerStreamOrder
 
 Assigns the Strahler stream order to each link in a stream network.
 
@@ -12804,7 +13012,7 @@ strahler_stream_order(
 ```
 
 
-#### 8.14.16 StreamLinkClass
+#### 8.13.16 StreamLinkClass
 
 Identifies the exterior/interior links and nodes in a stream network.
 
@@ -12845,7 +13053,7 @@ stream_link_class(
 ```
 
 
-#### 8.14.17 StreamLinkIdentifier
+#### 8.13.17 StreamLinkIdentifier
 
 Assigns a unique identifier to each link in a stream network.
 
@@ -12886,7 +13094,7 @@ stream_link_identifier(
 ```
 
 
-#### 8.14.18 StreamLinkLength
+#### 8.13.18 StreamLinkLength
 
 Estimates the length of each link (or tributary) in a stream network.
 
@@ -12928,7 +13136,7 @@ stream_link_length(
 ```
 
 
-#### 8.14.19 StreamLinkSlope
+#### 8.13.19 StreamLinkSlope
 
 Estimates the average slope of each link (or tributary) in a stream network.
 
@@ -12972,7 +13180,7 @@ stream_link_slope(
 ```
 
 
-#### 8.14.20 StreamSlopeContinuous
+#### 8.13.20 StreamSlopeContinuous
 
 Estimates the slope of each grid cell in a stream network.
 
@@ -13016,7 +13224,7 @@ stream_slope_continuous(
 ```
 
 
-#### 8.14.21 TopologicalStreamOrder
+#### 8.13.21 TopologicalStreamOrder
 
 Assigns each link in a stream network its topological order.
 
@@ -13057,7 +13265,7 @@ topological_stream_order(
 ```
 
 
-#### 8.14.22 TributaryIdentifier
+#### 8.13.22 TributaryIdentifier
 
 Assigns a unique identifier to each tributary in a stream network.
 
@@ -13096,6 +13304,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

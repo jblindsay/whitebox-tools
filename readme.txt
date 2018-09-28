@@ -60,14 +60,23 @@ Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     AddPointCoordinatesToTable
     CentroidVector
+    ElongationRatio
     ExtendVectorLines
+    HoleProportion
     LidarConstructVectorTIN and ConstructVectorTIN
     LidarTINGridding and TINGridding
+    LinesToPolygons
     Medoid
+    MinimumBoundingCircle
+    MultiPartToSinglePart
+    PerimeterAreaRatio and CompactnessRatio
     PolygonArea and PolygonPerimeter
     RasterStreamsToVector
     RasterToVectorPoints
+    RelatedCircumscribingCircle
+    RemovePolygonHoles
     ShapeComplexityIndex
+    SumOverlay
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
   LidarGroundPointFilter tool. In this way, if the fixed-radius search yields fewer
@@ -75,6 +84,8 @@ Version 0.11.0 (XX-XX-2018)
   out to identify the k nearest neighbours. This can be preferable for cases where
   the point density varies significantly in the data set, e.g. in the case of 
   terrestrial LiDAR point clouds.
+- The MinimumBoundingBox tool has been modified to take an optional minimization 
+  criteria, including minimum box area, length, width, or perimeter.
 - Fixed a bug that resulted in a 0.5 m offset in the positioning of interpolated grids.
 
 

@@ -49,7 +49,7 @@ impl ShapeComplexityIndex {
     pub fn new() -> ShapeComplexityIndex {
         // public constructor
         let name = "ShapeComplexityIndex".to_string();
-        let toolbox = "GIS Analysis".to_string();
+        let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
         let description =
             "Calculates overall polygon shape complexity or irregularity.".to_string();
 
@@ -77,7 +77,7 @@ impl ShapeComplexityIndex {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=points.shp",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=polygons.shp",
             short_exe, name
         ).replace("*", &sep);
 

@@ -29,7 +29,7 @@ impl ExtendVectorLines {
     pub fn new() -> ExtendVectorLines {
         // public constructor
         let name = "ExtendVectorLines".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Extends vector lines by a specified distance.".to_string();
 
         let mut parameters = vec![];

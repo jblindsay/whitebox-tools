@@ -1,5 +1,5 @@
 /* 
-This tool is part of the WhiteboxTools geospatial analysis library.
+This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/08/2018
 Last Modified: 30/08/2018
@@ -51,9 +51,21 @@ impl Point2D {
         Point2D::new(x, y)
     }
 
+    /// Calculates the cross product
+    pub fn cross(&self, other: Self) -> f64 {
+        self.x * other.y - self.y * other.x
+    }
+
     /// Calculate Euclidean distance between the point and another.
     pub fn distance(&self, other: &Self) -> f64 {
         ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y)).sqrt()
+    }
+
+    /// Calculate squared Euclidean distance between the point and another.
+    pub fn distance_squared(&self, p: &Self) -> f64 {
+        let dx = self.x - p.x;
+        let dy = self.y - p.y;
+        dx * dx + dy * dy
     }
 
     /// Draw a horizontal line through this point, connect this point with the other,
@@ -107,12 +119,6 @@ impl Point2D {
         } else {
             Direction::Ahead
         }
-    }
-
-    pub fn distance_squared(&self, p: &Self) -> f64 {
-        let dx = self.x - p.x;
-        let dy = self.y - p.y;
-        dx * dx + dy * dy
     }
 
     pub fn orient(&self, q: &Self, r: &Self) -> bool {

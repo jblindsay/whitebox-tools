@@ -6,7 +6,7 @@ Last Modified: 15/09/2018
 License: MIT
 */
 
-use algorithms::minimum_bounding_box;
+use algorithms::{minimum_bounding_box, MinimizationCriterion};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -34,7 +34,7 @@ impl PolygonShortAxis {
     pub fn new() -> PolygonShortAxis {
         // public constructor
         let name = "PolygonShortAxis".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "This tool can be used to map the short axis of polygon features.".to_string();
 
@@ -202,7 +202,7 @@ impl WhiteboxTool for PolygonShortAxis {
             for i in 0..record.num_points as usize {
                 points.push(Point2D::new(record.points[i].x, record.points[i].y));
             }
-            let mbb_points = minimum_bounding_box(&mut points);
+            let mbb_points = minimum_bounding_box(&mut points, MinimizationCriterion::Area);
 
             // first, find the centre point of the mbb
             let centre = Point2D::centre_point(&mbb_points);

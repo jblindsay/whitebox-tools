@@ -34,7 +34,7 @@ impl CreateRectangularVectorGrid {
     pub fn new() -> CreateRectangularVectorGrid {
         // public constructor
         let name = "CreateRectangularVectorGrid".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Creates a rectangular vector grid.".to_string();
 
         let mut parameters = vec![];

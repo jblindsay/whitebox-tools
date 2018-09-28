@@ -34,7 +34,7 @@ impl TINGridding {
     pub fn new() -> TINGridding {
         // public constructor
         let name = "TINGridding".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points."
                 .to_string();

@@ -34,7 +34,7 @@ impl CreateHexagonalVectorGrid {
     pub fn new() -> CreateHexagonalVectorGrid {
         // public constructor
         let name = "CreateHexagonalVectorGrid".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Creates a hexagonal vector grid.".to_string();
 
         let mut parameters = vec![];

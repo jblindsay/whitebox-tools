@@ -32,7 +32,7 @@ impl ConstructVectorTIN {
     pub fn new() -> ConstructVectorTIN {
         // public constructor
         let name = "ConstructVectorTIN".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Creates a vector triangular irregular network (TIN) for a set of vector points."
                 .to_string();

@@ -33,7 +33,7 @@ impl EliminateCoincidentPoints {
     pub fn new() -> EliminateCoincidentPoints {
         // public constructor
         let name = "EliminateCoincidentPoints".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Removes any coincident, or nearly coincident, points from a vector points file."
                 .to_string();

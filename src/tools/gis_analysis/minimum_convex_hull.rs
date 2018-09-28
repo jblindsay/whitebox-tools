@@ -29,7 +29,7 @@ impl MinimumConvexHull {
     pub fn new() -> MinimumConvexHull {
         // public constructor
         let name = "MinimumConvexHull".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description = "Creates a vector convex polygon around vector features.".to_string();
 
         let mut parameters = vec![];

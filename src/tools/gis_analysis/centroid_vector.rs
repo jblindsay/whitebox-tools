@@ -32,7 +32,7 @@ impl CentroidVector {
     pub fn new() -> CentroidVector {
         // public constructor
         let name = "CentroidVector".to_string();
-        let toolbox = "GIS Tools".to_string();
+        let toolbox = "GIS Analysis".to_string();
         let description =
             "Identifes the centroid point of a vector polyline or polygon feature or a group of vector points."
                 .to_string();

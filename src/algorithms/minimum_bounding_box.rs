@@ -10,6 +10,14 @@ use algorithms::convex_hull;
 use std::f64;
 use structures::Point2D;
 
+#[derive(Copy, Clone, Debug)]
+pub enum MinimizationCriterion {
+    Area,
+    Perimeter,
+    Length,
+    Width,
+}
+
 /// Returns the minimum bounding box (MBB) around a set of points (Vec<Point2D>.
 /// The algorithm first calculates the convex hull around the points. The MBB
 /// will be aligned with one of the sides of the convex hull. If minimize_area
@@ -17,7 +25,24 @@ use structures::Point2D;
 /// otherwise, it will minimize box perimeter.
 ///
 /// The return is a Vec<Point2D> of the four corner points of the MBB.
-pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
+pub fn minimum_bounding_box(
+    points: &mut Vec<Point2D>,
+    min_criterion: MinimizationCriterion,
+) -> Vec<Point2D> {
+    // Get the minimization criteria function
+    let min_fn: Box<Fn(f64, f64) -> f64> = match min_criterion {
+        MinimizationCriterion::Area => Box::new(|axis1: f64, axis2: f64| -> f64 { axis1 * axis2 }),
+        MinimizationCriterion::Perimeter => {
+            Box::new(|axis1: f64, axis2: f64| -> f64 { 2f64 * axis1 + 2f64 * axis2 })
+        }
+        MinimizationCriterion::Length => {
+            Box::new(|axis1: f64, axis2: f64| -> f64 { axis1.max(axis2) })
+        }
+        MinimizationCriterion::Width => {
+            Box::new(|axis1: f64, axis2: f64| -> f64 { axis1.min(axis2) })
+        }
+    };
+
     // Get the convex hull
     let hull = convex_hull(points);
     let num_hull_pts = hull.len();
@@ -54,8 +79,8 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
     let (mut x, mut y): (f64, f64);
     let (mut x_rotated, mut y_rotated): (f64, f64);
     let (mut new_x_axis, mut new_y_axis): (f64, f64);
-    let mut current_area: f64;
-    let mut min_area = f64::INFINITY;
+    let mut current_metric: f64;
+    let mut min_metric = f64::INFINITY;
     let right_angle = f64::consts::PI / 2f64;
 
     // Rotate the hull points to align with the orientation of each side in order.
@@ -89,9 +114,9 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
 
         new_x_axis = (east - west).abs();
         new_y_axis = (north - south).abs();
-        current_area = new_x_axis * new_y_axis;
-        if current_area < min_area {
-            min_area = current_area;
+        current_metric = min_fn(new_x_axis, new_y_axis);
+        if current_metric < min_metric {
+            min_metric = current_metric;
             x_axis = new_x_axis;
             y_axis = new_y_axis;
             slope = if x_axis > y_axis {
@@ -148,7 +173,7 @@ pub fn minimum_bounding_box(points: &mut Vec<Point2D>) -> Vec<Point2D> {
 
 #[cfg(test)]
 mod test {
-    use super::minimum_bounding_box;
+    use super::{minimum_bounding_box, MinimizationCriterion};
     use structures::Point2D;
     #[test]
     fn test_minimum_bounding_box() {
@@ -162,7 +187,7 @@ mod test {
         points.push(Point2D::new(15.0, 15.0));
         points.push(Point2D::new(-15.0, -15.0));
 
-        let mbb = minimum_bounding_box(&mut points);
+        let mbb = minimum_bounding_box(&mut points, MinimizationCriterion::Area);
 
         let mbb_should_be = vec![
             Point2D::new(15f64, 15.000000000000002f64),
