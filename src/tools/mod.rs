@@ -74,6 +74,7 @@ impl ToolManager {
         tool_names.push("HighestPosition".to_string());
         tool_names.push("HoleProportion".to_string());
         tool_names.push("IdwInterpolation".to_string());
+        tool_names.push("LayerFootprint".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
@@ -81,6 +82,7 @@ impl ToolManager {
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinimumBoundingBox".to_string());
         tool_names.push("MinimumBoundingCircle".to_string());
+        tool_names.push("MinimumBoundingEnvelope".to_string());
         tool_names.push("MinimumConvexHull".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PercentEqualTo".to_string());
@@ -503,6 +505,7 @@ impl ToolManager {
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
             "holeproportion" => Some(Box::new(tools::gis_analysis::HoleProportion::new())),
             "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
+            "layerfootprint" => Some(Box::new(tools::gis_analysis::LayerFootprint::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
@@ -511,6 +514,9 @@ impl ToolManager {
             "minimumboundingbox" => Some(Box::new(tools::gis_analysis::MinimumBoundingBox::new())),
             "minimumboundingcircle" => {
                 Some(Box::new(tools::gis_analysis::MinimumBoundingCircle::new()))
+            }
+            "minimumboundingenvelope" => {
+                Some(Box::new(tools::gis_analysis::MinimumBoundingEnvelope::new()))
             }
             "minimumconvexhull" => Some(Box::new(tools::gis_analysis::MinimumConvexHull::new())),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),

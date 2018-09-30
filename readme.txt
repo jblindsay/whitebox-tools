@@ -60,16 +60,17 @@ Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     AddPointCoordinatesToTable
     CentroidVector
+    CompactnessRatio and PerimeterAreaRatio
     ElongationRatio
     ExtendVectorLines
     HoleProportion
+    LayerFootprint
     LidarConstructVectorTIN and ConstructVectorTIN
     LidarTINGridding and TINGridding
     LinesToPolygons
     Medoid
-    MinimumBoundingCircle
+    MinimumBoundingCircle and MinimumBoundingEnvelope
     MultiPartToSinglePart and SinglePartToMultiPart
-    PerimeterAreaRatio and CompactnessRatio
     PolygonArea and PolygonPerimeter
     RasterStreamsToVector
     RasterToVectorPoints

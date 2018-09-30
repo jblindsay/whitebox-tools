@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/09/2018
-Last Modified: 04/09/2018
+Last Modified: 31/09/2018
 License: MIT
 */
 
@@ -17,6 +17,8 @@ use vector::ShapefileGeometry;
 use vector::*;
 
 /// Creates a vector convex polygon around vector features.
+///
+/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumBoundingEnvelope`
 pub struct MinimumConvexHull {
     name: String,
     description: String,
@@ -133,7 +135,7 @@ impl WhiteboxTool for MinimumConvexHull {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut individual_feature_hulls = true;
+        let mut individual_feature_hulls = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -170,7 +172,7 @@ impl WhiteboxTool for MinimumConvexHull {
         }
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let mut progress: usize = 0;
+        let mut progress: usize;
         let mut old_progress: usize = 1;
 
         let start = time::now();
@@ -267,7 +269,7 @@ impl WhiteboxTool for MinimumConvexHull {
                 }
             }
 
-            if progress != old_progress {
+            if verbose {
                 println!("Finding convex hull...");
             }
             let mut hull_points = convex_hull(&mut points);

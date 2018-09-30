@@ -17,8 +17,9 @@ use vector::*;
 /// This tool can be used to convert a vector file containing single-part features into a vector
 /// containing multi-part features. The user has the option to either group features based on an
 /// ID Field (`--field` flag), which is a categorical field within the vector's attribute table.
-/// If no `--field` flag is specified, all features will be grouped together into one large
-/// multi-part vector.
+/// The ID Field should either be of String (text) or Integer type. Fields containing decimal values
+/// are not good candidates for the ID Field. **If no `--field` flag is specified, all features will
+/// be grouped together into one large multi-part vector**.
 ///
 /// This tool works for vectors containing either point, line, or polygon features.
 /// Since vectors of a POINT ShapeType cannot represent multi-part features, the ShapeType of the

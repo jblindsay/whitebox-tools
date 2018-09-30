@@ -1,14 +1,13 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 14/09/2018
+Created: 31/09/2018
 Last Modified: 31/09/2018
 License: MIT
 */
 
-use algorithms::smallest_enclosing_circle;
+use raster::*;
 use std::env;
-use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Point2D;
@@ -17,11 +16,20 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
-/// circle to completely enclose a feature.
+/// This tool creates a vector polygon footprint of the area covered by a raster grid or vector
+/// layer. It will create a vector rectangle corresponding to the bounding box. The user must
+/// specify the name of the input file, which may be either a Whitebox raster or a vector, and
+/// the name of the output file.
 ///
-/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
-pub struct MinimumBoundingCircle {
+/// If an input raster grid is specified which has an irregular shape, i.e. it contains NoData
+/// values at the edges, the resulting vector will still correspond to the full grid extent,
+/// ignoring the irregular boundary. If this is not the desired effect, you should reclass the
+/// grid such that all cells containing valid values are assigned some positive, non-zero value,
+/// and then use the `RasterToVectorPolygons` tool to vectorize the irregular-shaped extent
+/// boundary.
+///
+/// **See Also**: `MinimumBoundingEnvelope`, `RasterToVectorPolygons`
+pub struct LayerFootprint {
     name: String,
     description: String,
     toolbox: String,
@@ -29,20 +37,21 @@ pub struct MinimumBoundingCircle {
     example_usage: String,
 }
 
-impl MinimumBoundingCircle {
-    pub fn new() -> MinimumBoundingCircle {
+impl LayerFootprint {
+    pub fn new() -> LayerFootprint {
         // public constructor
-        let name = "MinimumBoundingCircle".to_string();
+        let name = "LayerFootprint".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.".to_string();
+            "Creates a vector polygon footprint of the area covered by a raster grid or vector layer."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input Vector File".to_owned(),
+            name: "Input Raster or Vector File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input vector file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+            description: "Input raster or vector file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::RasterAndVector(
                 VectorGeometryType::Any,
             )),
             default_value: None,
@@ -60,17 +69,6 @@ impl MinimumBoundingCircle {
             optional: false,
         });
 
-        parameters.push(ToolParameter {
-            name: "Find bounding rectangles around each individual feature.".to_owned(),
-            flags: vec!["--features".to_owned()],
-            description:
-                "Find the minimum bounding rectangles around each individual vector feature"
-                    .to_owned(),
-            parameter_type: ParameterType::Boolean,
-            default_value: Some("true".to_owned()),
-            optional: true,
-        });
-
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -83,11 +81,11 @@ impl MinimumBoundingCircle {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp",
             short_exe, name
         ).replace("*", &sep);
 
-        MinimumBoundingCircle {
+        LayerFootprint {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -97,7 +95,7 @@ impl MinimumBoundingCircle {
     }
 }
 
-impl WhiteboxTool for MinimumBoundingCircle {
+impl WhiteboxTool for LayerFootprint {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -140,7 +138,6 @@ impl WhiteboxTool for MinimumBoundingCircle {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut individual_feature_hulls = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -171,14 +168,10 @@ impl WhiteboxTool for MinimumBoundingCircle {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-features" || flag_val == "-feature" {
-                individual_feature_hulls = true;
             }
         }
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let mut progress: usize;
-        let mut old_progress: usize = 1;
 
         let start = time::now();
 
@@ -196,59 +189,32 @@ impl WhiteboxTool for MinimumBoundingCircle {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        let input = Shapefile::read(&input_file)?;
+        // is it a vector or a raster file?
+        if input_file.to_lowercase().ends_with(".shp") {
+            // The input file is a vector
+            let input = Shapefile::read(&input_file)?;
 
-        if input.header.shape_type.base_shape_type() == ShapeType::Point {
-            // Finding hulls around individual points makes no sense. Likely
-            // the user didn't intend to supply the --hull flag.
-            individual_feature_hulls = false;
-        }
-
-        let num_circle_vertices = 128usize;
-        let angular_resolution = 2f64 * PI / num_circle_vertices as f64;
-
-        if individual_feature_hulls {
             // create output file
             let mut output =
-                Shapefile::initialize_using_file(&output_file, &input, ShapeType::Polygon, true)?;
+                Shapefile::initialize_using_file(&output_file, &input, ShapeType::Polygon, false)?;
+            // Add an FID attribute to the table
+            output
+                .attributes
+                .add_field(&AttributeField::new("FID", FieldDataType::Int, 3u8, 0u8));
 
-            for record_num in 0..input.num_records {
-                let record = input.get_record(record_num);
+            let mut envelope_points = vec![];
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_min));
+            envelope_points.push(Point2D::new(input.header.x_max, input.header.y_min));
+            envelope_points.push(Point2D::new(input.header.x_max, input.header.y_max));
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_max));
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_min));
 
-                let mbc = smallest_enclosing_circle(&record.points);
-
-                let mut points: Vec<Point2D> = Vec::with_capacity(num_circle_vertices + 1);
-                let (mut x, mut y): (f64, f64);
-                let mut slope: f64;
-                for i in 0..num_circle_vertices {
-                    slope = i as f64 * angular_resolution;
-                    x = mbc.center.x + mbc.radius * slope.sin();
-                    y = mbc.center.y + mbc.radius * slope.cos();
-                    points.push(Point2D::new(x, y));
-                }
-
-                // now add a last point same as the first.
-                slope = 0f64;
-                x = mbc.center.x + mbc.radius * slope.sin();
-                y = mbc.center.y + mbc.radius * slope.cos();
-                points.push(Point2D::new(x, y));
-
-                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                sfg.add_part(&points);
-                output.add_record(sfg);
-
-                let atts = input.attributes.get_record(record_num);
-                output.attributes.add_record(atts.clone(), false);
-
-                if verbose {
-                    progress =
-                        (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
-                    if progress != old_progress {
-                        println!("Progress: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
+            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+            sfg.add_part(&envelope_points);
+            output.add_record(sfg);
+            output
+                .attributes
+                .add_record(vec![FieldData::Int(1i32)], false);
 
             if verbose {
                 println!("Saving data...")
@@ -260,54 +226,26 @@ impl WhiteboxTool for MinimumBoundingCircle {
                 Err(e) => return Err(e),
             };
         } else {
+            // it's likely a raster file instead
+            let input = Raster::new(&input_file, "r")?;
+
             // create output file
             let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
-            output.projection = input.projection.clone();
+            output.projection = input.configs.coordinate_ref_system_wkt.clone();
+            // Add an FID attribute to the table
+            output
+                .attributes
+                .add_field(&AttributeField::new("FID", FieldDataType::Int, 3u8, 0u8));
 
-            // add the attributes
-            let fid = AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8);
-            output.attributes.add_field(&fid);
-
-            let mut points: Vec<Point2D> = vec![];
-            for record_num in 0..input.num_records {
-                let record = input.get_record(record_num);
-                for i in 0..record.num_points as usize {
-                    points.push(Point2D::new(record.points[i].x, record.points[i].y));
-                }
-
-                if verbose {
-                    progress =
-                        (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
-                    if progress != old_progress {
-                        println!("Reading points: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-
-            if verbose {
-                println!("Finding minimum bounding circle...");
-            }
-            let mbc = smallest_enclosing_circle(&points);
-
-            let mut points: Vec<Point2D> = Vec::with_capacity(num_circle_vertices + 1);
-            let (mut x, mut y): (f64, f64);
-            let mut slope: f64;
-            for i in 0..num_circle_vertices {
-                slope = i as f64 * angular_resolution;
-                x = mbc.center.x + mbc.radius * slope.sin();
-                y = mbc.center.y + mbc.radius * slope.cos();
-                points.push(Point2D::new(x, y));
-            }
-
-            // now add a last point same as the first.
-            slope = 0f64;
-            x = mbc.center.x + mbc.radius * slope.sin();
-            y = mbc.center.y + mbc.radius * slope.cos();
-            points.push(Point2D::new(x, y));
+            let mut envelope_points = vec![];
+            envelope_points.push(Point2D::new(input.configs.west, input.configs.south));
+            envelope_points.push(Point2D::new(input.configs.east, input.configs.south));
+            envelope_points.push(Point2D::new(input.configs.east, input.configs.north));
+            envelope_points.push(Point2D::new(input.configs.west, input.configs.north));
+            envelope_points.push(Point2D::new(input.configs.west, input.configs.south));
 
             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            sfg.add_part(&points);
+            sfg.add_part(&envelope_points);
             output.add_record(sfg);
             output
                 .attributes

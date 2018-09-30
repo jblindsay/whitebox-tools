@@ -1,13 +1,13 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 14/09/2018
+Created: 31/09/2018
 Last Modified: 31/09/2018
 License: MIT
 */
 
-use algorithms::{minimum_bounding_box, MinimizationCriterion};
 use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Point2D;
@@ -16,14 +16,13 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
-/// completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
-/// bounding box for each rotation, and finding the box with the smallest area, length, width, or perimeter. The
-/// MBB is needed to compute several shape indices, such as the Elongation Ratio. The `MinimumBoundingEnvelop`
-/// tool can be used to calculate the axis-aligned bounding rectangle around each feature in a vector file.
+/// This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
+/// rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y
+/// axis of the coordinate system. The `MinimumBoundingBox` can be used instead to find the smallest possible
+/// non-axis aligned rectangular envelope.
 ///
-/// **See Also**: `MinimumBoundingCircle`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
-pub struct MinimumBoundingBox {
+/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumConvexHull`
+pub struct MinimumBoundingEnvelope {
     name: String,
     description: String,
     toolbox: String,
@@ -31,13 +30,14 @@ pub struct MinimumBoundingBox {
     example_usage: String,
 }
 
-impl MinimumBoundingBox {
-    pub fn new() -> MinimumBoundingBox {
+impl MinimumBoundingEnvelope {
+    pub fn new() -> MinimumBoundingEnvelope {
         // public constructor
-        let name = "MinimumBoundingBox".to_string();
+        let name = "MinimumBoundingEnvelope".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "Creates a vector minimum bounding rectangle around vector features.".to_string();
+            "Creates a vector axis-aligned minimum bounding rectangle (envelope) around vector features."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -63,16 +63,6 @@ impl MinimumBoundingBox {
         });
 
         parameters.push(ToolParameter {
-            name: "Minimization Criterion".to_owned(),
-            flags: vec!["--criterion".to_owned()],
-            description: "Minimization criterion; options include 'area' (default), 'length', 'width', and 'perimeter'."
-                .to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["area".to_owned(), "length".to_owned(), "width".to_owned(), "perimeter".to_owned()]),
-            default_value: Some("area".to_owned()),
-            optional: true,
-        });
-
-        parameters.push(ToolParameter {
             name: "Find bounding rectangles around each individual feature.".to_owned(),
             flags: vec!["--features".to_owned()],
             description:
@@ -95,11 +85,11 @@ impl MinimumBoundingBox {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --criterion=length --features",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
             short_exe, name
         ).replace("*", &sep);
 
-        MinimumBoundingBox {
+        MinimumBoundingEnvelope {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -109,7 +99,7 @@ impl MinimumBoundingBox {
     }
 }
 
-impl WhiteboxTool for MinimumBoundingBox {
+impl WhiteboxTool for MinimumBoundingEnvelope {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -153,7 +143,6 @@ impl WhiteboxTool for MinimumBoundingBox {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut individual_feature_hulls = false;
-        let mut min_criterion = MinimizationCriterion::Area;
 
         // read the arguments
         if args.len() == 0 {
@@ -184,21 +173,6 @@ impl WhiteboxTool for MinimumBoundingBox {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-criterion" {
-                let criteria_str = if keyval {
-                    vec[1].to_string()
-                } else {
-                    args[i + 1].to_string()
-                };
-                min_criterion = if criteria_str.contains("len") {
-                    MinimizationCriterion::Length
-                } else if criteria_str.contains("wi") {
-                    MinimizationCriterion::Width
-                } else if criteria_str.contains("per") {
-                    MinimizationCriterion::Perimeter
-                } else {
-                    MinimizationCriterion::Area
-                };
             } else if flag_val == "-features" || flag_val == "-feature" {
                 individual_feature_hulls = true;
             }
@@ -227,7 +201,7 @@ impl WhiteboxTool for MinimumBoundingBox {
         let input = Shapefile::read(&input_file)?;
 
         if input.header.shape_type.base_shape_type() == ShapeType::Point {
-            // Finding hulls around individual points makes no sense. Likely
+            // Finding hulls around individual points makes no sense. Likely,
             // the user didn't intend to supply the --hull flag.
             individual_feature_hulls = false;
         }
@@ -243,13 +217,16 @@ impl WhiteboxTool for MinimumBoundingBox {
                 for i in 0..record.num_points as usize {
                     points.push(Point2D::new(record.points[i].x, record.points[i].y));
                 }
-                let mut mbb_points = minimum_bounding_box(&mut points, min_criterion);
+                let mut envelope_points = vec![];
+                envelope_points.push(Point2D::new(record.x_min, record.y_min));
+                envelope_points.push(Point2D::new(record.x_max, record.y_min));
+                envelope_points.push(Point2D::new(record.x_max, record.y_max));
+                envelope_points.push(Point2D::new(record.x_min, record.y_max));
                 // now add a last point same as the first.
-                let p = mbb_points[0];
-                mbb_points.push(p);
+                envelope_points.push(Point2D::new(record.x_min, record.y_min));
 
                 let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                sfg.add_part(&mbb_points);
+                sfg.add_part(&envelope_points);
                 output.add_record(sfg);
 
                 let atts = input.attributes.get_record(record_num);
@@ -280,36 +257,19 @@ impl WhiteboxTool for MinimumBoundingBox {
             output.projection = input.projection.clone();
 
             // add the attributes
-            let fid = AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8);
+            let fid = AttributeField::new("FID", FieldDataType::Int, 3u8, 0u8);
             output.attributes.add_field(&fid);
 
-            let mut points: Vec<Point2D> = vec![];
-            for record_num in 0..input.num_records {
-                let record = input.get_record(record_num);
-                for i in 0..record.num_points as usize {
-                    points.push(Point2D::new(record.points[i].x, record.points[i].y));
-                }
-
-                if verbose {
-                    progress =
-                        (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
-                    if progress != old_progress {
-                        println!("Reading points: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-
-            if verbose {
-                println!("Finding convex hull...");
-            }
-            let mut mbb_points = minimum_bounding_box(&mut points, min_criterion);
+            let mut envelope_points = vec![];
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_min));
+            envelope_points.push(Point2D::new(input.header.x_max, input.header.y_min));
+            envelope_points.push(Point2D::new(input.header.x_max, input.header.y_max));
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_max));
             // now add a last point same as the first.
-            let p = mbb_points[0];
-            mbb_points.push(p);
+            envelope_points.push(Point2D::new(input.header.x_min, input.header.y_min));
 
             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            sfg.add_part(&mbb_points);
+            sfg.add_part(&envelope_points);
             output.add_record(sfg);
             output
                 .attributes
