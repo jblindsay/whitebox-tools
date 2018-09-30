@@ -28,7 +28,7 @@ pub struct AttributeHeader {
     pub language_driver_id: u8,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DateData {
     pub year: u16,
     pub month: u8,
@@ -56,7 +56,7 @@ impl fmt::Display for DateData {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldData {
     Int(i32),
     // Int64(i64),

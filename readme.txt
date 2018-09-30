@@ -68,7 +68,7 @@ Version 0.11.0 (XX-XX-2018)
     LinesToPolygons
     Medoid
     MinimumBoundingCircle
-    MultiPartToSinglePart
+    MultiPartToSinglePart and SinglePartToMultiPart
     PerimeterAreaRatio and CompactnessRatio
     PolygonArea and PolygonPerimeter
     RasterStreamsToVector
@@ -86,8 +86,9 @@ Version 0.11.0 (XX-XX-2018)
   terrestrial LiDAR point clouds.
 - The MinimumBoundingBox tool has been modified to take an optional minimization 
   criteria, including minimum box area, length, width, or perimeter.
-- Fixed a bug that resulted in a 0.5 m offset in the positioning of interpolated grids.
-
+- Fixed: Bug that resulted in a 0.5 m offset in the positioning of interpolated grids.
+- Fixed: Viewshed tool now emits an intelligible error when the viewing station does 
+  not overlap with the DEM.
 
 Version 0.10.0 (16-09-2018)
 - The following tools were added to the project:

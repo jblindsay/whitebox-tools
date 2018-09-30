@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 10, 2018
-Last Modified: January 10, 2018
+Last Modified: 30/09/2018
 License: MIT
 
 Help: This tool can be used to calculate the viewshed (i.e. the visible area) from a 

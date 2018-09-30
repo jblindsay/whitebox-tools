@@ -2,7 +2,7 @@
 This file is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/04/2018
-Last Modified: 31/08/2018
+Last Modified: 30/09/2018
 License: MIT
 */
 use std::f64;
@@ -115,6 +115,8 @@ impl ShapefileGeometry {
     /// Adds a part of Point2Ds to the ShapefileGeometry.
     pub fn add_part(&mut self, points: &[Point2D]) {
         self.parts.push(self.points.len() as i32);
+        self.num_parts += 1i32;
+
         for p in points {
             self.points.push(*p);
             if p.x < self.x_min {
@@ -131,7 +133,6 @@ impl ShapefileGeometry {
             }
         }
         self.num_points += points.len() as i32;
-        self.num_parts += 1i32;
     }
 
     /// Adds a part of Point2Ds and measures to the ShapefileGeometry.
@@ -504,7 +505,7 @@ impl ShapeType {
             | &ShapeType::MultiPoint
             | &ShapeType::Point
             | &ShapeType::Polygon
-            | &ShapeType::PolyLine => ShapeTypeDimension::Normal,
+            | &ShapeType::PolyLine => ShapeTypeDimension::XY,
             &ShapeType::MultiPointM
             | &ShapeType::PointM
             | &ShapeType::PolygonM
@@ -520,7 +521,7 @@ impl ShapeType {
 #[repr(u16)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum ShapeTypeDimension {
-    Normal,
+    XY,
     Measure,
     Z,
 }

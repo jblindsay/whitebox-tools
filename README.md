@@ -182,6 +182,7 @@ The library currently contains more than 360 tools, which are each grouped based
 - ***ReinitializeAttributeTable***: initializes a vector's attribute table deleting all fields but the feature ID (FID).
 - ***RemovePolygonHoles***: Removes holes within the features of a vector polygon file.
 - ***SetNodataValue***: Assign a specified value in an input image to the NoData value.
+- ***SinglePartToMultiPart***: Converts a vector file containing multi-part features into a vector containing only single-part features.
 - ***VectorLinesToRaster***: Converts a vector containing polylines into a raster.
 - ***VectorPointsToRaster***: Converts a vector containing points into a raster.
 - ***VectorPolygonsToRaster***: Converts a vector containing polygons into a raster.
