@@ -56,8 +56,11 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.11.0 (XX-XX-2018)
-- The following tools were added to the project:
+Version 0.11.0 (01-10-2018)
+- This release is marked by the addition of several vector data processing capabilities. 
+  Most notably, this includes support for TINing and TIN based gridding (vector and 
+  LiDAR), as well as several vector patch shape indicies. The following tools were 
+  added to the project:
     AddPointCoordinatesToTable
     CentroidVector
     CompactnessRatio
@@ -97,6 +100,7 @@ Version 0.11.0 (XX-XX-2018)
 - Fixed: Bug that resulted in a 0.5 m offset in the positioning of interpolated grids.
 - Fixed: Viewshed tool now emits an intelligible error when the viewing station does 
   not overlap with the DEM.
+
 
 Version 0.10.0 (16-09-2018)
 - The following tools were added to the project:

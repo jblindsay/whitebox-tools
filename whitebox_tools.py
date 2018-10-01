@@ -360,9 +360,22 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
+
+    def add_point_coordinates_to_table(self, i, callback=None):
+        """Modifies the attribute table of a point vector by adding fields containing each point's X and Y coordinates.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('add_point_coordinates_to_table', args, callback) # returns 1 if error
 
     def convert_nodata_to_zero(self, i, output, callback=None):
         """Converts nodata values in a raster to zero.
@@ -408,33 +421,35 @@ class WhiteboxTools(object):
         if headers: args.append("--headers")
         return self.run_tool('export_table_to_csv', args, callback) # returns 1 if error
 
-    def idw_interpolation(self, i, field, output, use_z=False, weight=2.0, radius=None, min_points=None, cell_size=None, base=None, callback=None):
-        """Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+    def lines_to_polygons(self, i, output, callback=None):
+        """Converts vector polylines to polygons.
 
         Keyword arguments:
 
-        i -- Input vector Points file. 
-        field -- Input field name in attribute table. 
-        use_z -- Use z-coordinate instead of field?. 
-        output -- Output raster file. 
-        weight -- IDW weight value. 
-        radius -- Search Radius. 
-        min_points -- Minimum number of points. 
-        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
-        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        i -- Input vector line file. 
+        output -- Output vector polygon file. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
-        args.append("--field='{}'".format(field))
-        if use_z: args.append("--use_z")
         args.append("--output='{}'".format(output))
-        args.append("--weight={}".format(weight))
-        if radius is not None: args.append("--radius='{}'".format(radius))
-        if min_points is not None: args.append("--min_points='{}'".format(min_points))
-        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
-        if base is not None: args.append("--base='{}'".format(base))
-        return self.run_tool('idw_interpolation', args, callback) # returns 1 if error
+        return self.run_tool('lines_to_polygons', args, callback) # returns 1 if error
+
+    def multi_part_to_single_part(self, i, output, exclude_holes=True, callback=None):
+        """Converts a vector file containing multi-part features into a vector containing only single-part features.
+
+        Keyword arguments:
+
+        i -- Input vector line or polygon file. 
+        output -- Output vector line or polygon file. 
+        exclude_holes -- Exclude hole parts from the feature splitting? (holes will continue to belong to their features in output.). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if exclude_holes: args.append("--exclude_holes")
+        return self.run_tool('multi_part_to_single_part', args, callback) # returns 1 if error
 
     def new_raster_from_base(self, base, output, value="nodata", data_type="float", callback=None):
         """Creates a new raster using a base image.
@@ -480,6 +495,20 @@ callback -- Custom function for handling tool text outputs.
         args.append("--input='{}'".format(i))
         return self.run_tool('print_geo_tiff_tags', args, callback) # returns 1 if error
 
+    def raster_to_vector_points(self, i, output, callback=None):
+        """Converts a raster dataset to a vector of the POINT shapetype.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output vector points file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('raster_to_vector_points', args, callback) # returns 1 if error
+
     def reinitialize_attribute_table(self, i, callback=None):
         """Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
 
@@ -491,6 +520,20 @@ callback -- Custom function for handling tool text outputs.
         args = []
         args.append("--input='{}'".format(i))
         return self.run_tool('reinitialize_attribute_table', args, callback) # returns 1 if error
+
+    def remove_polygon_holes(self, i, output, callback=None):
+        """Removes holes within the features of a vector polygon file.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('remove_polygon_holes', args, callback) # returns 1 if error
 
     def set_nodata_value(self, i, output, back_value=0.0, callback=None):
         """Assign a specified value in an input image to the NoData value.
@@ -507,6 +550,22 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         args.append("--back_value={}".format(back_value))
         return self.run_tool('set_nodata_value', args, callback) # returns 1 if error
+
+    def single_part_to_multi_part(self, i, output, field=None, callback=None):
+        """Converts a vector file containing multi-part features into a vector containing only single-part features.
+
+        Keyword arguments:
+
+        i -- Input vector line or polygon file. 
+        field -- Grouping ID field name in attribute table. 
+        output -- Output vector line or polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('single_part_to_multi_part', args, callback) # returns 1 if error
 
     def vector_lines_to_raster(self, i, output, field="FID", nodata=True, cell_size=None, base=None, callback=None):
         """Converts a vector containing polylines into a raster.
@@ -614,6 +673,20 @@ callback -- Custom function for handling tool text outputs.
         if text_output: args.append("--text_output")
         return self.run_tool('centroid', args, callback) # returns 1 if error
 
+    def centroid_vector(self, i, output, callback=None):
+        """Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('centroid_vector', args, callback) # returns 1 if error
+
     def clump(self, i, output, diag=True, zero_back=False, callback=None):
         """Groups cells that form physically discrete areas, assigning them unique identifiers.
 
@@ -631,6 +704,42 @@ callback -- Custom function for handling tool text outputs.
         if diag: args.append("--diag")
         if zero_back: args.append("--zero_back")
         return self.run_tool('clump', args, callback) # returns 1 if error
+
+    def construct_vector_tin(self, i, output, field=None, use_z=False, callback=None):
+        """Creates a vector triangular irregular network (TIN) for a set of vector points.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        return self.run_tool('construct_vector_tin', args, callback) # returns 1 if error
+
+    def create_hexagonal_vector_grid(self, i, output, width, orientation="horizontal", callback=None):
+        """Creates a hexagonal vector grid.
+
+        Keyword arguments:
+
+        i -- Input base file. 
+        output -- Output vector polygon file. 
+        width -- The grid cell width. 
+        orientation -- Grid Orientation, 'horizontal' or 'vertical'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--width='{}'".format(width))
+        args.append("--orientation={}".format(orientation))
+        return self.run_tool('create_hexagonal_vector_grid', args, callback) # returns 1 if error
 
     def create_plane(self, base, output, gradient=15.0, aspect=90.0, constant=0.0, callback=None):
         """Creates a raster image based on the equation for a simple plane.
@@ -651,6 +760,76 @@ callback -- Custom function for handling tool text outputs.
         args.append("--aspect={}".format(aspect))
         args.append("--constant={}".format(constant))
         return self.run_tool('create_plane', args, callback) # returns 1 if error
+
+    def create_rectangular_vector_grid(self, i, output, width, height, xorig=0, yorig=0, callback=None):
+        """Creates a rectangular vector grid.
+
+        Keyword arguments:
+
+        i -- Input base file. 
+        output -- Output vector polygon file. 
+        width -- The grid cell width. 
+        height -- The grid cell height. 
+        xorig -- The grid origin x-coordinate. 
+        yorig -- The grid origin y-coordinate. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--width='{}'".format(width))
+        args.append("--height='{}'".format(height))
+        args.append("--xorig={}".format(xorig))
+        args.append("--yorig={}".format(yorig))
+        return self.run_tool('create_rectangular_vector_grid', args, callback) # returns 1 if error
+
+    def eliminate_coincident_points(self, i, output, tolerance, callback=None):
+        """Removes any coincident, or nearly coincident, points from a vector points file.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector polygon file. 
+        tolerance -- The distance tolerance for points. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--tolerance='{}'".format(tolerance))
+        return self.run_tool('eliminate_coincident_points', args, callback) # returns 1 if error
+
+    def extend_vector_lines(self, i, output, dist, extend="both ends", callback=None):
+        """Extends vector lines by a specified distance.
+
+        Keyword arguments:
+
+        i -- Input vector polyline file. 
+        output -- Output vector polyline file. 
+        dist -- The distance to extend. 
+        extend -- Extend direction, 'both ends' (default), 'line start', 'line end'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--dist='{}'".format(dist))
+        args.append("--extend={}".format(extend))
+        return self.run_tool('extend_vector_lines', args, callback) # returns 1 if error
+
+    def extract_nodes(self, i, output, callback=None):
+        """Converts vector lines or polygons into vertex points.
+
+        Keyword arguments:
+
+        i -- Input vector lines or polygon file. 
+        output -- Output vector points file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('extract_nodes', args, callback) # returns 1 if error
 
     def extract_raster_values_at_points(self, inputs, points, callback=None):
         """Extracts the values of raster(s) at vector point locations.
@@ -681,6 +860,180 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         args.append("--out_type={}".format(out_type))
         return self.run_tool('find_lowest_or_highest_points', args, callback) # returns 1 if error
+
+    def idw_interpolation(self, i, field, output, use_z=False, weight=2.0, radius=None, min_points=None, cell_size=None, base=None, callback=None):
+        """Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use z-coordinate instead of field?. 
+        output -- Output raster file. 
+        weight -- IDW weight value. 
+        radius -- Search Radius. 
+        min_points -- Minimum number of points. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        args.append("--weight={}".format(weight))
+        if radius is not None: args.append("--radius='{}'".format(radius))
+        if min_points is not None: args.append("--min_points='{}'".format(min_points))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('idw_interpolation', args, callback) # returns 1 if error
+
+    def layer_footprint(self, i, output, callback=None):
+        """Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
+
+        Keyword arguments:
+
+        i -- Input raster or vector file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('layer_footprint', args, callback) # returns 1 if error
+
+    def medoid(self, i, output, callback=None):
+        """Calculates the medoid for a series of vector features contained in a shapefile.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('medoid', args, callback) # returns 1 if error
+
+    def minimum_bounding_box(self, i, output, criterion="area", features=True, callback=None):
+        """Creates a vector minimum bounding rectangle around vector features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector polygon file. 
+        criterion -- Minimization criterion; options include 'area' (default), 'length', 'width', and 'perimeter'. 
+        features -- Find the minimum bounding rectangles around each individual vector feature. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--criterion={}".format(criterion))
+        if features: args.append("--features")
+        return self.run_tool('minimum_bounding_box', args, callback) # returns 1 if error
+
+    def minimum_bounding_circle(self, i, output, features=True, callback=None):
+        """Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector polygon file. 
+        features -- Find the minimum bounding rectangles around each individual vector feature. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if features: args.append("--features")
+        return self.run_tool('minimum_bounding_circle', args, callback) # returns 1 if error
+
+    def minimum_bounding_envelope(self, i, output, features=True, callback=None):
+        """Creates a vector axis-aligned minimum bounding rectangle (envelope) around vector features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector polygon file. 
+        features -- Find the minimum bounding rectangles around each individual vector feature. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if features: args.append("--features")
+        return self.run_tool('minimum_bounding_envelope', args, callback) # returns 1 if error
+
+    def minimum_convex_hull(self, i, output, features=True, callback=None):
+        """Creates a vector convex polygon around vector features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector polygon file. 
+        features -- Find the hulls around each vector feature. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if features: args.append("--features")
+        return self.run_tool('minimum_convex_hull', args, callback) # returns 1 if error
+
+    def polygon_area(self, i, callback=None):
+        """Calculates the area of vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('polygon_area', args, callback) # returns 1 if error
+
+    def polygon_long_axis(self, i, output, callback=None):
+        """This tool can be used to map the long axis of polygon features.
+
+        Keyword arguments:
+
+        i -- Input vector polygons file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('polygon_long_axis', args, callback) # returns 1 if error
+
+    def polygon_perimeter(self, i, callback=None):
+        """Calculates the perimeter of vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('polygon_perimeter', args, callback) # returns 1 if error
+
+    def polygon_short_axis(self, i, output, callback=None):
+        """This tool can be used to map the short axis of polygon features.
+
+        Keyword arguments:
+
+        i -- Input vector polygons file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('polygon_short_axis', args, callback) # returns 1 if error
 
     def raster_cell_assignment(self, i, output, assign="column", callback=None):
         """Assign row or column number to cells.
@@ -751,6 +1104,60 @@ callback -- Custom function for handling tool text outputs.
         args.append("--reclass_file='{}'".format(reclass_file))
         args.append("--output='{}'".format(output))
         return self.run_tool('reclass_from_file', args, callback) # returns 1 if error
+
+    def smooth_vectors(self, i, output, filter=3, callback=None):
+        """Smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType.
+
+        Keyword arguments:
+
+        i -- Input vector POLYLINE or POLYGON file. 
+        output -- Output vector file. 
+        filter -- The filter size, any odd integer greater than or equal to 3; default is 3. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        return self.run_tool('smooth_vectors', args, callback) # returns 1 if error
+
+    def tin_gridding(self, i, output, resolution, field=None, use_z=False, callback=None):
+        """Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
+        output -- Output vector polygon file. 
+        resolution -- Output raster's grid resolution. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        args.append("--resolution='{}'".format(resolution))
+        return self.run_tool('tin_gridding', args, callback) # returns 1 if error
+
+    def vector_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
+        """Hex-bins a set of vector points.
+
+        Keyword arguments:
+
+        i -- Input base file. 
+        output -- Output vector polygon file. 
+        width -- The grid cell width. 
+        orientation -- Grid Orientation, 'horizontal' or 'vertical'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--width='{}'".format(width))
+        args.append("--orientation={}".format(orientation))
+        return self.run_tool('vector_hex_binning', args, callback) # returns 1 if error
 
     ###############################
     # GIS Analysis/Distance Tools #
@@ -1070,6 +1477,20 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('pick_from_list', args, callback) # returns 1 if error
 
+    def sum_overlay(self, inputs, output, callback=None):
+        """Calculates the sum for each grid cell from a group of raster images.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('sum_overlay', args, callback) # returns 1 if error
+
     def weighted_overlay(self, factors, weights, output, cost=None, constraints=None, scale_max=1.0, callback=None):
         """Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 
@@ -1112,6 +1533,18 @@ callback -- Custom function for handling tool text outputs.
     # GIS Analysis/Patch Shape Tools #
     ##################################
 
+    def compactness_ratio(self, i, callback=None):
+        """Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('compactness_ratio', args, callback) # returns 1 if error
+
     def edge_proportion(self, i, output, output_text=False, callback=None):
         """Calculate the proportion of cells in a raster polygon that are edge cells.
 
@@ -1128,6 +1561,18 @@ callback -- Custom function for handling tool text outputs.
         if output_text: args.append("--output_text")
         return self.run_tool('edge_proportion', args, callback) # returns 1 if error
 
+    def elongation_ratio(self, i, callback=None):
+        """Calculates the elongation ratio for vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('elongation_ratio', args, callback) # returns 1 if error
+
     def find_patch_or_class_edge_cells(self, i, output, callback=None):
         """Finds all cells located on the edge of patch or class features.
 
@@ -1141,6 +1586,30 @@ callback -- Custom function for handling tool text outputs.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('find_patch_or_class_edge_cells', args, callback) # returns 1 if error
+
+    def hole_proportion(self, i, callback=None):
+        """Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('hole_proportion', args, callback) # returns 1 if error
+
+    def perimeter_area_ratio(self, i, callback=None):
+        """Calculates the perimeter-area ratio of vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('perimeter_area_ratio', args, callback) # returns 1 if error
 
     def radius_of_gyration(self, i, output, text_output=False, callback=None):
         """Calculates the distance of cells from their polygon's centroid.
@@ -1158,241 +1627,29 @@ callback -- Custom function for handling tool text outputs.
         if text_output: args.append("--text_output")
         return self.run_tool('radius_of_gyration', args, callback) # returns 1 if error
 
-    #############
-    # GIS Tools #
-    #############
-
-    def centroid_vector(self, i, output, callback=None):
-        """Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+    def related_circumscribing_circle(self, i, callback=None):
+        """Calculates the related circumscribing circle of vector polygons.
 
         Keyword arguments:
 
-        i -- Input vector file. 
-        output -- Output vector file. 
-        callback -- Custom function for handling tool text outputs.
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('centroid_vector', args, callback) # returns 1 if error
+        return self.run_tool('related_circumscribing_circle', args, callback) # returns 1 if error
 
-    def construct_vector_tin(self, i, output, field=None, use_z=False, callback=None):
-        """Creates a vector triangular irregular network (TIN) for a set of vector points.
+    def shape_complexity_index(self, i, callback=None):
+        """Calculates overall polygon shape complexity or irregularity.
 
         Keyword arguments:
 
-        i -- Input vector points file. 
-        field -- Input field name in attribute table. 
-        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
-        output -- Output vector polygon file. 
-        callback -- Custom function for handling tool text outputs.
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
-        if field is not None: args.append("--field='{}'".format(field))
-        if use_z: args.append("--use_z")
-        args.append("--output='{}'".format(output))
-        return self.run_tool('construct_vector_tin', args, callback) # returns 1 if error
-
-    def create_hexagonal_vector_grid(self, i, output, width, orientation="horizontal", callback=None):
-        """Creates a hexagonal vector grid.
-
-        Keyword arguments:
-
-        i -- Input base file. 
-        output -- Output vector polygon file. 
-        width -- The grid cell width. 
-        orientation -- Grid Orientation, 'horizontal' or 'vertical'. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        args.append("--width='{}'".format(width))
-        args.append("--orientation={}".format(orientation))
-        return self.run_tool('create_hexagonal_vector_grid', args, callback) # returns 1 if error
-
-    def create_rectangular_vector_grid(self, i, output, width, height, xorig=0, yorig=0, callback=None):
-        """Creates a rectangular vector grid.
-
-        Keyword arguments:
-
-        i -- Input base file. 
-        output -- Output vector polygon file. 
-        width -- The grid cell width. 
-        height -- The grid cell height. 
-        xorig -- The grid origin x-coordinate. 
-        yorig -- The grid origin y-coordinate. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        args.append("--width='{}'".format(width))
-        args.append("--height='{}'".format(height))
-        args.append("--xorig={}".format(xorig))
-        args.append("--yorig={}".format(yorig))
-        return self.run_tool('create_rectangular_vector_grid', args, callback) # returns 1 if error
-
-    def eliminate_coincident_points(self, i, output, tolerance, callback=None):
-        """Removes any coincident, or nearly coincident, points from a vector points file.
-
-        Keyword arguments:
-
-        i -- Input vector file. 
-        output -- Output vector polygon file. 
-        tolerance -- The distance tolerance for points. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        args.append("--tolerance='{}'".format(tolerance))
-        return self.run_tool('eliminate_coincident_points', args, callback) # returns 1 if error
-
-    def extend_vector_lines(self, i, output, dist, extend="both ends", callback=None):
-        """Extends vector lines by a specified distance.
-
-        Keyword arguments:
-
-        i -- Input vector polyline file. 
-        output -- Output vector polyline file. 
-        dist -- The distance to extend. 
-        extend -- Extend direction, 'both ends' (default), 'line start', 'line end'. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        args.append("--dist='{}'".format(dist))
-        args.append("--extend={}".format(extend))
-        return self.run_tool('extend_vector_lines', args, callback) # returns 1 if error
-
-    def extract_nodes(self, i, output, callback=None):
-        """Converts vector lines or polygons into vertex points.
-
-        Keyword arguments:
-
-        i -- Input vector lines or polygon file. 
-        output -- Output vector points file. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('extract_nodes', args, callback) # returns 1 if error
-
-    def medoid(self, i, output, callback=None):
-        """Calculates the medoid for a series of vector features contained in a shapefile.
-
-        Keyword arguments:
-
-        i -- Input vector file. 
-        output -- Output vector file. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('medoid', args, callback) # returns 1 if error
-
-    def minimum_bounding_box(self, i, output, features=True, callback=None):
-        """Creates a vector minimum bounding rectangle around vector features.
-
-        Keyword arguments:
-
-        i -- Input vector file. 
-        output -- Output vector polygon file. 
-        features -- Find the minimum bounding rectangles around each individual vector feature. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        if features: args.append("--features")
-        return self.run_tool('minimum_bounding_box', args, callback) # returns 1 if error
-
-    def minimum_convex_hull(self, i, output, features=True, callback=None):
-        """Creates a vector convex polygon around vector features.
-
-        Keyword arguments:
-
-        i -- Input vector file. 
-        output -- Output vector polygon file. 
-        features -- Find the hulls around each vector feature. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        if features: args.append("--features")
-        return self.run_tool('minimum_convex_hull', args, callback) # returns 1 if error
-
-    def polygon_long_axis(self, i, output, callback=None):
-        """This tool can be used to map the long axis of polygon features.
-
-        Keyword arguments:
-
-        i -- Input vector polygons file. 
-        output -- Output vector polygon file. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('polygon_long_axis', args, callback) # returns 1 if error
-
-    def polygon_short_axis(self, i, output, callback=None):
-        """This tool can be used to map the short axis of polygon features.
-
-        Keyword arguments:
-
-        i -- Input vector polygons file. 
-        output -- Output vector polygon file. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        return self.run_tool('polygon_short_axis', args, callback) # returns 1 if error
-
-    def tin_gridding(self, i, output, resolution, field=None, use_z=False, callback=None):
-        """Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
-
-        Keyword arguments:
-
-        i -- Input vector points file. 
-        field -- Input field name in attribute table. 
-        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
-        output -- Output vector polygon file. 
-        resolution -- Output raster's grid resolution. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        if field is not None: args.append("--field='{}'".format(field))
-        if use_z: args.append("--use_z")
-        args.append("--output='{}'".format(output))
-        args.append("--resolution='{}'".format(resolution))
-        return self.run_tool('tin_gridding', args, callback) # returns 1 if error
-
-    def vector_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
-        """Hex-bins a set of vector points.
-
-        Keyword arguments:
-
-        i -- Input base file. 
-        output -- Output vector polygon file. 
-        width -- The grid cell width. 
-        orientation -- Grid Orientation, 'horizontal' or 'vertical'. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
-        args.append("--width='{}'".format(width))
-        args.append("--orientation={}".format(orientation))
-        return self.run_tool('vector_hex_binning', args, callback) # returns 1 if error
+        return self.run_tool('shape_complexity_index', args, callback) # returns 1 if error
 
     ############################
     # Geomorphometric Analysis #
@@ -4849,7 +5106,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('lidar_tile_footprint', args, callback) # returns 1 if error
 
     def lidar_tin_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, callback=None):
-        """Creates a raster grid based on a triangular irregular network (TIN) fitted to LiDAR points.
+        """Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 
         Keyword arguments:
 

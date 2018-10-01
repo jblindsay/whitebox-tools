@@ -36,12 +36,12 @@ documentclass: report
 \newpage
 
 
-WhiteboxTools Version 0.10  \
+WhiteboxTools Version 0.11  \
 Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-September 16, 2018  \
+October 1, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -496,7 +496,7 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](https://github.com/jblindsay/whitebox-tools/blob/master/tool_porting.md) to *WhiteboxTools*, although this is an immense task. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
-The library currently contains more than 350 tools, which are each grouped into themed toolboxes including: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the ```toolhelp``` command from the terminal, or the ```tool_help('tool_name')``` function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+The library currently contains more than 370 tools, which are each grouped into themed toolboxes including: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the ```toolhelp``` command from the terminal, or the ```tool_help('tool_name')``` function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
 
 
 
@@ -931,7 +931,41 @@ set_nodata_value(
 ```
 
 
-#### 8.1.14 VectorLinesToRaster
+#### 8.1.14 SinglePartToMultiPart
+
+Converts a vector file containing multi-part features into a vector containing only single-part features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector line or polygon file
+-\-field             Grouping ID field name in attribute table
+-o, -\-output        Output vector line or polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+single_part_to_multi_part(
+    i, 
+    output, 
+    field=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=SinglePartToMultiPart -v ^
+--wd="/path/to/data/" -i=input.shp -o=output.shp ^
+--field='COUNTRY' 
+
+
+```
+
+
+#### 8.1.15 VectorLinesToRaster
 
 Converts a vector containing polylines into a raster.
 
@@ -976,7 +1010,7 @@ vector_lines_to_raster(
 ```
 
 
-#### 8.1.15 VectorPointsToRaster
+#### 8.1.16 VectorPointsToRaster
 
 Converts a vector containing points into a raster.
 
@@ -1026,7 +1060,7 @@ vector_points_to_raster(
 ```
 
 
-#### 8.1.16 VectorPolygonsToRaster
+#### 8.1.17 VectorPolygonsToRaster
 
 Converts a vector containing polygons into a raster.
 
@@ -1582,7 +1616,38 @@ idw_interpolation(
 ```
 
 
-#### 8.2.15 Medoid
+#### 8.2.15 LayerFootprint
+
+Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster or vector file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+layer_footprint(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LayerFootprint -v --wd="/path/to/data/" ^
+-i=file.shp -o=outfile.shp 
+
+
+```
+
+
+#### 8.2.16 Medoid
 
 Calculates the medoid for a series of vector features contained in a shapefile.
 
@@ -1613,7 +1678,7 @@ medoid(
 ```
 
 
-#### 8.2.16 MinimumBoundingBox
+#### 8.2.17 MinimumBoundingBox
 
 Creates a vector minimum bounding rectangle around vector features.
 
@@ -1650,7 +1715,7 @@ minimum_bounding_box(
 ```
 
 
-#### 8.2.17 MinimumBoundingCircle
+#### 8.2.18 MinimumBoundingCircle
 
 Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.
 
@@ -1683,7 +1748,40 @@ minimum_bounding_circle(
 ```
 
 
-#### 8.2.18 MinimumConvexHull
+#### 8.2.19 MinimumBoundingEnvelope
+
+Creates a vector axis-aligned minimum bounding rectangle (envelope) around vector features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector polygon file
+-\-features          Find the minimum bounding rectangles around each individual vector feature
+
+
+*Python function*:
+
+~~~~{.python}
+minimum_bounding_envelope(
+    i, 
+    output, 
+    features=True, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MinimumBoundingEnvelope -v ^
+--wd="/path/to/data/" -i=file.shp -o=outfile.shp --features 
+
+
+```
+
+
+#### 8.2.20 MinimumConvexHull
 
 Creates a vector convex polygon around vector features.
 
@@ -1716,7 +1814,7 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.19 PolygonArea
+#### 8.2.21 PolygonArea
 
 Calculates the area of vector polygons.
 
@@ -1745,7 +1843,7 @@ polygon_area(
 ```
 
 
-#### 8.2.20 PolygonLongAxis
+#### 8.2.22 PolygonLongAxis
 
 This tool can be used to map the long axis of polygon features.
 
@@ -1776,7 +1874,7 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.21 PolygonPerimeter
+#### 8.2.23 PolygonPerimeter
 
 Calculates the perimeter of vector polygons.
 
@@ -1805,7 +1903,7 @@ polygon_perimeter(
 ```
 
 
-#### 8.2.22 PolygonShortAxis
+#### 8.2.24 PolygonShortAxis
 
 This tool can be used to map the short axis of polygon features.
 
@@ -1836,7 +1934,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.23 RasterCellAssignment
+#### 8.2.25 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -1871,7 +1969,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.24 Reclass
+#### 8.2.26 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -1913,7 +2011,7 @@ reclass(
 ```
 
 
-#### 8.2.25 ReclassEqualInterval
+#### 8.2.27 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -1951,7 +2049,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.26 ReclassFromFile
+#### 8.2.28 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -1985,7 +2083,40 @@ reclass_from_file(
 ```
 
 
-#### 8.2.27 TinGridding
+#### 8.2.29 SmoothVectors
+
+Smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector POLYLINE or POLYGON file
+-o, -\-output        Output vector file
+-\-filter            The filter size, any odd integer greater than or equal to 3; default is 3
+
+
+*Python function*:
+
+~~~~{.python}
+smooth_vectors(
+    i, 
+    output, 
+    filter=3, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=SmoothVectors -v --wd="/path/to/data/" ^
+-i=in_file.shp -o=out_file.shp --filter=9 
+
+
+```
+
+
+#### 8.2.30 TinGridding
 
 Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 
@@ -2026,7 +2157,7 @@ tin_gridding(
 ```
 
 
-#### 8.2.28 VectorHexBinning
+#### 8.2.31 VectorHexBinning
 
 Hex-bins a set of vector points.
 
