@@ -60,24 +60,31 @@ Version 0.11.0 (XX-XX-2018)
 - The following tools were added to the project:
     AddPointCoordinatesToTable
     CentroidVector
-    CompactnessRatio and PerimeterAreaRatio
+    CompactnessRatio
+    ConstructVectorTIN
     ElongationRatio
     ExtendVectorLines
     HoleProportion
     LayerFootprint
-    LidarConstructVectorTIN and ConstructVectorTIN
-    LidarTINGridding and TINGridding
+    LidarConstructVectorTIN
+    LidarTINGridding
     LinesToPolygons
     Medoid
-    MinimumBoundingCircle and MinimumBoundingEnvelope
-    MultiPartToSinglePart and SinglePartToMultiPart
-    PolygonArea and PolygonPerimeter
+    MinimumBoundingCircle
+    MinimumBoundingEnvelope
+    MultiPartToSinglePart
+    PerimeterAreaRatio
+    PolygonArea
+    PolygonPerimeter
     RasterStreamsToVector
     RasterToVectorPoints
     RelatedCircumscribingCircle
     RemovePolygonHoles
     ShapeComplexityIndex
+    SinglePartToMultiPart
+    SmoothVectors
     SumOverlay
+    TINGridding
 
 - Added a minimum number of neighbours criteria in the neighbourhood search of the
   LidarGroundPointFilter tool. In this way, if the fixed-radius search yields fewer
