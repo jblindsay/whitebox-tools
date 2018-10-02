@@ -12,7 +12,8 @@ extern crate time;
 pub mod attributes;
 pub mod geometry;
 pub use self::attributes::{
-    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, ShapefileAttributes,
+    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
+    ShapefileAttributes,
 };
 pub use self::geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
@@ -23,6 +24,7 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter, Error, ErrorKind};
+use std::path::Path;
 use std::str;
 use structures::Point2D;
 
@@ -155,6 +157,14 @@ impl Shapefile {
             sf.attributes.header.num_fields = sf.attributes.fields.len() as u32;
         }
         Ok(sf)
+    }
+
+    /// Returns the filename, in shortened form (e.g. file.shp).
+    pub fn get_short_filename(&self) -> String {
+        let path = Path::new(&self.file_name);
+        let file_name = path.file_stem().unwrap();
+        let f = file_name.to_str().unwrap();
+        f.to_string()
     }
 
     /// Returns the ShapefileGeometry for a specified index, starting at zero.

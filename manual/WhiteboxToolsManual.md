@@ -36,7 +36,7 @@ documentclass: report
 \newpage
 
 
-WhiteboxTools Version 0.11  \
+WhiteboxTools Version 0.12  \
 Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \

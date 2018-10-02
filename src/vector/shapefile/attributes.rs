@@ -95,9 +95,12 @@ pub struct AttributeField {
     pub field_type: char,
     pub field_length: u8,
     pub decimal_count: u8,
-    // pub work_area_id: u8,
-    // pub set_field_flag: u8,
-    // pub index_field_flag: u8,
+}
+
+impl PartialEq for AttributeField {
+    fn eq(&self, other: &AttributeField) -> bool {
+        other.name == self.name && other.field_type == self.field_type
+    }
 }
 
 impl AttributeField {
@@ -118,6 +121,41 @@ impl AttributeField {
             // work_area_id: work_area_id,
             // set_field_flag: set_field_flag,
             // index_field_flag: index_field_flag,
+        }
+    }
+
+    pub fn intersection(atts1: &[AttributeField], atts2: &[AttributeField]) -> Vec<AttributeField> {
+        let mut ret: Vec<AttributeField> = Vec::with_capacity(atts1.len().max(atts2.len()));
+        for i in 0..atts1.len() {
+            for j in 0..atts2.len() {
+                if atts1[i] == atts2[j] {
+                    ret.push(atts1[i].clone());
+                }
+            }
+        }
+
+        ret
+    }
+}
+
+pub trait Intersector {
+    fn intersection(&mut self, other: &Self);
+}
+
+impl Intersector for Vec<AttributeField> {
+    fn intersection(&mut self, other: &Self) {
+        let mut in_other: bool;
+        for i in (0..self.len()).rev() {
+            in_other = false;
+            for j in 0..other.len() {
+                if self[i] == other[j] {
+                    in_other = true;
+                    break;
+                }
+            }
+            if !in_other {
+                self.remove(i);
+            }
         }
     }
 }

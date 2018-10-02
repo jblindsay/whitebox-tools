@@ -1,12 +1,11 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 25/09/2018
-Last Modified: 25/09/2018
+Created: 01/10/2018
+Last Modified: 01/10/2018
 License: MIT
 */
 
-use algorithms::{minimum_bounding_box, MinimizationCriterion};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,22 +14,24 @@ use time;
 use tools::*;
 use vector::*;
 
-/// This tool can be used to calculate the elongation ratio for vector polygons. The
-/// elongation ratio values calculated for each vector polygon feature will be placed
-/// in the accompanying database file (.dbf) as an elongation field (ELONGATION).
+/// This tool calculates the linearity index of polygon features based on a regression analysis.
+/// The index is simply the coefficient of determination (r-squared) calculated from a regression
+/// analysis of the x and y coordinates of the exterior hull nodes of a vector polygon. Linearity
+/// index is a measure of how well a polygon can be described by a straight line. It is a related
+/// index to the `ElongationRatio`, but is more efficient to calculate as it does not require
+/// finding the minimum bounding box. The Pearson correlation coefficient between linearity index
+/// and the elongation ratio for a large data set of lake polygons in northern Canada was found
+/// to be 0.656, suggesting a moderate level of association between the two measures of polygon
+/// linearity. Note that this index is not useful for identifying narrow yet sinuous polygons, such
+/// as meandering rivers.
 ///
-/// The elongation ratio (`E`) is:
+/// The only required input is the name of the file. The linearity values calculated for each vector
+/// polygon feature will be placed in the accompanying attribute table as a new field (LINEARITY).
 ///
-/// `E = 1 - S / L`
+/// The results will be based on reduced major axis (RMA) regression line.
 ///
-/// Where `S` is the short-axis length, and `L` is the long-axis length. Axes
-/// lengths are determined by estimating the minimum bounding box.
-///
-/// The elongation ratio provides similar information as the Linearity Index. The
-/// ratio is not an adequate measure of overall polygon narrowness, because a highly
-/// sinuous but narrow polygon will have a low linearity (elongation) owing to the
-/// compact nature of these polygon.
-pub struct ElongationRatio {
+/// **See Also**: `ElongationRatio`
+pub struct LinearityIndex {
     name: String,
     description: String,
     toolbox: String,
@@ -38,12 +39,12 @@ pub struct ElongationRatio {
     example_usage: String,
 }
 
-impl ElongationRatio {
-    pub fn new() -> ElongationRatio {
+impl LinearityIndex {
+    pub fn new() -> LinearityIndex {
         // public constructor
-        let name = "ElongationRatio".to_string();
+        let name = "LinearityIndex".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
-        let description = "Calculates the elongation ratio for vector polygons.".to_string();
+        let description = "Calculates the linearity index for vector polygons.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -73,7 +74,7 @@ impl ElongationRatio {
             short_exe, name
         ).replace("*", &sep);
 
-        ElongationRatio {
+        LinearityIndex {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -83,7 +84,7 @@ impl ElongationRatio {
     }
 }
 
-impl WhiteboxTool for ElongationRatio {
+impl WhiteboxTool for LinearityIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -188,40 +189,70 @@ impl WhiteboxTool for ElongationRatio {
 
         // add the attributes
         output.attributes.add_field(&AttributeField::new(
-            "ELONGATION",
+            "LINEARITY",
             FieldDataType::Real,
-            12u8,
-            4u8,
+            7u8,
+            5u8,
         ));
 
-        let mut elongation: f64;
-        let mut short_axis: f64;
-        let mut long_axis: f64;
-        let mut dist1: f64;
-        let mut dist2: f64;
+        let mut part_start: usize;
+        let mut part_end: usize;
+        let mut midpoint_x: f64;
+        let mut midpoint_y: f64;
+        let mut n: f64;
+        let mut r_squared: f64;
+        let (mut x, mut y): (f64, f64);
+        let mut sigma_x: f64;
+        let mut sigma_y: f64;
+        let mut sigma_xy: f64;
+        let mut sigma_xsqr: f64;
+        let mut sigma_ysqr: f64;
+        let mut mean: f64;
+        let mut sxx: f64;
+        let mut syy: f64;
+        let mut sxy: f64;
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
-
-            let mut points: Vec<Point2D> = Vec::with_capacity(record.num_points as usize);
-            for i in 0..record.num_points as usize {
-                points.push(Point2D::new(record.points[i].x, record.points[i].y));
+            midpoint_x = (record.x_max - record.x_min) / 2f64;
+            midpoint_y = (record.y_max - record.y_min) / 2f64;
+            // regression_data = vec[0f64; 5];
+            sigma_x = 0f64;
+            sigma_y = 0f64;
+            sigma_xy = 0f64;
+            sigma_xsqr = 0f64;
+            sigma_ysqr = 0f64;
+            r_squared = 0f64;
+            part_start = record.parts[0] as usize;
+            part_end = if record.num_parts > 1 {
+                record.parts[1] as usize - 1
+            } else {
+                record.num_points as usize - 1
+            };
+            n = (part_end - part_start + 1) as f64;
+            for i in part_start..=part_end {
+                x = record.points[i].x - midpoint_x;
+                y = record.points[i].y - midpoint_y;
+                sigma_x += x;
+                sigma_y += y;
+                sigma_xy += x * y;
+                sigma_xsqr += x * x;
+                sigma_ysqr += y * y;
             }
-            let mbb_points = minimum_bounding_box(&mut points, MinimizationCriterion::Area);
 
-            // now calculate the distance between the first and second points and the second and third points
-            dist1 = mbb_points[0].distance(&mbb_points[1]);
-            dist2 = mbb_points[1].distance(&mbb_points[2]);
+            mean = sigma_x / n;
 
-            short_axis = dist1.min(dist2);
-            long_axis = dist1.max(dist2);
-
-            elongation = 1f64 - short_axis / long_axis;
+            sxx = sigma_xsqr / n - mean * mean;
+            syy = sigma_ysqr / n - (sigma_y / n) * (sigma_y / n);
+            sxy = sigma_xy / n - (sigma_x * sigma_y) / (n * n);
+            if (sxx * syy).sqrt() != 0f64 {
+                r_squared = (sxy / (sxx * syy).sqrt()) * (sxy / (sxx * syy).sqrt());
+            }
 
             let record_out = record.clone();
             output.add_record(record_out);
 
             let mut atts = input.attributes.get_record(record_num);
-            atts.push(FieldData::Real(elongation));
+            atts.push(FieldData::Real(r_squared));
             output.attributes.add_record(atts, false);
 
             if verbose {

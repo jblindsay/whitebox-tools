@@ -30,6 +30,7 @@ impl ToolManager {
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
         tool_names.push("LinesToPolygons".to_string());
+        tool_names.push("MergeVectors".to_string());
         tool_names.push("MultiPartToSinglePart".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
@@ -75,6 +76,7 @@ impl ToolManager {
         tool_names.push("HoleProportion".to_string());
         tool_names.push("IdwInterpolation".to_string());
         tool_names.push("LayerFootprint".to_string());
+        tool_names.push("LinearityIndex".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
@@ -232,6 +234,7 @@ impl ToolManager {
         tool_names.push("FlightlineOverlap".to_string());
         tool_names.push("LasToAscii".to_string());
         tool_names.push("LasToMultipointShapefile".to_string());
+        tool_names.push("LasToShapefile".to_string());
         tool_names.push("LidarColourize".to_string());
         tool_names.push("LidarConstructVectorTIN".to_string());
         tool_names.push("LidarElevationSlice".to_string());
@@ -432,6 +435,7 @@ impl ToolManager {
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
             "linestopolygons" => Some(Box::new(tools::data_tools::LinesToPolygons::new())),
+            "mergevectors" => Some(Box::new(tools::data_tools::MergeVectors::new())),
             "multiparttosinglepart" => {
                 Some(Box::new(tools::data_tools::MultiPartToSinglePart::new()))
             }
@@ -507,6 +511,7 @@ impl ToolManager {
             "holeproportion" => Some(Box::new(tools::gis_analysis::HoleProportion::new())),
             "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
             "layerfootprint" => Some(Box::new(tools::gis_analysis::LayerFootprint::new())),
+            "linearityindex" => Some(Box::new(tools::gis_analysis::LinearityIndex::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
             "maxoverlay" => Some(Box::new(tools::gis_analysis::MaxOverlay::new())),
@@ -778,6 +783,7 @@ impl ToolManager {
             "lastomultipointshapefile" => Some(Box::new(
                 tools::lidar_analysis::LasToMultipointShapefile::new(),
             )),
+            "lastoshapefile" => Some(Box::new(tools::lidar_analysis::LasToShapefile::new())),
             "lidarcolourize" => Some(Box::new(tools::lidar_analysis::LidarColourize::new())),
             "lidarconstructvectortin" => Some(Box::new(
                 tools::lidar_analysis::LidarConstructVectorTIN::new(),

@@ -21,7 +21,8 @@ pub use self::shapefile::geometry::*;
 pub use self::shapefile::ShapeType;
 pub use self::shapefile::Shapefile;
 pub use self::shapefile::{
-    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, ShapefileAttributes,
+    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
+    ShapefileAttributes,
 };
 pub use structures::Point2D;
 

@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 04/09/2018
-Last Modified: 04/09/2018
+Created: 01/10/2018
+Last Modified: 01/10/2018
 License: MIT
 */
 
@@ -17,21 +17,25 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use time;
 use tools::*;
-use vector::ShapefileGeometry;
 use vector::*;
 
-/// Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is
+/// Converts one or more LAS files into a POINT vector. When the input parameter is
 /// not specified, the tool grids all LAS files contained within the working directory.
+/// The attribute table of the output Shapefile will contain fields for the z-value,
+/// intensity, point class, return number, and number of return.
 ///
-/// This tool can be used in place of the `LasToShapefile` tool when the number of points are
-/// relatively high and when the desire is to represent the x,y,z position of points only. The z
-/// values of LAS points will be stored in the z-array of the output Shapefile. Notice that because
-/// the output file stores each point in a single multi-point record, this Shapefile representation,
-/// while unable to represent individual point classes, return numbers, etc, is an efficient means
-/// of converting LAS point positional information.
+/// This tool can be used in place of the `LasToMultipointShapefile` tool when the
+/// number of points are relatively low and when the desire is to represent more than
+/// simply the x,y,z position of points. Notice however that because each point in
+/// the input LAS file will be represented as a separate record in the output
+/// Shapefile, the output file will be many time larger than the equivalent output of
+/// the `LasToMultipointShapefile` tool. There is also a practical limit on the
+/// total number of records that can be held in a single Shapefile and large LAS
+/// files approach this limit. In these cases, the `LasToMultipointShapefile` tool
+/// should be preferred instead.
 ///
-/// **See Also**: `LasToShapefile`
-pub struct LasToMultipointShapefile {
+/// **See Also**: `LasToMultipointShapefile`
+pub struct LasToShapefile {
     name: String,
     description: String,
     toolbox: String,
@@ -39,13 +43,14 @@ pub struct LasToMultipointShapefile {
     example_usage: String,
 }
 
-impl LasToMultipointShapefile {
-    pub fn new() -> LasToMultipointShapefile {
+impl LasToShapefile {
+    pub fn new() -> LasToShapefile {
         // public constructor
-        let name = "LasToMultipointShapefile".to_string();
+        let name = "LasToShapefile".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description =
-            "Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is not specified, the tool grids all LAS files contained within the working directory.".to_string();
+            "Converts one or more LAS files into a vector Shapefile of POINT ShapeType."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -73,7 +78,7 @@ impl LasToMultipointShapefile {
             short_exe, name
         ).replace("*", &sep);
 
-        LasToMultipointShapefile {
+        LasToShapefile {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -83,7 +88,7 @@ impl LasToMultipointShapefile {
     }
 }
 
-impl WhiteboxTool for LasToMultipointShapefile {
+impl WhiteboxTool for LasToShapefile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -224,38 +229,83 @@ impl WhiteboxTool for LasToMultipointShapefile {
                     let ret_val = match LasFile::new(&input_file, "r") {
                         Ok(mut input) => {
                             // create the output file
-                            let mut output = match Shapefile::new(
-                                &output_file,
-                                ShapeType::MultiPointZ,
-                            ) {
+                            let mut output = match Shapefile::new(&output_file, ShapeType::Point) {
                                 Ok(output) => output,
                                 Err(e) => panic!("Error creating output file:\n{:?}", e), // TODO: fix this panic.
                             };
                             output.projection = input.get_wkt();
 
                             // add the attributes
-                            let fid = AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8);
-                            output.attributes.add_field(&fid);
+                            output.attributes.add_field(&AttributeField::new(
+                                "FID",
+                                FieldDataType::Int,
+                                7u8,
+                                0u8,
+                            ));
+
+                            output.attributes.add_field(&AttributeField::new(
+                                "Z",
+                                FieldDataType::Real,
+                                12u8,
+                                5u8,
+                            ));
+
+                            output.attributes.add_field(&AttributeField::new(
+                                "INTENSITY",
+                                FieldDataType::Int,
+                                7u8,
+                                0u8,
+                            ));
+
+                            output.attributes.add_field(&AttributeField::new(
+                                "CLASS",
+                                FieldDataType::Int,
+                                5u8,
+                                0u8,
+                            ));
+
+                            output.attributes.add_field(&AttributeField::new(
+                                "RTN_NUM",
+                                FieldDataType::Int,
+                                3u8,
+                                0u8,
+                            ));
+
+                            output.attributes.add_field(&AttributeField::new(
+                                "NUM_RTNS",
+                                FieldDataType::Int,
+                                3u8,
+                                0u8,
+                            ));
 
                             let n_points = input.header.number_of_points as usize;
-
-                            // read the points into a Vec<Point2D>
-                            let mut points: Vec<Point2D> = Vec::with_capacity(n_points);
-                            let mut m_values: Vec<f64> = Vec::with_capacity(n_points);
-                            let mut z_values: Vec<f64> = Vec::with_capacity(n_points);
+                            let mut progress: usize;
+                            let mut old_progress: usize = 1;
+                            // read the points
                             for i in 0..n_points {
                                 let p: PointData = input.get_point_info(i);
-                                points.push(Point2D::new(p.x, p.y));
-                                m_values.push(p.intensity as f64);
-                                z_values.push(p.z);
-                            }
+                                output.add_point_record(p.x, p.y);
+                                output.attributes.add_record(
+                                    vec![
+                                        FieldData::Int(i as i32 + 1i32),
+                                        FieldData::Real(p.z),
+                                        FieldData::Int(p.intensity as i32),
+                                        FieldData::Int(p.classification as i32),
+                                        FieldData::Int(p.return_number() as i32),
+                                        FieldData::Int(p.number_of_returns() as i32),
+                                    ],
+                                    false,
+                                );
 
-                            let mut sfg = ShapefileGeometry::new(ShapeType::MultiPointZ);
-                            sfg.add_partz(&points, &m_values, &z_values);
-                            output.add_record(sfg);
-                            output
-                                .attributes
-                                .add_record(vec![FieldData::Int(1i32)], false);
+                                if verbose && num_tiles == 1 {
+                                    progress =
+                                        (100.0_f64 * i as f64 / (n_points - 1) as f64) as usize;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
+                                }
+                            }
 
                             // output the file
                             let v = match output.write() {

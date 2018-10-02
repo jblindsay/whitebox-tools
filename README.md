@@ -174,6 +174,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
 - ***LinesToPolygons***: Converts vector polylines to polygons.
+- ***MergeVectors***: Combines two or more input vectors of the same ShapeType creating a single, new output vector.
 - ***MultiPartToSinglePart**: Converts a vector file containing multi-part features into a vector containing only single-part features.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PolygonsToLines***: Converts vector polygons into polylines.
@@ -272,6 +273,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***HoleProportion***: Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
 - ***IdwInterpolation***: Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 - ***LayerFootprint***: Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
+- ***LinearityIndex***: Calculates the linearity index for vector polygons.
 - ***LowestPosition***: Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 - ***MaxAbsoluteOverlay***: Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 - ***MaxOverlay***: Evaluates the maximum value for each grid cell from a stack of input rasters.
@@ -432,6 +434,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***FlightlineOverlap***: Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 - ***LasToAscii***: Converts one or more LAS files into ASCII text files.
 - **LasToMultipointShapefile**: Converts one or more LAS files into MultipointZ vector Shapefiles.
+- ***LasToShapefile***: Converts one or more LAS files into a vector Shapefile of POINT ShapeType.
 - ***LidarColourize***: Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 - ***LidarConstructVectorTIN***: Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
