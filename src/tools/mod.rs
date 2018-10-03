@@ -54,6 +54,7 @@ impl ToolManager {
         tool_names.push("Clump".to_string());
         tool_names.push("CompactnessRatio".to_string());
         tool_names.push("ConstructVectorTIN".to_string());
+        tool_names.push("ConstructVoronoiDiagram".to_string());
         tool_names.push("CountIf".to_string());
         tool_names.push("CostAllocation".to_string());
         tool_names.push("CostDistance".to_string());
@@ -473,6 +474,9 @@ impl ToolManager {
             "clump" => Some(Box::new(tools::gis_analysis::Clump::new())),
             "compactnessratio" => Some(Box::new(tools::gis_analysis::CompactnessRatio::new())),
             "constructvectortin" => Some(Box::new(tools::gis_analysis::ConstructVectorTIN::new())),
+            "constructvoronoidiagram" => {
+                Some(Box::new(tools::gis_analysis::ConstructVoronoiDiagram::new()))
+            }
             "countif" => Some(Box::new(tools::gis_analysis::CountIf::new())),
             "costallocation" => Some(Box::new(tools::gis_analysis::CostAllocation::new())),
             "costdistance" => Some(Box::new(tools::gis_analysis::CostDistance::new())),

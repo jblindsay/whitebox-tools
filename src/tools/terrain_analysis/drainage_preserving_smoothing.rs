@@ -255,7 +255,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
                 reduction = reduction.abs();
-            } else if flag_val == "-dmf" {
+            } else if flag_val == "-dfm" {
                 dfm_threshold = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {

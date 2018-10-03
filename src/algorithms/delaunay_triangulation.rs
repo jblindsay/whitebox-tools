@@ -1,8 +1,29 @@
-// The following code has been modified from the original delaunator-rs project
-
 /*!
+The following code has been modified from the original delaunator-rs project:
+
+https://github.com/mourner/delaunator-rs
+
+For a description of the data structure, including the halfedge connectivity, see:
+
+https://mapbox.github.io/delaunator/
+
+
+# Description
 A very fast 2D [Delaunay Triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) library for Rust.
 A port of [Delaunator](https://github.com/mapbox/delaunator).
+
+
+A triangle edge may be shared with another triangle. Instead of thinking about each edge A↔︎B, we will use two half-edges A→B and B→A. Having two half-edges is the key to everything this library provides.
+
+Half-edges e are the indices into both of delaunator’s outputs:
+
+    delaunay.triangles[e] returns the point id where the half-edge starts
+    delaunay.halfedges[e] returns the opposite half-edge in the adjacent triangle, or -1 if there is no adjacent triangle
+
+Triangle ids and half-edge ids are related.
+
+    The half-edges of triangle t are 3*t, 3*t + 1, and 3*t + 2.
+    The triangle of half-edge id e is floor(e/3
 
 # Example
 
@@ -22,6 +43,7 @@ println!("{:?}", result.triangles); // [0, 2, 1, 0, 3, 2]
 ```
 */
 
+// use std::collections::HashSet;
 use std::f64;
 use structures::Point2D;
 
@@ -30,25 +52,6 @@ use structures::Point2D;
 /// will have this value.
 pub const EMPTY: usize = usize::max_value();
 
-/// Next halfedge in a triangle.
-pub fn next_halfedge(i: usize) -> usize {
-    if i % 3 == 2 {
-        i - 2
-    } else {
-        i + 1
-    }
-}
-
-/// Previous halfedge in a triangle.
-pub fn prev_halfedge(i: usize) -> usize {
-    if i % 3 == 0 {
-        i + 2
-    } else {
-        i - 1
-    }
-}
-
-/// Result of the Delaunay triangulation.
 pub struct Triangulation {
     /// A vector of point indices where each triple represents a Delaunay triangle.
     /// All triangles are directed counter-clockwise.
@@ -67,6 +70,7 @@ pub struct Triangulation {
 }
 
 impl Triangulation {
+    /// Constructs a new *Triangulation*.
     fn new(n: usize) -> Self {
         let max_triangles = 2 * n - 5;
         Self {
@@ -79,6 +83,115 @@ impl Triangulation {
     /// The number of triangles in the triangulation.
     pub fn len(&self) -> usize {
         (self.triangles.len() / 3)
+    }
+
+    /// Next halfedge in a triangle.
+    pub fn next_halfedge(&self, edge: usize) -> usize {
+        if edge % 3 == 2 {
+            edge - 2
+        } else {
+            edge + 1
+        }
+    }
+
+    /// Previous halfedge in a triangle.
+    pub fn prev_halfedge(&self, edge: usize) -> usize {
+        if edge % 3 == 0 {
+            edge + 2
+        } else {
+            edge - 1
+        }
+    }
+
+    /// Returns the triangle of an edge.
+    pub fn triangle_of_edge(&self, edge: usize) -> usize {
+        edge / 3
+    }
+
+    /// Returns the edges of a triangle.
+    pub fn edges_of_triangle(&self, triangle: usize) -> [usize; 3] {
+        [3 * triangle, 3 * triangle + 1, 3 * triangle + 2]
+    }
+
+    /// Returns the points of a triangle.
+    pub fn points_of_triangle(&self, triangle: usize) -> [usize; 3] {
+        // self.edges_of_triangle(t)
+        //     .into_iter()
+        //     .map(|e| self.triangles[*e])
+        //     .collect()
+        let e = self.edges_of_triangle(triangle);
+        [
+            self.triangles[e[0]],
+            self.triangles[e[1]],
+            self.triangles[e[2]],
+        ]
+    }
+
+    /// Triangle circumcenter.
+    pub fn triangle_center(&self, points: &[Point2D], triangle: usize) -> Point2D {
+        let p = self.points_of_triangle(triangle);
+        points[p[0]].circumcenter(&points[p[1]], &points[p[2]])
+    }
+
+    /// Returns the edges around a point (start)
+    pub fn edges_around_point(&self, start: usize) -> Vec<usize> {
+        let mut result = vec![];
+        let mut incoming = start;
+        let mut outgoing: usize;
+        loop {
+            result.push(incoming);
+            outgoing = self.next_halfedge(incoming);
+            incoming = self.halfedges[outgoing];
+            if incoming == EMPTY || incoming == start {
+                break;
+            }
+        }
+        result
+    }
+
+    /// Returns the indices of the adjacent triangles to a triangle.
+    pub fn triangles_adjacent_to_triangle(&self, triangle: usize) -> Vec<usize> {
+        let mut adjacent_triangles: Vec<usize> = vec![];
+        let mut opposite: usize;
+        for e in self.edges_of_triangle(triangle).iter() {
+            opposite = self.halfedges[*e];
+            if opposite != EMPTY {
+                adjacent_triangles.push(self.triangle_of_edge(opposite));
+            }
+        }
+        adjacent_triangles
+    }
+
+    pub fn voronoi_cell(&self, points: &[Point2D], edge: usize) -> Vec<Point2D> {
+        // let mut seen = HashSet::new(); // of point ids
+        // for e in 0..self.triangles.len() {
+        // let p = self.triangles[self.next_halfedge(edge)];
+        //     let mut verticies = vec![];
+        //     if !seen.contains(&p) {
+        //         seen.insert(p);
+        //         let edges = self.edges_around_point(edge);
+        //         let triangles: Vec<usize> = edges
+        //             .into_iter()
+        //             .map(|e| self.triangle_of_edge(e))
+        //             .collect();
+        //         vertices = triangles.into_iter().map(|t| self.triangle_center(points, t).collect();
+        //     }
+        // }
+
+        let edges = self.edges_around_point(edge);
+        println!("{} edges: {:?}", edge, edges);
+
+        let triangles: Vec<usize> = edges
+            .into_iter()
+            .map(|e| self.triangle_of_edge(e))
+            .collect();
+
+        println!("{} triangles: {:?}", edge, triangles);
+
+        triangles
+            .into_iter()
+            .map(|t| self.triangle_center(&points, t))
+            .collect()
     }
 
     fn add_triangle(
@@ -131,14 +244,14 @@ impl Triangulation {
         //          \||/                  \  /
         //           pr                    pr
         //
-        let ar = prev_halfedge(a);
+        let ar = self.prev_halfedge(a);
 
         if b == EMPTY {
             return ar;
         }
 
-        let al = next_halfedge(a);
-        let bl = prev_halfedge(b);
+        let al = self.next_halfedge(a);
+        let bl = self.prev_halfedge(b);
 
         let p0 = self.triangles[ar];
         let pr = self.triangles[a];
@@ -182,7 +295,7 @@ impl Triangulation {
                 self.halfedges[bl] = ar;
             }
 
-            let br = next_halfedge(b);
+            let br = self.next_halfedge(b);
 
             self.legalize(a, points, hull);
             return self.legalize(br, points, hull);
