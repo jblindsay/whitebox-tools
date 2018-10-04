@@ -43,7 +43,6 @@ println!("{:?}", result.triangles); // [0, 2, 1, 0, 3, 2]
 ```
 */
 
-// use std::collections::HashSet;
 use std::f64;
 use structures::Point2D;
 
@@ -52,6 +51,20 @@ use structures::Point2D;
 /// will have this value.
 pub const EMPTY: usize = usize::max_value();
 
+/// A data structure used to perform Delaunay triangulation on
+/// a set of input vector points. Connectivity between points,
+/// triangles, and halfedges is as follows:
+///
+/// - edge → edges: next_halfedge, prevHalfedge, halfedges[]
+/// - edge → points: triangles[]
+/// - edge → triangle: triangle_of_edge
+/// - triangle → edges: edges_of_triangle
+/// - triangle → points: points_of_triangle
+/// - triangle → triangles: triangles_adjacent_to_triangle
+/// - point → incoming edges: edges_around_point
+/// - point → outgoing edges: edges_around_point + halfedge[]
+/// - point → points: edges_around_point + triangles[]
+/// - point → triangles: edges_around_point + triangle_of_edge
 pub struct Triangulation {
     /// A vector of point indices where each triple represents a Delaunay triangle.
     /// All triangles are directed counter-clockwise.
@@ -133,7 +146,7 @@ impl Triangulation {
         points[p[0]].circumcenter(&points[p[1]], &points[p[2]])
     }
 
-    /// Returns the edges around a point (start)
+    /// Returns the edges around a point connected to halfedge '*start*'.
     pub fn edges_around_point(&self, start: usize) -> Vec<usize> {
         let mut result = vec![];
         let mut incoming = start;
@@ -142,7 +155,10 @@ impl Triangulation {
             result.push(incoming);
             outgoing = self.next_halfedge(incoming);
             incoming = self.halfedges[outgoing];
-            if incoming == EMPTY || incoming == start {
+            if incoming == EMPTY {
+                break;
+            } else if incoming == start {
+                result.push(incoming);
                 break;
             }
         }
@@ -162,37 +178,34 @@ impl Triangulation {
         adjacent_triangles
     }
 
-    pub fn voronoi_cell(&self, points: &[Point2D], edge: usize) -> Vec<Point2D> {
-        // let mut seen = HashSet::new(); // of point ids
-        // for e in 0..self.triangles.len() {
-        // let p = self.triangles[self.next_halfedge(edge)];
-        //     let mut verticies = vec![];
-        //     if !seen.contains(&p) {
-        //         seen.insert(p);
-        //         let edges = self.edges_around_point(edge);
-        //         let triangles: Vec<usize> = edges
-        //             .into_iter()
-        //             .map(|e| self.triangle_of_edge(e))
-        //             .collect();
-        //         vertices = triangles.into_iter().map(|t| self.triangle_center(points, t).collect();
-        //     }
-        // }
+    // pub fn voronoi_cell(&self, points: &[Point2D], edge: usize) -> Vec<Point2D> {
+    //     // let mut seen = HashSet::new(); // of point ids
+    //     // for e in 0..self.triangles.len() {
+    //     // let p = self.triangles[self.next_halfedge(edge)];
+    //     //     let mut verticies = vec![];
+    //     //     if !seen.contains(&p) {
+    //     //         seen.insert(p);
+    //     //         let edges = self.edges_around_point(edge);
+    //     //         let triangles: Vec<usize> = edges
+    //     //             .into_iter()
+    //     //             .map(|e| self.triangle_of_edge(e))
+    //     //             .collect();
+    //     //         vertices = triangles.into_iter().map(|t| self.triangle_center(points, t).collect();
+    //     //     }
+    //     // }
 
-        let edges = self.edges_around_point(edge);
-        println!("{} edges: {:?}", edge, edges);
+    //     let edges = self.edges_around_point(edge);
 
-        let triangles: Vec<usize> = edges
-            .into_iter()
-            .map(|e| self.triangle_of_edge(e))
-            .collect();
+    //     let triangles: Vec<usize> = edges
+    //         .into_iter()
+    //         .map(|e| self.triangle_of_edge(e))
+    //         .collect();
 
-        println!("{} triangles: {:?}", edge, triangles);
-
-        triangles
-            .into_iter()
-            .map(|t| self.triangle_center(&points, t))
-            .collect()
-    }
+    //     triangles
+    //         .into_iter()
+    //         .map(|t| self.triangle_center(&points, t))
+    //         .collect()
+    // }
 
     fn add_triangle(
         &mut self,

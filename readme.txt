@@ -56,11 +56,13 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.12.0 (01-10-2018)
+Version 0.12.0 (XX-XX-2018)
 - The following tools were added to the project:
     LasToShapefile
     LinearityIndex
     MergeVectors
+    VoronoiDiagram
+
 
 Version 0.11.0 (01-10-2018)
 - This release is marked by the addition of several vector data processing capabilities. 

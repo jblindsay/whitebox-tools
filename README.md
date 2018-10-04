@@ -304,6 +304,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***SumOverlay***: Calculates the sum for each grid cell from a group of raster images.
 - ***TINGridding***: Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 - ***VectorHexBinning***: Hex-bins a set of vector points.
+- ***VoronoiDiagram***: s tool creates a vector Voronoi diagram for a set of vector points.
 - ***WeightedOverlay***: Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 - ***WeightedSum***: Performs a weighted-sum overlay on multiple input raster images.
 

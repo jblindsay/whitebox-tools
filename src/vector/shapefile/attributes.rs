@@ -253,6 +253,7 @@ impl ShapefileAttributes {
     //     self.data[record_index][field_index].clone()
     // }
 
+    /// Returns the field number associated with a specified field name.
     pub fn get_field_num(&self, name: &str) -> Option<usize> {
         for i in 0..self.fields.len() {
             if self.fields[i].name == name {
@@ -260,6 +261,11 @@ impl ShapefileAttributes {
             }
         }
         None
+    }
+
+    /// Returns the number of fields in the attribute table.
+    pub fn get_num_fields(&self) -> usize {
+        self.fields.len()
     }
 
     fn get_field_hashmap(&mut self) {
