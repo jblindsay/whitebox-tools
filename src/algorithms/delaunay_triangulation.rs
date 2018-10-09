@@ -178,35 +178,6 @@ impl Triangulation {
         adjacent_triangles
     }
 
-    // pub fn voronoi_cell(&self, points: &[Point2D], edge: usize) -> Vec<Point2D> {
-    //     // let mut seen = HashSet::new(); // of point ids
-    //     // for e in 0..self.triangles.len() {
-    //     // let p = self.triangles[self.next_halfedge(edge)];
-    //     //     let mut verticies = vec![];
-    //     //     if !seen.contains(&p) {
-    //     //         seen.insert(p);
-    //     //         let edges = self.edges_around_point(edge);
-    //     //         let triangles: Vec<usize> = edges
-    //     //             .into_iter()
-    //     //             .map(|e| self.triangle_of_edge(e))
-    //     //             .collect();
-    //     //         vertices = triangles.into_iter().map(|t| self.triangle_center(points, t).collect();
-    //     //     }
-    //     // }
-
-    //     let edges = self.edges_around_point(edge);
-
-    //     let triangles: Vec<usize> = edges
-    //         .into_iter()
-    //         .map(|e| self.triangle_of_edge(e))
-    //         .collect();
-
-    //     triangles
-    //         .into_iter()
-    //         .map(|t| self.triangle_center(&points, t))
-    //         .collect()
-    // }
-
     fn add_triangle(
         &mut self,
         i0: usize,
@@ -282,13 +253,16 @@ impl Triangulation {
             // edge swapped on the other side of the hull (rare); fix the halfedge reference
             if hbl == EMPTY {
                 let mut e = hull.start;
+
                 loop {
                     if hull.tri[e] == bl {
                         hull.tri[e] = a;
                         break;
                     }
                     e = hull.next[e];
-                    if e == hull.start {
+                    if e == hull.start || e == EMPTY {
+                        // notice, I added the || e == EMPTY after
+                        // finding a bug. I don't know about this.
                         break;
                     }
                 }
@@ -503,6 +477,7 @@ pub fn triangulate(points: &[Point2D]) -> Option<Triangulation> {
 
         // find a visible edge on the convex hull using edge hash
         let (mut e, walk_back) = hull.find_visible_edge(p, points);
+
         if e == EMPTY {
             continue; // likely a near-duplicate point; skip it
         }
@@ -531,6 +506,7 @@ pub fn triangulate(points: &[Point2D]) -> Option<Triangulation> {
         if walk_back {
             loop {
                 let q = hull.prev[e];
+
                 if !p.orient(&points[q], &points[e]) {
                     break;
                 }

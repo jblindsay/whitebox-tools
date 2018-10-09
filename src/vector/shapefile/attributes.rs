@@ -28,7 +28,7 @@ pub struct AttributeHeader {
     pub language_driver_id: u8,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct DateData {
     pub year: u16,
     pub month: u8,
@@ -59,12 +59,17 @@ impl fmt::Display for DateData {
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldData {
     Int(i32),
-    // Int64(i64),
     Real(f64),
     Text(String),
     Date(DateData),
     Bool(bool),
     Null,
+}
+
+impl fmt::Display for FieldData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?})", self)
+    }
 }
 
 #[derive(Debug, Clone)]

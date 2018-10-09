@@ -27,7 +27,7 @@ fn is_left(p0: &Point2D, p1: &Point2D, p2: &Point2D) -> f64 {
 ///          poly[] = vertex points of a polygon v[n+1] with v[n]=v[0]
 pub fn point_in_poly(p: &Point2D, poly: &[Point2D]) -> bool {
     // winding_number(&p, &poly) != 0i32
-    winding_number(&p, &poly) % 2 == 1i32
+    winding_number(&p, &poly) % 2 != 0i32
 }
 
 /// Calculates the Winding number (wn) test for a point in a polygon operation

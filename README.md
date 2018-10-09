@@ -173,6 +173,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***ConvertNodataToZero***: Converts nodata values in a raster to zero.
 - ***ConvertRasterFormat***: Converts raster data from one format to another.
 - ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
+- ***JoinTables***: Merge a vector's attribute table with another table based on a common field.
 - ***LinesToPolygons***: Converts vector polylines to polygons.
 - ***MergeVectors***: Combines two or more input vectors of the same ShapeType creating a single, new output vector.
 - ***MultiPartToSinglePart**: Converts a vector file containing multi-part features into a vector containing only single-part features.

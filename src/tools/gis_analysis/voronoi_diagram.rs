@@ -26,17 +26,22 @@ use vector::*;
 /// one point of the input vector points. All locations within the cell are
 /// nearer to the contained point than any other input point.
 ///
-/// A frame of 'ghost' points are inserted around the input point set to limit
-/// the spatial extent of the diagram. The frame is set back from the bounding
-/// box of the input points by 2 x the average spacing. The polygons of these
-/// ghost points are not output, however, points that are situated along the
-/// edges of the data will have rounded (paraboloic) outer sides as a result.
+/// A dense frame of 'ghost' (hidden) points is inserted around the input point
+/// set to limit the spatial extent of the diagram. The frame is set back from
+/// the bounding box of the input points by 2 x the average point  spacing. The
+/// polygons of these ghost points are not output, however, points that are
+/// situated along the edges of the data will have somewhat rounded (paraboloic)
+/// exterior boundaries as a result of this edge condition. If this property is
+/// unacceptable for application, clipping the Voronoi diagram to the convex
+/// hull may be a better alternative.
 ///
 /// This tool works on vector input data only. If a Voronoi diagram is needed
-/// for a set of raster points, use the `EuclideanAllocation` tool instead.
+/// to tesselate regions associated with a set of raster points, use the
+/// `EuclideanAllocation` tool instead. To use Voronoi diagrams for gridding
+/// data (i.e. raster interpolation), use the `NearestNeighbourGridding` tool.
 ///
 /// # See Also
-/// `ConstructVectorTIN`, `EuclideanAllocation`
+/// `ConstructVectorTIN`, `EuclideanAllocation`, `NearestNeighbourGridding`
 pub struct VoronoiDiagram {
     name: String,
     description: String,
@@ -239,7 +244,7 @@ impl WhiteboxTool for VoronoiDiagram {
             }
         }
 
-        // Add a frame of ghost points surrounding the data, to serve as an artificial convex hull.
+        // Add a frame of hidden points surrounding the data, to serve as an artificial hull.
         let mut ghost_box = BoundingBox::new(
             input.header.x_min,
             input.header.x_max,
@@ -250,23 +255,12 @@ impl WhiteboxTool for VoronoiDiagram {
         let expansion = ((input.header.x_max - input.header.x_min)
             * (input.header.y_max - input.header.y_min)
             / input.num_records as f64)
-            .sqrt()
-            * 2.0;
-        ghost_box.expand_by(expansion);
+            .sqrt();
+        ghost_box.expand_by(2.0 * expansion);
 
-        let mut gap = (ghost_box.max_y - ghost_box.min_y) / 100f64;
-        for y in 0..100 {
-            points.push(Point2D::new(
-                ghost_box.min_x,
-                ghost_box.min_y + y as f64 * gap,
-            ));
-            points.push(Point2D::new(
-                ghost_box.max_x,
-                ghost_box.min_y + y as f64 * gap,
-            ));
-        }
-        gap = (ghost_box.max_x - ghost_box.min_x) / 100f64;
-        for x in 0..100 {
+        let gap = expansion / 3f64; // One-third the average point spacing
+        let mut num_edge_points = ((ghost_box.max_x - ghost_box.min_x) / gap) as usize;
+        for x in 0..num_edge_points {
             points.push(Point2D::new(
                 ghost_box.min_x + x as f64 * gap,
                 ghost_box.min_y,
@@ -274,6 +268,18 @@ impl WhiteboxTool for VoronoiDiagram {
             points.push(Point2D::new(
                 ghost_box.min_x + x as f64 * gap,
                 ghost_box.max_y,
+            ));
+        }
+
+        num_edge_points = ((ghost_box.max_y - ghost_box.min_y) / gap) as usize;
+        for y in 0..num_edge_points {
+            points.push(Point2D::new(
+                ghost_box.min_x,
+                ghost_box.min_y + y as f64 * gap,
+            ));
+            points.push(Point2D::new(
+                ghost_box.max_x,
+                ghost_box.min_y + y as f64 * gap,
             ));
         }
 
@@ -343,7 +349,7 @@ impl WhiteboxTool for VoronoiDiagram {
             if verbose {
                 progress = (100.0_f64 * p as f64 / (input.num_records - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Creating polygons: {}%", progress);
+                    println!("Creating Voronoi cells: {}%", progress);
                     old_progress = progress;
                 }
             }

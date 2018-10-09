@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/04/2018
-Last Modified: 24/04/2018
+Last Modified: 08/10/2018
 License: MIT
 */
 
@@ -65,7 +65,8 @@ impl ExportTableToCsv {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -211,9 +212,6 @@ impl WhiteboxTool for ExportTableToCsv {
                     FieldData::Int(ref val) => {
                         s.push_str(&format!(",{}", val));
                     }
-                    // FieldData::Int64(ref val) => {
-                    //     s.push_str(&format!(",{}", val));
-                    // },
                     FieldData::Real(ref val) => {
                         s.push_str(&format!(",{}", (val * multiplier).round() / multiplier));
                     }
@@ -240,7 +238,7 @@ impl WhiteboxTool for ExportTableToCsv {
                 progress =
                     (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Writting attributes: {}%", progress);
+                    println!("Writing attributes: {}%", progress);
                     old_progress = progress;
                 }
             }

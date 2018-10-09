@@ -29,6 +29,7 @@ impl ToolManager {
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
+        tool_names.push("JoinTables".to_string());
         tool_names.push("LinesToPolygons".to_string());
         tool_names.push("MergeVectors".to_string());
         tool_names.push("MultiPartToSinglePart".to_string());
@@ -103,6 +104,7 @@ impl ToolManager {
         tool_names.push("ReclassFromFile".to_string());
         tool_names.push("RelatedCircumscribingCircle".to_string());
         tool_names.push("ShapeComplexityIndex".to_string());
+        // tool_names.push("SibsonInterpolation".to_string());
         tool_names.push("SmoothVectors".to_string());
         tool_names.push("SumOverlay".to_string());
         tool_names.push("TINGridding".to_string());
@@ -435,6 +437,7 @@ impl ToolManager {
             "convertnodatatozero" => Some(Box::new(tools::data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(tools::data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
+            "jointables" => Some(Box::new(tools::data_tools::JoinTables::new())),
             "linestopolygons" => Some(Box::new(tools::data_tools::LinesToPolygons::new())),
             "mergevectors" => Some(Box::new(tools::data_tools::MergeVectors::new())),
             "multiparttosinglepart" => {
@@ -551,6 +554,9 @@ impl ToolManager {
             "shapecomplexityindex" => {
                 Some(Box::new(tools::gis_analysis::ShapeComplexityIndex::new()))
             }
+            // "sibsoninterpolation" => {
+            //     Some(Box::new(tools::gis_analysis::SibsonInterpolation::new()))
+            // }
             "smoothvectors" => Some(Box::new(tools::gis_analysis::SmoothVectors::new())),
             "sumoverlay" => Some(Box::new(tools::gis_analysis::SumOverlay::new())),
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),

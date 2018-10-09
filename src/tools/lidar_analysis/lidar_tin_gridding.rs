@@ -638,10 +638,14 @@ impl WhiteboxTool for LidarTINGridding {
                         p1 = result.triangles[i];
                         p2 = result.triangles[i + 1];
                         p3 = result.triangles[i + 2];
+
                         tri_points[0] = points[p1].clone();
                         tri_points[1] = points[p2].clone();
                         tri_points[2] = points[p3].clone();
                         tri_points[3] = points[p1].clone();
+                        // if is_clockwise_order(&tri_points) {
+                        //     tri_points.reverse();
+                        // }
 
                         // get the equation of the plane
                         a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
@@ -665,8 +669,8 @@ impl WhiteboxTool for LidarTINGridding {
 
                         for row in top_row..=bottom_row {
                             for col in left_col..=right_col {
-                                x = west + (col as f64 + 0.5) * grid_res;
-                                y = north - (row as f64 + 0.5) * grid_res;
+                                x = west + col as f64 * grid_res;
+                                y = north - row as f64 * grid_res;
                                 if point_in_poly(&Point2D::new(x, y), &tri_points) {
                                     // calculate the z values
                                     zn = -(norm.x * x + norm.y * y + k) / norm.z;

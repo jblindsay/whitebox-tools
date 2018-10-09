@@ -6,8 +6,9 @@ Last Modified: 30/08/2018
 License: MIT
 */
 use std::f64;
+use structures::Point2D;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct BoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -23,6 +24,17 @@ impl PartialEq for BoundingBox {
             && self.min_y == other.min_y
             && self.max_x == other.max_x
             && self.max_y == other.max_y
+    }
+}
+
+impl Default for BoundingBox {
+    fn default() -> BoundingBox {
+        BoundingBox {
+            min_x: f64::INFINITY,
+            min_y: f64::INFINITY,
+            max_x: f64::NEG_INFINITY,
+            max_y: f64::NEG_INFINITY,
+        }
     }
 }
 
@@ -44,6 +56,27 @@ impl BoundingBox {
             max_x: x2,
             max_y: y2,
         }
+    }
+
+    pub fn from_points(points: &[Point2D]) -> BoundingBox {
+        let mut bb = BoundingBox {
+            ..Default::default()
+        };
+        for i in 0..points.len() {
+            if points[i].x < bb.min_x {
+                bb.min_x = points[i].x;
+            }
+            if points[i].x > bb.max_x {
+                bb.max_x = points[i].x;
+            }
+            if points[i].y < bb.min_y {
+                bb.min_y = points[i].y;
+            }
+            if points[i].y > bb.max_y {
+                bb.max_y = points[i].y;
+            }
+        }
+        bb
     }
 
     pub fn initialize_to_inf(&mut self) {

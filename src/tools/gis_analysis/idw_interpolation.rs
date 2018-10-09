@@ -580,8 +580,8 @@ impl WhiteboxTool for IdwInterpolation {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        x = west + col as f64 * grid_res + 0.5;
-                        y = north - row as f64 * grid_res - 0.5;
+                        x = west + (col as f64 + 0.5) * grid_res;
+                        y = north - (row as f64 + 0.5) * grid_res;
                         let ret = frs.search(x, y);
                         if ret.len() >= min_points {
                             sum_weights = 0.0;
