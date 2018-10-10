@@ -180,6 +180,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***NewRasterFromBase***: Creates a new raster using a base image.
 - ***PolygonsToLines***: Converts vector polygons into polylines.
 - ***PrintGeoTiffTags***: Prints the tags within a GeoTIFF.
+- ***RasterToVectorLines***: Converts a raster lines features into vector of the POLYLINE shapetype.
 - ***RasterToVectorPoints***: Converts a raster dataset to a vector of the POINT shapetype.
 - ***ReinitializeAttributeTable***: initializes a vector's attribute table deleting all fields but the feature ID (FID).
 - ***RemovePolygonHoles***: Removes holes within the features of a vector polygon file.
@@ -206,6 +207,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***FillMissingData***: Fills nodata holes in a DEM.
 - ***FindRidges***: Identifies potential ridge and peak grid cells.
 - ***Hillshade***: Calculates a hillshade raster from an input DEM.
+- ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 - ***HypsometricAnalysis***: Calculates a hypsometric curve for one or more DEMs.
 - ***MaxAnisotropyDev***: Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 - ***MaxAnisotropyDevSignature***: Calculates the anisotropy in deviation from mean for points over a range of spatial scales.
@@ -218,7 +220,6 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***MultiscaleRoughness***: Calculates surface roughness over a range of spatial scales.
 - ***MultiscaleRoughnessSignature***: Calculates the surface roughness for points over a range of spatial scales.
 - ***MultiscaleTopographicPositionImage***: Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
-- ***HorizonAngle***: Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 - ***NumDownslopeNeighbours***: Calculates the number of downslope neighbours to each grid cell in a DEM.
 - ***NumUpslopeNeighbours***: Calculates the number of upslope neighbours to each grid cell in a DEM.
 - ***PennockLandformClass***: Classifies hillslope zones based on slope, profile curvature, and plan curvature.
@@ -245,6 +246,8 @@ The library currently contains more than 370 tools, which are each grouped based
 
 - ***AggregateRaster***: Aggregates a raster to a lower resolution.
 - ***AverageOverlay***: Calculates the average for each grid cell from a group of raster images.
+- ***BlockMaximumGridding***: Creates a raster grid based on a set of vector points and assigns grid values using a block maximum scheme.
+- ***BlockMinimumGridding***: Creates a raster grid based on a set of vector points and assigns grid values using a block minimum scheme.
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 - ***Centroid***: Calculates the centroid, or average location, of raster polygon objects.
 - ***CentroidVector***: Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
@@ -285,6 +288,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***MinimumBoundingEnvelope***: Creates a vector axis-aligned minimum bounding rectangle (envelope) around vector features.
 - ***MinimumConvexHull***: Creates a vector convex polygon around vector features.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
+- ***NearestNeighbourGridding***: Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 - ***PercentEqualTo***: Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 - ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 - ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.

@@ -38,8 +38,8 @@ mod remove_duplicates;
 mod select_tiles_by_polygon;
 
 // exports identifiers from private sub-modules in the current module namespace
-pub use self::block_maximum::BlockMaximum;
-pub use self::block_minimum::BlockMinimum;
+pub use self::block_maximum::LidarBlockMaximum;
+pub use self::block_minimum::LidarBlockMinimum;
 pub use self::classify_overlap_points::ClassifyOverlapPoints;
 pub use self::clip_lidar_to_polygon::ClipLidarToPolygon;
 pub use self::erase_polygon_from_lidar::ErasePolygonFromLidar;

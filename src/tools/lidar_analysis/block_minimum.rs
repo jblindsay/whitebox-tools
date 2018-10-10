@@ -2,25 +2,25 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: Feb. 6, 2018
+Last Modified: 09/10/2018
 License: MIT
 */
 
-use time;
+use lidar::*;
 use num_cpus;
+use raster::*;
 use std::env;
 use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use std::path;
-use lidar::*;
-use raster::*;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
-pub struct BlockMinimum {
+pub struct LidarBlockMinimum {
     name: String,
     description: String,
     toolbox: String,
@@ -28,44 +28,44 @@ pub struct BlockMinimum {
     example_usage: String,
 }
 
-impl BlockMinimum {
-    pub fn new() -> BlockMinimum {
+impl LidarBlockMinimum {
+    pub fn new() -> LidarBlockMinimum {
         // public constructor
-        let name = "BlockMinimum".to_string();
+        let name = "LidarBlockMinimum".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Grid Resolution".to_owned(), 
-            flags: vec!["--resolution".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Grid Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
             description: "Output raster's grid resolution.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         // parameters.push(ToolParameter{
-        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(), 
-        //     flags: vec!["--palette".to_owned()], 
+        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(),
+        //     flags: vec!["--palette".to_owned()],
         //     description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
         //     parameter_type: ParameterType::String,
         //     default_value: None,
@@ -75,7 +75,8 @@ impl BlockMinimum {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -85,7 +86,7 @@ impl BlockMinimum {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0\"
 .*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
-        BlockMinimum {
+        LidarBlockMinimum {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -95,11 +96,11 @@ impl BlockMinimum {
     }
 }
 
-impl WhiteboxTool for BlockMinimum {
+impl WhiteboxTool for LidarBlockMinimum {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -130,11 +131,12 @@ impl WhiteboxTool for BlockMinimum {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
@@ -142,8 +144,10 @@ impl WhiteboxTool for BlockMinimum {
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -197,14 +201,21 @@ impl WhiteboxTool for BlockMinimum {
                     let s = format!("{:?}", path.unwrap().path());
                     if s.replace("\"", "").to_lowercase().ends_with(".las") {
                         inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(inputs[inputs.len()-1].replace(".las", ".tif").replace(".LAS", ".tif"))
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".las", ".tif")
+                                .replace(".LAS", ".tif"),
+                        )
                     }
                 },
             }
         } else {
             inputs.push(input_file.clone());
             if output_file.is_empty() {
-                output_file = input_file.clone().replace(".las", ".tif").replace(".LAS", ".tif");
+                output_file = input_file
+                    .clone()
+                    .replace(".las", ".tif")
+                    .replace(".LAS", ".tif");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
                 output_file = format!("{}{}", working_directory, output_file);
@@ -223,7 +234,12 @@ impl WhiteboxTool for BlockMinimum {
             output_file = outputs[k].replace("\"", "").clone();
 
             if verbose && inputs.len() > 1 {
-                println!("Gridding {} of {} ({})", k+1, inputs.len(), input_file.clone());
+                println!(
+                    "Gridding {} of {} ({})",
+                    k + 1,
+                    inputs.len(),
+                    input_file.clone()
+                );
             }
 
             if !input_file.contains(path::MAIN_SEPARATOR) {
@@ -261,7 +277,9 @@ impl WhiteboxTool for BlockMinimum {
             let ns_range = north - south;
             let ew_range = east - west;
 
-            let mut configs = RasterConfigs { ..Default::default() };
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
             configs.rows = rows;
             configs.columns = columns;
             configs.north = north;
@@ -289,9 +307,9 @@ impl WhiteboxTool for BlockMinimum {
                     for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                         let p: PointData = input.get_point_info(i);
                         col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                .round()) as isize;
+                            .floor()) as isize;
                         row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                .round()) as isize;
+                            .floor()) as isize;
                         tx.send((row, col, p.z)).unwrap();
                     }
                 });
@@ -320,12 +338,15 @@ impl WhiteboxTool for BlockMinimum {
             }
 
             let end_run = time::now();
-            let elapsed_time_run = end_run - start_run;  
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                            self.get_tool_name()));
+            let elapsed_time_run = end_run - start_run;
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                        .replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""),
+            );
 
             if verbose {
                 println!("Saving data...")
@@ -343,10 +364,11 @@ impl WhiteboxTool for BlockMinimum {
         let end = time::now();
         let elapsed_time = end - start;
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
-
 
         Ok(())
     }

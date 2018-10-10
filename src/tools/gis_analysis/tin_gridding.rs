@@ -400,8 +400,8 @@ impl WhiteboxTool for TINGridding {
 
                 for row in top_row..=bottom_row {
                     for col in left_col..=right_col {
-                        x = west + col as f64 * grid_res;
-                        y = north - row as f64 * grid_res;
+                        x = west + (col as f64 + 0.5) * grid_res;
+                        y = north - (row as f64 + 0.5) * grid_res;
                         if point_in_poly(&Point2D::new(x, y), &tri_points) {
                             // calculate the z values
                             z = -(norm.x * x + norm.y * y + k) / norm.z;

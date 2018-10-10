@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/09/2018
-Last Modified: 24/09/2018
+Last Modified: 09/10/2018
 License: MIT
 */
 
@@ -63,8 +63,10 @@ impl RasterStreamsToVector {
         parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            description: "Output vector file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
+                VectorGeometryType::Line,
+            )),
             default_value: None,
             optional: false,
         });
@@ -89,8 +91,8 @@ impl RasterStreamsToVector {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.tif --d8_pntr=D8.tif -o=output.tif
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.tif --d8_pntr=D8.tif -o=output.tif --esri_pntr", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.tif --d8_pntr=D8.tif -o=output.shp
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.tif --d8_pntr=D8.tif -o=output.shp --esri_pntr", short_exe, name).replace("*", &sep);
 
         RasterStreamsToVector {
             name: name,

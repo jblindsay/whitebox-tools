@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: Feb. 6, 2018
+Last Modified: 09/10/2018
 License: MIT
 */
 
@@ -20,7 +20,7 @@ use std::thread;
 use time;
 use tools::*;
 
-pub struct BlockMaximum {
+pub struct LidarBlockMaximum {
     name: String,
     description: String,
     toolbox: String,
@@ -28,10 +28,10 @@ pub struct BlockMaximum {
     example_usage: String,
 }
 
-impl BlockMaximum {
-    pub fn new() -> BlockMaximum {
+impl LidarBlockMaximum {
+    pub fn new() -> LidarBlockMaximum {
         // public constructor
-        let name = "BlockMaximum".to_string();
+        let name = "LidarBlockMaximum".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.".to_string();
 
@@ -86,7 +86,7 @@ impl BlockMaximum {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0\"
 .*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --palette=light_quant.plt", short_exe, name).replace("*", &sep);
 
-        BlockMaximum {
+        LidarBlockMaximum {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -96,7 +96,7 @@ impl BlockMaximum {
     }
 }
 
-impl WhiteboxTool for BlockMaximum {
+impl WhiteboxTool for LidarBlockMaximum {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -307,9 +307,9 @@ impl WhiteboxTool for BlockMaximum {
                     for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
                         let p: PointData = input.get_point_info(i);
                         col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                            .round()) as isize;
+                            .floor()) as isize;
                         row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                            .round()) as isize;
+                            .floor()) as isize;
                         tx.send((row, col, p.z)).unwrap();
                     }
                 });

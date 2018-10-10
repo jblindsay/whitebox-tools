@@ -36,6 +36,7 @@ impl ToolManager {
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
         tool_names.push("PrintGeoTiffTags".to_string());
+        tool_names.push("RasterToVectorLines".to_string());
         tool_names.push("RasterToVectorPoints".to_string());
         tool_names.push("ReinitializeAttributeTable".to_string());
         tool_names.push("RemovePolygonHoles".to_string());
@@ -48,6 +49,8 @@ impl ToolManager {
         // gis_analysis
         tool_names.push("AggregateRaster".to_string());
         tool_names.push("AverageOverlay".to_string());
+        tool_names.push("BlockMaximumGridding".to_string());
+        tool_names.push("BlockMinimumGridding".to_string());
         tool_names.push("BufferRaster".to_string());
         tool_names.push("Centroid".to_string());
         tool_names.push("CentroidVector".to_string());
@@ -87,6 +90,7 @@ impl ToolManager {
         tool_names.push("MinimumBoundingCircle".to_string());
         tool_names.push("MinimumBoundingEnvelope".to_string());
         tool_names.push("MinimumConvexHull".to_string());
+        tool_names.push("NearestNeighbourGridding".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PercentEqualTo".to_string());
         tool_names.push("PercentGreaterThan".to_string());
@@ -227,8 +231,8 @@ impl ToolManager {
         tool_names.push("WriteFunctionMemoryInsertion".to_string());
 
         // lidar_analysis
-        tool_names.push("BlockMaximum".to_string());
-        tool_names.push("BlockMinimum".to_string());
+        tool_names.push("LidarBlockMaximum".to_string());
+        tool_names.push("LidarBlockMinimum".to_string());
         tool_names.push("ClassifyOverlapPoints".to_string());
         tool_names.push("ClipLidarToPolygon".to_string());
         tool_names.push("ErasePolygonFromLidar".to_string());
@@ -446,6 +450,7 @@ impl ToolManager {
             "newrasterfrombase" => Some(Box::new(tools::data_tools::NewRasterFromBase::new())),
             "polygonstolines" => Some(Box::new(tools::data_tools::PolygonsToLines::new())),
             "printgeotifftags" => Some(Box::new(tools::data_tools::PrintGeoTiffTags::new())),
+            "rastertovectorlines" => Some(Box::new(tools::data_tools::RasterToVectorLines::new())),
             "rastertovectorpoints" => {
                 Some(Box::new(tools::data_tools::RasterToVectorPoints::new()))
             }
@@ -468,6 +473,12 @@ impl ToolManager {
             // gis_analysis
             "aggregateraster" => Some(Box::new(tools::gis_analysis::AggregateRaster::new())),
             "averageoverlay" => Some(Box::new(tools::gis_analysis::AverageOverlay::new())),
+            "blockmaximumgridding" => {
+                Some(Box::new(tools::gis_analysis::BlockMaximumGridding::new()))
+            }
+            "blockminimumgridding" => {
+                Some(Box::new(tools::gis_analysis::BlockMinimumGridding::new()))
+            }
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
             "centroid" => Some(Box::new(tools::gis_analysis::Centroid::new())),
             "centroidvector" => Some(Box::new(tools::gis_analysis::CentroidVector::new())),
@@ -529,6 +540,9 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::MinimumBoundingEnvelope::new()))
             }
             "minimumconvexhull" => Some(Box::new(tools::gis_analysis::MinimumConvexHull::new())),
+            "nearestneighbourgridding" => Some(Box::new(
+                tools::gis_analysis::NearestNeighbourGridding::new(),
+            )),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
             "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
@@ -769,8 +783,8 @@ impl ToolManager {
             )),
 
             // lidar_analysis
-            "blockmaximum" => Some(Box::new(tools::lidar_analysis::BlockMaximum::new())),
-            "blockminimum" => Some(Box::new(tools::lidar_analysis::BlockMinimum::new())),
+            "lidarblockmaximum" => Some(Box::new(tools::lidar_analysis::LidarBlockMaximum::new())),
+            "lidarblockminimum" => Some(Box::new(tools::lidar_analysis::LidarBlockMinimum::new())),
             "classifyoverlappoints" => {
                 Some(Box::new(tools::lidar_analysis::ClassifyOverlapPoints::new()))
             }

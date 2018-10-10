@@ -58,10 +58,14 @@ for more details.
 
 Version 0.12.0 (XX-XX-2018)
 - The following tools were added to the project:
+    BlockMaximumGridding
+    BlockMinimumGridding
     JoinTables
     LasToShapefile
     LinearityIndex
     MergeVectors
+    NearestNeighbourGridding
+    RasterToVectorLines
     VoronoiDiagram
 
 

@@ -1,6 +1,8 @@
 // private sub-module defined in other files
 mod aggregate_raster;
 mod average_overlay;
+mod block_maximum;
+mod block_minimum;
 mod buffer_raster;
 mod centroid;
 mod centroid_vector;
@@ -41,6 +43,7 @@ mod minimum_bounding_box;
 mod minimum_bounding_circle;
 mod minimum_bounding_envelope;
 mod minimum_convex_hull;
+mod nearest_neighbour_gridding;
 mod percent_equal_to;
 mod percent_greater_than;
 mod percent_less_than;
@@ -69,6 +72,8 @@ mod weighted_sum;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::aggregate_raster::AggregateRaster;
 pub use self::average_overlay::AverageOverlay;
+pub use self::block_maximum::BlockMaximumGridding;
+pub use self::block_minimum::BlockMinimumGridding;
 pub use self::buffer_raster::BufferRaster;
 pub use self::centroid::Centroid;
 pub use self::centroid_vector::CentroidVector;
@@ -109,6 +114,7 @@ pub use self::minimum_bounding_box::MinimumBoundingBox;
 pub use self::minimum_bounding_circle::MinimumBoundingCircle;
 pub use self::minimum_bounding_envelope::MinimumBoundingEnvelope;
 pub use self::minimum_convex_hull::MinimumConvexHull;
+pub use self::nearest_neighbour_gridding::NearestNeighbourGridding;
 pub use self::percent_equal_to::PercentEqualTo;
 pub use self::percent_greater_than::PercentGreaterThan;
 pub use self::percent_less_than::PercentLessThan;

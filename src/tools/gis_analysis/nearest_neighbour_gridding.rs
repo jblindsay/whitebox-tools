@@ -1,20 +1,9 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 10/05/2018
+Created: 09/10/2018
 Last Modified: 09/10/2018
 License: MIT
-
-NOTES: Most IDW tool have the option to work either based on a fixed number of neighbouring 
-points or a fixed neighbourhood size. This tool is currently configured to perform the later
-only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require 
-use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance 
-does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
-other options here. 
-
-Another change that will need to be implemented is the use of a nodal function. The original 
-Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the 
-former.
 */
 
 use num_cpus;
@@ -31,8 +20,8 @@ use time;
 use tools::*;
 use vector::{FieldData, ShapeType, Shapefile};
 
-/// Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
-pub struct IdwInterpolation {
+/// Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
+pub struct NearestNeighbourGridding {
     name: String,
     description: String,
     toolbox: String,
@@ -40,12 +29,12 @@ pub struct IdwInterpolation {
     example_usage: String,
 }
 
-impl IdwInterpolation {
+impl NearestNeighbourGridding {
     /// public constructor
-    pub fn new() -> IdwInterpolation {
-        let name = "IdwInterpolation".to_string();
+    pub fn new() -> NearestNeighbourGridding {
+        let name = "NearestNeighbourGridding".to_string();
         let toolbox = "GIS Analysis".to_string();
-        let description = "Interpolates vector points into a raster surface using an inverse-distance weighted scheme.".to_string();
+        let description = "Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -89,33 +78,6 @@ impl IdwInterpolation {
             optional: false,
         });
 
-        parameters.push(ToolParameter {
-            name: "IDW Weight (Exponent) Value".to_owned(),
-            flags: vec!["--weight".to_owned()],
-            description: "IDW weight value.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("2.0".to_owned()),
-            optional: true,
-        });
-
-        parameters.push(ToolParameter {
-            name: "Search Radius".to_owned(),
-            flags: vec!["--radius".to_owned()],
-            description: "Search Radius.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: None,
-            optional: true,
-        });
-
-        parameters.push(ToolParameter {
-            name: "Min. Number of Points".to_owned(),
-            flags: vec!["--min_points".to_owned()],
-            description: "Minimum number of points.".to_owned(),
-            parameter_type: ParameterType::Integer,
-            default_value: None,
-            optional: true,
-        });
-
         parameters.push(ToolParameter{
             name: "Cell Size (optional)".to_owned(), 
             flags: vec!["--cell_size".to_owned()], 
@@ -134,6 +96,15 @@ impl IdwInterpolation {
             optional: true
         });
 
+        parameters.push(ToolParameter {
+            name: "Maximum Search Distance".to_owned(),
+            flags: vec!["--max_dist".to_owned()],
+            description: "Maximum search distance (optional)".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -145,10 +116,10 @@ impl IdwInterpolation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=ELEV -o=output.tif --weight=2.0 --radius=4.0 --min_points=3 --cell_size=1.0
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --use_z -o=output.tif --weight=2.0 --radius=4.0 --min_points=3 --base=existing_raster.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=ELEV -o=output.tif --cell_size=1.0
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --use_z -o=output.tif --base=existing_raster.tif --max_dist=5.5", short_exe, name).replace("*", &sep);
 
-        IdwInterpolation {
+        NearestNeighbourGridding {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -158,7 +129,7 @@ impl IdwInterpolation {
     }
 }
 
-impl WhiteboxTool for IdwInterpolation {
+impl WhiteboxTool for NearestNeighbourGridding {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -198,10 +169,7 @@ impl WhiteboxTool for IdwInterpolation {
         let mut output_file = String::new();
         let mut grid_res = 0f64;
         let mut base_file = String::new();
-        let mut weight = 2f64;
-        let mut radius = 0f64;
-        let mut min_points = 0usize;
-        // let mut max_dist = f64::INFINITY;
+        let mut max_dist = f64::INFINITY;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -251,30 +219,12 @@ impl WhiteboxTool for IdwInterpolation {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-weight" {
-                weight = if keyval {
+            } else if flag_val == "-max_dist" {
+                max_dist = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
-            } else if flag_val == "-radius" {
-                radius = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
-                } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
-                };
-            } else if flag_val == "-min_points" {
-                min_points = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
-                } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
-                };
-                // } else if flag_val == "-max_dist" {
-                //     max_dist = if keyval {
-                //         vec[1].to_string().parse::<f64>().unwrap()
-                //     } else {
-                //         args[i+1].to_string().parse::<f64>().unwrap()
-                //     };
             }
         }
 
@@ -296,12 +246,6 @@ impl WhiteboxTool for IdwInterpolation {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        // radius = radius * radius; // squared distances are used
-
-        // if max_dist != f64::INFINITY {
-        //     max_dist = max_dist * max_dist; // square the max dist
-        // }
-
         if verbose {
             println!("Reading data...")
         };
@@ -317,99 +261,14 @@ impl WhiteboxTool for IdwInterpolation {
             ));
         }
 
-        // // Create the kd tree
+        // The fixed radius search structure needs a radius. Estimate the average spacing between points.
+        let radius = 4.0
+            * ((vector_data.header.x_max - vector_data.header.x_min)
+                * (vector_data.header.y_max - vector_data.header.y_min)
+                / vector_data.num_records as f64)
+                .sqrt();
+
         let (mut x, mut y, mut z): (f64, f64, f64);
-        // let mut points = vec![];
-        // for record_num in 0..vector_data.num_records {
-        //     let record = vector_data.get_record(record_num);
-        //     for i in 0..record.points.len() {
-        //         x = record.points[i].x;
-        //         y = record.points[i].y;
-        //         points.push([x, y]);
-        //     }
-        // }
-
-        // let kdtree = if !use_z {
-        //     // use the specified attribute
-
-        //     // What is the index of the field to be analyzed?
-        //     let field_index = match vector_data.attributes.get_field_num(&field_name) {
-        //         Some(i) => i,
-        //         None => {
-        //             // Field not found
-        //             return Err(Error::new(ErrorKind::InvalidInput,
-        //                 "Attribute not found in table."));
-        //         },
-        //     };
-
-        //     // Is the field numeric?
-        //     if !vector_data.attributes.is_field_numeric(field_index) {
-        //         // Warn user of non-numeric
-        //         return Err(Error::new(ErrorKind::InvalidInput,
-        //             "Non-numeric attributes cannot be rasterized."));
-        //     }
-
-        //     let mut kdtree = KdTree::new_with_capacity(2, vector_data.num_records);
-
-        //     for record_num in 0..vector_data.num_records {
-        //         match vector_data.attributes.get_field_value(record_num, field_index) {
-        //             FieldData::Int(val) => {
-        //                 kdtree.add(points[record_num], val as f64).unwrap();
-        //             },
-        //             FieldData::Int64(val) => {
-        //                 kdtree.add(points[record_num], val as f64).unwrap();
-        //             },
-        //             FieldData::Real(val) => {
-        //                 kdtree.add(points[record_num], val as f64).unwrap();
-        //             },
-        //             _ => {
-        //                 // do nothing; likely due to null value for record.
-        //             }
-        //         }
-
-        //         if verbose {
-        //             progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
-        //             if progress != old_progress {
-        //                 println!("Creating kd-tree: {}%", progress);
-        //                 old_progress = progress;
-        //             }
-        //         }
-        //     }
-
-        //     kdtree
-        // } else {
-        //     // use the z dimension of the point data.
-        //     if vector_data.header.shape_type != ShapeType::PointZ &&
-        //         vector_data.header.shape_type != ShapeType::PointM &&
-        //         vector_data.header.shape_type != ShapeType::MultiPointZ &&
-        //         vector_data.header.shape_type != ShapeType::MultiPointM {
-        //         return Err(Error::new(ErrorKind::InvalidInput,
-        //             "The input vector data must be of PointZ, PointM, MultiPointZ, or MultiPointM shape type."));
-        //     }
-
-        //     let mut kdtree = KdTree::new_with_capacity(2, vector_data.num_records);
-
-        //     let mut p = 0;
-        //     for record_num in 0..vector_data.num_records {
-        //         let record = vector_data.get_record(record_num);
-        //         for i in 0..record.z_array.len() {
-        //             z = record.z_array[i];
-        //             kdtree.add(points[p], z).unwrap();
-        //             p += 1;
-        //         }
-
-        //         if verbose {
-        //             progress = (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
-        //             if progress != old_progress {
-        //                 println!("Creating kd-tree: {}%", progress);
-        //                 old_progress = progress;
-        //             }
-        //         }
-        //     }
-
-        //     kdtree
-        // };
-
         let frs = if !use_z {
             // use the specified attribute
 
@@ -445,9 +304,6 @@ impl WhiteboxTool for IdwInterpolation {
                     FieldData::Int(val) => {
                         frs.insert(x, y, val as f64);
                     }
-                    // FieldData::Int64(val) => {
-                    //     frs.insert(x, y, val as f64);
-                    // },
                     FieldData::Real(val) => {
                         frs.insert(x, y, val);
                     }
@@ -490,7 +346,6 @@ impl WhiteboxTool for IdwInterpolation {
                     y = record.points[i].y;
                     z = record.z_array[i];
                     frs.insert(x, y, z);
-                    // p += 1;
                 }
 
                 if verbose {
@@ -553,116 +408,28 @@ impl WhiteboxTool for IdwInterpolation {
         let north = output.configs.north;
         output.configs.nodata = nodata; // in case a base image is used with a different nodata value.
 
-        // let kdtree = Arc::new(kdtree); // wrap FRS in an Arc
         let frs = Arc::new(frs);
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            // let kdtree = kdtree.clone();
             let frs = frs.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let (mut x, mut y): (f64, f64);
-                let mut zn: f64;
-                let mut dist: f64;
-                let mut val: f64;
-                let mut sum_weights: f64;
-                // let diff_weight = weight - 2f64; // diff between weight and 2, because distances are returned squared
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         x = west + (col as f64 + 0.5) * grid_res;
                         y = north - (row as f64 + 0.5) * grid_res;
-                        let mut ret = frs.search(x, y);
-                        if ret.len() < min_points {
-                            ret = frs.knn_search(x, y, min_points);
-                        }
-                        if ret.len() >= min_points {
-                            sum_weights = 0.0;
-                            val = 0.0;
-                            for j in 0..ret.len() {
-                                zn = ret[j].0;
-                                dist = ret[j].1 as f64;
-                                if dist > 0.0 {
-                                    val += zn / dist.powf(weight);
-                                    sum_weights += 1.0 / dist.powf(weight);
-                                } else {
-                                    data[col as usize] = zn;
-                                    sum_weights = 0.0;
-                                    break;
-                                }
-                            }
-                            if sum_weights > 0.0 {
-                                data[col as usize] = val / sum_weights;
+                        let ret = frs.knn_search(x, y, 1);
+                        if ret.len() == 1 {
+                            if ret[0].1 <= max_dist {
+                                data[col as usize] = ret[0].0;
                             }
                         }
                     }
                     tx.send((row, data)).unwrap();
                 }
-                // if radius > 0f64 {
-                //     for row in (0..rows).filter(|r| r % num_procs == tid) {
-                //         let mut data = vec![nodata; columns as usize];
-                //         for col in 0..columns {
-                //             x = west + col as f64 * grid_res + 0.5;
-                //             y = north - row as f64 * grid_res - 0.5;
-                //             let ret = kdtree.within(&[x, y], radius, &squared_euclidean).unwrap();
-                //             if ret.len() >= min_points {
-                //                 sum_weights = 0.0;
-                //                 val = 0.0;
-                //                 for j in 0..ret.len() {
-                //                     zn = *ret[j].1;
-                //                     dist = ret[j].0;
-                //                     if dist > 0.0 {
-                //                         val += zn / (dist * dist.powf(diff_weight));
-                //                         sum_weights += 1.0 / (dist * dist.powf(diff_weight));
-                //                     } else {
-                //                         data[col as usize] = zn;
-                //                         sum_weights = 0.0;
-                //                         break;
-                //                     }
-                //                 }
-                //                 if sum_weights > 0.0 {
-                //                     data[col as usize] = val / sum_weights;
-                //                 }
-                //             }
-                //         }
-                //         tx.send((row, data)).unwrap();
-                //     }
-                // } else {
-                //     for row in (0..rows).filter(|r| r % num_procs == tid) {
-                //         let mut data = vec![nodata; columns as usize];
-                //         for col in 0..columns {
-                //             x = west + col as f64 * grid_res + 0.5;
-                //             y = north - row as f64 * grid_res - 0.5;
-                //             let ret = kdtree.nearest(&[x, y], min_points, &squared_euclidean).unwrap();
-                //             sum_weights = 0.0;
-                //             val = 0.0;
-                //             for j in 0..ret.len() {
-                //                 zn = *ret[j].1;
-                //                 dist = ret[j].0;
-                //                 if dist < max_dist {
-                //                     if dist > 0.0 {
-                //                         val += zn / (dist * dist.powf(diff_weight));
-                //                         sum_weights += 1.0 / (dist * dist.powf(diff_weight));
-                //                     } else {
-                //                         data[col as usize] = zn;
-                //                         sum_weights = 0.0;
-                //                         break;
-                //                     }
-                //                 } else {
-                //                     // There are fewer than the required number of neighbouring
-                //                     // points. Assign the output nodata.
-                //                     sum_weights = 0.0;
-                //                     break;
-                //                 }
-                //             }
-                //             if sum_weights > 0.0 {
-                //                 data[col as usize] = val / sum_weights;
-                //             }
-                //         }
-                //         tx.send((row, data)).unwrap();
-                //     }
-                // }
             });
         }
 
