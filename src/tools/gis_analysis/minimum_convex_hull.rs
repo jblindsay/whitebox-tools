@@ -16,9 +16,15 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// Creates a vector convex polygon around vector features.
+/// This tool creates a vector convex polygon around vector features. The convex hull
+/// is a convex closure of a set of points or polygon verticies and can be may be
+/// conceptualized as the shape enclosed by a rubber band stretched around the point
+/// set. The convex hull has many applications and is most notably used in various
+/// shape indices. The Delaunay triangulation of a point set and its dual, the
+/// Voronoi diagram, are mathematically related to convex hulls.
 ///
-/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumBoundingEnvelope`
+/// # See Also
+/// `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumBoundingEnvelope`
 pub struct MinimumConvexHull {
     name: String,
     description: String,

@@ -22,7 +22,8 @@ use vector::*;
 /// MBB is needed to compute several shape indices, such as the Elongation Ratio. The `MinimumBoundingEnvelop`
 /// tool can be used to calculate the axis-aligned bounding rectangle around each feature in a vector file.
 ///
-/// **See Also**: `MinimumBoundingCircle`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
+/// # See Also
+/// `MinimumBoundingCircle`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
 pub struct MinimumBoundingBox {
     name: String,
     description: String,

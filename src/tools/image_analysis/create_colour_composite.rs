@@ -6,20 +6,20 @@ Last Modified: Dec. 14, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
+use time;
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+/// Creates a colour-composite image from three bands of multispectral imagery.
 pub struct CreateColourComposite {
     name: String,
     description: String,
@@ -33,68 +33,72 @@ impl CreateColourComposite {
     pub fn new() -> CreateColourComposite {
         let name = "CreateColourComposite".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Creates a colour-composite image from three bands of multispectral imagery."
-            .to_string();
+        let description =
+            "Creates a colour-composite image from three bands of multispectral imagery."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Red Band Image File".to_owned(), 
-            flags: vec!["--red".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Red Band Image File".to_owned(),
+            flags: vec!["--red".to_owned()],
             description: "Input red band image file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Green Band Image File".to_owned(), 
-            flags: vec!["--green".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Green Band Image File".to_owned(),
+            flags: vec!["--green".to_owned()],
             description: "Input green band image file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Blue Band Image File".to_owned(), 
-            flags: vec!["--blue".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Blue Band Image File".to_owned(),
+            flags: vec!["--blue".to_owned()],
             description: "Input blue band image file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Opacity Band Image File (Optional)".to_owned(), 
-            flags: vec!["--opacity".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Opacity Band Image File (Optional)".to_owned(),
+            flags: vec!["--opacity".to_owned()],
             description: "Input opacity band image file (optional).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Colour Composite File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Colour Composite File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output colour composite file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Perform balance contrast enhancement?".to_owned(), 
-            flags: vec!["--enhance".to_owned()], 
-            description: "Optional flag indicating whether a balance contrast enhancement is performed.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Perform balance contrast enhancement?".to_owned(),
+            flags: vec!["--enhance".to_owned()],
+            description:
+                "Optional flag indicating whether a balance contrast enhancement is performed."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -118,7 +122,7 @@ impl WhiteboxTool for CreateColourComposite {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -142,11 +146,12 @@ impl WhiteboxTool for CreateColourComposite {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1_file = String::new();
         let mut input2_file = String::new();
         let mut input3_file = String::new();
@@ -155,8 +160,10 @@ impl WhiteboxTool for CreateColourComposite {
         let mut output_file = String::new();
         let mut enhance = false;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -266,8 +273,9 @@ impl WhiteboxTool for CreateColourComposite {
                 let opacity = Raster::new(&input4_file, "r")?;
                 a_min = opacity.configs.display_min;
                 a_range = opacity.configs.display_max - a_min;
-                if input_r.configs.rows != opacity.configs.rows ||
-                   input_r.configs.columns != opacity.configs.columns {
+                if input_r.configs.rows != opacity.configs.rows
+                    || input_r.configs.columns != opacity.configs.columns
+                {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                           "The input files must have the same number of rows and columns and spatial extent."));
                 }
@@ -284,15 +292,21 @@ impl WhiteboxTool for CreateColourComposite {
         let start = time::now();
 
         // make sure the input files have the same size
-        if input_r.configs.rows != input_g.configs.rows ||
-           input_r.configs.columns != input_g.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "The input files must have the same number of rows and columns and spatial extent."));
+        if input_r.configs.rows != input_g.configs.rows
+            || input_r.configs.columns != input_g.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        if input_r.configs.rows != input_b.configs.rows ||
-           input_r.configs.columns != input_b.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "The input files must have the same number of rows and columns and spatial extent."));
+        if input_r.configs.rows != input_b.configs.rows
+            || input_r.configs.columns != input_b.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let num_procs = num_cpus::get() as isize;
@@ -451,18 +465,18 @@ impl WhiteboxTool for CreateColourComposite {
             let g_s = g_sqr_total as f64 / num_pixels as f64;
             let b_s = b_sqr_total as f64 / num_pixels as f64;
 
-            let r_b = (r_h * r_h * (e - l) - r_s * (h - l) + r_l * r_l * (h - e)) /
-                      (2f64 * (r_h * (e - l) - r_e * (h - l) + r_l * (h - e)));
+            let r_b = (r_h * r_h * (e - l) - r_s * (h - l) + r_l * r_l * (h - e))
+                / (2f64 * (r_h * (e - l) - r_e * (h - l) + r_l * (h - e)));
             let r_a = (h - l) / ((r_h - r_l) * (r_h + r_l - 2f64 * r_b));
             let r_c = l - r_a * ((r_l - r_b) * (r_l - r_b));
 
-            let g_b = (g_h * g_h * (e - l) - g_s * (h - l) + g_l * g_l * (h - e)) /
-                      (2f64 * (g_h * (e - l) - g_e * (h - l) + g_l * (h - e)));
+            let g_b = (g_h * g_h * (e - l) - g_s * (h - l) + g_l * g_l * (h - e))
+                / (2f64 * (g_h * (e - l) - g_e * (h - l) + g_l * (h - e)));
             let g_a = (h - l) / ((g_h - g_l) * (g_h + g_l - 2f64 * g_b));
             let g_c = l - g_a * ((g_l - g_b) * (g_l - g_b));
 
-            let b_b = (b_h * b_h * (e - l) - b_s * (h - l) + b_l * b_l * (h - e)) /
-                      (2f64 * (b_h * (e - l) - b_e * (h - l) + b_l * (h - e)));
+            let b_b = (b_h * b_h * (e - l) - b_s * (h - l) + b_l * b_l * (h - e))
+                / (2f64 * (b_h * (e - l) - b_e * (h - l) + b_l * (h - e)));
             let b_a = (h - l) / ((b_h - b_l) * (b_h + b_l - 2f64 * b_b));
             let b_c = l - b_a * ((b_l - b_b) * (b_l - b_b));
 
@@ -503,7 +517,8 @@ impl WhiteboxTool for CreateColourComposite {
                         g_out = g_outf as u32;
                         b_out = b_outf as u32;
 
-                        output[(row, col)] = ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64
+                        output[(row, col)] =
+                            ((a << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64
                     }
                 }
                 if verbose {
@@ -518,8 +533,10 @@ impl WhiteboxTool for CreateColourComposite {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input red band file: {}", input1_file));
         output.add_metadata_entry(format!("Input green band file: {}", input2_file));
         output.add_metadata_entry(format!("Input blue band file: {}", input3_file));
@@ -527,8 +544,9 @@ impl WhiteboxTool for CreateColourComposite {
             output.add_metadata_entry(format!("Input opacity file: {}", input4_file));
         }
         output.add_metadata_entry(format!("Balance contrast enhancement: {}", enhance));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -542,8 +560,10 @@ impl WhiteboxTool for CreateColourComposite {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

@@ -19,7 +19,6 @@ use time;
 use tools::*;
 use vector::*;
 
-/// # Description
 /// Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
 /// and linear interpolation within each triangular-shaped plane.
 ///

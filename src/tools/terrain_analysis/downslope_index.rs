@@ -44,8 +44,7 @@ use tools::*;
 /// value in the output raster. The output raster is of the float data type and continuous
 /// data scale.
 ///
-/// **Reference**:
-///
+/// # Reference
 /// Hjerdt, K.N., McDonnell, J.J., Seibert, J. Rodhe, A. (2004) *A new topographic index to
 /// quantify downslope controls on local drainage*, **Water Resources Research**, 40, W05602,
 /// doi:10.1029/2004WR003130.

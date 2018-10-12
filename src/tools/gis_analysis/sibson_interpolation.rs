@@ -31,7 +31,6 @@ use time;
 use tools::*;
 use vector::*;
 
-/// # Description
 /// Creates a raster grid based on Sibson's interpolation method, sometimes called *natural neighbours*.
 /// Sibson's method involves applying weights to each of the nearby points, determined by the Voronoi
 /// diagram, of each grid intersection. Weights are determined by the captured area by the Voronoi cell

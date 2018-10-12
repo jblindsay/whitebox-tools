@@ -97,7 +97,7 @@ impl LidarGroundPointFilter {
             flags: vec!["--classify".to_owned()],
             description: "Classify points as ground (2) or off-ground (1).".to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: None,
+            default_value: Some("true".to_string()),
             optional: true,
         });
 

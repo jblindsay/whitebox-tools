@@ -41,7 +41,7 @@ Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-October 1, 2018  \
+October 10, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -514,11 +514,16 @@ The library currently contains more than 370 tools, which are each grouped into 
 
 
 
+
+
+
+
 ### 8.1 Data Tools
 
 #### 8.1.1 AddPointCoordinatesToTable
 
-Modifies the attribute table of a point vector by adding fields containing each point's X and Y coordinates.
+This tool modifies the attribute table of a vector of POINT ShapeType by adding two fields,
+XCOORD and YCOORD, containing each point's X and Y coordinates respectively.
 
 *Parameters*:
 
@@ -609,7 +614,16 @@ convert_raster_format(
 
 #### 8.1.4 ExportTableToCsv
 
-Exports an attribute table to a CSV text file.
+This tool can be used to export a vector's attribute table to a comma separated values (CSV)
+file. CSV files stores tabular data (numbers and text) in plain-text form such that each row
+corresponds to a record and each column to a field. Fields are typically separated by commas
+within records. The user must specify the name of the vector (and associated attribute file),
+the name of the output CSV file, and whether or not to include the field names as a header
+column in the output CSV file.
+
+*See Also*:
+
+`MergeTableWithCsv`
 
 *Parameters*:
 
@@ -640,9 +654,85 @@ export_table_to_csv(
 ```
 
 
-#### 8.1.5 LinesToPolygons
+#### 8.1.5 JoinTables
 
-Converts vector polylines to polygons.
+This tool can be used to join (i.e. merge) a vector's attribute table with a second table. The
+user must specify the name of the vector file (and associated attribute file) as well as the
+*primary key* within the table. The *primary key* (`--primary_key` or `--pkey` flag) is the field
+within the table that is being appended to that serves as the identifier. Additionally, the user
+must specify the name of a second vector from which the data appended into the first table will be
+derived. The *foreign key* (`--foreign_key` or `--fkey` flag), the identifying field within the
+second table that corresponds with the data contained within the primary key in the table, must be
+specified. Both the primary and foreign keys should either be strings (text) or integer values.
+*Fields containing decimal values are not good candidates for keys.* Lastly, the names of the field
+within the second file to include in the merge operation can also be input (`--import`). If the
+`--import` field is not input, all fields in the attribute table of the second file, that are not
+the foreign key nor FID, will be imported to the first table.
+
+Merging works for one-to-one and many-to-one database relations. A *one-to-one* relations exists when
+each record in the attribute table corresponds to one record in the second table and each primary
+key is unique. Since each record in the attribute table is associated with a geospatial feature in
+the vector, an example of a one-to-one relation may be where the second file contains AREA and
+PERIMETER fields for each polygon feature in the vector. This is the most basic type of relation.
+A many-to-one relation would exist when each record in the first attribute table corresponds to one
+record in the second file and the primary key is NOT unique. Consider as an example a vector and
+attribute table associated with a world map of countries. Each country has one or more more polygon
+features in the shapefile, e.g. Canada has its mainland and many hundred large islands. You may want
+to append a table containing data about the population and area of each country. In this case, the
+COUNTRY columns in the attribute table and the second file serve as the primary and foreign keys
+respectively. While there may be many duplicate primary keys (all of those Canadian polygons) each
+will correspond to only one foreign key containing the population and area data. This is a
+*many-to-one* relation. The `JoinTables` tool does not support one-to-many nor many-to-many relations.
+
+*See Also*:
+
+`MergeTableWithCsv`, `ReinitializeAttributeTable`, `ExportTableToCsv`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-i1, -\-input1     Input primary vector file (i.e. the table to be modified)
+-\-primary_key, -\-pkeyPrimary key field
+-\-i2, -\-input2     Input foreign vector file (i.e. source of data to be imported)
+-\-foreign_key, -\-fkeyForeign key field
+-\-import            Imported field (all fields will be imported if not specified)
+
+
+*Python function*:
+
+~~~~{.python}
+join_tables(
+    input1, 
+    pkey, 
+    input2, 
+    fkey, 
+    import, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=JoinTables -v --wd="/path/to/data/" ^
+--i1=properties.shp --pkey=TYPE --i2=land_class.shp ^
+--fkey=VALUE --import=NEW_VALUE 
+
+
+```
+
+
+#### 8.1.6 LinesToPolygons
+
+Converts vector polylines into polygons. Note that this tool will close polygons
+that are open and will ensure that the first part of an input line is interpreted
+as the polygon hull and subsequent parts are considered holes. The tool does not
+examine input lines for line crossings (self intersections), which are topological
+errors.
+
+*See Also*:
+
+`PolygonsToLines`
 
 *Parameters*:
 
@@ -671,9 +761,141 @@ lines_to_polygons(
 ```
 
 
-#### 8.1.6 MultiPartToSinglePart
+#### 8.1.7 MergeTableWithCsv
 
-Converts a vector file containing multi-part features into a vector containing only single-part features.
+This tool can be used to merge a vector's attribute table with data contained within a comma
+separated values (CSV) text file. CSV files stores tabular data (numbers and text) in plain-text
+form such that each row is a record and each column a field. Fields are typically separated by
+commas although the tool will also support seimi-colon, tab, and space delimited files. The user
+must specify the name of the vector (and associated attribute file) as well as the *primary key*
+within the table. The *primary key* (`--primary_key` or `--pkey` flag) is the field within the
+table that is being appended to that serves as the unique identifier. Additionally, the user must
+specify the name of a CSV text file with either a *.csv or *.txt extension. The file must possess a
+header row, i.e. the first row must contain information about the names of the various fields. The
+*foreign key* (`--foreign_key` or `--fkey` flag), that is the unique identifying field within the
+CSV file that corresponds with the data contained within the *primary key* in the table, must also
+be specified. Both the primary and foreign keys should either be strings (text) or integer values.
+*Fields containing decimal values are not good candidates for keys.* Lastly, the user may optionally
+specify the name of a field within the CSV file to import in the merge operation (`--import` flag).
+If this flag is not specified, all of the fields within the CSV, with the exception of the foreign
+key, will be appended to the attribute table.
+
+Merging works for one-to-one and many-to-one database relations. A *one-to-one* relations exists when
+each record in the attribute table corresponds to one record in the second table and each primary
+key is unique. Since each record in the attribute table is associated with a geospatial feature in
+the vector, an example of a one-to-one relation may be where the second file contains AREA and
+PERIMETER fields for each polygon feature in the vector. This is the most basic type of relation.
+A many-to-one relation would exist when each record in the first attribute table corresponds to one
+record in the second file and the primary key is NOT unique. Consider as an example a vector and
+attribute table associated with a world map of countries. Each country has one or more more polygon
+features in the shapefile, e.g. Canada has its mainland and many hundred large islands. You may want
+to append a table containing data about the population and area of each country. In this case, the
+COUNTRY columns in the attribute table and the second file serve as the primary and foreign keys
+respectively. While there may be many duplicate primary keys (all of those Canadian polygons) each
+will correspond to only one foreign key containing the population and area data. This is a
+*many-to-one* relation. The `JoinTables` tool does not support one-to-many nor many-to-many relations.
+
+*See Also*:
+
+`JoinTables`, `ReinitializeAttributeTable`, `ExportTableToCsv`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input primary vector file (i.e. the table to be modified)
+-\-primary_key, -\-pkeyPrimary key field
+-\-csv               Input CSV file (i.e. source of data to be imported)
+-\-foreign_key, -\-fkeyForeign key field
+-\-import            Imported field (all fields will be imported if not specified)
+
+
+*Python function*:
+
+~~~~{.python}
+merge_table_with_csv(
+    i, 
+    pkey, 
+    csv, 
+    fkey, 
+    import, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MergeTableWithCsv -v ^
+--wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
+--csv=land_class.csv --fkey=VALUE --import=NEW_VALUE 
+
+
+```
+
+
+#### 8.1.8 MergeVectors
+
+Combines two or more input vectors of the same ShapeType creating a single, new output
+vector. Importantly, the attribute table of the output vector will contain the ubiquitous
+file-specific FID, the parent file name, the parent FID, and the list of attribute fields
+that are shared among each of the input files. For a field to be considered common
+between tables, it must have the same `name` and `field_type` (i.e. data type and
+precision).
+
+Overlapping features will not be identified nor handled in the merging. If you have
+significant areas of overlap, it is advisable to use one of the vector overlay tools
+instead.
+
+The difference between `MergeVectors` and the `Append` tool is that merging takes two
+or more files and creates one new file containing the features of all inputs, and
+`Append` places the features of a single vector into another existing (appended) vector.
+
+This tool only operates on vector files. Use the `Mosaic` tool to combine raster data.
+
+*See Also*:
+
+`Append`, `Mosaic`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-inputs        Input vector files
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+merge_vectors(
+    inputs, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MergeVectors -v --wd="/path/to/data/" ^
+-i='polys1.shp;polys2.shp;polys3.shp' -o=out_file.shp 
+
+
+```
+
+
+#### 8.1.9 MultiPartToSinglePart
+
+This tool can be used to convert a vector file containing multi-part features into a vector
+containing only single-part features. Any multi-part polygons or lines within the input
+vector file will be split into seperate features in the output file, each possessing their
+own entry in the associated attribute file. For polygon-type vectors, the user may optionally
+choose to exclude hole-parts from being separated from their containing polygons. That is,
+with the `--exclude_holes` flag, hole parts in the input vector will continue to belong to
+their enclosing polygon in the output vector.
+
+*See Also*:
+
+`SinglePartToMultiPart`
 
 *Parameters*:
 
@@ -706,7 +928,7 @@ multi_part_to_single_part(
 ```
 
 
-#### 8.1.7 NewRasterFromBase
+#### 8.1.10 NewRasterFromBase
 
 Creates a new raster using a base image.
 
@@ -746,9 +968,9 @@ new_raster_from_base(
 ```
 
 
-#### 8.1.8 PolygonsToLines
+#### 8.1.11 PolygonsToLines
 
-Converts vector polygons to polylines.
+Converts vector polygons into polylines.
 
 *Parameters*:
 
@@ -777,7 +999,7 @@ polygons_to_lines(
 ```
 
 
-#### 8.1.9 PrintGeoTiffTags
+#### 8.1.12 PrintGeoTiffTags
 
 Prints the tags within a GeoTIFF.
 
@@ -806,9 +1028,58 @@ print_geo_tiff_tags(
 ```
 
 
-#### 8.1.10 RasterToVectorPoints
+#### 8.1.13 RasterToVectorLines
 
-Converts a raster dataset to a vector of the POINT shapetype.
+This tool converts raster lines features into a vector of the POLYLINE ShapeType.
+Grid cells associated with line features will contain non-zero, non-NoData cell
+values. The algorithm requires three passes of the raster. The first pass counts
+the number of line neighbours of each line cell; the second pass traces line
+segments starting from line ends (i.e. line cells with only one neighbouring line
+cell); lastly, the final pass traces any remaining line segments, which are likely
+forming closed loops (and therefore do not have line ends).
+
+If the line raster contains streams, it is preferable to use the `RasterStreamsToVector`
+instead. This tool will use knowledge of flow directions to ensure connections
+between stream segments at confluence sites, whereas `RasterToVectorLines` will not.
+
+*See Also*:
+
+`RasterToVectorPoints`, `RasterStreamsToVector`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input raster lines file
+-o, -\-output        Output raster file
+
+
+*Python function*:
+
+~~~~{.python}
+raster_to_vector_lines(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=RasterToVectorLines -v ^
+--wd="/path/to/data/" -i=lines.tif -o=lines.shp 
+
+
+```
+
+
+#### 8.1.14 RasterToVectorPoints
+
+Converts a raster dataset to a vector of the POINT shapetype. The user must specify
+the name of a raster file and the name of the output vector. Points will correspond
+with grid cell centre points. All grid cells containing non-zero, non-NoData values
+will be considered a point. The vector's attribute table will contain a field called
+'VALUE' that will contain the cell value for each point feature.
 
 *Parameters*:
 
@@ -837,9 +1108,10 @@ raster_to_vector_points(
 ```
 
 
-#### 8.1.11 ReinitializeAttributeTable
+#### 8.1.15 ReinitializeAttributeTable
 
 Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
+Caution: this tool overwrites the input file's attribute table.
 
 *Parameters*:
 
@@ -866,9 +1138,11 @@ reinitialize_attribute_table(
 ```
 
 
-#### 8.1.12 RemovePolygonHoles
+#### 8.1.16 RemovePolygonHoles
 
-Removes holes within the features of a vector polygon file.
+This tool can be used to remove holes from the features within a vector
+polygon file. The user must specify the name of the input vector file,
+which must be of a polygon shapetype, and the name of the output file.
 
 *Parameters*:
 
@@ -898,7 +1172,7 @@ remove_polygon_holes(
 ```
 
 
-#### 8.1.13 SetNodataValue
+#### 8.1.17 SetNodataValue
 
 Assign a specified value in an input image to the NoData value.
 
@@ -931,9 +1205,27 @@ set_nodata_value(
 ```
 
 
-#### 8.1.14 SinglePartToMultiPart
+#### 8.1.18 SinglePartToMultiPart
 
-Converts a vector file containing multi-part features into a vector containing only single-part features.
+This tool can be used to convert a vector file containing single-part features into a vector
+containing multi-part features. The user has the option to either group features based on an
+ID Field (`--field` flag), which is a categorical field within the vector's attribute table.
+The ID Field should either be of String (text) or Integer type. Fields containing decimal values
+are not good candidates for the ID Field. **If no `--field` flag is specified, all features will
+be grouped together into one large multi-part vector**.
+
+This tool works for vectors containing either point, line, or polygon features.
+Since vectors of a POINT ShapeType cannot represent multi-part features, the ShapeType of the
+output file will be modified to a MULTIPOINT ShapeType if the input file is of a POINT ShapeType.
+If the input vector is of a POLYGON ShapeType, the user can optionally set the algorithm to search
+for polygons that should be represented as hole parts. In the case of grouping based on an ID Field,
+hole parts are polygon features contained within larger polygons of the same ID Field value. Please
+note that searching for polygon holes may significantly increase processing time for larger polygon
+coverages.
+
+*See Also*:
+
+`MultiPartToSinglePart`
 
 *Parameters*:
 
@@ -965,7 +1257,7 @@ single_part_to_multi_part(
 ```
 
 
-#### 8.1.15 VectorLinesToRaster
+#### 8.1.19 VectorLinesToRaster
 
 Converts a vector containing polylines into a raster.
 
@@ -1010,7 +1302,7 @@ vector_lines_to_raster(
 ```
 
 
-#### 8.1.16 VectorPointsToRaster
+#### 8.1.20 VectorPointsToRaster
 
 Converts a vector containing points into a raster.
 
@@ -1060,7 +1352,7 @@ vector_points_to_raster(
 ```
 
 
-#### 8.1.17 VectorPolygonsToRaster
+#### 8.1.21 VectorPolygonsToRaster
 
 Converts a vector containing polygons into a raster.
 
@@ -1143,9 +1435,104 @@ aggregate_raster(
 ```
 
 
-#### 8.2.2 Centroid
+#### 8.2.2 BlockMaximumGridding
 
-Calculates the centroid, or average location, of raster polygon objects.
+Creates a raster grid based on a set of vector points and assigns grid values using a block maximum scheme.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-\-use_z             Use z-coordinate instead of field?
+-o, -\-output        Output raster file
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+block_maximum_gridding(
+    i, 
+    field, 
+    output, 
+    use_z=False, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=BlockMaximumGridding -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--cell_size=1.0
+>>./whitebox_tools -r=BlockMaximumGridding -v ^
+--wd="/path/to/data/" -i=points.shp --use_z -o=output.tif ^
+--base=existing_raster.tif 
+
+
+```
+
+
+#### 8.2.3 BlockMinimumGridding
+
+Creates a raster grid based on a set of vector points and assigns grid values using a block minimum scheme.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-\-use_z             Use z-coordinate instead of field?
+-o, -\-output        Output raster file
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+
+
+*Python function*:
+
+~~~~{.python}
+block_minimum_gridding(
+    i, 
+    field, 
+    output, 
+    use_z=False, 
+    cell_size=None, 
+    base=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=BlockMinimumGridding -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--cell_size=1.0
+>>./whitebox_tools -r=BlockMinimumGridding -v ^
+--wd="/path/to/data/" -i=points.shp --use_z -o=output.tif ^
+--base=existing_raster.tif 
+
+
+```
+
+
+#### 8.2.4 Centroid
+
+This tool calculates the centroid, or average location, of raster polygon objects.
+For vector features, use the `CentroidVector` tool instead.
+
+*See Also*:
+
+`CentroidVector`
 
 *Parameters*:
 
@@ -1179,9 +1566,18 @@ centroid(
 ```
 
 
-#### 8.2.3 CentroidVector
+#### 8.2.5 CentroidVector
 
-Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+This can be used to identify the centroid point of a vector polyline or polygon feature or a group of
+vector points. The output is a vector shapefile of points. For multi-part polyline or polygon features,
+the user can optionally specify whether to identify the centroid of each part. The default is to treat
+multi-part features a single entity.
+
+For raster features, use the `Centroid` tool instead.
+
+*See Also*:
+
+`Centroid`, `Medoid`
 
 *Parameters*:
 
@@ -1210,7 +1606,7 @@ centroid_vector(
 ```
 
 
-#### 8.2.4 Clump
+#### 8.2.6 Clump
 
 Groups cells that form physically discrete areas, assigning them unique identifiers.
 
@@ -1245,9 +1641,9 @@ clump(
 ```
 
 
-#### 8.2.5 ConstructVectorTin
+#### 8.2.7 ConstructVectorTin
 
-Creates a vector triangular irregular network (TIN) for a set of vector points.
+This tool creates a vector triangular irregular network (TIN) for a set of vector points.
 
 *Parameters*:
 
@@ -1283,9 +1679,12 @@ construct_vector_tin(
 ```
 
 
-#### 8.2.6 CreateHexagonalVectorGrid
+#### 8.2.8 CreateHexagonalVectorGrid
 
-Creates a hexagonal vector grid.
+This tool can be used to create a hexagonal vector grid. The extent of the hexagonal
+grid is based on the extent of a user-specified base file (any supported raster format,
+shapefiles, or LAS files). The user must also specify the origin of the grid (x and y
+coordinates) and the hexagonal cell width.
 
 *Parameters*:
 
@@ -1319,7 +1718,7 @@ create_hexagonal_vector_grid(
 ```
 
 
-#### 8.2.7 CreatePlane
+#### 8.2.9 CreatePlane
 
 Creates a raster image based on the equation for a simple plane.
 
@@ -1357,9 +1756,12 @@ create_plane(
 ```
 
 
-#### 8.2.8 CreateRectangularVectorGrid
+#### 8.2.10 CreateRectangularVectorGrid
 
-Creates a rectangular vector grid.
+This tool can be used to create a rectangular vector grid. The extent of the rectangular
+grid is based on the extent of a user-specified base file (any supported raster format,
+shapefiles, or LAS files). The user must also specify the origin of the grid (x and y
+coordinates) and the grid cell width and height.
 
 *Parameters*:
 
@@ -1397,9 +1799,14 @@ create_rectangular_vector_grid(
 ```
 
 
-#### 8.2.9 EliminateCoincidentPoints
+#### 8.2.11 EliminateCoincidentPoints
 
-Removes any coincident, or nearly coincident, points from a vector points file.
+This tool can be used to remove any coincident, or nearly coincident, points
+from a vector points file. The user must specify the name of the input file,
+which must be of a POINTS ShapeType, the output file name, and the tolerance
+distance. All points that are within the specified tolerance distance will be
+eliminated from the output file. A tolerance distance of 0.0 indicates that
+points must be exactly coincident to be removed.
 
 *Parameters*:
 
@@ -1431,9 +1838,12 @@ eliminate_coincident_points(
 ```
 
 
-#### 8.2.10 ExtendVectorLines
+#### 8.2.12 ExtendVectorLines
 
-Extends vector lines by a specified distance.
+This tool can be used to extend vector lines by a specified distance. The user must
+input the names of the input and output shapefiles, the distance to extend features
+by, and whether to extend both ends, line starts, or line ends. The input shapefile
+must be of a POLYLINE base shape type and should be in a projected coordinate system.
 
 *Parameters*:
 
@@ -1467,7 +1877,7 @@ extend_vector_lines(
 ```
 
 
-#### 8.2.11 ExtractNodes
+#### 8.2.13 ExtractNodes
 
 Converts vector lines or polygons into vertex points.
 
@@ -1498,7 +1908,7 @@ extract_nodes(
 ```
 
 
-#### 8.2.12 ExtractRasterValuesAtPoints
+#### 8.2.14 ExtractRasterValuesAtPoints
 
 Extracts the values of raster(s) at vector point locations.
 
@@ -1530,7 +1940,7 @@ extract_raster_values_at_points(
 ```
 
 
-#### 8.2.13 FindLowestOrHighestPoints
+#### 8.2.15 FindLowestOrHighestPoints
 
 Locates the lowest and/or highest valued cells in a raster.
 
@@ -1564,7 +1974,7 @@ find_lowest_or_highest_points(
 ```
 
 
-#### 8.2.14 IdwInterpolation
+#### 8.2.16 IdwInterpolation
 
 Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 
@@ -1606,19 +2016,34 @@ idw_interpolation(
 ```
 >>./whitebox_tools -r=IdwInterpolation -v ^
 --wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
---assign=min --nodata ^
---cell_size=10.0
-        >>./whitebox_tools -r=IdwInterpolation ^
--v --wd="/path/to/data/" -i=points.shp --field=FID ^
--o=output.tif --assign=last --base=existing_raster.tif 
+--weight=2.0 --radius=4.0 --min_points=3 ^
+--cell_size=1.0
+>>./whitebox_tools -r=IdwInterpolation -v ^
+--wd="/path/to/data/" -i=points.shp --use_z -o=output.tif ^
+--weight=2.0 --radius=4.0 --min_points=3 ^
+--base=existing_raster.tif 
 
 
 ```
 
 
-#### 8.2.15 LayerFootprint
+#### 8.2.17 LayerFootprint
 
-Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
+This tool creates a vector polygon footprint of the area covered by a raster grid or vector
+layer. It will create a vector rectangle corresponding to the bounding box. The user must
+specify the name of the input file, which may be either a Whitebox raster or a vector, and
+the name of the output file.
+
+If an input raster grid is specified which has an irregular shape, i.e. it contains NoData
+values at the edges, the resulting vector will still correspond to the full grid extent,
+ignoring the irregular boundary. If this is not the desired effect, you should reclass the
+grid such that all cells containing valid values are assigned some positive, non-zero value,
+and then use the `RasterToVectorPolygons` tool to vectorize the irregular-shaped extent
+boundary.
+
+*See Also*:
+
+`MinimumBoundingEnvelope`, `RasterToVectorPolygons`
 
 *Parameters*:
 
@@ -1647,9 +2072,24 @@ layer_footprint(
 ```
 
 
-#### 8.2.16 Medoid
+#### 8.2.18 Medoid
 
-Calculates the medoid for a series of vector features contained in a shapefile.
+This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
+of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid
+is always a members of the input feature data set. Thus, the medoid is a measure of central tendency
+that is robust in the presence of outliers. If the input vector is of a POLYLINE or POLYGON ShapeType,
+the nodes of each feature will be used to estimate the feature medoid. If the input vector is of a
+POINT base ShapeType, the medoid will be calculated for the collection of points. While there are
+more than one competing method of calculating the medoid, this tool uses an algorithm that works as follows:
+
+1. The x-coordinate and y-coordinate of each point/node are placed into two arrays.
+2. The x- and y-coordinate arrays are then sorted and the median x-coordinate (Med X) and median
+y-coordinate (Med Y) are calculated.
+3. The point/node in the dataset that is nearest the point (Med X, Med Y) is identified as the medoid.
+
+*See Also*:
+
+`CentroidVector`
 
 *Parameters*:
 
@@ -1678,9 +2118,17 @@ medoid(
 ```
 
 
-#### 8.2.17 MinimumBoundingBox
+#### 8.2.19 MinimumBoundingBox
 
-Creates a vector minimum bounding rectangle around vector features.
+This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
+completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
+bounding box for each rotation, and finding the box with the smallest area, length, width, or perimeter. The
+MBB is needed to compute several shape indices, such as the Elongation Ratio. The `MinimumBoundingEnvelop`
+tool can be used to calculate the axis-aligned bounding rectangle around each feature in a vector file.
+
+*See Also*:
+
+`MinimumBoundingCircle`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
 
 *Parameters*:
 
@@ -1715,9 +2163,14 @@ minimum_bounding_box(
 ```
 
 
-#### 8.2.18 MinimumBoundingCircle
+#### 8.2.20 MinimumBoundingCircle
 
-Delineates the minimum bounding circle (i.e. smallest enclosing circle) for a group of vectors.
+This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
+circle to completely enclose a feature.
+
+*See Also*:
+
+`MinimumBoundingBox`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
 
 *Parameters*:
 
@@ -1748,9 +2201,16 @@ minimum_bounding_circle(
 ```
 
 
-#### 8.2.19 MinimumBoundingEnvelope
+#### 8.2.21 MinimumBoundingEnvelope
 
-Creates a vector axis-aligned minimum bounding rectangle (envelope) around vector features.
+This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
+rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y
+axis of the coordinate system. The `MinimumBoundingBox` can be used instead to find the smallest possible
+non-axis aligned rectangular envelope.
+
+*See Also*:
+
+`MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumConvexHull`
 
 *Parameters*:
 
@@ -1781,9 +2241,18 @@ minimum_bounding_envelope(
 ```
 
 
-#### 8.2.20 MinimumConvexHull
+#### 8.2.22 MinimumConvexHull
 
-Creates a vector convex polygon around vector features.
+This tool creates a vector convex polygon around vector features. The convex hull
+is a convex closure of a set of points or polygon verticies and can be may be
+conceptualized as the shape enclosed by a rubber band stretched around the point
+set. The convex hull has many applications and is most notably used in various
+shape indices. The Delaunay triangulation of a point set and its dual, the
+Voronoi diagram, are mathematically related to convex hulls.
+
+*See Also*:
+
+`MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumBoundingEnvelope`
 
 *Parameters*:
 
@@ -1814,9 +2283,59 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.21 PolygonArea
+#### 8.2.23 NearestNeighbourGridding
 
-Calculates the area of vector polygons.
+Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector Points file
+-\-field             Input field name in attribute table
+-\-use_z             Use z-coordinate instead of field?
+-o, -\-output        Output raster file
+-\-cell_size         Optionally specified cell size of output raster. Not used when base raster is 
+                     specified 
+-\-base              Optionally specified input base raster file. Not used when a cell size is 
+                     specified 
+-\-max_dist          Maximum search distance (optional)
+
+
+*Python function*:
+
+~~~~{.python}
+nearest_neighbour_gridding(
+    i, 
+    field, 
+    output, 
+    use_z=False, 
+    cell_size=None, 
+    base=None, 
+    max_dist=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=NearestNeighbourGridding -v ^
+--wd="/path/to/data/" -i=points.shp --field=ELEV -o=output.tif ^
+--cell_size=1.0
+>>./whitebox_tools -r=NearestNeighbourGridding ^
+-v --wd="/path/to/data/" -i=points.shp --use_z -o=output.tif ^
+--base=existing_raster.tif --max_dist=5.5 
+
+
+```
+
+
+#### 8.2.24 PolygonArea
+
+This tool calculates the area of vector polygons, adding the result to the
+vector's attribute table (AREA field). The area calculation will account
+for any holes contained within polygons. The vector should be in a
+projected coordinate system.
 
 *Parameters*:
 
@@ -1843,9 +2362,13 @@ polygon_area(
 ```
 
 
-#### 8.2.22 PolygonLongAxis
+#### 8.2.25 PolygonLongAxis
 
-This tool can be used to map the long axis of polygon features.
+This tool can be used to map the long axis of polygon features. The long axis is the
+longer of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
+to completely enclose a feature. The long axis is drawn for each polygon in the input
+vector file such that it passes through the centre point of the MBB. The output file is
+therefore a vector of simple two-point polylines forming a vector field.
 
 *Parameters*:
 
@@ -1874,9 +2397,12 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.23 PolygonPerimeter
+#### 8.2.26 PolygonPerimeter
 
-Calculates the perimeter of vector polygons.
+This tool calculates the perimeter of vector polygons, adding the result
+to the vector's attribute table (PERIMETER field). The area calculation will
+account for any holes contained within polygons. The vector should be in a
+a projected coordinate system.
 
 *Parameters*:
 
@@ -1903,9 +2429,13 @@ polygon_perimeter(
 ```
 
 
-#### 8.2.24 PolygonShortAxis
+#### 8.2.27 PolygonShortAxis
 
-This tool can be used to map the short axis of polygon features.
+This tool can be used to map the short axis of polygon features. The short axis is the
+shorter of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
+to completely enclose a feature. The short axis is drawn for each polygon in the input
+vector file such that it passes through the centre point of the MBB. The output file is
+therefore a vector of simple two-point polylines forming a vector field.
 
 *Parameters*:
 
@@ -1934,7 +2464,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.25 RasterCellAssignment
+#### 8.2.28 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -1969,7 +2499,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.26 Reclass
+#### 8.2.29 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -2011,7 +2541,7 @@ reclass(
 ```
 
 
-#### 8.2.27 ReclassEqualInterval
+#### 8.2.30 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -2049,7 +2579,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.28 ReclassFromFile
+#### 8.2.31 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -2083,9 +2613,12 @@ reclass_from_file(
 ```
 
 
-#### 8.2.29 SmoothVectors
+#### 8.2.32 SmoothVectors
 
-Smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType.
+This tool smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType. The algorithm
+uses a simple moving average method for smoothing, where the size of the averaging window is specified
+by the user. The default filter size is 3 and can be any odd integer larger than or equal to 3. The
+larger the averaging window, the greater the degree of line smoothing.
 
 *Parameters*:
 
@@ -2116,9 +2649,14 @@ smooth_vectors(
 ```
 
 
-#### 8.2.30 TinGridding
+#### 8.2.33 TinGridding
 
-Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
+Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
+and linear interpolation within each triangular-shaped plane.
+
+*See Also*:
+
+`LidarTINGridding`, `ConstructVectorTIN`
 
 *Parameters*:
 
@@ -2127,7 +2665,7 @@ Creates a raster grid based on a triangular irregular network (TIN) fitted to ve
 -i, -\-input         Input vector points file
 -\-field             Input field name in attribute table
 -\-use_z             Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?
--o, -\-output        Output vector polygon file
+-o, -\-output        Output raster file
 -\-resolution        Output raster's grid resolution
 
 
@@ -2157,9 +2695,30 @@ tin_gridding(
 ```
 
 
-#### 8.2.31 VectorHexBinning
+#### 8.2.34 VectorHexBinning
 
-Hex-bins a set of vector points.
+The practice of binning point data to form a type of 2D histogram, density plot,
+or what is sometimes called a heatmap, is quite useful as an alternative for the
+cartographic display of of very dense points sets. This is particularly the case
+when the points experience significant overlap at the displayed scale. The
+`PointDensity` tool can be used to perform binning based on a regular grid (raster
+output). This tool, by comparison, bases the binning on a hexagonal grid.
+
+The tool is similar to the `CreateHexagonalVectorGrid` tool, however instead will
+create an output hexagonal grid in which each hexagonal cell possesses a `COUNT`
+attribute which specifies the number of points from an input points file (Shapefile
+vector) that are contained within the hexagonal cell.
+
+In addition to the names of the input points file and the output Shapefile, the user
+must also specify the desired hexagon width (w), which is the distance between opposing
+sides of each hexagon. The size (s) each side of the hexagon can then be calculated as,
+s = w / [2 x cos(PI / 6)]. The area of each hexagon (A) is, A = 3s(w / 2). The user must
+also specify the orientation of the grid with options of horizontal (pointy side up) and
+vertical (flat side up).
+
+*See Also*:
+
+`LidarHexBinning`, `PointDensity`, `CreateHexagonalVectorGrid`
 
 *Parameters*:
 
@@ -2188,6 +2747,60 @@ vector_hex_binning(
 >>./whitebox_tools -r=VectorHexBinning -v ^
 --wd="/path/to/data/" -i=file.shp -o=outfile.shp --width=10.0 ^
 --orientation=vertical 
+
+
+```
+
+
+#### 8.2.35 VoronoiDiagram
+
+This tool creates a vector Voronoi diagram for a set of vector points. The
+Voronoi diagram is the dual graph of the Delaunay triangulation. The tool
+operates by first constructing the Delaunay triangulation and then
+connecting the circumcenters of each triangle. Each Voronoi cell contains
+one point of the input vector points. All locations within the cell are
+nearer to the contained point than any other input point.
+
+A dense frame of 'ghost' (hidden) points is inserted around the input point
+set to limit the spatial extent of the diagram. The frame is set back from
+the bounding box of the input points by 2 x the average point  spacing. The
+polygons of these ghost points are not output, however, points that are
+situated along the edges of the data will have somewhat rounded (paraboloic)
+exterior boundaries as a result of this edge condition. If this property is
+unacceptable for application, clipping the Voronoi diagram to the convex
+hull may be a better alternative.
+
+This tool works on vector input data only. If a Voronoi diagram is needed
+to tesselate regions associated with a set of raster points, use the
+`EuclideanAllocation` tool instead. To use Voronoi diagrams for gridding
+data (i.e. raster interpolation), use the `NearestNeighbourGridding` tool.
+
+*See Also*:
+
+`ConstructVectorTIN`, `EuclideanAllocation`, `NearestNeighbourGridding`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector points file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+voronoi_diagram(
+    i, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=VoronoiDiagram -v --wd="/path/to/data/" ^
+-i=points.shp -o=tin.shp 
 
 
 ```
@@ -2863,6 +3476,10 @@ pick_from_list(
 
 Calculates the sum for each grid cell from a group of raster images.
 
+*See Also*:
+
+`WeightedSum`
+
 *Parameters*:
 
 **Flag**             **Description**
@@ -2936,7 +3553,13 @@ weighted_overlay(
 
 #### 8.4.17 WeightedSum
 
-Performs a weighted-sum overlay on multiple input raster images.
+This tool performs a weighted-sum overlay on multiple input raster images.
+If you have a stack of rasters that you would like to sum, each with an
+equal weighting (1.0), then use the `SumOverlay` tool instead.
+
+*See Also*:
+
+`SumOverlay`
 
 *Parameters*:
 
@@ -2971,7 +3594,20 @@ weighted_sum(
 
 #### 8.5.1 CompactnessRatio
 
-Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
+The compactness ratio is an indicator of polygon shape complexity. The compactness
+ratio is defined as the polygon area divided by its perimeter. Unlike some other
+shape parameters (e.g. `ShapeComplexityIndex`), compactness ratio does not standardize
+to a simple Euclidean shape. Although widely used for landscape analysis, compactness
+ratio, like its inverse, the `PerimeterAreaRatio`, exhibits the undesirable property
+of polygon size dependence (Mcgarigal et al. 2002). That is, holding shape constant,
+an increase in polygon size will cause a change in the compactness ratio.
+
+The output data will be contained in the input vector's attribute table as a new field
+(COMPACT).
+
+*See Also*:
+
+`PerimeterAreaRatio`, `ShapeComplexityIndex`, `RelatedCircumscribingCircle`
 
 *Parameters*:
 
@@ -3033,7 +3669,21 @@ edge_proportion(
 
 #### 8.5.3 ElongationRatio
 
-Calculates the elongation ratio for vector polygons.
+This tool can be used to calculate the elongation ratio for vector polygons. The
+elongation ratio values calculated for each vector polygon feature will be placed
+in the accompanying database file (.dbf) as an elongation field (ELONGATION).
+
+The elongation ratio (`E`) is:
+
+`E = 1 - S / L`
+
+Where `S` is the short-axis length, and `L` is the long-axis length. Axes
+lengths are determined by estimating the minimum bounding box.
+
+The elongation ratio provides similar information as the Linearity Index. The
+ratio is not an adequate measure of overall polygon narrowness, because a highly
+sinuous but narrow polygon will have a low linearity (elongation) owing to the
+compact nature of these polygon.
 
 *Parameters*:
 
@@ -3054,7 +3704,7 @@ elongation_ratio(
 
 ```
 >>./whitebox_tools -r=ElongationRatio -v ^
---wd="/path/to/data/" --input=points.shp 
+--wd="/path/to/data/" --input=polygons.shp 
 
 
 ```
@@ -3093,7 +3743,15 @@ find_patch_or_class_edge_cells(
 
 #### 8.5.5 HoleProportion
 
-Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
+This calculates the proportion of the total area of a polygon's holes (i.e. islands)
+relative to the area of the polygon's hull. It can be a useful measure of shape
+complexity, or how discontinuous a patch is. The user must specify the name of the
+input vector file and the output data will be contained within the input vector's
+database file as a new field (HOLE_PROP).
+
+*See Also*:
+
+`ShapeComplexityIndex`, `ElongationRatio`, `PerimeterAreaRatio`
 
 *Parameters*:
 
@@ -3120,9 +3778,65 @@ hole_proportion(
 ```
 
 
-#### 8.5.6 PerimeterAreaRatio
+#### 8.5.6 LinearityIndex
 
-Calculates the perimeter-area ratio of vector polygons.
+This tool calculates the linearity index of polygon features based on a regression analysis.
+The index is simply the coefficient of determination (r-squared) calculated from a regression
+analysis of the x and y coordinates of the exterior hull nodes of a vector polygon. Linearity
+index is a measure of how well a polygon can be described by a straight line. It is a related
+index to the `ElongationRatio`, but is more efficient to calculate as it does not require
+finding the minimum bounding box. The Pearson correlation coefficient between linearity index
+and the elongation ratio for a large data set of lake polygons in northern Canada was found
+to be 0.656, suggesting a moderate level of association between the two measures of polygon
+linearity. Note that this index is not useful for identifying narrow yet sinuous polygons, such
+as meandering rivers.
+
+The only required input is the name of the file. The linearity values calculated for each vector
+polygon feature will be placed in the accompanying attribute table as a new field (LINEARITY).
+
+The results will be based on reduced major axis (RMA) regression line.
+
+*See Also*:
+
+`ElongationRatio`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+linearity_index(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LinearityIndex -v --wd="/path/to/data/" ^
+--input=polygons.shp 
+
+
+```
+
+
+#### 8.5.7 PerimeterAreaRatio
+
+The perimeter-area ratio is an indicator of polygon shape complexity. Unlike some
+other shape parameters (e.g. shape complexity index), perimeter-area ratio does not
+standardize to a simple Euclidean shape. Although widely used for landscape analysis,
+perimeter-area ratio exhibits the undesirable property of polygon size dependence
+(Mcgarigal et al. 2002). That is, holding shape constant, an increase in polygon
+size will cause a decrease in the perimeter-area ratio. The perimeter-area ratio is
+the inverse of the compactness ratio.
+
+The output data will be displayed as a new field (P-A_RATIO) in the input vector's
+database file.
 
 *Parameters*:
 
@@ -3149,7 +3863,7 @@ perimeter_area_ratio(
 ```
 
 
-#### 8.5.7 RadiusOfGyration
+#### 8.5.8 RadiusOfGyration
 
 Calculates the distance of cells from their polygon's centroid.
 
@@ -3183,9 +3897,28 @@ radius_of_gyration(
 ```
 
 
-#### 8.5.8 RelatedCircumscribingCircle
+#### 8.5.9 RelatedCircumscribingCircle
 
-Calculates the related circumscribing circle of vector polygons.
+This tool can be used to calculate the related circumscribing circle (Mcgarigal et al. 2002)
+for vector polygon features. The related circumscribing circle values calculated for each
+vector polygon feature will be placed in the accompanying attribute table as a new field
+(RC_CIRCLE).
+
+Related circumscribing circle (RCC) is defined as:
+
+`RCC = 1 - A / Ac`
+
+Where `A` is the polygon's area and `Ac` the area of the smallest circumscribing circle.
+
+Theoretically, `RelatedCircumscribingCircle` ranges from 0 to 1, where a value of 0 indicates
+a circular polygon and a value of 1 indicates a highly elongated shape. The circumscribing
+circle provides a measure of polygon elongation. Unlike the `ElongationRatio`, however, it
+does not provide a measure of polygon direction in addition to overall elongation. Like the
+`ElongationRatio` and `LinearityIndex`, `RelatedCircumscribingCircle` is not an adequate
+measure of overall polygon narrowness, because a highly sinuous but narrow patch will have
+a low related circumscribing circle index owing to the compact nature of these polygon.
+
+Note: Holes are excluded from the area calculation of polygons.
 
 *Parameters*:
 
@@ -3212,9 +3945,30 @@ related_circumscribing_circle(
 ```
 
 
-#### 8.5.9 ShapeComplexityIndex
+#### 8.5.10 ShapeComplexityIndex
 
-Calculates overall polygon shape complexity or irregularity.
+This tool provides a measure of overall polygon shape complexity, or irregularity,
+for vector polygons. Several shape indices have been created to compare a polygon's
+shape to simple Euclidean shapes (e.g. circles, squares, etc.). One of the problems
+with this approach is that it inherently convolves the characteristics of polygon
+complexity and elongation. The Shape Complexity Index (SCI) was developed as a
+parameter for assessing the complexity of a polygon that is independent of its
+elongation.
+
+SCI relates a polygon's shape to that of an encompassing convex hull. It is
+defined as:
+
+`SCI = 1 - A / Ah`
+
+Where `A` is the polygon's area and `Ah` is the area of the convex hull containing
+the polygon. Convex polygons, i.e. those that do not contain concavities or holes,
+have a value of 0. As the shape of the polygon becomes more complex, the SCI
+approaches 1. Note that polygon shape complexity also increases with the greater
+number of holes (i.e. islands), since holes have the effect of reducing the lake
+area.
+
+The SCI values calculated for each vector polygon feature will be placed in the
+accompanying database file (.dbf) as a complexity field (COMPLEXITY).
 
 *Parameters*:
 
@@ -3385,7 +4139,36 @@ directional_relief(
 
 #### 8.6.5 DownslopeIndex
 
-Calculates the Hjerdt et al. (2004) downslope index.
+This tool can be used to calculate the downslope index described by Hjerdt et al. (2004).
+The downslope index is a measure of the slope gradient between a grid cell and some
+downslope location (along the flowpath passing through the upslope grid cell) that
+represents a specified vertical drop (i.e. a potential head drop). The index has been
+shown to be useful for hydrological, geomorphological, and biogeochemical applications.
+
+The user must specify the name of a digital elevaton model (DEM) raster. This DEM
+should be have been pre-processed to remove artifact topographic depressions and flat
+areas. The user must also specify the head potential drop (d), and the output type. The
+output type can be either '`tangent`', '`degrees`', '`radians`', or '`distance`'. If
+'`distance`' is selected as the output type, the output grid actually represents the
+downslope flowpath length required to drop d meters from each grid cell. Linear
+interpolation is used when the specified drop value is encountered between two adjacent
+grid cells along a flowpath traverse.
+
+Notice that this algorithm is affected by edge contamination. That is, for some grid cells,
+the edge of the grid will be encountered along a flowpath traverse before the specified
+vertical drop occurs. In these cases, the value of the downslope index is approximated by
+replacing d with the actual elevation drop observed along the flowpath. To avoid this problem,
+the entire watershed containing an area of interest should be contained in the DEM.
+
+Grid cells containing NoData values in any of the input images are assigned the NoData
+value in the output raster. The output raster is of the float data type and continuous
+data scale.
+
+*Reference*:
+
+Hjerdt, K.N., McDonnell, J.J., Seibert, J. Rodhe, A. (2004) *A new topographic index to
+quantify downslope controls on local drainage*, **Water Resources Research**, 40, W05602,
+doi:10.1029/2004WR003130.
 
 *Parameters*:
 
@@ -3421,7 +4204,17 @@ downslope_index(
 
 #### 8.6.6 DrainagePreservingSmoothing
 
-Reduces short-scale variation in an input DEM while preserving breaks-in-slope and small drainage features using a modified Sun et al. (2007) algorithm.
+This tool implements a modified form of the algorithm described by
+Sun, Rosin, Martin, and Langbein (2007) '*Fast and effective feature-preserving
+mesh denoising*'. This implimentation varies the threshold angle between
+neighbouring grid cell normal vectors, used during the smoothing operation. The
+threshold is varied as a function of how low-lying a site is. This varying
+smoothing level better preserves small drainage features, such as ditches,
+rills, gullies, etc., which would otherwise be smoothed over.
+
+*See Also*:
+
+`FeaturePreservingDenoise`
 
 *Parameters*:
 
@@ -3600,7 +4393,9 @@ elev_relative_to_watershed_min_max(
 
 #### 8.6.11 FeaturePreservingDenoise
 
-Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
+This tool implements a modified form of the algorithm described by
+Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
+mesh denoising.
 
 *Parameters*:
 
@@ -7652,7 +8447,7 @@ high_pass_filter(
 
 #### 8.9.12 HighPassMedianFilter
 
-Performs a high pass median filter on an input image.
+Performs a high pass filter based on a median filter.
 
 *Parameters*:
 
@@ -7989,7 +8784,7 @@ mean_filter(
 
 #### 8.9.21 MedianFilter
 
-Performs a median filter on an input image.
+Performs an efficient median filter based on Huang, Yang, and Tang's (1979) method.
 
 *Parameters*:
 
@@ -8931,79 +9726,7 @@ standard_deviation_contrast_stretch(
 
 ### 8.11 LiDAR Tools
 
-#### 8.11.1 BlockMaximum
-
-Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input LiDAR file
--o, -\-output        Output file
--\-resolution        Output raster's grid resolution
-
-
-*Python function*:
-
-~~~~{.python}
-block_maximum(
-    i=None, 
-    output=None, 
-    resolution=1.0, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=BlockMaximum -v --wd="/path/to/data/" ^
--i=file.las -o=outfile.tif --resolution=2.0"
-./whitebox_tools ^
--r=BlockMaximum -v --wd="/path/to/data/" -i=file.las ^
--o=outfile.tif --resolution=5.0 --palette=light_quant.plt 
-
-
-```
-
-
-#### 8.11.2 BlockMinimum
-
-Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input LiDAR file
--o, -\-output        Output file
--\-resolution        Output raster's grid resolution
-
-
-*Python function*:
-
-~~~~{.python}
-block_minimum(
-    i=None, 
-    output=None, 
-    resolution=1.0, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=BlockMinimum -v --wd="/path/to/data/" ^
--i=file.las -o=outfile.tif --resolution=2.0"
-./whitebox_tools ^
--r=BlockMinimum -v --wd="/path/to/data/" -i=file.las ^
--o=outfile.tif --resolution=5.0 --palette=light_quant.plt 
-
-
-```
-
-
-#### 8.11.3 ClassifyOverlapPoints
+#### 8.11.1 ClassifyOverlapPoints
 
 Classifies or filters LAS points in regions of overlapping flight lines.
 
@@ -9040,7 +9763,7 @@ classify_overlap_points(
 ```
 
 
-#### 8.11.4 ClipLidarToPolygon
+#### 8.11.2 ClipLidarToPolygon
 
 Clips a LiDAR point cloud to a vector polygon or polygons.
 
@@ -9074,7 +9797,7 @@ clip_lidar_to_polygon(
 ```
 
 
-#### 8.11.5 ErasePolygonFromLidar
+#### 8.11.3 ErasePolygonFromLidar
 
 Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
 
@@ -9108,7 +9831,7 @@ erase_polygon_from_lidar(
 ```
 
 
-#### 8.11.6 FilterLidarScanAngles
+#### 8.11.4 FilterLidarScanAngles
 
 Removes points in a LAS file with scan angles greater than a threshold.
 
@@ -9142,7 +9865,7 @@ filter_lidar_scan_angles(
 ```
 
 
-#### 8.11.7 FindFlightlineEdgePoints
+#### 8.11.5 FindFlightlineEdgePoints
 
 Identifies points along a flightline's edge in a LAS file.
 
@@ -9173,7 +9896,7 @@ find_flightline_edge_points(
 ```
 
 
-#### 8.11.8 FlightlineOverlap
+#### 8.11.6 FlightlineOverlap
 
 Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
 
@@ -9210,7 +9933,7 @@ flightline_overlap(
 ```
 
 
-#### 8.11.9 LasToAscii
+#### 8.11.7 LasToAscii
 
 Converts one or more LAS files into ASCII text files.
 
@@ -9239,9 +9962,21 @@ las_to_ascii(
 ```
 
 
-#### 8.11.10 LasToMultipointShapefile
+#### 8.11.8 LasToMultipointShapefile
 
-Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is not specified, the tool grids all LAS files contained within the working directory.
+Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is
+not specified, the tool grids all LAS files contained within the working directory.
+
+This tool can be used in place of the `LasToShapefile` tool when the number of points are
+relatively high and when the desire is to represent the x,y,z position of points only. The z
+values of LAS points will be stored in the z-array of the output Shapefile. Notice that because
+the output file stores each point in a single multi-point record, this Shapefile representation,
+while unable to represent individual point classes, return numbers, etc, is an efficient means
+of converting LAS point positional information.
+
+*See Also*:
+
+`LasToShapefile`
 
 *Parameters*:
 
@@ -9268,7 +10003,127 @@ las_to_multipoint_shapefile(
 ```
 
 
-#### 8.11.11 LidarColourize
+#### 8.11.9 LasToShapefile
+
+This tool converts one or more LAS files into a POINT vector. When the input parameter is
+not specified, the tool grids all LAS files contained within the working directory.
+The attribute table of the output Shapefile will contain fields for the z-value,
+intensity, point class, return number, and number of return.
+
+This tool can be used in place of the `LasToMultipointShapefile` tool when the
+number of points are relatively low and when the desire is to represent more than
+simply the x,y,z position of points. Notice however that because each point in
+the input LAS file will be represented as a separate record in the output
+Shapefile, the output file will be many time larger than the equivalent output of
+the `LasToMultipointShapefile` tool. There is also a practical limit on the
+total number of records that can be held in a single Shapefile and large LAS
+files approach this limit. In these cases, the `LasToMultipointShapefile` tool
+should be preferred instead.
+
+*See Also*:
+
+`LasToMultipointShapefile`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+
+
+*Python function*:
+
+~~~~{.python}
+las_to_shapefile(
+    i=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LasToShapefile -v --wd="/path/to/data/" ^
+-i=input.las 
+
+
+```
+
+
+#### 8.11.10 LidarBlockMaximum
+
+Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-o, -\-output        Output file
+-\-resolution        Output raster's grid resolution
+
+
+*Python function*:
+
+~~~~{.python}
+lidar_block_maximum(
+    i=None, 
+    output=None, 
+    resolution=1.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LidarBlockMaximum -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=2.0"
+./whitebox_tools -r=LidarBlockMaximum -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=5.0 --palette=light_quant.plt 
+
+
+```
+
+
+#### 8.11.11 LidarBlockMinimum
+
+Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input LiDAR file
+-o, -\-output        Output file
+-\-resolution        Output raster's grid resolution
+
+
+*Python function*:
+
+~~~~{.python}
+lidar_block_minimum(
+    i=None, 
+    output=None, 
+    resolution=1.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LidarBlockMinimum -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=2.0"
+./whitebox_tools -r=LidarBlockMinimum -v ^
+--wd="/path/to/data/" -i=file.las -o=outfile.tif ^
+--resolution=5.0 --palette=light_quant.plt 
+
+
+```
+
+
+#### 8.11.12 LidarColourize
 
 Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
@@ -9302,7 +10157,7 @@ lidar_colourize(
 ```
 
 
-#### 8.11.12 LidarConstructVectorTin
+#### 8.11.13 LidarConstructVectorTin
 
 Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -9343,7 +10198,7 @@ lidar_construct_vector_tin(
 ```
 
 
-#### 8.11.13 LidarElevationSlice
+#### 8.11.14 LidarElevationSlice
 
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -9395,7 +10250,7 @@ lidar_elevation_slice(
 ```
 
 
-#### 8.11.14 LidarGroundPointFilter
+#### 8.11.15 LidarGroundPointFilter
 
 Identifies ground points within LiDAR dataset using a slope-based method.
 
@@ -9425,7 +10280,7 @@ lidar_ground_point_filter(
     min_neighbours=0, 
     slope_threshold=45.0, 
     height_threshold=1.0, 
-    classify=False, 
+    classify=True, 
     slope_norm=True, 
     callback=default_callback)
 ~~~~
@@ -9442,9 +10297,32 @@ lidar_ground_point_filter(
 ```
 
 
-#### 8.11.15 LidarHexBinning
+#### 8.11.16 LidarHexBinning
 
-Hex-bins a set of LiDAR points.
+The practice of binning point data to form a type of 2D histogram, density plot,
+or what is sometimes called a heatmap, is quite useful as an alternative for the
+cartographic display of of very dense points sets. This is particularly the case
+when the points experience significant overlap at the displayed scale. The
+`LidarPointDensity` tool can be used to perform binning based on a regular grid
+(raster output). This tool, by comparison, bases the binning on a hexagonal grid.
+
+The tool is similar to the `CreateHexagonalVectorGrid` tool, however instead will
+create an output hexagonal grid in which each hexagonal cell possesses a `COUNT`
+attribute which specifies the number of points from an input points file (LAS file)
+that are contained within the hexagonal cell. The tool will also calculate the
+minimum and maximum elevations and intensity values and outputs these data to the
+attribute table.
+
+In addition to the names of the input points file and the output Shapefile, the user
+must also specify the desired hexagon width (w), which is the distance between opposing
+sides of each hexagon. The size (s) each side of the hexagon can then be calculated as,
+s = w / [2 x cos(PI / 6)]. The area of each hexagon (A) is, A = 3s(w / 2). The user must
+also specify the orientation of the grid with options of horizontal (pointy side up) and
+vertical (flat side up).
+
+*See Also*:
+
+`VectorHexBinning`, `LidarPointDensity`, `CreateHexagonalVectorGrid`
 
 *Parameters*:
 
@@ -9478,7 +10356,7 @@ lidar_hex_binning(
 ```
 
 
-#### 8.11.16 LidarHillshade
+#### 8.11.17 LidarHillshade
 
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
@@ -9518,7 +10396,7 @@ lidar_hillshade(
 ```
 
 
-#### 8.11.17 LidarHistogram
+#### 8.11.18 LidarHistogram
 
 Creates a histogram from LiDAR data.
 
@@ -9554,7 +10432,7 @@ lidar_histogram(
 ```
 
 
-#### 8.11.18 LidarIdwInterpolation
+#### 8.11.19 LidarIdwInterpolation
 
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
 
@@ -9608,9 +10486,11 @@ lidar_idw_interpolation(
 ```
 
 
-#### 8.11.19 LidarInfo
+#### 8.11.20 LidarInfo
 
-Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
+This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
+data. The reported information will include including data on the header, point return frequency, and classification
+data and information about the variable length records (VLRs) and geokeys.
 
 *Parameters*:
 
@@ -9645,7 +10525,7 @@ lidar_info(
 ```
 
 
-#### 8.11.20 LidarJoin
+#### 8.11.21 LidarJoin
 
 Joins multiple LiDAR (LAS) files into a single LAS file.
 
@@ -9676,7 +10556,7 @@ lidar_join(
 ```
 
 
-#### 8.11.21 LidarKappaIndex
+#### 8.11.22 LidarKappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
@@ -9710,7 +10590,7 @@ lidar_kappa_index(
 ```
 
 
-#### 8.11.22 LidarNearestNeighbourGridding
+#### 8.11.23 LidarNearestNeighbourGridding
 
 Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -9762,7 +10642,7 @@ lidar_nearest_neighbour_gridding(
 ```
 
 
-#### 8.11.23 LidarPointDensity
+#### 8.11.24 LidarPointDensity
 
 Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -9811,7 +10691,7 @@ lidar_point_density(
 ```
 
 
-#### 8.11.24 LidarPointStats
+#### 8.11.25 LidarPointStats
 
 Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
@@ -9853,7 +10733,7 @@ lidar_point_stats(
 ```
 
 
-#### 8.11.25 LidarRemoveDuplicates
+#### 8.11.26 LidarRemoveDuplicates
 
 Removes duplicate points from a LiDAR data set.
 
@@ -9886,7 +10766,7 @@ lidar_remove_duplicates(
 ```
 
 
-#### 8.11.26 LidarRemoveOutliers
+#### 8.11.27 LidarRemoveOutliers
 
 Removes outliers (high and low points) in a LiDAR point cloud.
 
@@ -9922,7 +10802,7 @@ lidar_remove_outliers(
 ```
 
 
-#### 8.11.27 LidarSegmentation
+#### 8.11.28 LidarSegmentation
 
 Segments a LiDAR point cloud based on normal vectors.
 
@@ -9961,7 +10841,7 @@ lidar_segmentation(
 ```
 
 
-#### 8.11.28 LidarSegmentationBasedFilter
+#### 8.11.29 LidarSegmentationBasedFilter
 
 Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
@@ -10002,7 +10882,7 @@ lidar_segmentation_based_filter(
 ```
 
 
-#### 8.11.29 LidarThin
+#### 8.11.30 LidarThin
 
 Thins a LiDAR point cloud, reducing point density.
 
@@ -10041,7 +10921,7 @@ lidar_thin(
 ```
 
 
-#### 8.11.30 LidarThinHighDensity
+#### 8.11.31 LidarThinHighDensity
 
 Thins points from high density areas within a LiDAR point cloud.
 
@@ -10079,7 +10959,7 @@ lidar_thin_high_density(
 ```
 
 
-#### 8.11.31 LidarTile
+#### 8.11.32 LidarTile
 
 Tiles a LiDAR LAS file into multiple LAS files.
 
@@ -10118,9 +10998,10 @@ lidar_tile(
 ```
 
 
-#### 8.11.32 LidarTileFootprint
+#### 8.11.33 LidarTileFootprint
 
-Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters are not specified, the tool works with all LAS files contained within the working directory.
+Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters
+are not specified, the tool works with all LAS files contained within the working directory.
 
 *Parameters*:
 
@@ -10149,7 +11030,7 @@ lidar_tile_footprint(
 ```
 
 
-#### 8.11.33 LidarTinGridding
+#### 8.11.34 LidarTinGridding
 
 Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -10195,7 +11076,7 @@ lidar_tin_gridding(
 ```
 
 
-#### 8.11.34 LidarTophatTransform
+#### 8.11.35 LidarTophatTransform
 
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
@@ -10229,7 +11110,7 @@ lidar_tophat_transform(
 ```
 
 
-#### 8.11.35 NormalVectors
+#### 8.11.36 NormalVectors
 
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
@@ -10262,7 +11143,7 @@ normal_vectors(
 ```
 
 
-#### 8.11.36 SelectTilesByPolygon
+#### 8.11.37 SelectTilesByPolygon
 
 Copies LiDAR tiles overlapping with a polygon into an output directory.
 
@@ -11359,7 +12240,7 @@ in_place_subtract(
 
 #### 8.12.33 Increment
 
-Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd).
+Increases the values of each grid cell in an input raster by 1.0. (see also InPlaceAdd)
 
 *Parameters*:
 
@@ -13201,7 +14082,15 @@ long_profile_from_points(
 
 #### 8.13.11 RasterStreamsToVector
 
-Converts a raster stream file into a vector file.
+This tool converts a raster stream file into a vector file. The user must specify
+1) the name of the raster streams file, 2) the name of the D8 flow pointer file,
+and 3) the name of the output vector file. Streams in the input raster streams
+file are denoted by cells containing any positive, non-zero integer. A field in
+the vector database file, called STRM_VAL, will correspond to this positive
+integer value. The database file will also have a field for the length of each
+link in the stream network. The flow pointer file must be calculated from a DEM with
+all topographic depressions and flat areas removed and must be calculated using the
+D8 flow pointer algorithm. The output vector will contain PolyLine features.
 
 *Parameters*:
 
@@ -13209,7 +14098,7 @@ Converts a raster stream file into a vector file.
 -------------------  ---------------
 -\-streams           Input raster streams file
 -\-d8_pntr           Input raster D8 pointer file
--o, -\-output        Output raster file
+-o, -\-output        Output vector file
 -\-esri_pntr         D8 pointer uses the ESRI style scheme
 
 
@@ -13229,10 +14118,10 @@ raster_streams_to_vector(
 ```
 >>./whitebox_tools -r=RasterStreamsToVector -v ^
 --wd="/path/to/data/" --streams=streams.tif --d8_pntr=D8.tif ^
--o=output.tif
+-o=output.shp
 >>./whitebox_tools -r=RasterStreamsToVector -v ^
 --wd="/path/to/data/" --streams=streams.tif --d8_pntr=D8.tif ^
--o=output.tif --esri_pntr 
+-o=output.shp --esri_pntr 
 
 
 ```
@@ -13688,8 +14577,6 @@ tributary_identifier(
 
 
 ```
-
-
 
 
 

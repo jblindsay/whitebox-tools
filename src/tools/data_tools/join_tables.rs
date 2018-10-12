@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 07/10/2018
-Last Modified: 08/10/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -15,17 +15,18 @@ use time;
 use tools::*;
 use vector::{FieldData, Shapefile};
 
-/// This tool can be used to join (i.e. merge) a vectors's attribute table with a second table. The
+/// This tool can be used to join (i.e. merge) a vector's attribute table with a second table. The
 /// user must specify the name of the vector file (and associated attribute file) as well as the
-/// primary key within the table. The primary key is the field within the table that is being appended
-/// to that serves as the identifier. Additionally, the user must specify the name of a second vector
-/// from which the data appended into the first table will be derived. The foreign key, the identifying
-/// field within the second table that corresponds with the data contained within the primary key in
-/// the table, must be specified. Both the primary and foreign key should either be strings (text) or
-/// integer values. Fields containing decimal values are not good candidates for keys. Lastly, the
-/// names of the field within the second file to include in the merge operation can also be input
-/// (`--import`). If the `--import` field is not input, all fields in the attribute table of the second
-/// file, that are not the foreign key nor FID, will be imported to the first table.
+/// *primary key* within the table. The *primary key* (`--pkey` flag) is the field
+/// within the table that is being appended to that serves as the identifier. Additionally, the user
+/// must specify the name of a second vector from which the data appended into the first table will be
+/// derived. The *foreign key* (`--fkey` flag), the identifying field within the
+/// second table that corresponds with the data contained within the primary key in the table, must be
+/// specified. Both the primary and foreign keys should either be strings (text) or integer values.
+/// *Fields containing decimal values are not good candidates for keys.* Lastly, the names of the field
+/// within the second file to include in the merge operation can also be input (`--import`). If the
+/// `--import` field is not input, all fields in the attribute table of the second file, that are not
+/// the foreign key nor FID, will be imported to the first table.
 ///
 /// Merging works for one-to-one and many-to-one database relations. A *one-to-one* relations exists when
 /// each record in the attribute table corresponds to one record in the second table and each primary
@@ -41,6 +42,9 @@ use vector::{FieldData, Shapefile};
 /// respectively. While there may be many duplicate primary keys (all of those Canadian polygons) each
 /// will correspond to only one foreign key containing the population and area data. This is a
 /// *many-to-one* relation. The `JoinTables` tool does not support one-to-many nor many-to-many relations.
+///
+/// # See Also
+/// `MergeTableWithCsv`, `ReinitializeAttributeTable`, `ExportTableToCsv`
 pub struct JoinTables {
     name: String,
     description: String,
@@ -72,7 +76,7 @@ impl JoinTables {
 
         parameters.push(ToolParameter {
             name: "Primary Key Field".to_owned(),
-            flags: vec!["--primary_key".to_owned(), "--pkey".to_owned()],
+            flags: vec!["--pkey".to_owned()],
             description: "Primary key field.".to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
                 AttributeType::Any,
@@ -96,7 +100,7 @@ impl JoinTables {
 
         parameters.push(ToolParameter {
             name: "Foreign Key Field".to_owned(),
-            flags: vec!["--foreign_key".to_owned(), "--fkey".to_owned()],
+            flags: vec!["--fkey".to_owned()],
             description: "Foreign key field.".to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
                 AttributeType::Any,
@@ -131,7 +135,7 @@ impl JoinTables {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=properties.shp --pkey=TYPE --i2=land_class.csv --fkey=VALUE --import=NEW_VALUE",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=properties.shp --pkey=TYPE --i2=land_class.shp --fkey=VALUE --import=NEW_VALUE",
             short_exe, name
         ).replace("*", &sep);
 

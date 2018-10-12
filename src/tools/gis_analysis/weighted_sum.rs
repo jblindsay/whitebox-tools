@@ -18,7 +18,8 @@ use tools::*;
 /// If you have a stack of rasters that you would like to sum, each with an
 /// equal weighting (1.0), then use the `SumOverlay` tool instead.
 ///
-/// **See Also**: `SumOverlay`
+/// # See Also
+/// `SumOverlay`
 pub struct WeightedSum {
     name: String,
     description: String,

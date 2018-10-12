@@ -19,7 +19,7 @@ use time;
 use tools::*;
 use vector::*;
 
-/// Converts one or more LAS files into a POINT vector. When the input parameter is
+/// This tool converts one or more LAS files into a POINT vector. When the input parameter is
 /// not specified, the tool grids all LAS files contained within the working directory.
 /// The attribute table of the output Shapefile will contain fields for the z-value,
 /// intensity, point class, return number, and number of return.
@@ -34,7 +34,8 @@ use vector::*;
 /// files approach this limit. In these cases, the `LasToMultipointShapefile` tool
 /// should be preferred instead.
 ///
-/// **See Also**: `LasToMultipointShapefile`
+/// # See Also
+/// `LasToMultipointShapefile`
 pub struct LasToShapefile {
     name: String,
     description: String,

@@ -28,6 +28,31 @@ def to_camelcase(name):
     return ''.join(x.title() for x in name.split('_'))
 
 
+tool_dir = "/Users/johnlindsay/Documents/Programming/whitebox_tools/whitebox-tools/src/tools/"
+in_files = []
+for dirpath, dirnames, filenames in os.walk(tool_dir):
+    for filename in [f for f in filenames if f.endswith(".rs")]:
+        in_files.append(os.path.join(dirpath, filename))
+
+
+tool_help_dict = {}
+for filepath in in_files:
+    with open(filepath) as f:
+        docs = []
+        for line in f:
+            if line.startswith("///"):
+                docs.append(line.replace("///", "").replace("\n", "").strip())
+            elif line.startswith("pub struct") and len(docs) > 0:
+                toolname = line.replace("pub struct", "").replace(
+                    "{", "").replace("\n", "").strip()
+                helpstring = ""
+                for l in docs:
+                    l = l.replace(
+                        "# See Also", "*See Also*:\n").replace("# Reference", "*Reference*:\n")
+                    helpstring += l + "\n"
+                tool_help_dict[camel_to_snake(toolname)] = helpstring
+
+
 wbt = WhiteboxTools()
 
 # Get the root directory containing the WhiteboxTools repo
@@ -55,6 +80,9 @@ tools = wbt.list_tools()
 # description = t.strip().split(":")[1].strip().rstrip('.')
 for tool, description in tools.items():
     toolbox = wbt.toolbox(tool).strip()
+
+    if tool in tool_help_dict:
+        description = tool_help_dict[tool]
 
     tool = to_camelcase(tool)
 
@@ -199,7 +227,7 @@ for tool, description in tools.items():
     fn = """
 #### insertNumHere {}
 
-{}.
+{}
 
 *Parameters*:
 
@@ -220,7 +248,7 @@ for tool, description in tools.items():
 
 
 ```
-""".format(tool, description.strip().rstrip('.'), doc_str, fn_def, example)
+""".format(tool, description.strip(), doc_str, fn_def, example)
     # print(fn)
     tb_dict[toolbox].append(fn)
 

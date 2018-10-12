@@ -6,20 +6,20 @@ Last Modified: Dec. 15, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
+use time;
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+/// Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
 pub struct PanchromaticSharpening {
     name: String,
     description: String,
@@ -36,13 +36,16 @@ impl PanchromaticSharpening {
         let description = "Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Red Band File (optional; only if colour-composite not specified)".to_owned(), 
-            flags: vec!["--red".to_owned()], 
-            description: "Input red band image file. Optionally specified if colour-composite not specified.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Input Red Band File (optional; only if colour-composite not specified)"
+                .to_owned(),
+            flags: vec!["--red".to_owned()],
+            description:
+                "Input red band image file. Optionally specified if colour-composite not specified."
+                    .to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -72,37 +75,38 @@ impl PanchromaticSharpening {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Panchromatic Band File".to_owned(), 
-            flags: vec!["--pan".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Panchromatic Band File".to_owned(),
+            flags: vec!["--pan".to_owned()],
             description: "Input panchromatic band file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Colour Composite File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Colour Composite File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output colour composite file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Pan-Sharpening Method".to_owned(), 
-            flags: vec!["--method".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Pan-Sharpening Method".to_owned(),
+            flags: vec!["--method".to_owned()],
             description: "Options include 'brovey' (default) and 'ihs'".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["brovey".to_owned(), "ihs".to_owned()]),
             default_value: Some("brovey".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -126,7 +130,7 @@ impl WhiteboxTool for PanchromaticSharpening {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -157,11 +161,12 @@ impl WhiteboxTool for PanchromaticSharpening {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut red_file = String::new();
         let mut green_file = String::new();
         let mut blue_file = String::new();
@@ -172,8 +177,10 @@ impl WhiteboxTool for PanchromaticSharpening {
         let mut fusion_method = String::from("brovey");
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -190,37 +197,47 @@ impl WhiteboxTool for PanchromaticSharpening {
                 } else {
                     red_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-g" || vec[0].to_lowercase() == "-green" ||
-                      vec[0].to_lowercase() == "--green" {
+            } else if vec[0].to_lowercase() == "-g"
+                || vec[0].to_lowercase() == "-green"
+                || vec[0].to_lowercase() == "--green"
+            {
                 if keyval {
                     green_file = vec[1].to_string();
                 } else {
                     green_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-b" || vec[0].to_lowercase() == "-blue" ||
-                      vec[0].to_lowercase() == "--blue" {
+            } else if vec[0].to_lowercase() == "-b"
+                || vec[0].to_lowercase() == "-blue"
+                || vec[0].to_lowercase() == "--blue"
+            {
                 if keyval {
                     blue_file = vec[1].to_string();
                 } else {
                     blue_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-p" || vec[0].to_lowercase() == "-pan" ||
-                      vec[0].to_lowercase() == "--pan" {
+            } else if vec[0].to_lowercase() == "-p"
+                || vec[0].to_lowercase() == "-pan"
+                || vec[0].to_lowercase() == "--pan"
+            {
                 if keyval {
                     pan_file = vec[1].to_string();
                 } else {
                     pan_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-c" || vec[0].to_lowercase() == "-composite" ||
-                      vec[0].to_lowercase() == "--composite" {
+            } else if vec[0].to_lowercase() == "-c"
+                || vec[0].to_lowercase() == "-composite"
+                || vec[0].to_lowercase() == "--composite"
+            {
                 if keyval {
                     composite_file = vec[1].to_string();
                 } else {
                     composite_file = args[i + 1].to_string();
                 }
                 use_composite = true;
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "-output" ||
-                      vec[0].to_lowercase() == "--output" {
+            } else if vec[0].to_lowercase() == "-o"
+                || vec[0].to_lowercase() == "-output"
+                || vec[0].to_lowercase() == "--output"
+            {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
@@ -299,7 +316,6 @@ impl WhiteboxTool for PanchromaticSharpening {
             resolution_y = input_c.configs.resolution_y;
 
             input = input_c.get_data_as_array2d();
-
         } else {
             if verbose {
                 println!("Reading red band data...")
@@ -315,13 +331,15 @@ impl WhiteboxTool for PanchromaticSharpening {
             let input_b = Raster::new(&blue_file, "r")?;
 
             // make sure the input files have the same size
-            if input_r.configs.rows != input_g.configs.rows ||
-               input_r.configs.columns != input_g.configs.columns {
+            if input_r.configs.rows != input_g.configs.rows
+                || input_r.configs.columns != input_g.configs.columns
+            {
                 return Err(Error::new(ErrorKind::InvalidInput,
                                       "The input files must have the same number of rows and columns and spatial extent."));
             }
-            if input_r.configs.rows != input_b.configs.rows ||
-               input_r.configs.columns != input_b.configs.columns {
+            if input_r.configs.rows != input_b.configs.rows
+                || input_r.configs.columns != input_b.configs.columns
+            {
                 return Err(Error::new(ErrorKind::InvalidInput,
                                       "The input files must have the same number of rows and columns and spatial extent."));
             }
@@ -337,7 +355,6 @@ impl WhiteboxTool for PanchromaticSharpening {
             east = input_r.configs.east;
             resolution_x = input_r.configs.resolution_x;
             resolution_y = input_r.configs.resolution_y;
-
 
             input = Array2D::new(rows_ms, columns_ms, nodata_ms, nodata_ms)?; // : Array2D<f64>
             let (mut r, mut g, mut b): (f64, f64, f64);
@@ -381,8 +398,8 @@ impl WhiteboxTool for PanchromaticSharpening {
                         }
                         b_out = b as u32;
 
-                        input[(row, col)] = ((255 << 24) | (b_out << 16) | (g_out << 8) | r_out) as
-                                            f64;
+                        input[(row, col)] =
+                            ((255 << 24) | (b_out << 16) | (g_out << 8) | r_out) as f64;
                     }
                 }
             }
@@ -484,7 +501,6 @@ impl WhiteboxTool for PanchromaticSharpening {
                     }
                 }
             }
-
         } else {
             // ihs
 
@@ -666,8 +682,10 @@ impl WhiteboxTool for PanchromaticSharpening {
         let end = time::now();
         let elapsed_time = end - start;
 
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         if use_composite {
             output.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
         } else {
@@ -677,8 +695,9 @@ impl WhiteboxTool for PanchromaticSharpening {
         }
         output.add_metadata_entry(format!("Input panchromatic file: {}", pan_file));
         output.add_metadata_entry(format!("Pan-sharpening fusion method: {}", fusion_method));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -692,8 +711,10 @@ impl WhiteboxTool for PanchromaticSharpening {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

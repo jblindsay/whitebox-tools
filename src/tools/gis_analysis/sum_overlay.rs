@@ -16,7 +16,8 @@ use tools::*;
 
 /// Calculates the sum for each grid cell from a group of raster images.
 ///
-/// **See Also**: `WeightedSum`
+/// # See Also
+/// `WeightedSum`
 pub struct SumOverlay {
     name: String,
     description: String,

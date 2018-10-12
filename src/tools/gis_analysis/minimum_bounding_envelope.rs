@@ -21,7 +21,8 @@ use vector::*;
 /// axis of the coordinate system. The `MinimumBoundingBox` can be used instead to find the smallest possible
 /// non-axis aligned rectangular envelope.
 ///
-/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumConvexHull`
+/// # See Also
+/// `MinimumBoundingBox`, `MinimumBoundingCircle`, `MinimumConvexHull`
 pub struct MinimumBoundingEnvelope {
     name: String,
     description: String,

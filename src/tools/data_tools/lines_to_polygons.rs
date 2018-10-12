@@ -20,7 +20,8 @@ use vector::*;
 /// examine input lines for line crossings (self intersections), which are topological
 /// errors.
 ///
-/// **See Also**: `PolygonsToLines`
+/// # See Also
+/// `PolygonsToLines`
 pub struct LinesToPolygons {
     name: String,
     description: String,

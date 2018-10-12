@@ -22,7 +22,8 @@ use vector::*;
 /// with the `--exclude_holes` flag, hole parts in the input vector will continue to belong to
 /// their enclosing polygon in the output vector.
 ///
-/// **See Also**: `SinglePartToMultiPart`
+/// # See Also
+/// `SinglePartToMultiPart`
 pub struct MultiPartToSinglePart {
     name: String,
     description: String,

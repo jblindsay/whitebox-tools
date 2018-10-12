@@ -18,7 +18,6 @@ use time;
 use tools::*;
 use vector::*;
 
-/// # Description
 /// This tool creates a vector Voronoi diagram for a set of vector points. The
 /// Voronoi diagram is the dual graph of the Delaunay triangulation. The tool
 /// operates by first constructing the Delaunay triangulation and then

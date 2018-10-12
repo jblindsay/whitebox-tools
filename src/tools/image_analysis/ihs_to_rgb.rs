@@ -6,19 +6,19 @@ Last Modified: Dec. 15, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+/// Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
 pub struct IhsToRgb {
     name: String,
     description: String,
@@ -28,93 +28,108 @@ pub struct IhsToRgb {
 }
 
 impl IhsToRgb {
-
     /// Public constructor.
     pub fn new() -> IhsToRgb {
         let name = "IhsToRgb".to_string();
         let toolbox = "Image Processing Tools".to_owned();
         let description = "Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Intensity File".to_owned(), 
-            flags: vec!["--intensity".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Intensity File".to_owned(),
+            flags: vec!["--intensity".to_owned()],
             description: "Input intensity file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Hue File".to_owned(), 
-            flags: vec!["--hue".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Hue File".to_owned(),
+            flags: vec!["--hue".to_owned()],
             description: "Input hue file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Saturation File".to_owned(), 
-            flags: vec!["--saturation".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Saturation File".to_owned(),
+            flags: vec!["--saturation".to_owned()],
             description: "Input saturation file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Red Band File (optional; only if colour-composite not specified)".to_owned(), 
-            flags: vec!["--red".to_owned()], 
-            description: "Output red band file. Optionally specified if colour-composite not specified.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output Red Band File (optional; only if colour-composite not specified)"
+                .to_owned(),
+            flags: vec!["--red".to_owned()],
+            description:
+                "Output red band file. Optionally specified if colour-composite not specified."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Green Band File (optional; only if colour-composite not specified)".to_owned(), 
-            flags: vec!["--green".to_owned()], 
-            description: "Output green band file. Optionally specified if colour-composite not specified.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output Green Band File (optional; only if colour-composite not specified)"
+                .to_owned(),
+            flags: vec!["--green".to_owned()],
+            description:
+                "Output green band file. Optionally specified if colour-composite not specified."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Blue Band File (optional; only if colour-composite not specified)".to_owned(), 
-            flags: vec!["--blue".to_owned()], 
-            description: "Output blue band file. Optionally specified if colour-composite not specified.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output Blue Band File (optional; only if colour-composite not specified)"
+                .to_owned(),
+            flags: vec!["--blue".to_owned()],
+            description:
+                "Output blue band file. Optionally specified if colour-composite not specified."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Colour-Composite File (optional; only if individual bands not specified)".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output colour-composite file. Only used if individual bands are not specified.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output Colour-Composite File (optional; only if individual bands not specified)"
+                .to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output colour-composite file. Only used if individual bands are not specified."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --intensity=intensity.tif --hue=hue.tif --saturation=saturation.tif --red=band3.tif --green=band2.tif --blue=band1.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --intensity=intensity.tif --hue=hue.tif --saturation=saturation.tif --composite=image.tif", short_exe, name).replace("*", &sep);
-    
-        IhsToRgb { 
-            name: name, 
-            description: description, 
+
+        IhsToRgb {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -123,7 +138,7 @@ impl WhiteboxTool for IhsToRgb {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -147,7 +162,12 @@ impl WhiteboxTool for IhsToRgb {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut red_file = String::new();
         let mut green_file = String::new();
         let mut blue_file = String::new();
@@ -157,8 +177,10 @@ impl WhiteboxTool for IhsToRgb {
         let mut composite_file = String::new();
         let mut use_composite = false;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -173,43 +195,61 @@ impl WhiteboxTool for IhsToRgb {
                 if keyval {
                     red_file = vec[1].to_string();
                 } else {
-                    red_file = args[i+1].to_string();
+                    red_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-g" || vec[0].to_lowercase() == "-green" || vec[0].to_lowercase() == "--green" {
+            } else if vec[0].to_lowercase() == "-g"
+                || vec[0].to_lowercase() == "-green"
+                || vec[0].to_lowercase() == "--green"
+            {
                 if keyval {
                     green_file = vec[1].to_string();
                 } else {
-                    green_file = args[i+1].to_string();
+                    green_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-b" || vec[0].to_lowercase() == "-blue" || vec[0].to_lowercase() == "--blue" {
+            } else if vec[0].to_lowercase() == "-b"
+                || vec[0].to_lowercase() == "-blue"
+                || vec[0].to_lowercase() == "--blue"
+            {
                 if keyval {
                     blue_file = vec[1].to_string();
                 } else {
-                    blue_file = args[i+1].to_string();
+                    blue_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-intensity" || vec[0].to_lowercase() == "--intensity" {
+            } else if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "-intensity"
+                || vec[0].to_lowercase() == "--intensity"
+            {
                 if keyval {
                     intensity_file = vec[1].to_string();
                 } else {
-                    intensity_file = args[i+1].to_string();
+                    intensity_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-h" || vec[0].to_lowercase() == "-hue" || vec[0].to_lowercase() == "--hue" {
+            } else if vec[0].to_lowercase() == "-h"
+                || vec[0].to_lowercase() == "-hue"
+                || vec[0].to_lowercase() == "--hue"
+            {
                 if keyval {
                     hue_file = vec[1].to_string();
                 } else {
-                    hue_file = args[i+1].to_string();
+                    hue_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-s" || vec[0].to_lowercase() == "-saturation" || vec[0].to_lowercase() == "--saturation" {
+            } else if vec[0].to_lowercase() == "-s"
+                || vec[0].to_lowercase() == "-saturation"
+                || vec[0].to_lowercase() == "--saturation"
+            {
                 if keyval {
                     saturation_file = vec[1].to_string();
                 } else {
-                    saturation_file = args[i+1].to_string();
+                    saturation_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "-composite" || vec[0].to_lowercase() == "--composite" {
+            } else if vec[0].to_lowercase() == "-o"
+                || vec[0].to_lowercase() == "-composite"
+                || vec[0].to_lowercase() == "--composite"
+            {
                 if keyval {
                     composite_file = vec[1].to_string();
                 } else {
-                    composite_file = args[i+1].to_string();
+                    composite_file = args[i + 1].to_string();
                 }
                 use_composite = true;
             }
@@ -245,11 +285,17 @@ impl WhiteboxTool for IhsToRgb {
             saturation_file = format!("{}{}", working_directory, saturation_file);
         }
 
-        if verbose { println!("Reading intensity band data...") };
+        if verbose {
+            println!("Reading intensity band data...")
+        };
         let input_i = Arc::new(Raster::new(&intensity_file, "r")?);
-        if verbose { println!("Reading hue band data...") };
+        if verbose {
+            println!("Reading hue band data...")
+        };
         let input_h = Arc::new(Raster::new(&hue_file, "r")?);
-        if verbose { println!("Reading saturation band data...") };
+        if verbose {
+            println!("Reading saturation band data...")
+        };
         let input_s = Arc::new(Raster::new(&saturation_file, "r")?);
 
         let rows = input_i.configs.rows as isize;
@@ -257,17 +303,25 @@ impl WhiteboxTool for IhsToRgb {
         let nodata_i = input_i.configs.nodata;
         let nodata_h = input_h.configs.nodata;
         let nodata_s = input_s.configs.nodata;
-        
+
         let start = time::now();
 
         // make sure the input files have the same size
-        if input_i.configs.rows != input_h.configs.rows || input_i.configs.columns != input_h.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if input_i.configs.rows != input_h.configs.rows
+            || input_i.configs.columns != input_h.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        if input_i.configs.rows != input_s.configs.rows || input_i.configs.columns != input_s.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if input_i.configs.rows != input_s.configs.rows
+            || input_i.configs.columns != input_s.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let num_procs = num_cpus::get() as isize;
@@ -297,7 +351,8 @@ impl WhiteboxTool for IhsToRgb {
                                 r = i * (1f64 - s) / 3f64;
                                 g = i * (1f64 + 2f64 * s - 3f64 * s * (h - 1f64)) / 3f64;
                                 b = i * (1f64 - s + 3f64 * s * (h - 1f64)) / 3f64;
-                            } else { // h <= 3
+                            } else {
+                                // h <= 3
                                 r = i * (1f64 - s + 3f64 * s * (h - 2f64)) / 3f64;
                                 g = i * (1f64 - s) / 3f64;
                                 b = i * (1f64 + 2f64 * s - 3f64 * s * (h - 2f64)) / 3f64;
@@ -317,15 +372,15 @@ impl WhiteboxTool for IhsToRgb {
             let mut output_r = Raster::initialize_using_file(&red_file, &input_i);
             output_r.configs.photometric_interp = PhotometricInterpretation::Continuous;
             output_r.configs.data_type = DataType::F32;
-            
+
             let mut output_g = Raster::initialize_using_file(&green_file, &input_i);
             output_g.configs.photometric_interp = PhotometricInterpretation::Continuous;
             output_g.configs.data_type = DataType::F32;
-            
+
             let mut output_b = Raster::initialize_using_file(&blue_file, &input_i);
             output_b.configs.photometric_interp = PhotometricInterpretation::Continuous;
             output_b.configs.data_type = DataType::F32;
-            
+
             for row in 0..rows {
                 let data = rx.recv().unwrap();
                 output_r.set_row_data(data.0, data.1);
@@ -342,45 +397,77 @@ impl WhiteboxTool for IhsToRgb {
 
             let end = time::now();
             let elapsed_time = end - start;
-            
-            output_r.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+
+            output_r.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output_r.add_metadata_entry(format!("Input intensity image file: {}", intensity_file));
             output_r.add_metadata_entry(format!("Input hue image file: {}", hue_file));
-            output_r.add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output_r.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output_r
+                .add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
+            output_r.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving red data...") };
+            if verbose {
+                println!("Saving red data...")
+            };
             let _ = match output_r.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
 
-            output_g.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output_g.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output_g.add_metadata_entry(format!("Input intensity image file: {}", intensity_file));
             output_g.add_metadata_entry(format!("Input hue image file: {}", hue_file));
-            output_g.add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output_g.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output_g
+                .add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
+            output_g.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving green data...") };
+            if verbose {
+                println!("Saving green data...")
+            };
             let _ = match output_g.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
 
-            output_b.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+            output_b.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output_b.add_metadata_entry(format!("Input intensity image file: {}", intensity_file));
             output_b.add_metadata_entry(format!("Input hue image file: {}", hue_file));
-            output_b.add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output_b.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output_b
+                .add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
+            output_b.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving blue data...") };
+            if verbose {
+                println!("Saving blue data...")
+            };
             let _ = match output_b.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
 
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
-
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         } else {
             let mut output = Raster::initialize_using_file(&composite_file, &input_i);
             output.configs.photometric_interp = PhotometricInterpretation::RGB;
@@ -409,20 +496,32 @@ impl WhiteboxTool for IhsToRgb {
 
             let end = time::now();
             let elapsed_time = end - start;
-            
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
             output.add_metadata_entry(format!("Input intensity image file: {}", intensity_file));
             output.add_metadata_entry(format!("Input hue image file: {}", hue_file));
             output.add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(
+                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+            );
 
-            if verbose { println!("Saving red data...") };
+            if verbose {
+                println!("Saving red data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                );
             }
         }
 

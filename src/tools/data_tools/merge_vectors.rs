@@ -30,7 +30,8 @@ use vector::*;
 ///
 /// This tool only operates on vector files. Use the `Mosaic` tool to combine raster data.
 ///
-/// **See Also**: `Append`, `Mosaic`
+/// # See Also
+/// `Append`, `Mosaic`
 pub struct MergeVectors {
     name: String,
     description: String,

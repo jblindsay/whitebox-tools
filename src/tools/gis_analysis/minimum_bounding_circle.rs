@@ -20,7 +20,8 @@ use vector::*;
 /// This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
 /// circle to completely enclose a feature.
 ///
-/// **See Also**: `MinimumBoundingBox`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
+/// # See Also
+/// `MinimumBoundingBox`, `MinimumBoundingEnvelope`, `MinimumConvexHull`
 pub struct MinimumBoundingCircle {
     name: String,
     description: String,

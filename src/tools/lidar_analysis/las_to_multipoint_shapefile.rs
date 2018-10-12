@@ -30,7 +30,8 @@ use vector::*;
 /// while unable to represent individual point classes, return numbers, etc, is an efficient means
 /// of converting LAS point positional information.
 ///
-/// **See Also**: `LasToShapefile`
+/// # See Also
+/// `LasToShapefile`
 pub struct LasToMultipointShapefile {
     name: String,
     description: String,

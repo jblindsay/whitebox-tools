@@ -6,20 +6,20 @@ Last Modified: Dec. 14, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
-use structures::Array2D;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use structures::Array2D;
+use time;
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+/// Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
 pub struct DirectDecorrelationStretch {
     name: String,
     description: String,
@@ -36,22 +36,22 @@ impl DirectDecorrelationStretch {
         let description = "Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Colour Composite Image File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Colour Composite Image File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input colour composite image file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -63,29 +63,31 @@ impl DirectDecorrelationStretch {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Percent to clip the upper tail".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional percent to clip the upper tail by during the stretch.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Percent to clip the upper tail".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional percent to clip the upper tail by during the stretch."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif -k=0.4",
-                            short_exe,
-                            name)
-                .replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif -k=0.4",
+            short_exe, name
+        ).replace("*", &sep);
 
         DirectDecorrelationStretch {
             name: name,
@@ -101,7 +103,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,18 +127,21 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut achromatic_factor = 0.5f64;
         let mut clip_percent = 0.01f64;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -147,8 +152,10 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-input" ||
-               vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "-input"
+                || vec[0].to_lowercase() == "--input"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -166,9 +173,10 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                 } else {
                     achromatic_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-clip_percent" ||
-                      vec[0].to_lowercase() == "--clip_percent" ||
-                      vec[0].to_lowercase() == "--clip" {
+            } else if vec[0].to_lowercase() == "-clip_percent"
+                || vec[0].to_lowercase() == "--clip_percent"
+                || vec[0].to_lowercase() == "--clip"
+            {
                 if keyval {
                     clip_percent = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
@@ -289,15 +297,16 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                             num_cells += 1;
                         }
                     }
-                    tx.send((row,
-                               data_r,
-                               histo_red,
-                               data_g,
-                               histo_green,
-                               data_b,
-                               histo_blue,
-                               num_cells))
-                        .unwrap();
+                    tx.send((
+                        row,
+                        data_r,
+                        histo_red,
+                        data_g,
+                        histo_green,
+                        data_b,
+                        histo_blue,
+                        num_cells,
+                    )).unwrap();
                 }
             });
         }
@@ -451,13 +460,13 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                             }
 
                             red = (((red as f64 - stretch_min) / stretch_range) * 255f64) as u32;
-                            green = (((green as f64 - stretch_min) / stretch_range) * 255f64) as
-                                    u32;
+                            green =
+                                (((green as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             blue = (((blue as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             a = (z as u32 >> 24) & 0xFF;
 
-                            data[col as usize] = ((a << 24) | (blue << 16) | (green << 8) | red) as
-                                                 f64;
+                            data[col as usize] =
+                                ((a << 24) | (blue << 16) | (green << 8) | red) as f64;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -483,13 +492,16 @@ impl WhiteboxTool for DirectDecorrelationStretch {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Achromatic factor: {}", achromatic_factor));
         output.add_metadata_entry(format!("Clip percent: {}", clip_percent * 100f64));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
         if verbose {
             println!("Saving data...")
@@ -503,10 +515,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             Err(e) => return Err(e),
         };
 
-
-
         /* The following is a single-threaded version that was used for testing */
-
 
         // let mut output = Raster::initialize_using_file(&output_file, &input);
         // output.configs.nodata = rgb_nodata
@@ -623,8 +632,10 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         // }
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

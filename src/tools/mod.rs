@@ -31,6 +31,7 @@ impl ToolManager {
         tool_names.push("ExportTableToCsv".to_string());
         tool_names.push("JoinTables".to_string());
         tool_names.push("LinesToPolygons".to_string());
+        tool_names.push("MergeTableWithCsv".to_string());
         tool_names.push("MergeVectors".to_string());
         tool_names.push("MultiPartToSinglePart".to_string());
         tool_names.push("NewRasterFromBase".to_string());
@@ -443,6 +444,7 @@ impl ToolManager {
             "exporttabletocsv" => Some(Box::new(tools::data_tools::ExportTableToCsv::new())),
             "jointables" => Some(Box::new(tools::data_tools::JoinTables::new())),
             "linestopolygons" => Some(Box::new(tools::data_tools::LinesToPolygons::new())),
+            "mergetablewithcsv" => Some(Box::new(tools::data_tools::MergeTableWithCsv::new())),
             "mergevectors" => Some(Box::new(tools::data_tools::MergeVectors::new())),
             "multiparttosinglepart" => {
                 Some(Box::new(tools::data_tools::MultiPartToSinglePart::new()))

@@ -30,7 +30,8 @@ use vector::*;
 ///
 /// The results will be based on reduced major axis (RMA) regression line.
 ///
-/// **See Also**: `ElongationRatio`
+/// # See Also
+/// `ElongationRatio`
 pub struct LinearityIndex {
     name: String,
     description: String,

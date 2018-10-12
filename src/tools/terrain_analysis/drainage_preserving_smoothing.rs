@@ -31,7 +31,8 @@ use tools::*;
 /// smoothing level better preserves small drainage features, such as ditches,
 /// rills, gullies, etc., which would otherwise be smoothed over.
 ///
-/// See also: `FeaturePreservingDenoise`
+/// # See Also
+/// `FeaturePreservingDenoise`
 pub struct DrainagePreservingSmoothing {
     name: String,
     description: String,

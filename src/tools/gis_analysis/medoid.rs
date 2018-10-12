@@ -28,7 +28,8 @@ use vector::*;
 /// y-coordinate (Med Y) are calculated.
 /// 3. The point/node in the dataset that is nearest the point (Med X, Med Y) is identified as the medoid.
 ///
-/// See Also: Centroid
+/// # See Also
+/// `CentroidVector`
 pub struct Medoid {
     name: String,
     description: String,

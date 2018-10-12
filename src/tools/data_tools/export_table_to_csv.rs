@@ -10,13 +10,21 @@ use std::env;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufWriter;
-use std::io::{Error, ErrorKind};
+use std::io::{BufWriter, Error, ErrorKind};
 use std::path;
 use time;
 use tools::*;
 use vector::{FieldData, Shapefile};
 
+/// This tool can be used to export a vector's attribute table to a comma separated values (CSV)
+/// file. CSV files stores tabular data (numbers and text) in plain-text form such that each row
+/// corresponds to a record and each column to a field. Fields are typically separated by commas
+/// within records. The user must specify the name of the vector (and associated attribute file),
+/// the name of the output CSV file, and whether or not to include the field names as a header
+/// column in the output CSV file.
+///
+/// # See Also
+/// `MergeTableWithCsv`
 pub struct ExportTableToCsv {
     name: String,
     description: String,

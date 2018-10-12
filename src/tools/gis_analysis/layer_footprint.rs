@@ -28,7 +28,8 @@ use vector::*;
 /// and then use the `RasterToVectorPolygons` tool to vectorize the irregular-shaped extent
 /// boundary.
 ///
-/// **See Also**: `MinimumBoundingEnvelope`, `RasterToVectorPolygons`
+/// # See Also
+/// `MinimumBoundingEnvelope`, `RasterToVectorPolygons`
 pub struct LayerFootprint {
     name: String,
     description: String,

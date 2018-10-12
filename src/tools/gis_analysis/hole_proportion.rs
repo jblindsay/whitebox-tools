@@ -21,7 +21,8 @@ use vector::*;
 /// input vector file and the output data will be contained within the input vector's
 /// database file as a new field (HOLE_PROP).
 ///
-/// **See Also**: `ShapeComplexityIndex`, `ElongationRatio`, `PerimeterAreaRatio`
+/// # See Also
+/// `ShapeComplexityIndex`, `ElongationRatio`, `PerimeterAreaRatio`
 pub struct HoleProportion {
     name: String,
     description: String,

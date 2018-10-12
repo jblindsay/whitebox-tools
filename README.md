@@ -175,6 +175,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***ExportTableToCsv***: Exports an attribute table to a CSV text file.
 - ***JoinTables***: Merge a vector's attribute table with another table based on a common field.
 - ***LinesToPolygons***: Converts vector polylines to polygons.
+- ***MergeTableWithCsv***: Merge a vector's attribute table with a table contained within a CSV text file.
 - ***MergeVectors***: Combines two or more input vectors of the same ShapeType creating a single, new output vector.
 - ***MultiPartToSinglePart**: Converts a vector file containing multi-part features into a vector containing only single-part features.
 - ***NewRasterFromBase***: Creates a new raster using a base image.
@@ -430,8 +431,6 @@ The library currently contains more than 370 tools, which are each grouped based
 
 **LiDAR Analysis**
 
-- ***BlockMaximum***: Creates a block-maximum raster from an input LAS file.
-- ***BlockMinimum***: Creates a block-minimum raster from an input LAS file.
 - ***ClassifyOverlapPoints***: Classifies or filters LAS point in regions of overlapping flight lines.
 - ***ClipLidarToPolygon***: Clips a LiDAR point cloud to a vector polygon or polygons.
 - ***ErasePolygonFromLidar***: Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
@@ -441,6 +440,8 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***LasToAscii***: Converts one or more LAS files into ASCII text files.
 - **LasToMultipointShapefile**: Converts one or more LAS files into MultipointZ vector Shapefiles.
 - ***LasToShapefile***: Converts one or more LAS files into a vector Shapefile of POINT ShapeType.
+- ***LidarBlockMaximum***: Creates a block-maximum raster from an input LAS file.
+- ***LidarBlockMinimum***: Creates a block-minimum raster from an input LAS file.
 - ***LidarColourize***: Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 - ***LidarConstructVectorTIN***: Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.

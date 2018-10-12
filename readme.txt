@@ -63,6 +63,7 @@ Version 0.12.0 (XX-XX-2018)
     JoinTables
     LasToShapefile
     LinearityIndex
+    MergeTableWithCsv
     MergeVectors
     NearestNeighbourGridding
     RasterToVectorLines

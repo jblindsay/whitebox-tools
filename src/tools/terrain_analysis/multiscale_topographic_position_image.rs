@@ -6,19 +6,19 @@ Last Modified: Dec. 16, 2017
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use time;
 use tools::*;
 
-/// Tool struct containing the essential descriptors required to interact with the tool.
+/// Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 pub struct MultiscaleTopographicPositionImage {
     name: String,
     description: String,
@@ -28,74 +28,77 @@ pub struct MultiscaleTopographicPositionImage {
 }
 
 impl MultiscaleTopographicPositionImage {
-
     /// Public constructor.
     pub fn new() -> MultiscaleTopographicPositionImage {
         let name = "MultiscaleTopographicPositionImage".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Local-Scale File".to_owned(), 
-            flags: vec!["--local".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Local-Scale File".to_owned(),
+            flags: vec!["--local".to_owned()],
             description: "Input local-scale topographic position (DEVmax) raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Meso-Scale File".to_owned(), 
-            flags: vec!["--meso".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Meso-Scale File".to_owned(),
+            flags: vec!["--meso".to_owned()],
             description: "Input meso-scale topographic position (DEVmax) raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Broad-Scale File".to_owned(), 
-            flags: vec!["--broad".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Broad-Scale File".to_owned(),
+            flags: vec!["--broad".to_owned()],
             description: "Input broad-scale topographic position (DEVmax) raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Image Lightness Value".to_owned(), 
-            flags: vec!["--lightness".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Image Lightness Value".to_owned(),
+            flags: vec!["--lightness".to_owned()],
             description: "Image lightness value (default is 1.2).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.2".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --local=DEV_local.tif --meso=DEV_meso.tif --broad=DEV_broad.tif -o=output.tif --lightness=1.5", short_exe, name).replace("*", &sep);
-    
-        MultiscaleTopographicPositionImage { 
-            name: name, 
-            description: description, 
+
+        MultiscaleTopographicPositionImage {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -104,7 +107,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -135,15 +138,22 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1_file = String::new();
         let mut input2_file = String::new();
         let mut input3_file = String::new();
         let mut output_file = String::new();
         let mut cutoff = 1.2f64;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -158,31 +168,33 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
                 if keyval {
                     input1_file = vec[1].to_string();
                 } else {
-                    input1_file = args[i+1].to_string();
+                    input1_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-meso" || vec[0].to_lowercase() == "--meso" {
                 if keyval {
                     input2_file = vec[1].to_string();
                 } else {
-                    input2_file = args[i+1].to_string();
+                    input2_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-local" || vec[0].to_lowercase() == "--local" {
                 if keyval {
                     input3_file = vec[1].to_string();
                 } else {
-                    input3_file = args[i+1].to_string();
+                    input3_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-lightness" || vec[0].to_lowercase() == "--lightness" {
+            } else if vec[0].to_lowercase() == "-lightness"
+                || vec[0].to_lowercase() == "--lightness"
+            {
                 if keyval {
                     cutoff = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    cutoff = args[i+1].to_string().parse::<f64>().unwrap();
+                    cutoff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -211,11 +223,17 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading broad-scale DEV data...") };
+        if verbose {
+            println!("Reading broad-scale DEV data...")
+        };
         let input_r = Arc::new(Raster::new(&input1_file, "r")?);
-        if verbose { println!("Reading meso-scale DEV data...") };
+        if verbose {
+            println!("Reading meso-scale DEV data...")
+        };
         let input_g = Arc::new(Raster::new(&input2_file, "r")?);
-        if verbose { println!("Reading local-scale DEV data...") };
+        if verbose {
+            println!("Reading local-scale DEV data...")
+        };
         let input_b = Arc::new(Raster::new(&input3_file, "r")?);
 
         let rows = input_r.configs.rows as isize;
@@ -233,15 +251,23 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         let start = time::now();
 
         // make sure the input files have the same size
-        if input_r.configs.rows != input_g.configs.rows || input_r.configs.columns != input_g.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if input_r.configs.rows != input_g.configs.rows
+            || input_r.configs.columns != input_g.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        if input_r.configs.rows != input_b.configs.rows || input_r.configs.columns != input_b.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if input_r.configs.rows != input_b.configs.rows
+            || input_r.configs.columns != input_b.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -261,12 +287,16 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
                         green_val = input_g[(row, col)];
                         blue_val = input_b[(row, col)];
                         if red_val != nodata_r && green_val != nodata_g && blue_val != nodata_b {
-
                             /* Replaced the linear interpolation with this logistic function.*/
-                            red_val   = (512f64 / (1f64 + (-cutoff * (red_val).abs()).exp())).floor() - 256f64;
-                            green_val = (512f64 / (1f64 + (-cutoff * (green_val).abs()).exp())).floor() - 256f64;
-                            blue_val  = (512f64 / (1f64 + (-cutoff * (blue_val).abs()).exp())).floor() - 256f64;
-                    
+                            red_val = (512f64 / (1f64 + (-cutoff * (red_val).abs()).exp())).floor()
+                                - 256f64;
+                            green_val = (512f64 / (1f64 + (-cutoff * (green_val).abs()).exp()))
+                                .floor()
+                                - 256f64;
+                            blue_val = (512f64 / (1f64 + (-cutoff * (blue_val).abs()).exp()))
+                                .floor()
+                                - 256f64;
+
                             if red_val < 0f64 {
                                 red_val = 0f64;
                             }
@@ -291,7 +321,8 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
                             }
                             blue = blue_val as u32;
 
-                            data[col as usize] = ((255 << 24) | (blue << 16) | (green << 8) | red) as f64;
+                            data[col as usize] =
+                                ((255 << 24) | (blue << 16) | (green << 8) | red) as f64;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -316,19 +347,31 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
 
         let end = time::now();
         let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input broad-scale image file: {}", input1_file));
         output.add_metadata_entry(format!("Input meso-scale image file: {}", input2_file));
         output.add_metadata_entry(format!("Input local-scale image file: {}", input3_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(
+            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        );
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())

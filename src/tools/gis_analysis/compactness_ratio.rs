@@ -26,7 +26,8 @@ use vector::*;
 /// The output data will be contained in the input vector's attribute table as a new field
 /// (COMPACT).
 ///
-/// **See Also**: `PerimeterAreaRatio`, `ShapeComplexityIndex`, `RelatedCircumscribingCircle`
+/// # See Also
+/// `PerimeterAreaRatio`, `ShapeComplexityIndex`, `RelatedCircumscribingCircle`
 pub struct CompactnessRatio {
     name: String,
     description: String,

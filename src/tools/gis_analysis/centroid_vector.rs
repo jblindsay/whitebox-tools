@@ -19,7 +19,10 @@ use vector::*;
 /// the user can optionally specify whether to identify the centroid of each part. The default is to treat
 /// multi-part features a single entity.
 ///
-/// See Also: CentroidVector
+/// For raster features, use the `Centroid` tool instead.
+///
+/// # See Also
+/// `Centroid`, `Medoid`
 pub struct CentroidVector {
     name: String,
     description: String,

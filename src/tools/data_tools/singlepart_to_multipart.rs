@@ -30,7 +30,8 @@ use vector::*;
 /// note that searching for polygon holes may significantly increase processing time for larger polygon
 /// coverages.
 ///
-/// **See Also**: `MultiPartToSinglePart`
+/// # See Also
+/// `MultiPartToSinglePart`
 pub struct SinglePartToMultiPart {
     name: String,
     description: String,
