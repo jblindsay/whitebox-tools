@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::*;
 
@@ -55,7 +54,8 @@ impl ExtractRasterValuesAtPoints {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -160,7 +160,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut cmd = input_files.split(";");
         let mut vec = cmd.collect::<Vec<&str>>();
@@ -336,8 +336,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         //     );
         // }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Saving data...")
@@ -351,7 +350,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

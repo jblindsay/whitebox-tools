@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/10/2018
-Last Modified: 09/10/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -13,7 +13,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{Array2D, Point2D};
-use time;
 use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
@@ -193,7 +192,7 @@ impl WhiteboxTool for RasterToVectorLines {
         };
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -433,8 +432,7 @@ impl WhiteboxTool for RasterToVectorLines {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Saving data...")
@@ -449,7 +447,7 @@ impl WhiteboxTool for RasterToVectorLines {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

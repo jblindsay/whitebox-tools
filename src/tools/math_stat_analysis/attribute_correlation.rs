@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/04/2018
-Last Modified: 29/04/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: Correlation is calculated for each pair of numeric attributes.
@@ -16,7 +16,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use time;
 use tools::*;
 use vector::{FieldData, Shapefile};
 
@@ -63,7 +62,8 @@ impl AttributeCorrelation {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -171,7 +171,7 @@ impl WhiteboxTool for AttributeCorrelation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
@@ -321,13 +321,12 @@ impl WhiteboxTool for AttributeCorrelation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 
@@ -342,9 +341,12 @@ impl WhiteboxTool for AttributeCorrelation {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Attributes Correlation Report</h1>"#.as_bytes())?;
+            <h1>Attributes Correlation Report</h1>"#
+                .as_bytes(),
+        )?;
 
         // output the names of the input files.
         writer.write_all("<p><strong>Attributes</strong>:</br>".as_bytes())?;

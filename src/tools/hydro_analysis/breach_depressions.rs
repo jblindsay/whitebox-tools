@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: December 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal 
@@ -10,16 +10,15 @@ methods for flow path enforcement in digital elevation models. Hydrological Proc
 30(6): 846–857. DOI: 10.1002/hyp.10648
 */
 
-use time;
+use raster::*;
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
-use std::cmp::Ordering;
 use std::env;
-use std::path;
-use std::i32;
 use std::f64;
-use raster::*;
+use std::i32;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
 use tools::*;
 
@@ -32,63 +31,72 @@ pub struct BreachDepressions {
 }
 
 impl BreachDepressions {
-    pub fn new() -> BreachDepressions { // public constructor
+    pub fn new() -> BreachDepressions {
+        // public constructor
         let name = "BreachDepressions".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description = "Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Breach Depth (z units)".to_owned(), 
-            flags: vec!["--max_depth".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Maximum Breach Depth (z units)".to_owned(),
+            flags: vec!["--max_depth".to_owned()],
             description: "Optional maximum breach depth (default is Inf).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Breach Channel Length (grid cells)".to_owned(), 
-            flags: vec!["--max_length".to_owned()], 
-            description: "Optional maximum breach channel length (in grid cells; default is Inf).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Maximum Breach Channel Length (grid cells)".to_owned(),
+            flags: vec!["--max_length".to_owned()],
+            description: "Optional maximum breach channel length (in grid cells; default is Inf)."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        BreachDepressions { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        BreachDepressions {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -97,7 +105,7 @@ impl WhiteboxTool for BreachDepressions {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -121,16 +129,23 @@ impl WhiteboxTool for BreachDepressions {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut max_depth = f64::INFINITY;
         let mut max_length = f64::INFINITY;
         let mut constrained_mode = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -141,30 +156,37 @@ impl WhiteboxTool for BreachDepressions {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-max_depth" || vec[0].to_lowercase() == "--max_depth" {
+            } else if vec[0].to_lowercase() == "-max_depth"
+                || vec[0].to_lowercase() == "--max_depth"
+            {
                 if keyval {
                     max_depth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_depth = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_depth = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
                 constrained_mode = true;
-            } else if vec[0].to_lowercase() == "-max_length" || vec[0].to_lowercase() == "--max_length" {
+            } else if vec[0].to_lowercase() == "-max_length"
+                || vec[0].to_lowercase() == "--max_length"
+            {
                 if keyval {
                     max_length = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_length = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_length = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
                 constrained_mode = true;
             }
@@ -188,7 +210,9 @@ impl WhiteboxTool for BreachDepressions {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         if verbose && constrained_mode {
             println!("Breaching in constrained mode...");
@@ -196,7 +220,7 @@ impl WhiteboxTool for BreachDepressions {
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
@@ -206,7 +230,7 @@ impl WhiteboxTool for BreachDepressions {
         let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
         let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let background_val = (i32::min_value() + 1) as f64;
         output.reinitialize_values(background_val);
@@ -223,7 +247,8 @@ impl WhiteboxTool for BreachDepressions {
         for nodata values along the raster's edges.
         */
 
-        let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+        let mut queue: VecDeque<(isize, isize)> =
+            VecDeque::with_capacity((rows * columns) as usize);
         for row in 0..rows {
             /*
             Note that this is only possible because Whitebox rasters
@@ -249,8 +274,8 @@ impl WhiteboxTool for BreachDepressions {
         let mut zin_n: f64; // value of neighbour of row, col in input raster
         let mut zout: f64; // value of row, col in output raster
         let mut zout_n: f64; // value of neighbour of row, col in output raster
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         while !queue.is_empty() {
@@ -269,7 +294,11 @@ impl WhiteboxTool for BreachDepressions {
                     } else {
                         output[(row_n, col_n)] = zin_n;
                         // Push it onto the priority queue for the priority flood operation
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                        });
                     }
                     num_solved_cells += 1;
                 }
@@ -285,7 +314,7 @@ impl WhiteboxTool for BreachDepressions {
         }
 
         // Perform the priority flood operation.
-        let back_link = [ 4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8 ];
+        let back_link = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
         // let (mut row_n2, mut col_n2): (isize, isize);
         let (mut x, mut y): (isize, isize);
         // let mut zin_n2: f64;
@@ -309,7 +338,11 @@ impl WhiteboxTool for BreachDepressions {
                         if zin_n != nodata {
                             flow_dir[(row_n, col_n)] = back_link[n];
                             output[(row_n, col_n)] = zin_n;
-                            minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                            minheap.push(GridCell {
+                                row: row_n,
+                                column: col_n,
+                                priority: zin_n,
+                            });
                             if zin_n < (zout + small_num) {
                                 // Is it a pit cell?
                                 // is_pit = true;
@@ -323,26 +356,26 @@ impl WhiteboxTool for BreachDepressions {
                                 //     }
                                 // }
                                 // if is_pit {
-                                    // Trace the flowpath back to a lower cell, if it exists.
-                                    x = col_n;
-                                    y = row_n;
-                                    z_target = output[(row_n, col_n)];
-                                    flag = true;
-                                    while flag {
-                                        dir = flow_dir[(y, x)];
-                                        if dir >= 0 {
-                                            y += dy[dir as usize];
-                                            x += dx[dir as usize];
-                                            z_target -= small_num;
-                                            if output[(y, x)] > z_target {
-                                                output[(y, x)] = z_target;
-                                            } else {
-                                                flag = false;
-                                            }
+                                // Trace the flowpath back to a lower cell, if it exists.
+                                x = col_n;
+                                y = row_n;
+                                z_target = output[(row_n, col_n)];
+                                flag = true;
+                                while flag {
+                                    dir = flow_dir[(y, x)];
+                                    if dir >= 0 {
+                                        y += dy[dir as usize];
+                                        x += dx[dir as usize];
+                                        z_target -= small_num;
+                                        if output[(y, x)] > z_target {
+                                            output[(y, x)] = z_target;
                                         } else {
                                             flag = false;
                                         }
+                                    } else {
+                                        flag = false;
                                     }
+                                }
                                 // }
                             }
                         } else {
@@ -355,14 +388,16 @@ impl WhiteboxTool for BreachDepressions {
 
                 if verbose {
                     num_solved_cells += 1;
-                    progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                    progress =
+                        (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                     if progress != old_progress {
                         println!("Progress: {}%", progress);
                         old_progress = progress;
                     }
                 }
             }
-        } else { // constrained mode
+        } else {
+            // constrained mode
             let mut channel_depth: f64;
             let mut channel_length: f64;
             let mut carved_depth: f64;
@@ -381,7 +416,11 @@ impl WhiteboxTool for BreachDepressions {
                         if zin_n != nodata {
                             flow_dir[(row_n, col_n)] = back_link[n];
                             output[(row_n, col_n)] = zin_n;
-                            minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                            minheap.push(GridCell {
+                                row: row_n,
+                                column: col_n,
+                                priority: zin_n,
+                            });
                             if zin_n < (zout + small_num) {
                                 // Trace the flowpath back to a lower cell, if it exists.
                                 x = col_n;
@@ -399,7 +438,9 @@ impl WhiteboxTool for BreachDepressions {
                                         channel_length += 1.0;
                                         if output[(y, x)] > z_target {
                                             carved_depth = input[(y, x)] - z_target;
-                                            if carved_depth > channel_depth { channel_depth = carved_depth; }
+                                            if carved_depth > channel_depth {
+                                                channel_depth = carved_depth;
+                                            }
                                         } else {
                                             flag = false;
                                         }
@@ -442,7 +483,8 @@ impl WhiteboxTool for BreachDepressions {
 
                 if verbose {
                     num_solved_cells += 1;
-                    progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                    progress =
+                        (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                     if progress != old_progress {
                         println!("Progress: {}%", progress);
                         old_progress = progress;
@@ -454,22 +496,31 @@ impl WhiteboxTool for BreachDepressions {
                 println!("There were unbreached depressions. The result should be filled to remove additional depressions.");
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

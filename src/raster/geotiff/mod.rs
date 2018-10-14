@@ -7,7 +7,6 @@ extern crate lzw;
 
 // use flate2::read::GzDecoder;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use io_utils::{ByteOrderReader, Endianness};
 use raster::geotiff::geokeys::*;
 use raster::geotiff::tiff_consts::*;
 use raster::*;
@@ -23,6 +22,7 @@ use std::io::prelude::*;
 use std::io::BufWriter;
 use std::io::Error;
 use std::io::ErrorKind;
+use utils::{ByteOrderReader, Endianness};
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;

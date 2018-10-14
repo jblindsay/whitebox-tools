@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: 25/05/2018
+Last Modified: 13/10/2018
 License: MIT
 
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
@@ -17,7 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
@@ -231,7 +230,7 @@ impl WhiteboxTool for DiversityFilter {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
@@ -334,8 +333,7 @@ impl WhiteboxTool for DiversityFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -343,9 +341,7 @@ impl WhiteboxTool for DiversityFilter {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -359,7 +355,7 @@ impl WhiteboxTool for DiversityFilter {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

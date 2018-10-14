@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
-Last Modified: December 26, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -165,17 +165,17 @@ impl WhiteboxTool for LidarInfo {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-vlr" {
                 show_vlrs = true;
             } else if flag_val == "-geokeys" {

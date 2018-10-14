@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 21, 2018
-Last Modified: February 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -69,7 +68,8 @@ impl Profile {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -201,7 +201,7 @@ impl WhiteboxTool for Profile {
         };
         let surface = Raster::new(&surface_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of lines type
         if profile_data.header.shape_type.base_shape_type() != ShapeType::PolyLine {
@@ -274,7 +274,8 @@ impl WhiteboxTool for Profile {
                         * (record.points[i].x - record.points[i + 1].x)
                         + (record.points[i].y - record.points[i + 1].y)
                             * (record.points[i].y - record.points[i + 1].y))
-                        .sqrt() / path_dist;
+                        .sqrt()
+                        / path_dist;
 
                     if num_steps > 0 {
                         for j in 1..num_steps {
@@ -322,9 +323,12 @@ impl WhiteboxTool for Profile {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Profile</h1>"#.as_bytes())?;
+            <h1>Profile</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(
             (format!(
@@ -334,8 +338,7 @@ impl WhiteboxTool for Profile {
         )?;
 
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = xdata.len() > 2 && xdata.len() < 12;
 
@@ -365,7 +368,7 @@ impl WhiteboxTool for Profile {
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

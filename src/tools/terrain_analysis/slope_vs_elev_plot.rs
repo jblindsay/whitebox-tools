@@ -2,28 +2,27 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 1, 2018
-Last Modified: February 1, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::LineGraph;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
-use tools::*;
-use rendering::LineGraph;
-use rendering::html::*;
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
+use tools::*;
 
 pub struct SlopeVsElevationPlot {
     name: String,
@@ -41,37 +40,40 @@ impl SlopeVsElevationPlot {
         let description = "Creates a slope vs. elevation plot for one or more DEMs.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input DEM files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Watershed Files (optional)".to_owned(), 
-            flags: vec!["--watershed".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Watershed Files (optional)".to_owned(),
+            flags: vec!["--watershed".to_owned()],
             description: "Input watershed files (optional).".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -95,7 +97,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -126,17 +128,21 @@ impl WhiteboxTool for SlopeVsElevationPlot {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files_str = String::new();
         let mut watershed_files_str = "".to_string();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -152,13 +158,13 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 input_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-watershed" {
                 watershed_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -180,8 +186,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let mut cmd = input_files_str.split(";");
         let mut input_files = cmd.collect::<Vec<&str>>();
         if input_files.len() == 1 {
@@ -205,18 +211,21 @@ impl WhiteboxTool for SlopeVsElevationPlot {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Slope-Elevation Analysis</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"</head>
+
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Slope-Elevation Analysis</h1>"#.as_bytes())?;
-        
+            <h1>Slope-Elevation Analysis</h1>"#
+                .as_bytes(),
+        )?;
+
         if num_files > 1 {
             writer.write_all(("<p><strong>Input DEMs</strong>:<br>").as_bytes())?;
         }
-        
+
         let mut xdata = vec![];
         let mut ydata = vec![];
         let mut shortnames = vec![];
@@ -230,7 +239,12 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 let input = Arc::new(Raster::new(&input_file, "r")?);
 
                 if num_files == 1 {
-                    writer.write_all((format!("<p><strong>Input DEM</strong>: {}", input.get_short_filename())).as_bytes())?;
+                    writer.write_all(
+                        (format!(
+                            "<p><strong>Input DEM</strong>: {}",
+                            input.get_short_filename()
+                        )).as_bytes(),
+                    )?;
                 }
                 let rows = input.configs.rows as isize;
                 let columns = input.configs.columns as isize;
@@ -246,7 +260,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         z_factor = 1.0 / (113200.0 * mid_lat.cos());
                     }
                 }
-                
+
                 // calculate slope
                 let num_procs = num_cpus::get() as isize;
                 let (tx, rx) = mpsc::channel();
@@ -256,8 +270,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                     thread::spawn(move || {
                         let nodata = input.configs.nodata;
                         let columns = input.configs.columns as isize;
-                        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                         let mut n: [f64; 8] = [0.0; 8];
                         let mut z: f64;
                         let (mut fx, mut fy): (f64, f64);
@@ -275,9 +289,12 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                                         }
                                     }
                                     // calculate slope
-                                    fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                                    fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                                    data[col as usize] = (fx * fx + fy * fy).sqrt().atan().to_degrees();
+                                    fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2])
+                                        / eight_grid_res;
+                                    fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6])
+                                        / eight_grid_res;
+                                    data[col as usize] =
+                                        (fx * fx + fy * fy).sqrt().atan().to_degrees();
                                 }
                             }
                             tx1.send((row, data)).unwrap();
@@ -289,7 +306,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 for row in 0..rows {
                     let data = rx.recv().unwrap();
                     slope.set_row_data(data.0, data.1);
-                    
+
                     if verbose {
                         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                         if progress != old_progress {
@@ -298,13 +315,13 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         }
                     }
                 }
-                
+
                 let min = input.configs.minimum;
                 let max = input.configs.maximum;
                 let range = max - min + 0.00001f64;
                 let mut num_bins = (max - min) as usize / 5;
-                if num_bins < ((rows * columns) as f64).log2().ceil() as usize  + 1 {
-                    num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
+                if num_bins < ((rows * columns) as f64).log2().ceil() as usize + 1 {
+                    num_bins = ((rows * columns) as f64).log2().ceil() as usize + 1;
                 }
                 let bin_width = range / num_bins as f64;
                 let mut freq_data = vec![0f64; num_bins];
@@ -365,7 +382,12 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 }
                 let input = Arc::new(Raster::new(&input_file, "r")?);
                 if num_files == 1 {
-                    writer.write_all((format!("<p><strong>Input DEM</strong>: {}", input.get_short_filename())).as_bytes())?;
+                    writer.write_all(
+                        (format!(
+                            "<p><strong>Input DEM</strong>: {}",
+                            input.get_short_filename()
+                        )).as_bytes(),
+                    )?;
                 }
                 let rows = input.configs.rows as isize;
                 let columns = input.configs.columns as isize;
@@ -381,7 +403,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         z_factor = 1.0 / (113200.0 * mid_lat.cos());
                     }
                 }
-                
+
                 // calculate slope
                 let num_procs = num_cpus::get() as isize;
                 let (tx, rx) = mpsc::channel();
@@ -391,8 +413,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                     thread::spawn(move || {
                         let nodata = input.configs.nodata;
                         let columns = input.configs.columns as isize;
-                        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                         let mut n: [f64; 8] = [0.0; 8];
                         let mut z: f64;
                         let (mut fx, mut fy): (f64, f64);
@@ -410,9 +432,12 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                                         }
                                     }
                                     // calculate slope
-                                    fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                                    fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                                    data[col as usize] = (fx * fx + fy * fy).sqrt().atan().to_degrees();
+                                    fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2])
+                                        / eight_grid_res;
+                                    fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6])
+                                        / eight_grid_res;
+                                    data[col as usize] =
+                                        (fx * fx + fy * fy).sqrt().atan().to_degrees();
                                 }
                             }
                             tx1.send((row, data)).unwrap();
@@ -424,7 +449,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 for row in 0..rows {
                     let data = rx.recv().unwrap();
                     slope.set_row_data(data.0, data.1);
-                    
+
                     if verbose {
                         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                         if progress != old_progress {
@@ -433,14 +458,16 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         }
                     }
                 }
-                
+
                 let mut watershed_file = watershed_files[i].to_string();
                 if !watershed_file.contains(&sep) {
                     watershed_file = format!("{}{}", working_directory, watershed_file);
                 }
                 let watershed = Raster::new(&watershed_file, "r")?;
                 let ws_nodata = watershed.configs.nodata;
-                if watershed.configs.rows as isize != rows || watershed.configs.columns as isize != columns {
+                if watershed.configs.rows as isize != rows
+                    || watershed.configs.columns as isize != columns
+                {
                     return Err(Error::new(ErrorKind::InvalidInput,
                             "The input DEM and watershed rasters should have the same extents (rows and columns)."));
                 }
@@ -463,8 +490,12 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                             val = watershed.get_value(row, col);
                             if val != 0f64 && val != ws_nodata {
                                 watershed_id = (val - watershed_min) as usize;
-                                if z < min_elevs[watershed_id] { min_elevs[watershed_id] = z; }
-                                if z > max_elevs[watershed_id] { max_elevs[watershed_id] = z; }
+                                if z < min_elevs[watershed_id] {
+                                    min_elevs[watershed_id] = z;
+                                }
+                                if z > max_elevs[watershed_id] {
+                                    max_elevs[watershed_id] = z;
+                                }
                             }
                         }
                     }
@@ -488,8 +519,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         let max = max_elevs[w];
                         let range = max - min + 0.00001f64;
                         let mut num_bins = (max - min) as usize / 5;
-                        if num_bins < ((rows * columns) as f64).log2().ceil() as usize  + 1 {
-                            num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
+                        if num_bins < ((rows * columns) as f64).log2().ceil() as usize + 1 {
+                            num_bins = ((rows * columns) as f64).log2().ceil() as usize + 1;
                         }
                         let bin_width = range / num_bins as f64;
                         bin_widths.push(bin_width);
@@ -505,7 +536,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         bin_widths.push(0f64);
                     }
                 }
-                
+
                 let mut bin: usize;
                 for row in 0..rows {
                     for col in 0..columns {
@@ -514,7 +545,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                             val = watershed.get_value(row, col);
                             if val != 0f64 && val != ws_nodata {
                                 watershed_id = (val - watershed_min) as usize;
-                                bin = ((z - min_elevs[watershed_id]) / bin_widths[watershed_id]).floor() as usize;
+                                bin = ((z - min_elevs[watershed_id]) / bin_widths[watershed_id])
+                                    .floor() as usize;
                                 freq_data[watershed_id][bin] += 1f64;
                                 slope_data[watershed_id][bin] += slope.get_value(row, col);
                             }
@@ -540,10 +572,13 @@ impl WhiteboxTool for SlopeVsElevationPlot {
 
                         xdata.push(slope_data[w].clone());
                         ydata.push(bin_elevations[w].clone());
-                        shortnames.push(format!("{} {}", input.get_short_filename(), w as f64 + watershed_min));
-                 
+                        shortnames.push(format!(
+                            "{} {}",
+                            input.get_short_filename(),
+                            w as f64 + watershed_min
+                        ));
                     }
-                }   
+                }
 
                 if num_files > 1 {
                     writer.write_all(&format!("{}<br>", shortnames[i]).as_bytes())?;
@@ -551,8 +586,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
             }
         }
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);;
 
         let multiples = num_files > 1;
 
@@ -562,7 +596,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: shortnames.clone(), 
+            series_labels: shortnames.clone(),
             x_axis_label: "Average Slope".to_string(),
             y_axis_label: "Elevation".to_string(),
             draw_points: false,
@@ -571,14 +605,20 @@ impl WhiteboxTool for SlopeVsElevationPlot {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
 
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

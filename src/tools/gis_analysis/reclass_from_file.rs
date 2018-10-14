@@ -2,24 +2,23 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufReader;
-use std::io::BufRead;
-use std::fs::File;
+use raster::*;
 use std::collections::HashMap;
 use std::env;
-use std::path;
 use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
+use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct ReclassFromFile {
@@ -32,54 +31,60 @@ pub struct ReclassFromFile {
 
 impl ReclassFromFile {
     /// public constructor
-    pub fn new() -> ReclassFromFile { 
+    pub fn new() -> ReclassFromFile {
         let name = "ReclassFromFile".to_string();
         let toolbox = "GIS Analysis".to_string();
-        let description = "Reclassifies the values in a raster image using reclass ranges in a text file.".to_string();
-        
+        let description =
+            "Reclassifies the values in a raster image using reclass ranges in a text file."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Reclass Text File".to_owned(), 
-            flags: vec!["--reclass_file".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Reclass Text File".to_owned(),
+            flags: vec!["--reclass_file".to_owned()],
             description: "Input text file containing reclass ranges.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Text),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' --reclass_file='reclass.txt' -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        ReclassFromFile { 
-            name: name, 
-            description: description, 
+
+        ReclassFromFile {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -88,7 +93,7 @@ impl WhiteboxTool for ReclassFromFile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -112,15 +117,22 @@ impl WhiteboxTool for ReclassFromFile {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut reclass_file = String::new();
         let mut assign_mode = false;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -135,19 +147,21 @@ impl WhiteboxTool for ReclassFromFile {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-reclass_file" || vec[0].to_lowercase() == "--reclass_file" {
+            } else if vec[0].to_lowercase() == "-reclass_file"
+                || vec[0].to_lowercase() == "--reclass_file"
+            {
                 if keyval {
                     reclass_file = vec[1].to_string();
                 } else {
-                    reclass_file = args[i+1].to_string();
+                    reclass_file = args[i + 1].to_string();
                 }
             }
         }
@@ -170,7 +184,8 @@ impl WhiteboxTool for ReclassFromFile {
         for line in f.lines() {
             let line_unwrapped = line.unwrap();
             let mut v: Vec<&str> = line_unwrapped.split(";").collect();
-            if v.len() < 2 { // delimiter can be a semicolon, comma, space, or tab.
+            if v.len() < 2 {
+                // delimiter can be a semicolon, comma, space, or tab.
                 v = line_unwrapped.split(",").collect();
                 if v.len() < 2 {
                     v = line_unwrapped.split(" ").collect();
@@ -180,7 +195,9 @@ impl WhiteboxTool for ReclassFromFile {
                 }
             }
 
-            if v.len() == 2 { assign_mode = true; }
+            if v.len() == 2 {
+                assign_mode = true;
+            }
 
             for s in v {
                 reclass_vals.push(s.parse().unwrap());
@@ -210,19 +227,21 @@ impl WhiteboxTool for ReclassFromFile {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-            
+
         if !assign_mode {
             for tid in 0..num_procs {
                 let input = input.clone();
@@ -240,16 +259,20 @@ impl WhiteboxTool for ReclassFromFile {
                                     // This is a shortcut intended to take advantage of the inherent
                                     // spatial autocorrelation in spatial distributions to speed up
                                     // the search for the appropriate range bin.
-                                    if z >= reclass_vals[prev_idx*3+1] && z < reclass_vals[prev_idx*3+2] {
-                                        z = reclass_vals[prev_idx*3];
+                                    if z >= reclass_vals[prev_idx * 3 + 1]
+                                        && z < reclass_vals[prev_idx * 3 + 2]
+                                    {
+                                        z = reclass_vals[prev_idx * 3];
                                     } else {
                                         prev_idx = num_ranges;
                                     }
-                                } 
+                                }
                                 if num_ranges == num_ranges {
                                     for a in 0..num_ranges {
-                                        if z >= reclass_vals[a*3+1] && z < reclass_vals[a*3+2] {
-                                            z = reclass_vals[a*3];
+                                        if z >= reclass_vals[a * 3 + 1]
+                                            && z < reclass_vals[a * 3 + 2]
+                                        {
+                                            z = reclass_vals[a * 3];
                                             prev_idx = a;
                                             break;
                                         }
@@ -266,7 +289,7 @@ impl WhiteboxTool for ReclassFromFile {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -275,7 +298,8 @@ impl WhiteboxTool for ReclassFromFile {
                     }
                 }
             }
-        } else { // assign_mode
+        } else {
+            // assign_mode
             // create a hashmap to hold the assign values
             // the key is the old_value and the value is the new_value.
             /* Note: Rust doesn't support using HashMaps with floating-point keys because it is unsafe.
@@ -285,7 +309,10 @@ impl WhiteboxTool for ReclassFromFile {
             let multiplier = 10000f64;
             let mut assign_map = HashMap::new();
             for a in 0..num_ranges {
-                assign_map.insert((reclass_vals[a*2+1] * multiplier).round() as i64, reclass_vals[a*2]);
+                assign_map.insert(
+                    (reclass_vals[a * 2 + 1] * multiplier).round() as i64,
+                    reclass_vals[a * 2],
+                );
             }
             let assign_map = Arc::new(assign_map);
 
@@ -302,7 +329,9 @@ impl WhiteboxTool for ReclassFromFile {
                             if z != nodata {
                                 // is z in the hashmap?
                                 if assign_map.contains_key(&((z * multiplier).round() as i64)) {
-                                    z = *assign_map.get(&((z * multiplier).round() as i64)).unwrap();
+                                    z = *assign_map
+                                        .get(&((z * multiplier).round() as i64))
+                                        .unwrap();
                                 }
                                 data[col as usize] = z;
                             }
@@ -315,7 +344,7 @@ impl WhiteboxTool for ReclassFromFile {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -326,23 +355,32 @@ impl WhiteboxTool for ReclassFromFile {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Reclass values: {:?}", reclass_vals));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

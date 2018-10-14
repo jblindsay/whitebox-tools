@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: January 21, 2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct LessThan {
@@ -27,63 +26,68 @@ pub struct LessThan {
 }
 
 impl LessThan {
-    pub fn new() -> LessThan { // public constructor
+    pub fn new() -> LessThan {
+        // public constructor
         let name = "LessThan".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description = "Performs a less-than comparison operation on two rasters or a raster and a constant value.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File Or Constant Value".to_owned(), 
-            flags: vec!["--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File Or Constant Value".to_owned(),
+            flags: vec!["--input1".to_owned()],
             description: "Input raster file or constant value.".to_owned(),
             parameter_type: ParameterType::ExistingFileOrFloat(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input File Or Constant Value".to_owned(), 
-            flags: vec!["--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File Or Constant Value".to_owned(),
+            flags: vec!["--input2".to_owned()],
             description: "Input raster file or constant value.".to_owned(),
             parameter_type: ParameterType::ExistingFileOrFloat(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Perform a less-than-OR-EQUAL-TO operation?".to_owned(), 
-            flags: vec!["--incl_equals".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Perform a less-than-OR-EQUAL-TO operation?".to_owned(),
+            flags: vec!["--incl_equals".to_owned()],
             description: "Perform a less-than-or-equal-to operation.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif' -o=output.tif --incl_equals", short_exe, name).replace("*", &sep);
-    
-        LessThan { 
-            name: name, 
-            description: description, 
+
+        LessThan {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -92,7 +96,7 @@ impl WhiteboxTool for LessThan {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -123,15 +127,22 @@ impl WhiteboxTool for LessThan {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1 = String::new();
         let mut input2 = String::new();
         let mut output_file = String::new();
         let mut equal_to = false;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -146,21 +157,23 @@ impl WhiteboxTool for LessThan {
                 if keyval {
                     input1 = vec[1].to_string();
                 } else {
-                    input1 = args[i+1].to_string();
+                    input1 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--input2" {
                 if keyval {
                     input2 = vec[1].to_string();
                 } else {
-                    input2 = args[i+1].to_string();
+                    input2 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-incl_equals" || vec[0].to_lowercase() == "--incl_equals" {
+            } else if vec[0].to_lowercase() == "-incl_equals"
+                || vec[0].to_lowercase() == "--incl_equals"
+            {
                 equal_to = true;
             }
         }
@@ -183,10 +196,10 @@ impl WhiteboxTool for LessThan {
         // Are either of the inputs constants?
         let mut input1_constant = f64::NEG_INFINITY;
         let input1_is_constant = match input1.parse::<f64>() {
-            Ok(val) => { 
+            Ok(val) => {
                 input1_constant = val;
                 true
-            },
+            }
             Err(_) => false,
         };
         if !input1_is_constant {
@@ -197,10 +210,10 @@ impl WhiteboxTool for LessThan {
 
         let mut input2_constant = f64::NEG_INFINITY;
         let input2_is_constant = match input2.parse::<f64>() {
-            Ok(val) => { 
+            Ok(val) => {
                 input2_constant = val;
                 true
-            },
+            }
             Err(_) => false,
         };
         if !input2_is_constant {
@@ -215,10 +228,12 @@ impl WhiteboxTool for LessThan {
             println!("{}", less_than(input1_constant, input2_constant, equal_to));
             return Ok(());
         } else if input1_is_constant && !input2_is_constant {
-            if verbose { println!("Reading data...") };
+            if verbose {
+                println!("Reading data...")
+            };
             let in2 = Arc::new(Raster::new(&input2, "r")?);
 
-            let start = time::now();
+            let start = Instant::now();
             let rows = in2.configs.rows as isize;
             let columns = in2.configs.columns as isize;
             let nodata2 = in2.configs.nodata;
@@ -249,7 +264,7 @@ impl WhiteboxTool for LessThan {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -259,31 +274,42 @@ impl WhiteboxTool for LessThan {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
             output.configs.data_type = DataType::F32;
             output.configs.palette = "qual.plt".to_string();
             output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-            if verbose { println!("Saving data...") };
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
             }
         } else if !input1_is_constant && input2_is_constant {
-            if verbose { println!("Reading data...") };
+            if verbose {
+                println!("Reading data...")
+            };
             let in1 = Arc::new(Raster::new(&input1, "r")?);
-            
-            let start = time::now();
+
+            let start = Instant::now();
             let rows = in1.configs.rows as isize;
             let columns = in1.configs.columns as isize;
             let nodata1 = in1.configs.nodata;
-            
+
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -310,7 +336,7 @@ impl WhiteboxTool for LessThan {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -320,28 +346,40 @@ impl WhiteboxTool for LessThan {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
             output.configs.data_type = DataType::F32;
             output.configs.palette = "qual.plt".to_string();
             output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-            if verbose { println!("Saving data...") };
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
             }
-        } else { // !input1_is_constant && !input2_is_constant
-            if verbose { println!("Reading data...") };
+        } else {
+            // !input1_is_constant && !input2_is_constant
+            if verbose {
+                println!("Reading data...")
+            };
             let in1 = Arc::new(Raster::new(&input1, "r")?);
             let in2 = Arc::new(Raster::new(&input2, "r")?);
 
-            let start = time::now();
+            let start = Instant::now();
             let rows = in1.configs.rows as isize;
             let columns = in1.configs.columns as isize;
             let nodata1 = in1.configs.nodata;
@@ -352,7 +390,7 @@ impl WhiteboxTool for LessThan {
                 return Err(Error::new(ErrorKind::InvalidInput,
                                     "The input files must have the same number of rows and columns and spatial extent."));
             }
-            
+
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -382,7 +420,7 @@ impl WhiteboxTool for LessThan {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -392,25 +430,33 @@ impl WhiteboxTool for LessThan {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
             output.configs.data_type = DataType::F32;
             output.configs.palette = "qual.plt".to_string();
             output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-            if verbose { println!("Saving data...") };
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
             if verbose {
-                println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
             }
-
         }
-        
+
         Ok(())
     }
 }

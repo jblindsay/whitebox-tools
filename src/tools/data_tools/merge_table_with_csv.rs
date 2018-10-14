@@ -13,7 +13,6 @@ use std::io::prelude::*;
 use std::io::{BufReader, Error, ErrorKind};
 use std::path;
 use std::{f64, i32};
-use time;
 use tools::*;
 use vector::{AttributeField, FieldData, FieldDataType, Shapefile};
 
@@ -372,7 +371,7 @@ impl WhiteboxTool for MergeTableWithCsv {
             record_num += 1;
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // create output file
         let mut output =
@@ -442,14 +441,10 @@ impl WhiteboxTool for MergeTableWithCsv {
             Err(e) => return Err(e),
         };
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

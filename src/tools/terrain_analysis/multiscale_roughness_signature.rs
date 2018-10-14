@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 27, 2018
-Last Modified: February 27, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -24,7 +24,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -105,7 +104,8 @@ impl MultiscaleRoughnessSignature {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -268,7 +268,7 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
             println!("Reading DEM data...")
         };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -358,9 +358,13 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                                     values[i] = z;
                                 }
                             }
-                            a = -(values[2] - values[4] + 2f64 * (values[1] - values[5]) + values[0]
+                            a = -(values[2] - values[4]
+                                + 2f64 * (values[1] - values[5])
+                                + values[0]
                                 - values[6]);
-                            b = -(values[6] - values[4] + 2f64 * (values[7] - values[3]) + values[0]
+                            b = -(values[6] - values[4]
+                                + 2f64 * (values[7] - values[3])
+                                + values[0]
                                 - values[2]);
                             data[col as usize] = Normal {
                                 a: a,
@@ -544,7 +548,7 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                             b: b,
                             c: eight_grid_res,
                         })).acos()
-                            .to_degrees();
+                        .to_degrees();
                     } else {
                         diff = 0f64;
                     }
@@ -594,7 +598,8 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
 
                     n = i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)] - i_n[(y2, x1)];
                     if n > 0 {
-                        sum = i_diff_nv[(y2, x2)] + i_diff_nv[(y1, x1)] - i_diff_nv[(y1, x2)]
+                        sum = i_diff_nv[(y2, x2)] + i_diff_nv[(y1, x1)]
+                            - i_diff_nv[(y1, x2)]
                             - i_diff_nv[(y2, x1)];
                         xdata[s].push((midpoint * 2 + 1) as f64);
                         ydata[s].push(sum / n as f64);
@@ -603,12 +608,11 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 
@@ -623,9 +627,12 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Multiscale Roughness</h1>"#.as_bytes())?;
+            <h1>Multiscale Roughness</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(
             (format!(

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/04/2018
-Last Modified: 22/04/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{Array2D, BoundingBox};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -85,7 +84,8 @@ impl RaiseWalls {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -223,7 +223,7 @@ impl WhiteboxTool for RaiseWalls {
         // read the DEM into memory
         let dem = Raster::new(&dem_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of polygon or polyline type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Polygon
@@ -583,16 +583,13 @@ impl WhiteboxTool for RaiseWalls {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -611,7 +608,7 @@ impl WhiteboxTool for RaiseWalls {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

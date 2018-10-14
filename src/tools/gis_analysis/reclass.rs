@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 9, 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct Reclass {
@@ -224,7 +223,7 @@ impl WhiteboxTool for Reclass {
         };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -347,17 +346,14 @@ impl WhiteboxTool for Reclass {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Reclass values: {:?}", reclass_vals));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -372,7 +368,7 @@ impl WhiteboxTool for Reclass {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

@@ -2,22 +2,21 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: 05/05/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::cmp::Ordering::Less;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct KNearestMeanFilter {
@@ -29,73 +28,84 @@ pub struct KNearestMeanFilter {
 }
 
 impl KNearestMeanFilter {
-    pub fn new() -> KNearestMeanFilter { // public constructor
+    pub fn new() -> KNearestMeanFilter {
+        // public constructor
         let name = "KNearestMeanFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
-        let description = "A k-nearest mean filter is a type of edge-preserving smoothing filter.".to_string();
-        
+        let description =
+            "A k-nearest mean filter is a type of edge-preserving smoothing filter.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter X-Dimension".to_owned(), 
-            flags: vec!["--filterx".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter X-Dimension".to_owned(),
+            flags: vec!["--filterx".to_owned()],
             description: "Size of the filter kernel in the x-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter Y-Dimension".to_owned(), 
-            flags: vec!["--filtery".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter Y-Dimension".to_owned(),
+            flags: vec!["--filtery".to_owned()],
             description: "Size of the filter kernel in the y-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "K-value (pixels)".to_owned(), 
-            flags: vec!["-k".to_owned()], 
-            description: "k-value in pixels; this is the number of nearest-valued neighbours to use.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "K-value (pixels)".to_owned(),
+            flags: vec!["-k".to_owned()],
+            description:
+                "k-value in pixels; this is the number of nearest-valued neighbours to use."
+                    .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("5".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=9 -k=5
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filtery=7 --filtery=9  -k=5", short_exe, name).replace("*", &sep);
-    
-        KNearestMeanFilter { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=9 -k=5
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filtery=7 --filtery=9  -k=5",
+            short_exe, name
+        ).replace("*", &sep);
+
+        KNearestMeanFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -104,7 +114,7 @@ impl WhiteboxTool for KNearestMeanFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -128,15 +138,22 @@ impl WhiteboxTool for KNearestMeanFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size_x = 3usize;
         let mut filter_size_y = 3usize;
         let mut k = 5usize;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -209,10 +226,10 @@ impl WhiteboxTool for KNearestMeanFilter {
         if (filter_size_y as f64 / 2f64).floor() == (filter_size_y as f64 / 2f64) {
             filter_size_y += 1;
         }
-        
+
         k += 1; // Let's assume that we want k neighbours, or k + 1 including the centre cell itself.
         if k > filter_size_x * filter_size_y {
-            println!("The value of k cannot be greater than the size of the filter (i.e. filterx * filtery). The value has been changed."); 
+            println!("The value of k cannot be greater than the size of the filter (i.e. filterx * filtery). The value has been changed.");
             k = filter_size_x * filter_size_y;
         }
 
@@ -234,12 +251,12 @@ impl WhiteboxTool for KNearestMeanFilter {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
@@ -248,7 +265,7 @@ impl WhiteboxTool for KNearestMeanFilter {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        
+
         let (tx, rx) = mpsc::channel();
         let num_procs = num_cpus::get() as isize;
         for tid in 0..num_procs {
@@ -258,31 +275,27 @@ impl WhiteboxTool for KNearestMeanFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
-                
+
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {
                     // convert it back into an rgb value, using the modified intensity value.
-                    Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                return hsi2value(h, s, value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            return hsi2value(h, s, value);
                         }
-                    )
+                        nodata
+                    })
                 };
 
                 let mut n: f64;
@@ -313,7 +326,11 @@ impl WhiteboxTool for KNearestMeanFilter {
                                 }
                             }
                             // sort the list of neighbours by their squared difference with z
-                            neighbour_vals.sort_by(|a, b| ((a - z)*(a - z)).partial_cmp(&((b - z)*(b - z))).unwrap_or(Less));
+                            neighbour_vals.sort_by(|a, b| {
+                                ((a - z) * (a - z))
+                                    .partial_cmp(&((b - z) * (b - z)))
+                                    .unwrap_or(Less)
+                            });
 
                             sum = 0f64;
                             n = 0f64;
@@ -321,7 +338,7 @@ impl WhiteboxTool for KNearestMeanFilter {
                                 if neighbour_vals[i] != f64::INFINITY {
                                     sum += neighbour_vals[i];
                                     n += 1f64;
-                                } 
+                                }
                             }
                             if n > 0f64 {
                                 data[col as usize] = output_fn(row, col, sum / n);
@@ -348,25 +365,34 @@ impl WhiteboxTool for KNearestMeanFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
         output.add_metadata_entry(format!("k-value: {}", k));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => { if verbose { println!("Output file written"); } },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written");
+                }
+            }
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -390,21 +416,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -414,33 +441,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

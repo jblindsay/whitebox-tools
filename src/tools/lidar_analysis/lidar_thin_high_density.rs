@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 6, 2018
-Last Modified: 28/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -14,7 +14,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::isize;
 use std::path;
-use time;
 use tools::*;
 
 /// Thins points from high density areas within a LiDAR point cloud.
@@ -218,7 +217,7 @@ impl WhiteboxTool for LidarThinHighDensity {
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("Performing analysis...");
@@ -345,7 +344,7 @@ impl WhiteboxTool for LidarThinHighDensity {
                     }
                 }
             }
-            end = time::now();
+            end = get_formatted_elapsed_time(start);
         } else {
             let p = path::Path::new(&output_file);
             let mut extension = String::from(".");
@@ -370,15 +369,13 @@ impl WhiteboxTool for LidarThinHighDensity {
                 }
             }
 
-            end = time::now();
+            end = get_formatted_elapsed_time(start);
 
             let _ = match filtered_output.write() {
                 Ok(_) => println!("Filtered points LAS file saved"),
                 Err(e) => println!("error while writing: {:?}", e),
             };
         }
-
-        let elapsed_time = end - start;
 
         if verbose {
             println!("Writing output LAS file...");
@@ -388,10 +385,7 @@ impl WhiteboxTool for LidarThinHighDensity {
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", end));
         }
 
         Ok(())

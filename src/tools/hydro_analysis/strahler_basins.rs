@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
 use tools::*;
 
@@ -24,63 +23,69 @@ pub struct StrahlerOrderBasins {
 }
 
 impl StrahlerOrderBasins {
-    pub fn new() -> StrahlerOrderBasins { // public constructor
+    pub fn new() -> StrahlerOrderBasins {
+        // public constructor
         let name = "StrahlerOrderBasins".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Identifies Strahler-order basins from an input stream network.".to_string();
-        
+        let description =
+            "Identifies Strahler-order basins from an input stream network.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input raster D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Streams File".to_owned(), 
-            flags: vec!["--streams".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Streams File".to_owned(),
+            flags: vec!["--streams".to_owned()],
             description: "Input raster streams file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr='d8pntr.tif' --streams='streams.tif' -o='output.tif'", short_exe, name).replace("*", &sep);
-    
-        StrahlerOrderBasins { 
-            name: name, 
-            description: description, 
+
+        StrahlerOrderBasins {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -89,7 +94,7 @@ impl WhiteboxTool for StrahlerOrderBasins {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -113,15 +118,22 @@ impl WhiteboxTool for StrahlerOrderBasins {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -136,21 +148,24 @@ impl WhiteboxTool for StrahlerOrderBasins {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
-                    d8_file = args[i+1].to_string();
+                    d8_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
-                    streams_file = args[i+1].to_string();
+                    streams_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr"
+                || vec[0].to_lowercase() == "--esri_pntr"
+                || vec[0].to_lowercase() == "--esri_style"
+            {
                 esri_style = true;
             }
         }
@@ -176,26 +191,32 @@ impl WhiteboxTool for StrahlerOrderBasins {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let pntr = Raster::new(&d8_file, "r")?;
         let streams = Raster::new(&streams_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
         let nodata = streams.configs.nodata;
         let pntr_nodata = pntr.configs.nodata;
-        
+
         // make sure the input files have the same size
-        if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if streams.configs.rows != pntr.configs.rows
+            || streams.configs.columns != pntr.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         let mut pourpts: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
@@ -204,8 +225,8 @@ impl WhiteboxTool for StrahlerOrderBasins {
         // but the mapping method is far faster than calculating z.ln() / ln(2.0).
         // It's also a good way of allowing for different point styles.
         let mut pntr_matches: [usize; 129] = [999usize; 129];
-        let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
-        
+        let mut inflowing_vals = [16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64];
+
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
             // onto the cell offsets in dx and dy.
@@ -229,7 +250,7 @@ impl WhiteboxTool for StrahlerOrderBasins {
             pntr_matches[64] = 7usize;
             pntr_matches[128] = 0usize;
 
-            inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
+            inflowing_vals = [8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64];
         }
 
         let mut num_neighbouring_stream_cells: i8;
@@ -247,8 +268,8 @@ impl WhiteboxTool for StrahlerOrderBasins {
                     for c in 0..8 {
                         x = col + dx[c];
                         y = row + dy[c];
-                        if streams[(y, x)] > 0.0 && pntr[(y, x)] == inflowing_vals[c] { 
-                            num_neighbouring_stream_cells += 1; 
+                        if streams[(y, x)] > 0.0 && pntr[(y, x)] == inflowing_vals[c] {
+                            num_neighbouring_stream_cells += 1;
                         }
                     }
                     if num_neighbouring_stream_cells == 0i8 {
@@ -270,7 +291,8 @@ impl WhiteboxTool for StrahlerOrderBasins {
                                 x += dx[pntr_matches[dir]];
                                 y += dy[pntr_matches[dir]];
 
-                                if streams[(y, x)] <= 0.0 { //it's not a stream cell
+                                if streams[(y, x)] <= 0.0 {
+                                    //it's not a stream cell
                                     flag = false;
                                 } else {
                                     current_value = pourpts[(y, x)];
@@ -283,9 +305,10 @@ impl WhiteboxTool for StrahlerOrderBasins {
                                         for d in 0..8 {
                                             x2 = x + dx[d];
                                             y2 = y + dy[d];
-                                            if streams[(y2, x2)] > 0.0 &&
-                                                    pntr[(y2, x2)] == inflowing_vals[d] &&
-                                                    pourpts[(y2, x2)] == current_order {
+                                            if streams[(y2, x2)] > 0.0
+                                                && pntr[(y2, x2)] == inflowing_vals[d]
+                                                && pourpts[(y2, x2)] == current_order
+                                            {
                                                 num_neighbouring_stream_cells += 1;
                                             }
                                         }
@@ -300,10 +323,10 @@ impl WhiteboxTool for StrahlerOrderBasins {
                                         pourpts[(y, x)] = current_order;
                                     }
                                 }
-
                             } else {
-                                if streams[(y, x)] > 0.0 { //it is a valid stream cell and probably just has no downslope neighbour (e.g. at the edge of the grid)
-                                    pourpts.increment(y, x, 1.0); 
+                                if streams[(y, x)] > 0.0 {
+                                    //it is a valid stream cell and probably just has no downslope neighbour (e.g. at the edge of the grid)
+                                    pourpts.increment(y, x, 1.0);
                                 }
                                 flag = false;
                             }
@@ -313,7 +336,7 @@ impl WhiteboxTool for StrahlerOrderBasins {
                     pourpts[(row, col)] = nodata;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -330,7 +353,7 @@ impl WhiteboxTool for StrahlerOrderBasins {
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         let low_value = f64::MIN;
         output.reinitialize_values(low_value);
-        
+
         let mut z: f64;
         for row in 0..rows {
             for col in 0..columns {
@@ -411,23 +434,32 @@ impl WhiteboxTool for StrahlerOrderBasins {
                 }
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Streams file: {}", streams_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

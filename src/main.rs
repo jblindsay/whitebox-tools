@@ -32,6 +32,7 @@ by the WhiteboxTools library:
 */
 
 extern crate byteorder;
+// extern crate chrono;
 extern crate kdtree;
 extern crate lzw;
 extern crate nalgebra as na;
@@ -40,16 +41,16 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate statrs;
-extern crate time;
+// extern crate time;
 
 pub mod algorithms;
-pub mod io_utils;
 pub mod lidar;
 pub mod raster;
 pub mod rendering;
 pub mod spatial_ref_system;
 pub mod structures;
 pub mod tools;
+pub mod utils;
 pub mod vector;
 
 use std::env;

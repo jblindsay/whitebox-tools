@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: 05/05/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct DiffOfGaussianFilter {
@@ -28,63 +27,68 @@ pub struct DiffOfGaussianFilter {
 }
 
 impl DiffOfGaussianFilter {
-    pub fn new() -> DiffOfGaussianFilter { // public constructor
+    pub fn new() -> DiffOfGaussianFilter {
+        // public constructor
         let name = "DiffOfGaussianFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Difference of Gaussian (DoG) filter on an image.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Sigma 1 (pixels)".to_owned(), 
-            flags: vec!["--sigma1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Sigma 1 (pixels)".to_owned(),
+            flags: vec!["--sigma1".to_owned()],
             description: "Standard deviation distance in pixels.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Sigma 2 (pixels)".to_owned(), 
-            flags: vec!["--sigma2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Sigma 2 (pixels)".to_owned(),
+            flags: vec!["--sigma2".to_owned()],
             description: "Standard deviation distance in pixels.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("4.0".to_owned()),
-            optional: true
+            optional: true,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma1=2.0 --sigma2=4.0", short_exe, name).replace("*", &sep);
-    
-        DiffOfGaussianFilter { 
-            name: name, 
-            description: description, 
+
+        DiffOfGaussianFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -93,7 +97,7 @@ impl WhiteboxTool for DiffOfGaussianFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,7 +121,12 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size1 = 0usize;
@@ -125,8 +134,10 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         let mut sigma1 = 2.0;
         let mut sigma2 = 4.0;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -192,8 +203,10 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         }
 
         if sigma1 == sigma2 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The two input sigma values should not be equal."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The two input sigma values should not be equal.",
+            ));
         }
 
         let recip_root_2_pi_times_sigma1 = 1.0 / ((2.0 * PI).sqrt() * sigma1);
@@ -205,25 +218,28 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         // figure out the size of the filter
         let mut weight: f64;
         for i in 0..250 {
-            weight = recip_root_2_pi_times_sigma1 * (-1.0 * ((i * i) as f64) / two_sigma_sqr1).exp();
+            weight =
+                recip_root_2_pi_times_sigma1 * (-1.0 * ((i * i) as f64) / two_sigma_sqr1).exp();
             if weight <= 0.001 {
                 filter_size1 = i * 2 + 1;
                 break;
             }
         }
-        
+
         // the filter dimensions must be odd numbers such that there is a middle pixel
         if filter_size1 % 2 == 0 {
             filter_size1 += 1;
         }
 
-        if filter_size1 < 3 { filter_size1 = 3; }
+        if filter_size1 < 3 {
+            filter_size1 = 3;
+        }
 
         let num_pixels_in_filter1 = filter_size1 * filter_size1;
         let mut d_x1 = vec![0isize; num_pixels_in_filter1];
         let mut d_y1 = vec![0isize; num_pixels_in_filter1];
         let mut weights1 = vec![0.0; num_pixels_in_filter1];
-        
+
         // fill the filter d_x and d_y values and the distance-weights
         let midpoint1: isize = (filter_size1 as f64 / 2f64).floor() as isize + 1;
         let mut a = 0;
@@ -234,34 +250,37 @@ impl WhiteboxTool for DiffOfGaussianFilter {
                 y = row as isize - midpoint1;
                 d_x1[a] = x;
                 d_y1[a] = y;
-                weight = recip_root_2_pi_times_sigma1 * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr1).exp();
+                weight = recip_root_2_pi_times_sigma1
+                    * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr1).exp();
                 weights1[a] = weight;
                 a += 1;
             }
         }
 
-
         // figure out the size of the filter
         for i in 0..250 {
-            weight = recip_root_2_pi_times_sigma2 * (-1.0 * ((i * i) as f64) / two_sigma_sqr2).exp();
+            weight =
+                recip_root_2_pi_times_sigma2 * (-1.0 * ((i * i) as f64) / two_sigma_sqr2).exp();
             if weight <= 0.001 {
                 filter_size2 = i * 2 + 1;
                 break;
             }
         }
-        
+
         // the filter dimensions must be odd numbers such that there is a middle pixel
         if filter_size2 % 2 == 0 {
             filter_size2 += 1;
         }
 
-        if filter_size2 < 3 { filter_size2 = 3; }
+        if filter_size2 < 3 {
+            filter_size2 = 3;
+        }
 
         let num_pixels_in_filter2 = filter_size2 * filter_size2;
         let mut d_x2 = vec![0isize; num_pixels_in_filter2];
         let mut d_y2 = vec![0isize; num_pixels_in_filter2];
         let mut weights2 = vec![0.0; num_pixels_in_filter2];
-        
+
         // fill the filter d_x and d_y values and the distance-weights
         let midpoint2: isize = (filter_size2 as f64 / 2f64).floor() as isize + 1;
         a = 0;
@@ -271,7 +290,8 @@ impl WhiteboxTool for DiffOfGaussianFilter {
                 y = row as isize - midpoint2;
                 d_x2[a] = x;
                 d_y2[a] = y;
-                weight = recip_root_2_pi_times_sigma2 * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr2).exp();
+                weight = recip_root_2_pi_times_sigma2
+                    * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr2).exp();
                 weights2[a] = weight;
                 a += 1;
             }
@@ -292,21 +312,21 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         let d_y2 = Arc::new(d_y2);
         let weights2 = Arc::new(weights2);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
-    
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
@@ -326,17 +346,15 @@ impl WhiteboxTool for DiffOfGaussianFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
-                
+
                 let (mut sum, mut z_final1, mut z_final2): (f64, f64, f64);
                 let mut z: f64;
                 let mut zn: f64;
@@ -393,14 +411,16 @@ impl WhiteboxTool for DiffOfGaussianFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Sigma1: {}", sigma1));
         output.add_metadata_entry(format!("Sigma2: {}", sigma2));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -415,8 +435,10 @@ impl WhiteboxTool for DiffOfGaussianFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

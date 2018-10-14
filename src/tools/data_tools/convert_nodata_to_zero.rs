@@ -2,24 +2,23 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
-use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
 use tools::ParameterFileType;
+use tools::ParameterType;
+use tools::ToolParameter;
+use tools::*;
 
 pub struct ConvertNodataToZero {
     name: String,
@@ -37,35 +36,39 @@ impl ConvertNodataToZero {
         let description = "Converts nodata values in a raster to zero.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=in.tif -o=NewRaster.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=in.tif -o=NewRaster.tif",
+            short_exe, name
+        ).replace("*", &sep);
 
         ConvertNodataToZero {
             name: name,
@@ -81,7 +84,7 @@ impl WhiteboxTool for ConvertNodataToZero {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -105,17 +108,20 @@ impl WhiteboxTool for ConvertNodataToZero {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -149,26 +155,27 @@ impl WhiteboxTool for ConvertNodataToZero {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        if !input_file.contains(&sep) && !input_file.contains("/") { // Windows now takes forward slash in directory names.
+        if !input_file.contains(&sep) && !input_file.contains("/") {
+            // Windows now takes forward slash in directory names.
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(&sep) && ! output_file.contains("/") {
+        if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.nodata = -32768f64; // make sure that the output image doesn't use a zero-valued nodata.
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -201,13 +208,13 @@ impl WhiteboxTool for ConvertNodataToZero {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input raster file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -222,7 +229,10 @@ impl WhiteboxTool for ConvertNodataToZero {
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

@@ -27,7 +27,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{BoundingBox, Point2D};
-use time;
 use tools::*;
 use vector::*;
 
@@ -234,7 +233,7 @@ impl WhiteboxTool for SibsonInterpolation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -616,8 +615,7 @@ impl WhiteboxTool for SibsonInterpolation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -626,7 +624,7 @@ impl WhiteboxTool for SibsonInterpolation {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
         output.add_metadata_entry(
-            format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""),
+            format!("Elapsed Time (including I/O): {}", elapsed_time)
         );
 
         if verbose {
@@ -645,7 +643,7 @@ impl WhiteboxTool for SibsonInterpolation {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time: {}", elapsed_time)
             );
         }
 

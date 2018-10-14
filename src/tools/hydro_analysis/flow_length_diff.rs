@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 8, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
 use tools::*;
 
@@ -24,54 +23,62 @@ pub struct FlowLengthDiff {
 }
 
 impl FlowLengthDiff {
-    pub fn new() -> FlowLengthDiff { // public constructor
+    pub fn new() -> FlowLengthDiff {
+        // public constructor
         let name = "FlowLengthDiff".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description = "Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input D8 pointer raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        FlowLengthDiff { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        FlowLengthDiff {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -80,7 +87,7 @@ impl WhiteboxTool for FlowLengthDiff {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -104,14 +111,21 @@ impl WhiteboxTool for FlowLengthDiff {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -126,15 +140,18 @@ impl WhiteboxTool for FlowLengthDiff {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
-                    d8_file = args[i+1].to_string();
+                    d8_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr"
+                || vec[0].to_lowercase() == "--esri_pntr"
+                || vec[0].to_lowercase() == "--esri_style"
+            {
                 esri_style = true;
             }
         }
@@ -156,8 +173,10 @@ impl WhiteboxTool for FlowLengthDiff {
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
-        
-        if verbose { println!("Reading pointer data...") };
+
+        if verbose {
+            println!("Reading pointer data...")
+        };
         let pntr = Raster::new(&d8_file, "r")?;
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -165,13 +184,13 @@ impl WhiteboxTool for FlowLengthDiff {
         let cell_size_x = pntr.configs.resolution_x;
         let cell_size_y = pntr.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
-        let start = time::now();
-        
+
+        let start = Instant::now();
+
         let out_nodata = -32768f64;
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+
         let mut pntr_matches: [usize; 129] = [999usize; 129];
         if !esri_style {
             // This maps Whitebox-style D8 pointer values
@@ -198,7 +217,16 @@ impl WhiteboxTool for FlowLengthDiff {
         }
 
         let mut dfl: Array2D<f64> = Array2D::new(rows, columns, -999f64, out_nodata)?;
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let grid_lengths = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
         let mut dir: f64;
         let mut c: usize;
         let mut flag: bool;
@@ -290,7 +318,7 @@ impl WhiteboxTool for FlowLengthDiff {
                         if zn != out_nodata {
                             if (z - zn).abs() > max_abs_diff {
                                 max_abs_diff = (z - zn).abs();
-                            } 
+                            }
                         }
                     }
                     if max_abs_diff != f64::NEG_INFINITY {
@@ -311,23 +339,31 @@ impl WhiteboxTool for FlowLengthDiff {
             }
         }
 
-
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input D8 pointer file: {}", d8_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

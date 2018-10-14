@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 pub struct MaxDownslopeElevChange {
@@ -35,35 +34,39 @@ impl MaxDownslopeElevChange {
             .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif",
+            short_exe, name
+        ).replace("*", &sep);
 
         MaxDownslopeElevChange {
             name: name,
@@ -79,7 +82,7 @@ impl WhiteboxTool for MaxDownslopeElevChange {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -109,18 +112,21 @@ impl WhiteboxTool for MaxDownslopeElevChange {
     fn get_toolbox(&self) -> String {
         self.toolbox.clone()
     }
-    
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -131,7 +137,10 @@ impl WhiteboxTool for MaxDownslopeElevChange {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -163,19 +172,19 @@ impl WhiteboxTool for MaxDownslopeElevChange {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         let cell_size_x = input.configs.resolution_x;
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -188,9 +197,18 @@ impl WhiteboxTool for MaxDownslopeElevChange {
                 let mut slope: f64;
                 let mut dist: f64;
                 let mut max_z_change: f64;
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let grid_lengths = [
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                ];
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -209,7 +227,6 @@ impl WhiteboxTool for MaxDownslopeElevChange {
                                         max_z_change = z - zn;
                                     }
                                 }
-                                
                             }
                             if max_slope > 0f64 {
                                 data[col as usize] = max_z_change;
@@ -235,13 +252,13 @@ impl WhiteboxTool for MaxDownslopeElevChange {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input DEM file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -255,8 +272,10 @@ impl WhiteboxTool for MaxDownslopeElevChange {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 18, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// Performs a write function memory insertion for single-band multi-date change detection.
@@ -223,7 +222,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
             false => Arc::new(Raster::new(&input2_file, "r")?),
         };
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input files have the same size
         if input_r.configs.rows != input_g.configs.rows
@@ -324,8 +323,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -335,9 +333,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
         if input3_used {
             output.add_metadata_entry(format!("Input file Date 3: {}", input3_file));
         }
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -351,7 +347,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

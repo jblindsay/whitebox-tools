@@ -2,9 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay and Anthony Francioni
 Created: 06/09/2018
-Last Modified: 16/09/2018
+Last Modified: 12/10/2018
 License: MIT
-
 */
 
 use num_cpus;
@@ -20,7 +19,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// This tool implements a modified form of the algorithm described by
@@ -319,7 +317,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         if input.is_in_geographic_coordinates() {
             // calculate a new z-conversion factor
@@ -594,10 +592,13 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
             }
         }
 
-        let t1 = time::now();
+        let t1 = Instant::now();
         println!(
             "{}",
-            format!("Calculating normal vectors: {}", t1 - start).replace("PT", "")
+            format!(
+                "Calculating normal vectors: {}",
+                get_formatted_elapsed_time(start)
+            )
         );
 
         //////////////////////////////////////////////////////////
@@ -703,10 +704,12 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
             }
         }
 
-        let t2 = time::now();
         println!(
             "{}",
-            format!("Smoothing normal vectors: {}", t2 - t1).replace("PT", "")
+            format!(
+                "Smoothing normal vectors: {}",
+                get_formatted_elapsed_time(t1)
+            )
         );
 
         ///////////////////////////////////////////////////////////////////////////
@@ -791,7 +794,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
             }
         }
 
-        let elapsed_time = time::now() - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
         output.configs.palette = input.configs.palette.clone();
@@ -806,9 +809,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         output.add_metadata_entry(format!("Reduction factor: {}", reduction * 100f64));
         output.add_metadata_entry(format!("DFM threhsold: {}", dfm_threshold));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -822,7 +823,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

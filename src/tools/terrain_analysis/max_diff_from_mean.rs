@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/08/2018
-Last Modified: 29/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Calculates the maximum difference from mean elevation over a range of spatial scales.
@@ -251,7 +250,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
             println!("Reading data...")
         };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -395,10 +394,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        // output_mag.configs.display_min = -3.0;
-        // output_mag.configs.display_max = 3.0;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output_mag.configs.palette = "blue_white_red.plt".to_string();
         output_mag.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -408,9 +404,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
         output_mag.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_mag.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag.add_metadata_entry(format!("Step size y: {}", step));
-        output_mag.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving magnitude data...")
@@ -433,9 +427,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
         output_scale.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_scale.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale.add_metadata_entry(format!("Step size: {}", step));
-        output_scale.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving scale data...")

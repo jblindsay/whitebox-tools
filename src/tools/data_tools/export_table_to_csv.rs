@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/04/2018
-Last Modified: 08/10/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufWriter, Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::{FieldData, Shapefile};
 
@@ -190,7 +189,7 @@ impl WhiteboxTool for ExportTableToCsv {
         };
         let vector_data = Shapefile::read(&input_file)?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let f = File::create(&output_file)?;
         let mut writer = BufWriter::new(f);
@@ -253,11 +252,10 @@ impl WhiteboxTool for ExportTableToCsv {
         }
 
         if verbose {
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

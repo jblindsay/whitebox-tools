@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 24, 2017
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::path;
 use std::path::Path;
 use std::process::Command;
 use structures::{DistanceMetric, FixedRadiusSearch3D};
-use time;
 use tools::*;
 
 pub struct LidarKappaIndex {
@@ -194,7 +193,7 @@ impl WhiteboxTool for LidarKappaIndex {
         if verbose {
             println!("Reading data...")
         };
-        let start = time::now();
+        let start = Instant::now();
 
         let input1: LasFile = match LasFile::new(&input_file1, "r") {
             Ok(lf) => lf,
@@ -572,12 +571,11 @@ impl WhiteboxTool for LidarKappaIndex {
             println!("Complete!\nPlease see {} for output.", output_file);
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

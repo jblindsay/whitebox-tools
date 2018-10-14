@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: 26/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -13,7 +13,6 @@ use std::i16;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Array2D;
-use time;
 use tools::*;
 
 pub struct AverageOverlay {
@@ -172,7 +171,7 @@ impl WhiteboxTool for AverageOverlay {
                                 "There is something incorrect with the input files. At least two inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // We need to initialize output and n here, but in reality this can't be done
         // until we know the size of rows and columns, which occurs during the first loop.
@@ -265,15 +264,12 @@ impl WhiteboxTool for AverageOverlay {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(
-            format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -288,7 +284,7 @@ impl WhiteboxTool for AverageOverlay {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

@@ -2,19 +2,18 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 use tools::*;
 
@@ -27,82 +26,88 @@ pub struct RescaleValueRange {
 }
 
 impl RescaleValueRange {
-    pub fn new() -> RescaleValueRange { // public constructor
+    pub fn new() -> RescaleValueRange {
+        // public constructor
         let name = "RescaleValueRange".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs a min-max contrast stretch on an input greytone image.".to_string();
-        
+        let description =
+            "Performs a min-max contrast stretch on an input greytone image.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Raster Minimum Value".to_owned(), 
-            flags: vec!["--out_min_val".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Raster Minimum Value".to_owned(),
+            flags: vec!["--out_min_val".to_owned()],
             description: "New minimum value in output image.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Raster Maximum Value".to_owned(), 
-            flags: vec!["--out_max_val".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Raster Maximum Value".to_owned(),
+            flags: vec!["--out_max_val".to_owned()],
             description: "New maximum value in output image.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Lower-Tail Clip Value (optional)".to_owned(), 
-            flags: vec!["--clip_min".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Lower-Tail Clip Value (optional)".to_owned(),
+            flags: vec!["--clip_min".to_owned()],
             description: "Optional lower tail clip value.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Upper-Tail Clip Value (optional)".to_owned(), 
-            flags: vec!["--clip_max".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Upper-Tail Clip Value (optional)".to_owned(),
+            flags: vec!["--clip_max".to_owned()],
             description: "Optional upper tail clip value.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --out_min_val=0.0 --out_max_val=1.0
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --out_min_val=0.0 --out_max_val=1.0 --clip_min=45.0 --clip_max=200.0 ", short_exe, name).replace("*", &sep);
-    
-        RescaleValueRange { 
-            name: name, 
-            description: description, 
+
+        RescaleValueRange {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -111,7 +116,7 @@ impl WhiteboxTool for RescaleValueRange {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -142,17 +147,24 @@ impl WhiteboxTool for RescaleValueRange {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut min_val = f64::INFINITY;
         let mut max_val = f64::NEG_INFINITY;
         let mut out_min_val = f64::INFINITY;
         let mut out_max_val = f64::NEG_INFINITY;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -167,33 +179,39 @@ impl WhiteboxTool for RescaleValueRange {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-clip_min" || vec[0].to_lowercase() == "--clip_min" {
+            } else if vec[0].to_lowercase() == "-clip_min" || vec[0].to_lowercase() == "--clip_min"
+            {
                 if keyval {
                     min_val = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     min_val = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-clip_max" || vec[0].to_lowercase() == "--clip_max" {
+            } else if vec[0].to_lowercase() == "-clip_max" || vec[0].to_lowercase() == "--clip_max"
+            {
                 if keyval {
                     max_val = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     max_val = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-out_min_val" || vec[0].to_lowercase() == "--out_min_val" {
+            } else if vec[0].to_lowercase() == "-out_min_val"
+                || vec[0].to_lowercase() == "--out_min_val"
+            {
                 if keyval {
                     out_min_val = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     out_min_val = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-out_max_val" || vec[0].to_lowercase() == "--out_max_val" {
+            } else if vec[0].to_lowercase() == "-out_max_val"
+                || vec[0].to_lowercase() == "--out_max_val"
+            {
                 if keyval {
                     out_max_val = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
@@ -220,47 +238,58 @@ impl WhiteboxTool for RescaleValueRange {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input data...") };
+        if verbose {
+            println!("Reading input data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.data_type == DataType::RGB48 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            return Err(Error::new(ErrorKind::InvalidInput,
-            "This tool cannot be applied to RGB colour-composite images."));
+        if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.data_type == DataType::RGB48
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "This tool cannot be applied to RGB colour-composite images.",
+            ));
         }
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         if out_min_val == f64::INFINITY && out_max_val == f64::NEG_INFINITY {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Error reading the output minimum and maximum values."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Error reading the output minimum and maximum values.",
+            ));
         }
 
         if min_val == f64::INFINITY {
             min_val = input.configs.minimum;
         }
-        
+
         if max_val == f64::NEG_INFINITY {
             max_val = input.configs.maximum;
         }
 
         let value_range = max_val - min_val;
         if value_range < 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input minimum and maximum clip values are incorrect."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input minimum and maximum clip values are incorrect.",
+            ));
         }
 
         let out_range = out_max_val - out_min_val;
         if out_range < 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The output minimum and maximum values are incorrect."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The output minimum and maximum values are incorrect.",
+            ));
         }
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -274,9 +303,13 @@ impl WhiteboxTool for RescaleValueRange {
                     for col in 0..columns {
                         z_in = input[(row, col)];
                         if z_in != nodata {
-                            if z_in < min_val { z_in = min_val; }
-  						    if z_in > max_val { z_in = max_val; }
-	  					    z_out = out_min_val + ((z_in - min_val) / value_range) * out_range;
+                            if z_in < min_val {
+                                z_in = min_val;
+                            }
+                            if z_in > max_val {
+                                z_in = max_val;
+                            }
+                            z_out = out_min_val + ((z_in - min_val) / value_range) * out_range;
                             data[col as usize] = z_out;
                         }
                     }
@@ -298,23 +331,32 @@ impl WhiteboxTool for RescaleValueRange {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Minimum clip value: {}", min_val));
         output.add_metadata_entry(format!("Maximum clip value: {}", max_val));
         output.add_metadata_entry(format!("Output minimum value: {}", out_min_val));
         output.add_metadata_entry(format!("Output maximum value: {}", out_max_val));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

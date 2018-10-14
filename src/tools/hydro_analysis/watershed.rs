@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::*;
 
@@ -75,7 +74,8 @@ impl Watershed {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -210,7 +210,7 @@ impl WhiteboxTool for Watershed {
             ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -370,17 +370,14 @@ impl WhiteboxTool for Watershed {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Pour-points file: {}", pourpts_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -394,7 +391,7 @@ impl WhiteboxTool for Watershed {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

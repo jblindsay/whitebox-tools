@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Performs a percentile filter on an input image.
@@ -254,7 +253,7 @@ impl WhiteboxTool for PercentileFilter {
         let input = Arc::new(Raster::new(&input_file, "r")?);
         // let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // first bin the data
         let rows = input.configs.rows as isize;
@@ -415,8 +414,7 @@ impl WhiteboxTool for PercentileFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = 0.0;
         output.configs.display_max = 100.0;
         output.configs.palette = "blue_white_red.plt".to_string();
@@ -427,9 +425,7 @@ impl WhiteboxTool for PercentileFilter {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -443,7 +439,7 @@ impl WhiteboxTool for PercentileFilter {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

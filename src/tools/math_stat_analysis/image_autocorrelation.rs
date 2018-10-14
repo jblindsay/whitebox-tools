@@ -2,27 +2,26 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 16, 2017
-Last Modified: Dec. 16, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
+use self::statrs::distribution::{Normal, Univariate};
 use num_cpus;
+use raster::*;
 use statrs;
-use std::io::BufWriter;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
-use self::statrs::distribution::{Normal, Univariate};
 
 pub struct ImageAutocorrelation {
     name: String,
@@ -40,41 +39,44 @@ impl ImageAutocorrelation {
         let description = "Performs Moran's I analysis on two or more input images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Contiguity Type".to_owned(), 
-            flags: vec!["--contiguity".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Contiguity Type".to_owned(),
+            flags: vec!["--contiguity".to_owned()],
             description: "Contiguity type.".to_owned(),
             parameter_type: ParameterType::OptionList(vec![
-                "Rook".to_owned(), 
-                "King".to_owned(), 
-                "Bishop".to_owned()
+                "Rook".to_owned(),
+                "King".to_owned(),
+                "Bishop".to_owned(),
             ]),
             default_value: Some("Rook".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -100,7 +102,7 @@ impl WhiteboxTool for ImageAutocorrelation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,18 +133,21 @@ impl WhiteboxTool for ImageAutocorrelation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files: String = String::new();
         let mut output_file = String::new();
         let mut contiguity = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -158,7 +163,7 @@ impl WhiteboxTool for ImageAutocorrelation {
                 if keyval {
                     input_files = vec[1].to_string();
                 } else {
-                    input_files = args[i+1].to_string();
+                    input_files = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
@@ -170,7 +175,7 @@ impl WhiteboxTool for ImageAutocorrelation {
                 if keyval {
                     contiguity = vec[1].to_string().to_lowercase();
                 } else {
-                    contiguity = args[i+1].to_string().to_lowercase();
+                    contiguity = args[i + 1].to_string().to_lowercase();
                 }
             }
         }
@@ -186,15 +191,15 @@ impl WhiteboxTool for ImageAutocorrelation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
-        
         let (dx, dy) = if contiguity.contains("bishop") {
             (vec![1, 1, -1, -1], vec![-1, 1, 1, -1])
-        } else if contiguity.contains("queen")
-                || contiguity.contains("king") {
-            (vec![1, 1, 1, 0, -1, -1, -1, 0],
-            vec![-1, 0, 1, 1, 1, 0, -1, -1])
+        } else if contiguity.contains("queen") || contiguity.contains("king") {
+            (
+                vec![1, 1, 1, 0, -1, -1, -1, 0],
+                vec![-1, 0, 1, 1, 1, 0, -1, -1],
+            )
         } else {
             // go with the rook default
             (vec![1, 0, -1, 0], vec![0, 1, 0, -1])
@@ -252,7 +257,9 @@ impl WhiteboxTool for ImageAutocorrelation {
         let mut p_value_r = vec![0f64; num_files];
         let mut rows: isize = 0;
         let mut columns: isize = 0;
-        if verbose { println!("Calculating image averages..."); }
+        if verbose {
+            println!("Calculating image averages...");
+        }
         for a in 0..num_files {
             let value = &file_names[a]; //files_vec[a];
             let input_file = value.trim(); //.to_owned();
@@ -262,10 +269,12 @@ impl WhiteboxTool for ImageAutocorrelation {
                 rows = input.configs.rows as isize;
                 columns = input.configs.columns as isize;
             } else {
-                if input.configs.columns as isize != columns || 
-                        input.configs.rows as isize != rows {
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                        "All input images must have the same dimensions (rows and columns)."));
+                if input.configs.columns as isize != columns || input.configs.rows as isize != rows
+                {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "All input images must have the same dimensions (rows and columns).",
+                    ));
                 }
             }
 
@@ -303,12 +312,11 @@ impl WhiteboxTool for ImageAutocorrelation {
             }
             mean[a] = image_totals[a] / n[a];
 
-
             e_i[a] = -1f64 / (n[a] - 1f64);
             let mut total_deviation = 0f64;
             let mut w = 0f64;
             let mut numerator = 0f64;
-            let mut s2 = 0f64; 
+            let mut s2 = 0f64;
             let mut wij: f64;
             let mut z: f64;
             let mut zn: f64;
@@ -344,29 +352,32 @@ impl WhiteboxTool for ImageAutocorrelation {
                     }
                 }
             }
-            
+
             let s1 = 4f64 * w;
             s2 = s2 * 4f64;
-            
+
             std_dev[a] = (total_deviation / (n[a] - 1f64)).sqrt();
 
             i[a] = n[a] * numerator / (total_deviation * w);
-            
-            var_normality[a] = (n[a] * n[a] * s1 - n[a] * s2 + 3f64 * w * w) / 
-                    ((w * w) * (n[a] * n[a] - 1f64));
-            
-            z_n[a] = (i[a] - e_i[a]) / var_normality[a].sqrt(); 
+
+            var_normality[a] =
+                (n[a] * n[a] * s1 - n[a] * s2 + 3f64 * w * w) / ((w * w) * (n[a] * n[a] - 1f64));
+
+            z_n[a] = (i[a] - e_i[a]) / var_normality[a].sqrt();
             p_value_n[a] = 2f64 * (1f64 - distribution.cdf(z_n[a].abs()));
-            
+
             k = k / (n[a] * std_dev[a] * std_dev[a] * std_dev[a] * std_dev[a]);
-            
-            var_randomization[a] = (n[a] * ((n[a] * n[a] - 3f64 * n[a] + 3f64) * s1 - n[a] * s2 + 3f64 * w * w) - 
-                    k * (n[a] * n[a] - n[a]) * s1 - 2f64 * n[a] * s1 + 6f64 * w * w) / 
-                    ((n[a] - 1f64) * (n[a] - 2f64) * (n[a] - 3f64) * w * w);
-            
-            z_r[a] = (i[a] - e_i[a]) / var_randomization[a].sqrt(); 
+
+            var_randomization[a] = (n[a]
+                * ((n[a] * n[a] - 3f64 * n[a] + 3f64) * s1 - n[a] * s2 + 3f64 * w * w)
+                - k * (n[a] * n[a] - n[a]) * s1
+                - 2f64 * n[a] * s1
+                + 6f64 * w * w)
+                / ((n[a] - 1f64) * (n[a] - 2f64) * (n[a] - 3f64) * w * w);
+
+            z_r[a] = (i[a] - e_i[a]) / var_randomization[a].sqrt();
             p_value_r[a] = 2f64 * (1f64 - distribution.cdf(z_r[a].abs()));
-                
+
             if verbose {
                 progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
                 if progress != old_progress {
@@ -376,13 +387,14 @@ impl WhiteboxTool for ImageAutocorrelation {
             }
         }
 
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -438,19 +450,36 @@ impl WhiteboxTool for ImageAutocorrelation {
         // output the names of the input files.
         for a in 0..num_files {
             let value = &file_names[a];
-            writer.write_all(&format!("<p><strong>Image {}</strong>: {}</p>", a + 1, value).as_bytes())?;
+            writer.write_all(
+                &format!("<p><strong>Image {}</strong>: {}</p>", a + 1, value).as_bytes(),
+            )?;
 
             writer.write_all("<div><table align=\"center\">".as_bytes())?;
             writer.write_all("<caption>Moran's I Results</caption>".as_bytes())?;
 
-            writer.write_all(&format!("<tr><td>Number of cells included</td><td>{}</td class=\"numberCell\"></tr>", n[a]).as_bytes())?;
+            writer.write_all(
+                &format!(
+                    "<tr><td>Number of cells included</td><td>{}</td class=\"numberCell\"></tr>",
+                    n[a]
+                ).as_bytes(),
+            )?;
             // if (units[a].equals("")) {
-                writer.write_all(&format!("<tr><td>Mean of cells included</td><td class=\"numberCell\">{:.*}</td></tr>", 4, mean[a]).as_bytes())?;
+            writer.write_all(
+                &format!(
+                    "<tr><td>Mean of cells included</td><td class=\"numberCell\">{:.*}</td></tr>",
+                    4, mean[a]
+                ).as_bytes(),
+            )?;
             // } else {
             //     retstr.append("Mean of cells included:\t\t").append(df2.format(mean[a])).append(" ").append(units[a]).append("\n");
             // }
             writer.write_all(&format!("<tr><td>Spatial autocorrelation (Moran's I)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, i[a]).as_bytes())?;
-            writer.write_all(&format!("<tr><td>Expected value</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, e_i[a]).as_bytes())?;
+            writer.write_all(
+                &format!(
+                    "<tr><td>Expected value</td> <td class=\"numberCell\">{:.*}</td></tr>",
+                    4, e_i[a]
+                ).as_bytes(),
+            )?;
             writer.write_all(&format!("<tr><td>Variance of I (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, var_normality[a]).as_bytes())?;
             writer.write_all(&format!("<tr><td>z test stat (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, z_n[a]).as_bytes())?;
             writer.write_all(&format!("<tr><td>p-value (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, p_value_n[a]).as_bytes())?;
@@ -459,7 +488,7 @@ impl WhiteboxTool for ImageAutocorrelation {
             writer.write_all(&format!("<tr><td>p-value (randomization assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, p_value_r[a]).as_bytes())?;
             writer.write_all("</table></div>".as_bytes())?;
         }
-        
+
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();

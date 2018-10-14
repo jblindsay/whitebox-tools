@@ -2,22 +2,21 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 14, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufReader;
-use std::io::BufRead;
-use std::fs::File;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
+use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 use tools::*;
 
@@ -34,41 +33,44 @@ impl HistogramMatching {
         // public constructor
         let name = "HistogramMatching".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Alters the statistical distribution of a raster image matching it to a specified PDF."
-            .to_string();
+        let description =
+            "Alters the statistical distribution of a raster image matching it to a specified PDF."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Probability Distribution Function (PDF) Text File".to_owned(), 
-            flags: vec!["--histo_file".to_owned()], 
-            description: "Input reference probability distribution function (pdf) text file.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Input Probability Distribution Function (PDF) Text File".to_owned(),
+            flags: vec!["--histo_file".to_owned()],
+            description: "Input reference probability distribution function (pdf) text file."
+                .to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Text),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -91,7 +93,7 @@ impl WhiteboxTool for HistogramMatching {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -115,18 +117,21 @@ impl WhiteboxTool for HistogramMatching {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut histo_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -137,13 +142,18 @@ impl WhiteboxTool for HistogramMatching {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--i" || vec[0].to_lowercase() == "--input" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--i"
+                || vec[0].to_lowercase() == "--input"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-histo_file" || vec[0].to_lowercase() == "--histo_file" {
+            } else if vec[0].to_lowercase() == "-histo_file"
+                || vec[0].to_lowercase() == "--histo_file"
+            {
                 if keyval {
                     histo_file = vec[1].to_string();
                 } else {
@@ -179,25 +189,27 @@ impl WhiteboxTool for HistogramMatching {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input data...") };
+        if verbose {
+            println!("Reading input data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGB48 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-
+        if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGB48
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "This tool is for single-band greyscale images and cannot be applied to RGB colour-composite images."));
         }
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         let min_value = input.configs.minimum;
         let max_value = input.configs.maximum;
-        let num_bins = ((max_value - min_value).max(1024f64)).ceil() as usize; 
+        let num_bins = ((max_value - min_value).max(1024f64)).ceil() as usize;
         let bin_size = (max_value - min_value) / num_bins as f64;
         let mut histogram = vec![0f64; num_bins];
         let num_bins_less_one = num_bins - 1;
@@ -210,7 +222,9 @@ impl WhiteboxTool for HistogramMatching {
                 if z != nodata {
                     numcells += 1f64;
                     bin_num = ((z - min_value) / bin_size) as usize;
-                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    if bin_num > num_bins_less_one {
+                        bin_num = num_bins_less_one;
+                    }
                     histogram[bin_num] += 1f64;
                 }
             }
@@ -241,7 +255,8 @@ impl WhiteboxTool for HistogramMatching {
             // but under some circumstances, it may show up (e.g. Excel for Mac inserts \r instead of \n).
             let line_unwrapped = line.unwrap().replace("\u{feff}", "").replace("\r", ",");
             let mut v: Vec<&str> = line_unwrapped.split(",").collect();
-            if v.len() < 2 { // delimiter can be a semicolon, comma, space, or tab.
+            if v.len() < 2 {
+                // delimiter can be a semicolon, comma, space, or tab.
                 v = line_unwrapped.split(";").collect();
                 if v.len() < 2 {
                     v = line_unwrapped.split(" ").collect();
@@ -284,7 +299,7 @@ impl WhiteboxTool for HistogramMatching {
         for i in 0..num_lines {
             reference_cdf[i][1] = reference_cdf[i][1] / total_frequency;
         }
-        
+
         let mut starting_vals = [0usize; 11];
         let mut p_val: f64;
         for i in 0..num_lines {
@@ -346,7 +361,9 @@ impl WhiteboxTool for HistogramMatching {
                         z = input[(row, col)];
                         if z != nodata {
                             bin_num = ((z - min_value) / bin_size) as usize;
-                            if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                            if bin_num > num_bins_less_one {
+                                bin_num = num_bins_less_one;
+                            }
                             p_val = cdf[bin_num];
                             j = ((p_val * 10f64).floor()) as usize;
                             for i in starting_vals[j]..num_lines {
@@ -388,15 +405,14 @@ impl WhiteboxTool for HistogramMatching {
             }
         }
 
-
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file to modify: {}", input_file));
         output.add_metadata_entry(format!("Input reference file: {}", histo_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -410,8 +426,10 @@ impl WhiteboxTool for HistogramMatching {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 7, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct DirectionalRelief {
@@ -28,63 +27,69 @@ pub struct DirectionalRelief {
 
 impl DirectionalRelief {
     /// public constructor
-    pub fn new() -> DirectionalRelief { 
+    pub fn new() -> DirectionalRelief {
         let name = "DirectionalRelief".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates relief for cells in an input DEM for a specified direction.".to_string();
-        
+        let description =
+            "Calculates relief for cells in an input DEM for a specified direction.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Azimuth".to_owned(), 
-            flags: vec!["--azimuth".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Azimuth".to_owned(),
+            flags: vec!["--azimuth".to_owned()],
             description: "Wind azimuth in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Search Distance".to_owned(), 
-            flags: vec!["--max_dist".to_owned()], 
-            description: "Optional maximum search distance (unspecified if none; in xy units).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Maximum Search Distance".to_owned(),
+            flags: vec!["--max_dist".to_owned()],
+            description: "Optional maximum search distance (unspecified if none; in xy units)."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif --azimuth=315.0", short_exe, name).replace("*", &sep);
-    
-        DirectionalRelief { 
-            name: name, 
-            description: description, 
+
+        DirectionalRelief {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -93,7 +98,7 @@ impl WhiteboxTool for DirectionalRelief {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -124,15 +129,22 @@ impl WhiteboxTool for DirectionalRelief {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0;
         let mut max_dist = f64::INFINITY;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -143,29 +155,33 @@ impl WhiteboxTool for DirectionalRelief {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-azimuth" || vec[0].to_lowercase() == "--azimuth" {
                 if keyval {
                     azimuth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    azimuth = args[i+1].to_string().parse::<f64>().unwrap();
+                    azimuth = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-max_dist" || vec[0].to_lowercase() == "--max_dist" {
+            } else if vec[0].to_lowercase() == "-max_dist" || vec[0].to_lowercase() == "--max_dist"
+            {
                 if keyval {
                     max_dist = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_dist = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_dist = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -188,10 +204,12 @@ impl WhiteboxTool for DirectionalRelief {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         if azimuth > 360f64 || azimuth < 0f64 {
             azimuth = 0.1;
@@ -279,7 +297,7 @@ impl WhiteboxTool for DirectionalRelief {
 
                             //find all of the vertical intersections
                             x = col as f64;
-                            
+
                             flag = true;
                             while flag {
                                 x = x + x_step as f64;
@@ -314,7 +332,7 @@ impl WhiteboxTool for DirectionalRelief {
                                     }
                                 }
                             }
-                            
+
                             //find all of the horizontal intersections
                             y = -row as f64;
                             flag = true;
@@ -371,7 +389,7 @@ impl WhiteboxTool for DirectionalRelief {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -381,24 +399,33 @@ impl WhiteboxTool for DirectionalRelief {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Max dist: {}", max_dist));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

@@ -2,28 +2,27 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 20, 2018
-Last Modified: February 20, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::LineGraph;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
-use tools::*;
-use rendering::LineGraph;
-use rendering::html::*;
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
+use tools::*;
 
 /// Plots the stream longitudinal profiles for one or more rivers.
 pub struct LongProfile {
@@ -35,72 +34,78 @@ pub struct LongProfile {
 }
 
 impl LongProfile {
-    pub fn new() -> LongProfile { // public constructor
+    pub fn new() -> LongProfile {
+        // public constructor
         let name = "LongProfile".to_string();
         let toolbox = "Stream Network Analysis".to_string();
-        let description = "Plots the stream longitudinal profiles for one or more rivers.".to_string();
-        
+        let description =
+            "Plots the stream longitudinal profiles for one or more rivers.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input raster D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Streams File".to_owned(), 
-            flags: vec!["--streams".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Streams File".to_owned(),
+            flags: vec!["--streams".to_owned()],
             description: "Input raster streams file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --streams=streams.tif --dem=dem.tif -o=output.html --esri_pntr", short_exe, name).replace("*", &sep);
-    
-        LongProfile { 
-            name: name, 
-            description: description, 
+
+        LongProfile {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -109,7 +114,7 @@ impl WhiteboxTool for LongProfile {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -140,16 +145,23 @@ impl WhiteboxTool for LongProfile {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut streams_file = String::new();
         let mut dem_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -165,25 +177,25 @@ impl WhiteboxTool for LongProfile {
                 d8_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-streams" {
                 streams_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-dem" {
                 dem_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
@@ -214,36 +226,50 @@ impl WhiteboxTool for LongProfile {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading pointer data...") };
+        if verbose {
+            println!("Reading pointer data...")
+        };
         let pntr = Raster::new(&d8_file, "r")?;
-        if verbose { println!("Reading streams data...") };
+        if verbose {
+            println!("Reading streams data...")
+        };
         let streams = Raster::new(&streams_file, "r")?;
-        if verbose { println!("Reading DEM data...") };
+        if verbose {
+            println!("Reading DEM data...")
+        };
         let dem = Raster::new(&dem_file, "r")?;
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
-        
+
         // make sure the input files have the same size
-        if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if streams.configs.rows != pntr.configs.rows
+            || streams.configs.columns != pntr.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         // make sure the input files have the same size
         if dem.configs.rows != pntr.configs.rows || dem.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let cell_size_x = pntr.configs.resolution_x;
         let cell_size_y = pntr.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
+
         // find all the stream head cells and add them to a list
-        if verbose { println!("Finding channel heads..."); }
+        if verbose {
+            println!("Finding channel heads...");
+        }
         let streams = Arc::new(streams);
         let pntr = Arc::new(pntr);
         let num_procs = num_cpus::get() as isize;
@@ -253,12 +279,12 @@ impl WhiteboxTool for LongProfile {
             let pntr = pntr.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let inflowing_vals = if !esri_style {
-                    [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ]
+                    [16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64]
                 } else {
-                    [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ]
+                    [8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64]
                 };
                 let mut num_neighbouring_stream_cells: i8;
                 let (mut x, mut y): (isize, isize);
@@ -271,8 +297,10 @@ impl WhiteboxTool for LongProfile {
                             for c in 0..8 {
                                 x = col + d_x[c];
                                 y = row + d_y[c];
-                                if streams.get_value(y, x) > 0.0 && pntr.get_value(y, x) == inflowing_vals[c] { 
-                                    num_neighbouring_stream_cells += 1i8; 
+                                if streams.get_value(y, x) > 0.0
+                                    && pntr.get_value(y, x) == inflowing_vals[c]
+                                {
+                                    num_neighbouring_stream_cells += 1i8;
                                     break;
                                 }
                             }
@@ -292,7 +320,7 @@ impl WhiteboxTool for LongProfile {
             for col in data {
                 heads.push((r, col));
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -302,14 +330,16 @@ impl WhiteboxTool for LongProfile {
             }
         }
 
-        if verbose { println!("Traversing streams..."); }
+        if verbose {
+            println!("Traversing streams...");
+        }
         // Now traverse each flowpath starting from each stream head and
         // retrieve the elevation and distance from outlet data.
         let mut xdata = vec![];
         let mut ydata = vec![];
         let series_names = vec![];
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         // Create a mapping from the pointer values to cells offsets.
         // This may seem wasteful, using only 8 of 129 values in the array,
@@ -339,7 +369,16 @@ impl WhiteboxTool for LongProfile {
             pntr_matches[64] = 7usize;
             pntr_matches[128] = 0usize;
         }
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let grid_lengths = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
         let mut flag: bool;
         let (mut x, mut y): (isize, isize);
         let mut dir: usize;
@@ -368,7 +407,8 @@ impl WhiteboxTool for LongProfile {
 
                     x += d_x[pntr_matches[dir]];
                     y += d_y[pntr_matches[dir]];
-                    if streams.get_value(y, x) <= 0.0 { //it's not a stream cell
+                    if streams.get_value(y, x) <= 0.0 {
+                        //it's not a stream cell
                         flag = false;
                     } else {
                         dist += grid_lengths[pntr_matches[dir]];
@@ -385,7 +425,7 @@ impl WhiteboxTool for LongProfile {
             stream_lengths[h] = dist;
             // update progress here
             if verbose {
-                progress = (100.0_f64 * h as f64 / (num_heads-1) as f64) as usize;
+                progress = (100.0_f64 * h as f64 / (num_heads - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Loop 1 of 2: {}%", progress);
                     old_progress = progress;
@@ -413,7 +453,8 @@ impl WhiteboxTool for LongProfile {
                     dir = pntr.get_value(y, x) as usize;
                     x += d_x[pntr_matches[dir]];
                     y += d_y[pntr_matches[dir]];
-                    if streams.get_value(y, x) <= 0.0 { //it's not a stream cell
+                    if streams.get_value(y, x) <= 0.0 {
+                        //it's not a stream cell
                         flag = false;
                     } else {
                         dist += grid_lengths[pntr_matches[dir]];
@@ -430,9 +471,9 @@ impl WhiteboxTool for LongProfile {
 
             let num_cells = profile_xdata.len();
             if num_cells > 1 {
-                if profile_xdata[num_cells-1] == 0f64 {
+                if profile_xdata[num_cells - 1] == 0f64 {
                     // Otherwise the origin of the plot won't be at zero.
-                    profile_xdata[num_cells-1] = 0.0000001f64; 
+                    profile_xdata[num_cells - 1] = 0.0000001f64;
                 }
 
                 xdata.push(profile_xdata.clone());
@@ -442,7 +483,7 @@ impl WhiteboxTool for LongProfile {
             }
             // update progress here
             if verbose {
-                progress = (100.0_f64 * h as f64 / (num_heads-1) as f64) as usize;
+                progress = (100.0_f64 * h as f64 / (num_heads - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Loop 2 of 2: {}%", progress);
                     old_progress = progress;
@@ -457,20 +498,32 @@ impl WhiteboxTool for LongProfile {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Long Profile</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"</head>
+
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Long Profile</h1>"#.as_bytes())?;
-        
-        writer.write_all((format!("<p><strong>Input Streams Raster</strong>: {}<br>", streams.get_short_filename())).as_bytes())?;
-        writer.write_all((format!("<p><strong>Input DEM</strong>: {}<br>", dem.get_short_filename())).as_bytes())?;
-        
+            <h1>Long Profile</h1>"#
+                .as_bytes(),
+        )?;
+
+        writer.write_all(
+            (format!(
+                "<p><strong>Input Streams Raster</strong>: {}<br>",
+                streams.get_short_filename()
+            )).as_bytes(),
+        )?;
+        writer.write_all(
+            (format!(
+                "<p><strong>Input DEM</strong>: {}<br>",
+                dem.get_short_filename()
+            )).as_bytes(),
+        )?;
+
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = traverse_num > 2 && traverse_num < 12;
 
@@ -480,7 +533,7 @@ impl WhiteboxTool for LongProfile {
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: "Distance from Mouth".to_string(),
             y_axis_label: "Elevation".to_string(),
             draw_points: false,
@@ -489,13 +542,20 @@ impl WhiteboxTool for LongProfile {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
 
-        if verbose { println!("\n{}",  &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

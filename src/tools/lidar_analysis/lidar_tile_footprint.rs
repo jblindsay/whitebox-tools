@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/08/2018
-Last Modified: 31/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structures::Point2D;
-use time;
 use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
@@ -164,7 +163,7 @@ impl WhiteboxTool for LidarTileFootprint {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
-        let start = time::now();
+        let start = Instant::now();
 
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
@@ -318,8 +317,7 @@ impl WhiteboxTool for LidarTileFootprint {
             output.projection = data.to_string();
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Saving data...")
@@ -331,10 +329,7 @@ impl WhiteboxTool for LidarTileFootprint {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

@@ -2,27 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/05/2018
-Last Modified: 04/05/2018
+Last Modified: 13/10/2018
 License: MIT
-
-HELP:
-This tool can be used to interpolate a trend surface from a vector points file. The 
-technique uses a polynomial, least-squares regression analysis. The user must specify 
-the name of the input shapefile, which must be of a 'Points' base ShapeType and select 
-the attribute in the shapefile's associated attribute table for which to base the trend 
-surface analysis. The attribute must be numerical. In addition, the user must specify 
-the polynomial order (1 to 10) for the analysis. A first-order polynomial is a planar 
-surface with no curvature. As the polynomial order is increased, greater flexibility is 
-allowed in the fitted surface. Although polynomial orders as high as 10 are accepted, 
-numerical instability in the analysis often creates artifacts in trend surfaces of orders 
-greater than 5. The operation will display a text report on completion, in addition to 
-the output raster image. The report will list each of the coefficient values and the 
-r-square value. The Trend Surface tool can be used instead if the input data is a raster 
-image.
-
-Numerical stability is enhanced by transforming the x, y, z data by their minimum
-values before performing the regression analysis. These transform parameters 
-are also reported in the output report.
 */
 
 use na::{DMatrix, DVector};
@@ -36,11 +17,26 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use time;
 use tools::*;
 use vector::{FieldData, ShapeType, Shapefile};
 
-/// Estimates a trend surface from vector points.
+/// This tool can be used to interpolate a trend surface from a vector points file. The
+/// technique uses a polynomial, least-squares regression analysis. The user must specify
+/// the name of the input shapefile, which must be of a 'Points' base ShapeType and select
+/// the attribute in the shapefile's associated attribute table for which to base the trend
+/// surface analysis. The attribute must be numerical. In addition, the user must specify
+/// the polynomial order (1 to 10) for the analysis. A first-order polynomial is a planar
+/// surface with no curvature. As the polynomial order is increased, greater flexibility is
+/// allowed in the fitted surface. Although polynomial orders as high as 10 are accepted,
+/// numerical instability in the analysis often creates artifacts in trend surfaces of orders
+/// greater than 5. The operation will display a text report on completion, in addition to
+/// the output raster image. The report will list each of the coefficient values and the
+/// r-square value. The Trend Surface tool can be used instead if the input data is a raster
+/// image.
+///
+/// Numerical stability is enhanced by transforming the x, y, z data by their minimum
+/// values before performing the regression analysis. These transform parameters
+/// are also reported in the output report.
 pub struct TrendSurfaceVectorPoints {
     name: String,
     description: String,
@@ -110,7 +106,8 @@ impl TrendSurfaceVectorPoints {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -249,7 +246,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
 
         let vector_data = Shapefile::read(&input_file)?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of points type
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
@@ -437,11 +434,13 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"
+        writer.write_all(
+            &r#"
             </head>
             <body>
                 <h1>Trend Surface Analysis Report</h1>
-                "#.as_bytes())?;
+                "#.as_bytes(),
+        )?;
 
         writer.write_all((format!("<p><strong>Input</strong>: {}</p>", input_file)).as_bytes())?;
         writer.write_all(
@@ -569,8 +568,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -578,9 +576,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Polynomial order: {}", order));
         output.add_metadata_entry(format!("r-squared: {}", r_sqr));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -595,7 +591,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: December 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -14,7 +14,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct CreatePlane {
@@ -209,7 +208,7 @@ impl WhiteboxTool for CreatePlane {
 
         let base = Raster::new(&base_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
         if slope < -85.0 {
@@ -280,8 +279,7 @@ impl WhiteboxTool for CreatePlane {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -290,9 +288,7 @@ impl WhiteboxTool for CreatePlane {
         output.add_metadata_entry(format!("Slope: {}", slope));
         output.add_metadata_entry(format!("Aspect: {}", aspect));
         output.add_metadata_entry(format!("Constant: {}", constant_val));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -309,7 +305,7 @@ impl WhiteboxTool for CreatePlane {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

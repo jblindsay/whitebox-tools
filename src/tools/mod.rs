@@ -9,7 +9,9 @@ pub mod terrain_analysis;
 
 use serde_json;
 use std::io::{Error, ErrorKind};
+use std::time::Instant;
 use tools;
+use utils::get_formatted_elapsed_time;
 
 #[derive(Default)]
 pub struct ToolManager {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: November 23, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -18,7 +18,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// This tool implements a modified form of the algorithm described by
@@ -260,7 +259,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         // max_norm_diff = max_norm_diff.to_radians();
 
@@ -353,10 +352,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
         }
 
-        let t1 = time::now();
+        let t1 = Instant::now();
         println!(
             "{}",
-            format!("Calculating normal vectors: {}", t1 - start).replace("PT", "")
+            format!(
+                "Calculating normal vectors: {}",
+                get_formatted_elapsed_time(start)
+            )
         );
 
         //////////////////////////////////////////////////////////
@@ -446,10 +448,12 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
         }
 
-        let t2 = time::now();
         println!(
             "{}",
-            format!("Smoothing normal vectors: {}", t2 - t1).replace("PT", "")
+            format!(
+                "Smoothing normal vectors: {}",
+                get_formatted_elapsed_time(t1)
+            )
         );
 
         ///////////////////////////////////////////////////////////////////////////
@@ -1103,7 +1107,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         // // let t3 = time::now();
         // // println!("{}", format!("Updating DEM: {}", t3 - t2).replace("PT", ""));
 
-        let elapsed_time = time::now() - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
         output.configs.palette = input.configs.palette.clone();
@@ -1116,9 +1120,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         output.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff));
         output.add_metadata_entry(format!("Iterations: {}", num_iter));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -1132,7 +1134,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

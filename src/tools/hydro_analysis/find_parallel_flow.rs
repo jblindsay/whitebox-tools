@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use structures::Array2D;
 use tools::*;
 
@@ -32,49 +31,52 @@ impl FindParallelFlow {
         // public constructor
         let name = "FindParallelFlow".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Finds areas of parallel flow in D8 flow direction rasters."
-            .to_string();
+        let description = "Finds areas of parallel flow in D8 flow direction rasters.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input D8 pointer raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Streams File".to_owned(), 
-            flags: vec!["--streams".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Streams File".to_owned(),
+            flags: vec!["--streams".to_owned()],
             description: "Input raster streams file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif --streams='streams.tif'", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif --streams='streams.tif'",
+            short_exe, name
+        ).replace("*", &sep);
 
         FindParallelFlow {
             name: name,
@@ -90,7 +92,7 @@ impl WhiteboxTool for FindParallelFlow {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,19 +116,22 @@ impl WhiteboxTool for FindParallelFlow {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut use_streams = false;
         let mut streams_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -141,13 +146,13 @@ impl WhiteboxTool for FindParallelFlow {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
-                    d8_file = args[i+1].to_string();
+                    d8_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
-                    streams_file = args[i+1].to_string();
+                    streams_file = args[i + 1].to_string();
                 }
                 if !streams_file.is_empty() {
                     use_streams = true;
@@ -178,22 +183,24 @@ impl WhiteboxTool for FindParallelFlow {
 
         let pntr = Arc::new(Raster::new(&d8_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
         let nodata = pntr.configs.nodata;
-        
+
         let streams_nodata: f64;
         let streams: Array2D<f64> = match use_streams {
-            false => { 
+            false => {
                 streams_nodata = -32768.0;
                 Array2D::new(1, 1, 1f64, 1f64)?
-            },
+            }
             true => {
-                if verbose { println!("Reading streams data...") };
+                if verbose {
+                    println!("Reading streams data...")
+                };
                 let r = Raster::new(&streams_file, "r")?;
                 if r.configs.rows != rows as usize || r.configs.columns != columns as usize {
                     return Err(Error::new(ErrorKind::InvalidInput,
@@ -201,9 +208,9 @@ impl WhiteboxTool for FindParallelFlow {
                 }
                 streams_nodata = r.configs.nodata;
                 r.get_data_as_array2d()
-            },
+            }
         };
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &pntr);
         let streams = Arc::new(streams);
 
@@ -219,10 +226,10 @@ impl WhiteboxTool for FindParallelFlow {
                 let mut stream_val: f64;
                 let mut stream_valn: f64;
                 let mut is_parallel: bool;
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
-                let outflowing_vals = [ 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let inflowing_vals = [16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64];
+                let outflowing_vals = [1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64];
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -234,11 +241,11 @@ impl WhiteboxTool for FindParallelFlow {
                                 if z != outflowing_vals[n] {
                                     zn = pntr[(row + dy[n], col + dx[n])];
                                     stream_valn = streams[(row + dy[n], col + dx[n])];
-                                    if zn == z && 
-                                        zn != inflowing_vals[n] && 
-                                        stream_valn > 0f64 && 
-                                        stream_valn != streams_nodata {
-
+                                    if zn == z
+                                        && zn != inflowing_vals[n]
+                                        && stream_valn > 0f64
+                                        && stream_valn != streams_nodata
+                                    {
                                         is_parallel = true;
                                         break;
                                     }
@@ -268,16 +275,16 @@ impl WhiteboxTool for FindParallelFlow {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input D8 pointer file: {}", d8_file));
         if use_streams {
             output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         }
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -292,8 +299,10 @@ impl WhiteboxTool for FindParallelFlow {
         };
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

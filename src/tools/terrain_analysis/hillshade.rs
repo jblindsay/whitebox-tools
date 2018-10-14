@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
-Last Modified: 06/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct Hillshade {
@@ -84,7 +83,8 @@ impl Hillshade {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -226,7 +226,7 @@ impl WhiteboxTool for Hillshade {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         azimuth = (azimuth - 90f64).to_radians();
         altitude = altitude.to_radians();
@@ -283,8 +283,7 @@ impl WhiteboxTool for Hillshade {
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
                                 aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                                    + 90f64 * (fx / (fx).abs()))
-                                    .to_radians();
+                                    + 90f64 * (fx / (fx).abs())).to_radians();
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;
                                 term3 = cos_theta * (azimuth - aspect).sin();
@@ -355,8 +354,7 @@ impl WhiteboxTool for Hillshade {
             output.configs.display_max = new_max as f64;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -366,9 +364,7 @@ impl WhiteboxTool for Hillshade {
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Altitude: {}", altitude));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -382,7 +378,7 @@ impl WhiteboxTool for Hillshade {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

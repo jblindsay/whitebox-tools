@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/03/2018
-Last Modified: 18/03/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use tools::*;
 
 pub struct InPlaceSubtract {
@@ -24,46 +23,54 @@ pub struct InPlaceSubtract {
 
 impl InPlaceSubtract {
     /// public constructor
-    pub fn new() -> InPlaceSubtract { 
+    pub fn new() -> InPlaceSubtract {
         let name = "InPlaceSubtract".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs an in-place subtraction operation (input1 -= input2).".to_string();
-        
+        let description =
+            "Performs an in-place subtraction operation (input1 -= input2).".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Raster File".to_owned(), 
-            flags: vec!["--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Raster File".to_owned(),
+            flags: vec!["--input1".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input File Or Constant Value".to_owned(), 
-            flags: vec!["--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File Or Constant Value".to_owned(),
+            flags: vec!["--input2".to_owned()],
             description: "Input raster file or constant value.".to_owned(),
             parameter_type: ParameterType::ExistingFileOrFloat(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif'\"
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2=10.5'", short_exe, name).replace("*", &sep);
-    
-        InPlaceSubtract { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif'\"
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2=10.5'",
+            short_exe, name
+        ).replace("*", &sep);
+
+        InPlaceSubtract {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -72,7 +79,7 @@ impl WhiteboxTool for InPlaceSubtract {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -103,13 +110,20 @@ impl WhiteboxTool for InPlaceSubtract {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1 = String::new();
         let mut input2 = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -125,13 +139,13 @@ impl WhiteboxTool for InPlaceSubtract {
                 input1 = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-input2" {
                 input2 = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -153,10 +167,10 @@ impl WhiteboxTool for InPlaceSubtract {
 
         let mut input2_constant = f64::NEG_INFINITY;
         let input2_is_constant = match input2.parse::<f64>() {
-            Ok(val) => { 
+            Ok(val) => {
                 input2_constant = val;
                 true
-            },
+            }
             Err(_) => false,
         };
         if !input2_is_constant {
@@ -165,16 +179,18 @@ impl WhiteboxTool for InPlaceSubtract {
             }
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let mut in1 = Raster::new(&input1, "rw")?;
-        
-        let mut start = time::now();
-        
+
+        let mut start = Instant::now();
+
         let rows = in1.configs.rows as isize;
         let columns = in1.configs.columns as isize;
         let nodata1 = in1.configs.nodata;
         let (mut z1, mut z2): (f64, f64);
-    
+
         if input2_is_constant {
             for row in 0..rows {
                 for col in 0..columns {
@@ -183,7 +199,7 @@ impl WhiteboxTool for InPlaceSubtract {
                         in1.set_value(row, col, z1 - input2_constant);
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -192,11 +208,14 @@ impl WhiteboxTool for InPlaceSubtract {
                     }
                 }
             }
-        } else { // !input2_is_constant
-            if verbose { println!("Reading data...") };
+        } else {
+            // !input2_is_constant
+            if verbose {
+                println!("Reading data...")
+            };
             let in2 = Raster::new(&input2, "r")?;
 
-            start = time::now();
+            start = Instant::now();
             let nodata2 = in2.configs.nodata;
 
             // make sure the input files have the same size
@@ -204,7 +223,7 @@ impl WhiteboxTool for InPlaceSubtract {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "The input files must have the same number of rows and columns and spatial extent."));
             }
-            
+
             for row in 0..rows {
                 for col in 0..columns {
                     z1 = in1.get_value(row, col);
@@ -215,7 +234,7 @@ impl WhiteboxTool for InPlaceSubtract {
                         in1.set_value(row, col, nodata1);
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -226,19 +245,27 @@ impl WhiteboxTool for InPlaceSubtract {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        
-        if verbose { println!("Saving data...") };
+        let elapsed_time = get_formatted_elapsed_time(start);
+
+        if verbose {
+            println!("Saving data...")
+        };
         in1.update_min_max();
         in1.update_display_min_max();
         let _ = match in1.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
-        if verbose { println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
-        
+        if verbose {
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
+
         Ok(())
     }
 }

@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct ElevRelativeToWatershedMinMax {
@@ -27,54 +26,59 @@ pub struct ElevRelativeToWatershedMinMax {
 }
 
 impl ElevRelativeToWatershedMinMax {
-    pub fn new() -> ElevRelativeToWatershedMinMax { // public constructor
+    pub fn new() -> ElevRelativeToWatershedMinMax {
+        // public constructor
         let name = "ElevRelativeToWatershedMinMax".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the elevation of a location relative to the minimum and maximum elevations in a watershed.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Watersheds File".to_owned(), 
-            flags: vec!["--watersheds".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Watersheds File".to_owned(),
+            flags: vec!["--watersheds".to_owned()],
             description: "Input raster watersheds file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --watersheds=watershed.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        ElevRelativeToWatershedMinMax { 
-            name: name, 
-            description: description, 
+
+        ElevRelativeToWatershedMinMax {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -83,7 +87,7 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,14 +118,21 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut watersheds_file = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -132,23 +143,28 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-watersheds" || vec[0].to_lowercase() == "--watersheds" {
+            } else if vec[0].to_lowercase() == "-watersheds"
+                || vec[0].to_lowercase() == "--watersheds"
+            {
                 if keyval {
                     watersheds_file = vec[1].to_string();
                 } else {
-                    watersheds_file = args[i+1].to_string();
+                    watersheds_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -174,25 +190,31 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         // let min_val = input.configs.minimum;
-        
+
         let watersheds = Arc::new(Raster::new(&watersheds_file, "r")?);
         let watershed_nodata = watersheds.configs.nodata;
 
         // make sure the input files have the same size
-        if watersheds.configs.rows != input.configs.rows || watersheds.configs.columns != input.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if watersheds.configs.rows != input.configs.rows
+            || watersheds.configs.columns != input.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         let min_watershed = watersheds.configs.minimum;
@@ -230,10 +252,11 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
         }
 
         let mut watershed_min_vals = vec![f64::INFINITY; range_watersheds as usize + 1];
-        let mut watershed_max_vals = vec![f64::NEG_INFINITY; range_watersheds as usize + 1];        
+        let mut watershed_max_vals = vec![f64::NEG_INFINITY; range_watersheds as usize + 1];
         for tid in 0..num_procs {
             let (mins, maxs) = rx.recv().unwrap();
-            for i in 0..mins.len() { //(range_watersheds as usize+1) {
+            for i in 0..mins.len() {
+                //(range_watersheds as usize+1) {
                 if mins[i] != f64::INFINITY && mins[i] < watershed_min_vals[i] {
                     watershed_min_vals[i] = mins[i];
                 }
@@ -267,7 +290,10 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
                         watershed = watersheds[(row, col)];
                         if z != nodata && watershed != watershed_nodata {
                             watershed -= min_watershed;
-                            data[col as usize] = (z - watershed_min_vals[watershed as usize]) / (watershed_max_vals[watershed as usize] - watershed_min_vals[watershed as usize]) * 100f64;
+                            data[col as usize] = (z - watershed_min_vals[watershed as usize])
+                                / (watershed_max_vals[watershed as usize]
+                                    - watershed_min_vals[watershed as usize])
+                                * 100f64;
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -287,22 +313,29 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
             }
         }
 
-        println!("I'm here");
-
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Watersheds file: {}", watersheds_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
-        let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
-            Err(e) => return Err(e),
-        };        
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!("Saving data...")
+        };
+        let _ = match output.write() {
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
+            Err(e) => return Err(e),
+        };
+        if verbose {
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

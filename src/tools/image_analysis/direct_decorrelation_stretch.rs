@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 21, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Performs a direct decorrelation stretch enhancement on a colour-composite image of multispectral data.
@@ -223,7 +222,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         let input = Arc::new(Raster::new(&input_file, "r")?);
         // let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -490,8 +489,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -499,9 +497,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Achromatic factor: {}", achromatic_factor));
         output.add_metadata_entry(format!("Clip percent: {}", clip_percent * 100f64));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")

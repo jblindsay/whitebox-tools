@@ -2,22 +2,21 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: Jan. 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::i32;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
-use structures::Array2D;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use structures::Array2D;
 use tools::*;
 
 pub struct DevFromMeanElev {
@@ -29,63 +28,71 @@ pub struct DevFromMeanElev {
 }
 
 impl DevFromMeanElev {
-    pub fn new() -> DevFromMeanElev { // public constructor
+    pub fn new() -> DevFromMeanElev {
+        // public constructor
         let name = "DevFromMeanElev".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates deviation from mean elevation.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter X-Dimension".to_owned(), 
-            flags: vec!["--filterx".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter X-Dimension".to_owned(),
+            flags: vec!["--filterx".to_owned()],
             description: "Size of the filter kernel in the x-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter Y-Dimension".to_owned(), 
-            flags: vec!["--filtery".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter Y-Dimension".to_owned(),
+            flags: vec!["--filtery".to_owned()],
             description: "Size of the filter kernel in the y-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --filter=25", short_exe, name).replace("*", &sep);
-    
-        DevFromMeanElev { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --filter=25",
+            short_exe, name
+        ).replace("*", &sep);
+
+        DevFromMeanElev {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -94,7 +101,7 @@ impl WhiteboxTool for DevFromMeanElev {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,14 +132,21 @@ impl WhiteboxTool for DevFromMeanElev {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size_x = 11usize;
         let mut filter_size_y = 11usize;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -143,7 +157,10 @@ impl WhiteboxTool for DevFromMeanElev {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -218,7 +235,7 @@ impl WhiteboxTool for DevFromMeanElev {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         // first bin the data
         let rows = input.configs.rows as isize;
@@ -230,7 +247,8 @@ impl WhiteboxTool for DevFromMeanElev {
         let min_bin = (min_val * multiplier).floor() as i32;
         let bin_nodata32 = i32::MIN;
 
-        let mut binned_data: Array2D<i32> = Array2D::new(rows, columns, bin_nodata32, bin_nodata32)?;
+        let mut binned_data: Array2D<i32> =
+            Array2D::new(rows, columns, bin_nodata32, bin_nodata32)?;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -372,14 +390,16 @@ impl WhiteboxTool for DevFromMeanElev {
                             if x2 >= columns {
                                 x2 = columns - 1;
                             }
-                            n = i_n.get_value(y2, x2) + i_n.get_value(y1, x1) - i_n.get_value(y1, x2) -
-                                i_n.get_value(y2, x1);
+                            n = i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
+                                - i_n.get_value(y1, x2)
+                                - i_n.get_value(y2, x1);
                             if n > 0 {
-                                sum = i.get_value(y2, x2) + i.get_value(y1, x1) - i.get_value(y1, x2) -
-                                    i.get_value(y2, x1);
-                                sum_sqr = i2.get_value(y2, x2) + i2.get_value(y1, x1) -
-                                        i2.get_value(y1, x2) -
-                                        i2.get_value(y2, x1);
+                                sum = i.get_value(y2, x2) + i.get_value(y1, x1)
+                                    - i.get_value(y1, x2)
+                                    - i.get_value(y2, x1);
+                                sum_sqr = i2.get_value(y2, x2) + i2.get_value(y1, x1)
+                                    - i2.get_value(y1, x2)
+                                    - i2.get_value(y2, x1);
                                 v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
                                 if v > 0f64 {
                                     s = v.sqrt();
@@ -411,19 +431,18 @@ impl WhiteboxTool for DevFromMeanElev {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = -2.0;
         output.configs.display_max = 2.0;
         output.configs.palette = "blue_white_red.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                        self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output
-            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT",
-                                                                                                ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -438,8 +457,10 @@ impl WhiteboxTool for DevFromMeanElev {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

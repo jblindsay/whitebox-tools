@@ -2,43 +2,39 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/04/2018
-Last Modified: 30/04/2018
+Last Modified: 13/10/2018
 License: MIT
-
-HELP:
-This tool can be used to interpolate a trend surface from a raster image. The 
-technique uses a polynomial, least-squares regression analysis. The user must 
-specify the name of the input raster file. In addition, the user must specify 
-the polynomial order (1 to 10) for the analysis. A first-order polynomial is a 
-planar surface with no curvature. As the polynomial order is increased, greater 
-flexibility is allowed in the fitted surface. Although polynomial orders as high 
-as 10 are accepted, numerical instability in the analysis often creates artifacts 
-in trend surfaces of orders greater than 5. The operation will display a text 
-report on completion, in addition to the output raster image. The report will 
-list each of the coefficient values and the r-square value. Note that the entire 
-raster image must be able to fit into computer memory, limiting the use of this 
-tool to relatively small rasters. The Trend Surface (Vector Points) tool can be 
-used instead if the input data is vector points contained in a shapefile.
-
-Numerical stability is enhanced by transforming the x, y, z data by their minimum
-values before performing the regression analysis. These transform parameters 
-are also reported in the output report.
 */
 
-use time;
-use std::env;
-use std::path;
-use raster::*;
-use std::io::{Error, ErrorKind};
-use tools::*;
 use na::{DMatrix, DVector};
+use raster::*;
 use rendering::html::*;
-use std::io::BufWriter;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
+use std::path;
 use std::process::Command;
+use tools::*;
 
-/// Estimates the trend surface of an input raster file.
+/// This tool can be used to interpolate a trend surface from a raster image. The
+/// technique uses a polynomial, least-squares regression analysis. The user must
+/// specify the name of the input raster file. In addition, the user must specify
+/// the polynomial order (1 to 10) for the analysis. A first-order polynomial is a
+/// planar surface with no curvature. As the polynomial order is increased, greater
+/// flexibility is allowed in the fitted surface. Although polynomial orders as high
+/// as 10 are accepted, numerical instability in the analysis often creates artifacts
+/// in trend surfaces of orders greater than 5. The operation will display a text
+/// report on completion, in addition to the output raster image. The report will
+/// list each of the coefficient values and the r-square value. Note that the entire
+/// raster image must be able to fit into computer memory, limiting the use of this
+/// tool to relatively small rasters. The Trend Surface (Vector Points) tool can be
+/// used instead if the input data is vector points contained in a shapefile.
+///
+/// Numerical stability is enhanced by transforming the x, y, z data by their minimum
+/// values before performing the regression analysis. These transform parameters
+/// are also reported in the output report.
 pub struct TrendSurface {
     name: String,
     description: String,
@@ -48,54 +44,62 @@ pub struct TrendSurface {
 }
 
 impl TrendSurface {
-    pub fn new() -> TrendSurface { // public constructor
+    pub fn new() -> TrendSurface {
+        // public constructor
         let name = "TrendSurface".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description = "Estimates the trend surface of an input raster file.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Polynomial Order".to_owned(), 
-            flags: vec!["--order".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Polynomial Order".to_owned(),
+            flags: vec!["--order".to_owned()],
             description: "Polynomial order (1 to 10).".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1".to_string()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o='output.tif' --order=2", short_exe, name).replace("*", &sep);
-    
-        TrendSurface { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o='output.tif' --order=2",
+            short_exe, name
+        ).replace("*", &sep);
+
+        TrendSurface {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -104,7 +108,7 @@ impl WhiteboxTool for TrendSurface {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -128,14 +132,21 @@ impl WhiteboxTool for TrendSurface {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut order = 1usize;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -151,19 +162,19 @@ impl WhiteboxTool for TrendSurface {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-order" {
                 order = if keyval {
                     vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    args[i+1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
                 };
             }
         }
@@ -186,14 +197,20 @@ impl WhiteboxTool for TrendSurface {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if order < 1 { order = 1; }
-        if order > 10 { order = 10; }
+        if order < 1 {
+            order = 1;
+        }
+        if order > 10 {
+            order = 10;
+        }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -201,7 +218,6 @@ impl WhiteboxTool for TrendSurface {
         let min_x = input.configs.west;
         let min_y = input.configs.south;
         let min_z = input.configs.minimum;
-
 
         // get the input data
         let total_cells = rows * columns;
@@ -235,7 +251,7 @@ impl WhiteboxTool for TrendSurface {
 
         // How many coefficients are there?
         let mut num_coefficients = 0;
-        for j in 0..(order+1) {
+        for j in 0..(order + 1) {
             for _k in 0..(order - j + 1) {
                 num_coefficients += 1;
             }
@@ -245,32 +261,40 @@ impl WhiteboxTool for TrendSurface {
         let mut forward_coefficient_matrix = vec![0f64; n * num_coefficients];
         for i in 0..n {
             let mut m = 0;
-            for j in 0..(order+1) {
+            for j in 0..(order + 1) {
                 for k in 0..(order - j + 1) {
-                    forward_coefficient_matrix[i * num_coefficients + m] = x[i].powf(j as f64) * y[i].powf(k as f64);
+                    forward_coefficient_matrix[i * num_coefficients + m] =
+                        x[i].powf(j as f64) * y[i].powf(k as f64);
                     m += 1;
                 }
             }
         }
-        
-        let coefficients = DMatrix::from_row_slice(n, num_coefficients, &forward_coefficient_matrix);
+
+        let coefficients =
+            DMatrix::from_row_slice(n, num_coefficients, &forward_coefficient_matrix);
         let qr = coefficients.clone().qr();
-        let q  = qr.q();
-        let r  = qr.r();
+        let q = qr.q();
+        let r = qr.r();
         if !r.is_invertible() {
-            return Err(Error::new(ErrorKind::InvalidInput,  "Matrix is not invertible."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Matrix is not invertible.",
+            ));
         }
-        
+
         let b = DVector::from_row_slice(n, &z);
-        let regress_coefficents = (r.try_inverse().unwrap() * q.transpose() * b).as_slice().to_vec(); //inv(R).dot(Q.T).dot(y)
-        
+        let regress_coefficents = (r.try_inverse().unwrap() * q.transpose() * b)
+            .as_slice()
+            .to_vec(); //inv(R).dot(Q.T).dot(y)
+
         let mut residuals = vec![0f64; n];
         let mut ss_resid = 0f64;
         let mut y_hat: f64;
         for i in 0..n {
             y_hat = 0f64;
             for j in 0..num_coefficients {
-                y_hat += forward_coefficient_matrix[i * num_coefficients + j] * regress_coefficents[j];
+                y_hat +=
+                    forward_coefficient_matrix[i * num_coefficients + j] * regress_coefficents[j];
             }
             residuals[i] = z[i] - y_hat;
             ss_resid += residuals[i] * residuals[i];
@@ -301,26 +325,33 @@ impl WhiteboxTool for TrendSurface {
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
                 <title>Trend Surface Analysis Report</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"
+
+        writer.write_all(
+            &r#"
             </head>
             <body>
                 <h1>Trend Surface Analysis Report</h1>
-                "#.as_bytes())?;
+                "#.as_bytes(),
+        )?;
 
         writer.write_all((format!("<p><strong>Input</strong>: {}</p>", input_file)).as_bytes())?;
-        writer.write_all((format!("<p><strong>Polynomial Order</strong>: {}</p>", order)).as_bytes())?;
+        writer.write_all(
+            (format!("<p><strong>Polynomial Order</strong>: {}</p>", order)).as_bytes(),
+        )?;
         writer.write_all((format!("<p><strong>R-sqr</strong>: {:.*}</p>", 5, r_sqr)).as_bytes())?;
 
         //////////////////////////
         // Transformation Table //
         //////////////////////////
         writer.write_all("<p><table>".as_bytes())?;
-        writer.write_all("<caption>Pre-calculation Transformation Coefficients</caption>".as_bytes())?;
-        writer.write_all("<tr><th>&Delta;X</th><th>&Delta;Y</th><th>&Delta;Z</th></tr>".as_bytes())?;
+        writer.write_all(
+            "<caption>Pre-calculation Transformation Coefficients</caption>".as_bytes(),
+        )?;
+        writer
+            .write_all("<tr><th>&Delta;X</th><th>&Delta;Y</th><th>&Delta;Z</th></tr>".as_bytes())?;
         writer.write_all(&format!("<tr><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td><td class=\"numberCell\">{}</td></tr>", min_x, min_y, min_z).as_bytes())?;
         writer.write_all("</table></p>".as_bytes())?;
 
@@ -329,7 +360,7 @@ impl WhiteboxTool for TrendSurface {
         //////////////
         let mut s = "z = ".to_string();
         let mut b_val = 1;
-        for j in 0..(order+1) {
+        for j in 0..(order + 1) {
             for k in 0..(order - j + 1) {
                 let x_exp = if j > 1 {
                     format!("<sup>{}</sup>", j)
@@ -363,7 +394,12 @@ impl WhiteboxTool for TrendSurface {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!("<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>", (j+1), 12, regress_coefficents[j]);
+            let mut s = format!(
+                "<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>",
+                (j + 1),
+                12,
+                regress_coefficents[j]
+            );
             writer.write_all(&format!("<tr>{}</tr>", s).as_bytes())?;
         }
         writer.write_all("</table></p>".as_bytes())?;
@@ -400,18 +436,17 @@ impl WhiteboxTool for TrendSurface {
             println!("Please see {} for output report.", output_html_file);
         }
 
-
         // create the output trend-surface raster
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let mut term: f64;
-        let mut m: usize;   
+        let mut m: usize;
         for row in 0..rows {
             for col in 0..columns {
                 x_val = input.get_x_from_column(col) - min_x;
                 y_val = input.get_y_from_row(row) - min_y;
                 z_val = min_z; // 0f64;
                 m = 0;
-                for j in 0..(order+1) {
+                for j in 0..(order + 1) {
                     for k in 0..(order - j + 1) {
                         term = x_val.powf(j as f64) * y_val.powf(k as f64);
                         z_val += term * regress_coefficents[m];
@@ -429,24 +464,33 @@ impl WhiteboxTool for TrendSurface {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Polynomial order: {}", order));
         output.add_metadata_entry(format!("r-squared: {}", r_sqr));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
-           
+
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

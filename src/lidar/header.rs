@@ -1,9 +1,9 @@
+use lidar::las::GlobalEncodingField;
+use std::fmt;
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
-use std::fs::File;
-use std::fmt;
-use lidar::las::GlobalEncodingField;
-use io_utils::{ByteOrderReader, Endianness};
+use utils::{ByteOrderReader, Endianness};
 
 #[derive(Default, Clone, Debug)]
 pub struct LasHeader {
@@ -53,15 +53,31 @@ impl fmt::Display for LasHeader {
         s = s + &format!("\nFile Source ID: {}", self.file_source_id);
         s = s + &format!("\nGlobal Encoding:\n{}", self.global_encoding);
         if self.project_id_used {
-            s = s + &format!("\nProject ID (GUID): {{{:x}-{:x}-{:x}-{:x}{:x}-{:x}{:x}{:x}{:x}{:x}{:x}}}",
-                self.project_id1, self.project_id2, self.project_id3, self.project_id4[0],
-                self.project_id4[1], self.project_id4[2], self.project_id4[3], self.project_id4[4],
-                self.project_id4[5], self.project_id4[6], self.project_id4[7]);
+            s = s + &format!(
+                "\nProject ID (GUID): {{{:x}-{:x}-{:x}-{:x}{:x}-{:x}{:x}{:x}{:x}{:x}{:x}}}",
+                self.project_id1,
+                self.project_id2,
+                self.project_id3,
+                self.project_id4[0],
+                self.project_id4[1],
+                self.project_id4[2],
+                self.project_id4[3],
+                self.project_id4[4],
+                self.project_id4[5],
+                self.project_id4[6],
+                self.project_id4[7]
+            );
         }
         s = s + &format!("\nSystem ID: {}", self.system_id);
         s = s + &format!("\nGenerating Software: {}", self.generating_software);
-        s = s + &format!("\nLas Version: {}.{}", self.version_major, self.version_minor);
-        s = s + &format!("\nFile Creation Day/Year: {}/{}", self.file_creation_day, self.file_creation_year);
+        s = s + &format!(
+            "\nLas Version: {}.{}",
+            self.version_major, self.version_minor
+        );
+        s = s + &format!(
+            "\nFile Creation Day/Year: {}/{}",
+            self.file_creation_day, self.file_creation_year
+        );
         s = s + &format!("\nHeader Size: {}", self.header_size);
         s = s + &format!("\nOffset to Points: {}", self.offset_to_points);
         s = s + &format!("\nNumber of VLRs: {}", self.number_of_vlrs);
@@ -70,7 +86,7 @@ impl fmt::Display for LasHeader {
         s = s + &format!("\nNum. of Points (32-bit): {}", self.number_of_points_old);
         s = s + &"\nNumber of Points by Return: [";
         for i in 0..self.number_of_points_by_return_old.len() {
-            if i < self.number_of_points_by_return_old.len()-1 {
+            if i < self.number_of_points_by_return_old.len() - 1 {
                 s = s + &format!("{}, ", self.number_of_points_by_return_old[i]);
             } else {
                 s = s + &format!("{}]", self.number_of_points_by_return_old[i]);
@@ -96,9 +112,9 @@ impl fmt::Display for LasHeader {
             s = s + &format!("\nExtended VLR Start: {}", self.offset_to_ex_vlrs);
             s = s + &format!("\nNum. Extended VLR: {}", self.number_of_extended_vlrs);
             s = s + &format!("\nNum. of Points (64-bit): {}", self.number_of_points);
-             s = s + &"\nNumber of Points by Return (64-bit): [";
+            s = s + &"\nNumber of Points by Return (64-bit): [";
             for i in 0..self.number_of_points_by_return.len() {
-                if i < self.number_of_points_by_return.len()-1 {
+                if i < self.number_of_points_by_return.len() - 1 {
                     s = s + &format!("{}, ", self.number_of_points_by_return[i]);
                 } else {
                     s = s + &format!("{}]", self.number_of_points_by_return[i]);
@@ -139,7 +155,7 @@ impl LasHeader {
         }
 
         let mut bor = ByteOrderReader::new(buffer, Endianness::LittleEndian);
-        
+
         bor.pos = 0;
         header.file_signature = bor.read_utf8(4);
         if header.file_signature != "LASF" {
@@ -147,7 +163,7 @@ impl LasHeader {
         }
         header.file_source_id = bor.read_u16();
         let ge_val = bor.read_u16();
-        header.global_encoding = GlobalEncodingField { value: ge_val};
+        header.global_encoding = GlobalEncodingField { value: ge_val };
         if header.project_id_used {
             header.project_id1 = bor.read_u32();
             header.project_id2 = bor.read_u16();
@@ -159,7 +175,7 @@ impl LasHeader {
         // The version major and minor are read earlier.
         // Two bytes that must be added to the offset here.
         bor.pos += 2;
-        header.system_id = bor.read_utf8(32); 
+        header.system_id = bor.read_utf8(32);
         header.generating_software = bor.read_utf8(32);
         header.file_creation_day = bor.read_u16();
         header.file_creation_year = bor.read_u16();
@@ -196,15 +212,18 @@ impl LasHeader {
             }
         }
 
-        if header.number_of_points_old != 0 { 
+        if header.number_of_points_old != 0 {
             header.number_of_points = header.number_of_points_old as u64;
             for i in 0..5 {
-                if header.number_of_points_by_return_old[i] as u64 > header.number_of_points_by_return[i] {
-                    header.number_of_points_by_return[i] = header.number_of_points_by_return_old[i] as u64;
+                if header.number_of_points_by_return_old[i] as u64
+                    > header.number_of_points_by_return[i]
+                {
+                    header.number_of_points_by_return[i] =
+                        header.number_of_points_by_return_old[i] as u64;
                 }
             }
         }
-            
+
         Ok(header)
     }
 }

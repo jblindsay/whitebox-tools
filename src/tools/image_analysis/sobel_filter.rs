@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: 06/05/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct SobelFilter {
@@ -76,7 +75,8 @@ impl SobelFilter {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -215,7 +215,7 @@ impl WhiteboxTool for SobelFilter {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -345,8 +345,7 @@ impl WhiteboxTool for SobelFilter {
             output.clip_min_and_max_by_percent(clip_amount);
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -355,9 +354,7 @@ impl WhiteboxTool for SobelFilter {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Variant: {}", variant));
         output.add_metadata_entry(format!("Clip amount: {}", clip_amount));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -374,7 +371,7 @@ impl WhiteboxTool for SobelFilter {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

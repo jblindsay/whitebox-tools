@@ -2,41 +2,39 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/04/2018
-Last Modified: 05/05/2018
+Last Modified: 13/10/2018
 License: MIT
-
-NOTES: NoData values in the input image are ignored during the convolution operation. 
-This can lead to unexpected behavior at the edges of images (since the default behavior 
-is to return NoData when addressing cells beyond the grid edge) and where the grid 
-contains interior areas of NoData values. Normalization of kernel weights can be useful 
-for handling the edge effects associated with interior areas of NoData values. When the 
-normalization option is selected, the sum of the cell value-weight product is divided 
-by the sum of the weights on a cell-by-cell basis. Therefore, if the kernel at a 
-particular grid cell contains neighboring cells of NoData values, normalization 
-effectively re-adjusts the weighting to account for the missing data values. Normalization 
-also ensures that the output image will possess values within the range of the input 
-image and allows the user to specify integer value weights in the kernel. However, note
-that this implies that the sum of weights should equal one. In some cases, alternative
-sums (e.g. zero) are more appropriate, and as such normalization should not be applied
-in these cases.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
-use raster::*;
+use std::io::BufReader;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
+/// NoData values in the input image are ignored during the convolution operation.
+/// This can lead to unexpected behavior at the edges of images (since the default behavior
+/// is to return NoData when addressing cells beyond the grid edge) and where the grid
+/// contains interior areas of NoData values. Normalization of kernel weights can be useful
+/// for handling the edge effects associated with interior areas of NoData values. When the
+/// normalization option is selected, the sum of the cell value-weight product is divided
+/// by the sum of the weights on a cell-by-cell basis. Therefore, if the kernel at a
+/// particular grid cell contains neighboring cells of NoData values, normalization
+/// effectively re-adjusts the weighting to account for the missing data values. Normalization
+/// also ensures that the output image will possess values within the range of the input
+/// image and allows the user to specify integer value weights in the kernel. However, note
+/// that this implies that the sum of weights should equal one. In some cases, alternative
+/// sums (e.g. zero) are more appropriate, and as such normalization should not be applied
+/// in these cases.
 pub struct UserDefinedWeightsFilter {
     name: String,
     description: String,
@@ -46,37 +44,38 @@ pub struct UserDefinedWeightsFilter {
 }
 
 impl UserDefinedWeightsFilter {
-    pub fn new() -> UserDefinedWeightsFilter { // public constructor
+    pub fn new() -> UserDefinedWeightsFilter {
+        // public constructor
         let name = "UserDefinedWeightsFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a user-defined weights filter on an image.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Weights File".to_owned(), 
-            flags: vec!["--weights".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Weights File".to_owned(),
+            flags: vec!["--weights".to_owned()],
             description: "Input weights file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Csv),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -96,22 +95,26 @@ impl UserDefinedWeightsFilter {
             default_value: Some("false".to_string()),
             optional: true
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif --weights=weights.txt -o=output.tif --center=center --normalize", short_exe, name).replace("*", &sep);
-    
-        UserDefinedWeightsFilter { 
-            name: name, 
-            description: description, 
+
+        UserDefinedWeightsFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -120,7 +123,7 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -144,15 +147,22 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut weights_file = String::new();
         let mut kernel_center = "center".to_string();
         let mut normalize = false;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -248,8 +258,9 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
 
                 // First make sure the filter dimensions are odd.
                 // The filter dimensions must be odd numbers such that there is a middle pixel
-                if (kernel_columns as f64 / 2f64).floor() == (kernel_columns as f64 / 2f64) || 
-                    (kernel_rows as f64 / 2f64).floor() == (kernel_rows as f64 / 2f64) {
+                if (kernel_columns as f64 / 2f64).floor() == (kernel_columns as f64 / 2f64)
+                    || (kernel_rows as f64 / 2f64).floor() == (kernel_rows as f64 / 2f64)
+                {
                     return Err(Error::new(ErrorKind::InvalidInput,
                         "The filter kernel is not an odd number of rows and columns yet the 'center' 
                         option for the kernel centre has been selected. Please modify the input 
@@ -259,7 +270,7 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
                 let midpoint_x: isize = (kernel_columns as f64 / 2f64).floor() as isize;
                 let midpoint_y: isize = (kernel_rows as f64 / 2f64).floor() as isize;
                 (midpoint_x, midpoint_y)
-            },
+            }
         };
 
         // fill the filter d_x and d_y values and the distance-weights
@@ -273,15 +284,17 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        
-        let start = time::now();
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let start = Instant::now();
+
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
@@ -305,31 +318,27 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
-                
+
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {
                     // convert it back into an rgb value, using the modified intensity value.
-                    Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                return hsi2value(h, s, value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            return hsi2value(h, s, value);
                         }
-                    )
+                        nodata
+                    })
                 };
 
                 let (mut sum_weights, mut z_final): (f64, f64);
@@ -394,23 +403,32 @@ impl WhiteboxTool for UserDefinedWeightsFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Weights file: {}", weights_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
             Ok(_) => {
-                if verbose { println!("Output file written") }
-            },
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -434,21 +452,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -458,33 +477,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

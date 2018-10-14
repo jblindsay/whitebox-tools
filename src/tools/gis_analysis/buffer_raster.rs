@@ -2,18 +2,17 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
 use structures::Array2D;
+use tools::*;
 
 pub struct BufferRaster {
     name: String,
@@ -24,42 +23,43 @@ pub struct BufferRaster {
 }
 
 impl BufferRaster {
-    pub fn new() -> BufferRaster { // public constructor
+    pub fn new() -> BufferRaster {
+        // public constructor
         let name = "BufferRaster".to_string();
         let toolbox = "GIS Analysis/Distance Tools".to_string();
         let description = "Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.".to_string();
-        
+
         // let mut parameters = "-i, --input   Input raster file.\n".to_owned();
         // parameters.push_str("-o, --output  Output raster file.\n");
         // parameters.push_str("--size        Buffer size.\n");
         // parameters.push_str("--gridcells   Optional flag to indicate that the 'size' threshold should be measured in grid cells instead of the default.\n");
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Buffer Size".to_owned(), 
-            flags: vec!["--size".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Buffer Size".to_owned(),
+            flags: vec!["--size".to_owned()],
             description: "Buffer size.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -74,18 +74,25 @@ impl BufferRaster {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        BufferRaster { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        BufferRaster {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -94,7 +101,7 @@ impl WhiteboxTool for BufferRaster {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -118,15 +125,22 @@ impl WhiteboxTool for BufferRaster {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut buffer_size: f64 = 10.0;
         let mut grid_cell_units = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -141,21 +155,23 @@ impl WhiteboxTool for BufferRaster {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-size" || vec[0].to_lowercase() == "--size" {
                 if keyval {
                     buffer_size = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    buffer_size = args[i+1].to_string().parse::<f64>().unwrap();
+                    buffer_size = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-gridcells" || vec[0].to_lowercase() == "--gridcells" {
+            } else if vec[0].to_lowercase() == "-gridcells"
+                || vec[0].to_lowercase() == "--gridcells"
+            {
                 grid_cell_units = true;
             }
         }
@@ -178,7 +194,9 @@ impl WhiteboxTool for BufferRaster {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
 
@@ -188,20 +206,20 @@ impl WhiteboxTool for BufferRaster {
         let mut r_x: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         let mut h: f64;
         let mut which_cell: usize;
         let inf_val = f64::INFINITY;
-        let d_x = [ -1, -1, 0, 1, 1, 1, 0, -1 ];
-        let d_y = [ 0, -1, -1, -1, 0, 1, 1, 1 ];
-        let g_x = [ 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0 ];
-        let g_y = [ 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0 ];
+        let d_x = [-1, -1, 0, 1, 1, 1, 0, -1];
+        let d_y = [0, -1, -1, -1, 0, 1, 1, 1];
+        let g_x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0];
+        let g_y = [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0];
         let (mut x, mut y): (isize, isize);
         let (mut z, mut z2, mut z_min): (f64, f64, f64);
-        
+
         for row in 0..rows {
             for col in 0..columns {
                 z = input[(row, col)];
@@ -261,7 +279,7 @@ impl WhiteboxTool for BufferRaster {
                 }
             }
         }
-        
+
         for row in (0..rows).rev() {
             for col in (0..columns).rev() {
                 z = output[(row, col)];
@@ -308,7 +326,7 @@ impl WhiteboxTool for BufferRaster {
         if grid_cell_units {
             cell_size = 1.0;
         }
-        
+
         let mut dist: f64;
         for row in 0..rows {
             for col in 0..columns {
@@ -333,24 +351,33 @@ impl WhiteboxTool for BufferRaster {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Buffer size: {}", buffer_size));
         output.add_metadata_entry(format!("Grid cells as units: {}", grid_cell_units));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

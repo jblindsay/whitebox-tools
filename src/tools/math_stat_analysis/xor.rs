@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: January 21, 2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct Xor {
@@ -27,54 +26,60 @@ pub struct Xor {
 }
 
 impl Xor {
-    pub fn new() -> Xor { // public constructor
+    pub fn new() -> Xor {
+        // public constructor
         let name = "Xor".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs a logical XOR operator on two Boolean raster images.".to_string();
-        
+        let description =
+            "Performs a logical XOR operator on two Boolean raster images.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["--input1".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["--input2".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif' -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        Xor { 
-            name: name, 
-            description: description, 
+
+        Xor {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -83,7 +88,7 @@ impl WhiteboxTool for Xor {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,14 +119,21 @@ impl WhiteboxTool for Xor {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1 = String::new();
         let mut input2 = String::new();
         let mut output_file = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -136,19 +148,19 @@ impl WhiteboxTool for Xor {
                 if keyval {
                     input1 = vec[1].to_string();
                 } else {
-                    input1 = args[i+1].to_string();
+                    input1 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--input2" {
                 if keyval {
                     input2 = vec[1].to_string();
                 } else {
-                    input2 = args[i+1].to_string();
+                    input2 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -174,12 +186,13 @@ impl WhiteboxTool for Xor {
             input2 = format!("{}{}", working_directory, input2);
         }
 
-
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let in1 = Arc::new(Raster::new(&input1, "r")?);
         let in2 = Arc::new(Raster::new(&input2, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = in1.configs.rows as isize;
         let columns = in1.configs.columns as isize;
         let nodata1 = in1.configs.nodata;
@@ -187,10 +200,12 @@ impl WhiteboxTool for Xor {
 
         // make sure the input files have the same size
         if in1.configs.rows != in2.configs.rows || in1.configs.columns != in2.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        
+
         // calculate the number of downslope cells
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -207,8 +222,12 @@ impl WhiteboxTool for Xor {
                         z1 = in1[(row, col)];
                         z2 = in2[(row, col)];
                         if z1 != nodata1 && z2 != nodata2 {
-                            if z1 != 0f64 { z1 = 1f64; }
-                            if z2 != 0f64 { z2 = 1f64; }
+                            if z1 != 0f64 {
+                                z1 = 1f64;
+                            }
+                            if z2 != 0f64 {
+                                z2 = 1f64;
+                            }
                             if z1 + z2 == 1f64 {
                                 //this occurs only when one of the two images has a true value
                                 data[col as usize] = 1f64;
@@ -227,7 +246,7 @@ impl WhiteboxTool for Xor {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -237,25 +256,34 @@ impl WhiteboxTool for Xor {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.data_type = DataType::F32;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input1: {}", input1));
         output.add_metadata_entry(format!("Input2: {}", input2));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

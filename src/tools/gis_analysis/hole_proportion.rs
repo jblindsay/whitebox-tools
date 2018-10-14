@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::*;
 
@@ -165,7 +164,7 @@ impl WhiteboxTool for HoleProportion {
 
         let input = Shapefile::read(&input_file)?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of points type
         if input.header.shape_type.base_shape_type() != ShapeType::Polygon {
@@ -235,14 +234,10 @@ impl WhiteboxTool for HoleProportion {
             Err(e) => return Err(e),
         };
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: 07/06/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::*;
 
@@ -74,7 +73,8 @@ impl SnapPourPoints {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -213,7 +213,7 @@ impl WhiteboxTool for SnapPourPoints {
 
         let flow_accum = Raster::new(&flow_accum_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // let rows = flow_accum.configs.rows as isize;
         // let columns = flow_accum.configs.columns as isize;
@@ -322,8 +322,7 @@ impl WhiteboxTool for SnapPourPoints {
         //     }
         // }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         // output.add_metadata_entry(format!(
         //     "Created by whitebox_tools\' {} tool",
         //     self.get_tool_name()
@@ -332,7 +331,7 @@ impl WhiteboxTool for SnapPourPoints {
         // output.add_metadata_entry(format!("D8 flow accumulation file: {}", flow_accum_file));
         // output.add_metadata_entry(format!("Snap distance: {}", snap_dist));
         // output.add_metadata_entry(
-        //     format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
+        //     format!("Elapsed Time (excluding I/O): {}", elapsed_time),
         // );
 
         if verbose {
@@ -347,7 +346,7 @@ impl WhiteboxTool for SnapPourPoints {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

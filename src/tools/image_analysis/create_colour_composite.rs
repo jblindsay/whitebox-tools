@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Creates a colour-composite image from three bands of multispectral imagery.
@@ -289,7 +288,7 @@ impl WhiteboxTool for CreateColourComposite {
             }
         };
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input files have the same size
         if input_r.configs.rows != input_g.configs.rows
@@ -531,8 +530,7 @@ impl WhiteboxTool for CreateColourComposite {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -544,9 +542,7 @@ impl WhiteboxTool for CreateColourComposite {
             output.add_metadata_entry(format!("Input opacity file: {}", input4_file));
         }
         output.add_metadata_entry(format!("Balance contrast enhancement: {}", enhance));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -562,7 +558,7 @@ impl WhiteboxTool for CreateColourComposite {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

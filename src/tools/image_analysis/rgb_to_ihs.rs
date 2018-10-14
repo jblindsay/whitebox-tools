@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 25, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
@@ -316,7 +315,7 @@ impl WhiteboxTool for RgbToIhs {
             let overall_max = red_max.max(green_max.max(blue_max));
             let range = overall_max - overall_min;
 
-            let start = time::now();
+            let start = Instant::now();
 
             // make sure the input files have the same size
             if input_r.configs.rows != input_g.configs.rows
@@ -435,17 +434,14 @@ impl WhiteboxTool for RgbToIhs {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
 
             output_i.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",
                 self.get_tool_name()
             ));
             // output_i.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
-            output_i.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-            );
+            output_i.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
             if verbose {
                 println!("Saving intensity data...")
@@ -462,9 +458,7 @@ impl WhiteboxTool for RgbToIhs {
                 self.get_tool_name()
             ));
             // output_h.add_metadata_entry(format!("Input colour composite file: {}", composite_file));
-            output_h.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-            );
+            output_h.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
             if verbose {
                 println!("Saving hue data...")
@@ -508,7 +502,7 @@ impl WhiteboxTool for RgbToIhs {
             let columns = input.configs.columns as isize;
             let nodata = input.configs.nodata;
 
-            let start = time::now();
+            let start = Instant::now();
 
             // find the overall minimum and range
             let (tx, rx) = mpsc::channel();
@@ -680,8 +674,7 @@ impl WhiteboxTool for RgbToIhs {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
 
             output_i.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",

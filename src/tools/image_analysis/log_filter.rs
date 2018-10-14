@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: 05/05/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct LaplacianOfGaussianFilter {
@@ -28,54 +27,62 @@ pub struct LaplacianOfGaussianFilter {
 }
 
 impl LaplacianOfGaussianFilter {
-    pub fn new() -> LaplacianOfGaussianFilter { // public constructor
+    pub fn new() -> LaplacianOfGaussianFilter {
+        // public constructor
         let name = "LaplacianOfGaussianFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Laplacian-of-Gaussian (LoG) filter on an image.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Standard Deviation (Pixels)".to_owned(), 
-            flags: vec!["--sigma".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Standard Deviation (Pixels)".to_owned(),
+            flags: vec!["--sigma".to_owned()],
             description: "Standard deviation in pixels.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.75".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma=2.0", short_exe, name).replace("*", &sep);
-    
-        LaplacianOfGaussianFilter { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma=2.0",
+            short_exe, name
+        ).replace("*", &sep);
+
+        LaplacianOfGaussianFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -84,7 +91,7 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -108,14 +115,21 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 0usize;
         let mut sigma = 0.75;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -180,19 +194,21 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
                 break;
             }
         }
-        
+
         // the filter dimensions must be odd numbers such that there is a middle pixel
         if filter_size % 2 == 0 {
             filter_size += 1;
         }
 
-        if filter_size < 3 { filter_size = 3; }
+        if filter_size < 3 {
+            filter_size = 3;
+        }
 
         let num_pixels_in_filter = filter_size * filter_size;
         let mut d_x = vec![0isize; num_pixels_in_filter];
         let mut d_y = vec![0isize; num_pixels_in_filter];
         let mut weights = vec![0.0; num_pixels_in_filter];
-        
+
         let cells_on_either_side = (filter_size as f64 / 2.0).floor() as isize;
 
         let term1 = -1.0 / (PI * sigma * sigma * sigma * sigma);
@@ -228,21 +244,21 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
         let d_y = Arc::new(d_y);
         let weights = Arc::new(weights);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
-    
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
@@ -259,15 +275,13 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
                 let (mut sum, mut z_final): (f64, f64);
                 let mut z: f64;
@@ -310,15 +324,17 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
         output.update_min_max();
         output.clip_display_min_max(1.0);
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Sigma: {}", sigma));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -333,8 +349,10 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

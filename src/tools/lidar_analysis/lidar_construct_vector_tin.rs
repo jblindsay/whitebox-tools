@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/09/2018
-Last Modified: 23/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
 use structures::Point2D;
-use time;
 use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
@@ -246,7 +245,7 @@ impl WhiteboxTool for LidarConstructVectorTIN {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let (all_returns, late_returns, early_returns): (bool, bool, bool);
         if return_type.contains("last") {
@@ -539,13 +538,12 @@ impl WhiteboxTool for LidarConstructVectorTIN {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

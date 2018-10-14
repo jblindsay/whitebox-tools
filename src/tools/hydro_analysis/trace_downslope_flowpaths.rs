@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: Add support for vector seed points.
@@ -13,7 +13,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -95,7 +94,8 @@ impl TraceDownslopeFlowpaths {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -175,7 +175,8 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
                 } else {
                     seed_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "--d8_pntr" || vec[0].to_lowercase() == "-flow_dir"
+            } else if vec[0].to_lowercase() == "--d8_pntr"
+                || vec[0].to_lowercase() == "-flow_dir"
                 || vec[0].to_lowercase() == "--flow_dir"
             {
                 if keyval {
@@ -236,7 +237,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         //                         "The input files must have the same number of rows and columns and spatial extent."));
         // }
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = flowdir.configs.rows as isize;
         let columns = flowdir.configs.columns as isize;
         let nodata = flowdir.configs.nodata;
@@ -386,8 +387,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum.plt".to_string();
         output.configs.data_type = DataType::F32;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
@@ -400,9 +400,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
             "D8 flow direction (pointer) raster: {}",
             flowdir_file
         ));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -416,7 +414,7 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

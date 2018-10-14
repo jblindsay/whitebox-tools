@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 18, 2017
-Last Modified: Dec. 18, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use raster::*;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
 use tools::*;
 
 pub struct CrossTabulation {
@@ -34,37 +33,40 @@ impl CrossTabulation {
         let description = "Performs a cross-tabulation on two categorical images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File 1".to_owned(), 
-            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File 1".to_owned(),
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()],
             description: "Input raster file 1.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input File 2".to_owned(), 
-            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File 2".to_owned(),
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()],
             description: "Input raster file 1.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -88,7 +90,7 @@ impl WhiteboxTool for CrossTabulation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -119,17 +121,21 @@ impl WhiteboxTool for CrossTabulation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file1: String = String::new();
         let mut input_file2: String = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -145,13 +151,13 @@ impl WhiteboxTool for CrossTabulation {
                 if keyval {
                     input_file1 = vec[1].to_string();
                 } else {
-                    input_file1 = args[i+1].to_string();
+                    input_file1 = args[i + 1].to_string();
                 }
             } else if flag_val == "-i2" || flag_val == "-input2" {
                 if keyval {
                     input_file2 = vec[1].to_string();
                 } else {
-                    input_file2 = args[i+1].to_string();
+                    input_file2 = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
@@ -173,8 +179,8 @@ impl WhiteboxTool for CrossTabulation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         if !input_file1.contains(&sep) && !input_file1.contains("/") {
             input_file1 = format!("{}{}", working_directory, input_file1);
         }
@@ -189,7 +195,7 @@ impl WhiteboxTool for CrossTabulation {
         let rows = input1.configs.rows as isize;
         let columns = input1.configs.columns as isize;
         let nodata1 = input1.configs.nodata;
-        
+
         let input2 = Raster::new(&input_file2, "r")?;
         let nodata2 = input2.configs.nodata;
 
@@ -231,13 +237,14 @@ impl WhiteboxTool for CrossTabulation {
             }
         }
 
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -293,8 +300,18 @@ impl WhiteboxTool for CrossTabulation {
         <body>
             <h1>Cross Tabulation Report</h1> ".as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Image 1</strong> (columns): {}</p>", input_file1.clone()).as_bytes())?;
-        writer.write_all(&format!("<p><strong>Image 2</strong> (rows): {}</p>", input_file2.clone()).as_bytes())?;
+        writer.write_all(
+            &format!(
+                "<p><strong>Image 1</strong> (columns): {}</p>",
+                input_file1.clone()
+            ).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!(
+                "<p><strong>Image 2</strong> (rows): {}</p>",
+                input_file2.clone()
+            ).as_bytes(),
+        )?;
 
         // output the table.
         writer.write_all("<div><table align=\"center\">".as_bytes())?;
@@ -314,7 +331,10 @@ impl WhiteboxTool for CrossTabulation {
                 let mut s = format!("<tr><td class=\"header\">{}</td>", b as isize + min2);
                 for a in 0..image1_range {
                     if class_exists1[a] {
-                        s.push_str(&format!("<td class=\"numberCell\">{}</td>", contingency_table[a][b]));
+                        s.push_str(&format!(
+                            "<td class=\"numberCell\">{}</td>",
+                            contingency_table[a][b]
+                        ));
                     }
                 }
                 s.push_str("</tr>");

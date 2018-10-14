@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 20, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 pub struct MaxElevationDeviation {
@@ -258,7 +257,7 @@ impl WhiteboxTool for MaxElevationDeviation {
             println!("Reading data...")
         };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -420,8 +419,7 @@ impl WhiteboxTool for MaxElevationDeviation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output_mag.configs.display_min = -3.0;
         output_mag.configs.display_max = 3.0;
         output_mag.configs.palette = "blue_white_red.plt".to_string();
@@ -433,9 +431,7 @@ impl WhiteboxTool for MaxElevationDeviation {
         output_mag.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_mag.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag.add_metadata_entry(format!("Step size y: {}", step));
-        output_mag.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving magnitude data...")
@@ -458,9 +454,7 @@ impl WhiteboxTool for MaxElevationDeviation {
         output_scale.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_scale.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale.add_metadata_entry(format!("Step size: {}", step));
-        output_scale.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving scale data...")

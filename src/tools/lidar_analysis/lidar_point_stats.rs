@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Feb. 18, 2018
-Last Modified: Feb. 19, 2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes:
@@ -27,7 +27,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 pub struct LidarPointStats {
@@ -118,7 +117,8 @@ impl LidarPointStats {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -231,7 +231,7 @@ impl WhiteboxTool for LidarPointStats {
             }
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // check to see if all of the outputs are false and if so, set them all the true
         if !num_points && !num_pulses && !z_range && !intensity_range && !predominant_class {
@@ -340,7 +340,7 @@ impl WhiteboxTool for LidarPointStats {
                             Raster::initialize_using_config(&out_file_num_pulses, &configs);
                         out_num_pulses.reinitialize_values(0f64);
 
-                        let start_run = time::now();
+                        let start_run = Instant::now();
 
                         let (mut row, mut col): (isize, isize);
                         for i in 0..n_points {
@@ -365,8 +365,7 @@ impl WhiteboxTool for LidarPointStats {
                             }
                         }
 
-                        let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
@@ -380,10 +379,10 @@ impl WhiteboxTool for LidarPointStats {
                             out_num_pnts.add_metadata_entry(format!("Input file: {}", input_file));
                             out_num_pnts
                                 .add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_num_pnts.add_metadata_entry(
-                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                    .replace("PT", ""),
-                            );
+                            out_num_pnts.add_metadata_entry(format!(
+                                "Elapsed Time (excluding I/O): {}",
+                                elapsed_time_run
+                            ));
                             let _ = out_num_pnts.write().unwrap();
                         }
 
@@ -430,7 +429,7 @@ impl WhiteboxTool for LidarPointStats {
                         let mut out_intensity_range =
                             Raster::initialize_using_config(&out_file_intensity_range, &configs);
 
-                        let start_run = time::now();
+                        let start_run = Instant::now();
 
                         let mut new_min_max_z: bool;
                         let mut new_min_max_i: bool;
@@ -489,8 +488,7 @@ impl WhiteboxTool for LidarPointStats {
                             }
                         }
 
-                        let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
@@ -505,10 +503,10 @@ impl WhiteboxTool for LidarPointStats {
                                 .add_metadata_entry(format!("Input file: {}", input_file));
                             out_elev_range
                                 .add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_elev_range.add_metadata_entry(
-                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                    .replace("PT", ""),
-                            );
+                            out_elev_range.add_metadata_entry(format!(
+                                "Elapsed Time (excluding I/O): {}",
+                                elapsed_time_run
+                            ));
                             let _ = out_elev_range.write().unwrap();
                         }
 
@@ -521,10 +519,10 @@ impl WhiteboxTool for LidarPointStats {
                                 .add_metadata_entry(format!("Input file: {}", input_file));
                             out_intensity_range
                                 .add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                            out_intensity_range.add_metadata_entry(
-                                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                    .replace("PT", ""),
-                            );
+                            out_intensity_range.add_metadata_entry(format!(
+                                "Elapsed Time (excluding I/O): {}",
+                                elapsed_time_run
+                            ));
                             let _ = out_intensity_range.write().unwrap();
                         }
                     }
@@ -544,7 +542,7 @@ impl WhiteboxTool for LidarPointStats {
                         let mut out_predominant_class =
                             Raster::initialize_using_config(&out_file_predominant_class, &configs);
 
-                        let start_run = time::now();
+                        let start_run = Instant::now();
 
                         let mut class: u8;
                         let mut freq: u16;
@@ -573,8 +571,7 @@ impl WhiteboxTool for LidarPointStats {
                             }
                         }
 
-                        let end_run = time::now();
-                        let elapsed_time_run = end_run - start_run;
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
 
                         if verbose && inputs.len() == 1 {
                             println!("Saving data...")
@@ -588,10 +585,10 @@ impl WhiteboxTool for LidarPointStats {
                             .add_metadata_entry(format!("Input file: {}", input_file));
                         out_predominant_class
                             .add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                        out_predominant_class.add_metadata_entry(
-                            format!("Elapsed Time (excluding I/O): {}", elapsed_time_run)
-                                .replace("PT", ""),
-                        );
+                        out_predominant_class.add_metadata_entry(format!(
+                            "Elapsed Time (excluding I/O): {}",
+                            elapsed_time_run
+                        ));
                         let _ = out_predominant_class.write().unwrap();
                     }
 
@@ -624,13 +621,12 @@ impl WhiteboxTool for LidarPointStats {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

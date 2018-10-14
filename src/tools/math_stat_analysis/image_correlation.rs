@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
-Last Modified: 29/04/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -20,7 +20,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct ImageCorrelation {
@@ -62,7 +61,8 @@ impl ImageCorrelation {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -170,7 +170,7 @@ impl WhiteboxTool for ImageCorrelation {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut files = input_files.split(";");
         let mut files_vec = files.collect::<Vec<&str>>();
@@ -355,13 +355,12 @@ impl WhiteboxTool for ImageCorrelation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 
@@ -376,16 +375,20 @@ impl WhiteboxTool for ImageCorrelation {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Image Correlation Report</h1>"#.as_bytes())?;
+            <h1>Image Correlation Report</h1>"#
+                .as_bytes(),
+        )?;
 
         // output the names of the input files.
         writer.write_all("<p><strong>Input files</strong>:</br>".as_bytes())?;
         for a in 0..num_files {
             let value = &file_names[a]; //files_vec[a];
-            writer
-                .write_all(format!("<strong>Image {}</strong>: {}</br>", a + 1, value).as_bytes())?;
+            writer.write_all(
+                format!("<strong>Image {}</strong>: {}</br>", a + 1, value).as_bytes(),
+            )?;
         }
         writer.write_all("</p>".as_bytes())?;
 

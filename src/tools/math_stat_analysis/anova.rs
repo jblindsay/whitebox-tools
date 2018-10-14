@@ -2,26 +2,25 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 23, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::io::BufWriter;
-use std::fs::File;
-use std::io::prelude::*;
-use std::process::Command;
+use raster::*;
 use std::env;
-use std::path;
-use std::path::Path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::path::Path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct Anova {
@@ -33,54 +32,60 @@ pub struct Anova {
 }
 
 impl Anova {
-    pub fn new() -> Anova { // public constructor
+    pub fn new() -> Anova {
+        // public constructor
         let name = "Anova".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs an analysis of variance (ANOVA) test on a raster dataset.".to_string();
-        
+        let description =
+            "Performs an analysis of variance (ANOVA) test on a raster dataset.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Feature Definition (Class) File".to_owned(), 
-            flags: vec!["--features".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Feature Definition (Class) File".to_owned(),
+            flags: vec!["--features".to_owned()],
             description: "Feature definition (or class) raster.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=data.tif --features=classes.tif -o=anova.html", short_exe, name).replace("*", &sep);
-    
-        Anova { 
-            name: name, 
+
+        Anova {
+            name: name,
             description: description,
-            toolbox: toolbox, 
-            parameters: parameters, 
-            example_usage: usage 
+            toolbox: toolbox,
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -89,7 +94,7 @@ impl WhiteboxTool for Anova {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -120,14 +125,21 @@ impl WhiteboxTool for Anova {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut feature_file = String::new();
         let mut output_file = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -142,19 +154,20 @@ impl WhiteboxTool for Anova {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-features" || vec[0].to_lowercase() == "--features" {
+            } else if vec[0].to_lowercase() == "-features" || vec[0].to_lowercase() == "--features"
+            {
                 if keyval {
                     feature_file = vec[1].to_string();
                 } else {
-                    feature_file = args[i+1].to_string();
+                    feature_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -183,11 +196,13 @@ impl WhiteboxTool for Anova {
             output_file = output_file + ".html";
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -260,12 +275,17 @@ impl WhiteboxTool for Anova {
         ";
         writer.write_all(s.as_bytes())?;
 
-
         let path = Path::new(&input_file);
-        let s1 = &format!("<p><strong>Measurement variable:</strong> {}</p>", path.file_name().unwrap().to_str().unwrap());
+        let s1 = &format!(
+            "<p><strong>Measurement variable:</strong> {}</p>",
+            path.file_name().unwrap().to_str().unwrap()
+        );
         writer.write_all(s1.as_bytes())?;
         let path = Path::new(&feature_file);
-        let s1 = &format!("<p><strong>Nominal variable:</strong> {}</p><br>", path.file_name().unwrap().to_str().unwrap());
+        let s1 = &format!(
+            "<p><strong>Nominal variable:</strong> {}</p><br>",
+            path.file_name().unwrap().to_str().unwrap()
+        );
         writer.write_all(s1.as_bytes())?;
 
         let features = Arc::new(Raster::new(&feature_file, "r")?);
@@ -278,7 +298,7 @@ impl WhiteboxTool for Anova {
         // let mut id: f64;
         // let mut id_int: i32;
         let mut vec_id: usize;
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -300,14 +320,19 @@ impl WhiteboxTool for Anova {
                         id = features.get_value(row, col);
                         if z != nodata && id != nodata_features {
                             id_int = id.round() as i32;
-                            if id_int > max_id { max_id = id_int; }
-                            if id_int < min_id { min_id = id_int; }
+                            if id_int > max_id {
+                                max_id = id_int;
+                            }
+                            if id_int < min_id {
+                                min_id = id_int;
+                            }
                             overall_n += 1;
                             overall_sum += z;
                             overall_sum_sqr += z * z;
                         }
                     }
-                    tx.send((overall_n, overall_sum, overall_sum_sqr, min_id, max_id)).unwrap();
+                    tx.send((overall_n, overall_sum, overall_sum_sqr, min_id, max_id))
+                        .unwrap();
                 }
             });
         }
@@ -322,9 +347,13 @@ impl WhiteboxTool for Anova {
             overall_n += a;
             overall_sum += b;
             overall_sum_sqr += c;
-            if d < min_id { min_id = d; }
-            if e > max_id { max_id = e; }
-            
+            if d < min_id {
+                min_id = d;
+            }
+            if e > max_id {
+                max_id = e;
+            }
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -336,9 +365,10 @@ impl WhiteboxTool for Anova {
 
         let range = (max_id - min_id + 1) as usize;
         let overall_mean = overall_sum / overall_n as f64;
-        let overall_variance = (overall_sum_sqr - (overall_sum * overall_sum)/ overall_n as f64) / (overall_n as f64 - 1f64);
+        let overall_variance = (overall_sum_sqr - (overall_sum * overall_sum) / overall_n as f64)
+            / (overall_n as f64 - 1f64);
         let ss_t = overall_sum_sqr - overall_n as f64 * overall_mean * overall_mean;
-        
+
         let mut n = vec![0usize; range];
         let mut sum = vec![0f64; range];
         let mut sum_sqr = vec![0f64; range];
@@ -374,7 +404,7 @@ impl WhiteboxTool for Anova {
             if n[i] > 0 {
                 num_classes += 1;
                 mean[i] = sum[i] / n[i] as f64;
-                variance[i] = (sum_sqr[i] - (sum[i] * sum[i])/ n[i] as f64) / (n[i] as f64 - 1f64);
+                variance[i] = (sum_sqr[i] - (sum[i] * sum[i]) / n[i] as f64) / (n[i] as f64 - 1f64);
             }
         }
 
@@ -413,8 +443,6 @@ impl WhiteboxTool for Anova {
 
         println!("Saving output...");
 
-
-
         s = "<br><table align=\"center\">
         <caption>Group Summaries</caption>
         <tr>
@@ -427,34 +455,37 @@ impl WhiteboxTool for Anova {
 
         for i in 0..range {
             if n[i] > 0 {
-                let s1 = &format!("<tr>
+                let s1 = &format!(
+                    "<tr>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}</td>
                 </tr>\n",
-                i as i32 + min_id,
-                n[i],
-                format!("{:.*}", 4, mean[i]),
-                format!("{:.*}", 4, variance[i].sqrt()));
+                    i as i32 + min_id,
+                    n[i],
+                    format!("{:.*}", 4, mean[i]),
+                    format!("{:.*}", 4, variance[i].sqrt())
+                );
                 writer.write_all(s1.as_bytes())?;
             }
         }
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">Overall</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        overall_n,
-        format!("{:.*}", 4, overall_mean),
-        format!("{:.*}", 4, overall_variance.sqrt()));
+            overall_n,
+            format!("{:.*}", 4, overall_mean),
+            format!("{:.*}", 4, overall_variance.sqrt())
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table>";
         writer.write_all(s.as_bytes())?;
-
 
         s = "<br><br><table align=\"center\">
         <caption>ANOVA Table</caption>
@@ -477,7 +508,8 @@ impl WhiteboxTool for Anova {
             p_str = format!("{:.e}", p as f32);
         }
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">Between groups</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
@@ -485,14 +517,16 @@ impl WhiteboxTool for Anova {
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        format!("{:.*}", 3, ss_b),
-        df_b,
-        format!("{:.*}", 3, ms_b),
-        format!("{:.*}", 3, f),
-        p_str);
+            format!("{:.*}", 3, ss_b),
+            df_b,
+            format!("{:.*}", 3, ms_b),
+            format!("{:.*}", 3, f),
+            p_str
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">Within groups</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
@@ -500,12 +534,14 @@ impl WhiteboxTool for Anova {
             <td class=\"numberCell\"></td>
             <td class=\"numberCell\"></td>
         </tr>\n",
-        format!("{:.*}", 3, ss_w),
-        df_w,
-        format!("{:.*}", 3, ms_w));
+            format!("{:.*}", 3, ss_w),
+            df_w,
+            format!("{:.*}", 3, ms_w)
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">Total variation</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
@@ -513,8 +549,9 @@ impl WhiteboxTool for Anova {
             <td class=\"numberCell\"></td>
             <td class=\"numberCell\"></td>
         </tr>\n",
-        format!("{:.*}", 3, ss_t),
-        df_t);
+            format!("{:.*}", 3, ss_t),
+            df_t
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table>";
@@ -607,10 +644,12 @@ impl WhiteboxTool for Anova {
             println!("Complete! Please see {} for output.", output_file);
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
-            println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -618,54 +657,73 @@ impl WhiteboxTool for Anova {
 }
 
 fn f_call(x: f64) -> f64 {
-  let zk;
-  if x >= 0.0 {
-    zk = x + 0.0000005;
-  } else {
-    zk = x - 0.0000005;
-  }
-  zk
+    let zk;
+    if x >= 0.0 {
+        zk = x + 0.0000005;
+    } else {
+        zk = x - 0.0000005;
+    }
+    zk
 }
 
 const PJ2: f64 = PI / 2.0;
 fn f_spin(f: f64, df1: usize, df2: usize) -> f64 {
     let x = df2 as f64 / (df1 as f64 * f + df2 as f64);
     if (df1 as f64 % 2.0) == 0.0 {
-      return lj_spin(1.0 - x, df2 as f64, df1 as f64 + df2 as f64 - 4.0, df2 as f64 - 2.0) * x.powf(df2 as f64 / 2.0);
+        return lj_spin(
+            1.0 - x,
+            df2 as f64,
+            df1 as f64 + df2 as f64 - 4.0,
+            df2 as f64 - 2.0,
+        ) * x.powf(df2 as f64 / 2.0);
     }
     if (df2 as f64 % 2.0) == 0.0 {
-      return 1.0 - lj_spin(x, df1 as f64, df1 as f64 + df2 as f64 - 4.0, df1 as f64 - 2.0) * (1.0 - x).powf(df1 as f64 / 2.0);
+        return 1.0
+            - lj_spin(
+                x,
+                df1 as f64,
+                df1 as f64 + df2 as f64 - 4.0,
+                df1 as f64 - 2.0,
+            ) * (1.0 - x).powf(df1 as f64 / 2.0);
     }
     let tan = ((df1 as f64 * f / df2 as f64).sqrt()).atan();
     let mut a = tan / PJ2;
     let sat = tan.sin();
     let cot = tan.cos();
     if df2 as f64 > 1.0 {
-      a += sat * cot * lj_spin(cot * cot, 2.0, df2 as f64 - 3.0, -1.0 ) / PJ2;
+        a += sat * cot * lj_spin(cot * cot, 2.0, df2 as f64 - 3.0, -1.0) / PJ2;
     }
     if df1 == 1 {
-      return 1.0 - a;
+        return 1.0 - a;
     }
-    let mut c = 4.0 * lj_spin(sat * sat, df2 as f64 + 1.0, df1 as f64 + df2 as f64 - 4.0, df2 as f64 - 2.0) * sat * cot.powf(df2 as f64) / PI;
+    let mut c =
+        4.0 * lj_spin(
+            sat * sat,
+            df2 as f64 + 1.0,
+            df1 as f64 + df2 as f64 - 4.0,
+            df2 as f64 - 2.0,
+        ) * sat
+            * cot.powf(df2 as f64)
+            / PI;
     if df2 == 1 {
-      return 1.0 - a + c / 2.0;
+        return 1.0 - a + c / 2.0;
     }
     let mut k = 2.0;
     while k <= (df2 as f64 - 1.0) / 2.0 {
-      c = c * k / (k - 0.5);
-      k = k + 1.0;
+        c = c * k / (k - 0.5);
+        k = k + 1.0;
     }
     return 1.0 - a + c;
 }
 
 fn lj_spin(q: f64, i: f64, j: f64, b: f64) -> f64 {
-   let mut zz = 1.0;
-   let mut z = zz;
-   let mut k = i;
-   while k <= j {
-     zz = zz * q * k / (k - b);
-     z = z + zz;
-     k = k + 2.0;
-   }
-   z
+    let mut zz = 1.0;
+    let mut z = zz;
+    let mut k = i;
+    while k <= j {
+        zz = zz * q * k / (k - b);
+        z = z + zz;
+        k = k + 2.0;
+    }
+    z
 }

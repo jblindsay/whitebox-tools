@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/04/2018
-Last Modified: 27/04/2018
+Last Modified: 12/10/2018
 License: MIT
 
 HELP:
@@ -31,7 +31,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::*;
 
@@ -92,7 +91,8 @@ impl UnnestBasins {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -210,7 +210,7 @@ impl WhiteboxTool for UnnestBasins {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("Reading data...")
@@ -358,7 +358,7 @@ impl WhiteboxTool for UnnestBasins {
         }
 
         for order in 1..max_nesting_order + 1 {
-            let start2 = time::now();
+            let start2 = Instant::now();
             // there will be an output file for each nesting order
             let pos_of_dot = output_file.rfind('.').unwrap_or(0);
             let ext = &output_file[pos_of_dot..];
@@ -445,17 +445,14 @@ impl WhiteboxTool for UnnestBasins {
                 }
             }
 
-            let end2 = time::now();
-            let elapsed_time2 = end2 - start2;
+            let elapsed_time2 = get_formatted_elapsed_time(start2);
             output.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",
                 self.get_tool_name()
             ));
             output.add_metadata_entry(format!("D8 pointer file: {}", d8_file));
             output.add_metadata_entry(format!("Pour-points file: {}", pourpts_file));
-            output.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time2).replace("PT", ""),
-            );
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time2));
 
             if verbose {
                 println!("Saving data for nesting order {}...", order)
@@ -468,13 +465,12 @@ impl WhiteboxTool for UnnestBasins {
             };
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

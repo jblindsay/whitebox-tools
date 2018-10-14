@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 23/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
 use structures::{BoundingBox, Point2D};
-use time;
 use tools::*;
 
 /// Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
@@ -275,7 +274,7 @@ impl WhiteboxTool for LidarTINGridding {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let (all_returns, late_returns, early_returns): (bool, bool, bool);
         if return_type.contains("last") {
@@ -389,7 +388,7 @@ impl WhiteboxTool for LidarTINGridding {
                         Some(val) => val,
                         None => break, // There are no more tiles to interpolate
                     };
-                    let start_run = time::now();
+                    let start_run = Instant::now();
 
                     let input_file = inputs[tile].replace("\"", "").clone();
                     let output_file = outputs[tile].replace("\"", "").clone();
@@ -689,9 +688,7 @@ impl WhiteboxTool for LidarTINGridding {
                         }
                     }
 
-                    let end_run = time::now();
-                    let elapsed_time_run = end_run - start_run;
-
+                    let elapsed_time_run = get_formatted_elapsed_time(start_run);
                     output.add_metadata_entry(format!(
                         "Created by whitebox_tools\' {} tool",
                         tool_name
@@ -705,10 +702,10 @@ impl WhiteboxTool for LidarTINGridding {
                     ));
                     output.add_metadata_entry(format!("Returns: {}", return_type));
                     output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-                    output.add_metadata_entry(
-                        format!("Elapsed Time (including I/O): {}", elapsed_time_run)
-                            .replace("PT", ""),
-                    );
+                    output.add_metadata_entry(format!(
+                        "Elapsed Time (including I/O): {}",
+                        elapsed_time_run
+                    ));
 
                     if verbose && inputs.len() == 1 {
                         println!("Saving data...")
@@ -745,13 +742,12 @@ impl WhiteboxTool for LidarTINGridding {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 14, 2017
-Last Modified: 23/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::{DistanceMetric, FixedRadiusSearch2D};
-use time;
 use tools::*;
 
 pub struct FillMissingData {
@@ -217,7 +216,7 @@ impl WhiteboxTool for FillMissingData {
         let input = Raster::new(&input_file, "r")?;
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let nodata = input.configs.nodata;
         let columns = input.configs.columns as isize;
@@ -381,8 +380,7 @@ impl WhiteboxTool for FillMissingData {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -390,9 +388,7 @@ impl WhiteboxTool for FillMissingData {
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -406,7 +402,7 @@ impl WhiteboxTool for FillMissingData {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

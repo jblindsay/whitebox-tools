@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: November 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 NOTE: At the moment this tool determines input/output raster formats based on extensions, but due to file 
@@ -11,15 +11,14 @@ belong to a SurferAscii or a Surfer7Binary. This is more important for distingui
 files since input files can be read and distiguishing features idenfitied from the file structure.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::io::{Error, ErrorKind};
 use raster::*;
-use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
+use std::env;
+use std::io::{Error, ErrorKind};
+use std::path;
 use tools::ParameterFileType;
+use tools::ParameterType;
+use tools::ToolParameter;
+use tools::*;
 
 pub struct ConvertRasterFormat {
     name: String,
@@ -40,38 +39,39 @@ impl ConvertRasterFormat {
         // parameters.push_str("-o, --output  Output raster file.\n");
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif",
-                            short_exe,
-                            name)
-                .replace("*", &sep);
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
 
         ConvertRasterFormat {
             name: name,
@@ -87,7 +87,7 @@ impl WhiteboxTool for ConvertRasterFormat {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -111,17 +111,20 @@ impl WhiteboxTool for ConvertRasterFormat {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -167,10 +170,7 @@ impl WhiteboxTool for ConvertRasterFormat {
         };
 
         let input = Raster::new(&input_file, "r")?;
-
-        // println!("config info {:?}", input.configs);
-
-        let start = time::now();
+        let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         println!("Initializing the output raster...");
@@ -187,13 +187,13 @@ impl WhiteboxTool for ConvertRasterFormat {
         //     }
         // }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -208,8 +208,10 @@ impl WhiteboxTool for ConvertRasterFormat {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

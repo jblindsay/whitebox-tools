@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct NormalizedDifferenceVegetationIndex {
@@ -83,7 +82,8 @@ impl NormalizedDifferenceVegetationIndex {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -239,7 +239,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &nir);
 
@@ -287,8 +287,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             output.clip_min_and_max_by_percent(clip_amount);
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -299,9 +298,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             "Optimised Soil-Adjusted Vegetation Index (OSAVI) mode: {}",
             osavi_mode
         ));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -315,7 +312,7 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

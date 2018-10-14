@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use tools::*;
 
 pub struct MaxOverlay {
@@ -27,32 +26,34 @@ impl MaxOverlay {
         // public constructor
         let name = "MaxOverlay".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
-        let description = "Evaluates the maximum value for each grid cell from a stack of input rasters."
-            .to_string();
+        let description =
+            "Evaluates the maximum value for each grid cell from a stack of input rasters."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -75,7 +76,7 @@ impl WhiteboxTool for MaxOverlay {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -99,17 +100,20 @@ impl WhiteboxTool for MaxOverlay {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -162,7 +166,7 @@ impl WhiteboxTool for MaxOverlay {
                                   "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // We need to initialize output here, but in reality this can't be done
         // until we know the size of rows and columns, which occurs during the first loop.
@@ -198,8 +202,8 @@ impl WhiteboxTool for MaxOverlay {
                     output = Raster::initialize_using_file(&output_file, &input);
                 }
                 // check to ensure that all inputs have the same rows and columns
-                if input.configs.rows as isize != rows ||
-                   input.configs.columns as isize != columns {
+                if input.configs.rows as isize != rows || input.configs.columns as isize != columns
+                {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                           "The input files must have the same number of rows and columns and spatial extent."));
                 }
@@ -230,12 +234,12 @@ impl WhiteboxTool for MaxOverlay {
             i += 1;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
-        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -250,8 +254,10 @@ impl WhiteboxTool for MaxOverlay {
         };
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

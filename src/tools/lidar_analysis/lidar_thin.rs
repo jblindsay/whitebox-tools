@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/05/2018
-Last Modified: 06/06/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: This tool thins a LiDAR point cloud such that no more than one point exists within each grid cell of a
@@ -18,7 +18,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Thins a LiDAR point cloud, reducing point density.
@@ -88,7 +87,8 @@ impl LidarThin {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -201,7 +201,7 @@ impl WhiteboxTool for LidarThin {
             }
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
@@ -414,7 +414,7 @@ impl WhiteboxTool for LidarThin {
                     }
                 }
             }
-            end = time::now();
+            end = get_formatted_elapsed_time(start);
         } else {
             let p = path::Path::new(&output_file);
             let mut extension = String::from(".");
@@ -439,15 +439,13 @@ impl WhiteboxTool for LidarThin {
                 }
             }
 
-            end = time::now();
+            end = get_formatted_elapsed_time(start);
 
             let _ = match filtered_output.write() {
                 Ok(_) => println!("Filtered points LAS file saved"),
                 Err(e) => println!("error while writing: {:?}", e),
             };
         }
-
-        let elapsed_time = end - start;
 
         if verbose {
             println!("Writing output LAS file...");
@@ -457,10 +455,7 @@ impl WhiteboxTool for LidarThin {
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time (excluding I/O): {}", end));
         }
 
         Ok(())

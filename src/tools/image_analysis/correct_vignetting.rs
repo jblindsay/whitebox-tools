@@ -2,26 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/04/2018
-Last Modified: 24/04/2018
+Last Modified: 13/10/2018
 License: MIT
-
-This tool can be used to reduce vignetting within an image. Vignetting refers to the 
-reducuction of image brightness away from the image centre (i.e. the principal point). 
-Vignetting is a radiometric distortion resulting from lens characteristics. The 
-algorithm calculates the brightness value in the output image (BVout) as:
-
-BVout = BVin / [cos^n(arctan(d / f))]
-
-Where d is the photo-distance from the principal point in millimetres, f is the focal 
-length of the camera, in millimeters, and n is a user-specified parameter. Pixel 
-distances are converted to photo-distances (in millimetres) using the specified 
-image width, i.e. distance between left and right edges (mm). For many cameras, 4.0 
-is an appropriate value of the n parameter. A second pass of the image is used to 
-rescale the output image so that it possesses the same minimum and maximum values as 
-the input image. 
-
-If an RGB image is input, the analysis will be performed on the intensity component
-of the HSI transform.
 */
 
 use num_cpus;
@@ -35,10 +17,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
+/// This tool can be used to reduce vignetting within an image. Vignetting refers to the
+/// reducuction of image brightness away from the image centre (i.e. the principal point).
+/// Vignetting is a radiometric distortion resulting from lens characteristics. The
+/// algorithm calculates the brightness value in the output image (BVout) as:
+///
+/// BVout = BVin / [cos^n(arctan(d / f))]
+///
+/// Where d is the photo-distance from the principal point in millimetres, f is the focal
+/// length of the camera, in millimeters, and n is a user-specified parameter. Pixel
+/// distances are converted to photo-distances (in millimetres) using the specified
+/// image width, i.e. distance between left and right edges (mm). For many cameras, 4.0
+/// is an appropriate value of the n parameter. A second pass of the image is used to
+/// rescale the output image so that it possesses the same minimum and maximum values as
+/// the input image.
+///
+/// If an RGB image is input, the analysis will be performed on the intensity component
+/// of the HSI transform.
 pub struct CorrectVignetting {
     name: String,
     description: String,
@@ -114,7 +112,8 @@ impl CorrectVignetting {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -285,7 +284,7 @@ impl WhiteboxTool for CorrectVignetting {
             ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // get the row/column of the principal point
         let pp_x = input.get_column_from_x(vector_data.get_record(0).points[0].x) as f64;
@@ -432,8 +431,7 @@ impl WhiteboxTool for CorrectVignetting {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -443,9 +441,7 @@ impl WhiteboxTool for CorrectVignetting {
         output.add_metadata_entry(format!("Focal length: {}", focal_length));
         output.add_metadata_entry(format!("Image width: {}", image_width));
         output.add_metadata_entry(format!("n-parameter: {}", n_param));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -459,7 +455,7 @@ impl WhiteboxTool for CorrectVignetting {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

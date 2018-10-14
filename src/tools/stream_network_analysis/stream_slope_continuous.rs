@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
-Last Modified: January 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 /// Estimates the slope of each grid cell in a stream network.
@@ -28,82 +27,88 @@ pub struct StreamSlopeContinuous {
 }
 
 impl StreamSlopeContinuous {
-    pub fn new() -> StreamSlopeContinuous { // public constructor
+    pub fn new() -> StreamSlopeContinuous {
+        // public constructor
         let name = "StreamSlopeContinuous".to_string();
         let toolbox = "Stream Network Analysis".to_string();
         let description = "Estimates the slope of each grid cell in a stream network.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input raster D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Streams File".to_owned(), 
-            flags: vec!["--streams".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Streams File".to_owned(),
+            flags: vec!["--streams".to_owned()],
             description: "Input raster streams file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Should a background value of zero be used?".to_owned(), 
-            flags: vec!["--zero_background".to_owned()], 
-            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Should a background value of zero be used?".to_owned(),
+            flags: vec!["--zero_background".to_owned()],
+            description: "Flag indicating whether a background value of zero should be used."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --linkid=streamsID.tif --dem=dem.tif -o=output.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --streams=streamsID.tif --dem=dem.tif -o=output.tif --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
-    
-        StreamSlopeContinuous { 
-            name: name, 
-            description: description, 
+
+        StreamSlopeContinuous {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -112,7 +117,7 @@ impl WhiteboxTool for StreamSlopeContinuous {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -143,17 +148,24 @@ impl WhiteboxTool for StreamSlopeContinuous {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut streams_file = String::new();
         let mut dem_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
         let mut background_val = f64::NEG_INFINITY;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -168,29 +180,34 @@ impl WhiteboxTool for StreamSlopeContinuous {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
-                    d8_file = args[i+1].to_string();
+                    d8_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
-                    streams_file = args[i+1].to_string();
+                    streams_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-dem" || vec[0].to_lowercase() == "--dem" {
                 if keyval {
                     dem_file = vec[1].to_string();
                 } else {
-                    dem_file = args[i+1].to_string();
+                    dem_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr"
+                || vec[0].to_lowercase() == "--esri_pntr"
+                || vec[0].to_lowercase() == "--esri_style"
+            {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
+            } else if vec[0].to_lowercase() == "-zero_background"
+                || vec[0].to_lowercase() == "--zero_background"
+            {
                 background_val = 0f64;
             }
         }
@@ -219,15 +236,21 @@ impl WhiteboxTool for StreamSlopeContinuous {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading pointer data...") };
+        if verbose {
+            println!("Reading pointer data...")
+        };
         let pntr = Arc::new(Raster::new(&d8_file, "r")?);
         let pntr_nodata = pntr.configs.nodata;
-        if verbose { println!("Reading link ID data...") };
+        if verbose {
+            println!("Reading link ID data...")
+        };
         let streams = Arc::new(Raster::new(&streams_file, "r")?);
-        if verbose { println!("Reading DEM data...") };
+        if verbose {
+            println!("Reading DEM data...")
+        };
         let dem = Arc::new(Raster::new(&dem_file, "r")?);
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -240,7 +263,10 @@ impl WhiteboxTool for StreamSlopeContinuous {
         let mut diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         let dem_nodata = dem.configs.nodata;
 
-        if streams.is_in_geographic_coordinates() || pntr.is_in_geographic_coordinates() || dem.is_in_geographic_coordinates() {
+        if streams.is_in_geographic_coordinates()
+            || pntr.is_in_geographic_coordinates()
+            || dem.is_in_geographic_coordinates()
+        {
             let mut mid_lat = (streams.configs.north - streams.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
@@ -249,15 +275,23 @@ impl WhiteboxTool for StreamSlopeContinuous {
                 diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
             }
         }
-        
+
         // make sure the input files have the same size
-        if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if streams.configs.rows != pntr.configs.rows
+            || streams.configs.columns != pntr.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        if streams.configs.rows != dem.configs.rows || streams.configs.columns != dem.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if streams.configs.rows != dem.configs.rows
+            || streams.configs.columns != dem.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let num_procs = num_cpus::get() as isize;
@@ -268,13 +302,22 @@ impl WhiteboxTool for StreamSlopeContinuous {
             let dem = dem.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let mut inflowing_vals = [16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64];
                 if esri_style {
-                    inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
+                    inflowing_vals = [8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64];
                 }
-                let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+                let grid_lengths = [
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                ];
                 let mut pntr_matches: [usize; 129] = [999usize; 129];
                 if !esri_style {
                     // This maps Whitebox-style D8 pointer values
@@ -308,16 +351,20 @@ impl WhiteboxTool for StreamSlopeContinuous {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        if streams[(row, col)] > 0f64 && streams[(row, col)] != nodata && 
-                           dem[(row, col)] != dem_nodata && pntr[(row, col)] != pntr_nodata {
+                        if streams[(row, col)] > 0f64
+                            && streams[(row, col)] != nodata
+                            && dem[(row, col)] != dem_nodata
+                            && pntr[(row, col)] != pntr_nodata
+                        {
                             // first get the average elevation and distance of the inflowing stream cells
                             z_inflowing = 0f64;
                             dist = 0f64;
                             n_inflowing = 0f64;
                             for n in 0..8 {
-                                if streams[(row + dy[n], col + dx[n])] > 0.0 &&
-                                    streams[(row + dy[n], col + dx[n])] != nodata &&
-                                    pntr[(row + dy[n], col + dx[n])] == inflowing_vals[n] {
+                                if streams[(row + dy[n], col + dx[n])] > 0.0
+                                    && streams[(row + dy[n], col + dx[n])] != nodata
+                                    && pntr[(row + dy[n], col + dx[n])] == inflowing_vals[n]
+                                {
                                     z_inflowing += dem[(row + dy[n], col + dx[n])];
                                     dist += grid_lengths[n];
                                     n_inflowing += 1f64;
@@ -344,7 +391,8 @@ impl WhiteboxTool for StreamSlopeContinuous {
                                 z_dn = dem[(row, col)];
                             }
                             if dist > 0f64 {
-                                data[col as usize] = ((z_inflowing - z_dn) / dist).atan().to_degrees();
+                                data[col as usize] =
+                                    ((z_inflowing - z_dn) / dist).atan().to_degrees();
                             } else {
                                 data[col as usize] = 0f64;
                             }
@@ -360,7 +408,7 @@ impl WhiteboxTool for StreamSlopeContinuous {
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -370,8 +418,7 @@ impl WhiteboxTool for StreamSlopeContinuous {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if background_val == 0.0f64 {
             output.configs.palette = "spectrum_black_background.plt".to_string();
         } else {
@@ -379,19 +426,29 @@ impl WhiteboxTool for StreamSlopeContinuous {
         }
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams ID file: {}", streams_file));
         output.add_metadata_entry(format!("Input DEM file: {}", dem_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

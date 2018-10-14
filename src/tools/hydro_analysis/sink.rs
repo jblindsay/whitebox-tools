@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
+use raster::*;
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
-use std::cmp::Ordering;
 use std::env;
-use std::path;
-use std::i32;
 use std::f64;
-use raster::*;
+use std::i32;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
 use tools::*;
 
@@ -28,54 +27,62 @@ pub struct Sink {
 }
 
 impl Sink {
-    pub fn new() -> Sink { // public constructor
+    pub fn new() -> Sink {
+        // public constructor
         let name = "Sink".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Identifies the depressions in a DEM, giving each feature a unique identifier.".to_string();
-        
+        let description =
+            "Identifies the depressions in a DEM, giving each feature a unique identifier."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Should a background value of zero be used?".to_owned(), 
-            flags: vec!["--zero_background".to_owned()], 
-            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Should a background value of zero be used?".to_owned(),
+            flags: vec!["--zero_background".to_owned()],
+            description: "Flag indicating whether a background value of zero should be used."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --zero_background", short_exe, name).replace("*", &sep);
-    
-        Sink { 
-            name: name, 
-            description: description, 
+
+        Sink {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -84,7 +91,7 @@ impl WhiteboxTool for Sink {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -108,14 +115,21 @@ impl WhiteboxTool for Sink {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut zero_background = false;
-       
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -126,19 +140,24 @@ impl WhiteboxTool for Sink {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
+            } else if vec[0].to_lowercase() == "-zero_background"
+                || vec[0].to_lowercase() == "--zero_background"
+            {
                 zero_background = true;
             }
         }
@@ -161,16 +180,18 @@ impl WhiteboxTool for Sink {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
-        let nodata = input.configs.nodata;        
-        
+        let nodata = input.configs.nodata;
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let mut background_val = (i32::min_value() + 1) as f64;
         output.reinitialize_values(background_val);
@@ -185,7 +206,8 @@ impl WhiteboxTool for Sink {
         for nodata values along the raster's edges.
         */
 
-        let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+        let mut queue: VecDeque<(isize, isize)> =
+            VecDeque::with_capacity((rows * columns) as usize);
         for row in 0..rows {
             /*
             Note that this is only possible because Whitebox rasters
@@ -211,8 +233,8 @@ impl WhiteboxTool for Sink {
         let mut zin_n: f64; // value of neighbour of row, col in input raster
         let mut zout: f64; // value of row, col in output raster
         let mut zout_n: f64; // value of neighbour of row, col in output raster
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         while !queue.is_empty() {
@@ -231,7 +253,11 @@ impl WhiteboxTool for Sink {
                     } else {
                         output[(row_n, col_n)] = zin_n;
                         // Push it onto the priority queue for the priority flood operation
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                        });
                     }
                     num_solved_cells += 1;
                 }
@@ -259,9 +285,15 @@ impl WhiteboxTool for Sink {
                 if zout_n == background_val {
                     zin_n = input[(row_n, col_n)];
                     if zin_n != nodata {
-                        if zin_n < zout { zin_n = zout; } // We're in a depression. Raise the elevation.
+                        if zin_n < zout {
+                            zin_n = zout;
+                        } // We're in a depression. Raise the elevation.
                         output[(row_n, col_n)] = zin_n;
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                        });
                     } else {
                         // Interior nodata cells are still treated as nodata and are not filled.
                         output[(row_n, col_n)] = nodata;
@@ -325,23 +357,32 @@ impl WhiteboxTool for Sink {
                 }
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.data_type = DataType::F32;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

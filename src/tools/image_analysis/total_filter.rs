@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
-Last Modified: January 21, 2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
-use structures::Array2D;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use structures::Array2D;
 use tools::*;
 
 pub struct TotalFilter {
@@ -28,63 +27,71 @@ pub struct TotalFilter {
 }
 
 impl TotalFilter {
-    pub fn new() -> TotalFilter { // public constructor
+    pub fn new() -> TotalFilter {
+        // public constructor
         let name = "TotalFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a total filter on an input image.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter X-Dimension".to_owned(), 
-            flags: vec!["--filterx".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter X-Dimension".to_owned(),
+            flags: vec!["--filterx".to_owned()],
             description: "Size of the filter kernel in the x-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter Y-Dimension".to_owned(), 
-            flags: vec!["--filtery".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter Y-Dimension".to_owned(),
+            flags: vec!["--filtery".to_owned()],
             description: "Size of the filter kernel in the y-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25", short_exe, name).replace("*", &sep);
-    
-        TotalFilter { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
+            short_exe, name
+        ).replace("*", &sep);
+
+        TotalFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -93,7 +100,7 @@ impl WhiteboxTool for TotalFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -124,14 +131,21 @@ impl WhiteboxTool for TotalFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size_x = 11usize;
         let mut filter_size_y = 11usize;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -217,7 +231,7 @@ impl WhiteboxTool for TotalFilter {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -226,7 +240,7 @@ impl WhiteboxTool for TotalFilter {
 
         // create the integral images
         let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
-        
+
         let mut val: f64;
         let mut sum: f64;
         let mut i_prev: f64;
@@ -255,7 +269,7 @@ impl WhiteboxTool for TotalFilter {
                 }
             }
         }
-        
+
         let i = Arc::new(integral); // wrap integral in an Arc
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let (tx, rx) = mpsc::channel();
@@ -302,7 +316,8 @@ impl WhiteboxTool for TotalFilter {
                             if x2 >= columns {
                                 x2 = columns - 1;
                             }
-                            data[col as usize] = i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)];
+                            data[col as usize] =
+                                i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)];
                         }
                     }
 
@@ -323,15 +338,15 @@ impl WhiteboxTool for TotalFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output
-            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT",
-                                                                                                ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -346,8 +361,10 @@ impl WhiteboxTool for TotalFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

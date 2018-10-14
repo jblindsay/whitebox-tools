@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: 24/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Assigns the Shreve stream magnitude to each link in a stream network.
@@ -221,7 +220,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         };
         let streams = Raster::new(&streams_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -367,8 +366,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if background_val == 0.0f64 {
             output.configs.palette = "spectrum_black_background.plt".to_string();
         } else {
@@ -381,9 +379,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         ));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -397,7 +393,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/03/2018
-Last Modified: 15/03/2018
+Last Modified: 13/10/2018
 License: MIT
 
 Note: The current implementation reads every raster into memory at one time. This is 
@@ -10,20 +10,19 @@ because of the calculation of the co-variances. As such, if the entire image sta
 fit in memory, the tool will not work.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
-use std::io::BufWriter;
-use std::fs::File;
-use std::io::prelude::*;
-use std::process::Command;
-use raster::*;
-use std::io::{Error, ErrorKind};
-use tools::*;
 use na::DMatrix;
+use raster::*;
 use rendering::html::*;
 use rendering::LineGraph;
+use std::env;
+use std::f64;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use tools::*;
 
 pub struct PrincipalComponentAnalysis {
     name: String,
@@ -34,63 +33,70 @@ pub struct PrincipalComponentAnalysis {
 }
 
 impl PrincipalComponentAnalysis {
-    pub fn new() -> PrincipalComponentAnalysis { // public constructor
+    pub fn new() -> PrincipalComponentAnalysis {
+        // public constructor
         let name = "PrincipalComponentAnalysis".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Performs a principal component analysis (PCA) on a multi-spectral dataset.".to_string();
-        
+        let description =
+            "Performs a principal component analysis (PCA) on a multi-spectral dataset."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML Report File".to_owned(), 
-            flags: vec!["--out_html".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML Report File".to_owned(),
+            flags: vec!["--out_html".to_owned()],
             description: "Output HTML report file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Num. of Component Images (blank for all)".to_owned(), 
-            flags: vec!["--num_comp".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Num. of Component Images (blank for all)".to_owned(),
+            flags: vec!["--num_comp".to_owned()],
             description: "Number of component images to output; <= to num. input images".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Perform Standaradized PCA?".to_owned(), 
-            flags: vec!["--standardized".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Perform Standaradized PCA?".to_owned(),
+            flags: vec!["--standardized".to_owned()],
             description: "Perform standardized PCA?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --out_html=report.html --num_comp=3 --standardized", short_exe, name).replace("*", &sep);
-    
-        PrincipalComponentAnalysis { 
-            name: name, 
-            description: description, 
+
+        PrincipalComponentAnalysis {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -99,7 +105,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -123,15 +129,22 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files_str = String::new();
         let mut output_html_file = String::new();
         let mut num_comp = 0usize;
         let mut standardized = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -147,13 +160,13 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 input_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-out_html" {
                 output_html_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-num_comp" {
                 num_comp = if keyval {
@@ -197,11 +210,11 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 "There is something incorrect about the input files. At least three inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut rows = -1isize;
         let mut columns = -1isize;
-        
+
         let mut nodata = vec![0f64; num_files];
         let mut average = vec![0f64; num_files];
         let mut num_cells = vec![0f64; num_files];
@@ -231,10 +244,12 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 if rows == -1 || columns == -1 {
                     rows = input_raster[i].configs.rows as isize;
                     columns = input_raster[i].configs.columns as isize;
-                    wd = input_file.replace(&format!("{}.dep", input_raster[i].get_short_filename()), "");
+                    wd = input_file
+                        .replace(&format!("{}.dep", input_raster[i].get_short_filename()), "");
                 } else {
-                    if input_raster[i].configs.rows as isize != rows ||
-                        input_raster[i].configs.columns as isize != columns {
+                    if input_raster[i].configs.rows as isize != rows
+                        || input_raster[i].configs.columns as isize != columns
+                    {
                         return Err(Error::new(ErrorKind::InvalidInput,
                             "All input images must share the same dimensions (rows and columns) and spatial extent."));
                     }
@@ -246,8 +261,10 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
 
         if rows == -1 || columns == -1 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "Something is incorrect with the specified input files."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Something is incorrect with the specified input files.",
+            ));
         }
 
         // Calculate the covariance matrix and total deviations
@@ -271,7 +288,6 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                             }
                         }
                     }
-
                 }
             }
             if verbose {
@@ -282,13 +298,14 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 }
             }
         }
-        
+
         for i in 0..num_files {
             for a in 0..num_files {
-                correlation_matrix[i][a] = covariances[i][a] / (image_total_deviations[i] * image_total_deviations[a]).sqrt();
+                correlation_matrix[i][a] = covariances[i][a]
+                    / (image_total_deviations[i] * image_total_deviations[a]).sqrt();
             }
         }
-        
+
         for i in 0..num_files {
             for a in 0..num_files {
                 covariances[i][a] = covariances[i][a] / (num_cells[i] - 1f64);
@@ -313,7 +330,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             }
             DMatrix::from_row_slice(num_files, num_files, &vals)
         };
-        
+
         let eig = cov.clone().symmetric_eigen();
         let eigenvalues = eig.eigenvalues.as_slice().to_vec();
         let eigenvectors = eig.eigenvectors.as_slice().to_vec();
@@ -322,7 +339,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         for i in 0..num_files {
             total_eigenvalue += eigenvalues[i];
         }
-        
+
         let mut explained_variance = vec![0f64; num_files];
         for i in 0..num_files {
             explained_variance[i] = 100f64 * eigenvalues[i] / total_eigenvalue;
@@ -330,7 +347,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
 
         // find the order of components from highest explained variance to lowest
         let mut prev_var = 100f64;
-        let mut component_order = vec![0usize; num_files]; 
+        let mut component_order = vec![0usize; num_files];
         for i in 0..num_files {
             let mut k = 0usize;
             let mut max_ev = 0f64;
@@ -345,16 +362,16 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
 
         let mut pc: usize;
-        
+
         let mut xdata = vec![vec![0f64; num_files]; 1];
         let mut ydata = vec![vec![0f64; num_files]; 1];
         let series_names = vec![];
         for i in 0..num_files {
             pc = component_order[i];
-            xdata[0][i] = (i+1) as f64;
+            xdata[0][i] = (i + 1) as f64;
             ydata[0][i] = explained_variance[pc];
         }
-        
+
         // Output html file
         let f = File::create(output_html_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -364,19 +381,21 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
                 <title>Principal Component Analysis Report</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"
+
+        writer.write_all(
+            &r#"
             </head>
             <body>
                 <h1>Principal Component Analysis Report</h1>
-                "#.as_bytes())?;
+                "#.as_bytes(),
+        )?;
 
         writer.write_all(("<p><strong>Inputs</strong>:<br>").as_bytes())?;
         for i in 0..num_files {
-            writer.write_all((format!("Image {}: {}<br>", i+1, file_names[i])).as_bytes())?;
+            writer.write_all((format!("Image {}: {}<br>", i + 1, file_names[i])).as_bytes())?;
         }
         writer.write_all(("</p>").as_bytes())?;
 
@@ -407,22 +426,23 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         writer.write_all("<caption>Factor Loadings</caption>".as_bytes())?;
         writer.write_all("<tr><th>Image</th>".as_bytes())?;
         for j in 0..num_files {
-            writer.write_all(&format!("<th>PC{}</th>", (j+1)).as_bytes())?;
+            writer.write_all(&format!("<th>PC{}</th>", (j + 1)).as_bytes())?;
         }
         writer.write_all("</tr>".as_bytes())?;
         if !standardized {
             for j in 0..num_files {
-                let mut s = format!("<td class=\"numberCell\">{}<td>", (j+1));
+                let mut s = format!("<td class=\"numberCell\">{}<td>", (j + 1));
                 for k in 0..num_files {
                     pc = component_order[k];
-                    let loading = (eigenvectors[pc * num_files + j] * eigenvalues[pc].sqrt()) / covariances[j][j].sqrt();
+                    let loading = (eigenvectors[pc * num_files + j] * eigenvalues[pc].sqrt())
+                        / covariances[j][j].sqrt();
                     s.push_str(&format!("<td class=\"numberCell\">{:.*}</td>", 3, loading));
                 }
                 writer.write_all(&format!("<t>{}</tr>", s).as_bytes())?;
             }
         } else {
             for j in 0..num_files {
-                let mut s = format!("<td class=\"numberCell\">{}</td>", (j+1));
+                let mut s = format!("<td class=\"numberCell\">{}</td>", (j + 1));
                 for k in 0..num_files {
                     pc = component_order[k];
                     let loading = eigenvectors[pc * num_files + j] * eigenvalues[pc].sqrt();
@@ -440,7 +460,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             height: 450f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
-            series_labels: series_names.clone(), 
+            series_labels: series_names.clone(),
             x_axis_label: "Component".to_string(),
             y_axis_label: "Explained Variance (%)".to_string(),
             draw_points: true,
@@ -449,7 +469,9 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             draw_grey_background: false,
         };
 
-        writer.write_all(&format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
@@ -483,11 +505,10 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             println!("Please see {} for output report.", output_html_file);
         }
 
-
         // Output the component images
         for a in 0..num_comp {
             pc = component_order[a];
-            let out_file = format!("{}PCA_component{}.dep", wd, (a+1));
+            let out_file = format!("{}PCA_component{}.dep", wd, (a + 1));
             let mut output = Raster::initialize_using_file(&out_file, &input_raster[0]);
             for row in 0..rows {
                 for col in 0..columns {
@@ -495,7 +516,8 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                     if z1 != nodata[0] {
                         z1 = 0f64;
                         for k in 0..num_files {
-                            z1 += input_raster[k].get_value(row, col) * eigenvectors[pc * num_files + k];
+                            z1 += input_raster[k].get_value(row, col)
+                                * eigenvectors[pc * num_files + k];
                         }
                         output.set_value(row, col, z1);
                     }
@@ -503,28 +525,35 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
-                        println!("Saving component image {}: {}%", (a+1), progress);
+                        println!("Saving component image {}: {}%", (a + 1), progress);
                         old_progress = progress;
                     }
                 }
             }
 
-            let elapsed_time = time::now() - start;
-            output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-            output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            let elapsed_time = get_formatted_elapsed_time(start);
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
-            if verbose { println!("Saving component image {}...", (a+1)) };
+            if verbose {
+                println!("Saving component image {}...", (a + 1))
+            };
             let _ = match output.write() {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             };
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        
+        let elapsed_time = get_formatted_elapsed_time(start);
+
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

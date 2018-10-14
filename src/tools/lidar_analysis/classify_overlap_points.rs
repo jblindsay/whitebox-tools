@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/04/2018
-Last Modified: 27/04/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: If the --filter flag is specified, points from overlapping flightlines (i.e. later GPS times)
@@ -24,7 +24,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{DistanceMetric, FixedRadiusSearch2D};
-use time;
 use tools::*;
 
 pub struct ClassifyOverlapPoints {
@@ -194,7 +193,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
             }
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
@@ -594,8 +593,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!("Writing output LAS file...");
         }
@@ -606,7 +604,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

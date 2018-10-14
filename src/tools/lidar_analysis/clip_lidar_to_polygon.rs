@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/04/2018
-Last Modified: 30/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{BoundingBox, Point2D};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -191,7 +190,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
         let polygons = Shapefile::read(&polygons_file)?;
         let num_records = polygons.num_records;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of polygon type
         if polygons.header.shape_type.base_shape_type() != ShapeType::Polygon {
@@ -283,8 +282,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Writing output LAS file...");
@@ -296,7 +294,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

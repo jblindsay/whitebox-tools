@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 2, 2017
-Last Modified: 09/10/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 pub struct LidarBlockMinimum {
@@ -186,7 +185,7 @@ impl WhiteboxTool for LidarBlockMinimum {
             }
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut inputs = vec![];
         let mut outputs = vec![];
@@ -257,7 +256,7 @@ impl WhiteboxTool for LidarBlockMinimum {
                 Err(err) => panic!("Error reading file {}: {}", input_file, err),
             };
 
-            let start_run = time::now();
+            let start_run = Instant::now();
 
             if verbose && inputs.len() == 1 {
                 println!("Performing analysis...");
@@ -337,16 +336,16 @@ impl WhiteboxTool for LidarBlockMinimum {
                 }
             }
 
-            let end_run = time::now();
-            let elapsed_time_run = end_run - start_run;
+            let elapsed_time_run = get_formatted_elapsed_time(start_run);
             output.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",
                 self.get_tool_name()
             ));
             output.add_metadata_entry(format!("Input file: {}", input_file));
-            output.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time_run).replace("PT", ""),
-            );
+            output.add_metadata_entry(format!(
+                "Elapsed Time (excluding I/O): {}",
+                elapsed_time_run
+            ));
 
             if verbose {
                 println!("Saving data...")
@@ -361,12 +360,11 @@ impl WhiteboxTool for LidarBlockMinimum {
             };
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

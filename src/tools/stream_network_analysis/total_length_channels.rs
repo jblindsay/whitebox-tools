@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use structures::Array2D;
 use tools::*;
 
@@ -25,73 +24,79 @@ pub struct LengthOfUpstreamChannels {
 }
 
 impl LengthOfUpstreamChannels {
-    pub fn new() -> LengthOfUpstreamChannels { // public constructor
+    pub fn new() -> LengthOfUpstreamChannels {
+        // public constructor
         let name = "LengthOfUpstreamChannels".to_string();
         let toolbox = "Stream Network Analysis".to_string();
         let description = "Calculates the total length of channels upstream.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input D8 Pointer File".to_owned(), 
-            flags: vec!["--d8_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input D8 Pointer File".to_owned(),
+            flags: vec!["--d8_pntr".to_owned()],
             description: "Input raster D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Streams File".to_owned(), 
-            flags: vec!["--streams".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Streams File".to_owned(),
+            flags: vec!["--streams".to_owned()],
             description: "Input raster streams file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Should a background value of zero be used?".to_owned(), 
-            flags: vec!["--zero_background".to_owned()], 
-            description: "Flag indicating whether a background value of zero should be used.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Should a background value of zero be used?".to_owned(),
+            flags: vec!["--zero_background".to_owned()],
+            description: "Flag indicating whether a background value of zero should be used."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --streams=streams.tif -o=output.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=D8.tif --streams=streams.tif -o=output.tif --esri_pntr --zero_background", short_exe, name).replace("*", &sep);
-    
-        LengthOfUpstreamChannels { 
-            name: name, 
-            description: description, 
+
+        LengthOfUpstreamChannels {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -100,7 +105,7 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,16 +136,23 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut d8_file = String::new();
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
         let mut background_val = f64::NEG_INFINITY;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -155,23 +167,28 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
-                    d8_file = args[i+1].to_string();
+                    d8_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
-                    streams_file = args[i+1].to_string();
+                    streams_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr" || vec[0].to_lowercase() == "--esri_pntr" || vec[0].to_lowercase() == "--esri_style" {
+            } else if vec[0].to_lowercase() == "-esri_pntr"
+                || vec[0].to_lowercase() == "--esri_pntr"
+                || vec[0].to_lowercase() == "--esri_style"
+            {
                 esri_style = true;
-            } else if vec[0].to_lowercase() == "-zero_background" || vec[0].to_lowercase() == "--zero_background" {
+            } else if vec[0].to_lowercase() == "-zero_background"
+                || vec[0].to_lowercase() == "--zero_background"
+            {
                 background_val = 0f64;
             }
         }
@@ -197,12 +214,16 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading pointer data...") };
+        if verbose {
+            println!("Reading pointer data...")
+        };
         let pntr = Raster::new(&d8_file, "r")?;
-        if verbose { println!("Reading streams data...") };
+        if verbose {
+            println!("Reading streams data...")
+        };
         let streams = Raster::new(&streams_file, "r")?;
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -212,30 +233,43 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
         let cell_size_x = streams.configs.resolution_x;
         let cell_size_y = streams.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
+
         if background_val == f64::NEG_INFINITY {
             background_val = nodata;
         }
-        
+
         // make sure the input files have the same size
-        if streams.configs.rows != pntr.configs.rows || streams.configs.columns != pntr.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if streams.configs.rows != pntr.configs.rows
+            || streams.configs.columns != pntr.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &streams);
         output.configs.data_type = DataType::F32;
-        
+
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
-        let mut inflowing_vals = [ 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+        let grid_lengths = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
+        let mut inflowing_vals = [16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64, 8f64];
         if esri_style {
-            inflowing_vals = [ 8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64 ];
+            inflowing_vals = [8f64, 16f64, 32f64, 64f64, 128f64, 1f64, 2f64, 4f64];
         }
         let mut num_solved_cells = 0;
         let mut count: i8;
@@ -244,8 +278,9 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
                 if streams[(row, col)] > 0.0 {
                     count = 0i8;
                     for n in 0..8 {
-                        if streams[(row + dy[n], col + dx[n])] > 0.0 &&
-                            pntr[(row + dy[n], col + dx[n])] == inflowing_vals[n] {
+                        if streams[(row + dy[n], col + dx[n])] > 0.0
+                            && pntr[(row + dy[n], col + dx[n])] == inflowing_vals[n]
+                        {
                             count += 1;
                         }
                     }
@@ -345,26 +380,35 @@ impl WhiteboxTool for LengthOfUpstreamChannels {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if background_val == 0.0f64 {
             output.configs.palette = "spectrum_black_background.plt".to_string();
         } else {
             output.configs.palette = "spectrum.plt".to_string();
         }
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

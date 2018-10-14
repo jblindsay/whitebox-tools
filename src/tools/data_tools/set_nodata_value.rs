@@ -2,24 +2,23 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Sept. 10, 2017
-Last Modified: November 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
-use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
 use tools::ParameterFileType;
+use tools::ParameterType;
+use tools::ToolParameter;
+use tools::*;
 
 pub struct SetNodataValue {
     name: String,
@@ -34,51 +33,56 @@ impl SetNodataValue {
         // public constructor
         let name = "SetNodataValue".to_string();
         let toolbox = "Data Tools".to_string();
-        let description = "Assign a specified value in an input image to the NoData value.".to_string();
+        let description =
+            "Assign a specified value in an input image to the NoData value.".to_string();
 
         // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
         // parameters.push_str("-o, --output    Output raster file.\n");
         // parameters.push_str("--back_value    Background value to set to nodata (default is 0.0).\n");
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Background Value".to_owned(), 
-            flags: vec!["--back_value".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Background Value".to_owned(),
+            flags: vec!["--back_value".to_owned()],
             description: "Background value to set to nodata.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=in.tif -o=newRaster.tif --back_value=1.0", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=in.tif -o=newRaster.tif --back_value=1.0",
+            short_exe, name
+        ).replace("*", &sep);
 
         SetNodataValue {
             name: name,
@@ -94,7 +98,7 @@ impl WhiteboxTool for SetNodataValue {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,19 +121,22 @@ impl WhiteboxTool for SetNodataValue {
     fn get_toolbox(&self) -> String {
         self.toolbox.clone()
     }
-    
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut back_value = 0f64;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -152,7 +159,9 @@ impl WhiteboxTool for SetNodataValue {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-back_value" || vec[0].to_lowercase() == "--back_value" {
+            } else if vec[0].to_lowercase() == "-back_value"
+                || vec[0].to_lowercase() == "--back_value"
+            {
                 if keyval {
                     back_value = vec[1].to_string().parse().unwrap();
                 } else {
@@ -178,16 +187,16 @@ impl WhiteboxTool for SetNodataValue {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -220,11 +229,13 @@ impl WhiteboxTool for SetNodataValue {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input raster file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -239,7 +250,10 @@ impl WhiteboxTool for SetNodataValue {
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 2, 2018
-Last Modified: January 2, 2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: This tool will perform a Kolmogorov-Smirnov (K-S) test for normality to evaluate 
@@ -15,20 +15,19 @@ non-notable differences can be found to be statistically significant. Furthermor
 statistical significance says nothing about the practical significance of a difference.
 */
 
-use time;
 use rand::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::io::BufWriter;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::{Error, ErrorKind};
-use std::process::Command;
 use raster::*;
-use tools::*;
 use rendering::html::*;
 use rendering::Histogram;
+use std::env;
+use std::f64;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use tools::*;
 
 pub struct KSTestForNormality {
     name: String,
@@ -43,40 +42,42 @@ impl KSTestForNormality {
         // public constructor
         let name = "KSTestForNormality".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Evaluates whether the values in a raster are normally distributed.".to_string();
+        let description =
+            "Evaluates whether the values in a raster are normally distributed.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Num. Samples (blank for while image)".to_owned(), 
-            flags: vec!["--num_samples".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Num. Samples (blank for while image)".to_owned(),
+            flags: vec!["--num_samples".to_owned()],
             description: "Number of samples. Leave blank to use whole image.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
-            optional: true
+            optional: true,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -100,7 +101,7 @@ impl WhiteboxTool for KSTestForNormality {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,18 +132,21 @@ impl WhiteboxTool for KSTestForNormality {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut num_samples = 0usize;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -195,14 +199,14 @@ impl WhiteboxTool for KSTestForNormality {
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        
+
         if num_samples > (rows * columns) as usize {
             num_samples = (rows * columns) as usize;
         }
@@ -211,7 +215,7 @@ impl WhiteboxTool for KSTestForNormality {
         let mut z: f64;
         let min_value = input.configs.minimum;
         let max_value = input.configs.maximum;
-        let num_bins = 10000usize; 
+        let num_bins = 10000usize;
         let bin_size = (max_value - min_value) / num_bins as f64;
         let mut histogram = vec![0usize; num_bins];
         let mut bin_num: usize;
@@ -329,15 +333,15 @@ impl WhiteboxTool for KSTestForNormality {
         let std_dev = (total_deviation / (n - 1f64)).sqrt();
 
         let mut cdf = vec![0f64; num_bins];
-        cdf[0] = histogram[0] as f64; 
+        cdf[0] = histogram[0] as f64;
         for i in 1..num_bins {
             cdf[i] = cdf[i - 1] + histogram[i] as f64;
         }
-        
+
         for i in 0..num_bins {
             cdf[i] = cdf[i] / n;
         }
-        
+
         let mut normal_dist = vec![0f64; num_bins];
         let sd_root2pi = std_dev * (2f64 * f64::consts::PI).sqrt();
         let two_sd_sqr = 2f64 * std_dev * std_dev;
@@ -348,11 +352,11 @@ impl WhiteboxTool for KSTestForNormality {
         for i in 1..num_bins {
             normal_dist[i] = normal_dist[i - 1] + normal_dist[i];
         }
-        
+
         for i in 1..num_bins {
             normal_dist[i] = normal_dist[i] / normal_dist[num_bins - 1];
         }
-        
+
         // calculate the critical statistic, Dmax
         let mut dmax = 0f64;
         for i in 0..num_bins {
@@ -361,11 +365,11 @@ impl WhiteboxTool for KSTestForNormality {
                 dmax = z;
             }
         }
-        
+
         // calculate p-value
         let s = n * dmax * dmax;
         let p_value = 2f64 * (-(2.000071f64 + 0.331f64 / n.sqrt() + 1.409f64 / n) * s).exp();
-        
+
         ///////////////////////
         // Output the report //
         ///////////////////////
@@ -377,23 +381,41 @@ impl WhiteboxTool for KSTestForNormality {
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
                 <title>K-S Test for Normality</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"
+
+        writer.write_all(
+            &r#"
             </head>
             <body>
                 <h1>Kolmogorov-Smirnov (K-S) Test for Normality Report</h1>
-                <p>"#.as_bytes())?;
+                <p>"#
+                .as_bytes(),
+        )?;
 
-        writer.write_all(&format!("<strong>Input image</strong>: {}<br>", input_file).as_bytes())?;
+        writer
+            .write_all(&format!("<strong>Input image</strong>: {}<br>", input_file).as_bytes())?;
         writer.write_all(&format!("<strong>Sample size (N)</strong>: {:.0}<br>", n).as_bytes())?;
-        writer.write_all(&format!("<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>", dmax).as_bytes())?;
+        writer.write_all(
+            &format!(
+                "<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>",
+                dmax
+            ).as_bytes(),
+        )?;
         if p_value > 0.001f64 {
-            writer.write_all(&format!("<strong>Significance (p-value)</strong>: {:.4}<br>", p_value).as_bytes())?;
+            writer.write_all(
+                &format!(
+                    "<strong>Significance (p-value)</strong>: {:.4}<br>",
+                    p_value
+                ).as_bytes(),
+            )?;
         } else {
-            writer.write_all("<strong>Significance (p-value)</strong>: <0.001<br>".to_string().as_bytes())?;
+            writer.write_all(
+                "<strong>Significance (p-value)</strong>: <0.001<br>"
+                    .to_string()
+                    .as_bytes(),
+            )?;
         }
         if p_value < 0.05 {
             writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that the values come from a normal distribution.<br>".to_string().as_bytes())?;
@@ -402,21 +424,23 @@ impl WhiteboxTool for KSTestForNormality {
         }
 
         writer.write_all("</p>".as_bytes())?;
-        
+
         writer.write_all("<p><strong>Caveat</strong>: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, \nand statistical significance says nothing about the practical significance of a difference.</p>".to_string().as_bytes())?;
-        
+
         let histo = Histogram {
             parent_id: "histo".to_owned(),
             width: 700f64,
             height: 500f64,
             freq_data: freq_data.clone(),
-            min_bin_val: min_value, 
+            min_bin_val: min_value,
             bin_width: fd_bin_width,
             x_axis_label: "Value".to_string(),
             cumulative: true,
         };
 
-        writer.write_all(&format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
         writer.write_all("</html>".as_bytes())?;
@@ -450,14 +474,15 @@ impl WhiteboxTool for KSTestForNormality {
 
             println!("Complete! Please see {} for output.", output_file);
         }
-        
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

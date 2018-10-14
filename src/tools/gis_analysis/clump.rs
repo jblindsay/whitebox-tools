@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 06/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 
 pub struct Clump {
@@ -194,7 +193,7 @@ impl WhiteboxTool for Clump {
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
@@ -276,8 +275,7 @@ impl WhiteboxTool for Clump {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "qual.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -285,9 +283,7 @@ impl WhiteboxTool for Clump {
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Diagonal connectivity: {}", diag));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -302,7 +298,7 @@ impl WhiteboxTool for Clump {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

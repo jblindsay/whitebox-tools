@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 21, 2018
-Last Modified: February 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -18,7 +18,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -89,7 +88,8 @@ impl LongProfileFromPoints {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -239,7 +239,7 @@ impl WhiteboxTool for LongProfileFromPoints {
         };
         let dem = Raster::new(&dem_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = pntr.configs.rows as isize;
         let columns = pntr.configs.columns as isize;
@@ -442,9 +442,12 @@ impl WhiteboxTool for LongProfileFromPoints {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Long Profile From Points</h1>"#.as_bytes())?;
+            <h1>Long Profile From Points</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(
             (format!(
@@ -454,8 +457,7 @@ impl WhiteboxTool for LongProfileFromPoints {
         )?;
 
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = traverse_num > 2 && traverse_num < 12;
 
@@ -485,7 +487,7 @@ impl WhiteboxTool for LongProfileFromPoints {
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

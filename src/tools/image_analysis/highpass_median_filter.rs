@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/09/2018
-Last Modified: 10/09/2018
+Last Modified: 13/10/2018
 License: MIT
 
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
@@ -20,7 +20,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Performs a high pass filter based on a median filter.
@@ -256,7 +255,7 @@ impl WhiteboxTool for HighPassMedianFilter {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let is_rgb_image = if input.configs.data_type == DataType::RGB24
             || input.configs.data_type == DataType::RGBA32
@@ -487,8 +486,7 @@ impl WhiteboxTool for HighPassMedianFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -497,9 +495,7 @@ impl WhiteboxTool for HighPassMedianFilter {
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
         output.add_metadata_entry(format!("Num. significant digits: {}", num_sig_digits));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -513,7 +509,7 @@ impl WhiteboxTool for HighPassMedianFilter {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

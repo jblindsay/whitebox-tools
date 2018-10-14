@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 14/09/2018
-Last Modified: 31/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -12,7 +12,6 @@ use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::Point2D;
-use time;
 use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
@@ -181,7 +180,7 @@ impl WhiteboxTool for MinimumBoundingCircle {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -325,14 +324,10 @@ impl WhiteboxTool for MinimumBoundingCircle {
             };
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

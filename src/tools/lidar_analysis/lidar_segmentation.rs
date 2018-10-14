@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -27,7 +27,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::{DistanceMetric, FixedRadiusSearch3D};
-use time;
 use tools::*;
 
 /// Segments a LiDAR point cloud based on normal vectors.
@@ -236,7 +235,7 @@ impl WhiteboxTool for LidarSegmentation {
         let n_points = input.header.number_of_points as usize;
         let num_points = n_points as f64;
 
-        let start = time::now();
+        let start = Instant::now();
 
         if max_norm_diff < 0f64 {
             max_norm_diff = 0f64;
@@ -441,8 +440,7 @@ impl WhiteboxTool for LidarSegmentation {
         //     }
         // }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         println!("");
         if verbose {
@@ -455,7 +453,7 @@ impl WhiteboxTool for LidarSegmentation {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

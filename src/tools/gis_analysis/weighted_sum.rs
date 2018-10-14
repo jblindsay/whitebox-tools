@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 26/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 
 /// This tool performs a weighted-sum overlay on multiple input raster images.
@@ -191,7 +190,7 @@ impl WhiteboxTool for WeightedSum {
                                 "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // Parse the weights list and convert it into numbers
         cmd = weights_list.split(";");
@@ -285,15 +284,12 @@ impl WhiteboxTool for WeightedSum {
             j += 1;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(
-            format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -308,7 +304,7 @@ impl WhiteboxTool for WeightedSum {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

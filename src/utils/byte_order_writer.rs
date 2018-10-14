@@ -3,7 +3,7 @@
 // use std::io::BufWriter;
 // use std::fs::File;
 // use byteorder::{ByteOrder, LittleEndian, BigEndian, WriteBytesExt};
-// use io_utils::byte_order_reader::Endianness;
+// use utils::byte_order_reader::Endianness;
 
 // pub struct ByteOrderWriter {
 //     pub byte_order: Endianness,

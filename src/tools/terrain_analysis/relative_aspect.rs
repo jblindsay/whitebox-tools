@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 17, 2017
-Last Modified: January 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct RelativeAspect {
@@ -27,63 +26,73 @@ pub struct RelativeAspect {
 }
 
 impl RelativeAspect {
-    pub fn new() -> RelativeAspect { // public constructor
+    pub fn new() -> RelativeAspect {
+        // public constructor
         let name = "RelativeAspect".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates relative aspect (relative to a user-specified direction) from an input DEM.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Azimuth".to_owned(), 
-            flags: vec!["--azimuth".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Azimuth".to_owned(),
+            flags: vec!["--azimuth".to_owned()],
             description: "Illumination source azimuth.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Z Conversion Factor".to_owned(), 
-            flags: vec!["--zfactor".to_owned()], 
-            description: "Optional multiplier for when the vertical and horizontal units are not the same.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Z Conversion Factor".to_owned(),
+            flags: vec!["--zfactor".to_owned()],
+            description:
+                "Optional multiplier for when the vertical and horizontal units are not the same."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --azimuth=180.0", short_exe, name).replace("*", &sep);
-    
-        RelativeAspect { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --azimuth=180.0",
+            short_exe, name
+        ).replace("*", &sep);
+
+        RelativeAspect {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -92,7 +101,7 @@ impl WhiteboxTool for RelativeAspect {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -123,15 +132,22 @@ impl WhiteboxTool for RelativeAspect {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0f64;
         let mut z_factor = 1f64;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -142,29 +158,32 @@ impl WhiteboxTool for RelativeAspect {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-azimuth" || vec[0].to_lowercase() == "--azimuth" {
                 if keyval {
                     azimuth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    azimuth = args[i+1].to_string().parse::<f64>().unwrap();
+                    azimuth = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
                 if keyval {
                     z_factor = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    z_factor = args[i+1].to_string().parse::<f64>().unwrap();
+                    z_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -187,11 +206,13 @@ impl WhiteboxTool for RelativeAspect {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let eight_grid_res = input.configs.resolution_x * 8.0;
 
@@ -203,7 +224,7 @@ impl WhiteboxTool for RelativeAspect {
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
 
@@ -215,8 +236,8 @@ impl WhiteboxTool for RelativeAspect {
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
                 let (mut fx, mut fy): (f64, f64);
@@ -237,8 +258,13 @@ impl WhiteboxTool for RelativeAspect {
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
-                                z = ((180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs())) - azimuth).abs();
-                                if z > 180.0 { z = 360.0 - z; }
+                                z = ((180f64 - ((fy / fx).atan()).to_degrees()
+                                    + 90f64 * (fx / (fx).abs()))
+                                    - azimuth)
+                                    .abs();
+                                if z > 180.0 {
+                                    z = 360.0 - z;
+                                }
                                 data[col as usize] = z;
                             } else {
                                 data[col as usize] = -1f64;
@@ -253,7 +279,7 @@ impl WhiteboxTool for RelativeAspect {
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -263,22 +289,31 @@ impl WhiteboxTool for RelativeAspect {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

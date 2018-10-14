@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: 
@@ -23,7 +23,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D};
-use time;
 use tools::*;
 
 pub struct LidarIdwInterpolation {
@@ -346,7 +345,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut inputs = vec![];
         let mut outputs = vec![];
@@ -442,7 +441,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                         None => break, // There are no more tiles to interpolate
                     };
                     // for tile in (0..inputs.len()).filter(|t| t % num_procs2 as usize == tid as usize) {
-                    let start_run = time::now();
+                    let start_run = Instant::now();
 
                     let input_file = inputs[tile].replace("\"", "").clone();
                     let output_file = outputs[tile].replace("\"", "").clone();
@@ -749,8 +748,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                         }
                     }
 
-                    let end_run = time::now();
-                    let elapsed_time_run = end_run - start_run;
+                    let elapsed_time_run = get_formatted_elapsed_time(start_run);
 
                     output.add_metadata_entry(format!(
                         "Created by whitebox_tools\' {} tool",
@@ -766,10 +764,10 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     ));
                     output.add_metadata_entry(format!("Returns: {}", return_type));
                     output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-                    output.add_metadata_entry(
-                        format!("Elapsed Time (including I/O): {}", elapsed_time_run)
-                            .replace("PT", ""),
-                    );
+                    output.add_metadata_entry(format!(
+                        "Elapsed Time (including I/O): {}",
+                        elapsed_time_run
+                    ));
 
                     if verbose && inputs.len() == 1 {
                         println!("Saving data...")
@@ -806,13 +804,12 @@ impl WhiteboxTool for LidarIdwInterpolation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

@@ -2,19 +2,18 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 
 NOTES: Add anisotropy option.
 */
 
-use time;
-use std::env;
-use std::path;
-use std::i32;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
+use std::i32;
 use std::io::{Error, ErrorKind};
+use std::path;
 use tools::*;
 
 pub struct CostDistance {
@@ -26,63 +25,70 @@ pub struct CostDistance {
 }
 
 impl CostDistance {
-    pub fn new() -> CostDistance { // public constructor
+    pub fn new() -> CostDistance {
+        // public constructor
         let name = "CostDistance".to_string();
         let toolbox = "GIS Analysis/Distance Tools".to_string();
-        let description = "Performs cost-distance accumulation on a cost surface and a group of source cells.".to_string();
-        
+        let description =
+            "Performs cost-distance accumulation on a cost surface and a group of source cells."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Source File".to_owned(), 
-            flags: vec!["--source".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Source File".to_owned(),
+            flags: vec!["--source".to_owned()],
             description: "Input source raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Cost (Friction) File".to_owned(), 
-            flags: vec!["--cost".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Cost (Friction) File".to_owned(),
+            flags: vec!["--cost".to_owned()],
             description: "Input cost (friction) raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Cost Accumulation File".to_owned(), 
-            flags: vec!["--out_accum".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Cost Accumulation File".to_owned(),
+            flags: vec!["--out_accum".to_owned()],
             description: "Output cost accumulation raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Backlink File".to_owned(), 
-            flags: vec!["--out_backlink".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Backlink File".to_owned(),
+            flags: vec!["--out_backlink".to_owned()],
             description: "Output backlink raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --source=src.tif --cost=cost.tif --out_accum=accum.tif --out_backlink=backlink.tif", short_exe, name).replace("*", &sep);
-    
-        CostDistance { 
-            name: name, 
-            description: description, 
+
+        CostDistance {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -91,7 +97,7 @@ impl WhiteboxTool for CostDistance {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -115,15 +121,22 @@ impl WhiteboxTool for CostDistance {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut source_file = String::new();
         let mut cost_file = String::new();
         let mut accum_file = String::new();
         let mut backlink_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -138,25 +151,29 @@ impl WhiteboxTool for CostDistance {
                 if keyval {
                     source_file = vec[1].to_string();
                 } else {
-                    source_file = args[i+1].to_string();
+                    source_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-cost" || vec[0].to_lowercase() == "--cost" {
                 if keyval {
                     cost_file = vec[1].to_string();
                 } else {
-                    cost_file = args[i+1].to_string();
+                    cost_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_accum" || vec[0].to_lowercase() == "--out_accum" {
+            } else if vec[0].to_lowercase() == "-out_accum"
+                || vec[0].to_lowercase() == "--out_accum"
+            {
                 if keyval {
                     accum_file = vec[1].to_string();
                 } else {
-                    accum_file = args[i+1].to_string();
+                    accum_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_backlink" || vec[0].to_lowercase() == "--out_backlink" {
+            } else if vec[0].to_lowercase() == "-out_backlink"
+                || vec[0].to_lowercase() == "--out_backlink"
+            {
                 if keyval {
                     backlink_file = vec[1].to_string();
                 } else {
-                    backlink_file = args[i+1].to_string();
+                    backlink_file = args[i + 1].to_string();
                 }
             }
         }
@@ -185,23 +202,31 @@ impl WhiteboxTool for CostDistance {
             backlink_file = format!("{}{}", working_directory, backlink_file);
         }
 
-        if verbose { println!("Reading source data...") };
+        if verbose {
+            println!("Reading source data...")
+        };
         let source = Raster::new(&source_file, "r")?;
 
-        if verbose { println!("Reading cost data...") };
+        if verbose {
+            println!("Reading cost data...")
+        };
         let cost = Raster::new(&cost_file, "r")?;
 
         // make sure the input files have the same size
-        if source.configs.rows != cost.configs.rows || source.configs.columns != cost.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+        if source.configs.rows != cost.configs.rows
+            || source.configs.columns != cost.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = source.configs.rows as isize;
         let columns = source.configs.columns as isize;
         let nodata = cost.configs.nodata;
-        
+
         let mut output = Raster::initialize_using_file(&accum_file, &cost);
         let background_val = (i32::max_value() - 1) as f64;
         output.reinitialize_values(background_val);
@@ -233,14 +258,22 @@ impl WhiteboxTool for CostDistance {
         let cell_size_x = source.configs.resolution_x;
         let cell_size_y = source.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        let dist = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
-        let dx = [ 1, 1, 0, -1, -1, -1, 0, 1 ];
-        let dy = [ 0, 1, 1, 1, 0, -1, -1, -1 ];
-        let backlink_dir = [ 32.0, 64.0, 128.0, 1.0, 2.0, 4.0, 8.0, 16.0 ];
+        let dist = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
+        let dx = [1, 1, 0, -1, -1, -1, 0, 1];
+        let dy = [0, 1, 1, 1, 0, -1, -1, -1];
+        let backlink_dir = [32.0, 64.0, 128.0, 1.0, 2.0, 4.0, 8.0, 16.0];
         let mut did_something = true;
         let mut loop_num = 0;
         while did_something {
-
             // Row major scans
 
             loop_num += 1;
@@ -272,8 +305,10 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
-            
+            if !did_something {
+                break;
+            }
+
             loop_num += 1;
             did_something = false;
             for row in (0..rows).rev() {
@@ -303,7 +338,9 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -334,7 +371,9 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -365,10 +404,11 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-
             // Column major scans
-            
-            if !did_something { break; }
+
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -399,7 +439,9 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -430,7 +472,9 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -461,7 +505,9 @@ impl WhiteboxTool for CostDistance {
                 }
             }
 
-            if !did_something { break; }
+            if !did_something {
+                break;
+            }
 
             loop_num += 1;
             did_something = false;
@@ -507,7 +553,6 @@ impl WhiteboxTool for CostDistance {
         // let mut cost_val: f64;
         // let mut cost_n: f64;
 
-
         // let num_src_cells = starting_pts.len() as f64;
         // let mut i = 0.0;
         // for cell in starting_pts {
@@ -548,35 +593,49 @@ impl WhiteboxTool for CostDistance {
         //         }
         //     }
         // }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Source raster file: {}", source_file));
         output.add_metadata_entry(format!("Cost raster: {}", cost_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         backlink.configs.palette = "qual.plt".to_string();
         backlink.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        backlink.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        backlink.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         backlink.add_metadata_entry(format!("Source raster file: {}", source_file));
         backlink.add_metadata_entry(format!("Cost raster: {}", cost_file));
-        backlink.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        backlink.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
         let _ = match backlink.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
-        
+
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

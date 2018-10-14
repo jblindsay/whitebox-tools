@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 25, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
@@ -304,7 +303,7 @@ impl WhiteboxTool for IhsToRgb {
         let nodata_h = input_h.configs.nodata;
         let nodata_s = input_s.configs.nodata;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input files have the same size
         if input_i.configs.rows != input_h.configs.rows
@@ -395,8 +394,7 @@ impl WhiteboxTool for IhsToRgb {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
 
             output_r.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",
@@ -406,9 +404,7 @@ impl WhiteboxTool for IhsToRgb {
             output_r.add_metadata_entry(format!("Input hue image file: {}", hue_file));
             output_r
                 .add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output_r.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-            );
+            output_r.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
             if verbose {
                 println!("Saving red data...")
@@ -494,8 +490,7 @@ impl WhiteboxTool for IhsToRgb {
                 }
             }
 
-            let end = time::now();
-            let elapsed_time = end - start;
+            let elapsed_time = get_formatted_elapsed_time(start);
 
             output.add_metadata_entry(format!(
                 "Created by whitebox_tools\' {} tool",
@@ -504,9 +499,7 @@ impl WhiteboxTool for IhsToRgb {
             output.add_metadata_entry(format!("Input intensity image file: {}", intensity_file));
             output.add_metadata_entry(format!("Input hue image file: {}", hue_file));
             output.add_metadata_entry(format!("Input saturation image file: {}", saturation_file));
-            output.add_metadata_entry(
-                format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-            );
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
             if verbose {
                 println!("Saving red data...")
@@ -520,7 +513,7 @@ impl WhiteboxTool for IhsToRgb {
             if verbose {
                 println!(
                     "{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
                 );
             }
         }

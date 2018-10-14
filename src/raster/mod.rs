@@ -18,7 +18,6 @@ pub mod surfer7_raster;
 pub mod surfer_ascii_raster;
 pub mod whitebox_raster;
 
-use io_utils::*;
 use raster::arcascii_raster::*;
 use raster::arcbinary_raster::*;
 use raster::geotiff::*;
@@ -42,6 +41,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
+use utils::*;
 
 /// Raster is a common data structure that abstracts over several raster data formats,
 /// including GeoTIFFs, ArcGIS ASCII and binary rasters, Whitebox rasters, Idrisi

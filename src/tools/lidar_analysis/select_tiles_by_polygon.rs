@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/08/2018
-Last Modified: 30/08/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -18,7 +18,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use structures::{BoundingBox, Point2D};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -176,7 +175,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
             }
         }
 
-        let start = time::now();
+        let start = Instant::now();
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
         if input_directory.is_empty() {
@@ -368,16 +367,12 @@ impl WhiteboxTool for SelectTilesByPolygon {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Number of files copied: {}", num_files_copied);
 
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

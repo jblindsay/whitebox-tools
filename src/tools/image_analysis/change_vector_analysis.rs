@@ -4,42 +4,40 @@ Authors: Dr. John Lindsay
 Created: 29/04/2018
 Last Modified: 29/04/2018
 License: MIT
-
-Change Vector Analysis (CVA) is a change detection method that characterizes the 
-magnitude and change direction in spectral space between two times. A change vector 
-is the difference vector between two vectors in n-dimensional feature space defined 
-for two observations of the same geographical location (i.e. corresponding pixels) 
-during two dates. The CVA inputs include the set of raster images corresponding to 
-the multispectral data for each date. Note that there must be the same number of 
-image files (bands) for the two dates and they must be entered in the same order, 
-i.e. if three bands, red, green, and blue are entered for date one, these same 
-bands must be entered in the same order for date two.
-
-CVA outputs two image files. The first image contains the change vector length, 
-i.e. magnitude, for each pixel in the multi-spectral dataset. The second image 
-contains information about the direction of the change event in spectral feature 
-space, which is related to the type of change event, e.g. deforestation will likely 
-have a different change direction than say crop growth. The vector magnitude is a 
-continuous numerical variable. The change vector direction is presented in the form 
-of a code, referring to the multi-dimensional sector in which the change vector 
-occurs. A text output will be produced to provide a key describing sector codes, 
-relating the change vector to positive or negative shifts in n-dimensional feature 
-space.
-
-It is common to apply a simple thresholding operation on the magnitude data to 
-determine 'actual' change (i.e. change above some assumed level of error). The type 
-of change (qualitatively) is then defined according to the corresponding sector code. 
-Jensen (2005) provides a useful description of this approach to change detection.
 */
 
-use time;
-use std::env;
-use std::path;
 use raster::*;
+use std::env;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
 use structures::Array2D;
+use tools::*;
 
+/// Change Vector Analysis (CVA) is a change detection method that characterizes the
+/// magnitude and change direction in spectral space between two times. A change vector
+/// is the difference vector between two vectors in n-dimensional feature space defined
+/// for two observations of the same geographical location (i.e. corresponding pixels)
+/// during two dates. The CVA inputs include the set of raster images corresponding to
+/// the multispectral data for each date. Note that there must be the same number of
+/// image files (bands) for the two dates and they must be entered in the same order,
+/// i.e. if three bands, red, green, and blue are entered for date one, these same
+/// bands must be entered in the same order for date two.
+///
+/// CVA outputs two image files. The first image contains the change vector length,
+/// i.e. magnitude, for each pixel in the multi-spectral dataset. The second image
+/// contains information about the direction of the change event in spectral feature
+/// space, which is related to the type of change event, e.g. deforestation will likely
+/// have a different change direction than say crop growth. The vector magnitude is a
+/// continuous numerical variable. The change vector direction is presented in the form
+/// of a code, referring to the multi-dimensional sector in which the change vector
+/// occurs. A text output will be produced to provide a key describing sector codes,
+/// relating the change vector to positive or negative shifts in n-dimensional feature
+/// space.
+///
+/// It is common to apply a simple thresholding operation on the magnitude data to
+/// determine 'actual' change (i.e. change above some assumed level of error). The type
+/// of change (qualitatively) is then defined according to the corresponding sector code.
+/// Jensen (2005) provides a useful description of this approach to change detection.
 pub struct ChangeVectorAnalysis {
     name: String,
     description: String,
@@ -49,63 +47,69 @@ pub struct ChangeVectorAnalysis {
 }
 
 impl ChangeVectorAnalysis {
-    pub fn new() -> ChangeVectorAnalysis { // public constructor
+    pub fn new() -> ChangeVectorAnalysis {
+        // public constructor
         let name = "ChangeVectorAnalysis".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Performs a change vector analysis on a two-date multi-spectral dataset.".to_string();
-        
+        let description =
+            "Performs a change vector analysis on a two-date multi-spectral dataset.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Earlier Date Input Files".to_owned(), 
-            flags: vec!["--date1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Earlier Date Input Files".to_owned(),
+            flags: vec!["--date1".to_owned()],
             description: "Input raster files for the earlier date.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Later Date Input Files".to_owned(), 
-            flags: vec!["--date2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Later Date Input Files".to_owned(),
+            flags: vec!["--date2".to_owned()],
             description: "Input raster files for the later date.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Vector Magnitude File".to_owned(), 
-            flags: vec!["--magnitude".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Vector Magnitude File".to_owned(),
+            flags: vec!["--magnitude".to_owned()],
             description: "Output vector magnitude raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Vector Direction File".to_owned(), 
-            flags: vec!["--direction".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Vector Direction File".to_owned(),
+            flags: vec!["--direction".to_owned()],
             description: "Output vector Direction raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --date1='d1_band1.tif;d1_band2.tif;d1_band3.tif' --date2='d2_band1.tif;d2_band2.tif;d2_band3.tif' --magnitude=mag_out.tif --direction=dir_out.tif", short_exe, name).replace("*", &sep);
-    
-        ChangeVectorAnalysis { 
-            name: name, 
-            description: description, 
+
+        ChangeVectorAnalysis {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -114,7 +118,7 @@ impl WhiteboxTool for ChangeVectorAnalysis {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -138,14 +142,22 @@ impl WhiteboxTool for ChangeVectorAnalysis {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input1_files_str = String::new();
         let mut input2_files_str = String::new();
         let mut magnitude_file = String::new();
         let mut direction_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -161,25 +173,25 @@ impl WhiteboxTool for ChangeVectorAnalysis {
                 input1_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-date2" {
                 input2_files_str = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-magnitude" {
                 magnitude_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-direction" {
                 direction_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -190,7 +202,7 @@ impl WhiteboxTool for ChangeVectorAnalysis {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
@@ -212,8 +224,10 @@ impl WhiteboxTool for ChangeVectorAnalysis {
         }
         let num_files = input1_files.len();
         if num_files == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "At least one input for each date are required to operate this tool."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "At least one input for each date are required to operate this tool.",
+            ));
         }
 
         cmd = input2_files_str.split(";");
@@ -223,13 +237,17 @@ impl WhiteboxTool for ChangeVectorAnalysis {
             input2_files = cmd.collect::<Vec<&str>>();
         }
         if input2_files.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "At least one input for each date are required to operate this tool."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "At least one input for each date are required to operate this tool.",
+            ));
         }
 
         if num_files != input2_files.len() {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "There must be the same number of input files for each date."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "There must be the same number of input files for each date.",
+            ));
         }
 
         let mut direction_array: Vec<f64> = Vec::with_capacity(num_files);
@@ -254,11 +272,12 @@ impl WhiteboxTool for ChangeVectorAnalysis {
 
         let mut nodata_detected: Array2D<i8> = Array2D::new(rows, columns, -1i8, -1i8)?;
         // let num_procs = num_cpus::get() as isize;
-                
+
         for i in 0..num_files {
-            if verbose { println!("Reading file {} of {}", i+1, num_files); }
+            if verbose {
+                println!("Reading file {} of {}", i + 1, num_files);
+            }
             if !input1_files[i].trim().is_empty() && !input2_files[i].trim().is_empty() {
-                
                 let mut input1_file = input1_files[i].trim().to_owned();
                 if !input1_file.contains(&sep) && !input1_file.contains("/") {
                     input1_file = format!("{}{}", working_directory, input1_file);
@@ -273,12 +292,15 @@ impl WhiteboxTool for ChangeVectorAnalysis {
                 let input2 = Raster::new(&input2_file, "r")?;
 
                 // make sure the images have the right rows and columns
-                if input1.configs.rows as isize != rows || 
-                    input1.configs.columns as isize != columns ||
-                    input2.configs.rows as isize != rows ||
-                    input1.configs.columns as isize != columns {
-                        return Err(Error::new(ErrorKind::InvalidInput,
-                                "All of the input files must share the same extent (rows and columns)."));
+                if input1.configs.rows as isize != rows
+                    || input1.configs.columns as isize != columns
+                    || input2.configs.rows as isize != rows
+                    || input1.configs.columns as isize != columns
+                {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "All of the input files must share the same extent (rows and columns).",
+                    ));
                 }
 
                 let nodata1 = input1.configs.nodata;
@@ -330,24 +352,35 @@ impl WhiteboxTool for ChangeVectorAnalysis {
                 }
             }
         }
-        
-        if verbose { println!("Saving data...") };
-        
-        let end = time::now();
-        let elapsed_time = end - start;
-        out_magnitude.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-        out_magnitude.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
-        
+
+        if verbose {
+            println!("Saving data...")
+        };
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+        out_magnitude.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+        out_magnitude.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
+
         let _ = match out_magnitude.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
-        out_direction.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
-        out_direction.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        out_direction.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+        out_direction.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         let _ = match out_direction.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
@@ -372,7 +405,12 @@ impl WhiteboxTool for ChangeVectorAnalysis {
 
         println!("{}", s);
 
-        if verbose { println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        if verbose {
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         Ok(())
     }

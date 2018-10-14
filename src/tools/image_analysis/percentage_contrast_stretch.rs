@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -10,16 +10,15 @@ NOTES: 1. The tool should be updated to take multiple file inputs.
           this tool will operate on RGB images in addition to greyscale images.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use raster::*;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 use tools::*;
 
@@ -37,35 +36,36 @@ impl PercentageContrastStretch {
         // public constructor
         let name = "PercentageContrastStretch".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Performs a percentage linear contrast stretch on input images."
-            .to_string();
+        let description =
+            "Performs a percentage linear contrast stretch on input images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Distribution Tail Clip Amount (%)".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
-            description: "Optional amount to clip the distribution tails by, in percent.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Distribution Tail Clip Amount (%)".to_owned(),
+            flags: vec!["--clip".to_owned()],
+            description: "Optional amount to clip the distribution tails by, in percent."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -77,19 +77,20 @@ impl PercentageContrastStretch {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Number of Tones".to_owned(), 
-            flags: vec!["--num_tones".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Number of Tones".to_owned(),
+            flags: vec!["--num_tones".to_owned()],
             description: "Number of tones in the output image.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("256".to_owned()),
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -112,7 +113,7 @@ impl WhiteboxTool for PercentageContrastStretch {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -143,11 +144,12 @@ impl WhiteboxTool for PercentageContrastStretch {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut tail = String::from("both");
@@ -155,8 +157,10 @@ impl WhiteboxTool for PercentageContrastStretch {
         let mut num_tones = 256f64;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -185,8 +189,10 @@ impl WhiteboxTool for PercentageContrastStretch {
                 } else {
                     clip = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-tail" || vec[0].to_lowercase() == "--tail"
-                      || vec[0].to_lowercase() == "--tails" {
+            } else if vec[0].to_lowercase() == "-tail"
+                || vec[0].to_lowercase() == "--tail"
+                || vec[0].to_lowercase() == "--tails"
+            {
                 if keyval {
                     tail = vec[1].to_string();
                 } else {
@@ -199,8 +205,9 @@ impl WhiteboxTool for PercentageContrastStretch {
                 } else {
                     tail = String::from("both");
                 }
-            } else if vec[0].to_lowercase() == "-num_tones" ||
-                      vec[0].to_lowercase() == "--num_tones" {
+            } else if vec[0].to_lowercase() == "-num_tones"
+                || vec[0].to_lowercase() == "--num_tones"
+            {
                 if keyval {
                     num_tones = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
@@ -232,10 +239,14 @@ impl WhiteboxTool for PercentageContrastStretch {
             num_tones = 16f64;
         }
 
-        if clip < 0f64 || (tail == "both".to_string() && clip >= 50f64) ||
-           (tail != "both".to_string() && clip >= 100f64) {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Incorrect clip value (correct range is 0.0 to 50.0."));
+        if clip < 0f64
+            || (tail == "both".to_string() && clip >= 50f64)
+            || (tail != "both".to_string() && clip >= 100f64)
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Incorrect clip value (correct range is 0.0 to 50.0.",
+            ));
         }
 
         if verbose {
@@ -246,22 +257,23 @@ impl WhiteboxTool for PercentageContrastStretch {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = 
-            if input.configs.data_type == DataType::RGB24 ||
-                input.configs.data_type == DataType::RGBA32 ||
-                input.configs.photometric_interp == PhotometricInterpretation::RGB {
-                
-                true
-            } else {
-                false
-            };
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
+            true
+        } else {
+            false
+        };
 
         if input.configs.data_type == DataType::RGB48 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "This tool cannot be applied to 48-bit RGB colour-composite images."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "This tool cannot be applied to 48-bit RGB colour-composite images.",
+            ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("Calculating clip values...")
@@ -300,8 +312,12 @@ impl WhiteboxTool for PercentageContrastStretch {
                     value = input.get_value(row, col);
                     if value != nodata {
                         x = value2i(value); // gets the intensity
-                        if x < min_val { min_val = x; }
-                        if x > max_val { max_val = x; }
+                        if x < min_val {
+                            min_val = x;
+                        }
+                        if x > max_val {
+                            max_val = x;
+                        }
                         n += 1f64;
                         bin = (x * 999f64).floor() as usize;
                         histo[bin] += 1usize;
@@ -350,8 +366,13 @@ impl WhiteboxTool for PercentageContrastStretch {
 
         let value_range = max_val - min_val;
         if value_range < 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  format!("The calculated clip values ({}, {}) are incorrect.", min_val, max_val)));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                format!(
+                    "The calculated clip values ({}, {}) are incorrect.",
+                    min_val, max_val
+                ),
+            ));
         }
 
         let num_procs = num_cpus::get() as isize;
@@ -360,37 +381,31 @@ impl WhiteboxTool for PercentageContrastStretch {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = 
-                    if !is_rgb_image {
-                        Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
-                    } else {
-                        Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                let v = value2i(value);
-                                return v;
-                            }
-                            nodata
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            let v = value2i(value);
+                            return v;
                         }
-                        )
-                    };
-                
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = 
-                    if !is_rgb_image {
-                        Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
-                    } else {
-                        Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                let ret = hsi2value(h, s, value / num_tones);
-                                return ret;
-                            }
-                            nodata
+                        nodata
+                    })
+                };
+
+                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                    Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
+                } else {
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            let ret = hsi2value(h, s, value / num_tones);
+                            return ret;
                         }
-                        )
-                    };
+                        nodata
+                    })
+                };
 
                 let mut z_in: f64;
                 let mut z_out: f64;
@@ -427,16 +442,16 @@ impl WhiteboxTool for PercentageContrastStretch {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Percentage clip value: {}", clip));
         output.add_metadata_entry(format!("Clipped tails: {}", tail));
         output.add_metadata_entry(format!("Number of tones: {}", num_tones));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -448,11 +463,13 @@ impl WhiteboxTool for PercentageContrastStretch {
                 }
             }
             Err(e) => return Err(e),
-        }; 
+        };
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -476,21 +493,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -500,33 +518,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

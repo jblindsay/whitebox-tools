@@ -2,28 +2,25 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Anthony Francioni
 Created: May 26, 2018
-Last Modified: May 26, 2018
+Last Modified: 12/10/2018
 License: MIT
-
-NOTES: 
-Metric of roughness adopted from Grohmann et al., (2011)
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::i32;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
-use structures::Array2D;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use structures::Array2D;
 use tools::*;
 
-/// Calculates the standard deviation of slope from an input DEM.
+/// Calculates the standard deviation of slope from an input DEM, a metric of
+/// roughness described by Grohmann et al., (2011).
 pub struct StandardDeviationOfSlope {
     name: String,
     description: String,
@@ -33,72 +30,83 @@ pub struct StandardDeviationOfSlope {
 }
 
 impl StandardDeviationOfSlope {
-    pub fn new() -> StandardDeviationOfSlope { // public constructor
+    pub fn new() -> StandardDeviationOfSlope {
+        // public constructor
         let name = "StandardDeviationOfSlope".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates the standard deviation of slope from an input DEM.".to_string();
+        let description =
+            "Calculates the standard deviation of slope from an input DEM.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
-        });  
+            optional: false,
+        });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster DEM file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Z Conversion Factor".to_owned(), 
-            flags: vec!["--zfactor".to_owned()], 
-            description: "Optional multiplier for when the vertical and horizontal units are not the same.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Z Conversion Factor".to_owned(),
+            flags: vec!["--zfactor".to_owned()],
+            description:
+                "Optional multiplier for when the vertical and horizontal units are not the same."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
-         parameters.push(ToolParameter{
-            name: "Filter X-Dimension".to_owned(), 
-            flags: vec!["--filterx".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter X-Dimension".to_owned(),
+            flags: vec!["--filterx".to_owned()],
             description: "Size of the filter kernel in the x-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Filter Y-Dimension".to_owned(), 
-            flags: vec!["--filtery".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Filter Y-Dimension".to_owned(),
+            flags: vec!["--filtery".to_owned()],
             description: "Size of the filter kernel in the y-direction.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
 
-        StandardDeviationOfSlope { 
-            name: name, 
-            description: description, 
+        StandardDeviationOfSlope {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -107,7 +115,7 @@ impl WhiteboxTool for StandardDeviationOfSlope {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -138,7 +146,12 @@ impl WhiteboxTool for StandardDeviationOfSlope {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut z_factor = 1f64;
@@ -146,10 +159,12 @@ impl WhiteboxTool for StandardDeviationOfSlope {
         let mut filter_size_y = 11usize;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
-        //checks arguments 
+        //checks arguments
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
             arg = arg.replace("\'", "");
@@ -159,23 +174,26 @@ impl WhiteboxTool for StandardDeviationOfSlope {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
                 if keyval {
                     z_factor = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    z_factor = args[i+1].to_string().parse::<f64>().unwrap();
+                    z_factor = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
@@ -239,7 +257,7 @@ impl WhiteboxTool for StandardDeviationOfSlope {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -254,9 +272,8 @@ impl WhiteboxTool for StandardDeviationOfSlope {
             }
         }
 
-        
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         //slope calculation
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -264,13 +281,13 @@ impl WhiteboxTool for StandardDeviationOfSlope {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
                 let (mut fx, mut fy): (f64, f64);
-                
-                //Slope calculation 
+
+                //Slope calculation
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -357,7 +374,7 @@ impl WhiteboxTool for StandardDeviationOfSlope {
         let i = Arc::new(integral); // wrap integral in an Arc
         let i2 = Arc::new(integral2); // wrap integral2 in an Arc
         let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -371,8 +388,8 @@ impl WhiteboxTool for StandardDeviationOfSlope {
                 let mut n: i32;
                 let (mut sum, mut sum_sqr): (f64, f64);
                 let (mut v, mut s): (f64, f64);
-                let mut z: f64;        
-                
+                let mut z: f64;
+
                 // Standard Devaition Filter calculation
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     y1 = row - midpoint_y - 1;
@@ -390,7 +407,7 @@ impl WhiteboxTool for StandardDeviationOfSlope {
                     if y2 >= rows {
                         y2 = rows - 1;
                     }
-                        
+
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
@@ -444,15 +461,17 @@ impl WhiteboxTool for StandardDeviationOfSlope {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum_soft.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Filter size x: {}", filter_size_x));
         output.add_metadata_entry(format!("Filter size y: {}", filter_size_y));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -467,8 +486,10 @@ impl WhiteboxTool for StandardDeviationOfSlope {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

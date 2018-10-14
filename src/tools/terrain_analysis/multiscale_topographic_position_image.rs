@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: Dec. 16, 2017
+Last Modified: 12/10/2017
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
@@ -248,7 +247,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         // let green_range = input_g.configs.display_max - green_min;
         // let blue_range = input_b.configs.display_max - blue_min;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input files have the same size
         if input_r.configs.rows != input_g.configs.rows
@@ -345,8 +344,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -354,9 +352,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         output.add_metadata_entry(format!("Input broad-scale image file: {}", input1_file));
         output.add_metadata_entry(format!("Input meso-scale image file: {}", input2_file));
         output.add_metadata_entry(format!("Input local-scale image file: {}", input3_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -370,7 +366,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

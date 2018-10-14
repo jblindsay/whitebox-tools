@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 18, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct RootMeanSquareError {
@@ -27,45 +26,53 @@ pub struct RootMeanSquareError {
 }
 
 impl RootMeanSquareError {
-    pub fn new() -> RootMeanSquareError { // public constructor
+    pub fn new() -> RootMeanSquareError {
+        // public constructor
         let name = "RootMeanSquareError".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description = "Calculates the RMSE and other accuracy statistics.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Base File".to_owned(), 
-            flags: vec!["--base".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Base File".to_owned(),
+            flags: vec!["--base".to_owned()],
             description: "Input base raster file used for comparison.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif", short_exe, name).replace("*", &sep);
-    
-        RootMeanSquareError { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        RootMeanSquareError {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -74,7 +81,7 @@ impl WhiteboxTool for RootMeanSquareError {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -105,13 +112,20 @@ impl WhiteboxTool for RootMeanSquareError {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut base_file = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -126,13 +140,13 @@ impl WhiteboxTool for RootMeanSquareError {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-base" || vec[0].to_lowercase() == "--base" {
                 if keyval {
                     base_file = vec[1].to_string();
                 } else {
-                    base_file = args[i+1].to_string();
+                    base_file = args[i + 1].to_string();
                 }
             }
         }
@@ -155,18 +169,22 @@ impl WhiteboxTool for RootMeanSquareError {
             base_file = format!("{}{}", working_directory, base_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let base_raster = Arc::new(Raster::new(&base_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         let nodata_base = base_raster.configs.nodata;
 
-        if base_raster.configs.rows as isize == rows && base_raster.configs.columns as isize == columns {
+        if base_raster.configs.rows as isize == rows
+            && base_raster.configs.columns as isize == columns
+        {
             // The two grids are the same resolution. This simplifies calculation greatly.
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
@@ -214,15 +232,17 @@ impl WhiteboxTool for RootMeanSquareError {
             }
 
             let rmse = (sq_sum / num_cells as f64).sqrt();
-			let mean_vertical_error = sum / num_cells as f64;
+            let mean_vertical_error = sum / num_cells as f64;
 
             println!("\nVertical Accuracy Analysis:\n");
-			println!("Comparison File: {}", input_file);
-			println!("Base File: {}", base_file);
-			println!("Mean vertical error: {:.4}", mean_vertical_error); 
-			println!("RMSE: {:.4}", rmse);
-			println!("Accuracy at 95% confidence limit (m): {:.4}", rmse * 1.96f64);
-
+            println!("Comparison File: {}", input_file);
+            println!("Base File: {}", base_file);
+            println!("Mean vertical error: {:.4}", mean_vertical_error);
+            println!("RMSE: {:.4}", rmse);
+            println!(
+                "Accuracy at 95% confidence limit (m): {:.4}",
+                rmse * 1.96f64
+            );
         } else {
             /* The two grids are not of the same resolution. Bilinear resampling will have to be 
                 carried out to estimate z-values. Base image = source; input image = destination */
@@ -251,7 +271,7 @@ impl WhiteboxTool for RootMeanSquareError {
                     let mut n1: f64;
                     let mut n2: f64;
                     let mut n3: f64;
-                    
+
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         y = input.get_y_from_row(row);
                         let mut n = 0i32;
@@ -271,17 +291,41 @@ impl WhiteboxTool for RootMeanSquareError {
                                 n0 = base_raster[(origin_row, origin_col)];
                                 n1 = base_raster[(origin_row, origin_col + 1)];
                                 n2 = base_raster[(origin_row + 1, origin_col)];
-                                n3 = base_raster[(origin_row + 1, origin_col+ 1)];
+                                n3 = base_raster[(origin_row + 1, origin_col + 1)];
 
-                                if n0 != nodata_base && n1 != nodata_base && n2 != nodata_base && n3 != nodata_base { 
+                                if n0 != nodata_base
+                                    && n1 != nodata_base
+                                    && n2 != nodata_base
+                                    && n3 != nodata_base
+                                {
                                     // This is the bilinear interpolation equation.
-                                    z2 = n0 * (1f64 - dx) * (1f64 - dy) + n1 * dx * (1f64 - dy) + n2 * (1f64 - dx) * dy + n3 * dx * dy;
+                                    z2 = n0 * (1f64 - dx) * (1f64 - dy)
+                                        + n1 * dx * (1f64 - dy)
+                                        + n2 * (1f64 - dx) * dy
+                                        + n3 * dx * dy;
                                 } else {
                                     // some of the neighbours are nodata and an inverse-distance scheme is used instead
-                                    let w0 = if n0 != nodata_base { 1f64 / (dx * dx + dy * dy) } else { 0f64 };
-                                    let w1 = if n1 != nodata_base { 1f64 / ((1f64-dx) * (1f64-dx) + dy * dy) } else { 0f64 };
-                                    let w2 = if n2  != nodata_base { 1f64 / (dx * dx + (1f64-dy) * (1f64-dy)) } else { 0f64 };
-                                    let w3 = if n3 != nodata_base { 1f64 / ((1f64-dx) * (1f64-dx) + (1f64-dy) * (1f64-dy)) } else { 0f64 };
+                                    let w0 = if n0 != nodata_base {
+                                        1f64 / (dx * dx + dy * dy)
+                                    } else {
+                                        0f64
+                                    };
+                                    let w1 = if n1 != nodata_base {
+                                        1f64 / ((1f64 - dx) * (1f64 - dx) + dy * dy)
+                                    } else {
+                                        0f64
+                                    };
+                                    let w2 = if n2 != nodata_base {
+                                        1f64 / (dx * dx + (1f64 - dy) * (1f64 - dy))
+                                    } else {
+                                        0f64
+                                    };
+                                    let w3 = if n3 != nodata_base {
+                                        1f64 / ((1f64 - dx) * (1f64 - dx)
+                                            + (1f64 - dy) * (1f64 - dy))
+                                    } else {
+                                        0f64
+                                    };
                                     let sum = w0 + w1 + w2 + w3;
                                     if sum > 0f64 {
                                         z2 = (n0 * w0 + n1 * w1 + n2 * w2 + n3 * w3) / sum;
@@ -321,21 +365,25 @@ impl WhiteboxTool for RootMeanSquareError {
             }
 
             let rmse = (sq_sum / num_cells as f64).sqrt();
-			let mean_vertical_error = sum / num_cells as f64;
+            let mean_vertical_error = sum / num_cells as f64;
 
             println!("\nVertical Accuracy Analysis:\n");
-			println!("Comparison File: {}", input_file);
-			println!("Base File: {}", base_file);
-			println!("Mean vertical error: {:.4}", mean_vertical_error); 
-			println!("RMSE: {:.4}", rmse);
-			println!("Accuracy at 95% confidence limit (m): {:.4}", rmse * 1.96f64);
-
+            println!("Comparison File: {}", input_file);
+            println!("Base File: {}", base_file);
+            println!("Mean vertical error: {:.4}", mean_vertical_error);
+            println!("RMSE: {:.4}", rmse);
+            println!(
+                "Accuracy at 95% confidence limit (m): {:.4}",
+                rmse * 1.96f64
+            );
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
-            println!("\n{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

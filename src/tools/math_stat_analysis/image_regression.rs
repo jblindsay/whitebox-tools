@@ -2,28 +2,27 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 27, 2017
-Last Modified: December 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
+use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 use num_cpus;
+use raster::*;
 use statrs;
-use std::io::BufWriter;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use std::process::Command;
-use raster::*;
-use std::io::{Error, ErrorKind};
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
-use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 
 pub struct ImageRegression {
     name: String,
@@ -40,55 +39,57 @@ impl ImageRegression {
         let description = "Performs image regression analysis on two input images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Independent Variable (X).".to_owned(), 
-            flags: vec!["--i1".to_owned(), "--input1".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Independent Variable (X).".to_owned(),
+            flags: vec!["--i1".to_owned(), "--input1".to_owned()],
             description: "Input raster file (independent variable, X).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Dependent Variable (Y).".to_owned(), 
-            flags: vec!["--i2".to_owned(), "--input2".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Dependent Variable (Y).".to_owned(),
+            flags: vec!["--i2".to_owned(), "--input2".to_owned()],
             description: "Input raster file (dependent variable, Y).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Summary Report File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Summary Report File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output HTML file for regression summary report.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Optional Residuals Output File".to_owned(), 
-            flags: vec!["--out_residuals".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Optional Residuals Output File".to_owned(),
+            flags: vec!["--out_residuals".to_owned()],
             description: "Output raster regression resdidual file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Standardize the residuals map?".to_owned(), 
-            flags: vec!["--standardize".to_owned()], 
-            description: "Optional flag indicating whether to standardize the residuals map.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Standardize the residuals map?".to_owned(),
+            flags: vec!["--standardize".to_owned()],
+            description: "Optional flag indicating whether to standardize the residuals map."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -112,7 +113,7 @@ impl WhiteboxTool for ImageRegression {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -143,11 +144,12 @@ impl WhiteboxTool for ImageRegression {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file1 = String::new();
         let mut input_file2 = String::new();
         let mut output_file = String::new();
@@ -156,8 +158,10 @@ impl WhiteboxTool for ImageRegression {
         let mut output_residuals = false;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -168,17 +172,23 @@ impl WhiteboxTool for ImageRegression {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i1" || vec[0].to_lowercase() == "--i1" || vec[0].to_lowercase() == "--input1" {
+            if vec[0].to_lowercase() == "-i1"
+                || vec[0].to_lowercase() == "--i1"
+                || vec[0].to_lowercase() == "--input1"
+            {
                 if keyval {
                     input_file1 = vec[1].to_string();
                 } else {
-                    input_file1 = args[i+1].to_string();
+                    input_file1 = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i2" || vec[0].to_lowercase() == "--i2" || vec[0].to_lowercase() == "--input2" {
+            } else if vec[0].to_lowercase() == "-i2"
+                || vec[0].to_lowercase() == "--i2"
+                || vec[0].to_lowercase() == "--input2"
+            {
                 if keyval {
                     input_file2 = vec[1].to_string();
                 } else {
-                    input_file2 = args[i+1].to_string();
+                    input_file2 = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
@@ -186,14 +196,18 @@ impl WhiteboxTool for ImageRegression {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_residuals" || vec[0].to_lowercase() == "--out_residuals" {
+            } else if vec[0].to_lowercase() == "-out_residuals"
+                || vec[0].to_lowercase() == "--out_residuals"
+            {
                 if keyval {
                     residuals_file = vec[1].to_string();
                 } else {
                     residuals_file = args[i + 1].to_string();
                 }
                 output_residuals = true;
-            } else if vec[0].to_lowercase() == "-standardize" || vec[0].to_lowercase() == "--standardize" {
+            } else if vec[0].to_lowercase() == "-standardize"
+                || vec[0].to_lowercase() == "--standardize"
+            {
                 standardize_residuals = true;
             }
         }
@@ -236,16 +250,18 @@ impl WhiteboxTool for ImageRegression {
         let rows = input1.configs.rows as isize;
         let columns = input1.configs.columns as isize;
         let nodata1 = input1.configs.nodata;
-        
+
         let input2 = Arc::new(Raster::new(&input_file2, "r")?);
         if input2.configs.rows as isize != rows || input2.configs.columns as isize != columns {
             panic!("Error: The input files do not contain the same raster extent.");
         }
         let nodata2 = input2.configs.nodata;
 
-        let start = time::now();
-        
-        if verbose { println!("Loop 1 of 2..."); }
+        let start = Instant::now();
+
+        if verbose {
+            println!("Loop 1 of 2...");
+        }
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -298,12 +314,15 @@ impl WhiteboxTool for ImageRegression {
 
         let slope = (n * sum_xy - (sum_x * sum_y)) / (n * sum_xx - (sum_x * sum_x));
         let intercept = (sum_y - slope * sum_x) / n;
-        let r = (n * sum_xy - (sum_x * sum_y)) / (((n * sum_xx - (sum_x * sum_x)).sqrt() * ((n * sum_yy - (sum_y * sum_y)).sqrt())));
+        let r = (n * sum_xy - (sum_x * sum_y))
+            / ((n * sum_xx - (sum_x * sum_x)).sqrt() * ((n * sum_yy - (sum_y * sum_y)).sqrt()));
         let r_sqr = r * r;
         let y_mean = sum_y / n;
         let x_mean = sum_x / n;
-        
-        if verbose { println!("Loop 2 of 2..."); }
+
+        if verbose {
+            println!("Loop 2 of 2...");
+        }
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input1 = input1.clone();
@@ -340,12 +359,12 @@ impl WhiteboxTool for ImageRegression {
 
         let df_reg = 1f64;
         let df_error = n - 2f64;
-        let ss_reg =  ss_total - ss_error;
+        let ss_reg = ss_total - ss_error;
         let ms_reg = ss_reg / df_reg;
         let ms_error = ss_error / df_error;
         let f_stat = ms_reg / ms_error;
         let se_of_estimate = ms_error.sqrt();
-            
+
         //FDistribution f = new FDistribution(1, dfError);
         let f = FisherSnedecor::new(1f64, df_error).unwrap();
         let p_value = 1.0 - f.cdf(f_stat);
@@ -355,12 +374,12 @@ impl WhiteboxTool for ImageRegression {
 
         // TDistribution distribution = new TDistribution(N - 2);
         let t = StudentsT::new(0.0, 1.0, n - 2f64).unwrap();
-        let intercept_pvalue =  2f64 * (1.0 - t.cdf(intercept.abs() / intercept_se));
-        
+        let intercept_pvalue = 2f64 * (1.0 - t.cdf(intercept.abs() / intercept_se));
+
         let slope_se = (msse / sum_xx).sqrt();
         let slope_t = slope / slope_se;
-        let slope_pvalue =  2f64 * (1f64 - t.cdf(slope.abs() / slope_se));
-        
+        let slope_pvalue = 2f64 * (1f64 - t.cdf(slope.abs() / slope_se));
+
         if output_residuals {
             if !residuals_file.contains(&sep) {
                 residuals_file = format!("{}{}", working_directory, residuals_file);
@@ -382,7 +401,7 @@ impl WhiteboxTool for ImageRegression {
                             y = input2[(row, col)];
                             if x != nodata1 && y != nodata2 {
                                 y_estimate = slope * x + intercept;
-                                residual = if standardize_residuals { 
+                                residual = if standardize_residuals {
                                     (y - y_estimate) / se_of_estimate
                                 } else {
                                     y - y_estimate
@@ -399,7 +418,7 @@ impl WhiteboxTool for ImageRegression {
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -408,19 +427,23 @@ impl WhiteboxTool for ImageRegression {
                     }
                 }
             }
-            
-            if verbose { println!("Saving data...") };
+
+            if verbose {
+                println!("Saving data...")
+            };
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Output file written") },
+                Ok(_) => if verbose {
+                    println!("Output file written")
+                },
                 Err(e) => return Err(e),
             };
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
 
-        if verbose { println!("\n{}",  &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")); }
+        let elapsed_time = get_formatted_elapsed_time(start);
 
+        if verbose {
+            println!("\n{}", &format!("Elapsed Time: {}", elapsed_time));
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -490,14 +513,19 @@ impl WhiteboxTool for ImageRegression {
         ";
         writer.write_all(s.as_bytes())?;
 
-
         let path = Path::new(&input_file1);
         let x_filename = path.file_name().unwrap().to_str().unwrap();
-        let s1 = &format!("<p><strong>Input Image 1 (independent variable, X):</strong> {}</p>", x_filename.clone());
+        let s1 = &format!(
+            "<p><strong>Input Image 1 (independent variable, X):</strong> {}</p>",
+            x_filename.clone()
+        );
         writer.write_all(s1.as_bytes())?;
         let path = Path::new(&input_file2);
         let y_filename = path.file_name().unwrap().to_str().unwrap();
-        let s1 = &format!("<p><strong>Input Image 2 (dependent variable, Y):</strong> {}</p><br>", y_filename.clone());
+        let s1 = &format!(
+            "<p><strong>Input Image 2 (dependent variable, Y):</strong> {}</p><br>",
+            y_filename.clone()
+        );
         writer.write_all(s1.as_bytes())?;
 
         // Model summary
@@ -510,19 +538,20 @@ impl WhiteboxTool for ImageRegression {
         </tr>";
         writer.write_all(s.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        format!("{:.4}", r),
-        format!("{:.4}", r_sqr),
-        format!("{:.4}", se_of_estimate));
+            format!("{:.4}", r),
+            format!("{:.4}", r_sqr),
+            format!("{:.4}", se_of_estimate)
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table>";
         writer.write_all(s.as_bytes())?;
-
 
         // ANOVA table
         s = "<br><br><table>
@@ -537,7 +566,8 @@ impl WhiteboxTool for ImageRegression {
         </tr>";
         writer.write_all(s.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
@@ -545,15 +575,17 @@ impl WhiteboxTool for ImageRegression {
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        "Regression",
-        format!("{:.4}", ss_reg),
-        format!("{:.4}", df_reg),
-        format!("{:.4}", ms_reg),
-        format!("{:.4}", f_stat),
-        format!("{:.4}", p_value));
+            "Regression",
+            format!("{:.4}", ss_reg),
+            format!("{:.4}", df_reg),
+            format!("{:.4}", ms_reg),
+            format!("{:.4}", f_stat),
+            format!("{:.4}", p_value)
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
@@ -561,13 +593,15 @@ impl WhiteboxTool for ImageRegression {
             <td class=\"numberCell\"></td>
             <td class=\"numberCell\"></td>
         </tr>\n",
-        "Residual",
-        format!("{:.4}", ss_error),
-        format!("{:.4}", df_error),
-        format!("{:.4}", ms_error));
+            "Residual",
+            format!("{:.4}", ss_error),
+            format!("{:.4}", df_error),
+            format!("{:.4}", ms_error)
+        );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\"></td>
@@ -575,13 +609,13 @@ impl WhiteboxTool for ImageRegression {
             <td class=\"numberCell\"></td>
             <td class=\"numberCell\"></td>
         </tr>\n",
-        "Total",
-        format!("{:.4}", ss_total));
+            "Total",
+            format!("{:.4}", ss_total)
+        );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table>";
         writer.write_all(s.as_bytes())?;
-
 
         // Regression coefficients
         s = "<br><br><table>
@@ -595,45 +629,50 @@ impl WhiteboxTool for ImageRegression {
         </tr>";
         writer.write_all(s.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        "Constant",
-        format!("{:.4}", intercept),
-        format!("{:.4}", intercept_se),
-        format!("{:.4}", intercept_t),
-        format!("{:.4}", intercept_pvalue)
+            "Constant",
+            format!("{:.4}", intercept),
+            format!("{:.4}", intercept_se),
+            format!("{:.4}", intercept_t),
+            format!("{:.4}", intercept_pvalue)
         );
         writer.write_all(s1.as_bytes())?;
 
-        let s1 = &format!("<tr>
+        let s1 = &format!(
+            "<tr>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
             <td class=\"numberCell\">{}</td>
         </tr>\n",
-        "Slope",
-        format!("{:.4}", slope),
-        format!("{:.4}", slope_se),
-        format!("{:.4}", slope_t),
-        format!("{:.4}", slope_pvalue)
+            "Slope",
+            format!("{:.4}", slope),
+            format!("{:.4}", slope_se),
+            format!("{:.4}", slope_t),
+            format!("{:.4}", slope_pvalue)
         );
         writer.write_all(s1.as_bytes())?;
 
         s = "</table>";
         writer.write_all(s.as_bytes())?;
 
-        let sign = if intercept < 0f64 {
-            "-"
-        } else {
-            "+"
-        };
-        let s2 = &format!("<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>", y_filename.clone(), slope, x_filename.clone(), sign.clone(), intercept.abs());
+        let sign = if intercept < 0f64 { "-" } else { "+" };
+        let s2 = &format!(
+            "<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>",
+            y_filename.clone(),
+            slope,
+            x_filename.clone(),
+            sign.clone(),
+            intercept.abs()
+        );
         writer.write_all(s2.as_bytes())?;
 
         s = "<p>Caveat: Given a sufficiently large sample, extremely weak and non-notable relations can be found to be statistically significant

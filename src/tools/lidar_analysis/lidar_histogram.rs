@@ -2,23 +2,22 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 23, 2017
-Last Modified: Dec. 23, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use lidar::*;
+use rendering::html::*;
+use rendering::Histogram;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::process::Command;
-use lidar::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
 use tools::*;
-use rendering::Histogram;
-use rendering::html::*;
 
 pub struct LidarHistogram {
     name: String,
@@ -36,46 +35,56 @@ impl LidarHistogram {
         let description = "Creates a histogram from LiDAR data.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Parameter".to_owned(), 
-            flags: vec!["--parameter".to_owned()], 
-            description: "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["elevation".to_owned(), "intensity".to_owned(), "scan angle".to_owned(), "class".to_owned()]),
+        parameters.push(ToolParameter {
+            name: "Parameter".to_owned(),
+            flags: vec!["--parameter".to_owned()],
+            description:
+                "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class."
+                    .to_owned(),
+            parameter_type: ParameterType::OptionList(vec![
+                "elevation".to_owned(),
+                "intensity".to_owned(),
+                "scan angle".to_owned(),
+                "class".to_owned(),
+            ]),
             default_value: Some("elevation".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Tail Clip Percent".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Tail Clip Percent".to_owned(),
+            flags: vec!["--clip".to_owned()],
             description: "Amount to clip distribution tails (in percent).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -99,7 +108,7 @@ impl WhiteboxTool for LidarHistogram {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -130,18 +139,22 @@ impl WhiteboxTool for LidarHistogram {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut parameter = "elevation".to_string();
         let mut clip_percent = 1.0f64;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -157,7 +170,7 @@ impl WhiteboxTool for LidarHistogram {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
@@ -191,8 +204,8 @@ impl WhiteboxTool for LidarHistogram {
         let mut progress: i32;
         let mut old_progress: i32 = -1;
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -200,12 +213,14 @@ impl WhiteboxTool for LidarHistogram {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
-        
+
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
@@ -215,10 +230,10 @@ impl WhiteboxTool for LidarHistogram {
             "intensity" => 1,
             "scan angle" => 2,
             "class" => 3,
-            _ => { 
+            _ => {
                 println!("Warning: unrecognized parameter; elevation will be used");
                 0 // elevation
-            },
+            }
         };
 
         let mut z: f64;
@@ -233,8 +248,12 @@ impl WhiteboxTool for LidarHistogram {
                 2 => val.scan_angle as f64,
                 _ => val.classification() as f64,
             };
-            if z < min { min = z; }
-            if z > max { max = z; }
+            if z < min {
+                min = z;
+            }
+            if z > max {
+                max = z;
+            }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -243,13 +262,12 @@ impl WhiteboxTool for LidarHistogram {
                 }
             }
         }
-        
 
         let mut range = max - min + 0.00001f64;
         let mut num_bins = 1000usize;
         let mut bin_width = range / num_bins as f64;
         let mut freq_data = vec![0usize; num_bins];
-            
+
         if parameter_mode != 3 {
             let mut bin: isize;
             for i in 0..n_points {
@@ -277,9 +295,9 @@ impl WhiteboxTool for LidarHistogram {
             let mut lower_tail = 0;
             for bin in 0..num_bins {
                 n += freq_data[bin];
-                if n > tail_threshold { 
+                if n > tail_threshold {
                     lower_tail = bin;
-                    break; 
+                    break;
                 }
             }
 
@@ -287,15 +305,15 @@ impl WhiteboxTool for LidarHistogram {
             let mut upper_tail = 0;
             for bin in (0..num_bins).rev() {
                 n += freq_data[bin];
-                if n > tail_threshold { 
+                if n > tail_threshold {
                     upper_tail = bin;
-                    break; 
+                    break;
                 }
             }
 
             let old_min = min;
             let old_max = max;
-            if old_min <  old_min + lower_tail as f64 * bin_width {
+            if old_min < old_min + lower_tail as f64 * bin_width {
                 min = min + lower_tail as f64 * bin_width;
             }
             if old_max > old_min + upper_tail as f64 * bin_width + bin_width {
@@ -309,7 +327,7 @@ impl WhiteboxTool for LidarHistogram {
             }
 
             range = max - min + 0.00001f64;
-            num_bins = num_points.log2().ceil() as usize  + 1;
+            num_bins = num_points.log2().ceil() as usize + 1;
             bin_width = range / num_bins as f64;
             freq_data = vec![0usize; num_bins];
             let mut bin: isize;
@@ -334,7 +352,7 @@ impl WhiteboxTool for LidarHistogram {
             }
         } else {
             range = max - min + 0.00001f64;
-            num_bins = range as usize  + 1;
+            num_bins = range as usize + 1;
             bin_width = 1f64;
             freq_data = vec![0usize; num_bins];
             let mut bin: isize;
@@ -354,7 +372,7 @@ impl WhiteboxTool for LidarHistogram {
                 }
             }
         }
-            
+
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
@@ -362,18 +380,28 @@ impl WhiteboxTool for LidarHistogram {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Histogram Analysis</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"</head>
-        <body>
-            <h1>Histogram Analysis</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Input</strong>: {}<br>", input_file.clone()).as_bytes())?;
+        writer.write_all(
+            &r#"</head>
+        <body>
+            <h1>Histogram Analysis</h1>"#
+                .as_bytes(),
+        )?;
+
+        writer.write_all(
+            &format!("<p><strong>Input</strong>: {}<br>", input_file.clone()).as_bytes(),
+        )?;
         writer.write_all(&format!("<strong>Parameter</strong>: {}", parameter).as_bytes())?;
-        if parameter_mode != 3 { 
-            writer.write_all(&format!("<br><strong>Clip amount</strong>: {}%</p>", clip_percent*100f64).as_bytes())?;
+        if parameter_mode != 3 {
+            writer.write_all(
+                &format!(
+                    "<br><strong>Clip amount</strong>: {}%</p>",
+                    clip_percent * 100f64
+                ).as_bytes(),
+            )?;
         } else {
             writer.write_all("</p>".as_bytes())?;
         }
@@ -390,25 +418,28 @@ impl WhiteboxTool for LidarHistogram {
             width: 700f64,
             height: 500f64,
             freq_data: freq_data.clone(),
-            min_bin_val: min, 
+            min_bin_val: min,
             bin_width: bin_width,
             x_axis_label: x_axis_label,
             cumulative: false,
         };
 
-        writer.write_all(&format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
-        
-        let end = time::now();
-        let elapsed_time = end - start;
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        let elapsed_time = get_formatted_elapsed_time(start);
 
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

@@ -4,24 +4,6 @@ Authors: Dr. John Lindsay
 Created: January 2 2018
 Last Modified: January 2, 2018
 License: MIT
-
-Note: This tool will create an image mosaic from one or more input image files using 
-one of three resampling methods including, nearest neighbour, bilinear interpolation, 
-and cubic convolution. The order of the input source image files is important. Grid 
-cells in the output image will be assigned the corresponding value determined from the 
-first image found in the list to possess an overlapping coordinate.
-
-Resample is very similar in operation to the Mosaic tool. The Resample tool should be 
-used when there is an existing image into which you would like to dump information from 
-one or more source images. If the source images are more extensive than the destination 
-image, i.e. there are areas that extend beyond the destination image boundaries, these 
-areas will not be represented in the updated image. Grid cells in the destination image 
-that are not overlapping with any of the input source images will not be updated, i.e. 
-they will possess the same value as before the resampling operation. The Mosaic tool is 
-used when there is no existing destination image. In this case, a new image is created 
-that represents the bounding rectangle of each of the two or more input images. Grid 
-cells in the output image that do not overlap with any of the input images will be 
-assigned the NoData value.
 */
 
 use num_cpus;
@@ -33,9 +15,25 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
+/// This tool will create an image mosaic from one or more input image files using
+/// one of three resampling methods including, nearest neighbour, bilinear interpolation,
+/// and cubic convolution. The order of the input source image files is important. Grid
+/// cells in the output image will be assigned the corresponding value determined from the
+/// first image found in the list to possess an overlapping coordinate.
+///
+/// Resample is very similar in operation to the Mosaic tool. The Resample tool should be
+/// used when there is an existing image into which you would like to dump information from
+/// one or more source images. If the source images are more extensive than the destination
+/// image, i.e. there are areas that extend beyond the destination image boundaries, these
+/// areas will not be represented in the updated image. Grid cells in the destination image
+/// that are not overlapping with any of the input source images will not be updated, i.e.
+/// they will possess the same value as before the resampling operation. The Mosaic tool is
+/// used when there is no existing destination image. In this case, a new image is created
+/// that represents the bounding rectangle of each of the two or more input images. Grid
+/// cells in the output image that do not overlap with any of the input images will be
+/// assigned the NoData value.
 pub struct Mosaic {
     name: String,
     description: String,
@@ -82,7 +80,8 @@ impl Mosaic {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -215,7 +214,7 @@ impl WhiteboxTool for Mosaic {
                 "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // read the input files
         if verbose {
@@ -558,8 +557,7 @@ impl WhiteboxTool for Mosaic {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Modified by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -578,7 +576,7 @@ impl WhiteboxTool for Mosaic {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

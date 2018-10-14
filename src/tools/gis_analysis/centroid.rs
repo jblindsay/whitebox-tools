@@ -13,7 +13,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 
 /// This tool calculates the centroid, or average location, of raster polygon objects.
@@ -187,7 +186,7 @@ impl WhiteboxTool for Centroid {
         };
 
         let input = Raster::new(&input_file, "r")?;
-        let start = time::now();
+        let start = Instant::now();
 
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
@@ -246,16 +245,13 @@ impl WhiteboxTool for Centroid {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -270,7 +266,7 @@ impl WhiteboxTool for Centroid {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

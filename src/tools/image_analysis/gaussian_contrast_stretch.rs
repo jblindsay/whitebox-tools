@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/05/2018
-Last Modified: 21/05/2018
+Last Modified: 13/10/2018
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -10,16 +10,15 @@ NOTES: 1. The tool should be updated to take multiple file inputs.
           this tool will operate on RGB images in addition to greyscale images.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use raster::*;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
 use tools::*;
 
@@ -37,48 +36,51 @@ impl GaussianContrastStretch {
         // public constructor
         let name = "GaussianContrastStretch".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Performs a Gaussian contrast stretch on input images."
-            .to_string();
+        let description = "Performs a Gaussian contrast stretch on input images.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Number of Tones".to_owned(), 
-            flags: vec!["--num_tones".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Number of Tones".to_owned(),
+            flags: vec!["--num_tones".to_owned()],
             description: "Number of tones in the output image.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("256".to_owned()),
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --num_tones=1024", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --num_tones=1024",
+            short_exe, name
+        ).replace("*", &sep);
 
         GaussianContrastStretch {
             name: name,
@@ -94,7 +96,7 @@ impl WhiteboxTool for GaussianContrastStretch {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,18 +127,21 @@ impl WhiteboxTool for GaussianContrastStretch {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut num_tones = 256f64;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -195,31 +200,36 @@ impl WhiteboxTool for GaussianContrastStretch {
         let num_tones_int = num_tones.ceil() as usize;
         let num_tones_less_one = num_tones - 1f64;
 
-        if verbose { println!("Reading input data...") };
+        if verbose {
+            println!("Reading input data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = 
-            if input.configs.data_type == DataType::RGB24 ||
-                input.configs.data_type == DataType::RGBA32 ||
-                input.configs.photometric_interp == PhotometricInterpretation::RGB {
-                
-                true
-            } else {
-                false
-            };
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
+            true
+        } else {
+            false
+        };
 
         if input.configs.data_type == DataType::RGB48 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "This tool cannot be applied to 48-bit RGB colour-composite images."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "This tool cannot be applied to 48-bit RGB colour-composite images.",
+            ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // Get the min and max values
-        if verbose { println!("Calculating min and max values...") };
+        if verbose {
+            println!("Calculating min and max values...")
+        };
 
         let (min_val, max_val) = if !is_rgb_image {
             (input.configs.minimum, input.configs.maximum) // return
@@ -233,8 +243,12 @@ impl WhiteboxTool for GaussianContrastStretch {
                     value = input.get_value(row, col);
                     if value != nodata {
                         x = value2i(value); // gets the intensity
-                        if x < min_val { min_val = x; }
-                        if x > max_val { max_val = x; }
+                        if x < min_val {
+                            min_val = x;
+                        }
+                        if x > max_val {
+                            max_val = x;
+                        }
                     }
                 }
             }
@@ -242,7 +256,7 @@ impl WhiteboxTool for GaussianContrastStretch {
         };
 
         // Get the input file distribution
-        let num_bins = ((max_val - min_val).max(2048f64)).ceil() as usize; 
+        let num_bins = ((max_val - min_val).max(2048f64)).ceil() as usize;
         let bin_size = (max_val - min_val) / num_bins as f64;
         let mut histogram = vec![0f64; num_bins];
         let num_bins_less_one = num_bins - 1;
@@ -258,7 +272,9 @@ impl WhiteboxTool for GaussianContrastStretch {
                     }
                     numcells += 1f64;
                     bin_num = ((z - min_val) / bin_size) as usize;
-                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    if bin_num > num_bins_less_one {
+                        bin_num = num_bins_less_one;
+                    }
                     histogram[bin_num] += 1f64;
                 }
             }
@@ -280,7 +296,6 @@ impl WhiteboxTool for GaussianContrastStretch {
             cdf[i] = cdf[i] / numcells;
         }
 
-
         // Create the reference distribution
         let mut reference_cdf: Vec<Vec<f64>> = vec![];
         let p_step = 6f64 / (num_tones - 1f64);
@@ -288,7 +303,7 @@ impl WhiteboxTool for GaussianContrastStretch {
             let x = -3.0 + a as f64 * p_step;
             // Use the standard form (μ = 0.0, σ = 1.0) of:
             // (1 / sqrt(2σ^2 * π)) * e^(-(x - μ)^2 / 2σ^2)
-            let p = (1f64 / (2f64*PI).sqrt()) * (-x.powi(2) / 2f64).exp();
+            let p = (1f64 / (2f64 * PI).sqrt()) * (-x.powi(2) / 2f64).exp();
             reference_cdf.push(vec![x, p]);
         }
 
@@ -300,7 +315,7 @@ impl WhiteboxTool for GaussianContrastStretch {
         for i in 0..num_tones_int {
             reference_cdf[i][1] = reference_cdf[i][1] / total_frequency;
         }
-        
+
         let mut starting_vals = [0usize; 11];
         let mut p_val: f64;
         for i in 0..num_tones_int {
@@ -351,37 +366,33 @@ impl WhiteboxTool for GaussianContrastStretch {
             let cdf = cdf.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = 
-                    if !is_rgb_image {
-                        Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
-                    } else {
-                        Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                let v = value2i(value);
-                                return v;
-                            }
-                            nodata
+                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                    Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
+                } else {
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            let v = value2i(value);
+                            return v;
                         }
-                        )
-                    };
-                
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = 
-                    if !is_rgb_image {
-                        Box::new(|_: isize, _: isize, value: f64| -> f64 { ((value + 3f64) / 6f64 * num_tones_less_one).round() })
-                    } else {
-                        Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                let ret = hsi2value(h, s, (value + 3f64) / 6f64);
-                                return ret;
-                            }
-                            nodata
+                        nodata
+                    })
+                };
+
+                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                    Box::new(|_: isize, _: isize, value: f64| -> f64 {
+                        ((value + 3f64) / 6f64 * num_tones_less_one).round()
+                    })
+                } else {
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            let ret = hsi2value(h, s, (value + 3f64) / 6f64);
+                            return ret;
                         }
-                        )
-                    };
+                        nodata
+                    })
+                };
 
                 let mut z: f64;
                 let mut bin_num: usize;
@@ -395,7 +406,9 @@ impl WhiteboxTool for GaussianContrastStretch {
                         z = input_fn(row, col);
                         if z != nodata {
                             bin_num = ((z - min_val) / bin_size) as usize;
-                            if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                            if bin_num > num_bins_less_one {
+                                bin_num = num_bins_less_one;
+                            }
                             p_val = cdf[bin_num];
                             j = ((p_val * 10f64).floor()) as usize;
                             for i in starting_vals[j]..num_tones_int {
@@ -437,25 +450,32 @@ impl WhiteboxTool for GaussianContrastStretch {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Number of tones: {}", num_tones_int));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
         };
         let _ = match output.write() {
             Ok(_) => {
-                if verbose { println!("Output file written") }
+                if verbose {
+                    println!("Output file written")
+                }
             }
             Err(e) => return Err(e),
-        }; 
+        };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -479,21 +499,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -503,33 +524,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

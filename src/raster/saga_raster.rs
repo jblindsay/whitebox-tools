@@ -1,20 +1,21 @@
-use std::io::Error;
-use std::io::ErrorKind;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
-use std::io::SeekFrom;
-use std::path::Path;
+use raster::*;
 use std::f64;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::BufWriter;
+use std::io::Error;
+use std::io::ErrorKind;
+use std::io::SeekFrom;
 use std::mem;
-use raster::*;
-use io_utils::Endianness;
+use std::path::Path;
+use utils::Endianness;
 
-pub fn read_saga(file_name: &String,
-                 configs: &mut RasterConfigs,
-                 data: &mut Vec<f64>)
-                 -> Result<(), Error> {
+pub fn read_saga(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".sdat", ".sgrd");
     let f = try!(File::open(header_file));
@@ -47,15 +48,13 @@ pub fn read_saga(file_name: &String,
                 .parse::<u64>()
                 .unwrap();
         } else if vec[0].to_lowercase().contains("dataformat") {
-            let data_format = vec[1]
-                .replace("=", "")
-                .trim()
-                .to_lowercase()
-                .to_string();
+            let data_format = vec[1].replace("=", "").trim().to_lowercase().to_string();
             match &data_format[..] {
                 "bit" => {
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                                          "Reading of this kind of SAGA raster file is not currently supported"))
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Reading of this kind of SAGA raster file is not currently supported",
+                    ))
                 }
                 "byte_unsigned" => configs.data_type = DataType::U8,
                 "byte" => configs.data_type = DataType::U8,
@@ -66,21 +65,19 @@ pub fn read_saga(file_name: &String,
                 "float" => configs.data_type = DataType::F32,
                 "double" => configs.data_type = DataType::F64,
                 _ => {
-                    return Err(Error::new(ErrorKind::InvalidInput,
-                                          "Reading of this kind of SAGA raster file is not currently supported"))
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Reading of this kind of SAGA raster file is not currently supported",
+                    ))
                 }
             }
         } else if vec[0].to_lowercase().contains("byteorder_big") {
-            if vec[1]
-                   .replace("=", "")
-                   .trim()
-                   .to_lowercase()
-                   .contains("f") ||
-               vec[1]
-                   .replace("=", "")
-                   .trim()
-                   .to_lowercase()
-                   .contains("lsb") {
+            if vec[1].replace("=", "").trim().to_lowercase().contains("f") || vec[1]
+                .replace("=", "")
+                .trim()
+                .to_lowercase()
+                .contains("lsb")
+            {
                 configs.endian = Endianness::LittleEndian;
             } else {
                 configs.endian = Endianness::BigEndian;
@@ -141,19 +138,15 @@ pub fn read_saga(file_name: &String,
                 .parse::<f64>()
                 .unwrap();
         } else if vec[0].to_lowercase().contains("toptobottom") {
-            top_to_bottom = vec[1]
-                .replace("=", "")
-                .trim()
-                .to_lowercase()
-                .contains("t")
+            top_to_bottom = vec[1].replace("=", "").trim().to_lowercase().contains("t")
         }
     }
 
     configs.north = configs.south + configs.resolution_y * configs.rows as f64;
     configs.east = configs.west + configs.resolution_x * configs.columns as f64;
 
-    if z_factor < 0.0 &&
-       (configs.data_type == DataType::F32 || configs.data_type == DataType::F64) {
+    if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64)
+    {
         configs.data_type = DataType::F32;
     }
 
@@ -169,11 +162,12 @@ pub fn read_saga(file_name: &String,
 
     let data_size = if configs.data_type == DataType::F64 {
         8
-    } else if configs.data_type == DataType::F32 || configs.data_type == DataType::I32 ||
-              configs.data_type == DataType::U32 {
+    } else if configs.data_type == DataType::F32
+        || configs.data_type == DataType::I32
+        || configs.data_type == DataType::U32
+    {
         4
-    } else if configs.data_type == DataType::I16 ||
-              configs.data_type == DataType::U16 {
+    } else if configs.data_type == DataType::I16 || configs.data_type == DataType::U16 {
         2
     } else {
         // DataType::U8 or I8
@@ -204,14 +198,16 @@ pub fn read_saga(file_name: &String,
                     offset = i * data_size;
                     k = row * configs.columns + col;
                     data[k] = unsafe {
-                        mem::transmute::<[u8; 8], f64>([buffer[offset],
-                                                        buffer[offset + 1],
-                                                        buffer[offset + 2],
-                                                        buffer[offset + 3],
-                                                        buffer[offset + 4],
-                                                        buffer[offset + 5],
-                                                        buffer[offset + 6],
-                                                        buffer[offset + 7]])
+                        mem::transmute::<[u8; 8], f64>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                            buffer[offset + 4],
+                            buffer[offset + 5],
+                            buffer[offset + 6],
+                            buffer[offset + 7],
+                        ])
                     } * z_factor;
                     col += 1;
                     if col >= configs.columns {
@@ -233,11 +229,14 @@ pub fn read_saga(file_name: &String,
                     offset = i * data_size;
                     k = row * configs.columns + col;
                     data[k] = unsafe {
-                        mem::transmute::<[u8; 4], f32>([buffer[offset],
-                                                        buffer[offset + 1],
-                                                        buffer[offset + 2],
-                                                        buffer[offset + 3]])
-                    } as f64 * z_factor;
+                        mem::transmute::<[u8; 4], f32>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                        ])
+                    } as f64
+                        * z_factor;
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -258,11 +257,14 @@ pub fn read_saga(file_name: &String,
                     offset = i * data_size;
                     k = row * configs.columns + col;
                     data[k] = unsafe {
-                        mem::transmute::<[u8; 4], i32>([buffer[offset],
-                                                        buffer[offset + 1],
-                                                        buffer[offset + 2],
-                                                        buffer[offset + 3]])
-                    } as f64 * z_factor;
+                        mem::transmute::<[u8; 4], i32>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                        ])
+                    } as f64
+                        * z_factor;
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -283,11 +285,14 @@ pub fn read_saga(file_name: &String,
                     offset = i * data_size;
                     k = row * configs.columns + col;
                     data[k] = unsafe {
-                        mem::transmute::<[u8; 4], u32>([buffer[offset],
-                                                        buffer[offset + 1],
-                                                        buffer[offset + 2],
-                                                        buffer[offset + 3]])
-                    } as f64 * z_factor;
+                        mem::transmute::<[u8; 4], u32>([
+                            buffer[offset],
+                            buffer[offset + 1],
+                            buffer[offset + 2],
+                            buffer[offset + 3],
+                        ])
+                    } as f64
+                        * z_factor;
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -309,7 +314,8 @@ pub fn read_saga(file_name: &String,
                     k = row * configs.columns + col;
                     data[k] = unsafe {
                         mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset + 1]])
-                    } as f64 * z_factor;
+                    } as f64
+                        * z_factor;
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -331,7 +337,8 @@ pub fn read_saga(file_name: &String,
                     k = row * configs.columns + col;
                     data[k] = unsafe {
                         mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset + 1]])
-                    } as f64 * z_factor;
+                    } as f64
+                        * z_factor;
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -386,7 +393,10 @@ pub fn read_saga(file_name: &String,
                 }
             }
             _ => {
-                return Err(Error::new(ErrorKind::NotFound, "Raster data type is unknown."));
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    "Raster data type is unknown.",
+                ));
             }
         }
     }
@@ -468,9 +478,13 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             try!(writer.write_all("DATAFORMAT\t= BYTE\n".as_bytes()));
         }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound,
-                                  format!("Raster data type {:?} not supported in this format.",
-                                          r.configs.data_type)));
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                format!(
+                    "Raster data type {:?} not supported in this format.",
+                    r.configs.data_type
+                ),
+            ));
         }
     }
 
@@ -488,9 +502,14 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     try!(writer.write_all(format!("CELLCOUNT_Y\t= {}\n", r.configs.rows).as_bytes()));
 
-    try!(writer.write_all(format!("CELLSIZE\t= {}\n",
-                                  (r.configs.resolution_x + r.configs.resolution_y) / 2.0)
-                                  .as_bytes()));
+    try!(
+        writer.write_all(
+            format!(
+                "CELLSIZE\t= {}\n",
+                (r.configs.resolution_x + r.configs.resolution_y) / 2.0
+            ).as_bytes()
+        )
+    );
 
     try!(writer.write_all("Z_FACTOR\t= 1.000000\n".as_bytes()));
 
@@ -499,7 +518,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     try!(writer.write_all("TOPTOBOTTOM\t= FALSE\n".as_bytes()));
 
     let _ = writer.flush();
-
 
     // write the data file
     let data_file = r.file_name.replace(".sgrd", ".sdat");
@@ -512,7 +530,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let mut i: usize;
     match r.configs.data_type {
         DataType::F64 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u64_bytes = unsafe { mem::transmute(r.data[i]) };
@@ -521,7 +540,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::F32 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
@@ -530,7 +550,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I32 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as i32) };
@@ -539,7 +560,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U32 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
@@ -548,7 +570,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I16 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as i16) };
@@ -557,7 +580,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U16 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
@@ -566,7 +590,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U8 | DataType::I8 => {
-            for row in 0..r.configs.rows { //(0..r.configs.rows).rev() {
+            for row in 0..r.configs.rows {
+                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     try!(writer.write(&[r.data[i] as u8]));
@@ -574,7 +599,10 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         _ => {
-            return Err(Error::new(ErrorKind::NotFound, "Raster data type is unsupported."));
+            return Err(Error::new(
+                ErrorKind::NotFound,
+                "Raster data type is unsupported.",
+            ));
         }
     }
 

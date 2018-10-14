@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 1, 2018
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::{DistanceMetric, FixedRadiusSearch2D};
-use time;
 use tools::*;
 
 /// Removes duplicate points from a LiDAR data set.
@@ -191,7 +190,7 @@ impl WhiteboxTool for LidarRemoveDuplicates {
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("Performing analysis...");
@@ -283,8 +282,7 @@ impl WhiteboxTool for LidarRemoveDuplicates {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!("Writing output LAS file...");
@@ -296,7 +294,7 @@ impl WhiteboxTool for LidarRemoveDuplicates {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

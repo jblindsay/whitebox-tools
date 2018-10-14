@@ -4,34 +4,32 @@ Authors: Dr. John Lindsay
 Created: Dec. 30, 2017
 Last Modified: Dec. 30, 2017
 License: MIT
-
-Notes: This modified k-means algorithm is similar to that described by Mather (2004). 
-The main difference between the traditional k-means and this technique is that the user 
-does not need to specify the desired number of classes/clusters prior to running the 
-tool. Instead, the algorithm initializes with a very liberal overestimate of the number 
-of classes and then merges classes that have cluster centres that are separated by less 
-than a user-defined threshold. The main difference between this algorithm and the ISODATA 
-technique is that clusters can not be broken apart into two smaller clusters.
 */
 
-use time;
-use rand::prelude::*;
 use num_cpus;
+use rand::prelude::*;
+use raster::*;
+use rendering::html::*;
 use std::env;
-use std::path;
 use std::f64;
-use std::io::BufWriter;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process::Command;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
-use rendering::html::*;
 
+/// This modified k-means algorithm is similar to that described by Mather (2004).
+/// The main difference between the traditional k-means and this technique is that the user
+/// does not need to specify the desired number of classes/clusters prior to running the
+/// tool. Instead, the algorithm initializes with a very liberal overestimate of the number
+/// of classes and then merges classes that have cluster centres that are separated by less
+/// than a user-defined threshold. The main difference between this algorithm and the ISODATA
+/// technique is that clusters can not be broken apart into two smaller clusters.
 pub struct ModifiedKMeansClustering {
     name: String,
     description: String,
@@ -41,78 +39,82 @@ pub struct ModifiedKMeansClustering {
 }
 
 impl ModifiedKMeansClustering {
-    pub fn new() -> ModifiedKMeansClustering { // public constructor
+    pub fn new() -> ModifiedKMeansClustering {
+        // public constructor
         let name = "ModifiedKMeansClustering".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Performs a modified k-means clustering operation on a multi-spectral dataset.".to_string();
-        
+        let description =
+            "Performs a modified k-means clustering operation on a multi-spectral dataset."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Files".to_owned(), 
-            flags: vec!["-i".to_owned(), "--inputs".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Files".to_owned(),
+            flags: vec!["-i".to_owned(), "--inputs".to_owned()],
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Raster File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Raster File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML Report File".to_owned(), 
-            flags: vec!["--out_html".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output HTML Report File".to_owned(),
+            flags: vec!["--out_html".to_owned()],
             description: "Output HTML report file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Initial Num. of Clusters".to_owned(), 
-            flags: vec!["--start_clusters".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Initial Num. of Clusters".to_owned(),
+            flags: vec!["--start_clusters".to_owned()],
             description: "Initial number of clusters".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1000".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Cluster Merger Distance".to_owned(), 
-            flags: vec!["--merger_dist".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Cluster Merger Distance".to_owned(),
+            flags: vec!["--merger_dist".to_owned()],
             description: "Cluster merger distance".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Max. Iterations".to_owned(), 
-            flags: vec!["--max_iterations".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Max. Iterations".to_owned(),
+            flags: vec!["--max_iterations".to_owned()],
             description: "Maximum number of iterations".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("10".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Percent Class Change Threshold".to_owned(), 
-            flags: vec!["--class_change".to_owned()], 
-            description: "Minimum percent of cells changed between iterations before completion".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Percent Class Change Threshold".to_owned(),
+            flags: vec!["--class_change".to_owned()],
+            description: "Minimum percent of cells changed between iterations before completion"
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         // parameters.push(ToolParameter{
-        //     name: "How to Initialize Cluster Centres?".to_owned(), 
-        //     flags: vec!["--initialize".to_owned()], 
+        //     name: "How to Initialize Cluster Centres?".to_owned(),
+        //     flags: vec!["--initialize".to_owned()],
         //     description: "How to initialize cluster centres?".to_owned(),
         //     parameter_type: ParameterType::OptionList(vec!["diagonal".to_owned(), "random".to_owned()]),
         //     default_value: Some("diagonal".to_owned()),
@@ -120,8 +122,8 @@ impl ModifiedKMeansClustering {
         // });
 
         // parameters.push(ToolParameter{
-        //     name: "Min. Class Size".to_owned(), 
-        //     flags: vec!["--min_class_size".to_owned()], 
+        //     name: "Min. Class Size".to_owned(),
+        //     flags: vec!["--min_class_size".to_owned()],
         //     description: "Minimum class size, in pixels".to_owned(),
         //     parameter_type: ParameterType::Integer,
         //     default_value: Some("10".to_owned()),
@@ -131,18 +133,22 @@ impl ModifiedKMeansClustering {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html --start_clusters=100 --merger_dist=30.0 --max_iterations=25 --class_change=1.5", short_exe, name).replace("*", &sep);
-    
-        ModifiedKMeansClustering { 
-            name: name, 
-            description: description, 
+
+        ModifiedKMeansClustering {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -151,7 +157,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -175,7 +181,12 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_files_str = String::new();
         let mut output_file = String::new();
         let mut output_html_file = String::new();
@@ -185,10 +196,12 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         // let mut initialization_mode = 1;
         // let mut min_class_size = 10;
         let mut merger_dist = 1f64;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -204,19 +217,19 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 if keyval {
                     input_files_str = vec[1].to_string();
                 } else {
-                    input_files_str = args[i+1].to_string();
+                    input_files_str = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-out_html" {
                 if keyval {
                     output_html_file = vec[1].to_string();
                 } else {
-                    output_html_file = args[i+1].to_string();
+                    output_html_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-start_clusters" {
                 if keyval {
@@ -243,22 +256,22 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 } else {
                     percent_changed_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            // } else if flag_val == "-initialize" {
-            //     if keyval {
-            //         if vec[1].to_string().to_lowercase().contains("rand") {
-            //             initialization_mode = 0;
-            //         }
-            //     } else {
-            //         if args[i + 1].to_string().to_lowercase().contains("diag") {
-            //             initialization_mode = 1;
-            //         }
-            //     }
-            // } else if flag_val == "-min_class_size" {
-            //     if keyval {
-            //         min_class_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
-            //     } else {
-            //         min_class_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-            //     }
+                // } else if flag_val == "-initialize" {
+                //     if keyval {
+                //         if vec[1].to_string().to_lowercase().contains("rand") {
+                //             initialization_mode = 0;
+                //         }
+                //     } else {
+                //         if args[i + 1].to_string().to_lowercase().contains("diag") {
+                //             initialization_mode = 1;
+                //         }
+                //     }
+                // } else if flag_val == "-min_class_size" {
+                //     if keyval {
+                //         min_class_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                //     } else {
+                //         min_class_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                //     }
             }
         }
 
@@ -298,34 +311,39 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         }
 
         if max_iterations < 2 || max_iterations > 250 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "Maximum iterations should be between 2 and 250."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Maximum iterations should be between 2 and 250.",
+            ));
         }
 
         if percent_changed_threshold < 0f64 || percent_changed_threshold > 25f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "class_change flag should be between 0.0 and 25.0."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "class_change flag should be between 0.0 and 25.0.",
+            ));
         }
 
         if merger_dist < 0f64 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "Cluster merger distance must be positive."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Cluster merger distance must be positive.",
+            ));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut rows = -1isize;
         let mut columns = -1isize;
-        
+
         let mut nodata: Vec<f64> = Vec::with_capacity(num_files);
         let mut minimum: Vec<f64> = Vec::with_capacity(num_files);
         let mut maximum: Vec<f64> = Vec::with_capacity(num_files);
         let mut input_raster: Vec<Raster> = Vec::with_capacity(num_files);
 
         for i in 0..num_files {
-            println!("Reading file {} of {}", i+1, num_files);
+            println!("Reading file {} of {}", i + 1, num_files);
             if !input_files[i].trim().is_empty() {
-                
                 let mut input_file = input_files[i].trim().to_owned();
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
@@ -339,16 +357,19 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                     rows = input_raster[i].configs.rows as isize;
                     columns = input_raster[i].configs.columns as isize;
                     if num_classes < 2 || num_classes as isize > (rows * columns) {
-                        return Err(Error::new(ErrorKind::InvalidInput,
-                            "Number of classes should be between 2 and rows x columns."));
+                        return Err(Error::new(
+                            ErrorKind::InvalidInput,
+                            "Number of classes should be between 2 and rows x columns.",
+                        ));
                     }
-                    // if min_class_size > ((rows * columns) as usize / num_classes) {
-                    //     return Err(Error::new(ErrorKind::InvalidInput,
-                    //         "Min class size should be less than rows x columns / num_classes."));
-                    // }
+                // if min_class_size > ((rows * columns) as usize / num_classes) {
+                //     return Err(Error::new(ErrorKind::InvalidInput,
+                //         "Min class size should be less than rows x columns / num_classes."));
+                // }
                 } else {
-                    if input_raster[i].configs.rows as isize != rows ||
-                        input_raster[i].configs.columns as isize != columns {
+                    if input_raster[i].configs.rows as isize != rows
+                        || input_raster[i].configs.columns as isize != columns
+                    {
                         return Err(Error::new(ErrorKind::InvalidInput,
                             "All input images must share the same dimensions (rows and columns) and spatial extent."));
                     }
@@ -357,8 +378,10 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         }
 
         if rows == -1 || columns == -1 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "Something is incorrect with the specified input files."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Something is incorrect with the specified input files.",
+            ));
         }
 
         let out_nodata = nodata[0];
@@ -366,17 +389,17 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         let mut class_centres = vec![vec![0f64; num_files]; num_classes];
 
         // if initialization_mode == 0 {
-            // initialize the class centres randomly
-            let mut rng = thread_rng();
-            for a in 0..num_classes {
-                let row = rng.gen_range(0, rows); // Range::new(0, rows).ind_sample(&mut rng);
-                let col = rng.gen_range(0, columns); // Range::new(0, columns).ind_sample(&mut rng);
-                for i in 0..num_files {
-                    //let between = Range::new(minimum[i], maximum[i]);
-                    // class_centres[a][i] = between.ind_sample(&mut rng);
-                    class_centres[a][i] = input_raster[i].get_value(row, col);
-                }
+        // initialize the class centres randomly
+        let mut rng = thread_rng();
+        for a in 0..num_classes {
+            let row = rng.gen_range(0, rows); // Range::new(0, rows).ind_sample(&mut rng);
+            let col = rng.gen_range(0, columns); // Range::new(0, columns).ind_sample(&mut rng);
+            for i in 0..num_files {
+                //let between = Range::new(minimum[i], maximum[i]);
+                // class_centres[a][i] = between.ind_sample(&mut rng);
+                class_centres[a][i] = input_raster[i].get_value(row, col);
             }
+        }
         // } else {
         //     let (mut range, mut spacing): (f64, f64);
         //     for a in 0..num_classes {
@@ -401,7 +424,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             // assign each pixel to a class
             let mut class_centre_data = vec![vec![0f64; num_files]; num_classes];
             class_n = vec![0usize; num_classes];
-            
+
             let mut cells_changed = 0f64;
 
             let num_procs = num_cpus::get() as isize;
@@ -436,7 +459,8 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                                 for a in 0..num_classes {
                                     dist = 0f64;
                                     for i in 0..num_files {
-                                        dist += (value[i] - centres[a][i]) * (value[i] - centres[a][i]);
+                                        dist +=
+                                            (value[i] - centres[a][i]) * (value[i] - centres[a][i]);
                                     }
                                     if dist < min_dist {
                                         min_dist = dist;
@@ -459,7 +483,9 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 let (row, data, ccd) = rx.recv().unwrap();
                 for col in 0..columns {
                     if data[col as usize] >= 0 {
-                        if !n_counted { n += 1f64; }
+                        if !n_counted {
+                            n += 1f64;
+                        }
                         which_class = data[col as usize] as usize;
                         z = output.get_value(row, col);
                         class = z as usize - 1usize;
@@ -477,11 +503,16 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                         class_centre_data[a][i] += ccd[a][i];
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
-                        println!("Progress (loop {} of {}): {}%", loop_num + 1, max_iterations, progress);
+                        println!(
+                            "Progress (loop {} of {}): {}%",
+                            loop_num + 1,
+                            max_iterations,
+                            progress
+                        );
                         old_progress = progress;
                     }
                 }
@@ -504,11 +535,12 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             let mut dist: f64;
             for a in 0..num_classes {
                 if class_n[a] > 0 {
-                    for b in a+1..num_classes {
+                    for b in a + 1..num_classes {
                         if class_n[b] > 0 {
                             dist = 0f64;
                             for i in 0..num_files {
-                                dist += (class_centres[a][i] - class_centres[b][i]) * (class_centres[a][i] - class_centres[b][i]);
+                                dist += (class_centres[a][i] - class_centres[b][i])
+                                    * (class_centres[a][i] - class_centres[b][i]);
                             }
                             if dist < merger_dist {
                                 // calculate the weights
@@ -516,7 +548,8 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                                 weight2 = class_n[b] as f64 / (class_n[a] + class_n[b]) as f64;
                                 // adjust the centroid position
                                 for i in 0..num_files {
-                                    class_centres[a][i] = class_centres[a][i]*weight1 + class_centres[b][i]*weight2;
+                                    class_centres[a][i] = class_centres[a][i] * weight1
+                                        + class_centres[b][i] * weight2;
                                     class_centres[b][i] = 0f64;
                                 }
                                 // update the class size
@@ -540,16 +573,23 @@ impl WhiteboxTool for ModifiedKMeansClustering {
 
             println!("Number of clusters: {}", num_classes);
 
-            percent_changed = 100f64 *  cells_changed / n;
-            println!("Cells changed {} ({:.4} percent)", cells_changed, percent_changed);
-            if percent_changed < percent_changed_threshold { break; }
+            percent_changed = 100f64 * cells_changed / n;
+            println!(
+                "Cells changed {} ({:.4} percent)",
+                cells_changed, percent_changed
+            );
+            if percent_changed < percent_changed_threshold {
+                break;
+            }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Num. clusters: {}", num_classes));
         output.add_metadata_entry(format!("Num. bands: {}", num_files));
         output.add_metadata_entry(format!("max_iterations: {}", max_iterations));
@@ -561,17 +601,24 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         // } else {
         //     output.add_metadata_entry("initialize: diagonal".to_string());
         // }
-        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
+            );
         }
-        
+
         if !output_html_file.trim().is_empty() {
             let f = File::create(output_html_file.clone())?;
             let mut writer = BufWriter::new(f);
@@ -581,30 +628,54 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 <head>
                     <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
                     <title>k-Means Clustering</title>"#.as_bytes())?;
-            
+
             // get the style sheet
             writer.write_all(&get_css().as_bytes())?;
-                
-            writer.write_all(&r#"
+
+            writer.write_all(
+                &r#"
                 </head>
                 <body>
                     <h1>Modified k-Means Clustering Report</h1>
-                    <p>"#.as_bytes())?;
+                    <p>"#
+                    .as_bytes(),
+            )?;
 
-            writer.write_all(&format!("<strong>Num. bands</strong>: {}<br>", num_files).as_bytes())?;
+            writer
+                .write_all(&format!("<strong>Num. bands</strong>: {}<br>", num_files).as_bytes())?;
             for i in 0..num_files {
-                writer.write_all(&format!("<strong>Image {}</strong>: {}<br>", i+1, input_files[i].clone()).as_bytes())?;
+                writer.write_all(
+                    &format!(
+                        "<strong>Image {}</strong>: {}<br>",
+                        i + 1,
+                        input_files[i].clone()
+                    ).as_bytes(),
+                )?;
             }
-            writer.write_all(&format!("<strong>Num. clusters</strong>: {}<br>", num_classes).as_bytes())?;
-            writer.write_all(&format!("<strong>Max. iterations</strong>: {}<br>", max_iterations).as_bytes())?;
-            writer.write_all(&format!("<strong>Percent change threshold</strong>: {:.3}%<br>", percent_changed_threshold).as_bytes())?;
-            writer.write_all(&format!("<strong>Cluster merger distance</strong>: {}<br>", merger_dist.sqrt()).as_bytes())?;
+            writer.write_all(
+                &format!("<strong>Num. clusters</strong>: {}<br>", num_classes).as_bytes(),
+            )?;
+            writer.write_all(
+                &format!("<strong>Max. iterations</strong>: {}<br>", max_iterations).as_bytes(),
+            )?;
+            writer.write_all(
+                &format!(
+                    "<strong>Percent change threshold</strong>: {:.3}%<br>",
+                    percent_changed_threshold
+                ).as_bytes(),
+            )?;
+            writer.write_all(
+                &format!(
+                    "<strong>Cluster merger distance</strong>: {}<br>",
+                    merger_dist.sqrt()
+                ).as_bytes(),
+            )?;
             // if initialization_mode == 0 {
             //     writer.write_all("<strong>Initialize method</strong>: random<br>".to_string().as_bytes())?;
             // } else {
             //     writer.write_all("<strong>Initialize method</strong>: diagonal<br>".to_string().as_bytes())?;
             // }
-        
+
             writer.write_all("</p>".as_bytes())?;
 
             ////////////////////////
@@ -614,7 +685,13 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             writer.write_all("<caption>Cluster Size</caption>".as_bytes())?;
             writer.write_all("<tr><th>Cluster</th><th>Num. Pixels</th></tr>".as_bytes())?;
             for a in 0..num_classes {
-                writer.write_all(&format!("<tr><td>{}</td><td class=\"numberCell\">{}</td></tr>", a+1, class_n[a]).as_bytes())?;
+                writer.write_all(
+                    &format!(
+                        "<tr><td>{}</td><td class=\"numberCell\">{}</td></tr>",
+                        a + 1,
+                        class_n[a]
+                    ).as_bytes(),
+                )?;
             }
             writer.write_all("</table></p>".as_bytes())?;
 
@@ -623,18 +700,21 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             /////////////////////////////
             writer.write_all("<p><table>".as_bytes())?;
             writer.write_all("<caption>Cluster Centroid Vector</caption>".as_bytes())?;
-            
+
             let mut s = String::from("<tr><th>Cluster</th>");
             for i in 0..num_files {
-                s.push_str(&format!("<th>Image {}</th>", i+1));
+                s.push_str(&format!("<th>Image {}</th>", i + 1));
             }
             s.push_str("</tr>");
             writer.write_all(s.as_bytes())?;
-            
+
             for a in 0..num_classes {
-                let mut s = format!("<tr><td>{}</td>", a+1);
+                let mut s = format!("<tr><td>{}</td>", a + 1);
                 for i in 0..num_files {
-                    s.push_str(&format!("<td class=\"numberCell\">{:.3}</td>", class_centres[a][i]));
+                    s.push_str(&format!(
+                        "<td class=\"numberCell\">{:.3}</td>",
+                        class_centres[a][i]
+                    ));
                 }
                 s.push_str("</tr>");
                 writer.write_all(s.as_bytes())?;
@@ -648,18 +728,19 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             writer.write_all("<caption>Cluster Centroid Distance Analysis</caption>".as_bytes())?;
             let mut s = String::from("<tr><th></th>");
             for a in 0..num_classes {
-                s.push_str(&format!("<th>Cluster {}</th>", a+1));
+                s.push_str(&format!("<th>Cluster {}</th>", a + 1));
             }
             s.push_str("</tr>");
             writer.write_all(s.as_bytes())?;
-            
+
             for a in 0..num_classes {
-                let mut s = format!("<tr><td class=\"header\">Cluster {}</td>", a+1);
+                let mut s = format!("<tr><td class=\"header\">Cluster {}</td>", a + 1);
                 for b in 0..num_classes {
                     if b >= a {
                         let mut dist = 0f64;
                         for i in 0..num_files {
-                            dist += (class_centres[a][i] - class_centres[b][i]) * (class_centres[a][i] - class_centres[b][i]);
+                            dist += (class_centres[a][i] - class_centres[b][i])
+                                * (class_centres[a][i] - class_centres[b][i]);
                         }
                         s.push_str(&format!("<td class=\"numberCell\">{:.3}</td>", dist.sqrt()));
                     } else {

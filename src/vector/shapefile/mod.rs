@@ -8,6 +8,7 @@ License: MIT
 Notes: The logic behind working with the ESRI Shapefile format.
 */
 extern crate time;
+// extern crate chrono;
 
 pub mod attributes;
 pub mod geometry;
@@ -17,7 +18,6 @@ pub use self::attributes::{
 };
 pub use self::geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use io_utils::{ByteOrderReader, Endianness};
 use std::f64;
 use std::fmt;
 use std::fs;
@@ -27,6 +27,7 @@ use std::io::{BufReader, BufWriter, Error, ErrorKind};
 use std::path::Path;
 use std::str;
 use structures::Point2D;
+use utils::{ByteOrderReader, Endianness};
 
 /// ```ShapefileHeader``` stores the header variables of a ShapeFile header.
 #[derive(Default, Clone)]

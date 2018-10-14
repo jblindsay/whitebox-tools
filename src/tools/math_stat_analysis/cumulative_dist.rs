@@ -2,16 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 22 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
 use tools::*;
 
 pub struct CumulativeDistribution {
@@ -23,45 +22,54 @@ pub struct CumulativeDistribution {
 }
 
 impl CumulativeDistribution {
-    pub fn new() -> CumulativeDistribution { // public constructor
+    pub fn new() -> CumulativeDistribution {
+        // public constructor
         let name = "CumulativeDistribution".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Converts a raster image to its cumulative distribution function.".to_string();
-        
+        let description =
+            "Converts a raster image to its cumulative distribution function.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        CumulativeDistribution { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        CumulativeDistribution {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -70,7 +78,7 @@ impl WhiteboxTool for CumulativeDistribution {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -101,13 +109,20 @@ impl WhiteboxTool for CumulativeDistribution {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -122,13 +137,13 @@ impl WhiteboxTool for CumulativeDistribution {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -151,11 +166,13 @@ impl WhiteboxTool for CumulativeDistribution {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -177,7 +194,9 @@ impl WhiteboxTool for CumulativeDistribution {
                 if z != nodata {
                     num_cells += 1;
                     bin_num = ((z - min_val) / bin_size) as usize;
-                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    if bin_num > num_bins_less_one {
+                        bin_num = num_bins_less_one;
+                    }
                     histogram[bin_num] += 1;
                 }
             }
@@ -191,7 +210,7 @@ impl WhiteboxTool for CumulativeDistribution {
         }
 
         let mut cdf = vec![0f64; num_bins];
-        cdf[0] = histogram[0] as f64; 
+        cdf[0] = histogram[0] as f64;
         for i in 1..histogram.len() {
             cdf[i] = cdf[i - 1] + histogram[i] as f64;
         }
@@ -205,7 +224,9 @@ impl WhiteboxTool for CumulativeDistribution {
                 z = input[(row, col)];
                 if z != nodata {
                     bin_num = ((z - min_val) / bin_size) as usize;
-                    if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                    if bin_num > num_bins_less_one {
+                        bin_num = num_bins_less_one;
+                    }
                     output[(row, col)] = cdf[bin_num];
                 }
             }
@@ -218,20 +239,28 @@ impl WhiteboxTool for CumulativeDistribution {
             }
         }
 
-
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

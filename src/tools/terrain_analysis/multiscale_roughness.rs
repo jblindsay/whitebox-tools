@@ -2,23 +2,22 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 26, 2018
-Last Modified: February 26, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
+use std::io::{Error, ErrorKind};
 use std::ops::AddAssign;
 use std::ops::SubAssign;
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use structures::Array2D;
-use std::io::{Error, ErrorKind};
 use tools::*;
 
 pub struct MultiscaleRoughness {
@@ -30,81 +29,87 @@ pub struct MultiscaleRoughness {
 }
 
 impl MultiscaleRoughness {
-    pub fn new() -> MultiscaleRoughness { // public constructor
+    pub fn new() -> MultiscaleRoughness {
+        // public constructor
         let name = "MultiscaleRoughness".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates surface roughness over a range of spatial scales.".to_string();
-        
+        let description =
+            "Calculates surface roughness over a range of spatial scales.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Roughness Magnitude File".to_owned(), 
-            flags: vec!["--out_mag".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Roughness Magnitude File".to_owned(),
+            flags: vec!["--out_mag".to_owned()],
             description: "Output raster roughness magnitude file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Roughness Scale File".to_owned(), 
-            flags: vec!["--out_scale".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Roughness Scale File".to_owned(),
+            flags: vec!["--out_scale".to_owned()],
             description: "Output raster roughness scale file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Minimum Search Neighbourhood Radius (grid cells)".to_owned(), 
-            flags: vec!["--min_scale".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Minimum Search Neighbourhood Radius (grid cells)".to_owned(),
+            flags: vec!["--min_scale".to_owned()],
             description: "Minimum search neighbourhood radius in grid cells.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1".to_string()),
             optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Search Neighbourhood Radius (grid cells)".to_owned(), 
-            flags: vec!["--max_scale".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Maximum Search Neighbourhood Radius (grid cells)".to_owned(),
+            flags: vec!["--max_scale".to_owned()],
             description: "Maximum search neighbourhood radius in grid cells.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Step Size".to_owned(), 
-            flags: vec!["--step".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Step Size".to_owned(),
+            flags: vec!["--step".to_owned()],
             description: "Step size as any positive non-zero integer.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --out_mag=roughness_mag.tif --out_scale=roughness_scale.tif --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
-    
-        MultiscaleRoughness { 
-            name: name, 
-            description: description, 
+
+        MultiscaleRoughness {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -113,7 +118,7 @@ impl WhiteboxTool for MultiscaleRoughness {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -144,7 +149,12 @@ impl WhiteboxTool for MultiscaleRoughness {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_mag_file = String::new();
         let mut output_scale_file = String::new();
@@ -152,8 +162,10 @@ impl WhiteboxTool for MultiscaleRoughness {
         let mut max_scale = 100isize;
         let mut step = 1isize;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -189,7 +201,9 @@ impl WhiteboxTool for MultiscaleRoughness {
                 } else {
                     args[i + 1].to_string().parse::<isize>().unwrap()
                 };
-                if min_scale < 1 { min_scale = 1; }
+                if min_scale < 1 {
+                    min_scale = 1;
+                }
             } else if flag_val == "-max_scale" {
                 max_scale = if keyval {
                     vec[1].to_string().parse::<isize>().unwrap()
@@ -205,9 +219,9 @@ impl WhiteboxTool for MultiscaleRoughness {
             }
         }
 
-        if max_scale < min_scale { 
+        if max_scale < min_scale {
             let ms = min_scale;
-            min_scale = max_scale; 
+            min_scale = max_scale;
             max_scale = ms;
         }
 
@@ -215,7 +229,9 @@ impl WhiteboxTool for MultiscaleRoughness {
             max_scale += 1;
         }
 
-        if step < 1 { step = 1; }
+        if step < 1 {
+            step = 1;
+        }
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -238,9 +254,11 @@ impl WhiteboxTool for MultiscaleRoughness {
             output_scale_file = format!("{}{}", working_directory, output_scale_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -272,7 +290,14 @@ impl WhiteboxTool for MultiscaleRoughness {
                 let mut zn: f64;
                 let (mut a, mut b): (f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![Normal { a: 0f64, b: 0f64, c: 0f64 }; columns as usize];
+                    let mut data = vec![
+                        Normal {
+                            a: 0f64,
+                            b: 0f64,
+                            c: 0f64
+                        };
+                        columns as usize
+                    ];
                     let mut values = [0f64; 9];
                     for col in 0..columns {
                         z = input.get_value(row, col);
@@ -286,9 +311,19 @@ impl WhiteboxTool for MultiscaleRoughness {
                                     values[i] = z;
                                 }
                             }
-                            a = -(values[2] - values[4] + 2f64 * (values[1] - values[5]) + values[0] - values[6]);
-                            b = -(values[6] - values[4] + 2f64 * (values[7] - values[3]) + values[0] - values[2]);
-                            data[col as usize] = Normal{ a: a, b: b, c: eight_grid_res };
+                            a = -(values[2] - values[4]
+                                + 2f64 * (values[1] - values[5])
+                                + values[0]
+                                - values[6]);
+                            b = -(values[6] - values[4]
+                                + 2f64 * (values[7] - values[3])
+                                + values[0]
+                                - values[2]);
+                            data[col as usize] = Normal {
+                                a: a,
+                                b: b,
+                                c: eight_grid_res,
+                            };
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -296,12 +331,16 @@ impl WhiteboxTool for MultiscaleRoughness {
             });
         }
 
-        let zero_vector = Normal { a: 0f64, b: 0f64, c: 0f64 };
+        let zero_vector = Normal {
+            a: 0f64,
+            b: 0f64,
+            c: 0f64,
+        };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             nv.set_row_data(data.0, data.1);
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -354,15 +393,16 @@ impl WhiteboxTool for MultiscaleRoughness {
 
         let i = Arc::new(integral); // wrap integral in an Arc
         let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
-        
+
         let num_procs = num_cpus::get() as isize;
 
         let mut output_mag = Raster::initialize_using_file(&output_mag_file, &input);
         let mut output_scale = Raster::initialize_using_file(&output_scale_file, &input);
-        
+
         // let num_loops = (max_scale - min_scale) / step;
         // let mut loop_num = 0;
-        for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) { // .step_by(step) { once step_by is stabilized
+        for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) {
+            // .step_by(step) { once step_by is stabilized
             // loop_num += 1;
 
             println!("Loop {} / {}", midpoint - min_scale, max_scale - min_scale);
@@ -377,7 +417,12 @@ impl WhiteboxTool for MultiscaleRoughness {
                 let i_n = i_n.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+                    let (mut x1, mut x2, mut y1, mut y2): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     let mut n: i32;
                     let mut sum: f64;
                     let mut z: f64;
@@ -450,9 +495,16 @@ impl WhiteboxTool for MultiscaleRoughness {
                             }
                         }
 
-                        a = -(values[2] - values[4] + 2f64 * (values[1] - values[5]) + values[0] - values[6]);
-                        b = -(values[6] - values[4] + 2f64 * (values[7] - values[3]) + values[0] - values[2]);
-                        diff = (nv.get_value(row, col).angle_between( Normal{ a: a, b: b, c: eight_grid_res })).acos().to_degrees();
+                        a = -(values[2] - values[4] + 2f64 * (values[1] - values[5]) + values[0]
+                            - values[6]);
+                        b = -(values[6] - values[4] + 2f64 * (values[7] - values[3]) + values[0]
+                            - values[2]);
+                        diff = (nv.get_value(row, col).angle_between(Normal {
+                            a: a,
+                            b: b,
+                            c: eight_grid_res,
+                        })).acos()
+                        .to_degrees();
                     } else {
                         diff = 0f64;
                     }
@@ -461,15 +513,13 @@ impl WhiteboxTool for MultiscaleRoughness {
 
                     sum += diff;
                     if row > 0 {
-                        z = i_diff_nv.get_value(row-1, col);
+                        z = i_diff_nv.get_value(row - 1, col);
                         i_diff_nv.set_value(row, col, sum + z);
                     } else {
                         i_diff_nv.set_value(row, col, sum);
                     }
                 }
             }
-
-
 
             ///////////////////////////////////////////////////////////////////////////
             // Calcuate the average deviation within the local kernels and output it //
@@ -482,7 +532,12 @@ impl WhiteboxTool for MultiscaleRoughness {
                 let i_diff_nv = i_diff_nv.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+                    let (mut x1, mut x2, mut y1, mut y2): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     let mut n: i32;
                     let mut sum: f64;
                     let mut z: f64;
@@ -511,7 +566,9 @@ impl WhiteboxTool for MultiscaleRoughness {
                                 }
                                 n = i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)] - i_n[(y2, x1)];
                                 if n > 0 {
-                                    sum = i_diff_nv[(y2, x2)] + i_diff_nv[(y1, x1)] - i_diff_nv[(y1, x2)] - i_diff_nv[(y2, x1)];
+                                    sum = i_diff_nv[(y2, x2)] + i_diff_nv[(y1, x1)]
+                                        - i_diff_nv[(y1, x2)]
+                                        - i_diff_nv[(y2, x1)];
                                     data[col as usize] = sum / n as f64;
                                 }
                             }
@@ -533,17 +590,21 @@ impl WhiteboxTool for MultiscaleRoughness {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output_mag.configs.palette = "blue_white_red.plt".to_string();
-        output_mag.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output_mag.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output_mag.add_metadata_entry(format!("Input file: {}", input_file));
         output_mag.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_mag.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag.add_metadata_entry(format!("Step size y: {}", step));
-        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_mag.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving magnitude data...") };
+        if verbose {
+            println!("Saving magnitude data...")
+        };
         let _ = match output_mag.write() {
             Ok(_) => {
                 if verbose {
@@ -553,16 +614,20 @@ impl WhiteboxTool for MultiscaleRoughness {
             Err(e) => return Err(e),
         };
 
-
         output_scale.configs.palette = "spectrum.plt".to_string();
-        output_scale.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output_scale.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output_scale.add_metadata_entry(format!("Input file: {}", input_file));
         output_scale.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         output_scale.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale.add_metadata_entry(format!("Step size: {}", step));
-        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output_scale.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving scale data...") };
+        if verbose {
+            println!("Saving scale data...")
+        };
         let _ = match output_scale.write() {
             Ok(_) => {
                 if verbose {
@@ -573,8 +638,10 @@ impl WhiteboxTool for MultiscaleRoughness {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+            );
         }
 
         Ok(())
@@ -598,7 +665,9 @@ impl Normal {
          about checking for division by zero here because 'c' will always be 
          non-zero and therefore the vector magnitude cannot be zero.
         */
-        let denom = ((self.a * self.a + self.b * self.b + self.c * self.c) * (other.a * other.a + other.b * other.b + other.c * other.c)).sqrt();
+        let denom = ((self.a * self.a + self.b * self.b + self.c * self.c)
+            * (other.a * other.a + other.b * other.b + other.c * other.c))
+            .sqrt();
         (self.a * other.a + self.b * other.b + self.c * other.c) / denom
     }
 }

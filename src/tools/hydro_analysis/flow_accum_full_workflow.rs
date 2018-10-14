@@ -2,27 +2,26 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
-Last Modified: Dec. 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating 
 the D8 pointer raster and finally the D8 flow accumulation operation. 
 */
 
-use time;
 use num_cpus;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
+use raster::*;
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
-use std::cmp::Ordering;
 use std::env;
-use std::path;
-use std::i32;
 use std::f64;
-use raster::*;
+use std::i32;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
 use tools::*;
 
@@ -36,99 +35,108 @@ pub struct FlowAccumulationFullWorkflow {
 }
 
 impl FlowAccumulationFullWorkflow {
-    pub fn new() -> FlowAccumulationFullWorkflow { // public constructor
+    pub fn new() -> FlowAccumulationFullWorkflow {
+        // public constructor
         let name = "FlowAccumulationFullWorkflow".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description = "Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output DEM File".to_owned(), 
-            flags: vec!["--out_dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output DEM File".to_owned(),
+            flags: vec!["--out_dem".to_owned()],
             description: "Output raster DEM file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Flow Pointer File".to_owned(), 
-            flags: vec!["--out_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Flow Pointer File".to_owned(),
+            flags: vec!["--out_pntr".to_owned()],
             description: "Output raster flow pointer file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Flow Accumulation File".to_owned(), 
-            flags: vec!["--out_accum".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Flow Accumulation File".to_owned(),
+            flags: vec!["--out_accum".to_owned()],
             description: "Output raster flow accumulation file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Type".to_owned(), 
-            flags: vec!["--out_type".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Type".to_owned(),
+            flags: vec!["--out_type".to_owned()],
             description: "Output type; one of 'cells', 'sca' (default), and 'ca'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["Cells".to_owned(), "Specific Contributing Area".to_owned(), "Catchment Area".to_owned()]),
+            parameter_type: ParameterType::OptionList(vec![
+                "Cells".to_owned(),
+                "Specific Contributing Area".to_owned(),
+                "Catchment Area".to_owned(),
+            ]),
             default_value: Some("Specific Contributing Area".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Log-transform the output?".to_owned(), 
-            flags: vec!["--log".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Log-transform the output?".to_owned(),
+            flags: vec!["--log".to_owned()],
             description: "Optional flag to request the output be log-transformed.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Clip the upper tail by 1%?".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Clip the upper tail by 1%?".to_owned(),
+            flags: vec!["--clip".to_owned()],
             description: "Optional flag to request clipping the display max by 1%.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(), 
-            flags: vec!["--esri_pntr".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Does the pointer file use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
             description: "D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem='DEM.tif' --out_dem='DEM_filled.tif' --out_pntr='pointer.tif' --out_accum='accum.tif' --out_type=sca --log --clip", short_exe, name).replace("*", &sep);
-    
-        FlowAccumulationFullWorkflow { 
-            name: name, 
-            description: description, 
+
+        FlowAccumulationFullWorkflow {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -137,7 +145,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -161,7 +169,12 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut outdem_file = String::new();
         let mut pntr_file = String::new();
@@ -172,8 +185,10 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let mut esri_style = false;
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -184,35 +199,42 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-out_dem" || vec[0].to_lowercase() == "--out_dem" {
                 if keyval {
                     outdem_file = vec[1].to_string();
                 } else {
-                    outdem_file = args[i+1].to_string();
+                    outdem_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_pntr" || vec[0].to_lowercase() == "--out_pntr" {
+            } else if vec[0].to_lowercase() == "-out_pntr" || vec[0].to_lowercase() == "--out_pntr"
+            {
                 if keyval {
                     pntr_file = vec[1].to_string();
                 } else {
-                    pntr_file = args[i+1].to_string();
+                    pntr_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_accum" || vec[0].to_lowercase() == "--out_accum" {
+            } else if vec[0].to_lowercase() == "-out_accum"
+                || vec[0].to_lowercase() == "--out_accum"
+            {
                 if keyval {
                     accum_file = vec[1].to_string();
                 } else {
-                    accum_file = args[i+1].to_string();
+                    accum_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type" {
+            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type"
+            {
                 if keyval {
                     out_type = vec[1].to_lowercase();
                 } else {
-                    out_type = args[i+1].to_lowercase();
+                    out_type = args[i + 1].to_lowercase();
                 }
                 if out_type.contains("specific") || out_type.contains("sca") {
                     out_type = String::from("sca");
@@ -225,7 +247,10 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                 log_transform = true;
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 clip_max = true;
-            } else if vec[0].to_lowercase() == "-esri_style" || vec[0].to_lowercase() == "--esri_style" || vec[0].to_lowercase() == "--esri_pntr" {
+            } else if vec[0].to_lowercase() == "-esri_style"
+                || vec[0].to_lowercase() == "--esri_style"
+                || vec[0].to_lowercase() == "--esri_pntr"
+            {
                 esri_style = true;
             }
         }
@@ -254,11 +279,13 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             accum_file = format!("{}{}", working_directory, accum_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
@@ -286,8 +313,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
                 let (mut fx, mut fy): (f64, f64);
@@ -308,8 +335,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
-                                data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees() + 90f64 * (fx / (fx).abs());
-                                
+                                data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees()
+                                    + 90f64 * (fx / (fx).abs());
                             } else {
                                 data[col as usize] = nodata;
                             }
@@ -324,7 +351,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         for row in 0..rows {
             let data = rx.recv().unwrap();
             aspect.set_row_data(data.0, data.1);
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -334,12 +361,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             }
         }
 
-
         let min_val = input.configs.minimum;
         let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
         let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
-        
+
         let mut output = Raster::initialize_using_file(&outdem_file, &input);
         let background_val = (i32::min_value() + 1) as f64;
         output.reinitialize_values(background_val);
@@ -356,7 +382,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         for nodata values along the raster's edges.
         */
 
-        let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+        let mut queue: VecDeque<(isize, isize)> =
+            VecDeque::with_capacity((rows * columns) as usize);
         for row in 0..rows {
             /*
             Note that this is only possible because Whitebox rasters
@@ -382,8 +409,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let mut zin_n: f64; // value of neighbour of row, col in input raster
         let mut zout: f64; // value of row, col in output raster
         let mut zout_n: f64; // value of neighbour of row, col in output raster
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         let (mut x, mut y): (isize, isize);
@@ -415,7 +442,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                         if is_lowest {
                             output[(row_n, col_n)] = zin_n;
                             // Push it onto the priority queue for the priority flood operation
-                            minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                            minheap.push(GridCell {
+                                row: row_n,
+                                column: col_n,
+                                priority: zin_n,
+                            });
                             // flow_dir[(row_n, col_n)] = 0;
                         }
                     }
@@ -433,12 +464,12 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         }
 
         // Perform the priority flood operation.
-        let back_link = [ 4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8 ];
+        let back_link = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
         let (mut x, mut y): (isize, isize);
         let mut z_target: f64;
         let mut dir: i8;
         let mut flag: bool;
-        let directions = [ 45f64, 90f64, 135f64, 180f64, 225f64, 270f64, 315f64, 360f64 ];
+        let directions = [45f64, 90f64, 135f64, 180f64, 225f64, 270f64, 315f64, 360f64];
 
         while !minheap.is_empty() {
             let cell = minheap.pop().unwrap();
@@ -459,7 +490,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                         // minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
 
                         output[(row_n, col_n)] = zin_n;
-                        minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                        minheap.push(GridCell {
+                            row: row_n,
+                            column: col_n,
+                            priority: zin_n,
+                        });
                         if zin_n < (zout + small_num) {
                             // Trace the flowpath back to a lower cell, if it exists.
                             x = col_n;
@@ -497,17 +532,26 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     if flow_dir[(row_n, col_n)] >= 0 {
                         let prospective_fd = directions[back_link[n] as usize];
                         let mut diff1 = prospective_fd - aspect[(row_n, col_n)];
-                        if diff1 > 180f64 { diff1 -= 360f64 }
-                        if diff1 < -180f64 { diff1 += 360f64 }
+                        if diff1 > 180f64 {
+                            diff1 -= 360f64
+                        }
+                        if diff1 < -180f64 {
+                            diff1 += 360f64
+                        }
                         diff1 = diff1.abs();
-                        
+
                         let current_fd = directions[flow_dir[(row_n, col_n)] as usize];
                         let mut diff2 = current_fd - aspect[(row_n, col_n)];
-                        if diff2 > 180f64 { diff2 -= 360f64 }
-                        if diff2 < -180f64 { diff2 += 360f64 }
+                        if diff2 > 180f64 {
+                            diff2 -= 360f64
+                        }
+                        if diff2 < -180f64 {
+                            diff2 += 360f64
+                        }
                         diff2 = diff2.abs();
-                        
-                        if diff1 < diff2 { // if this cell is closer to the aspect of the neighbouring cell then the current pointer value.
+
+                        if diff1 < diff2 {
+                            // if this cell is closer to the aspect of the neighbouring cell then the current pointer value.
                             flow_dir[(row_n, col_n)] = back_link[n];
                         }
                     }
@@ -526,30 +570,39 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
 
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", time::now() - start).replace("PT", ""));
+        output.add_metadata_entry(format!(
+            "Elapsed Time (including I/O): {}",
+            get_formatted_elapsed_time(start)
+        ));
 
-        if verbose { println!("Saving DEM data...") };
+        if verbose {
+            println!("Saving DEM data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
-
 
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        
+
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let inflowing_vals: [i8; 8] = [ 4, 5, 6, 7, 0, 1, 2, 3 ];
+                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
                 let mut z: f64;
                 let mut count: i8;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -558,7 +611,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                         z = input[(row, col)];
                         if z != nodata {
                             count = 0i8;
-							for i in 0..8 {
+                            for i in 0..8 {
                                 if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
                                     count += 1;
                                 }
@@ -587,7 +640,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     num_solved_cells += 1;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -627,7 +680,16 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         }
 
         let mut cell_area = cell_size_x * cell_size_y;
-        let mut flow_widths = [diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x];
+        let mut flow_widths = [
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+        ];
         if out_type == "cells" {
             cell_area = 1.0;
             flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
@@ -637,8 +699,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
 
         let mut pntr = Raster::initialize_using_file(&pntr_file, &input);
         let pntr_vals = match esri_style {
-            true => [ 128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64 ],
-            false => [ 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64 ],
+            true => [128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64],
+            false => [1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64],
         };
 
         if log_transform {
@@ -649,15 +711,17 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     } else {
                         let dir = flow_dir[(row, col)];
                         if dir >= 0 {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[dir as usize]).ln();
+                            output[(row, col)] =
+                                (output[(row, col)] * cell_area / flow_widths[dir as usize]).ln();
                             pntr[(row, col)] = pntr_vals[flow_dir[(row, col)] as usize];
                         } else {
-                            output[(row, col)] = (output[(row, col)] * cell_area / flow_widths[3]).ln();
+                            output[(row, col)] =
+                                (output[(row, col)] * cell_area / flow_widths[3]).ln();
                             pntr[(row, col)] = 0f64;
                         }
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -674,7 +738,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     } else {
                         let dir = flow_dir[(row, col)];
                         if dir >= 0 {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[dir as usize];
+                            output[(row, col)] =
+                                output[(row, col)] * cell_area / flow_widths[dir as usize];
                             pntr[(row, col)] = pntr_vals[flow_dir[(row, col)] as usize];
                         } else {
                             output[(row, col)] = output[(row, col)] * cell_area / flow_widths[3];
@@ -682,7 +747,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                         }
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -692,37 +757,53 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                 }
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
-        
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+
         pntr.configs.palette = "qual.plt".to_string();
         pntr.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        pntr.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        pntr.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         pntr.add_metadata_entry(format!("Input file: {}", input_file));
-        pntr.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        pntr.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving flow pointer data...") };
+        if verbose {
+            println!("Saving flow pointer data...")
+        };
         let _ = match pntr.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         output.configs.palette = "blueyellow.plt".to_string();
-        if clip_max { 
-            output.clip_display_max(1.0); 
+        if clip_max {
+            output.clip_display_max(1.0);
         }
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving accumulation data...") };
+        if verbose {
+            println!("Saving accumulation data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

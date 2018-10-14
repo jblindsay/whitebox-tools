@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::cmp::Ordering::Equal;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 /// Identifies potential valley bottom grid cells based on local topolography alone.
@@ -33,26 +32,27 @@ impl ExtractValleys {
         // public constructor
         let name = "ExtractValleys".to_string();
         let toolbox = "Stream Network Analysis".to_string();
-        let description = "Identifies potential valley bottom grid cells based on local topolography alone."
-            .to_string();
+        let description =
+            "Identifies potential valley bottom grid cells based on local topolography alone."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -85,7 +85,8 @@ impl ExtractValleys {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -109,7 +110,7 @@ impl WhiteboxTool for ExtractValleys {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -140,20 +141,23 @@ impl WhiteboxTool for ExtractValleys {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut variant = String::from("lq");
         let mut line_thin = false;
         let mut filter_size = 5;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -168,7 +172,7 @@ impl WhiteboxTool for ExtractValleys {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
@@ -180,16 +184,19 @@ impl WhiteboxTool for ExtractValleys {
                 if keyval {
                     variant = vec[1].to_string();
                 } else {
-                    variant = args[i+1].to_string();
+                    variant = args[i + 1].to_string();
                 }
                 if variant.to_lowercase().contains("q") {
                     variant = String::from("lq");
                 } else if variant.to_lowercase().contains("j") {
                     variant = String::from("JandR");
-                } else { //if variant.to_lowercase().contains("p") {
+                } else {
+                    //if variant.to_lowercase().contains("p") {
                     variant = String::from("PandD");
                 }
-            } else if vec[0].to_lowercase() == "-line_thin" || vec[0].to_lowercase() == "--line_thin" {
+            } else if vec[0].to_lowercase() == "-line_thin"
+                || vec[0].to_lowercase() == "--line_thin"
+            {
                 line_thin = true;
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
@@ -223,20 +230,20 @@ impl WhiteboxTool for ExtractValleys {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         match &variant as &str {
             "lq" => {
                 output.reinitialize_values(0f64);
-                
+
                 // This one can be performed conccurently.
                 let num_procs = num_cpus::get() as isize;
                 let (tx, rx) = mpsc::channel();
@@ -253,10 +260,10 @@ impl WhiteboxTool for ExtractValleys {
                         let large_value = f64::INFINITY;
                         let mut n: f64;
                         let mut lower_quartile: usize;
-                        
+
                         // let mut filter_shape = vec![1f64; num_cells_in_filter];
-                        // //see which pixels in the filter lie within the largest ellipse 
-                        // //that fits in the filter box 
+                        // //see which pixels in the filter lie within the largest ellipse
+                        // //that fits in the filter box
                         // let mut asqr = midpoint * midpoint;
                         let mut i = 0;
                         for row in 0..filter_size as isize {
@@ -270,12 +277,12 @@ impl WhiteboxTool for ExtractValleys {
                                 i += 1;
                             }
                         }
-                        
+
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
                                 z = input[(row, col)];
-                                if z != nodata  {
+                                if z != nodata {
                                     let mut cell_data = vec![1f64; num_cells_in_filter];
                                     n = 0f64;
                                     for i in 0..num_cells_in_filter {
@@ -315,8 +322,7 @@ impl WhiteboxTool for ExtractValleys {
                         }
                     }
                 }
-
-            },
+            }
             "JandR" => {
                 // This one can be performed conccurently.
                 // output.reinitialize_values(0f64);
@@ -327,13 +333,13 @@ impl WhiteboxTool for ExtractValleys {
                     let tx = tx.clone();
                     thread::spawn(move || {
                         let (mut z, mut zn1, mut zn2): (f64, f64, f64);
-                        let dx = [ 0, 0, -1, 1 ];
-                        let dy = [ -1, 1, 0, 0 ];
+                        let dx = [0, 0, -1, 1];
+                        let dy = [-1, 1, 0, 0];
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
                                 z = input[(row, col)];
-                                if z != nodata  {
+                                if z != nodata {
                                     zn1 = input[(row + dy[0], col + dx[0])];
                                     zn2 = input[(row + dy[1], col + dx[1])];
                                     if zn1 != nodata && zn2 != nodata && zn1 > z && zn2 > z {
@@ -365,21 +371,22 @@ impl WhiteboxTool for ExtractValleys {
                         }
                     }
                 }
-            },
-            _ => { // "PandD"
-                // This one can't easily be performed conccurently because a cell can be 
+            }
+            _ => {
+                // "PandD"
+                // This one can't easily be performed conccurently because a cell can be
                 // modified while a row other than the row containing the cell is being scanned.
                 output.reinitialize_values(1f64);
                 let mut z: f64;
                 let mut maxz: f64;
                 let mut which_cell: usize;
-                let dx = [ -1, 0, -1, 0 ];
-                let dy = [ -1, -1, 0, 0 ];
+                let dx = [-1, 0, -1, 0];
+                let dy = [-1, -1, 0, 0];
                 let num_scan_cells = dx.len();
                 for row in 0..rows {
                     for col in 0..columns {
                         z = input[(row, col)];
-                        if z != nodata  {
+                        if z != nodata {
                             maxz = z;
                             which_cell = 3;
                             for n in 0..num_scan_cells {
@@ -406,23 +413,35 @@ impl WhiteboxTool for ExtractValleys {
                 }
             }
         }
-        
+
         if line_thin {
             println!("Line thinning operation...");
             let mut did_something = true;
             let mut loop_num = 0;
-            let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-            let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-            let elements = vec![ vec![ 6, 7, 0, 4, 3, 2 ], vec![ 7, 0, 1, 3, 5 ], 
-                vec![ 0, 1, 2, 4, 5, 6 ], vec![ 1, 2, 3, 5, 7 ], 
-                vec![ 2, 3, 4, 6, 7, 0 ], vec![ 3, 4, 5, 7, 1 ], 
-                vec![ 4, 5, 6, 0, 1, 2 ], vec![ 5, 6, 7, 1, 3 ] ];
+            let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+            let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+            let elements = vec![
+                vec![6, 7, 0, 4, 3, 2],
+                vec![7, 0, 1, 3, 5],
+                vec![0, 1, 2, 4, 5, 6],
+                vec![1, 2, 3, 5, 7],
+                vec![2, 3, 4, 6, 7, 0],
+                vec![3, 4, 5, 7, 1],
+                vec![4, 5, 6, 0, 1, 2],
+                vec![5, 6, 7, 1, 3],
+            ];
 
-            let vals = vec![ vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ], 
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ],
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ],
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ] ];
-            
+            let vals = vec![
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+            ];
+
             let mut neighbours = [0.0; 8];
             let mut pattern_match: bool;
             let mut z: f64;
@@ -438,7 +457,7 @@ impl WhiteboxTool for ExtractValleys {
                                 for i in 0..8 {
                                     neighbours[i] = output[(row + dy[i], col + dx[i])];
                                 }
-                                
+
                                 // scan through element
                                 pattern_match = true;
                                 for i in 0..elements[a].len() {
@@ -464,18 +483,18 @@ impl WhiteboxTool for ExtractValleys {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input DEM file: {}", input_file));
         output.add_metadata_entry(format!("Variant: {}", variant));
         if variant == String::from("lq") {
             output.add_metadata_entry(format!("Filter size: {}", filter_size));
         }
         output.add_metadata_entry(format!("Line thinning: {}", line_thin));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -489,8 +508,10 @@ impl WhiteboxTool for ExtractValleys {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

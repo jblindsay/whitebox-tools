@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 6, 2017
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 
 Note: This algorithm could be parallelized
@@ -15,7 +15,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{Array2D, DistanceMetric, FixedRadiusSearch2D};
-use time;
 use tools::*;
 
 pub struct RemoveOffTerrainObjects {
@@ -216,7 +215,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         };
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let nodata = input.configs.nodata;
         let cell_size_x = input.configs.resolution_x;
@@ -485,8 +484,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         // Finally, output the new raster
         let mut output = Raster::initialize_using_file(&output_file, &input);
@@ -513,9 +511,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Filter size: {}", filter_size));
         output.add_metadata_entry(format!("Slope threshold: {}", slope_threshold));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -529,7 +525,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

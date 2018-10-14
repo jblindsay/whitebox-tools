@@ -2,18 +2,17 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: December 14, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use tools::*;
+use std::path;
 use structures::Array2D;
+use tools::*;
 
 pub struct EuclideanAllocation {
     name: String,
@@ -24,45 +23,53 @@ pub struct EuclideanAllocation {
 }
 
 impl EuclideanAllocation {
-    pub fn new() -> EuclideanAllocation { // public constructor
+    pub fn new() -> EuclideanAllocation {
+        // public constructor
         let name = "EuclideanAllocation".to_string();
         let toolbox = "GIS Analysis/Distance Tools".to_string();
         let description = "Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        EuclideanAllocation { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif",
+            short_exe, name
+        ).replace("*", &sep);
+
+        EuclideanAllocation {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -71,7 +78,7 @@ impl WhiteboxTool for EuclideanAllocation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -95,13 +102,20 @@ impl WhiteboxTool for EuclideanAllocation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -116,13 +130,13 @@ impl WhiteboxTool for EuclideanAllocation {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -145,7 +159,9 @@ impl WhiteboxTool for EuclideanAllocation {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Raster::new(&input_file, "r")?;
 
@@ -156,21 +172,20 @@ impl WhiteboxTool for EuclideanAllocation {
         let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut distance: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
+        let start = Instant::now();
 
-        let start = time::now();
-        
         let mut allocation = Raster::initialize_using_file(&output_file, &input);
-        
+
         let mut h: f64;
         let mut which_cell: usize;
         let inf_val = f64::INFINITY;
-        let d_x = [ -1, -1, 0, 1, 1, 1, 0, -1 ];
-        let d_y = [ 0, -1, -1, -1, 0, 1, 1, 1 ];
-        let g_x = [ 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0 ];
-        let g_y = [ 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0 ];
+        let d_x = [-1, -1, 0, 1, 1, 1, 0, -1];
+        let d_y = [0, -1, -1, -1, 0, 1, 1, 1];
+        let g_x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0];
+        let g_y = [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0];
         let (mut x, mut y): (isize, isize);
         let (mut z, mut z2, mut z_min): (f64, f64, f64);
-        
+
         for row in 0..rows {
             for col in 0..columns {
                 z = input[(row, col)];
@@ -233,7 +248,7 @@ impl WhiteboxTool for EuclideanAllocation {
                 }
             }
         }
-        
+
         for row in (0..rows).rev() {
             for col in (0..columns).rev() {
                 z = distance[(row, col)];
@@ -293,21 +308,30 @@ impl WhiteboxTool for EuclideanAllocation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         allocation.configs.palette = input.configs.palette;
-        allocation.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        allocation.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         allocation.add_metadata_entry(format!("Input file: {}", input_file));
-        allocation.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        allocation.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match allocation.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

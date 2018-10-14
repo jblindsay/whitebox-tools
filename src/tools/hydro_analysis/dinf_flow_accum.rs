@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 24, 2017
-Last Modified: January 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
 use tools::*;
 
@@ -29,82 +28,94 @@ pub struct DInfFlowAccumulation {
 }
 
 impl DInfFlowAccumulation {
-    pub fn new() -> DInfFlowAccumulation { // public constructor
+    pub fn new() -> DInfFlowAccumulation {
+        // public constructor
         let name = "DInfFlowAccumulation".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
-        
+        let description =
+            "Calculates a D-infinity flow accumulation raster from an input DEM.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output Type".to_owned(), 
-            flags: vec!["--out_type".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output Type".to_owned(),
+            flags: vec!["--out_type".to_owned()],
             description: "Output type; one of 'cells', 'sca' (default), and 'ca'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["Cells".to_owned(), "Specific Contributing Area".to_owned(), "Catchment Area".to_owned()]),
+            parameter_type: ParameterType::OptionList(vec![
+                "Cells".to_owned(),
+                "Specific Contributing Area".to_owned(),
+                "Catchment Area".to_owned(),
+            ]),
             default_value: Some("Specific Contributing Area".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Convergence Threshold (grid cells; blank for none)".to_owned(), 
-            flags: vec!["--threshold".to_owned()], 
-            description: "Optional convergence threshold parameter, in grid cells; default is inifinity.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Convergence Threshold (grid cells; blank for none)".to_owned(),
+            flags: vec!["--threshold".to_owned()],
+            description:
+                "Optional convergence threshold parameter, in grid cells; default is inifinity."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Log-transform the output?".to_owned(), 
-            flags: vec!["--log".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Log-transform the output?".to_owned(),
+            flags: vec!["--log".to_owned()],
             description: "Optional flag to request the output be log-transformed.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Clip the upper tail by 1%?".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Clip the upper tail by 1%?".to_owned(),
+            flags: vec!["--clip".to_owned()],
             description: "Optional flag to request clipping the display max by 1%.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type=sca
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
-    
-        DInfFlowAccumulation { 
-            name: name, 
-            description: description, 
+
+        DInfFlowAccumulation {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -113,7 +124,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -137,17 +148,24 @@ impl WhiteboxTool for DInfFlowAccumulation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut out_type = String::from("sca");
         let mut convergence_threshold = f64::INFINITY;
         let mut log_transform = false;
         let mut clip_max = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -158,23 +176,27 @@ impl WhiteboxTool for DInfFlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type" {
+            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type"
+            {
                 if keyval {
                     out_type = vec[1].to_lowercase();
                 } else {
-                    out_type = args[i+1].to_lowercase();
+                    out_type = args[i + 1].to_lowercase();
                 }
                 if out_type.contains("specific") || out_type.contains("sca") {
                     out_type = String::from("sca");
@@ -183,11 +205,13 @@ impl WhiteboxTool for DInfFlowAccumulation {
                 } else {
                     out_type = String::from("ca");
                 }
-            } else if vec[0].to_lowercase() == "-threshold" || vec[0].to_lowercase() == "--threshold" {
+            } else if vec[0].to_lowercase() == "-threshold"
+                || vec[0].to_lowercase() == "--threshold"
+            {
                 if keyval {
                     convergence_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    convergence_threshold = args[i+1].to_string().parse::<f64>().unwrap();
+                    convergence_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
                 log_transform = true;
@@ -214,11 +238,13 @@ impl WhiteboxTool for DInfFlowAccumulation {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
@@ -243,16 +269,23 @@ impl WhiteboxTool for DInfFlowAccumulation {
                 let mut e0: f64;
                 let mut af: f64;
                 let mut ac: f64;
-                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
-                
-                let ac_vals = [ 0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64 ];
-                let af_vals = [ 1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64 ];
+                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                );
 
-                let e1_col = [ 1, 0, 0, -1, -1, 0, 0, 1 ];
-                let e1_row = [ 0, -1, -1, 0, 0, 1, 1, 0 ];
+                let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
+                let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
 
-                let e2_col = [ 1, 1, -1, -1, -1, -1, 1, 1 ];
-                let e2_row = [ -1, -1, -1, -1, 1, 1, 1, 1 ];
+                let e1_col = [1, 0, 0, -1, -1, 0, 0, 1];
+                let e1_row = [0, -1, -1, 0, 0, 1, 1, 0];
+
+                let e2_col = [1, 1, -1, -1, -1, -1, 1, 1];
+                let e2_row = [-1, -1, -1, -1, 1, 1, 1, 1];
 
                 let atanof1 = 1.0f64.atan();
 
@@ -264,9 +297,9 @@ impl WhiteboxTool for DInfFlowAccumulation {
                         e0 = input[(row, col)];
                         if e0 != nodata {
                             dir = 360.0;
-							max_slope = f64::MIN;
+                            max_slope = f64::MIN;
                             neighbouring_nodata = false;
-							for i in 0..8 {
+                            for i in 0..8 {
                                 ac = ac_vals[i];
                                 af = af_vals[i];
                                 e1 = input[(row + e1_row[i], col + e1_col[i])];
@@ -274,14 +307,24 @@ impl WhiteboxTool for DInfFlowAccumulation {
                                 if e1 != nodata && e2 != nodata {
                                     if e0 > e1 && e0 > e2 {
                                         s1 = (e0 - e1) / grid_res;
-                                        if s1 == 0.0 { s1 = 0.00001; }
+                                        if s1 == 0.0 {
+                                            s1 = 0.00001;
+                                        }
                                         s2 = (e1 - e2) / grid_res;
                                         r = (s2 / s1).atan();
                                         s = (s1 * s1 + s2 * s2).sqrt();
-                                        if s1 < 0.0 && s2 < 0.0 { s = -1.0 * s; }
-                                        if s1 < 0.0 && s2 == 0.0 { s = -1.0 * s; }
-                                        if s1 == 0.0 && s2 < 0.0 { s = -1.0 * s; }
-                                        if s1 == 0.001 && s2 < 0.0 { s = -1.0 * s; }
+                                        if s1 < 0.0 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 < 0.0 && s2 == 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 == 0.0 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 == 0.001 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
                                         if r < 0.0 || r > atanof1 {
                                             if r < 0.0 {
                                                 r = 0.0;
@@ -315,7 +358,9 @@ impl WhiteboxTool for DInfFlowAccumulation {
 
                             if max_slope > 0f64 {
                                 dir = 360.0 - dir.to_degrees() + 90.0;
-                                if dir > 360.0 { dir = dir - 360.0; }
+                                if dir > 360.0 {
+                                    dir = dir - 360.0;
+                                }
                                 data[col as usize] = dir;
                             } else {
                                 data[col as usize] = -1f64;
@@ -336,7 +381,9 @@ impl WhiteboxTool for DInfFlowAccumulation {
         for r in 0..rows {
             let (row, data, pit) = rx.recv().unwrap();
             flow_dir.set_row_data(row, data);
-            if pit { interior_pit_found = true; }
+            if pit {
+                interior_pit_found = true;
+            }
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -345,7 +392,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                 }
             }
         }
-        
+
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
@@ -354,10 +401,10 @@ impl WhiteboxTool for DInfFlowAccumulation {
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let start_fd = [ 180f64, 225f64, 270f64, 315f64, 0f64, 45f64, 90f64, 135f64 ];
-                let end_fd = [ 270f64, 315f64, 360f64, 45f64, 90f64, 135f64, 180f64, 225f64 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let start_fd = [180f64, 225f64, 270f64, 315f64, 0f64, 45f64, 90f64, 135f64];
+                let end_fd = [270f64, 315f64, 360f64, 45f64, 90f64, 135f64, 180f64, 225f64];
                 let mut dir: f64;
                 let mut count: i8;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -368,7 +415,8 @@ impl WhiteboxTool for DInfFlowAccumulation {
                             count = 0;
                             for i in 0..8 {
                                 dir = flow_dir[(row + d_y[i], col + d_x[i])];
-                                if dir >= 0.0 { //&& dir <= 360.0 {
+                                if dir >= 0.0 {
+                                    //&& dir <= 360.0 {
                                     if i != 3 {
                                         if dir > start_fd[i] && dir < end_fd[i] {
                                             count += 1;
@@ -402,7 +450,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     num_solved_cells += 1;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -417,7 +465,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
         let mut dir: f64;
         let (mut proportion1, mut proportion2): (f64, f64);
         let (mut a1, mut b1, mut a2, mut b2): (isize, isize, isize, isize);
-        
+
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
@@ -477,7 +525,8 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     proportion2 = (dir - 270.0) / 45.0;
                     a2 = col - 1;
                     b2 = row - 1;
-                } else { // else if dir >= 315.0 && dir <= 360.0 {
+                } else {
+                    // else if dir >= 315.0 && dir <= 360.0 {
                     proportion1 = (360.0 - dir) / 45.0;
                     a1 = col - 1;
                     b1 = row - 1;
@@ -504,14 +553,16 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     }
                 }
 
-                if proportion1 > 0.0 { // && output[(b1, a1)] != nodata {
+                if proportion1 > 0.0 {
+                    // && output[(b1, a1)] != nodata {
                     output.increment(b1, a1, fa * proportion1);
                     num_inflowing.decrement(b1, a1, 1i8);
                     if num_inflowing[(b1, a1)] == 0i8 {
                         stack.push((b1, a1));
                     }
                 }
-                if proportion2 > 0.0 { // && output[(b2, a2)] != nodata {
+                if proportion2 > 0.0 {
+                    // && output[(b2, a2)] != nodata {
                     output.increment(b2, a2, fa * proportion2);
                     num_inflowing.decrement(b2, a2, 1i8);
                     if num_inflowing[(b2, a2)] == 0i8 {
@@ -548,7 +599,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                         output[(row, col)] = (output[(row, col)] * cell_area / avg_cell_size).ln();
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -566,7 +617,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                         output[(row, col)] = output[(row, col)] * cell_area / avg_cell_size;
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -578,22 +629,31 @@ impl WhiteboxTool for DInfFlowAccumulation {
         }
 
         output.configs.palette = "blueyellow.plt".to_string();
-        if clip_max { 
-            output.clip_display_max(1.0); 
+        if clip_max {
+            output.clip_display_max(1.0);
         }
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
         if interior_pit_found {
             println!("**********************************************************************************");

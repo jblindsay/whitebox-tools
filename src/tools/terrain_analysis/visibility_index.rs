@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 07/04/2018
-Last Modified: 07/04/2018
+Last Modified: 12/10/2018
 License: MIT
 
 Help: This tool can be used to calculate a measure of landscape visibility based on the 
@@ -25,18 +25,18 @@ considered before running this tool on a particular data set. This tool is best 
 on systems with high core-counts and plenty of memory.
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
-use structures::Array2D;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use structures::Array2D;
 use tools::*;
+use utils::get_formatted_elapsed_time;
 
 pub struct VisibilityIndex {
     name: String,
@@ -48,63 +48,68 @@ pub struct VisibilityIndex {
 
 impl VisibilityIndex {
     /// public constructor
-    pub fn new() -> VisibilityIndex { 
+    pub fn new() -> VisibilityIndex {
         let name = "VisibilityIndex".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Estimates the relative visibility of sites in a DEM.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Station Height (in z units)".to_owned(), 
-            flags: vec!["--height".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Station Height (in z units)".to_owned(),
+            flags: vec!["--height".to_owned()],
             description: "Viewing station height, in z units.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Resolution Factor".to_owned(), 
-            flags: vec!["--res_factor".to_owned()], 
-            description: "The resolution factor determines the density of measured viewsheds.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Resolution Factor".to_owned(),
+            flags: vec!["--res_factor".to_owned()],
+            description: "The resolution factor determines the density of measured viewsheds."
+                .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("2".to_owned()),
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=dem.tif -o=output.tif --height=10.0 --res_factor=4", short_exe, name).replace("*", &sep);
-    
-        VisibilityIndex { 
-            name: name, 
-            description: description, 
+
+        VisibilityIndex {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -113,7 +118,7 @@ impl WhiteboxTool for VisibilityIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -144,14 +149,22 @@ impl WhiteboxTool for VisibilityIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut height = 2f32;
         let mut res_factor = 2isize;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -167,25 +180,25 @@ impl WhiteboxTool for VisibilityIndex {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-height" {
                 height = if keyval {
                     vec[1].to_string().parse::<f32>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f32>().unwrap()
+                    args[i + 1].to_string().parse::<f32>().unwrap()
                 };
             } else if flag_val == "-res_factor" {
                 res_factor = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap() as isize
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap() as isize
+                    args[i + 1].to_string().parse::<f64>().unwrap() as isize
                 };
             }
         }
@@ -210,10 +223,12 @@ impl WhiteboxTool for VisibilityIndex {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let dem = Arc::new(Raster::new(&input_file, "r")?);
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         if height < 0f32 {
             println!("Warning: Input station height cannot be less than zero.");
@@ -231,9 +246,12 @@ impl WhiteboxTool for VisibilityIndex {
         let columns = dem.configs.columns as isize;
         let nodata = dem.configs.nodata;
 
-        if verbose { println!("Performing analysis. Please be patient...") };
+        if verbose {
+            println!("Performing analysis. Please be patient...")
+        };
 
-        let num_cells_tested = (rows as f64 / res_factor as f64).ceil() * (columns as f64 / res_factor as f64).ceil();
+        let num_cells_tested =
+            (rows as f64 / res_factor as f64).ceil() * (columns as f64 / res_factor as f64).ceil();
         let target_cells_count = (num_cells_tested / 100f64) as usize;
         let num_cells_completed = Arc::new(Mutex::new(0));
         let (tx, rx) = mpsc::channel();
@@ -242,10 +260,13 @@ impl WhiteboxTool for VisibilityIndex {
             let num_cells_completed = num_cells_completed.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let mut return_data: Array2D<usize> = Array2D::new(rows, columns, 0usize, 0usize).unwrap();
-                let mut view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
-                let mut max_view_angle: Array2D<f32> = Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
-                
+                let mut return_data: Array2D<usize> =
+                    Array2D::new(rows, columns, 0usize, 0usize).unwrap();
+                let mut view_angle: Array2D<f32> =
+                    Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
+                let mut max_view_angle: Array2D<f32> =
+                    Array2D::new(rows, columns, -32768f32, -32768f32).unwrap();
+
                 let mut row_y_values = vec![0f32; rows as usize];
                 let mut col_x_values = vec![0f32; columns as usize];
                 for row in 0..rows {
@@ -270,7 +291,9 @@ impl WhiteboxTool for VisibilityIndex {
                 let mut horiz_count: f32;
                 let mut max_va: f32;
                 let mut cells_completed_by_thread = 0usize;
-                for stn_row in (0..rows).filter(|r| (r % res_factor == 0) && ((r / res_factor) % num_procs == tid)) {
+                for stn_row in (0..rows)
+                    .filter(|r| (r % res_factor == 0) && ((r / res_factor) % num_procs == tid))
+                {
                     for stn_col in (0..columns).filter(|c| c % res_factor == 0) {
                         stn_x = col_x_values[stn_col as usize];
                         stn_y = row_y_values[stn_row as usize];
@@ -282,7 +305,8 @@ impl WhiteboxTool for VisibilityIndex {
                                 x = col_x_values[col as usize];
                                 y = row_y_values[row as usize];
                                 dz = dem.get_value(row, col) as f32 - stn_z;
-                                dist = ((x - stn_x) * (x - stn_x) + (y - stn_y) * (y - stn_y)).sqrt();
+                                dist =
+                                    ((x - stn_x) * (x - stn_x) + (y - stn_y) * (y - stn_y)).sqrt();
                                 if dist != 0.0 {
                                     view_angle.set_value(row, col, dz / dist * 1000f32);
                                 } else {
@@ -292,14 +316,14 @@ impl WhiteboxTool for VisibilityIndex {
                         }
 
                         // perform the simple scan lines.
-                        for row in stn_row-1..stn_row+2 {
-                            for col in stn_col-1..stn_col+2 {
+                        for row in stn_row - 1..stn_row + 2 {
+                            for col in stn_col - 1..stn_col + 2 {
                                 max_view_angle.set_value(row, col, view_angle.get_value(row, col));
                             }
                         }
 
                         max_va = view_angle.get_value(stn_row - 1, stn_col);
-                        for row in (0..stn_row-1).rev() {
+                        for row in (0..stn_row - 1).rev() {
                             z = view_angle.get_value(row, stn_col);
                             if z > max_va {
                                 max_va = z;
@@ -309,7 +333,7 @@ impl WhiteboxTool for VisibilityIndex {
                         }
 
                         max_va = view_angle.get_value(stn_row + 1, stn_col);
-                        for row in stn_row+2..rows {
+                        for row in stn_row + 2..rows {
                             z = view_angle.get_value(row, stn_col);
                             if z > max_va {
                                 max_va = z;
@@ -319,7 +343,7 @@ impl WhiteboxTool for VisibilityIndex {
                         }
 
                         max_va = view_angle.get_value(stn_row, stn_col + 1);
-                        for col in stn_col+2..columns {
+                        for col in stn_col + 2..columns {
                             z = view_angle.get_value(stn_row, col);
                             if z > max_va {
                                 max_va = z;
@@ -329,7 +353,7 @@ impl WhiteboxTool for VisibilityIndex {
                         }
 
                         max_va = view_angle.get_value(stn_row, stn_col - 1);
-                        for col in (0..stn_col-1).rev() {
+                        for col in (0..stn_col - 1).rev() {
                             z = view_angle.get_value(stn_row, col);
                             if z > max_va {
                                 max_va = z;
@@ -340,10 +364,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         //solve the first triangular facet
                         vert_count = 1f32;
-                        for row in (0..stn_row-1).rev() {
+                        for row in (0..stn_row - 1).rev() {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for col in stn_col+1..stn_col+(vert_count as isize)+1 {
+                            for col in stn_col + 1..stn_col + (vert_count as isize) + 1 {
                                 if col <= columns {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -368,10 +392,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         //solve the second triangular facet
                         vert_count = 1f32;
-                        for row in (0..stn_row-1).rev() {
+                        for row in (0..stn_row - 1).rev() {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for col in (stn_col-(vert_count as isize)..stn_col).rev() {
+                            for col in (stn_col - (vert_count as isize)..stn_col).rev() {
                                 if col >= 0 {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -396,10 +420,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the third triangular facet
                         vert_count = 1f32;
-                        for row in stn_row+2..rows {
+                        for row in stn_row + 2..rows {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for col in (stn_col-(vert_count as isize)..stn_col).rev() {
+                            for col in (stn_col - (vert_count as isize)..stn_col).rev() {
                                 if col >= 0 {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -424,10 +448,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the fourth triangular facet
                         vert_count = 1f32;
-                        for row in stn_row+2..rows {
+                        for row in stn_row + 2..rows {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for col in stn_col+1..stn_col+(vert_count as isize)+1 {
+                            for col in stn_col + 1..stn_col + (vert_count as isize) + 1 {
                                 if col < columns {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -452,10 +476,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the fifth triangular facet
                         vert_count = 1f32;
-                        for col in stn_col+2..columns {
+                        for col in stn_col + 2..columns {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for row in (stn_row-(vert_count as isize)..stn_row).rev() {
+                            for row in (stn_row - (vert_count as isize)..stn_row).rev() {
                                 if row >= 0 {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -480,10 +504,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the sixth triangular facet
                         vert_count = 1f32;
-                        for col in stn_col+2..columns {
+                        for col in stn_col + 2..columns {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for row in stn_row+1..stn_row+(vert_count as isize)+1 {
+                            for row in stn_row + 1..stn_row + (vert_count as isize) + 1 {
                                 if row < rows {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -508,10 +532,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the seventh triangular facet
                         vert_count = 1f32;
-                        for col in (0..stn_col-1).rev() {
+                        for col in (0..stn_col - 1).rev() {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for row in stn_row+1..stn_row+(vert_count as isize)+1 {
+                            for row in stn_row + 1..stn_row + (vert_count as isize) + 1 {
                                 if row < rows {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -536,10 +560,10 @@ impl WhiteboxTool for VisibilityIndex {
 
                         // solve the eigth triangular facet
                         vert_count = 1f32;
-                        for col in (0..stn_col-1).rev() {
+                        for col in (0..stn_col - 1).rev() {
                             vert_count += 1f32;
                             horiz_count = 0f32;
-                            for row in (stn_row-(vert_count as isize)..stn_row).rev() {
+                            for row in (stn_row - (vert_count as isize)..stn_row).rev() {
                                 if row < rows {
                                     va = view_angle.get_value(row, col);
                                     horiz_count += 1f32;
@@ -568,7 +592,9 @@ impl WhiteboxTool for VisibilityIndex {
                             *num_cells_completed += cells_completed_by_thread;
                             cells_completed_by_thread = 0;
                             if verbose {
-                                let progress = (100.0_f64 * *num_cells_completed as f64 / (num_cells_tested - 1f64)) as usize;
+                                let progress = (100.0_f64 * *num_cells_completed as f64
+                                    / (num_cells_tested - 1f64))
+                                    as usize;
                                 println!("Progress (Loop 1 of 2): {}%", progress);
                             }
                         }
@@ -577,7 +603,8 @@ impl WhiteboxTool for VisibilityIndex {
                 let mut num_cells_completed = num_cells_completed.lock().unwrap();
                 *num_cells_completed += cells_completed_by_thread;
                 if verbose {
-                    let progress = (100.0_f64 * *num_cells_completed as f64 / (num_cells_tested - 1f64)) as usize;
+                    let progress = (100.0_f64 * *num_cells_completed as f64
+                        / (num_cells_tested - 1f64)) as usize;
                     println!("Progress (Loop 1 of 2): {}%", progress);
                 }
                 tx.send(return_data).unwrap();
@@ -598,7 +625,7 @@ impl WhiteboxTool for VisibilityIndex {
             }
         }
 
-       for row in 0..rows {
+        for row in 0..rows {
             for col in 0..columns {
                 if dem.get_value(row, col) != nodata {
                     z = output.get_value(row, col);
@@ -614,21 +641,30 @@ impl WhiteboxTool for VisibilityIndex {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("DEM file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

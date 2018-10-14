@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/03/2018
-Last Modified: 30/08/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: When support is provided for reading vector attributes tables, this tool should be modified so
@@ -18,7 +18,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{BoundingBox, Point2D};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -191,7 +190,7 @@ impl WhiteboxTool for FlattenLakes {
         };
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -464,16 +463,13 @@ impl WhiteboxTool for FlattenLakes {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -488,7 +484,7 @@ impl WhiteboxTool for FlattenLakes {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

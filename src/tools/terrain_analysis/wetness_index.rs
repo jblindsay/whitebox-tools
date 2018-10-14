@@ -6,16 +6,15 @@ Last Modified: January 21, 2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct WetnessIndex {
@@ -27,54 +26,60 @@ pub struct WetnessIndex {
 }
 
 impl WetnessIndex {
-    pub fn new() -> WetnessIndex { // public constructor
+    pub fn new() -> WetnessIndex {
+        // public constructor
         let name = "WetnessIndex".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates the topographic wetness index, Ln(A / tan(slope)).".to_string();
-        
+        let description =
+            "Calculates the topographic wetness index, Ln(A / tan(slope)).".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Specific Contributing Area (SCA) File".to_owned(), 
-            flags: vec!["--sca".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Specific Contributing Area (SCA) File".to_owned(),
+            flags: vec!["--sca".to_owned()],
             description: "Input raster specific contributing area (SCA) file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Slope File".to_owned(), 
-            flags: vec!["--slope".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Slope File".to_owned(),
+            flags: vec!["--slope".to_owned()],
             description: "Input raster slope file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
-         
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --sca='flow_accum.tif' --slope='slope.tif' -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        WetnessIndex { 
-            name: name, 
-            description: description, 
+
+        WetnessIndex {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -83,7 +88,7 @@ impl WhiteboxTool for WetnessIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -114,14 +119,21 @@ impl WhiteboxTool for WetnessIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut sca_file = String::new();
         let mut slope_file = String::new();
         let mut output_file = String::new();
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -136,19 +148,19 @@ impl WhiteboxTool for WetnessIndex {
                 if keyval {
                     sca_file = vec[1].to_string();
                 } else {
-                    sca_file = args[i+1].to_string();
+                    sca_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-slope" || vec[0].to_lowercase() == "--slope" {
                 if keyval {
                     slope_file = vec[1].to_string();
                 } else {
-                    slope_file = args[i+1].to_string();
+                    slope_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -174,12 +186,13 @@ impl WhiteboxTool for WetnessIndex {
             slope_file = format!("{}{}", working_directory, slope_file);
         }
 
-
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let sca = Arc::new(Raster::new(&sca_file, "r")?);
         let slope = Arc::new(Raster::new(&slope_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = sca.configs.rows as isize;
         let columns = sca.configs.columns as isize;
         let sca_nodata = sca.configs.nodata;
@@ -187,10 +200,12 @@ impl WhiteboxTool for WetnessIndex {
 
         // make sure the input files have the same size
         if sca.configs.rows != slope.configs.rows || sca.configs.columns != slope.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "The input files must have the same number of rows and columns and spatial extent."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
-        
+
         // calculate the number of downslope cells
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -221,7 +236,7 @@ impl WhiteboxTool for WetnessIndex {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -231,20 +246,26 @@ impl WhiteboxTool for WetnessIndex {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.data_type = DataType::F32;
         output.configs.palette = "grey.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output.clip_display_min_max(1.0);
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("SCA raster: {}", sca_file));
         output.add_metadata_entry(format!("Slope raster: {}", slope_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
 
@@ -253,9 +274,12 @@ impl WhiteboxTool for WetnessIndex {
             log-transformed. This tool requires non-transformed SCA as an input.")
         }
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

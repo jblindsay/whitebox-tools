@@ -2,23 +2,22 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
-Last Modified: January 21, 2018
+Last Modified: 13/10/2018
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read 
 and written to during the same loop. Doing so would involve using a mutex.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 pub struct RemoveSpurs {
@@ -30,54 +29,62 @@ pub struct RemoveSpurs {
 }
 
 impl RemoveSpurs {
-    pub fn new() -> RemoveSpurs { // public constructor
+    pub fn new() -> RemoveSpurs {
+        // public constructor
         let name = "RemoveSpurs".to_string();
         let toolbox = "Image Processing Tools".to_string();
         let description = "Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Iterations".to_owned(), 
-            flags: vec!["--iterations".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Maximum Iterations".to_owned(),
+            flags: vec!["--iterations".to_owned()],
             description: "Maximum number of iterations".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("10".to_owned()),
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --iterations=10", short_exe, name).replace("*", &sep);
-    
-        RemoveSpurs { 
-            name: name, 
-            description: description, 
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --iterations=10",
+            short_exe, name
+        ).replace("*", &sep);
+
+        RemoveSpurs {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -86,7 +93,7 @@ impl WhiteboxTool for RemoveSpurs {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,14 +124,21 @@ impl WhiteboxTool for RemoveSpurs {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut max_iterations = 10;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -135,19 +149,24 @@ impl WhiteboxTool for RemoveSpurs {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-iterations" || vec[0].to_lowercase() == "--iterations" {
+            } else if vec[0].to_lowercase() == "-iterations"
+                || vec[0].to_lowercase() == "--iterations"
+            {
                 if keyval {
                     max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
@@ -174,14 +193,16 @@ impl WhiteboxTool for RemoveSpurs {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-                
-        let start = time::now();
+
+        let start = Instant::now();
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -207,7 +228,7 @@ impl WhiteboxTool for RemoveSpurs {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -218,13 +239,19 @@ impl WhiteboxTool for RemoveSpurs {
         }
 
         let mut did_something: bool;
-        let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-        
-        let elements = vec![ vec![ 0, 1, 4, 5, 6, 7 ], vec![ 0, 1, 2, 5, 6, 7 ], 
-            vec![ 0, 1, 2, 3, 6, 7 ], vec![ 0, 1, 2, 3, 4, 7 ], 
-            vec![ 0, 1, 2, 3, 4, 5 ], vec![ 1, 2, 3, 4, 5, 6 ], 
-            vec![ 2, 3, 4, 5, 6, 7 ], vec![ 0, 3, 4, 5, 6, 7 ] ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+
+        let elements = vec![
+            vec![0, 1, 4, 5, 6, 7],
+            vec![0, 1, 2, 5, 6, 7],
+            vec![0, 1, 2, 3, 6, 7],
+            vec![0, 1, 2, 3, 4, 7],
+            vec![0, 1, 2, 3, 4, 5],
+            vec![1, 2, 3, 4, 5, 6],
+            vec![2, 3, 4, 5, 6, 7],
+            vec![0, 3, 4, 5, 6, 7],
+        ];
 
         let mut neighbours = [0.0; 8];
         let mut pattern_match: bool;
@@ -241,7 +268,7 @@ impl WhiteboxTool for RemoveSpurs {
                                 for i in 0..8 {
                                     neighbours[i] = output[(row + dy[i], col + dx[i])];
                                 }
-                                
+
                                 // scan through element
                                 pattern_match = true;
                                 for i in 0..elements[a].len() {
@@ -274,7 +301,7 @@ impl WhiteboxTool for RemoveSpurs {
                                 for i in 0..8 {
                                     neighbours[i] = output[(row + dy[i], col + dx[i])];
                                 }
-                                
+
                                 // scan through element
                                 pattern_match = true;
                                 for i in 0..elements[a].len() {
@@ -302,21 +329,30 @@ impl WhiteboxTool for RemoveSpurs {
                 break;
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Max iterations: {}", max_iterations));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 16, 2017
-Last Modified: 04/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -14,7 +14,6 @@ use std::io::prelude::*;
 use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 
 pub struct LasToAscii {
@@ -145,7 +144,7 @@ impl WhiteboxTool for LasToAscii {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut cmd = input_files.split(";");
         let mut vec = cmd.collect::<Vec<&str>>();
@@ -221,12 +220,8 @@ impl WhiteboxTool for LasToAscii {
         }
 
         if verbose {
-            let end = time::now();
-            let elapsed_time = end - start;
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            let elapsed_time = get_formatted_elapsed_time(start);
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

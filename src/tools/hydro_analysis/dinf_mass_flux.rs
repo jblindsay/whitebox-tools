@@ -2,24 +2,23 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 29, 2017
-Last Modified: January 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: Assumes that each of the three input rasters have the same number of rows and 
        columns and that any nodata cells present are the same among each of the inputs.
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
 use tools::*;
 
@@ -32,72 +31,77 @@ pub struct DInfMassFlux {
 }
 
 impl DInfMassFlux {
-    pub fn new() -> DInfMassFlux { // public constructor
+    pub fn new() -> DInfMassFlux {
+        // public constructor
         let name = "DInfMassFlux".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description = "Performs a D-infinity mass flux calculation.".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Loading File".to_owned(), 
-            flags: vec!["--loading".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Loading File".to_owned(),
+            flags: vec!["--loading".to_owned()],
             description: "Input loading raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Efficiency File".to_owned(), 
-            flags: vec!["--efficiency".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Efficiency File".to_owned(),
+            flags: vec!["--efficiency".to_owned()],
             description: "Input efficiency raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Absorption File".to_owned(), 
-            flags: vec!["--absorption".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Absorption File".to_owned(),
+            flags: vec!["--absorption".to_owned()],
             description: "Input absorption raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif --loading=load.tif --efficiency=eff.tif --absorption=abs.tif -o=output.tif", short_exe, name).replace("*", &sep);
-    
-        DInfMassFlux { 
-            name: name, 
-            description: description, 
+
+        DInfMassFlux {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -106,7 +110,7 @@ impl WhiteboxTool for DInfMassFlux {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -130,16 +134,23 @@ impl WhiteboxTool for DInfMassFlux {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut loading_file = String::new();
         let mut efficiency_file = String::new();
         let mut absorption_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -155,31 +166,31 @@ impl WhiteboxTool for DInfMassFlux {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-loading" {
                 if keyval {
                     loading_file = vec[1].to_string();
                 } else {
-                    loading_file = args[i+1].to_string();
+                    loading_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-efficiency" {
                 if keyval {
                     efficiency_file = vec[1].to_string();
                 } else {
-                    efficiency_file = args[i+1].to_string();
+                    efficiency_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-absorption" {
                 if keyval {
                     absorption_file = vec[1].to_string();
                 } else {
-                    absorption_file = args[i+1].to_string();
+                    absorption_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             }
         }
@@ -211,10 +222,12 @@ impl WhiteboxTool for DInfMassFlux {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let input = Arc::new(Raster::new(&input_file, "r")?); // the DEM
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -225,8 +238,9 @@ impl WhiteboxTool for DInfMassFlux {
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
 
         let efficiency = Arc::new(Raster::new(&efficiency_file, "r")?); // the efficiency raster
-        if efficiency.configs.rows as isize != rows ||
-            efficiency.configs.columns as isize != columns {
+        if efficiency.configs.rows as isize != rows
+            || efficiency.configs.columns as isize != columns
+        {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "All input images must share the same dimensions (rows and columns) and spatial extent."));
         }
@@ -237,12 +251,13 @@ impl WhiteboxTool for DInfMassFlux {
         };
 
         let absorption = Arc::new(Raster::new(&absorption_file, "r")?); // the absorption raster
-        if absorption.configs.rows as isize != rows ||
-            absorption.configs.columns as isize != columns {
+        if absorption.configs.rows as isize != rows
+            || absorption.configs.columns as isize != columns
+        {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "All input images must share the same dimensions (rows and columns) and spatial extent."));
         }
-        
+
         // calculate the flow directions
         let mut flow_dir: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
 
@@ -259,16 +274,23 @@ impl WhiteboxTool for DInfMassFlux {
                 let mut e0: f64;
                 let mut af: f64;
                 let mut ac: f64;
-                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
-                
-                let ac_vals = [ 0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64 ];
-                let af_vals = [ 1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64 ];
+                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                );
 
-                let e1_col = [ 1, 0, 0, -1, -1, 0, 0, 1 ];
-                let e1_row = [ 0, -1, -1, 0, 0, 1, 1, 0 ];
+                let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
+                let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
 
-                let e2_col = [ 1, 1, -1, -1, -1, -1, 1, 1 ];
-                let e2_row = [ -1, -1, -1, -1, 1, 1, 1, 1 ];
+                let e1_col = [1, 0, 0, -1, -1, 0, 0, 1];
+                let e1_row = [0, -1, -1, 0, 0, 1, 1, 0];
+
+                let e2_col = [1, 1, -1, -1, -1, -1, 1, 1];
+                let e2_row = [-1, -1, -1, -1, 1, 1, 1, 1];
 
                 let atanof1 = 1.0f64.atan();
 
@@ -280,9 +302,9 @@ impl WhiteboxTool for DInfMassFlux {
                         e0 = input[(row, col)];
                         if e0 != nodata {
                             dir = 360.0;
-							max_slope = f64::MIN;
+                            max_slope = f64::MIN;
                             neighbouring_nodata = false;
-							for i in 0..8 {
+                            for i in 0..8 {
                                 ac = ac_vals[i];
                                 af = af_vals[i];
                                 e1 = input[(row + e1_row[i], col + e1_col[i])];
@@ -290,14 +312,24 @@ impl WhiteboxTool for DInfMassFlux {
                                 if e1 != nodata && e2 != nodata {
                                     if e0 > e1 && e0 > e2 {
                                         s1 = (e0 - e1) / grid_res;
-                                        if s1 == 0.0 { s1 = 0.00001; }
+                                        if s1 == 0.0 {
+                                            s1 = 0.00001;
+                                        }
                                         s2 = (e1 - e2) / grid_res;
                                         r = (s2 / s1).atan();
                                         s = (s1 * s1 + s2 * s2).sqrt();
-                                        if s1 < 0.0 && s2 < 0.0 { s = -1.0 * s; }
-                                        if s1 < 0.0 && s2 == 0.0 { s = -1.0 * s; }
-                                        if s1 == 0.0 && s2 < 0.0 { s = -1.0 * s; }
-                                        if s1 == 0.001 && s2 < 0.0 { s = -1.0 * s; }
+                                        if s1 < 0.0 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 < 0.0 && s2 == 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 == 0.0 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
+                                        if s1 == 0.001 && s2 < 0.0 {
+                                            s = -1.0 * s;
+                                        }
                                         if r < 0.0 || r > atanof1 {
                                             if r < 0.0 {
                                                 r = 0.0;
@@ -332,7 +364,9 @@ impl WhiteboxTool for DInfMassFlux {
                             if max_slope > 0f64 {
                                 // dir = Math.round((dir * (180 / Math.PI)) * 10) / 10;
                                 dir = 360.0 - dir.to_degrees() + 90.0;
-                                if dir > 360.0 { dir = dir - 360.0; }
+                                if dir > 360.0 {
+                                    dir = dir - 360.0;
+                                }
                                 data[col as usize] = dir;
                             } else {
                                 data[col as usize] = -1f64;
@@ -353,7 +387,9 @@ impl WhiteboxTool for DInfMassFlux {
         for r in 0..rows {
             let (row, data, pit) = rx.recv().unwrap();
             flow_dir.set_row_data(row, data);
-            if pit { interior_pit_found = true; }
+            if pit {
+                interior_pit_found = true;
+            }
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -362,7 +398,7 @@ impl WhiteboxTool for DInfMassFlux {
                 }
             }
         }
-        
+
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
@@ -371,10 +407,10 @@ impl WhiteboxTool for DInfMassFlux {
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-                let start_fd = [ 180f64, 225f64, 270f64, 315f64, 0f64, 45f64, 90f64, 135f64 ];
-                let end_fd = [ 270f64, 315f64, 360f64, 45f64, 90f64, 135f64, 180f64, 225f64 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let start_fd = [180f64, 225f64, 270f64, 315f64, 0f64, 45f64, 90f64, 135f64];
+                let end_fd = [270f64, 315f64, 360f64, 45f64, 90f64, 135f64, 180f64, 225f64];
                 let mut dir: f64;
                 let mut count: i8;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -385,7 +421,8 @@ impl WhiteboxTool for DInfMassFlux {
                             count = 0;
                             for i in 0..8 {
                                 dir = flow_dir[(row + d_y[i], col + d_x[i])];
-                                if dir >= 0.0 { //&& dir <= 360.0 {
+                                if dir >= 0.0 {
+                                    //&& dir <= 360.0 {
                                     if i != 3 {
                                         if dir > start_fd[i] && dir < end_fd[i] {
                                             count += 1;
@@ -417,7 +454,7 @@ impl WhiteboxTool for DInfMassFlux {
                     num_solved_cells += 1;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -429,11 +466,10 @@ impl WhiteboxTool for DInfMassFlux {
 
         // Create the output image
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         // read in the loading file and initialize output with these data.
         let loading = Raster::new(&loading_file, "r")?; // the loading raster
-        if loading.configs.rows as isize != rows ||
-            loading.configs.columns as isize != columns {
+        if loading.configs.rows as isize != rows || loading.configs.columns as isize != columns {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "All input images must share the same dimensions (rows and columns) and spatial extent."));
         }
@@ -441,10 +477,10 @@ impl WhiteboxTool for DInfMassFlux {
 
         if load_nodata == nodata {
             output.set_data_from_raster(&loading)?;
-            // let _ = match output.set_data_from_raster(&loading) {
-            //     Ok(_) => // do nothing,
-            //     Err(e) => return Err(e),
-            // };
+        // let _ = match output.set_data_from_raster(&loading) {
+        //     Ok(_) => // do nothing,
+        //     Err(e) => return Err(e),
+        // };
         } else {
             let mut load: f64;
             for row in 0..rows {
@@ -534,7 +570,8 @@ impl WhiteboxTool for DInfMassFlux {
                     proportion2 = (dir - 270.0) / 45.0;
                     a2 = col - 1;
                     b2 = row - 1;
-                } else { // else if dir >= 315.0 && dir <= 360.0 {
+                } else {
+                    // else if dir >= 315.0 && dir <= 360.0 {
                     proportion1 = (360.0 - dir) / 45.0;
                     a1 = col - 1;
                     b1 = row - 1;
@@ -543,14 +580,16 @@ impl WhiteboxTool for DInfMassFlux {
                     b2 = row - 1;
                 }
 
-                if proportion1 > 0.0 { // && output[(b1, a1)] != nodata {
+                if proportion1 > 0.0 {
+                    // && output[(b1, a1)] != nodata {
                     output.increment(b1, a1, fa * proportion1);
                     num_inflowing.decrement(b1, a1, 1i8);
                     if num_inflowing[(b1, a1)] == 0i8 {
                         stack.push((b1, a1));
                     }
                 }
-                if proportion2 > 0.0 { // && output[(b2, a2)] != nodata {
+                if proportion2 > 0.0 {
+                    // && output[(b2, a2)] != nodata {
                     output.increment(b2, a2, fa * proportion2);
                     num_inflowing.decrement(b2, a2, 1i8);
                     if num_inflowing[(b2, a2)] == 0i8 {
@@ -575,7 +614,7 @@ impl WhiteboxTool for DInfMassFlux {
                     output.set_value(row, col, nodata);
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -586,22 +625,31 @@ impl WhiteboxTool for DInfMassFlux {
         }
 
         output.configs.palette = "blueyellow.plt".to_string();
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("DEM file: {}", input_file));
         output.add_metadata_entry(format!("Loading file: {}", loading_file));
         output.add_metadata_entry(format!("Efficiency file: {}", efficiency_file));
         output.add_metadata_entry(format!("Absorption file: {}", absorption_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
         if interior_pit_found {
             println!("**********************************************************************************");

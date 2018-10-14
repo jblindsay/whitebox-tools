@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
-Last Modified: 05/05/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::f64::consts::PI;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct BilateralFilter {
@@ -28,63 +27,68 @@ pub struct BilateralFilter {
 }
 
 impl BilateralFilter {
-    pub fn new() -> BilateralFilter { // public constructor
+    pub fn new() -> BilateralFilter {
+        // public constructor
         let name = "BilateralFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "A bilateral filter is an edge-preserving smoothing filter introduced by Tomasi and Manduchi (1998).".to_string();
-        
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Distance Standard Deviation (pixels)".to_owned(), 
-            flags: vec!["--sigma_dist".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Distance Standard Deviation (pixels)".to_owned(),
+            flags: vec!["--sigma_dist".to_owned()],
             description: "Standard deviation in distance in pixels.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.75".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Intensity Standard Deviation (intensity units)".to_owned(), 
-            flags: vec!["--sigma_int".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Intensity Standard Deviation (intensity units)".to_owned(),
+            flags: vec!["--sigma_int".to_owned()],
             description: "Standard deviation in intensity in pixels.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma_dist=2.5 --sigma_int=4.0", short_exe, name).replace("*", &sep);
-    
-        BilateralFilter { 
-            name: name, 
-            description: description, 
+
+        BilateralFilter {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -93,7 +97,7 @@ impl WhiteboxTool for BilateralFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -117,15 +121,22 @@ impl WhiteboxTool for BilateralFilter {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 0usize;
         let mut sigma_dist = 0.75;
         let mut sigma_int = 1.0;
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -148,13 +159,17 @@ impl WhiteboxTool for BilateralFilter {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-sigma_dist" || vec[0].to_lowercase() == "--sigma_dist" {
+            } else if vec[0].to_lowercase() == "-sigma_dist"
+                || vec[0].to_lowercase() == "--sigma_dist"
+            {
                 if keyval {
                     sigma_dist = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     sigma_dist = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-sigma_int" || vec[0].to_lowercase() == "--sigma_int" {
+            } else if vec[0].to_lowercase() == "-sigma_int"
+                || vec[0].to_lowercase() == "--sigma_int"
+            {
                 if keyval {
                     sigma_int = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
@@ -197,25 +212,28 @@ impl WhiteboxTool for BilateralFilter {
         // figure out the size of the filter
         let mut weight: f64;
         for i in 0..250 {
-            weight = recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+            weight =
+                recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
             if weight <= 0.001 {
                 filter_size = i * 2 + 1;
                 break;
             }
         }
-        
+
         // the filter dimensions must be odd numbers such that there is a middle pixel
         if filter_size % 2 == 0 {
             filter_size += 1;
         }
 
-        if filter_size < 3 { filter_size = 3; }
+        if filter_size < 3 {
+            filter_size = 3;
+        }
 
         let num_pixels_in_filter = filter_size * filter_size;
         let mut dx = vec![0isize; num_pixels_in_filter];
         let mut dy = vec![0isize; num_pixels_in_filter];
         let mut weights_d = vec![0.0; num_pixels_in_filter];
-        
+
         // fill the filter d_x and d_y values and the distance-weights
         let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize + 1;
         let mut a = 0;
@@ -226,7 +244,8 @@ impl WhiteboxTool for BilateralFilter {
                 y = row as isize - midpoint;
                 dx[a] = x;
                 dy[a] = y;
-                weight = recip_root_2_pi_times_sigma_d * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr_d).exp();
+                weight = recip_root_2_pi_times_sigma_d
+                    * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr_d).exp();
                 weights_d[a] = weight;
                 a += 1;
             }
@@ -243,22 +262,22 @@ impl WhiteboxTool for BilateralFilter {
         let dx = Arc::new(dx);
         let dy = Arc::new(dy);
         let weights_d = Arc::new(weights_d);
-        
-        let start = time::now();
+
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let is_rgb_image = if input.configs.data_type == DataType::RGB24 ||
-            input.configs.data_type == DataType::RGBA32 ||
-            input.configs.photometric_interp == PhotometricInterpretation::RGB {
-            
+        let is_rgb_image = if input.configs.data_type == DataType::RGB24
+            || input.configs.data_type == DataType::RGBA32
+            || input.configs.photometric_interp == PhotometricInterpretation::RGB
+        {
             true
         } else {
             false
         };
-    
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         let num_procs = num_cpus::get() as isize;
@@ -273,31 +292,27 @@ impl WhiteboxTool for BilateralFilter {
                 let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
-                    Box::new(
-                        |row: isize, col: isize| -> f64 {
-                            let value = input.get_value(row, col);
-                            if value != nodata {
-                                return value2i(value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize| -> f64 {
+                        let value = input.get_value(row, col);
+                        if value != nodata {
+                            return value2i(value);
                         }
-                    )
+                        nodata
+                    })
                 };
-                
+
                 let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {
                     // convert it back into an rgb value, using the modified intensity value.
-                    Box::new(
-                        |row: isize, col: isize, value: f64| -> f64 {
-                            if value != nodata {
-                                let (h, s, _) = value2hsi(input.get_value(row, col));
-                                return hsi2value(h, s, value);
-                            }
-                            nodata
+                    Box::new(|row: isize, col: isize, value: f64| -> f64 {
+                        if value != nodata {
+                            let (h, s, _) = value2hsi(input.get_value(row, col));
+                            return hsi2value(h, s, value);
                         }
-                    )
+                        nodata
+                    })
                 };
 
                 let (mut sum, mut z_final): (f64, f64);
@@ -319,7 +334,8 @@ impl WhiteboxTool for BilateralFilter {
                                 y = row + dy[a];
                                 zn = input_fn(y, x);
                                 if zn != nodata {
-                                    weight = recip_root_2_pi_times_sigma_i * (-1.0 * ((zn - z) * (zn - z)) / two_sigma_sqr_i).exp();
+                                    weight = recip_root_2_pi_times_sigma_i
+                                        * (-1.0 * ((zn - z) * (zn - z)) / two_sigma_sqr_i).exp();
                                     weight *= weights_d[a];
                                     weights_i[a] = weight;
                                     sum += weight;
@@ -357,14 +373,16 @@ impl WhiteboxTool for BilateralFilter {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Sigma distance: {}", sigma_dist));
         output.add_metadata_entry(format!("Sigma intensity: {}", sigma_int));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -379,8 +397,10 @@ impl WhiteboxTool for BilateralFilter {
         };
 
         if verbose {
-            println!("{}",
-                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())
@@ -404,21 +424,22 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
 
     let i = (r + g + b) / 3f64;
 
-	let rn = r / (r + g + b);
-	let gn = g / (r + g + b);
-	let bn = b / (r + g + b);
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
 
-	let mut h = if rn != gn || rn != bn {
-	    ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt()).acos()
-	} else {
-	    0f64
-	};
-	if b > g {
-		h = 2f64 * PI - h;	
-	}
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
 
-	let s = 1f64 - 3f64 * rn.min(gn).min(bn);
-    
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
     (h, s, i)
 }
 
@@ -428,33 +449,39 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut g: u32;
     let mut b: u32;
 
-    let x = i * (1f64 - s);	
-		
-	if h < 2f64 * PI / 3f64 {
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (y * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
         g = (z * 255f64).round() as u32;
         b = (x * 255f64).round() as u32;
-	} else if h < 4f64 * PI / 3f64 {
+    } else if h < 4f64 * PI / 3f64 {
         let h = h - 2f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (x * 255f64).round() as u32;
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
         g = (y * 255f64).round() as u32;
         b = (z * 255f64).round() as u32;
-	} else {
+    } else {
         let h = h - 4f64 * PI / 3f64;
         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
-	    let z = 3f64 * i - (x + y);
-		r = (z * 255f64).round() as u32; 
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
         g = (x * 255f64).round() as u32;
         b = (y * 255f64).round() as u32;
-	}
-    
-    if r > 255u32 { r = 255u32; }
-	if g > 255u32 { g = 255u32; }
-	if b > 255u32 { b = 255u32; }
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
 
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }

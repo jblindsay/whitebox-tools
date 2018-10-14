@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 20/09/2018
-Last Modified: 20/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -10,7 +10,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::*;
 
@@ -169,7 +168,7 @@ impl WhiteboxTool for CentroidVector {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -287,14 +286,10 @@ impl WhiteboxTool for CentroidVector {
             };
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

@@ -1,7 +1,7 @@
-use io_utils::{ByteOrderReader, Endianness};
 use raster::geotiff::IfdDirectory;
 use std::collections::HashMap;
 use std::fmt;
+use utils::{ByteOrderReader, Endianness};
 // use std::mem;
 use std::mem::transmute;
 

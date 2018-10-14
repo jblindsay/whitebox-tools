@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 27, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// Increases the spatial resolution of image data by combining multispectral bands with panchromatic data.
@@ -417,7 +416,7 @@ impl WhiteboxTool for PanchromaticSharpening {
         let pan_min = pan.configs.display_min;
         let pan_range = pan.configs.display_max - pan.configs.display_min;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &pan);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
@@ -679,8 +678,7 @@ impl WhiteboxTool for PanchromaticSharpening {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -695,9 +693,7 @@ impl WhiteboxTool for PanchromaticSharpening {
         }
         output.add_metadata_entry(format!("Input panchromatic file: {}", pan_file));
         output.add_metadata_entry(format!("Pan-sharpening fusion method: {}", fusion_method));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -713,7 +709,7 @@ impl WhiteboxTool for PanchromaticSharpening {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

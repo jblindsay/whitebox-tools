@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/04/2018
-Last Modified: 01/04/2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: This tool uses the algorithm described in:
@@ -29,7 +29,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::{Array2D, BoundingBox};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -82,7 +81,8 @@ impl FillBurn {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -217,7 +217,7 @@ impl WhiteboxTool for FillBurn {
         let columns = dem.configs.columns as isize;
         let nodata = dem.configs.nodata;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of lines type
         if streams.header.shape_type.base_shape_type() != ShapeType::PolyLine {
@@ -616,8 +616,7 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         // output.configs.palette = "qual.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
@@ -625,9 +624,7 @@ impl WhiteboxTool for FillBurn {
         ));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         output.add_metadata_entry(format!("Input DEM file: {}", dem_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -641,7 +638,7 @@ impl WhiteboxTool for FillBurn {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

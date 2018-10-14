@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 11, 2018
-Last Modified: March 11, 2018
+Last Modified: 12/10/2018
 License: MIT
 
 Notes: This tool uses the algorithm described in:
@@ -17,7 +17,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{Array2D, BoundingBox};
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -88,7 +87,8 @@ impl RasterizeStreams {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -234,7 +234,7 @@ impl WhiteboxTool for RasterizeStreams {
             background_val = nodata;
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of lines type
         if streams.header.shape_type.base_shape_type() != ShapeType::PolyLine {
@@ -404,7 +404,8 @@ impl WhiteboxTool for RasterizeStreams {
                         row_n = row + dy4[n];
                         col_n = col + dx4[n];
                         id_n = output.get_value(row_n, col_n);
-                        if id_n != id && id_n != background_val
+                        if id_n != id
+                            && id_n != background_val
                             && link_end_nodes.get_value(row_n, col_n) != 1u8
                         {
                             is_adjacent = true;
@@ -451,8 +452,7 @@ impl WhiteboxTool for RasterizeStreams {
             println!("Number of stream adjacencies: {}", num_adjacencies);
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!(
@@ -461,9 +461,7 @@ impl WhiteboxTool for RasterizeStreams {
         ));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         output.add_metadata_entry(format!("Input base file: {}", base_file));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -477,7 +475,7 @@ impl WhiteboxTool for RasterizeStreams {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

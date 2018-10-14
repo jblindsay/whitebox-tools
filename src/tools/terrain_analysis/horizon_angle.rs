@@ -2,22 +2,21 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 7, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: The tool should have the option to output a distance raster as well.
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct HorizonAngle {
@@ -30,63 +29,70 @@ pub struct HorizonAngle {
 
 impl HorizonAngle {
     /// public constructor
-    pub fn new() -> HorizonAngle { 
+    pub fn new() -> HorizonAngle {
         let name = "HorizonAngle".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.".to_string();
-        
+        let description =
+            "Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Azimuth".to_owned(), 
-            flags: vec!["--azimuth".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Azimuth".to_owned(),
+            flags: vec!["--azimuth".to_owned()],
             description: "Wind azimuth in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Maximum Search Distance".to_owned(), 
-            flags: vec!["--max_dist".to_owned()], 
-            description: "Optional maximum search distance (unspecified if none; in xy units).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Maximum Search Distance".to_owned(),
+            flags: vec!["--max_dist".to_owned()],
+            description: "Optional maximum search distance (unspecified if none; in xy units)."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif --azimuth=315.0", short_exe, name).replace("*", &sep);
-    
-        HorizonAngle { 
-            name: name, 
-            description: description, 
+
+        HorizonAngle {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -95,7 +101,7 @@ impl WhiteboxTool for HorizonAngle {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -126,15 +132,22 @@ impl WhiteboxTool for HorizonAngle {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0;
         let mut max_dist = f64::INFINITY;
-         
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -145,29 +158,33 @@ impl WhiteboxTool for HorizonAngle {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-azimuth" || vec[0].to_lowercase() == "--azimuth" {
                 if keyval {
                     azimuth = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    azimuth = args[i+1].to_string().parse::<f64>().unwrap();
+                    azimuth = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-max_dist" || vec[0].to_lowercase() == "--max_dist" {
+            } else if vec[0].to_lowercase() == "-max_dist" || vec[0].to_lowercase() == "--max_dist"
+            {
                 if keyval {
                     max_dist = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    max_dist = args[i+1].to_string().parse::<f64>().unwrap();
+                    max_dist = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             }
         }
@@ -190,10 +207,12 @@ impl WhiteboxTool for HorizonAngle {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         if azimuth > 360f64 || azimuth < 0f64 {
             azimuth = 0.1;
@@ -275,22 +294,20 @@ impl WhiteboxTool for HorizonAngle {
                             current_max_val = a_small_value;
                             // max_val_dist = a_small_value;
                             x = col as f64;
-                            
+
                             flag = true;
                             while flag {
                                 x = x + x_step as f64;
                                 if x < 0.0 || x >= columns as f64 {
                                     flag = false;
-                                    // break;
+                                // break;
                                 } else {
-
                                     //calculate the Y value
                                     y = (line_slope * x + y_intercept) * -1f64;
                                     if y < 0f64 || y >= rows as f64 {
                                         flag = false;
-                                        // break;
+                                    // break;
                                     } else {
-
                                         //calculate the distance
                                         delta_x = (x - col as f64) * cell_size;
                                         delta_y = (y - row as f64) * cell_size;
@@ -298,9 +315,8 @@ impl WhiteboxTool for HorizonAngle {
                                         dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
                                         if dist > max_dist {
                                             flag = false;
-                                            // break;
+                                        // break;
                                         } else {
-
                                             //estimate z
                                             y1 = y as isize;
                                             y2 = y1 + y_step * -1isize;
@@ -312,14 +328,14 @@ impl WhiteboxTool for HorizonAngle {
                                             if slope > current_max_val {
                                                 current_max_val = slope;
                                                 // max_val_dist = dist;
-                                            // } else if current_max_val < 0f64 {
+                                                // } else if current_max_val < 0f64 {
                                                 // max_val_dist = dist;
                                             }
                                         }
                                     }
                                 }
                             }
-                            
+
                             //find all of the horizontal intersections
                             y = -row as f64;
                             flag = true;
@@ -327,33 +343,29 @@ impl WhiteboxTool for HorizonAngle {
                                 y = y + y_step as f64;
                                 if -y < 0f64 || -y >= rows as f64 {
                                     flag = false;
-                                    // break;
+                                // break;
                                 } else {
-
                                     //calculate the X value
                                     x = (y - y_intercept) / line_slope;
                                     if x < 0f64 || x >= columns as f64 {
                                         flag = false;
-                                        //break;
+                                    //break;
                                     } else {
-
                                         //calculate the distance
                                         delta_x = (x - col as f64) * cell_size;
                                         delta_y = (-y - row as f64) * cell_size;
                                         dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
                                         if dist > max_dist {
                                             flag = false;
-                                            // break;
+                                        // break;
                                         } else {
-
                                             //estimate z
                                             x1 = x as isize;
                                             x2 = x1 + x_step;
                                             if x2 < 0 || x2 >= columns {
                                                 flag = false;
-                                                // break;
+                                            // break;
                                             } else {
-
                                                 z1 = input[(-y as isize, x1)];
                                                 z2 = input[(y as isize, x2)];
                                                 z = z1 + (x - x1 as f64) * (z2 - z1);
@@ -361,7 +373,7 @@ impl WhiteboxTool for HorizonAngle {
                                                 slope = (z - current_val) / dist;
                                                 if slope > current_max_val {
                                                     current_max_val = slope;
-                                                    // max_val_dist = dist;
+                                                // max_val_dist = dist;
                                                 } else if current_max_val < 0f64 {
                                                     // max_val_dist = dist;
                                                 }
@@ -372,13 +384,15 @@ impl WhiteboxTool for HorizonAngle {
                             }
 
                             z = current_max_val.atan().to_degrees();
-                            if z < -89f64 { z = 0f64; }
+                            if z < -89f64 {
+                                z = 0f64;
+                            }
                             if current_max_val != a_small_value {
                                 data[col as usize] = z;
-                                // if (saveDistance) {
-                                //     if (z < 0) { max_val_dist = max_val_dist * -1; }
-                                //     outputDist.setValue(row, col, max_val_dist);
-                                // }
+                            // if (saveDistance) {
+                            //     if (z < 0) { max_val_dist = max_val_dist * -1; }
+                            //     outputDist.setValue(row, col, max_val_dist);
+                            // }
                             } else {
                                 data[col as usize] = nodata;
                                 // if (saveDistance) {
@@ -396,7 +410,7 @@ impl WhiteboxTool for HorizonAngle {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -406,24 +420,33 @@ impl WhiteboxTool for HorizonAngle {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Max dist: {}", max_dist));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-        
+
         Ok(())
     }
 }

@@ -2,21 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 18, 2018
-Last Modified: February 18, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
+use lidar::*;
 use num_cpus;
+use raster::*;
 use std::env;
 use std::f64;
-use std::path;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use lidar::*;
-use raster::*;
 use tools::*;
 
 pub struct LidarColourize {
@@ -28,54 +27,61 @@ pub struct LidarColourize {
 }
 
 impl LidarColourize {
-    pub fn new() -> LidarColourize { // public constructor
+    pub fn new() -> LidarColourize {
+        // public constructor
         let name = "LidarColourize".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.".to_string();
-        
+        let description =
+            "Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image."
+                .to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input LiDAR File".to_owned(), 
-            flags: vec!["--in_lidar".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input LiDAR File".to_owned(),
+            flags: vec!["--in_lidar".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Input Colour Image File".to_owned(), 
-            flags: vec!["--in_image".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Colour Image File".to_owned(),
+            flags: vec!["--in_image".to_owned()],
             description: "Input colour image file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output LiDAR File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output LiDAR File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output LiDAR file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
-  
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --in_lidar=\"input.las\" --in_image=\"image.tif\" -o=\"output.las\" ", short_exe, name).replace("*", &sep);
-    
-        LidarColourize { 
-            name: name, 
-            description: description, 
+
+        LidarColourize {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -84,7 +90,7 @@ impl WhiteboxTool for LidarColourize {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -115,14 +121,22 @@ impl WhiteboxTool for LidarColourize {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_lidar_file: String = "".to_string();
         let mut input_image_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        
+
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -130,25 +144,27 @@ impl WhiteboxTool for LidarColourize {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-in_lidar" {
                 input_lidar_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-in_image" {
                 input_image_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             }
         }
@@ -170,13 +186,17 @@ impl WhiteboxTool for LidarColourize {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input files..."); }
+        if verbose {
+            println!("Reading input files...");
+        }
         let in_lidar = Arc::new(LasFile::new(&input_lidar_file, "r")?);
         let in_image = Arc::new(Raster::new(&input_image_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
 
         let n_points = in_lidar.header.number_of_points as usize;
         let num_points: f64 = (in_lidar.header.number_of_points - 1) as f64; // used for progress calculation only
@@ -227,10 +247,15 @@ impl WhiteboxTool for LidarColourize {
         // now output the data
         let mut output = LasFile::initialize_using_file(&output_file, &in_lidar);
         let out_pt_format = match in_lidar.header.point_format {
-            0 | 2 => 2, // No GPS data supplied
-            1 | 3 | 4 | 5 => 3, // GPS data is supplied
-            6 | 7 | 8 | 9 | 10  => 3, // This is a 64-bit format and will require LAS 1.4 output support. For now, output point format 3.
-            _ => return Err(Error::new(ErrorKind::InvalidInput, "Unsupport input point record format.")),
+            0 | 2 => 2,              // No GPS data supplied
+            1 | 3 | 4 | 5 => 3,      // GPS data is supplied
+            6 | 7 | 8 | 9 | 10 => 3, // This is a 64-bit format and will require LAS 1.4 output support. For now, output point format 3.
+            _ => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Unsupport input point record format.",
+                ))
+            }
         };
         output.header.point_format = out_pt_format;
 
@@ -242,22 +267,27 @@ impl WhiteboxTool for LidarColourize {
             value = colour_values[i];
             r = (value & 0xFF) as u16 * 256u16;
             g = ((value >> 8) & 0xFF) as u16 * 256u16;
-            b = ((value >> 16) & 0xFF) as u16 * 256u16;   
-            let rgb: ColourData = ColourData{ red: r, green: g, blue: b, nir: 0u16 };
+            b = ((value >> 16) & 0xFF) as u16 * 256u16;
+            let rgb: ColourData = ColourData {
+                red: r,
+                green: g,
+                blue: b,
+                nir: 0u16,
+            };
 
             p = in_lidar[i];
 
             if out_pt_format == 2 {
-                output.add_point_record(LidarPointRecord::PointRecord2 { 
-                    point_data: p, 
-                    colour_data: rgb 
+                output.add_point_record(LidarPointRecord::PointRecord2 {
+                    point_data: p,
+                    colour_data: rgb,
                 });
             } else {
                 gps = in_lidar.get_gps_time(i)?;
-                output.add_point_record(LidarPointRecord::PointRecord3 { 
-                    point_data: p, 
-                    gps_data: gps, 
-                    colour_data: rgb 
+                output.add_point_record(LidarPointRecord::PointRecord3 {
+                    point_data: p,
+                    gps_data: gps,
+                    colour_data: rgb,
                 });
             }
 
@@ -270,17 +300,21 @@ impl WhiteboxTool for LidarColourize {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         println!("");
-        if verbose { println!("Writing output LAS file..."); }
+        if verbose {
+            println!("Writing output LAS file...");
+        }
         let _ = match output.write() {
             Ok(_) => println!("Complete!"),
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

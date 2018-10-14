@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: January 21, 2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use structures::Array2D;
 use tools::*;
 
@@ -28,28 +27,30 @@ pub struct FD8FlowAccumulation {
 }
 
 impl FD8FlowAccumulation {
-    pub fn new() -> FD8FlowAccumulation { // public constructor
+    pub fn new() -> FD8FlowAccumulation {
+        // public constructor
         let name = "FD8FlowAccumulation".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Calculates an FD8 flow accumulation raster from an input DEM.".to_string();
-        
+        let description =
+            "Calculates an FD8 flow accumulation raster from an input DEM.".to_string();
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -61,58 +62,64 @@ impl FD8FlowAccumulation {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Exponent Parameter".to_owned(), 
-            flags: vec!["--exponent".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Exponent Parameter".to_owned(),
+            flags: vec!["--exponent".to_owned()],
             description: "Optional exponent parameter; default is 1.1.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.1".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Convergence Threshold (grid cells; blank for none)".to_owned(), 
-            flags: vec!["--threshold".to_owned()], 
-            description: "Optional convergence threshold parameter, in grid cells; default is inifinity.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Convergence Threshold (grid cells; blank for none)".to_owned(),
+            flags: vec!["--threshold".to_owned()],
+            description:
+                "Optional convergence threshold parameter, in grid cells; default is inifinity."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Log-transform the output?".to_owned(), 
-            flags: vec!["--log".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Log-transform the output?".to_owned(),
+            flags: vec!["--log".to_owned()],
             description: "Optional flag to request the output be log-transformed.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Clip the upper tail by 1%?".to_owned(), 
-            flags: vec!["--clip".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Clip the upper tail by 1%?".to_owned(),
+            flags: vec!["--clip".to_owned()],
             description: "Optional flag to request clipping the display max by 1%.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='cells'
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='catchment area' --exponent=1.5 --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
-    
-        FD8FlowAccumulation { 
-            name: name, 
-            description: description, 
+
+        FD8FlowAccumulation {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -121,7 +128,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -145,7 +152,12 @@ impl WhiteboxTool for FD8FlowAccumulation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut out_type = String::from("sca");
@@ -153,10 +165,12 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let mut convergence_threshold = f64::INFINITY;
         let mut log_transform = false;
         let mut clip_max = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -167,23 +181,27 @@ impl WhiteboxTool for FD8FlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type" {
+            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type"
+            {
                 if keyval {
                     out_type = vec[1].to_lowercase();
                 } else {
-                    out_type = args[i+1].to_lowercase();
+                    out_type = args[i + 1].to_lowercase();
                 }
                 if out_type.contains("specific") || out_type.contains("sca") {
                     out_type = String::from("sca");
@@ -192,17 +210,20 @@ impl WhiteboxTool for FD8FlowAccumulation {
                 } else {
                     out_type = String::from("ca");
                 }
-            } else if vec[0].to_lowercase() == "-exponent" || vec[0].to_lowercase() == "--exponent" {
+            } else if vec[0].to_lowercase() == "-exponent" || vec[0].to_lowercase() == "--exponent"
+            {
                 if keyval {
                     exponent = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    exponent = args[i+1].to_string().parse::<f64>().unwrap();
+                    exponent = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-threshold" || vec[0].to_lowercase() == "--threshold" {
+            } else if vec[0].to_lowercase() == "-threshold"
+                || vec[0].to_lowercase() == "--threshold"
+            {
                 if keyval {
                     convergence_threshold = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    convergence_threshold = args[i+1].to_string().parse::<f64>().unwrap();
+                    convergence_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
                 log_transform = true;
@@ -229,11 +250,13 @@ impl WhiteboxTool for FD8FlowAccumulation {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
@@ -241,7 +264,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let cell_size_x = input.configs.resolution_x;
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-        
+
         // calculate the number of inflowing cells
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let num_procs = num_cpus::get() as isize;
@@ -250,8 +273,8 @@ impl WhiteboxTool for FD8FlowAccumulation {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut z: f64;
                 let mut count: i8;
                 let mut interior_pit_found = false;
@@ -261,7 +284,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
                         z = input[(row, col)];
                         if z != nodata {
                             count = 0i8;
-							for i in 0..8 {
+                            for i in 0..8 {
                                 if input[(row + d_y[i], col + d_x[i])] > z {
                                     count += 1;
                                 }
@@ -285,7 +308,9 @@ impl WhiteboxTool for FD8FlowAccumulation {
         for r in 0..rows {
             let (row, data, pit) = rx.recv().unwrap();
             num_inflowing.set_row_data(row, data);
-            if pit { interior_pit_found = true; }
+            if pit {
+                interior_pit_found = true;
+            }
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
                     stack.push((row, col));
@@ -293,7 +318,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
                     num_solved_cells += 1;
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -303,16 +328,25 @@ impl WhiteboxTool for FD8FlowAccumulation {
             }
         }
 
-        let d_x = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-        let d_y = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+        let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+        let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         let (mut z, mut z_n): (f64, f64);
         let mut fa: f64;
-        let grid_lengths = [diag_cell_size, cell_size_x, diag_cell_size, cell_size_y, diag_cell_size, cell_size_x, diag_cell_size, cell_size_y];
+        let grid_lengths = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
         let (mut max_slope, mut slope): (f64, f64);
         let mut dir: i8;
-        
+
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
@@ -322,8 +356,8 @@ impl WhiteboxTool for FD8FlowAccumulation {
             num_inflowing[(row, col)] = -1i8;
 
             let mut total_weights = 0.0;
-			let mut weights: [f64; 8] = [0.0; 8];
-			let mut downslope: [bool; 8] = [false; 8];
+            let mut weights: [f64; 8] = [0.0; 8];
+            let mut downslope: [bool; 8] = [false; 8];
             if fa < convergence_threshold {
                 for i in 0..8 {
                     row_n = row + d_y[i];
@@ -400,7 +434,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
                         output[(row, col)] = (output[(row, col)] * cell_area / avg_cell_size).ln();
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -418,7 +452,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
                         output[(row, col)] = output[(row, col)] * cell_area / avg_cell_size;
                     }
                 }
-                
+
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -430,22 +464,31 @@ impl WhiteboxTool for FD8FlowAccumulation {
         }
 
         output.configs.palette = "blueyellow.plt".to_string();
-        if clip_max { 
-            output.clip_display_max(1.0); 
+        if clip_max {
+            output.clip_display_max(1.0);
         }
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-        if verbose { println!("Saving data...") };
+        if verbose {
+            println!("Saving data...")
+        };
         let _ = match output.write() {
-            Ok(_) => if verbose { println!("Output file written") },
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
         if interior_pit_found {
             println!("**********************************************************************************");

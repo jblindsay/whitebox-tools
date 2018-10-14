@@ -1,12 +1,13 @@
 #![allow(dead_code, unused_assignments)]
 extern crate time;
+// extern crate chrono;
 extern crate zip;
 
 use self::zip::read::{ZipArchive, ZipFile};
 use self::zip::result::ZipResult;
 use self::zip::write::{FileOptions, ZipWriter};
 use self::zip::CompressionMethod;
-use io_utils::{ByteOrderReader, Endianness};
+use utils::{ByteOrderReader, Endianness};
 use lidar::header::LasHeader;
 use lidar::point_data::{ColourData, PointData, WaveformPacket};
 use lidar::vlr::Vlr;

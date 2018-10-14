@@ -2,28 +2,26 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 2, 2018
-Last Modified: January 2, 2018
+Last Modified: 13/10/2018
 License: MIT
-
-Notes: This tool can be used to create a random sample of grid cells. The user specifies 
-the base raster file, which is used to determine the grid dimensions and georeference 
-information for the output raster, and the number of sample random samples (n). The 
-output grid will contain n non-zero grid cells, randomly distributed throughout the 
-raster grid, and a background value of zero. This tool is useful when performing 
-statistical analyses on raster images when you wish to obtain a random sample of data.
-
-Only valid, non-nodata, cells in the base raster will be sampled.
 */
 
-use time;
 use rand::prelude::*;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use raster::*;
+use std::path;
 use tools::*;
 
+/// This tool can be used to create a random sample of grid cells. The user specifies
+/// the base raster file, which is used to determine the grid dimensions and georeference
+/// information for the output raster, and the number of sample random samples (n). The
+/// output grid will contain n non-zero grid cells, randomly distributed throughout the
+/// raster grid, and a background value of zero. This tool is useful when performing
+/// statistical analyses on raster images when you wish to obtain a random sample of data.
+///
+/// Only valid, non-nodata, cells in the base raster will be sampled.
 pub struct RandomSample {
     name: String,
     description: String,
@@ -37,48 +35,53 @@ impl RandomSample {
         // public constructor
         let name = "RandomSample".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Creates an image containing randomly located sample grid cells with unique IDs."
-            .to_string();
+        let description =
+            "Creates an image containing randomly located sample grid cells with unique IDs."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Base File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--base".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Base File".to_owned(),
+            flags: vec!["-i".to_owned(), "--base".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Num. Samples".to_owned(), 
-            flags: vec!["--num_samples".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Num. Samples".to_owned(),
+            flags: vec!["--num_samples".to_owned()],
             description: "Number of samples".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1000".to_string()),
-            optional: false
+            optional: false,
         });
-        
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.tif -o=out.tif --num_samples=1000", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.tif -o=out.tif --num_samples=1000",
+            short_exe, name
+        ).replace("*", &sep);
 
         RandomSample {
             name: name,
@@ -94,7 +97,7 @@ impl WhiteboxTool for RandomSample {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -125,18 +128,21 @@ impl WhiteboxTool for RandomSample {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut num_samples = 1000usize;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -186,16 +192,18 @@ impl WhiteboxTool for RandomSample {
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
         if num_samples > (rows * columns) as usize {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "num_samples is too large for the size of grid."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "num_samples is too large for the size of grid.",
+            ));
             // This could still be a problem because of nodata in the input grid.
             // Only valid grid cells in the input will have samples.
         }
@@ -229,18 +237,18 @@ impl WhiteboxTool for RandomSample {
                 break;
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.configs.data_type = DataType::F32;
         output.configs.palette = "qual.plt".to_string();
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input base raster file: {}", input_file));
         output.add_metadata_entry(format!("Num. samples: {}", num_samples));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -250,11 +258,14 @@ impl WhiteboxTool for RandomSample {
                 if verbose {
                     println!("Output file written")
                 }
-            },
+            }
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}", &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

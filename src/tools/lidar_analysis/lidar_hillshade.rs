@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 14, 2017
-Last Modified: 13/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -18,7 +18,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::{DistanceMetric, FixedRadiusSearch3D};
-use time;
 use tools::*;
 
 pub struct LidarHillshade {
@@ -230,7 +229,7 @@ impl WhiteboxTool for LidarHillshade {
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
 
-        let start = time::now();
+        let start = Instant::now();
 
         if verbose {
             println!("Performing analysis...");
@@ -346,8 +345,7 @@ impl WhiteboxTool for LidarHillshade {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         println!("");
         if verbose {
@@ -360,7 +358,7 @@ impl WhiteboxTool for LidarHillshade {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

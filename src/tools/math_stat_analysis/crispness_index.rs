@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 15, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: This index (C) is taken from Lindsay (2006) Sensitivity of channel mapping techniques to uncertainty in digital
@@ -20,20 +20,19 @@ instead of the original:
 ∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
 */
 
-use time;
 use num_cpus;
-use std::io::BufWriter;
+use raster::*;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::sync::Arc;
-use std::sync::mpsc;
-use std::thread;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use tools::*;
 
 pub struct CrispnessIndex {
@@ -52,13 +51,13 @@ impl CrispnessIndex {
         let description = "Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -73,18 +72,19 @@ impl CrispnessIndex {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -o=crispness.html",
-                            short_exe,
-                            name)
-                .replace("*", &sep);
+            short_exe, name
+        ).replace("*", &sep);
 
         CrispnessIndex {
             name: name,
@@ -100,7 +100,7 @@ impl WhiteboxTool for CrispnessIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -131,17 +131,20 @@ impl WhiteboxTool for CrispnessIndex {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -199,7 +202,7 @@ impl WhiteboxTool for CrispnessIndex {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -288,12 +291,11 @@ impl WhiteboxTool for CrispnessIndex {
             }
         }
 
-        let denominator = sum * (1f64 - mean) * (1f64 - mean) +
-                          (num_cells as f64 - sum) * mean * mean;
+        let denominator =
+            sum * (1f64 - mean) * (1f64 - mean) + (num_cells as f64 - sum) * mean * mean;
         let crispness = total_dev / denominator;
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if warning {
             println!("WARNING: This tool is intended to be applied to membership probability (MP) rasters, with probability values 
@@ -306,10 +308,11 @@ ranging from 0-1. The input image contains values outside this range.");
         // println!("SSb: {}", denominator);
         // println!("Crispness index: {}", crispness);
         if verbose {
-            println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
-
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -370,33 +373,37 @@ ranging from 0-1. The input image contains values outside this range.");
 ranging from 0-1. The input image contains values outside this range. <em>Therefore, it is unlikely that the results are meaningful</em>.</p>".as_bytes())?;
         }
 
+        writer.write_all("<br><table align=\"center\">".as_bytes())?;
 
-        writer
-            .write_all("<br><table align=\"center\">".as_bytes())?;
-
-        writer
-            .write_all(&format!("<tr>
+        writer.write_all(
+            &format!(
+                "<tr>
             <td><em>SS<sub>mp</sub></em></td>
             <td class=\"numberCell\">{}</td>
         </tr>",
-                                format!("{:.*}", 4, total_dev))
-                                .as_bytes())?;
+                format!("{:.*}", 4, total_dev)
+            ).as_bytes(),
+        )?;
 
-        writer
-            .write_all(&format!("<tr>
+        writer.write_all(
+            &format!(
+                "<tr>
             <td><em>SS<sub>B</sub></em></td>
             <td class=\"numberCell\">{}</td>
         </tr>",
-                                format!("{:.*}", 4, denominator))
-                                .as_bytes())?;
+                format!("{:.*}", 4, denominator)
+            ).as_bytes(),
+        )?;
 
-        writer
-            .write_all(&format!("<tr>
+        writer.write_all(
+            &format!(
+                "<tr>
             <td><em>C</em><sup>1</sup></td>
             <td class=\"numberCell\">{}</td>
         </tr>",
-                                format!("{:.*}", 4, crispness))
-                                .as_bytes())?;
+                format!("{:.*}", 4, crispness)
+            ).as_bytes(),
+        )?;
 
         writer.write_all("</table>".as_bytes())?;
 

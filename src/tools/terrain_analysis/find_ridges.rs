@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/12/2017
-Last Modified: 15/12/2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 pub struct FindRidges {
@@ -31,26 +30,25 @@ impl FindRidges {
         // public constructor
         let name = "FindRidges".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Identifies potential ridge and peak grid cells."
-            .to_string();
+        let description = "Identifies potential ridge and peak grid cells.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -65,14 +63,18 @@ impl FindRidges {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.tif -o=out.tif --line_thin", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=pointer.tif -o=out.tif --line_thin",
+            short_exe, name
+        ).replace("*", &sep);
 
         FindRidges {
             name: name,
@@ -88,7 +90,7 @@ impl WhiteboxTool for FindRidges {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -119,17 +121,21 @@ impl WhiteboxTool for FindRidges {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut line_thin = false;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -140,11 +146,14 @@ impl WhiteboxTool for FindRidges {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "-dem" || vec[0].to_lowercase() == "--dem" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "-dem"
+                || vec[0].to_lowercase() == "--dem"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
@@ -152,7 +161,9 @@ impl WhiteboxTool for FindRidges {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-line_thin" || vec[0].to_lowercase() == "--line_thin" {
+            } else if vec[0].to_lowercase() == "-line_thin"
+                || vec[0].to_lowercase() == "--line_thin"
+            {
                 line_thin = true;
             }
         }
@@ -174,18 +185,18 @@ impl WhiteboxTool for FindRidges {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        
+
         output.reinitialize_values(0f64);
-                
+
         // This one can be performed conccurently.
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -197,12 +208,12 @@ impl WhiteboxTool for FindRidges {
                 let dy = vec![-1, 1, 0, 0];
                 let mut z: f64;
                 let (mut zn1, mut zn2): (f64, f64);
-                
+
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
-                        if z != nodata  {
+                        if z != nodata {
                             zn1 = input.get_value(row + dy[0], col + dx[0]);
                             zn2 = input.get_value(row + dy[1], col + dx[1]);
                             if zn1 != nodata && zn2 != nodata && zn1 < z && zn2 < z {
@@ -232,23 +243,35 @@ impl WhiteboxTool for FindRidges {
                 }
             }
         }
-        
+
         if line_thin {
             println!("Line thinning operation...");
             let mut did_something = true;
             let mut loop_num = 0;
-            let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-            let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
-            let elements = vec![ vec![ 6, 7, 0, 4, 3, 2 ], vec![ 7, 0, 1, 3, 5 ], 
-                vec![ 0, 1, 2, 4, 5, 6 ], vec![ 1, 2, 3, 5, 7 ], 
-                vec![ 2, 3, 4, 6, 7, 0 ], vec![ 3, 4, 5, 7, 1 ], 
-                vec![ 4, 5, 6, 0, 1, 2 ], vec![ 5, 6, 7, 1, 3 ] ];
+            let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+            let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+            let elements = vec![
+                vec![6, 7, 0, 4, 3, 2],
+                vec![7, 0, 1, 3, 5],
+                vec![0, 1, 2, 4, 5, 6],
+                vec![1, 2, 3, 5, 7],
+                vec![2, 3, 4, 6, 7, 0],
+                vec![3, 4, 5, 7, 1],
+                vec![4, 5, 6, 0, 1, 2],
+                vec![5, 6, 7, 1, 3],
+            ];
 
-            let vals = vec![ vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ], 
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ],
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ],
-                vec![ 0f64, 0f64, 0f64, 1f64, 1f64, 1f64 ], vec![ 0f64, 0f64, 0f64, 1f64, 1f64 ] ];
-            
+            let vals = vec![
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
+                vec![0f64, 0f64, 0f64, 1f64, 1f64],
+            ];
+
             let mut neighbours = [0.0; 8];
             let mut pattern_match: bool;
             let mut z: f64;
@@ -264,7 +287,7 @@ impl WhiteboxTool for FindRidges {
                                 for i in 0..8 {
                                     neighbours[i] = output[(row + dy[i], col + dx[i])];
                                 }
-                                
+
                                 // scan through element
                                 pattern_match = true;
                                 for i in 0..elements[a].len() {
@@ -290,14 +313,14 @@ impl WhiteboxTool for FindRidges {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input DEM file: {}", input_file));
         output.add_metadata_entry(format!("Line thinning: {}", line_thin));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -311,8 +334,10 @@ impl WhiteboxTool for FindRidges {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

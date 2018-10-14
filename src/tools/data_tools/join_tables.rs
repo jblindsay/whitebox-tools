@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 use vector::{FieldData, Shapefile};
 
@@ -262,7 +261,7 @@ impl WhiteboxTool for JoinTables {
         let input1 = Shapefile::read(&input1_file)?;
         let input2 = Shapefile::read(&input2_file)?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // create output file
         let mut output = Shapefile::initialize_using_file(
@@ -382,14 +381,10 @@ impl WhiteboxTool for JoinTables {
             Err(e) => return Err(e),
         };
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

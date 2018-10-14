@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/05/2018
-Last Modified: 11/05/2018
+Last Modified: 12/10/2018
 License: MIT
 
 NOTES: This tool differs from the original Whitebox GAT tool in a few significant ways:
@@ -29,23 +29,22 @@ NOTES: This tool differs from the original Whitebox GAT tool in a few significan
    more processors.
 */
 
-use time;
 use num_cpus;
-use rand::prelude::*;
 use rand::distributions::StandardNormal;
-use std::env;
-use std::path;
+use rand::prelude::*;
+use raster::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
+use std::env;
 use std::f64;
-use std::io::{Error, ErrorKind};
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
-use std::thread;
-use raster::*;
-use tools::*;
-use structures::Array2D;
 use std::f64::consts::PI;
+use std::io::{Error, ErrorKind};
+use std::path;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use structures::Array2D;
+use tools::*;
 
 /// Preforms a stochastic analysis of depressions within a DEM.
 pub struct StochasticDepressionAnalysis {
@@ -64,22 +63,22 @@ impl StochasticDepressionAnalysis {
         let description = "Preforms a stochastic analysis of depressions within a DEM.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input DEM File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--dem".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -91,28 +90,29 @@ impl StochasticDepressionAnalysis {
             optional: false
         });
 
-        parameters.push(ToolParameter{
-            name: "Range of Autocorrelation (map units)".to_owned(), 
-            flags: vec!["--range".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Range of Autocorrelation (map units)".to_owned(),
+            flags: vec!["--range".to_owned()],
             description: "The error field's correlation length, in xy-units.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Iterations".to_owned(), 
-            flags: vec!["--iterations".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Iterations".to_owned(),
+            flags: vec!["--iterations".to_owned()],
             description: "The number of iterations.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1000".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -135,7 +135,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -166,20 +166,23 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut rmse = 1f64;
         let mut range = 1f64;
         let mut iterations = 1000;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -207,19 +210,19 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 rmse = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-range" {
                 range = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    args[i+1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-iterations" {
                 iterations = if keyval {
                     vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    args[i+1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
                 };
             }
         }
@@ -241,11 +244,12 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
 
         let mut reference_cdf: Vec<Vec<f64>> = vec![];
         let mu = 0f64; // assume the mean error is zero
-        let p_step = 6f64 * rmse / (100.0-1f64);
+        let p_step = 6f64 * rmse / (100.0 - 1f64);
         for a in 0..100 {
             let x = -3.0 * rmse + a as f64 * p_step;
             // (1 / sqrt(2σ^2 * π)) * e^(-(x - μ)^2 / 2σ^2)
-            let p = (1f64 / (2f64*PI*rmse.powi(2)).sqrt()) * (-(x - mu).powi(2) / (2f64*rmse.powi(2))).exp();
+            let p = (1f64 / (2f64 * PI * rmse.powi(2)).sqrt())
+                * (-(x - mu).powi(2) / (2f64 * rmse.powi(2))).exp();
             reference_cdf.push(vec![x, p]);
         }
 
@@ -258,7 +262,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         for i in 0..num_lines {
             reference_cdf[i][1] = reference_cdf[i][1] / total_frequency;
         }
-        
+
         let mut starting_vals = [0usize; 11];
         let mut p_val: f64;
         for i in 0..num_lines {
@@ -294,12 +298,11 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 starting_vals[10] = i;
             }
         }
-            
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -313,7 +316,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         let (tx, rx) = mpsc::channel();
         let starting_vals = Arc::new(starting_vals);
         let reference_cdf = Arc::new(reference_cdf);
-        
+
         let iteration_list = Arc::new(Mutex::new(0..iterations));
 
         for _ in 0..num_procs {
@@ -324,30 +327,31 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             let iteration_list = iteration_list.clone();
             thread::spawn(move || {
                 let mut out: Array2D<u16> = Array2D::new(rows, columns, 0u16, 0u16).unwrap();
-                
+
                 // let mut rng = thread_rng();
                 // let normal = Normal::new(0.0, 1.0);
                 let mut rng = SmallRng::from_entropy();
 
                 let mut iter_num = 0;
-                    
-                while iter_num < iterations {
 
+                while iter_num < iterations {
                     iter_num = match iteration_list.lock().unwrap().next() {
-                        Some(val) => val, 
+                        Some(val) => val,
                         None => break, // There are no more tiles to interpolate
                     };
 
                     if verbose {
-                        println!("Loop {} of {}", iter_num+1, iterations);
-                        let progress = (100f64 * (iter_num+1) as f64 / iterations as f64) as isize;
+                        println!("Loop {} of {}", iter_num + 1, iterations);
+                        let progress =
+                            (100f64 * (iter_num + 1) as f64 / iterations as f64) as isize;
                         println!("Progress: {}%", progress);
                     }
 
                     /////////////////////////////
                     // Generate a random field //
                     /////////////////////////////
-                    let mut error_model: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata).unwrap();
+                    let mut error_model: Array2D<f64> =
+                        Array2D::new(rows, columns, nodata, nodata).unwrap();
 
                     for row in 0..rows {
                         for col in 0..columns {
@@ -359,13 +363,21 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     // Perform a FastAlmostGaussianFilter //
                     ////////////////////////////////////////
                     let n = 5;
-                    let w_ideal = ((12f64 * sigma * sigma / n as f64 + 1f64)).sqrt();
+                    let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
                     let mut wl = w_ideal.floor() as isize;
-                    if wl % 2 == 0 { wl -= 1; } // must be an odd integer
+                    if wl % 2 == 0 {
+                        wl -= 1;
+                    } // must be an odd integer
                     let wu = wl + 2;
-                    let m = ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64) / (-4 * wl - 4) as f64).round() as isize;
+                    let m = ((12f64 * sigma * sigma
+                        - (n * wl * wl) as f64
+                        - (4 * n * wl) as f64
+                        - (3 * n) as f64)
+                        / (-4 * wl - 4) as f64)
+                        .round() as isize;
 
-                    let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata).unwrap();
+                    let mut integral: Array2D<f64> =
+                        Array2D::new(rows, columns, 0f64, nodata).unwrap();
                     let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1).unwrap();
 
                     let mut val: f64;
@@ -373,9 +385,14 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     let mut sum_n: i32;
                     let mut i_prev: f64;
                     let mut n_prev: i32;
-                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+                    let (mut x1, mut x2, mut y1, mut y2): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     let mut num_cells: i32;
-                    
+
                     for iteration_num in 0..n {
                         let midpoint = if iteration_num < m {
                             (wl as f64 / 2f64).floor() as isize
@@ -383,7 +400,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                             (wu as f64 / 2f64).floor() as isize
                         };
 
-                        if iteration_num == 0 { // first iteration
+                        if iteration_num == 0 {
+                            // first iteration
                             // Create the integral images.
                             for row in 0..rows {
                                 sum = 0f64;
@@ -408,13 +426,15 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                                 }
                             }
                         } else {
-                            // Create the integral image based on previous iteration output. 
+                            // Create the integral image based on previous iteration output.
                             // We don't need to recalculate the num_cells integral image.
                             for row in 0..rows {
                                 sum = 0f64;
                                 for col in 0..columns {
                                     val = error_model.get_value(row, col);
-                                    if val == nodata { val = 0f64; }
+                                    if val == nodata {
+                                        val = 0f64;
+                                    }
                                     sum += val;
                                     if row > 0 {
                                         i_prev = integral.get_value(row - 1, col);
@@ -429,20 +449,32 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                         // Perform Filter
                         for row in 0..rows {
                             y1 = row - midpoint - 1;
-                            if y1 < 0 { y1 = 0; }
+                            if y1 < 0 {
+                                y1 = 0;
+                            }
                             y2 = row + midpoint;
-                            if y2 >= rows { y2 = rows - 1; }
+                            if y2 >= rows {
+                                y2 = rows - 1;
+                            }
 
                             for col in 0..columns {
                                 if input.get_value(row, col) != nodata {
                                     x1 = col - midpoint - 1;
-                                    if x1 < 0 { x1 = 0; }
+                                    if x1 < 0 {
+                                        x1 = 0;
+                                    }
                                     x2 = col + midpoint;
-                                    if x2 >= columns { x2 = columns - 1; }
+                                    if x2 >= columns {
+                                        x2 = columns - 1;
+                                    }
 
-                                    num_cells = integral_n[(y2, x2)] + integral_n[(y1, x1)] - integral_n[(y1, x2)] - integral_n[(y2, x1)];
+                                    num_cells = integral_n[(y2, x2)] + integral_n[(y1, x1)]
+                                        - integral_n[(y1, x2)]
+                                        - integral_n[(y2, x1)];
                                     if num_cells > 0 {
-                                        sum = integral[(y2, x2)] + integral[(y1, x1)] - integral[(y1, x2)] - integral[(y2, x1)];
+                                        sum = integral[(y2, x2)] + integral[(y1, x1)]
+                                            - integral[(y1, x2)]
+                                            - integral[(y2, x1)];
                                         error_model.set_value(row, col, sum / num_cells as f64);
                                     } else {
                                         // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
@@ -456,12 +488,16 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     // Find the min and max values.
                     let mut min_value = f64::INFINITY;
                     let mut max_value = f64::NEG_INFINITY;
-                    let mut z: f64; 
+                    let mut z: f64;
                     for row in 0..rows {
                         for col in 0..columns {
                             z = error_model[(row, col)];
-                            if z < min_value { min_value = z; }
-                            if z > max_value { max_value = z; }
+                            if z < min_value {
+                                min_value = z;
+                            }
+                            if z > max_value {
+                                max_value = z;
+                            }
                         }
                     }
 
@@ -469,7 +505,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     // Perform a histogram matching operation //
                     ////////////////////////////////////////////
 
-                    let num_bins = ((max_value - min_value).max(1024f64)).ceil() as usize; 
+                    let num_bins = ((max_value - min_value).max(1024f64)).ceil() as usize;
                     let bin_size = (max_value - min_value) / num_bins as f64;
                     let mut histogram = vec![0f64; num_bins];
                     let num_bins_less_one = num_bins - 1;
@@ -481,7 +517,9 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                             if z != nodata {
                                 numcells += 1f64;
                                 bin_num = ((z - min_value) / bin_size) as usize;
-                                if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                                if bin_num > num_bins_less_one {
+                                    bin_num = num_bins_less_one;
+                                }
                                 histogram[bin_num] += 1f64;
                             }
                         }
@@ -506,7 +544,9 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                             z = error_model[(row, col)];
                             if z != nodata {
                                 bin_num = ((z - min_value) / bin_size) as usize;
-                                if bin_num > num_bins_less_one { bin_num = num_bins_less_one; }
+                                if bin_num > num_bins_less_one {
+                                    bin_num = num_bins_less_one;
+                                }
                                 p_val = cdf[bin_num];
                                 j = ((p_val * 10f64).floor()) as usize;
                                 for i in starting_vals[j]..num_lines {
@@ -517,7 +557,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                                             p1 = reference_cdf[i - 1][1];
                                             p2 = reference_cdf[i][1];
                                             if p1 != p2 {
-                                                x_val = x1 + ((x2 - x1) * ((p_val - p1) / (p2 - p1)));
+                                                x_val =
+                                                    x1 + ((x2 - x1) * ((p_val - p1) / (p2 - p1)));
                                             } else {
                                                 x_val = x1;
                                             }
@@ -552,8 +593,9 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     // Fill the depressions in the error-added DEM //
                     /////////////////////////////////////////////////
                     let background_val = (i32::min_value() + 1) as f64;
-                    let mut dep_filled: Array2D<f64> = Array2D::new(rows, columns, background_val, nodata).unwrap();
-                    
+                    let mut dep_filled: Array2D<f64> =
+                        Array2D::new(rows, columns, background_val, nodata).unwrap();
+
                     /*
                     Find the data edges. This is complicated by the fact that DEMs frequently
                     have nodata edges, whereby the DEM does not occupy the full extent of 
@@ -564,7 +606,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     for nodata values along the raster's edges.
                     */
 
-                    let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
+                    let mut queue: VecDeque<(isize, isize)> =
+                        VecDeque::with_capacity((rows * columns) as usize);
                     for row in 0..rows {
                         /*
                         Note that this is only possible because Whitebox rasters
@@ -590,8 +633,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     let mut zin_n: f64; // value of neighbour of row, col in input raster
                     let mut zout: f64; // value of row, col in output raster
                     let mut zout_n: f64; // value of neighbour of row, col in output raster
-                    let dx = [ 1, 1, 1, 0, -1, -1, -1, 0 ];
-                    let dy = [ -1, 0, 1, 1, 1, 0, -1, -1 ];
+                    let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                    let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                     let (mut row, mut col): (isize, isize);
                     let (mut row_n, mut col_n): (isize, isize);
                     while !queue.is_empty() {
@@ -610,7 +653,11 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                                 } else {
                                     dep_filled[(row_n, col_n)] = zin_n;
                                     // Push it onto the priority queue for the priority flood operation
-                                    minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                                    minheap.push(GridCell {
+                                        row: row_n,
+                                        column: col_n,
+                                        priority: zin_n,
+                                    });
                                 }
                             }
                         }
@@ -629,9 +676,15 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                             if zout_n == background_val {
                                 zin_n = error_model[(row_n, col_n)];
                                 if zin_n != nodata {
-                                    if zin_n < zout { zin_n = zout; } // We're in a depression. Raise the elevation.
+                                    if zin_n < zout {
+                                        zin_n = zout;
+                                    } // We're in a depression. Raise the elevation.
                                     dep_filled[(row_n, col_n)] = zin_n;
-                                    minheap.push(GridCell{ row: row_n, column: col_n, priority: zin_n });
+                                    minheap.push(GridCell {
+                                        row: row_n,
+                                        column: col_n,
+                                        priority: zin_n,
+                                    });
                                 } else {
                                     // Interior nodata cells are still treated as nodata and are not filled.
                                     dep_filled[(row_n, col_n)] = nodata;
@@ -674,17 +727,19 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output.configs.data_type = DataType::F32;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input base raster file: {}", input_file));
         output.add_metadata_entry(format!("RMSE: {}", rmse));
         output.add_metadata_entry(format!("Range: {}", range));
         output.add_metadata_entry(format!("Iterations: {}", iterations));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time) .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -698,8 +753,10 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

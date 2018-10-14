@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/09/2018
-Last Modified: 26/09/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -11,7 +11,6 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use time;
 use tools::*;
 
 /// Calculates the sum for each grid cell from a group of raster images.
@@ -171,7 +170,7 @@ impl WhiteboxTool for SumOverlay {
                                 "There is something incorrect with the input files. At least two inputs are required to operate this tool."));
         }
 
-        let start = time::now();
+        let start = Instant::now();
 
         // We need to initialize output and n here, but in reality this can't be done
         // until we know the size of rows and columns, which occurs during the first loop.
@@ -235,15 +234,12 @@ impl WhiteboxTool for SumOverlay {
             i += 1;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(
-            format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -258,7 +254,7 @@ impl WhiteboxTool for SumOverlay {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

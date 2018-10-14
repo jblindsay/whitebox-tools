@@ -2,20 +2,19 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
-Last Modified: November 14, 2017
+Last Modified: 12/10/2018
 License: MIT
 */
 
-use time;
-use std::env;
-use std::path;
-use std::f64;
 use raster::*;
+use std::env;
+use std::f64;
 use std::io::{Error, ErrorKind};
-use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
+use std::path;
 use tools::ParameterFileType;
+use tools::ParameterType;
+use tools::ToolParameter;
+use tools::*;
 
 pub struct NewRasterFromBase {
     name: String,
@@ -38,31 +37,32 @@ impl NewRasterFromBase {
         // parameters.push_str("--data_type     Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').\n");
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Base File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--base".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Base File".to_owned(),
+            flags: vec!["-i".to_owned(), "--base".to_owned()],
             description: "Input base raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Constant Value".to_owned(), 
-            flags: vec!["--value".to_owned()], 
-            description: "Constant value to fill raster with; either 'nodata' or numeric value.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Constant Value".to_owned(),
+            flags: vec!["--value".to_owned()],
+            description: "Constant value to fill raster with; either 'nodata' or numeric value."
+                .to_owned(),
             parameter_type: ParameterType::StringOrNumber,
             default_value: Some("nodata".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -77,7 +77,8 @@ impl NewRasterFromBase {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -101,7 +102,7 @@ impl WhiteboxTool for NewRasterFromBase {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -120,24 +121,27 @@ impl WhiteboxTool for NewRasterFromBase {
     fn get_example_usage(&self) -> String {
         self.example_usage.clone()
     }
-    
+
     fn get_toolbox(&self) -> String {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut base_file = String::new();
         let mut output_file = String::new();
         let mut out_val_str = String::new();
         let mut data_type = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -148,8 +152,10 @@ impl WhiteboxTool for NewRasterFromBase {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-base" || vec[0].to_lowercase() == "--base"
-            || vec[0].to_lowercase() == "-i" {
+            if vec[0].to_lowercase() == "-base"
+                || vec[0].to_lowercase() == "--base"
+                || vec[0].to_lowercase() == "-i"
+            {
                 if keyval {
                     base_file = vec[1].to_string();
                 } else {
@@ -167,9 +173,10 @@ impl WhiteboxTool for NewRasterFromBase {
                 } else {
                     out_val_str = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-data_type" ||
-                      vec[0].to_lowercase() == "--data_type" ||
-                      vec[0].to_lowercase() == "--datatype" {
+            } else if vec[0].to_lowercase() == "-data_type"
+                || vec[0].to_lowercase() == "--data_type"
+                || vec[0].to_lowercase() == "--datatype"
+            {
                 if keyval {
                     data_type = vec[1].to_string();
                 } else {
@@ -195,7 +202,7 @@ impl WhiteboxTool for NewRasterFromBase {
 
         let base = Raster::new(&base_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let nodata = -32768.0;
         let mut out_val = nodata;
@@ -218,13 +225,13 @@ impl WhiteboxTool for NewRasterFromBase {
             output.configs.data_type = DataType::F32;
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        let elapsed_time = get_formatted_elapsed_time(start);
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Base raster file: {}", base_file));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -239,8 +246,10 @@ impl WhiteboxTool for NewRasterFromBase {
         };
 
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

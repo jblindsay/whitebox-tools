@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 15, 2018
-Last Modified: March 15, 2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -17,7 +17,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -69,7 +68,8 @@ impl ImageStackProfile {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -210,7 +210,7 @@ impl WhiteboxTool for ImageStackProfile {
         };
         let points = Shapefile::read(&points_file)?;
 
-        let start = time::now();
+        let start = Instant::now();
 
         // make sure the input vector file is of points type
         if points.header.shape_type.base_shape_type() != ShapeType::Point {
@@ -284,9 +284,12 @@ impl WhiteboxTool for ImageStackProfile {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Image Stack Profile</h1>"#.as_bytes())?;
+            <h1>Image Stack Profile</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(("<p>Inputs:<br>").as_bytes())?;
         for i in 0..num_files {
@@ -296,8 +299,7 @@ impl WhiteboxTool for ImageStackProfile {
         }
 
         writer.write_all(("</p>").as_bytes())?;
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = num_points > 2 && num_points < 12;
 
@@ -344,8 +346,7 @@ impl WhiteboxTool for ImageStackProfile {
                     .write(
                         &format!("<td class=\"numberCell\">{}</td>", ydata[record_num][i])
                             .as_bytes(),
-                    )
-                    .unwrap();
+                    ).unwrap();
             }
             writer.write("</tr>".as_bytes()).unwrap();
         }
@@ -357,7 +358,7 @@ impl WhiteboxTool for ImageStackProfile {
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (including I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (including I/O): {}", elapsed_time)
             );
         }
 

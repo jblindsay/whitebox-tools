@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 17, 2017
-Last Modified: 16/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -16,7 +16,6 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use structures::Array2D;
-use time;
 use tools::*;
 
 /// This tool can be used to calculate the downslope index described by Hjerdt et al. (2004).
@@ -252,7 +251,7 @@ impl WhiteboxTool for DownslopeIndex {
         };
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -425,8 +424,7 @@ impl WhiteboxTool for DownslopeIndex {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
@@ -437,9 +435,7 @@ impl WhiteboxTool for DownslopeIndex {
         output.add_metadata_entry(format!("Input DEM file: {}", input_file));
         output.add_metadata_entry(format!("drop_val value: {}", drop_val));
         output.add_metadata_entry(format!("Output type: {}", out_type));
-        output.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -453,7 +449,7 @@ impl WhiteboxTool for DownslopeIndex {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

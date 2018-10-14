@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dan Newman and John Lindsay
 Created: 27/03/2018
-Last Modified: 27/03/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -18,7 +18,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 use structures::Array2D;
-use time;
 use tools::*;
 use vector::{ShapeType, Shapefile};
 
@@ -97,7 +96,8 @@ impl MaxAnisotropyDevSignature {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -260,7 +260,7 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
             println!("Reading DEM data...")
         };
         let input = Raster::new(&input_file, "r")?;
-        let start = time::now();
+        let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
@@ -409,11 +409,13 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
                                     // - X -
                                     // - X -
                                     // - X -
-                                    n = i_n[(y4, x3)] + i_n[(y1, x2)] - i_n[(y1, x3)]
+                                    n = i_n[(y4, x3)] + i_n[(y1, x2)]
+                                        - i_n[(y1, x3)]
                                         - i_n[(y4, x2)];
                                     if n > 3 {
                                         sum = i[(y4, x3)] + i[(y1, x2)] - i[(y1, x3)] - i[(y4, x2)];
-                                        sum_sqr = i2[(y4, x3)] + i2[(y1, x2)] - i2[(y1, x3)]
+                                        sum_sqr = i2[(y4, x3)] + i2[(y1, x2)]
+                                            - i2[(y1, x3)]
                                             - i2[(y4, x2)];
                                         v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
                                         if v > 0f64 {
@@ -434,11 +436,13 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
                                     // - - -
                                     // X X X
                                     // - - -
-                                    n = i_n[(y3, x4)] + i_n[(y2, x1)] - i_n[(y2, x4)]
+                                    n = i_n[(y3, x4)] + i_n[(y2, x1)]
+                                        - i_n[(y2, x4)]
                                         - i_n[(y3, x1)];
                                     if n > 3 {
                                         sum = i[(y3, x4)] + i[(y2, x1)] - i[(y2, x4)] - i[(y3, x1)];
-                                        sum_sqr = i2[(y3, x4)] + i2[(y2, x1)] - i2[(y2, x4)]
+                                        sum_sqr = i2[(y3, x4)] + i2[(y2, x1)]
+                                            - i2[(y2, x4)]
                                             - i2[(y3, x1)];
                                         v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
                                         if v > 0f64 {
@@ -459,24 +463,32 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
                                     // - - X
                                     // - X -
                                     // X - -
-                                    n = (i_n[(y2, x4)] + i_n[(y1, x3)] - i_n[(y1, x4)]
+                                    n = (i_n[(y2, x4)] + i_n[(y1, x3)]
+                                        - i_n[(y1, x4)]
                                         - i_n[(y2, x3)])
-                                        + (i_n[(y3, x3)] + i_n[(y2, x2)] - i_n[(y2, x3)]
+                                        + (i_n[(y3, x3)] + i_n[(y2, x2)]
+                                            - i_n[(y2, x3)]
                                             - i_n[(y3, x2)])
-                                        + (i_n[(y4, x2)] + i_n[(y3, x1)] - i_n[(y3, x2)]
+                                        + (i_n[(y4, x2)] + i_n[(y3, x1)]
+                                            - i_n[(y3, x2)]
                                             - i_n[(y4, x1)]);
                                     if n > 3 {
-                                        sum = (i[(y2, x4)] + i[(y1, x3)] - i[(y1, x4)]
-                                            - i[(y2, x3)])
-                                            + (i[(y3, x3)] + i[(y2, x2)] - i[(y2, x3)]
-                                                - i[(y3, x2)])
-                                            + (i[(y4, x2)] + i[(y3, x1)] - i[(y3, x2)]
-                                                - i[(y4, x1)]);
-                                        sum_sqr = (i2[(y2, x4)] + i2[(y1, x3)] - i2[(y1, x4)]
+                                        sum =
+                                            (i[(y2, x4)] + i[(y1, x3)] - i[(y1, x4)] - i[(y2, x3)])
+                                                + (i[(y3, x3)] + i[(y2, x2)]
+                                                    - i[(y2, x3)]
+                                                    - i[(y3, x2)])
+                                                + (i[(y4, x2)] + i[(y3, x1)]
+                                                    - i[(y3, x2)]
+                                                    - i[(y4, x1)]);
+                                        sum_sqr = (i2[(y2, x4)] + i2[(y1, x3)]
+                                            - i2[(y1, x4)]
                                             - i2[(y2, x3)])
-                                            + (i2[(y3, x3)] + i2[(y2, x2)] - i2[(y2, x3)]
+                                            + (i2[(y3, x3)] + i2[(y2, x2)]
+                                                - i2[(y2, x3)]
                                                 - i2[(y3, x2)])
-                                            + (i2[(y4, x2)] + i2[(y3, x1)] - i2[(y3, x2)]
+                                            + (i2[(y4, x2)] + i2[(y3, x1)]
+                                                - i2[(y3, x2)]
                                                 - i2[(y4, x1)]);
                                         v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
                                         if v > 0f64 {
@@ -499,24 +511,32 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
                                     // X - -
                                     // - X -
                                     // - - X
-                                    n = (i_n[(y2, x2)] + i_n[(y1, x1)] - i_n[(y1, x2)]
+                                    n = (i_n[(y2, x2)] + i_n[(y1, x1)]
+                                        - i_n[(y1, x2)]
                                         - i_n[(y2, x1)])
-                                        + (i_n[(y3, x3)] + i_n[(y2, x2)] - i_n[(y2, x3)]
+                                        + (i_n[(y3, x3)] + i_n[(y2, x2)]
+                                            - i_n[(y2, x3)]
                                             - i_n[(y3, x2)])
-                                        + (i_n[(y4, x4)] + i_n[(y3, x3)] - i_n[(y3, x4)]
+                                        + (i_n[(y4, x4)] + i_n[(y3, x3)]
+                                            - i_n[(y3, x4)]
                                             - i_n[(y4, x3)]);
                                     if n > 3 {
-                                        sum = (i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)]
-                                            - i[(y2, x1)])
-                                            + (i[(y3, x3)] + i[(y2, x2)] - i[(y2, x3)]
-                                                - i[(y3, x2)])
-                                            + (i[(y4, x4)] + i[(y3, x3)] - i[(y3, x4)]
-                                                - i[(y4, x3)]);
-                                        sum_sqr = (i2[(y2, x2)] + i2[(y1, x1)] - i2[(y1, x2)]
+                                        sum =
+                                            (i[(y2, x2)] + i[(y1, x1)] - i[(y1, x2)] - i[(y2, x1)])
+                                                + (i[(y3, x3)] + i[(y2, x2)]
+                                                    - i[(y2, x3)]
+                                                    - i[(y3, x2)])
+                                                + (i[(y4, x4)] + i[(y3, x3)]
+                                                    - i[(y3, x4)]
+                                                    - i[(y4, x3)]);
+                                        sum_sqr = (i2[(y2, x2)] + i2[(y1, x1)]
+                                            - i2[(y1, x2)]
                                             - i2[(y2, x1)])
-                                            + (i2[(y3, x3)] + i2[(y2, x2)] - i2[(y2, x3)]
+                                            + (i2[(y3, x3)] + i2[(y2, x2)]
+                                                - i2[(y2, x3)]
                                                 - i2[(y3, x2)])
-                                            + (i2[(y4, x4)] + i2[(y3, x3)] - i2[(y3, x4)]
+                                            + (i2[(y4, x4)] + i2[(y3, x3)]
+                                                - i2[(y3, x4)]
                                                 - i2[(y4, x3)]);
                                         v = (sum_sqr - (sum * sum) / n as f64) / n as f64;
                                         if v > 0f64 {
@@ -534,7 +554,8 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
                                     }
 
                                     if num_panes_valid > 0f64 {
-                                        z = ((values[1] * values[1] + values[2] * values[2]
+                                        z = ((values[1] * values[1]
+                                            + values[2] * values[2]
                                             + values[3] * values[3]
                                             + values[4] * values[4])
                                             / num_panes_valid)
@@ -550,12 +571,11 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!(
                 "\n{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 
@@ -570,9 +590,12 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
 
-        writer.write_all(&r#"</head>
+        writer.write_all(
+            &r#"</head>
         <body>
-            <h1>Maximum Anisotropy in Deviation From Mean</h1>"#.as_bytes())?;
+            <h1>Maximum Anisotropy in Deviation From Mean</h1>"#
+                .as_bytes(),
+        )?;
 
         writer.write_all(
             (format!(

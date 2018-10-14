@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 15, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
@@ -14,7 +14,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use time;
 use tools::*;
 
 /// This tool splits an RGB colour composite image into seperate multispectral images.
@@ -178,7 +177,7 @@ impl WhiteboxTool for SplitColourComposite {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        let start = time::now();
+        let start = Instant::now();
 
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -243,17 +242,14 @@ impl WhiteboxTool for SplitColourComposite {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         output_r.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output_r.add_metadata_entry(format!("Input file: {}", input_file));
-        output_r.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_r.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
         if verbose {
             println!("Saving red image...")
         };
@@ -269,9 +265,7 @@ impl WhiteboxTool for SplitColourComposite {
             self.get_tool_name()
         ));
         output_g.add_metadata_entry(format!("Input file: {}", input_file));
-        output_g.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_g.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
         if verbose {
             println!("Saving green image...")
         };
@@ -287,9 +281,7 @@ impl WhiteboxTool for SplitColourComposite {
             self.get_tool_name()
         ));
         output_b.add_metadata_entry(format!("Input file: {}", input_file));
-        output_b.add_metadata_entry(
-            format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""),
-        );
+        output_b.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
         if verbose {
             println!("Saving blue image...")
         };
@@ -302,7 +294,7 @@ impl WhiteboxTool for SplitColourComposite {
         if verbose {
             println!(
                 "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 

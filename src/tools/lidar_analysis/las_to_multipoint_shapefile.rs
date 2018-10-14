@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/09/2018
-Last Modified: 04/09/2018
+Last Modified: 12/10/2018
 License: MIT
 */
 
@@ -15,7 +15,6 @@ use std::path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use time;
 use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
@@ -162,7 +161,7 @@ impl WhiteboxTool for LasToMultipointShapefile {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
+        let start = Instant::now();
 
         let mut inputs = vec![];
         if input_file.is_empty() {
@@ -299,12 +298,8 @@ impl WhiteboxTool for LasToMultipointShapefile {
         }
 
         if verbose {
-            let end = time::now();
-            let elapsed_time = end - start;
-            println!(
-                "{}",
-                &format!("Elapsed Time: {}", elapsed_time).replace("PT", "")
-            );
+            let elapsed_time = get_formatted_elapsed_time(start);
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         Ok(())

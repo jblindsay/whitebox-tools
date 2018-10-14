@@ -2,22 +2,21 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 14, 2017
-Last Modified: Dec. 15, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
 use num_cpus;
-use rand::prelude::*;
 use rand::distributions::StandardNormal;
+use rand::prelude::*;
+use raster::*;
 use std::env;
-use std::path;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::path;
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::thread;
-use raster::*;
 use tools::*;
 
 pub struct TurningBandsSimulation {
@@ -33,50 +32,54 @@ impl TurningBandsSimulation {
         // public constructor
         let name = "TurningBandsSimulation".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Creates an image containing random values based on a turning-bands simulation."
-            .to_string();
+        let description =
+            "Creates an image containing random values based on a turning-bands simulation."
+                .to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input Base File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--base".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input Base File".to_owned(),
+            flags: vec!["-i".to_owned(), "--base".to_owned()],
             description: "Input base raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Range of Autocorrelation (map units)".to_owned(), 
-            flags: vec!["--range".to_owned()], 
-            description: "The field's range, in xy-units, related to the extent of spatial autocorrelation.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Range of Autocorrelation (map units)".to_owned(),
+            flags: vec!["--range".to_owned()],
+            description:
+                "The field's range, in xy-units, related to the extent of spatial autocorrelation."
+                    .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Iterations".to_owned(), 
-            flags: vec!["--iterations".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Iterations".to_owned(),
+            flags: vec!["--iterations".to_owned()],
             description: "The number of iterations.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1000".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -99,7 +102,7 @@ impl WhiteboxTool for TurningBandsSimulation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -130,19 +133,22 @@ impl WhiteboxTool for TurningBandsSimulation {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut range = 1f64;
         let mut iterations = 1000;
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -153,7 +159,10 @@ impl WhiteboxTool for TurningBandsSimulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" || vec[0].to_lowercase() == "--base" {
+            if vec[0].to_lowercase() == "-i"
+                || vec[0].to_lowercase() == "--input"
+                || vec[0].to_lowercase() == "--base"
+            {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
@@ -169,13 +178,15 @@ impl WhiteboxTool for TurningBandsSimulation {
                 if keyval {
                     range = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    range = args[i+1].to_string().parse::<f64>().unwrap();
+                    range = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-iterations" || vec[0].to_lowercase() == "--iterations" {
+            } else if vec[0].to_lowercase() == "-iterations"
+                || vec[0].to_lowercase() == "--iterations"
+            {
                 if keyval {
                     iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
-                    iterations = args[i+1].to_string().parse::<f32>().unwrap() as usize;
+                    iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
             }
         }
@@ -197,15 +208,16 @@ impl WhiteboxTool for TurningBandsSimulation {
 
         let input = Raster::new(&input_file, "r")?;
 
-        let start = time::now();
+        let start = Instant::now();
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        
+
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         // let nodata = input.configs.nodata;
 
-        let diagonal_size = (rows as f64 * rows as f64 + columns as f64 * columns as f64).sqrt() as usize;
+        let diagonal_size =
+            (rows as f64 * rows as f64 + columns as f64 * columns as f64).sqrt() as usize;
         let filter_half_size = (range / (2f64 * input.configs.resolution_x as f64)) as usize;
         let filter_size = filter_half_size * 2 + 1;
         let mut cell_offsets = vec![0isize; filter_size];
@@ -214,7 +226,6 @@ impl WhiteboxTool for TurningBandsSimulation {
         }
 
         let w = (36f64 / (filter_half_size * (filter_half_size + 1) * filter_size) as f64).sqrt();
-            
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.reinitialize_values(0.0);
@@ -227,12 +238,11 @@ impl WhiteboxTool for TurningBandsSimulation {
         // let between_cols = Range::new(0f64, columns as f64);
         let mut z: f64;
         let (mut pnt1x, mut pnt1y, mut pnt2x, mut pnt2y): (f64, f64, f64, f64);
-        
+
         // loop through the number of iterations
         for i in 0..iterations {
-
             // create the data line and fill it with random numbers.
-            // notice that the initial dataline is 2 * filterHalfSize larger 
+            // notice that the initial dataline is 2 * filterHalfSize larger
             // because of the edge effects of the filter.
             let mut t = vec![0f64; diagonal_size + 2 * filter_half_size];
             for j in 0..diagonal_size {
@@ -276,59 +286,62 @@ impl WhiteboxTool for TurningBandsSimulation {
                 0 => {
                     pnt1x = 0f64;
                     pnt1y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                },
+                }
                 1 => {
                     pnt1x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt1y = 0f64;
-                },
+                }
                 2 => {
                     pnt1x = (columns - 1) as f64;
                     pnt1y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                },
-                _ => { // 3
+                }
+                _ => {
+                    // 3
                     pnt1x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt1y = (rows - 1) as f64;
-                },
+                }
             }
 
             match edge2 {
                 0 => {
                     pnt2x = 0f64;
                     pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                },
+                }
                 1 => {
                     pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt2y = 0f64;
-                },
+                }
                 2 => {
                     pnt2x = (columns - 1) as f64;
                     pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                },
-                _ => { // 3
+                }
+                _ => {
+                    // 3
                     pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt2y = (rows - 1) as f64;
-                },
+                }
             }
-            
+
             if pnt1x == pnt2x || pnt1y == pnt2y {
                 while pnt1x == pnt2x || pnt1y == pnt2y {
                     match edge2 {
                         0 => {
                             pnt2x = 0f64;
                             pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                        },
+                        }
                         1 => {
                             pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                             pnt2y = 0f64;
-                        },
+                        }
                         2 => {
                             pnt2x = (columns - 1) as f64;
                             pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
-                        },
-                        _ => { // 3
+                        }
+                        _ => {
+                            // 3
                             pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                             pnt2y = (rows - 1) as f64;
-                        },
+                        }
                     }
                 }
             }
@@ -340,7 +353,7 @@ impl WhiteboxTool for TurningBandsSimulation {
             let mut perpendicular_line_intercept: f64;
             let (mut row, mut col): (usize, usize);
 
-            // for each of the four corners, figure out what the perpendicular line 
+            // for each of the four corners, figure out what the perpendicular line
             // intersection coordinates would be.
 
             // point (0,0)
@@ -398,11 +411,17 @@ impl WhiteboxTool for TurningBandsSimulation {
                         let (mut intersecting_point_x, mut intersecting_point_y): (f64, f64);
                         let mut data = vec![0f64; columns as usize];
                         for col in 0..columns {
-                            perpendicular_line_intercept = row as f64 - perpendicular_line_slope * col as f64;
-                            intersecting_point_x = (perpendicular_line_intercept - line_intercept) / slope_diff;
-                            intersecting_point_y = line_slope * intersecting_point_x - line_intercept;
-                            let mut p = (((intersecting_point_x - line_start_x) * (intersecting_point_x - line_start_x)
-                                    + (intersecting_point_y - line_start_y) * (intersecting_point_y - line_start_y)).sqrt()) as isize;
+                            perpendicular_line_intercept =
+                                row as f64 - perpendicular_line_slope * col as f64;
+                            intersecting_point_x =
+                                (perpendicular_line_intercept - line_intercept) / slope_diff;
+                            intersecting_point_y =
+                                line_slope * intersecting_point_x - line_intercept;
+                            let mut p = (((intersecting_point_x - line_start_x)
+                                * (intersecting_point_x - line_start_x)
+                                + (intersecting_point_y - line_start_y)
+                                    * (intersecting_point_y - line_start_y))
+                                .sqrt()) as isize;
                             if p < 0 {
                                 p = 0;
                             }
@@ -428,7 +447,6 @@ impl WhiteboxTool for TurningBandsSimulation {
                     old_progress = progress;
                 }
             }
-
         }
 
         let iterations_rooted = (iterations as f64).sqrt(); // * 3.5;
@@ -447,18 +465,18 @@ impl WhiteboxTool for TurningBandsSimulation {
             }
         }
 
-        let end = time::now();
-        let elapsed_time = end - start;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "grey.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output.configs.data_type = DataType::F32;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool",
-                                          self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input base raster file: {}", input_file));
         output.add_metadata_entry(format!("Range: {}", range));
         output.add_metadata_entry(format!("Iterations: {}", iterations));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-                                      .replace("PT", ""));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
@@ -472,8 +490,10 @@ impl WhiteboxTool for TurningBandsSimulation {
             Err(e) => return Err(e),
         };
         if verbose {
-            println!("{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", ""));
+            println!(
+                "{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
         }
 
         Ok(())

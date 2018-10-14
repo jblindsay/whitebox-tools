@@ -1,17 +1,18 @@
-use std::io::Error;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
+use raster::*;
 use std::f64;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::BufWriter;
+use std::io::Error;
 use std::mem;
-use raster::*;
-use io_utils::Endianness;
+use utils::Endianness;
 
-pub fn read_arcbinary(file_name: &String,
-                      configs: &mut RasterConfigs,
-                      data: &mut Vec<f64>)
-                      -> Result<(), Error> {
+pub fn read_arcbinary(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".flt", ".hdr");
     let f = File::open(header_file)?;
@@ -28,24 +29,52 @@ pub fn read_arcbinary(file_name: &String,
         let line_split = line_unwrapped.split(" ");
         let vec = line_split.collect::<Vec<&str>>();
         if vec[0].to_lowercase().contains("nrows") {
-            configs.rows = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
+            configs.rows = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("ncols") {
-            configs.columns = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
+            configs.columns = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("xllcorner") {
-            xllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            xllcenter = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("yllcorner") {
-            yllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            yllcenter = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("xllcenter") {
-            xllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            xllcorner = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("yllcenter") {
-            yllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            yllcorner = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("cellsize") {
-            configs.resolution_x = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
-            configs.resolution_y = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_x = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+            configs.resolution_y = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("nodata_value") {
-            configs.nodata = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            configs.nodata = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("byteorder") {
-            if vec[vec.len()-1].trim().to_lowercase().contains("lsb") {
+            if vec[vec.len() - 1].trim().to_lowercase().contains("lsb") {
                 configs.endian = Endianness::LittleEndian;
             } else {
                 configs.endian = Endianness::BigEndian;
@@ -64,12 +93,12 @@ pub fn read_arcbinary(file_name: &String,
         configs.north = yllcorner + (configs.rows as f64) * configs.resolution_y;
     } else {
         //h.cellCornerMode = false
-        configs.east = xllcenter - (0.5 * configs.resolution_x) +
-                       (configs.columns as f64) * configs.resolution_x;
+        configs.east = xllcenter - (0.5 * configs.resolution_x)
+            + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcenter - (0.5 * configs.resolution_x);
         configs.south = yllcenter - (0.5 * configs.resolution_y);
-        configs.north = yllcenter - (0.5 * configs.resolution_y) +
-                        (configs.rows as f64) * configs.resolution_y;
+        configs.north =
+            yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
     // read the data file
@@ -89,24 +118,24 @@ pub fn read_arcbinary(file_name: &String,
         for i in 0..buf_size {
             offset = i * 4;
             data.push(unsafe {
-                          mem::transmute::<[u8; 4], f32>([buffer[offset],
-                                                          buffer[offset + 1],
-                                                          buffer[offset + 2],
-                                                          buffer[offset + 3]])
-                      } as f64);
+                mem::transmute::<[u8; 4], f32>([
+                    buffer[offset],
+                    buffer[offset + 1],
+                    buffer[offset + 2],
+                    buffer[offset + 3],
+                ])
+            } as f64);
             j += 1;
             if j == num_cells {
                 break;
             }
         }
-
     }
 
     Ok(())
 }
 
 pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {
-
     // Save the header file
     let header_file = r.file_name.replace(".flt", ".hdr");
 
@@ -125,13 +154,14 @@ pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("YLLCORNER {}\n", r.configs.south);
     writer.write_all(s.as_bytes())?;
 
-    let s = format!("CELLSIZE {}\n",
-                    (r.configs.resolution_x + r.configs.resolution_y) / 2.0);
+    let s = format!(
+        "CELLSIZE {}\n",
+        (r.configs.resolution_x + r.configs.resolution_y) / 2.0
+    );
     writer.write_all(s.as_bytes())?;
 
     let s = format!("NODATA_VALUE {}\n", r.configs.nodata);
     writer.write_all(s.as_bytes())?;
-
 
     if r.configs.endian == Endianness::LittleEndian {
         writer.write_all("BYTEORDER LSBFIRST\n".as_bytes())?;

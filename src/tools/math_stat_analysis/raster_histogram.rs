@@ -2,23 +2,22 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 19, 2017
-Last Modified: Dec. 19, 2017
+Last Modified: 13/10/2018
 License: MIT
 */
 
-use time;
-use std::io::BufWriter;
+use raster::*;
+use rendering::html::*;
+use rendering::Histogram;
+use std::env;
+use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::env;
-use std::path;
-use std::f64;
-use std::process::Command;
-use raster::*;
+use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
+use std::path;
+use std::process::Command;
 use tools::*;
-use rendering::Histogram;
-use rendering::html::*;
 
 pub struct RasterHistogram {
     name: String,
@@ -36,36 +35,41 @@ impl RasterHistogram {
         let description = "Creates a histogram from raster values.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output HTML File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
-            description: "Output HTML file (default name will be based on input file if unspecified).".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description:
+                "Output HTML file (default name will be based on input file if unspecified)."
+                    .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif\" -o=outfile.html",
-                            short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif\" -o=outfile.html",
+            short_exe, name
+        ).replace("*", &sep);
 
         RasterHistogram {
             name: name,
@@ -81,7 +85,7 @@ impl WhiteboxTool for RasterHistogram {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -112,16 +116,20 @@ impl WhiteboxTool for RasterHistogram {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -137,7 +145,7 @@ impl WhiteboxTool for RasterHistogram {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -159,8 +167,8 @@ impl WhiteboxTool for RasterHistogram {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = time::now();
-        
+        let start = Instant::now();
+
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -172,18 +180,18 @@ impl WhiteboxTool for RasterHistogram {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        
+
         let min = input.configs.display_min;
         let max = input.configs.display_max;
         let range = max - min + 0.00001f64;
-        let mut num_bins = ((rows * columns) as f64).log2().ceil() as usize  + 1;
+        let mut num_bins = ((rows * columns) as f64).log2().ceil() as usize + 1;
         let mut bin_width = range / num_bins as f64;
         if input.configs.photometric_interp == PhotometricInterpretation::Categorical {
             bin_width = 1f64;
             num_bins = range.ceil() as usize;
         }
         let mut freq_data = vec![0usize; num_bins];
-        
+
         let mut val: f64;
         let mut bin: usize;
         for row in 0..rows {
@@ -202,13 +210,15 @@ impl WhiteboxTool for RasterHistogram {
                 }
             }
         }
-        
-        let end = time::now();
-        let elapsed_time = end - start;
 
-        
-        if verbose { println!("\n{}",
-                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")); }
+        let elapsed_time = get_formatted_elapsed_time(start);
+
+        if verbose {
+            println!(
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+            );
+        }
 
         let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
@@ -217,33 +227,40 @@ impl WhiteboxTool for RasterHistogram {
         <head>
             <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
             <title>Histogram Analysis</title>"#.as_bytes())?;
-        
+
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
-            
-        writer.write_all(&r#"</head>
-        <body>
-            <h1>Histogram Analysis</h1>"#.as_bytes())?;
 
-        writer.write_all(&format!("<p><strong>Image</strong>: {}</p>", input_file.clone()).as_bytes())?;
-        
+        writer.write_all(
+            &r#"</head>
+        <body>
+            <h1>Histogram Analysis</h1>"#
+                .as_bytes(),
+        )?;
+
+        writer.write_all(
+            &format!("<p><strong>Image</strong>: {}</p>", input_file.clone()).as_bytes(),
+        )?;
+
         let histo = Histogram {
             parent_id: "histo".to_owned(),
             width: 700f64,
             height: 500f64,
             freq_data: freq_data.clone(),
-            min_bin_val: min, 
+            min_bin_val: min,
             bin_width: bin_width,
             x_axis_label: "Image Value (X)".to_owned(),
             cumulative: false,
         };
 
-        writer.write_all(&format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes())?;
+        writer.write_all(
+            &format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
-        
+
         // println!("freq. data: {:?}", freq_data);
 
         if verbose {
