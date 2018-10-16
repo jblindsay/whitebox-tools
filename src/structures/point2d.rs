@@ -171,6 +171,30 @@ impl Point2D {
     pub fn nearly_equals(&self, p: &Self) -> bool {
         (self.x - p.x).abs() <= EPSILON && (self.y - p.y).abs() <= EPSILON
     }
+
+    /// Tests if a point is Left|On|Right of an infinite line,
+    /// based on http://geomalgorithms.com/a03-_inclusion.html.
+    ///
+    /// Input:  two points, p0 and p1, on the line
+    ///
+    /// Return: > 0 for self left of the line through p0 and p1
+    ///         = 0 for self on the line through p0 and p1
+    ///         < 0 for self right of the line through p0 and p1
+    pub fn is_left(&self, p0: &Point2D, p1: &Point2D) -> f64 {
+        (p1.x - p0.x) * (self.y - p0.y) - (self.x - p0.x) * (p1.y - p0.y)
+    }
+
+    pub fn is_between(&self, a: &Self, b: &Self) -> bool {
+        let crossproduct = (self.y - a.y) * (b.x - a.x) - (self.x - a.x) * (b.y - a.y);
+        if crossproduct > -EPSILON && crossproduct < EPSILON {
+            if self.x >= a.x.min(b.x) && self.x <= a.x.max(b.x) {
+                if self.y >= a.y.min(b.y) && self.y <= a.y.max(b.y) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 impl Eq for Point2D {}
@@ -214,20 +238,20 @@ impl Eq for Point2D {}
 
 impl Add for Point2D {
     type Output = Point2D;
-    fn add(self, rhs: Self) -> Point2D {
+    fn add(self, other: Self) -> Point2D {
         Point2D {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
+            x: self.x + other.x,
+            y: self.y + other.y,
         }
     }
 }
 
 impl Sub for Point2D {
     type Output = Point2D;
-    fn sub(self, rhs: Self) -> Point2D {
+    fn sub(self, other: Self) -> Point2D {
         Point2D {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
+            x: self.x - other.x,
+            y: self.y - other.y,
         }
     }
 }
@@ -235,8 +259,8 @@ impl Sub for Point2D {
 // dot product
 impl Mul for Point2D {
     type Output = f64;
-    fn mul(self, rhs: Self) -> f64 {
-        self.x * rhs.x + self.y * rhs.y
+    fn mul(self, other: Self) -> f64 {
+        self.x * other.x + self.y * other.y
     }
 }
 

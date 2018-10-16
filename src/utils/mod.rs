@@ -17,7 +17,7 @@ pub fn get_formatted_elapsed_time(instant: Instant) -> String {
     let sub_sec = dur.as_secs() % 60;
     let sub_milli = dur.subsec_millis();
     if minutes > 0 {
-        return format!("{}min {}s {}ms", minutes, sub_sec, sub_milli);
+        return format!("{}min {}.{}s", minutes, sub_sec, sub_milli);
     }
-    format!("{}s {}ms", sub_sec, sub_milli)
+    format!("{}.{}s", sub_sec, sub_milli)
 }

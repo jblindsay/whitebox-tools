@@ -279,6 +279,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***IdwInterpolation***: Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 - ***LayerFootprint***: Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
 - ***LinearityIndex***: Calculates the linearity index for vector polygons.
+- ***LineIntersections***: Identifies points where the features of two vector line layers intersect.
 - ***LowestPosition***: Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 - ***MaxAbsoluteOverlay***: Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 - ***MaxOverlay***: Evaluates the maximum value for each grid cell from a stack of input rasters.
@@ -290,6 +291,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***MinimumConvexHull***: Creates a vector convex polygon around vector features.
 - ***MinOverlay***: Evaluates the minimum value for each grid cell from a stack of input rasters.
 - ***NearestNeighbourGridding***: Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
+- ***PatchOrientation***: Calculates the orientation of vector polygons.
 - ***PercentEqualTo***: Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 - ***PercentGreaterThan***: Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 - ***PercentLessThan***: Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.

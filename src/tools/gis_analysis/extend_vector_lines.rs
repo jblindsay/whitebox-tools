@@ -33,7 +33,7 @@ impl ExtendVectorLines {
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input Vector File".to_owned(),
+            name: "Input Vector Lines File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector polyline file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(

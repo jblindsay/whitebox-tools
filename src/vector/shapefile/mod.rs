@@ -7,7 +7,7 @@ License: MIT
 
 Notes: The logic behind working with the ESRI Shapefile format.
 */
-extern crate time;
+// extern crate time;
 // extern crate chrono;
 
 pub mod attributes;
@@ -18,6 +18,7 @@ pub use self::attributes::{
 };
 pub use self::geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use chrono::prelude::*;
 use std::f64;
 use std::fmt;
 use std::fs;
@@ -29,7 +30,7 @@ use std::str;
 use structures::Point2D;
 use utils::{ByteOrderReader, Endianness};
 
-/// ```ShapefileHeader``` stores the header variables of a ShapeFile header.
+/// `ShapefileHeader` stores the header variables of a ShapeFile header.
 #[derive(Default, Clone)]
 pub struct ShapefileHeader {
     file_code: i32,            // BigEndian; value is 9994
@@ -1039,10 +1040,14 @@ impl Shapefile {
         writer.write_u8(3u8)?;
 
         // write the date
-        let now = time::now();
-        writer.write_u8(now.tm_year as u8)?;
-        writer.write_u8(now.tm_mon as u8 + 1u8)?;
-        writer.write_u8(now.tm_mday as u8)?;
+        // let now = time::now();
+        // writer.write_u8(now.tm_year as u8)?;
+        // writer.write_u8(now.tm_mon as u8 + 1u8)?;
+        // writer.write_u8(now.tm_mday as u8)?;
+        let now = Local::now();
+        writer.write_u8((now.year() - 1900) as u8)?;
+        writer.write_u8(now.month() as u8)?;
+        writer.write_u8(now.day() as u8)?;
 
         writer.write_u32::<LittleEndian>(self.attributes.header.num_records)?; // number of records
         let header_size = 32u16 + self.attributes.header.num_fields as u16 * 32u16 + 1u16;

@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_assignments)]
-extern crate time;
+// extern crate time;
 // extern crate chrono;
+use chrono::prelude::*;
 extern crate zip;
 
 use self::zip::read::{ZipArchive, ZipFile};
@@ -1156,12 +1157,15 @@ impl LasFile {
             fixed_length_string("WhiteboxTools                   ", 32);
         writer.write_all(self.header.generating_software.as_bytes())?;
 
-        let now = time::now();
-        self.header.file_creation_day = now.tm_yday as u16;
+        // let now = time::now();
+        // self.header.file_creation_day = now.tm_yday as u16;
+        let now = Local::now();
+        self.header.file_creation_day = now.ordinal() as u16;
         u16_bytes = unsafe { mem::transmute(self.header.file_creation_day) };
         writer.write_all(&u16_bytes)?;
 
-        self.header.file_creation_year = (now.tm_year + 1900) as u16;
+        // self.header.file_creation_year = (now.tm_year + 1900) as u16;
+        self.header.file_creation_year = now.year() as u16;
         u16_bytes = unsafe { mem::transmute(self.header.file_creation_year) };
         writer.write_all(&u16_bytes)?;
 

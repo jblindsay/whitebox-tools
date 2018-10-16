@@ -63,11 +63,10 @@ impl MinimumBoundingEnvelope {
         });
 
         parameters.push(ToolParameter {
-            name: "Find bounding rectangles around each individual feature.".to_owned(),
+            name: "Find bounding envelop around each individual feature.".to_owned(),
             flags: vec!["--features".to_owned()],
-            description:
-                "Find the minimum bounding rectangles around each individual vector feature"
-                    .to_owned(),
+            description: "Find the minimum bounding envelop around each individual vector feature"
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_owned()),
             optional: true,

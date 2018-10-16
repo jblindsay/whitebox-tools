@@ -63,9 +63,11 @@ Version 0.12.0 (XX-XX-2018)
     JoinTables
     LasToShapefile
     LinearityIndex
+    LineIntersections
     MergeTableWithCsv
     MergeVectors
     NearestNeighbourGridding
+    PatchOrientation
     RasterToVectorLines
     VoronoiDiagram
 

@@ -84,6 +84,7 @@ impl ToolManager {
         tool_names.push("IdwInterpolation".to_string());
         tool_names.push("LayerFootprint".to_string());
         tool_names.push("LinearityIndex".to_string());
+        tool_names.push("LineIntersections".to_string());
         tool_names.push("LowestPosition".to_string());
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
@@ -95,6 +96,7 @@ impl ToolManager {
         tool_names.push("MinimumConvexHull".to_string());
         tool_names.push("NearestNeighbourGridding".to_string());
         tool_names.push("MinOverlay".to_string());
+        tool_names.push("PatchOrientation".to_string());
         tool_names.push("PercentEqualTo".to_string());
         tool_names.push("PercentGreaterThan".to_string());
         tool_names.push("PercentLessThan".to_string());
@@ -530,6 +532,7 @@ impl ToolManager {
             "holeproportion" => Some(Box::new(tools::gis_analysis::HoleProportion::new())),
             "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
             "layerfootprint" => Some(Box::new(tools::gis_analysis::LayerFootprint::new())),
+            "lineintersections" => Some(Box::new(tools::gis_analysis::LineIntersections::new())),
             "linearityindex" => Some(Box::new(tools::gis_analysis::LinearityIndex::new())),
             "lowestposition" => Some(Box::new(tools::gis_analysis::LowestPosition::new())),
             "maxabsoluteoverlay" => Some(Box::new(tools::gis_analysis::MaxAbsoluteOverlay::new())),
@@ -548,6 +551,7 @@ impl ToolManager {
                 tools::gis_analysis::NearestNeighbourGridding::new(),
             )),
             "minoverlay" => Some(Box::new(tools::gis_analysis::MinOverlay::new())),
+            "patchorientation" => Some(Box::new(tools::gis_analysis::PatchOrientation::new())),
             "percentequalto" => Some(Box::new(tools::gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(tools::gis_analysis::PercentGreaterThan::new())),
             "percentlessthan" => Some(Box::new(tools::gis_analysis::PercentLessThan::new())),

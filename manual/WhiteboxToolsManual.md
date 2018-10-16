@@ -658,10 +658,10 @@ export_table_to_csv(
 
 This tool can be used to join (i.e. merge) a vector's attribute table with a second table. The
 user must specify the name of the vector file (and associated attribute file) as well as the
-*primary key* within the table. The *primary key* (`--primary_key` or `--pkey` flag) is the field
+*primary key* within the table. The *primary key* (`--pkey` flag) is the field
 within the table that is being appended to that serves as the identifier. Additionally, the user
 must specify the name of a second vector from which the data appended into the first table will be
-derived. The *foreign key* (`--foreign_key` or `--fkey` flag), the identifying field within the
+derived. The *foreign key* (`--fkey` flag), the identifying field within the
 second table that corresponds with the data contained within the primary key in the table, must be
 specified. Both the primary and foreign keys should either be strings (text) or integer values.
 *Fields containing decimal values are not good candidates for keys.* Lastly, the names of the field
@@ -693,9 +693,9 @@ will correspond to only one foreign key containing the population and area data.
 **Flag**             **Description**
 -------------------  ---------------
 -\-i1, -\-input1     Input primary vector file (i.e. the table to be modified)
--\-primary_key, -\-pkeyPrimary key field
+-\-pkey              Primary key field
 -\-i2, -\-input2     Input foreign vector file (i.e. source of data to be imported)
--\-foreign_key, -\-fkeyForeign key field
+-\-fkey              Foreign key field
 -\-import            Imported field (all fields will be imported if not specified)
 
 
@@ -768,11 +768,11 @@ separated values (CSV) text file. CSV files stores tabular data (numbers and tex
 form such that each row is a record and each column a field. Fields are typically separated by
 commas although the tool will also support seimi-colon, tab, and space delimited files. The user
 must specify the name of the vector (and associated attribute file) as well as the *primary key*
-within the table. The *primary key* (`--primary_key` or `--pkey` flag) is the field within the
+within the table. The *primary key* (`--pkey` flag) is the field within the
 table that is being appended to that serves as the unique identifier. Additionally, the user must
 specify the name of a CSV text file with either a *.csv or *.txt extension. The file must possess a
 header row, i.e. the first row must contain information about the names of the various fields. The
-*foreign key* (`--foreign_key` or `--fkey` flag), that is the unique identifying field within the
+*foreign key* (`--fkey` flag), that is the identifying field within the
 CSV file that corresponds with the data contained within the *primary key* in the table, must also
 be specified. Both the primary and foreign keys should either be strings (text) or integer values.
 *Fields containing decimal values are not good candidates for keys.* Lastly, the user may optionally
@@ -804,9 +804,9 @@ will correspond to only one foreign key containing the population and area data.
 **Flag**             **Description**
 -------------------  ---------------
 -i, -\-input         Input primary vector file (i.e. the table to be modified)
--\-primary_key, -\-pkeyPrimary key field
+-\-pkey              Primary key field
 -\-csv               Input CSV file (i.e. source of data to be imported)
--\-foreign_key, -\-fkeyForeign key field
+-\-fkey              Foreign key field
 -\-import            Imported field (all fields will be imported if not specified)
 
 
@@ -818,7 +818,7 @@ merge_table_with_csv(
     pkey, 
     csv, 
     fkey, 
-    import, 
+    import=None, 
     callback=default_callback)
 ~~~~
 
@@ -827,7 +827,11 @@ merge_table_with_csv(
 ```
 >>./whitebox_tools -r=MergeTableWithCsv -v ^
 --wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
---csv=land_class.csv --fkey=VALUE --import=NEW_VALUE 
+--csv=land_class.csv --fkey=VALUE ^
+--import=NEW_VALUE
+>>./whitebox_tools -r=MergeTableWithCsv -v ^
+--wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
+--csv=land_class.csv --fkey=VALUE 
 
 
 ```
@@ -3509,7 +3513,24 @@ sum_overlay(
 
 #### 8.4.16 WeightedOverlay
 
-Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
+This tool performs a weighted overlay on multiple input images. It can be used to
+combine multiple factors with varying levels of weight or relative importance. The
+WeightedOverlay tool is similar to the WeightedSum tool but is more powerful because
+it automatically converts the input factors to a common user-defined scale and allows
+the user to specify benefit factors and cost factors. A benefit factor is a factor
+for which higher values are more suitable. A cost factor is a factor for which higher
+values are less suitable. By default, WeightedOverlay assumes that input images are
+benefit factors, unless a cost value of 'true' is entered in the cost array.
+Constraints are absolute restriction with values of 0 (unsuitable) and 1 (suitable).
+This tool is particularly useful for performing multi-criteria evaluations (MCE).
+
+Notice that the algorithm will convert the user-defined factor weights internally such
+that the sum of the weights is always equal to one. As such, the user can specify the
+relative weights as decimals, percentages, or relative weightings (e.g. slope is 2 times
+more important than elevation, in which case the weights may not sum to 1 or 100).
+
+NoData valued grid cells in any of the input images will be assigned NoData values in
+the output image. The output raster is of the float data type and continuous data scale.
 
 *Parameters*:
 
@@ -3865,7 +3886,16 @@ perimeter_area_ratio(
 
 #### 8.5.8 RadiusOfGyration
 
-Calculates the distance of cells from their polygon's centroid.
+This can be used to calculate the radius of gyration (RoG) for the polygon
+features within a raster image. RoG measures how far across the landscape a polygon
+extends its reach on average, given by the mean distance between cells in a patch
+(Mcgarigal et al. 2002). The radius of gyration can be considered a measure of the
+average distance an organism can move within a patch before encountering the patch
+boundary from a random starting point (Mcgarigal et al. 2002). The input raster grid
+should contain polygons with unique identifiers greater than zero. The user must also
+specify the name of the output raster file (where the radius of gyration will be
+assigned to each feature in the input file) and the specified option of outputting text
+data.
 
 *Parameters*:
 
@@ -5584,7 +5614,8 @@ slope_vs_elevation_plot(
 
 #### 8.6.44 StandardDeviationOfSlope
 
-Calculates the standard deviation of slope from an input DEM.
+Calculates the standard deviation of slope from an input DEM, a metric of
+roughness described by Grohmann et al., (2011).
 
 *Parameters*:
 
@@ -7314,7 +7345,31 @@ watershed(
 
 #### 8.8.1 ChangeVectorAnalysis
 
-Performs a change vector analysis on a two-date multi-spectral dataset.
+Change Vector Analysis (CVA) is a change detection method that characterizes the
+magnitude and change direction in spectral space between two times. A change vector
+is the difference vector between two vectors in n-dimensional feature space defined
+for two observations of the same geographical location (i.e. corresponding pixels)
+during two dates. The CVA inputs include the set of raster images corresponding to
+the multispectral data for each date. Note that there must be the same number of
+image files (bands) for the two dates and they must be entered in the same order,
+i.e. if three bands, red, green, and blue are entered for date one, these same
+bands must be entered in the same order for date two.
+
+CVA outputs two image files. The first image contains the change vector length,
+i.e. magnitude, for each pixel in the multi-spectral dataset. The second image
+contains information about the direction of the change event in spectral feature
+space, which is related to the type of change event, e.g. deforestation will likely
+have a different change direction than say crop growth. The vector magnitude is a
+continuous numerical variable. The change vector direction is presented in the form
+of a code, referring to the multi-dimensional sector in which the change vector
+occurs. A text output will be produced to provide a key describing sector codes,
+relating the change vector to positive or negative shifts in n-dimensional feature
+space.
+
+It is common to apply a simple thresholding operation on the magnitude data to
+determine 'actual' change (i.e. change above some assumed level of error). The type
+of change (qualitatively) is then defined according to the corresponding sector code.
+Jensen (2005) provides a useful description of this approach to change detection.
 
 *Parameters*:
 
@@ -7653,7 +7708,13 @@ line_thinning(
 
 #### 8.8.10 ModifiedKMeansClustering
 
-Performs a modified k-means clustering operation on a multi-spectral dataset.
+This modified k-means algorithm is similar to that described by Mather (2004).
+The main difference between the traditional k-means and this technique is that the user
+does not need to specify the desired number of classes/clusters prior to running the
+tool. Instead, the algorithm initializes with a very liberal overestimate of the number
+of classes and then merges classes that have cluster centres that are separated by less
+than a user-defined threshold. The main difference between this algorithm and the ISODATA
+technique is that clusters can not be broken apart into two smaller clusters.
 
 *Parameters*:
 
@@ -7696,7 +7757,23 @@ modified_k_means_clustering(
 
 #### 8.8.11 Mosaic
 
-Mosaics two or more images together.
+This tool will create an image mosaic from one or more input image files using
+one of three resampling methods including, nearest neighbour, bilinear interpolation,
+and cubic convolution. The order of the input source image files is important. Grid
+cells in the output image will be assigned the corresponding value determined from the
+first image found in the list to possess an overlapping coordinate.
+
+Resample is very similar in operation to the Mosaic tool. The Resample tool should be
+used when there is an existing image into which you would like to dump information from
+one or more source images. If the source images are more extensive than the destination
+image, i.e. there are areas that extend beyond the destination image boundaries, these
+areas will not be represented in the updated image. Grid cells in the destination image
+that are not overlapping with any of the input source images will not be updated, i.e.
+they will possess the same value as before the resampling operation. The Mosaic tool is
+used when there is no existing destination image. In this case, a new image is created
+that represents the bounding rectangle of each of the two or more input images. Grid
+cells in the output image that do not overlap with any of the input images will be
+assigned the NoData value.
 
 *Parameters*:
 
@@ -7842,7 +7919,17 @@ remove_spurs(
 
 #### 8.8.15 Resample
 
-Resamples one or more input images into a destination image.
+Resample is very similar in operation to the Mosaic tool. The Resample tool should
+be used when there is an existing image into which you would like to dump information
+from one or more source images. If the source images are more extensive than the
+destination image, i.e. there are areas that extend beyond the destination image
+boundaries, these areas will not be represented in the updated image. Grid cells in the
+destination image that are not overlapping with any of the input source images will not
+be updated, i.e. they will possess the same value as before the resampling operation. The
+Mosaic tool is used when there is no existing destination image. In this case, a new
+image is created that represents the bounding rectangle of each of the two or more input
+images. Grid cells in the output image that do not overlap with any of the input images
+will be assigned the NoData value.
 
 *Parameters*:
 
@@ -8346,7 +8433,17 @@ emboss_filter(
 
 #### 8.9.9 FastAlmostGaussianFilter
 
-Performs a fast approximate Gaussian filter on an image.
+Reference: P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing:
+Techniques and Applications (DICTA), 2010 International Conference on.
+
+The tool is somewhat modiied from Dr. Kovesi's original Matlab code in that it
+works with both greyscale and RGB images (decomposes to HSI and uses the intensity
+data) and it handles the case of rasters that contain NoData values. This adds
+complexity to the original 20 additions and 5 multiplications assertion of the
+original paper.
+
+Also note, for small values of sigma (< 1.8), you should probably just use the
+regular GaussianFilter tool.
 
 *Parameters*:
 
@@ -9205,7 +9302,20 @@ unsharp_masking(
 
 #### 8.9.33 UserDefinedWeightsFilter
 
-Performs a user-defined weights filter on an image.
+NoData values in the input image are ignored during the convolution operation.
+This can lead to unexpected behavior at the edges of images (since the default behavior
+is to return NoData when addressing cells beyond the grid edge) and where the grid
+contains interior areas of NoData values. Normalization of kernel weights can be useful
+for handling the edge effects associated with interior areas of NoData values. When the
+normalization option is selected, the sum of the cell value-weight product is divided
+by the sum of the weights on a cell-by-cell basis. Therefore, if the kernel at a
+particular grid cell contains neighboring cells of NoData values, normalization
+effectively re-adjusts the weighting to account for the missing data values. Normalization
+also ensures that the output image will possess values within the range of the input
+image and allows the user to specify integer value weights in the kernel. However, note
+that this implies that the sum of weights should equal one. In some cases, alternative
+sums (e.g. zero) are more appropriate, and as such normalization should not be applied
+in these cases.
 
 *Parameters*:
 
@@ -9280,7 +9390,23 @@ balance_contrast_enhancement(
 
 #### 8.10.2 CorrectVignetting
 
-Corrects the darkening of images towards corners.
+This tool can be used to reduce vignetting within an image. Vignetting refers to the
+reducuction of image brightness away from the image centre (i.e. the principal point).
+Vignetting is a radiometric distortion resulting from lens characteristics. The
+algorithm calculates the brightness value in the output image (BVout) as:
+
+BVout = BVin / [cos^n(arctan(d / f))]
+
+Where d is the photo-distance from the principal point in millimetres, f is the focal
+length of the camera, in millimeters, and n is a user-specified parameter. Pixel
+distances are converted to photo-distances (in millimetres) using the specified
+image width, i.e. distance between left and right edges (mm). For many cameras, 4.0
+is an appropriate value of the n parameter. A second pass of the image is used to
+rescale the output image so that it possesses the same minimum and maximum values as
+the input image.
+
+If an RGB image is input, the analysis will be performed on the intensity component
+of the HSI transform.
 
 *Parameters*:
 
@@ -12963,7 +13089,14 @@ random_field(
 
 #### 8.12.55 RandomSample
 
-Creates an image containing randomly located sample grid cells with unique IDs.
+This tool can be used to create a random sample of grid cells. The user specifies
+the base raster file, which is used to determine the grid dimensions and georeference
+information for the output raster, and the number of sample random samples (n). The
+output grid will contain n non-zero grid cells, randomly distributed throughout the
+raster grid, and a background value of zero. This tool is useful when performing
+statistical analyses on raster images when you wish to obtain a random sample of data.
+
+Only valid, non-nodata, cells in the base raster will be sampled.
 
 *Parameters*:
 
@@ -13474,7 +13607,23 @@ to_radians(
 
 #### 8.12.71 TrendSurface
 
-Estimates the trend surface of an input raster file.
+This tool can be used to interpolate a trend surface from a raster image. The
+technique uses a polynomial, least-squares regression analysis. The user must
+specify the name of the input raster file. In addition, the user must specify
+the polynomial order (1 to 10) for the analysis. A first-order polynomial is a
+planar surface with no curvature. As the polynomial order is increased, greater
+flexibility is allowed in the fitted surface. Although polynomial orders as high
+as 10 are accepted, numerical instability in the analysis often creates artifacts
+in trend surfaces of orders greater than 5. The operation will display a text
+report on completion, in addition to the output raster image. The report will
+list each of the coefficient values and the r-square value. Note that the entire
+raster image must be able to fit into computer memory, limiting the use of this
+tool to relatively small rasters. The Trend Surface (Vector Points) tool can be
+used instead if the input data is vector points contained in a shapefile.
+
+Numerical stability is enhanced by transforming the x, y, z data by their minimum
+values before performing the regression analysis. These transform parameters
+are also reported in the output report.
 
 *Parameters*:
 
@@ -13507,7 +13656,23 @@ trend_surface(
 
 #### 8.12.72 TrendSurfaceVectorPoints
 
-Estimates a trend surface from vector points.
+This tool can be used to interpolate a trend surface from a vector points file. The
+technique uses a polynomial, least-squares regression analysis. The user must specify
+the name of the input shapefile, which must be of a 'Points' base ShapeType and select
+the attribute in the shapefile's associated attribute table for which to base the trend
+surface analysis. The attribute must be numerical. In addition, the user must specify
+the polynomial order (1 to 10) for the analysis. A first-order polynomial is a planar
+surface with no curvature. As the polynomial order is increased, greater flexibility is
+allowed in the fitted surface. Although polynomial orders as high as 10 are accepted,
+numerical instability in the analysis often creates artifacts in trend surfaces of orders
+greater than 5. The operation will display a text report on completion, in addition to
+the output raster image. The report will list each of the coefficient values and the
+r-square value. The Trend Surface tool can be used instead if the input data is a raster
+image.
+
+Numerical stability is enhanced by transforming the x, y, z data by their minimum
+values before performing the regression analysis. These transform parameters
+are also reported in the output report.
 
 *Parameters*:
 

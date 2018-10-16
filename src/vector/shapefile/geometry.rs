@@ -7,7 +7,7 @@ License: MIT
 */
 use std::f64;
 use std::fmt;
-use structures::Point2D;
+use structures::{BoundingBox, Point2D};
 
 #[derive(Clone)]
 pub struct ShapefileGeometry {
@@ -219,6 +219,10 @@ impl ShapefileGeometry {
         }
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
+    }
+
+    pub fn get_bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(self.x_min, self.x_max, self.y_min, self.y_max)
     }
 
     /// Returns the length of the ShapefileGeometry, including the header, in bytes.

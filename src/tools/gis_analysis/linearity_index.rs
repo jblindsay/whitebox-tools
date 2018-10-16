@@ -27,10 +27,8 @@ use vector::*;
 /// The only required input is the name of the file. The linearity values calculated for each vector
 /// polygon feature will be placed in the accompanying attribute table as a new field (LINEARITY).
 ///
-/// The results will be based on reduced major axis (RMA) regression line.
-///
 /// # See Also
-/// `ElongationRatio`
+/// `ElongationRatio`, `PatchOrientation`
 pub struct LinearityIndex {
     name: String,
     description: String,

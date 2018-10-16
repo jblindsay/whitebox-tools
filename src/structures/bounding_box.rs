@@ -79,6 +79,15 @@ impl BoundingBox {
         bb
     }
 
+    pub fn from_two_points(p1: Point2D, p2: Point2D) -> BoundingBox {
+        BoundingBox {
+            min_x: p1.x.min(p2.x),
+            max_x: p1.x.max(p2.x),
+            min_y: p1.y.min(p2.y),
+            max_y: p1.y.max(p2.y),
+        }
+    }
+
     pub fn initialize_to_inf(&mut self) {
         self.min_x = f64::INFINITY;
         self.max_x = f64::NEG_INFINITY;
@@ -195,7 +204,7 @@ impl BoundingBox {
     }
 
     pub fn is_point_in_box(&self, x: f64, y: f64) -> bool {
-        !(self.max_y < y || self.max_x < x || self.min_y > y || self.min_x > x)
+        !(self.max_y <= y || self.max_x <= x || self.min_y >= y || self.min_x >= x)
     }
 
     pub fn expand_to(&mut self, other: BoundingBox) {
