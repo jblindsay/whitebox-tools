@@ -31,6 +31,10 @@ use tools::*;
 ///
 /// NoData valued grid cells in any of the input images will be assigned NoData values in
 /// the output image. The output raster is of the float data type and continuous data scale.
+///
+/// # Warning
+/// Each of the input rasters must have the same spatial extent and number of rows
+/// and columns.
 pub struct WeightedOverlay {
     name: String,
     description: String,

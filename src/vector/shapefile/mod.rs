@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: 12/04/2018
+Last Modified: 17/10/2018
 License: MIT
 
 Notes: The logic behind working with the ESRI Shapefile format.
@@ -132,6 +132,22 @@ impl Shapefile {
         };
         sf.header.shape_type = file_type;
         Ok(sf)
+    }
+
+    pub fn get_total_num_parts(&self) -> usize {
+        let mut ret = 0;
+        for a in 0..self.num_records {
+            ret += self.records[a].num_parts as usize;
+        }
+        ret
+    }
+
+    pub fn get_total_num_points(&self) -> usize {
+        let mut ret = 0;
+        for a in 0..self.num_records {
+            ret += self.records[a].num_points as usize;
+        }
+        ret
     }
 
     pub fn initialize_using_file<'a>(
@@ -1105,7 +1121,8 @@ impl Shapefile {
                 let fl = self.attributes.fields[j as usize].field_length as usize;
                 match &rec[j as usize] {
                     FieldData::Null => {
-                        writer.write_all("?".as_bytes())?;
+                        let spcs: String = vec![' '; fl].into_iter().collect();
+                        writer.write_all(spcs.as_bytes())?;
                     }
                     FieldData::Int(v) => {
                         let b = v.to_string();

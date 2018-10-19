@@ -69,6 +69,7 @@ Version 0.12.0 (XX-XX-2018)
     NearestNeighbourGridding
     PatchOrientation
     RasterToVectorLines
+    SplitWithLines
     VoronoiDiagram
 
 

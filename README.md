@@ -309,6 +309,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***RelatedCircumscribingCircle***: Calculates the related circumscribing circle of vector polygons.
 - ***ShapeComplexityIndex***: Calculates overall polygon shape complexity or irregularity.
 - ***SmoothVectors***: Smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType.
+- ***SplitWithLines***: Splits the lines or polygons in one layer using the lines in another layer
 - ***SumOverlay***: Calculates the sum for each grid cell from a group of raster images.
 - ***TINGridding***: Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 - ***VectorHexBinning***: Hex-bins a set of vector points.

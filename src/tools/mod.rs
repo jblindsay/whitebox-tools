@@ -115,6 +115,7 @@ impl ToolManager {
         tool_names.push("ShapeComplexityIndex".to_string());
         // tool_names.push("SibsonInterpolation".to_string());
         tool_names.push("SmoothVectors".to_string());
+        tool_names.push("SplitWithLines".to_string());
         tool_names.push("SumOverlay".to_string());
         tool_names.push("TINGridding".to_string());
         tool_names.push("VectorHexBinning".to_string());
@@ -580,6 +581,7 @@ impl ToolManager {
             //     Some(Box::new(tools::gis_analysis::SibsonInterpolation::new()))
             // }
             "smoothvectors" => Some(Box::new(tools::gis_analysis::SmoothVectors::new())),
+            "splitwithlines" => Some(Box::new(tools::gis_analysis::SplitWithLines::new())),
             "sumoverlay" => Some(Box::new(tools::gis_analysis::SumOverlay::new())),
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),

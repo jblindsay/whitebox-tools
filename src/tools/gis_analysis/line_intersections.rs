@@ -6,7 +6,7 @@ Last Modified: 16/10/2018
 License: MIT
 */
 
-use algorithms::find_lines_intersections;
+use algorithms::find_line_intersections;
 use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
@@ -322,35 +322,25 @@ impl WhiteboxTool for LineIntersections {
                                         record2.num_points as usize - 1
                                     };
 
-                                    let intersections = find_lines_intersections(
+                                    let intersections = find_line_intersections(
                                         &(record1.points
                                             [start_point_in_part1..=end_point_in_part1]),
                                         &(record2.points
                                             [start_point_in_part2..=end_point_in_part2]),
                                     );
                                     for ls in intersections {
-                                        if ls.p1 == ls.p2 {
-                                            // the intersection is a point
-                                            intersection_points.push((
-                                                ls.p1,
-                                                record_num1,
-                                                record_num2,
-                                            ));
-                                            num_intersections += 1;
-                                        } else {
+                                        // the intersection is a point
+                                        intersection_points.push((ls.p1, record_num1, record_num2));
+                                        num_intersections += 1;
+                                        if ls.p1 != ls.p2 {
                                             // the intersection is a line segment
-                                            intersection_points.push((
-                                                ls.p1,
-                                                record_num1,
-                                                record_num2,
-                                            ));
                                             intersection_points.push((
                                                 ls.p2,
                                                 record_num1,
                                                 record_num2,
                                             ));
                                             print_warning = true;
-                                            num_intersections += 2;
+                                            num_intersections += 1;
                                         }
                                     }
                                 }
