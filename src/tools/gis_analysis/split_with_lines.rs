@@ -2,16 +2,16 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/10/2018
-Last Modified: 19/10/2018
+Last Modified: 21/10/2018
 License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{find_split_points_at_line_intersections, is_clockwise_order};
+use algorithms::{find_split_points_at_line_intersections, interior_point, is_clockwise_order};
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashSet};
 use std::env;
 use std::f64::EPSILON;
 use std::io::{Error, ErrorKind};
@@ -49,7 +49,7 @@ impl SplitWithLines {
         let mut parameters = vec![];
         parameters.push(ToolParameter {
             name: "Input Vector Lines or Polygon File".to_owned(),
-            flags: vec!["--input".to_owned()],
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector line or polygon file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
                 VectorGeometryType::Any,
@@ -70,11 +70,11 @@ impl SplitWithLines {
         });
 
         parameters.push(ToolParameter {
-            name: "Output Vector Point File".to_owned(),
+            name: "Output Vector File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output vector point file.".to_owned(),
+            description: "Output vector file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
-                VectorGeometryType::Point,
+                VectorGeometryType::Any,
             )),
             default_value: None,
             optional: false,
@@ -168,13 +168,13 @@ impl WhiteboxTool for SplitWithLines {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i1" || flag_val == "-input1" {
+            if flag_val == "-i" || flag_val == "-input" {
                 input1_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-i2" || flag_val == "-input2" {
+            } else if flag_val == "-split" {
                 input2_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -225,8 +225,6 @@ impl WhiteboxTool for SplitWithLines {
             ));
         }
 
-        let num_polys = input1.num_records;
-
         let input2 = Shapefile::read(&input2_file)?;
 
         // make sure the input vector file is of polyline type
@@ -250,15 +248,17 @@ impl WhiteboxTool for SplitWithLines {
         }
 
         // Get the polylines and bounding boxes of each of the features in input1 and input 2
-        let mut start_point_in_part: usize;
-        let mut end_point_in_part: usize;
+        let mut num_polys = 0;
+        let mut first_point_in_part: usize;
+        let mut last_point_in_part: usize;
         let mut polylines1: Vec<Polyline> = Vec::with_capacity(input1.get_total_num_parts());
         let mut bb1: Vec<BoundingBox> = Vec::with_capacity(input1.get_total_num_parts());
-        for record_num in 0..num_polys {
+        for record_num in 0..input1.num_records {
             let record = input1.get_record(record_num);
             for part in 0..record.num_parts as usize {
-                start_point_in_part = record.parts[part] as usize;
-                end_point_in_part = if part < record.num_parts as usize - 1 {
+                num_polys += 1;
+                first_point_in_part = record.parts[part] as usize;
+                last_point_in_part = if part < record.num_parts as usize - 1 {
                     record.parts[part + 1] as usize - 1
                 } else {
                     record.num_points as usize - 1
@@ -266,7 +266,7 @@ impl WhiteboxTool for SplitWithLines {
 
                 // Create a polyline from the part
                 let mut pl = Polyline::new(
-                    &(record.points[start_point_in_part..=end_point_in_part]),
+                    &(record.points[first_point_in_part..=last_point_in_part]),
                     record_num,
                 );
 
@@ -282,8 +282,8 @@ impl WhiteboxTool for SplitWithLines {
         for record_num in 0..input2.num_records {
             let record = input2.get_record(record_num);
             for part in 0..record.num_parts as usize {
-                start_point_in_part = record.parts[part] as usize;
-                end_point_in_part = if part < record.num_parts as usize - 1 {
+                first_point_in_part = record.parts[part] as usize;
+                last_point_in_part = if part < record.num_parts as usize - 1 {
                     record.parts[part + 1] as usize - 1
                 } else {
                     record.num_points as usize - 1
@@ -291,7 +291,7 @@ impl WhiteboxTool for SplitWithLines {
 
                 // Create a polyline from the part
                 let mut pl = Polyline::new(
-                    &(record.points[start_point_in_part..=end_point_in_part]),
+                    &(record.points[first_point_in_part..=last_point_in_part]),
                     record_num + num_polys,
                 );
 
@@ -400,7 +400,7 @@ impl WhiteboxTool for SplitWithLines {
 
             // hunt for intersections in the overlapping bounding boxes
             let mut polylines = vec![];
-            let mut fid = 1i32;
+            let mut lengths = vec![];
             for record_num1 in 0..polylines1.len() {
                 for record_num2 in 0..polylines2.len() {
                     if bb1[record_num1].overlaps(bb2[record_num2]) {
@@ -414,6 +414,7 @@ impl WhiteboxTool for SplitWithLines {
                 let split_lines = polylines1[record_num1].split();
                 for j in 0..split_lines.len() {
                     polylines.push(split_lines[j].clone());
+                    lengths.push(split_lines[j].length());
                 }
 
                 if verbose {
@@ -430,14 +431,15 @@ impl WhiteboxTool for SplitWithLines {
                 let split_lines = polylines2[record_num2].split();
                 for j in 0..split_lines.len() {
                     polylines.push(split_lines[j].clone());
+                    lengths.push(split_lines[j].length());
                 }
             }
 
             let num_endnodes = polylines.len() * 2;
             /*
                 The structure of endnodes is as such:
-                1. the starting node for polyline 'a' is a * 2.
-                2. the ending node for polyline 'a' is a * 2 + 1.
+                1. the first node for polyline 'a' is a * 2.
+                2. the last node for polyline 'a' is a * 2 + 1.
                 3. endnode to polyline = e / 2
                 4. is an endnode a starting point? e % 2 == 0
             */
@@ -449,11 +451,11 @@ impl WhiteboxTool for SplitWithLines {
             let mut kdtree = KdTree::new_with_capacity(dimensions, capacity_per_node);
             let mut p: Point2D;
             for i in 0..polylines.len() {
-                p = polylines[i].start_vertex();
-                kdtree.add([p.x, p.y], start_node_id(i)).unwrap();
+                p = polylines[i].first_vertex();
+                kdtree.add([p.x, p.y], first_node_id(i)).unwrap();
 
-                p = polylines[i].end_vertex();
-                kdtree.add([p.x, p.y], end_node_id(i)).unwrap();
+                p = polylines[i].last_vertex();
+                kdtree.add([p.x, p.y], last_node_id(i)).unwrap();
 
                 if verbose {
                     progress = (100.0_f64 * (i + 1) as f64 / polylines.len() as f64) as usize;
@@ -467,7 +469,8 @@ impl WhiteboxTool for SplitWithLines {
             // Find the neighbours of each endnode and check for dangling arcs
             let mut is_dangling_arc = vec![false; polylines.len()];
             for i in 0..polylines.len() {
-                p = polylines[i].start_vertex();
+                // first vertex
+                p = polylines[i].first_vertex();
                 let ret = kdtree
                     .within(&[p.x, p.y], EPSILON, &squared_euclidean)
                     .unwrap();
@@ -476,13 +479,14 @@ impl WhiteboxTool for SplitWithLines {
                 } else {
                     for a in 0..ret.len() {
                         let index = *ret[a].1;
-                        if index != start_node_id(i) {
-                            endnodes[start_node_id(i)].push(index);
+                        if index != first_node_id(i) {
+                            endnodes[first_node_id(i)].push(index);
                         }
                     }
                 }
 
-                p = polylines[i].end_vertex();
+                // last vertex
+                p = polylines[i].last_vertex();
                 let ret = kdtree
                     .within(&[p.x, p.y], EPSILON, &squared_euclidean)
                     .unwrap();
@@ -491,8 +495,8 @@ impl WhiteboxTool for SplitWithLines {
                 } else {
                     for a in 0..ret.len() {
                         let index = *ret[a].1;
-                        if index != end_node_id(i) {
-                            endnodes[end_node_id(i)].push(index);
+                        if index != last_node_id(i) {
+                            endnodes[last_node_id(i)].push(index);
                         }
                     }
                 }
@@ -506,13 +510,19 @@ impl WhiteboxTool for SplitWithLines {
                 }
             }
 
-            let mut assigned = vec![false; polylines.len()];
+            let mut existing_polygons = HashSet::new();
+            let mut fid = 1i32;
+            let mut assigned = vec![0; polylines.len()];
+            let mut parent_poly: usize;
             for i in 0..polylines.len() {
-                if !assigned[i] && !is_dangling_arc[i] && polylines[i].id < num_polys {
-                    let source_node = end_node_id(i); // start with the end node of the polyline
-                    let target_node = start_node_id(i); // end with the start node of the polyline
-
+                if !is_dangling_arc[i] && assigned[i] < 2 {
+                    let source_node = last_node_id(i); // start with the end node of the polyline
+                    let target_node = first_node_id(i); // end with the start node of the polyline
                     let mut prev = vec![num_endnodes; num_endnodes];
+                    parent_poly = num_polys;
+
+                    // set the source node's prev value to anything other than num_endnodes
+                    prev[source_node] = num_endnodes + 1;
 
                     // initialize the queue
                     let mut queue = BinaryHeap::with_capacity(num_endnodes);
@@ -520,7 +530,7 @@ impl WhiteboxTool for SplitWithLines {
                         prev[*a] = source_node;
                         queue.push(Link {
                             id: *a,
-                            priority: 0,
+                            priority: 0f64,
                         });
                     }
 
@@ -540,7 +550,7 @@ impl WhiteboxTool for SplitWithLines {
                                 }
                                 queue.push(Link {
                                     id: *a,
-                                    priority: link.priority + 1,
+                                    priority: link.priority + lengths[link.id / 2],
                                 });
                             }
                         }
@@ -552,40 +562,70 @@ impl WhiteboxTool for SplitWithLines {
                         let mut backlinks: Vec<usize> = vec![];
                         let mut k = target_node;
                         let mut num_vertices = 0;
-                        let mut composed_of_multiple_input_polys = false;
                         while k != source_node {
                             k = prev[k];
                             backlinks.push(k);
                             let pl = k / 2;
-                            if !is_start_node(k) {
-                                if polylines[pl].id < num_polys {
-                                    if polylines[pl].id != polylines[i].id {
-                                        composed_of_multiple_input_polys = true;
-                                    }
-                                }
+                            if !is_first_node(k) {
                                 // don't add polylines twice. Add at the ending node.
                                 lines.push(pl);
                                 num_vertices += polylines[pl].len() - 1;
-                                assigned[pl] = true;
+                                if polylines[pl].id < num_polys {
+                                    parent_poly = polylines[pl].id;
+                                }
                             }
                         }
                         backlinks.push(target_node);
 
-                        if !composed_of_multiple_input_polys {
-                            // join the lines and then output the polygon
-                            lines.reverse();
-                            backlinks.reverse();
-                            let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
+                        // join the lines and then output the polygon
+                        lines.reverse();
+                        backlinks.reverse();
+                        let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices + 1);
+                        let mut output_poly = true;
+                        for a in 0..lines.len() {
+                            let pl = lines[a];
+                            // none of the composing lines can have been used more than twice already.
+                            if assigned[pl] > 1 {
+                                output_poly = false;
+                                break;
+                            }
+                            let mut v = (polylines[pl].vertices).clone();
+                            if backlinks[a * 2] > backlinks[a * 2 + 1] {
+                                v.reverse();
+                            }
+                            if a < lines.len() - 1 {
+                                v.pop();
+                            }
+                            vertices.append(&mut v);
+                        }
+
+                        // don't add the same poly more than once
+                        let mut test_poly = lines.clone();
+                        test_poly.sort();
+                        if existing_polygons.contains(&test_poly) {
+                            output_poly = false;
+                        } else {
+                            existing_polygons.insert(test_poly);
+                        }
+
+                        if parent_poly >= num_polys {
+                            // This would be a polygon formed by the intersection of split lines only.
+                            // There is no side that is part of the hull of an input polygon.
+                            output_poly = false;
+                        }
+
+                        if output_poly {
+                            // Is the polygon within the hull of the parent (input) polygon?
+                            let interior_point = interior_point(&vertices);
+                            if !input1.records[parent_poly].is_point_within_hull(&interior_point) {
+                                // A point interior to the output poly should also be interior to the parent poly.
+                                output_poly = false;
+                            }
+                        }
+
+                        if output_poly {
                             for a in 0..lines.len() {
-                                let pl = lines[a];
-                                let mut v = (polylines[pl].vertices).clone();
-                                if backlinks[a * 2] > backlinks[a * 2 + 1] {
-                                    v.reverse();
-                                }
-                                if a < lines.len() - 1 {
-                                    v.pop();
-                                }
-                                vertices.append(&mut v);
+                                assigned[lines[a]] += 1;
                             }
                             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
                             if !is_clockwise_order(&vertices) {
@@ -594,12 +634,17 @@ impl WhiteboxTool for SplitWithLines {
                             sfg.add_part(&vertices);
                             output.add_record(sfg);
 
+                            // output
+                            //     .attributes
+                            //     .add_record(vec![FieldData::Int(fid)], false);
+                            // fid += 1;
+
                             let mut atts: Vec<FieldData> =
                                 Vec::with_capacity(input1_att_nums.len() + 2);
                             atts.push(FieldData::Int(fid));
                             fid += 1;
-                            atts.push(FieldData::Int(polylines[i].id as i32));
-                            let in_atts = input1.attributes.get_record(polylines[i].id);
+                            atts.push(FieldData::Int(parent_poly as i32));
+                            let in_atts = input1.attributes.get_record(parent_poly);
                             for a in 0..input1_att_nums.len() {
                                 atts.push(in_atts[input1_att_nums[a]].clone());
                             }
@@ -642,12 +687,12 @@ impl WhiteboxTool for SplitWithLines {
 #[derive(Debug)]
 struct Link {
     id: usize,
-    priority: usize,
+    priority: f64,
 }
 
 impl PartialEq for Link {
     fn eq(&self, other: &Self) -> bool {
-        self.priority == other.priority && self.id == other.id
+        (self.priority - other.priority).abs() < EPSILON && self.id == other.id
     }
 }
 
@@ -658,7 +703,7 @@ impl Ord for Link {
         // this sorts priorities from low to high
         // and when priorities are equal, id's from
         // high to low.
-        let mut ord = other.priority.cmp(&self.priority);
+        let mut ord = other.priority.partial_cmp(&self.priority).unwrap();
         if ord == Ordering::Equal {
             ord = self.id.cmp(&other.id);
         }
@@ -681,14 +726,14 @@ fn get_other_endnode(index: usize) -> usize {
     index - 1
 }
 
-fn is_start_node(index: usize) -> bool {
+fn is_first_node(index: usize) -> bool {
     index % 2 == 0
 }
 
-fn start_node_id(polyline: usize) -> usize {
+fn first_node_id(polyline: usize) -> usize {
     polyline * 2
 }
 
-fn end_node_id(polyline: usize) -> usize {
+fn last_node_id(polyline: usize) -> usize {
     polyline * 2 + 1
 }

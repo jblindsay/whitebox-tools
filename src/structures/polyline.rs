@@ -34,6 +34,7 @@ impl Polyline {
         }
     }
 
+    // returns the number of verticies
     pub fn len(&self) -> usize {
         self.vertices.len()
     }
@@ -46,15 +47,23 @@ impl Polyline {
         self.vertices.len() == 0
     }
 
+    pub fn length(&self) -> f64 {
+        let mut ret = 0f64;
+        for a in 0..self.len() - 1 {
+            ret += self[a].distance(&self[a + 1]);
+        }
+        ret
+    }
+
     pub fn get(&self, index: usize) -> Point2D {
         self.vertices[index]
     }
 
-    pub fn start_vertex(&self) -> Point2D {
+    pub fn first_vertex(&self) -> Point2D {
         self.vertices[0]
     }
 
-    pub fn end_vertex(&self) -> Point2D {
+    pub fn last_vertex(&self) -> Point2D {
         self.vertices[self.vertices.len() - 1]
     }
 
@@ -81,8 +90,10 @@ impl Polyline {
     /// along the line segment connecting vertex 3 and vertex 4. Notice that integer values
     /// have the effect of inserting a duplicate vertex and a zero-length segment, which
     /// in most applications is likely very undesirable.
+    ///
+    /// Split points cannot be inserted at line endpoints.
     pub fn insert_split_point(&mut self, position: f64, point: Point2D) {
-        if position < (self.len() - 1) as f64 {
+        if position > 0f64 && position < (self.len() - 1) as f64 {
             self.split_points.push((position, point));
         }
     }
@@ -103,12 +114,24 @@ impl Polyline {
             let mut line: Vec<Point2D> = vec![];
             let mut next_split = 0;
             let mut upper_index = self.split_points[next_split].0.floor() as usize;
+
+            let mut is_integer = if self.split_points[next_split].0
+                - self.split_points[next_split].0.floor()
+                != 0f64
+            {
+                false
+            } else {
+                true
+            };
+
             let mut i = 0;
             while i < self.len() {
                 if i <= upper_index {
                     line.push(self.vertices[i]);
                 } else {
-                    line.push(self.split_points[next_split].1);
+                    if !is_integer {
+                        line.push(self.split_points[next_split].1);
+                    }
                     ret.push(Polyline::new(&line, self.id));
                     line.clear();
                     line.push(self.split_points[next_split].1);
@@ -116,6 +139,15 @@ impl Polyline {
                     i -= 1;
                     if next_split < self.num_splits() {
                         upper_index = self.split_points[next_split].0.floor() as usize;
+
+                        is_integer = if self.split_points[next_split].0
+                            - self.split_points[next_split].0.floor()
+                            != 0f64
+                        {
+                            false
+                        } else {
+                            true
+                        };
                     } else if next_split == self.num_splits() {
                         upper_index = self.len() - 1;
                     }

@@ -62,12 +62,14 @@ Version 0.12.0 (XX-XX-2018)
     BlockMinimumGridding
     JoinTables
     LasToShapefile
+    LidarClassifySubset
     LinearityIndex
     LineIntersections
     MergeTableWithCsv
     MergeVectors
     NearestNeighbourGridding
     PatchOrientation
+    Polygonize
     RasterToVectorLines
     SplitWithLines
     VoronoiDiagram

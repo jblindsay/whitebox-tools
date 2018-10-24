@@ -106,6 +106,7 @@ impl ToolManager {
         tool_names.push("PolygonLongAxis".to_string());
         tool_names.push("PolygonPerimeter".to_string());
         tool_names.push("PolygonShortAxis".to_string());
+        tool_names.push("Polygonize".to_string());
         tool_names.push("RadiusOfGyration".to_string());
         tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("Reclass".to_string());
@@ -248,6 +249,7 @@ impl ToolManager {
         tool_names.push("LasToAscii".to_string());
         tool_names.push("LasToMultipointShapefile".to_string());
         tool_names.push("LasToShapefile".to_string());
+        tool_names.push("LidarClassifySubset".to_string());
         tool_names.push("LidarColourize".to_string());
         tool_names.push("LidarConstructVectorTIN".to_string());
         tool_names.push("LidarElevationSlice".to_string());
@@ -562,6 +564,7 @@ impl ToolManager {
             "polygonlongaxis" => Some(Box::new(tools::gis_analysis::PolygonLongAxis::new())),
             "polygonperimeter" => Some(Box::new(tools::gis_analysis::PolygonPerimeter::new())),
             "polygonshortaxis" => Some(Box::new(tools::gis_analysis::PolygonShortAxis::new())),
+            "polygonize" => Some(Box::new(tools::gis_analysis::Polygonize::new())),
             "radiusofgyration" => Some(Box::new(tools::gis_analysis::RadiusOfGyration::new())),
             "rastercellassignment" => {
                 Some(Box::new(tools::gis_analysis::RasterCellAssignment::new()))
@@ -816,6 +819,9 @@ impl ToolManager {
                 tools::lidar_analysis::LasToMultipointShapefile::new(),
             )),
             "lastoshapefile" => Some(Box::new(tools::lidar_analysis::LasToShapefile::new())),
+            "lidarclassifysubset" => {
+                Some(Box::new(tools::lidar_analysis::LidarClassifySubset::new()))
+            }
             "lidarcolourize" => Some(Box::new(tools::lidar_analysis::LidarColourize::new())),
             "lidarconstructvectortin" => Some(Box::new(
                 tools::lidar_analysis::LidarConstructVectorTIN::new(),

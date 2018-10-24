@@ -48,7 +48,7 @@ for filepath in in_files:
                 helpstring = ""
                 for l in docs:
                     l = l.replace(
-                        "# See Also", "*See Also*:\n").replace("# Reference", "*Reference*:\n")
+                        "# See Also", "*See Also*:\n").replace("# Reference", "*Reference*:\n").replace("# Warning", "*Warning*:\n")
                     helpstring += l + "\n"
                 tool_help_dict[camel_to_snake(toolname)] = helpstring
 

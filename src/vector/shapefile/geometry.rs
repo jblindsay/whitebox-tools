@@ -5,6 +5,7 @@ Created: 10/04/2018
 Last Modified: 30/09/2018
 License: MIT
 */
+use algorithms::point_in_poly;
 use std::f64;
 use std::fmt;
 use structures::{BoundingBox, Point2D};
@@ -252,6 +253,25 @@ impl ShapefileGeometry {
         };
 
         ret
+    }
+
+    /// Checks whether a point is within the hull of the geometry. If
+    /// the geometry is not of POLYGON base ShapeType, the function
+    /// will return false.
+    pub fn is_point_within_hull(&self, point: &Point2D) -> bool {
+        // see if it's a polygon
+        if self.shape_type.base_shape_type() != ShapeType::Polygon {
+            // it's not a polygon
+            return false;
+        }
+        // get the first and last points in the hull.
+        let last_point = if self.num_parts > 1 {
+            self.parts[1] as usize
+        } else {
+            self.num_points as usize
+        };
+
+        point_in_poly(&point, &(self.points[0..last_point]))
     }
 
     /// Checks whether or not a part in a polygon is a hole.

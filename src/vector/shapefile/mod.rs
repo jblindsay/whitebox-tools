@@ -125,8 +125,14 @@ impl Shapefile {
     }
 
     pub fn new<'a>(file_name: &'a str, file_type: ShapeType) -> Result<Shapefile, Error> {
+        let new_file_name = if file_name.contains(".") {
+            file_name.to_string()
+        } else {
+            // likely no extension provided; default to .shp
+            format!("{}.shp", file_name)
+        };
         let mut sf = Shapefile {
-            file_name: file_name.to_string(),
+            file_name: new_file_name.to_string(),
             file_mode: "w".to_string(),
             ..Default::default()
         };

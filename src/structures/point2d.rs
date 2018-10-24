@@ -36,7 +36,7 @@ impl Point2D {
     }
 
     /// Calculates the centre point of a set of Point2Ds.
-    pub fn centre_point(points: &Vec<Point2D>) -> Point2D {
+    pub fn centre_point(points: &[Point2D]) -> Point2D {
         let mut x = 0f64;
         let mut y = 0f64;
 

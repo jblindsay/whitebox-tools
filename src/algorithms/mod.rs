@@ -23,6 +23,8 @@ pub use self::is_clockwise_order::is_clockwise_order;
 pub use self::line_ops::{find_line_intersections, find_split_points_at_line_intersections};
 pub use self::minimum_bounding_box::{minimum_bounding_box, MinimizationCriterion};
 pub use self::poly_area::polygon_area;
-pub use self::poly_ops::{point_in_poly, poly_in_poly, poly_is_convex, winding_number};
+pub use self::poly_ops::{
+    interior_point, point_in_poly, poly_in_poly, poly_is_convex, winding_number,
+};
 pub use self::poly_perimeter::polygon_perimeter;
 pub use self::smallest_enclosing_circle::smallest_enclosing_circle;

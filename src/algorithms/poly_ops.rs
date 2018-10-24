@@ -113,13 +113,33 @@ pub fn poly_is_convex(poly: &[Point2D]) -> bool {
     return true;
 }
 
-// pub fn line_poly_intersections(line: &[Point2D], poly: &[Point2D]) -> bool {
-//     for p in line {
-//         if !point_in_poly(p, containing_poly) {
-//             return false;
-//         }
-//     }
-// }
+/// Returns a point that is garaunteed to be within the poly.
+pub fn interior_point(poly: &[Point2D]) -> Point2D {
+    if poly[0] != poly[poly.len() - 1] {
+        panic!(
+            "Error (from poly_ops::interior_point): point squence does not form a closed polygon."
+        );
+    }
+    let num_points = poly.len();
+    if num_points > 3 {
+        for a in 1..num_points - 1 {
+            let midpoint = Point2D::midpoint(&poly[a - 1], &poly[a + 1]);
+            if point_in_poly(&midpoint, &poly) {
+                return midpoint;
+            }
+        }
+        // none of the tested points were interior, return one of the edge points
+        return poly[0].clone();
+    } else if num_points == 3 {
+        // it's a triangle
+        let midpoint = Point2D::centre_point(&poly);
+        if point_in_poly(&midpoint, &poly) {
+            return midpoint;
+        }
+        return poly[0].clone();
+    }
+    panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point");
+}
 
 #[cfg(test)]
 mod test {

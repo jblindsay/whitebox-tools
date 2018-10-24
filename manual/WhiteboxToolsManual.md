@@ -2182,7 +2182,7 @@ circle to completely enclose a feature.
 -------------------  ---------------
 -i, -\-input         Input vector file
 -o, -\-output        Output vector polygon file
--\-features          Find the minimum bounding rectangles around each individual vector feature
+-\-features          Find the minimum bounding circle around each individual vector feature
 
 
 *Python function*:
@@ -2222,7 +2222,7 @@ non-axis aligned rectangular envelope.
 -------------------  ---------------
 -i, -\-input         Input vector file
 -o, -\-output        Output vector polygon file
--\-features          Find the minimum bounding rectangles around each individual vector feature
+-\-features          Find the minimum bounding envelop around each individual vector feature
 
 
 *Python function*:
@@ -3183,7 +3183,52 @@ highest_position(
 ```
 
 
-#### 8.4.6 LowestPosition
+#### 8.4.6 LineIntersections
+
+This tool identifies points where the features of two vector line layers intersect.
+The user must specify the names of two input vector line files and the output file.
+The output file will be a vector of POINT ShapeType. If the input vectors intersect
+at a line segment, the beginning and end vertices of the segment will be present in
+the output file. A warning is issued if intersection line segments are identified
+during analysis. If no intersections are found between the input line files, the
+output file will not be saved and a warning will be issued.
+
+Each intersection point will contain `PARENT1` and `PARENT2` attribute fields,
+identifying the instersecting features in the first and second input line files
+respectively. Additionally, the output attribute table will contain all of the
+attributes (excluding `FID`s) of the two parent line features.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-i1, -\-input1     Input vector polyline file
+-\-i2, -\-input2     Input vector polyline file
+-o, -\-output        Output vector point file
+
+
+*Python function*:
+
+~~~~{.python}
+line_intersections(
+    input1, 
+    input2, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LineIntersections -v ^
+--wd="/path/to/data/" --i1=lines1.shp --i2=lines2.shp ^
+-o=out_file.shp 
+
+
+```
+
+
+#### 8.4.7 LowestPosition
 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
@@ -3214,7 +3259,7 @@ lowest_position(
 ```
 
 
-#### 8.4.7 MaxAbsoluteOverlay
+#### 8.4.8 MaxAbsoluteOverlay
 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
@@ -3246,7 +3291,7 @@ max_absolute_overlay(
 ```
 
 
-#### 8.4.8 MaxOverlay
+#### 8.4.9 MaxOverlay
 
 Evaluates the maximum value for each grid cell from a stack of input rasters.
 
@@ -3277,7 +3322,7 @@ max_overlay(
 ```
 
 
-#### 8.4.9 MinAbsoluteOverlay
+#### 8.4.10 MinAbsoluteOverlay
 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -3309,7 +3354,7 @@ min_absolute_overlay(
 ```
 
 
-#### 8.4.10 MinOverlay
+#### 8.4.11 MinOverlay
 
 Evaluates the minimum value for each grid cell from a stack of input rasters.
 
@@ -3340,7 +3385,7 @@ min_overlay(
 ```
 
 
-#### 8.4.11 PercentEqualTo
+#### 8.4.12 PercentEqualTo
 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
@@ -3374,7 +3419,7 @@ percent_equal_to(
 ```
 
 
-#### 8.4.12 PercentGreaterThan
+#### 8.4.13 PercentGreaterThan
 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
@@ -3408,7 +3453,7 @@ percent_greater_than(
 ```
 
 
-#### 8.4.13 PercentLessThan
+#### 8.4.14 PercentLessThan
 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
@@ -3442,7 +3487,7 @@ percent_less_than(
 ```
 
 
-#### 8.4.14 PickFromList
+#### 8.4.15 PickFromList
 
 Outputs the value from a raster stack specified by a position raster.
 
@@ -3476,9 +3521,55 @@ pick_from_list(
 ```
 
 
-#### 8.4.15 SumOverlay
+#### 8.4.16 SplitWithLines
 
-Calculates the sum for each grid cell from a group of raster images.
+This tool splits the lines or polygons in one layer using the lines in another layer
+to define the breaking points. Intersection points between geometries in both layers
+are considered as split points. The input layer (`--input`) can be of either
+POLYLINE or POLYGON ShapeType and the output file will share this geometry type.
+The user must also specify an split layer (`--split`), of POLYLINE ShapeType, used
+to bisect the input geometries.
+
+Each split geometry's attribute record will contain `FID` and `PARENT_FID` values
+and all of the attributes (excluding `FID`'s) of the input layer.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-input             Input vector line or polygon file
+-\-split             Input vector polyline file
+-o, -\-output        Output vector point file
+
+
+*Python function*:
+
+~~~~{.python}
+split_with_lines(
+    i, 
+    split, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=SplitWithLines -v --wd="/path/to/data/" ^
+--input=polygons.shp --split=lines.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.17 SumOverlay
+
+This tool calculates the sum for each grid cell from a group of raster images.
+
+*Warning*:
+
+Each of the input rasters must have the same spatial extent and number of rows
+and columns.
 
 *See Also*:
 
@@ -3511,7 +3602,7 @@ sum_overlay(
 ```
 
 
-#### 8.4.16 WeightedOverlay
+#### 8.4.18 WeightedOverlay
 
 This tool performs a weighted overlay on multiple input images. It can be used to
 combine multiple factors with varying levels of weight or relative importance. The
@@ -3531,6 +3622,11 @@ more important than elevation, in which case the weights may not sum to 1 or 100
 
 NoData valued grid cells in any of the input images will be assigned NoData values in
 the output image. The output raster is of the float data type and continuous data scale.
+
+*Warning*:
+
+Each of the input rasters must have the same spatial extent and number of rows
+and columns.
 
 *Parameters*:
 
@@ -3572,11 +3668,16 @@ weighted_overlay(
 ```
 
 
-#### 8.4.17 WeightedSum
+#### 8.4.19 WeightedSum
 
 This tool performs a weighted-sum overlay on multiple input raster images.
 If you have a stack of rasters that you would like to sum, each with an
 equal weighting (1.0), then use the `SumOverlay` tool instead.
+
+*Warning*:
+
+Each of the input rasters must have the same spatial extent and number of rows
+and columns.
 
 *See Also*:
 
@@ -3815,11 +3916,9 @@ as meandering rivers.
 The only required input is the name of the file. The linearity values calculated for each vector
 polygon feature will be placed in the accompanying attribute table as a new field (LINEARITY).
 
-The results will be based on reduced major axis (RMA) regression line.
-
 *See Also*:
 
-`ElongationRatio`
+`ElongationRatio`, `PatchOrientation`
 
 *Parameters*:
 
@@ -3846,7 +3945,50 @@ linearity_index(
 ```
 
 
-#### 8.5.7 PerimeterAreaRatio
+#### 8.5.7 PatchOrientation
+
+This tool calculates the orientation of polygon features based on the slope of a reduced major
+axis (RMA) regression line. The regression analysis use the vertices of the exterior hull nodes
+of a vector polygon. The only required input is the name of the vector polygon file. The
+orientation values, measured in degrees from north, will be placed in the accompanying attribute
+table as a new field (ORIENT). The value of the orientation measure for any polygon will
+depend on how elongated the feature is.
+
+Note that the output values are polygon orientations and not true directions. While directions
+may take values ranging from 0-360, orientation is expressed as an angle between 0 and 180 degrees
+clockwise from north. Lastly, the orientation measure may become unstable when polygons are
+oriented nearly vertical or horizontal.
+
+*See Also*:
+
+`LinearityIndex`, `ElongationRatio`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+patch_orientation(
+    i, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=PatchOrientation -v ^
+--wd="/path/to/data/" --input=polygons.shp 
+
+
+```
+
+
+#### 8.5.8 PerimeterAreaRatio
 
 The perimeter-area ratio is an indicator of polygon shape complexity. Unlike some
 other shape parameters (e.g. shape complexity index), perimeter-area ratio does not
@@ -3884,7 +4026,7 @@ perimeter_area_ratio(
 ```
 
 
-#### 8.5.8 RadiusOfGyration
+#### 8.5.9 RadiusOfGyration
 
 This can be used to calculate the radius of gyration (RoG) for the polygon
 features within a raster image. RoG measures how far across the landscape a polygon
@@ -3927,7 +4069,7 @@ radius_of_gyration(
 ```
 
 
-#### 8.5.9 RelatedCircumscribingCircle
+#### 8.5.10 RelatedCircumscribingCircle
 
 This tool can be used to calculate the related circumscribing circle (Mcgarigal et al. 2002)
 for vector polygon features. The related circumscribing circle values calculated for each
@@ -3975,7 +4117,7 @@ related_circumscribing_circle(
 ```
 
 
-#### 8.5.10 ShapeComplexityIndex
+#### 8.5.11 ShapeComplexityIndex
 
 This tool provides a measure of overall polygon shape complexity, or irregularity,
 for vector polygons. Several shape indices have been created to compare a polygon's
@@ -14742,6 +14884,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

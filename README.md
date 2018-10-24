@@ -301,6 +301,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***PolygonLongAxis***: This tool can be used to map the long axis of polygon features.
 - ***PolygonPerimeter***: Calculates the perimeter of vector polygons.
 - ***PolygonShortAxis***: This tool can be used to map the short axis of polygon features.
+- ***Polygonize***: Creates a polygon layer from two or more intersecting line features contained in one or more input vector line files.
 - ***RadiusOfGyration***: Calculates the distance of cells from their polygon's centroid.
 - ***RasterCellAssignment***: Assign row or column number to cells.
 - ***Reclass***: Reclassifies the values in a raster image.
@@ -445,6 +446,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***LasToShapefile***: Converts one or more LAS files into a vector Shapefile of POINT ShapeType.
 - ***LidarBlockMaximum***: Creates a block-maximum raster from an input LAS file.
 - ***LidarBlockMinimum***: Creates a block-minimum raster from an input LAS file.
+- ***LidarClassifySubset***: Classifies the values in one LiDAR point cloud that correpond with points in a subset cloud.
 - ***LidarColourize***: Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 - ***LidarConstructVectorTIN***: Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 - ***LidarElevationSlice***: Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
