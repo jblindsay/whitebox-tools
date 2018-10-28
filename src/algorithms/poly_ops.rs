@@ -38,7 +38,9 @@ pub fn point_in_poly(p: &Point2D, poly: &[Point2D]) -> bool {
 ///          poly[] = vertex points of a polygon poly[n+1] with poly[n]=poly[0]
 pub fn winding_number(p: &Point2D, poly: &[Point2D]) -> i32 {
     if poly[0] != poly[poly.len() - 1] {
-        panic!("Error (from poly_ops::winding_num): point squence does not form a closed polygon.");
+        panic!(
+            "Error (from poly_ops::winding_num): point sequence does not form a closed polygon."
+        );
     }
     let mut wn = 0i32;
     // loop through all edges of the polygon

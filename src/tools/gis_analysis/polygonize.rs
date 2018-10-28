@@ -7,18 +7,20 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{find_split_points_at_line_intersections, is_clockwise_order};
+use algorithms::{find_split_points_at_line_intersections, is_clockwise_order, poly_in_poly};
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::env;
-use std::f64::EPSILON;
+// use std::f64::EPSILON;
 use std::io::{Error, ErrorKind};
 use std::path;
 use structures::{BoundingBox, Polyline};
 use tools::*;
 use vector::*;
+
+const EPSILON: f64 = std::f64::EPSILON; //1.0e-7f64;
 
 /// This tool outputs a vector polygon layer from two or more intersecting line features
 /// contained in one or more input vector line files. Each space enclosed by the intersecting
@@ -298,36 +300,6 @@ impl WhiteboxTool for Polygonize {
             }
         }
 
-        // let mut fid = 1;
-        // for i in 0..polylines.len() {
-        //     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-        //     sfg.add_part(&polylines[i].vertices);
-        //     output.add_record(sfg);
-
-        //     output
-        //         .attributes
-        //         .add_record(vec![FieldData::Int(fid)], false);
-        //     fid += 1;
-        // }
-
-        // if verbose {
-        //     println!("Saving data...")
-        // };
-        // let _ = match output.write() {
-        //     Ok(_) => if verbose {
-        //         println!("Output file written")
-        //     },
-        //     Err(e) => return Err(e),
-        // };
-
-        // let elapsed_time = get_formatted_elapsed_time(start);
-
-        // if verbose {
-        //     println!("{}", &format!("Elapsed Time: {}", elapsed_time));
-        // }
-
-        // return Ok(());
-
         let num_endnodes = polylines.len() * 2;
         /*
             The structure of endnodes is as such:
@@ -338,9 +310,6 @@ impl WhiteboxTool for Polygonize {
         */
         let mut endnodes: Vec<Vec<usize>> = vec![vec![]; num_endnodes];
 
-        // let mut list_of_polys: Vec<Vec<usize>> = vec![];
-        let mut existing_polygons = HashSet::new();
-
         // now add the endpoints of each polyline into a kd tree
         let dimensions = 2;
         let capacity_per_node = 64;
@@ -348,6 +317,7 @@ impl WhiteboxTool for Polygonize {
         let mut p1: Point2D;
         let mut p2: Point2D;
         let mut p3: Point2D;
+        let mut p4: Point2D;
         println!("Creating tree...");
         for i in 0..polylines.len() {
             p1 = polylines[i].first_vertex();
@@ -360,10 +330,9 @@ impl WhiteboxTool for Polygonize {
         // Find the neighbours of each endnode and check for dangling arcs
         // and self-closing arcs which form single-line polys.
         println!("Finding node vertices...");
-        // let mut is_dangling_arc = vec![false; polylines.len()];
         let mut is_acyclic_arc = vec![false; polylines.len()];
         let mut node_angles: Vec<Vec<f64>> = vec![vec![]; num_endnodes];
-        // let mut num_neighbours = vec![0; polylines.len() * 2];
+        let mut heading: f64;
         for i in 0..polylines.len() {
             p1 = polylines[i].first_vertex();
             p2 = polylines[i].last_vertex();
@@ -373,28 +342,24 @@ impl WhiteboxTool for Polygonize {
                 .within(&[p1.x, p1.y], EPSILON, &squared_euclidean)
                 .unwrap();
             if ret.len() == 1 {
-                // is_dangling_arc[i] = true;
                 is_acyclic_arc[i] = true;
             } else {
+                p3 = polylines[i][1];
                 for a in 0..ret.len() {
                     let index = *ret[a].1;
+                    if index == last_node_id(i) && polylines[i].len() <= 2 {
+                        is_acyclic_arc[i] = true;
+                    }
                     if index != first_node_id(i) && !is_acyclic_arc[index / 2] {
                         endnodes[first_node_id(i)].push(index);
-                        // if is_first_node(index) {
-                        //     node_angles[first_node_id(i)]
-                        //         .push(p1.is_left(&polylines[i][1], &(polylines[index / 2][1])));
-                        // } else {
-                        //     node_angles[first_node_id(i)].push(p1.is_left(
-                        //         &polylines[i][1],
-                        //         &(polylines[index / 2][polylines[index / 2].len() - 2]),
-                        //     ));
-                        // }
                         if is_first_node(index) {
-                            p3 = polylines[index / 2][1];
-                            node_angles[first_node_id(i)].push(p3.is_left(&polylines[i][1], &p1));
+                            p4 = polylines[index / 2][1];
+                            heading = Point2D::change_in_heading(p3, p1, p4);
+                            node_angles[first_node_id(i)].push(heading);
                         } else {
-                            p3 = polylines[index / 2][polylines[index / 2].len() - 2];
-                            node_angles[first_node_id(i)].push(p3.is_left(&polylines[i][1], &p1));
+                            p4 = polylines[index / 2][polylines[index / 2].len() - 2];
+                            heading = Point2D::change_in_heading(p3, p1, p4);
+                            node_angles[first_node_id(i)].push(heading);
                         }
                     }
                 }
@@ -408,38 +373,61 @@ impl WhiteboxTool for Polygonize {
                     .within(&[p2.x, p2.y], EPSILON, &squared_euclidean)
                     .unwrap();
                 if ret.len() == 1 {
-                    // is_dangling_arc[i] = true;
                     is_acyclic_arc[i] = true;
                 } else {
+                    p3 = polylines[i][polylines[i].len() - 2];
                     for a in 0..ret.len() {
                         let index = *ret[a].1;
                         if index != last_node_id(i) && !is_acyclic_arc[index / 2] {
                             endnodes[last_node_id(i)].push(index);
-                            // if is_first_node(index) {
-                            //     node_angles[last_node_id(i)].push(p2.is_left(
-                            //         &polylines[i][polylines[i].len() - 2],
-                            //         &(polylines[index / 2][1]),
-                            //     ));
-                            // } else {
-                            //     node_angles[last_node_id(i)].push(p2.is_left(
-                            //         &polylines[i][polylines[i].len() - 2],
-                            //         &(polylines[index / 2][polylines[index / 2].len() - 2]),
-                            //     ));
-                            // }
                             if is_first_node(index) {
-                                p3 = polylines[index / 2][1];
-                                node_angles[last_node_id(i)]
-                                    .push(p3.is_left(&polylines[i][polylines[i].len() - 2], &p2));
+                                p4 = polylines[index / 2][1];
+                                heading = Point2D::change_in_heading(p3, p2, p4);
+                                node_angles[last_node_id(i)].push(heading);
                             } else {
-                                p3 = polylines[index / 2][polylines[index / 2].len() - 2];
-                                node_angles[last_node_id(i)]
-                                    .push(p3.is_left(&polylines[i][polylines[i].len() - 2], &p2));
+                                p4 = polylines[index / 2][polylines[index / 2].len() - 2];
+                                heading = Point2D::change_in_heading(p3, p2, p4);
+                                node_angles[last_node_id(i)].push(heading);
                             }
                         }
                     }
                 }
             }
         }
+
+        /*
+        let mut fid = 1;
+        for i in 0..polylines.len() {
+            if is_internal[i] {
+                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                sfg.add_part(&polylines[i].vertices);
+                output.add_record(sfg);
+
+                output
+                    .attributes
+                    .add_record(vec![FieldData::Int(fid)], false);
+                fid += 1;
+            }
+        }
+
+        if verbose {
+            println!("Saving data...")
+        };
+        let _ = match output.write() {
+            Ok(_) => if verbose {
+                println!("Output file written")
+            },
+            Err(e) => return Err(e),
+        };
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+
+        if verbose {
+            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
+        }
+
+        return Ok(());
+        */
 
         // Find connecting arcs. These are arcs that don't form loops. The only way to
         // travel from one endnode to the other is to travel through the polyline. They
@@ -526,156 +514,90 @@ impl WhiteboxTool for Polygonize {
             }
         }
 
+        bb.clear();
         let mut current_node: usize;
         let mut neighbour_node: usize;
         let mut num_neighbours: usize;
-        let mut existing_poly: bool = false;
+        let mut existing_polygons = HashSet::new();
+        let mut existing_hull = HashSet::new();
+        let mut hull_geometries: Vec<ShapefileGeometry> = vec![];
+        let mut max_val: f64;
+        let mut max_val_index: usize;
+        let mut k: usize;
+        let mut num_vertices: usize;
         let mut other_side: usize;
-        let mut count: usize;
         let mut target_found: bool;
         let mut assigned = vec![0usize; polylines.len()];
+        let mut is_clockwise: bool;
         let mut fid = 1;
         for i in 0..polylines.len() {
-            if i == 599 {
-                println!("I'm at {}", i);
-                println!("is_acyclic_arc[i]: {}", is_acyclic_arc[i]);
-                println!("assigned: {}", assigned[i]);
-                println!("endnodes first {:?}", endnodes[first_node_id(i)]);
-                println!("endnodes last {:?}", endnodes[last_node_id(i)]);
-            }
             if !is_acyclic_arc[i] && assigned[i] < 2 {
                 // starting at the last vertex, traverse a chain of lines, always
-                // taking the leftmost line at each junction. Stop when you encounter
-                // the first vertex of the line or a deadend is encountered.
+                // taking the rightmost line at each junction. Stop when you encounter
+                // the first vertex of the line.
 
                 source_node = last_node_id(i); // start with the end node of the polyline
                 target_node = first_node_id(i); // end with the start node of the polyline
-
-                if i == 599 {
-                    println!(
-                        "source: {} ({}) target: {}",
-                        source_node,
-                        source_node / 2 + 1,
-                        target_node
-                    );
-                }
 
                 let mut prev = vec![num_endnodes; num_endnodes];
 
                 target_found = false;
 
                 current_node = source_node;
-                count = 0;
                 loop {
-                    count += 1;
-                    if count > polylines.len() {
-                        break; // a kill switch for when things go wrong.
-                    }
                     num_neighbours = endnodes[current_node].len();
-                    if num_neighbours == 0 {
-                        if i == 599 {
-                            println!("I'm here");
+                    if num_neighbours > 1 {
+                        // We're at a junction and we should take the
+                        // rightmost line.
+                        max_val = node_angles[current_node][0];
+                        max_val_index = 0;
+                        for a in 1..num_neighbours {
+                            if node_angles[current_node][a] > max_val {
+                                max_val = node_angles[current_node][a];
+                                max_val_index = a;
+                            }
+                            if endnodes[current_node][a] == target_node {
+                                neighbour_node = endnodes[current_node][a];
+                                prev[neighbour_node] = current_node;
+                                break;
+                            }
                         }
-                        break;
+                        neighbour_node = endnodes[current_node][max_val_index];
+                        other_side = get_other_endnode(neighbour_node);
+                        prev[neighbour_node] = current_node;
+                        prev[other_side] = neighbour_node;
+                        if neighbour_node == target_node || other_side == target_node {
+                            target_found = true;
+                            break;
+                        }
+                        current_node = other_side;
                     } else if num_neighbours == 1 {
                         // There's only one way forward, so take it.
                         neighbour_node = endnodes[current_node][0];
                         other_side = get_other_endnode(neighbour_node);
-                        // if prev[neighbour_node] != num_endnodes {
-                        //     // We've been here already; we're caught in a loop.
-                        //     break;
-                        // }
                         prev[neighbour_node] = current_node;
                         prev[other_side] = neighbour_node;
-                        // if i == 599 {
-                        //     println!(
-                        //         "S current: {} ({}) neighbour: {} ({}) other: {}",
-                        //         current_node,
-                        //         current_node / 2 + 1,
-                        //         neighbour_node,
-                        //         neighbour_node / 2 + 1,
-                        //         other_side
-                        //     );
-                        // }
-                        if neighbour_node == source_node {
-                            // We've looped around to the same starting point. Something is wrong.
-                            break;
-                        }
                         if neighbour_node == target_node || other_side == target_node {
                             target_found = true;
                             break;
                         }
                         current_node = other_side;
                     } else {
-                        // We're at a junction and we should take the
-                        // rightmost line.
-                        let mut min_val = node_angles[current_node][0];
-                        let mut min_val_index = 0;
-                        for a in 0..num_neighbours {
-                            if node_angles[current_node][a] < min_val {
-                                min_val = node_angles[current_node][a];
-                                min_val_index = a;
-                            }
-                            if endnodes[current_node][a] == target_node {
-                                min_val_index = a;
-                                neighbour_node = endnodes[current_node][a];
-                                // other_side = get_other_endnode(neighbour_node);
-                                prev[neighbour_node] = current_node;
-                                // prev[other_side] = neighbour_node;
-                                break;
-                            }
-                        }
-                        neighbour_node = endnodes[current_node][min_val_index];
-                        other_side = get_other_endnode(neighbour_node);
-                        // if prev[neighbour_node] == current_node {
-                        //     // We've been here already; we're caught in a loop.
-                        //     break;
-                        // }
-                        prev[neighbour_node] = current_node;
-                        prev[other_side] = neighbour_node;
-                        // if i == 599 {
-                        //     println!(
-                        //         "M current: {} ({}) neighbour: {} ({}) other: {}",
-                        //         current_node,
-                        //         current_node / 2 + 1,
-                        //         neighbour_node,
-                        //         neighbour_node / 2 + 1,
-                        //         other_side
-                        //     );
-                        // }
-                        if neighbour_node == source_node {
-                            // We've looped around to the same starting point. Something is wrong.
-                            break;
-                        }
-                        if neighbour_node == target_node || other_side == target_node {
-                            target_found = true;
-                            break;
-                        }
-                        current_node = other_side;
+                        // because we've removed links to danling ars, this should never occur
+                        break;
                     }
                 }
 
                 if target_found {
-                    if i == 599 {
-                        println!("Found target");
-                    }
                     // traverse from the target to the source
                     let mut lines: Vec<usize> = vec![];
                     let mut backlinks: Vec<usize> = vec![];
-                    let mut k = target_node;
-                    let mut num_vertices = 0;
-                    let mut output_poly = true;
+                    k = target_node;
+                    num_vertices = 0;
+                    // let mut output_poly = true;
                     while k != source_node {
                         k = prev[k];
                         backlinks.push(k);
-                        if backlinks.len() > count * 2 + 1 {
-                            println!(
-                                "I can't find my way back on {} {} {} {}",
-                                i, count, source_node, prev[k]
-                            );
-                            output_poly = false;
-                            break;
-                        }
                         let pl = k / 2;
                         if !is_first_node(k) {
                             // don't add polylines twice. Add at the ending node.
@@ -685,26 +607,149 @@ impl WhiteboxTool for Polygonize {
                     }
                     backlinks.push(target_node);
 
+                    // join the lines
+                    lines.reverse();
+                    backlinks.reverse();
+                    let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
+                    for a in 0..lines.len() {
+                        let pl = lines[a];
+                        // assigned[pl] += 1;
+                        let mut v = (polylines[pl].vertices).clone();
+                        if backlinks[a * 2] > backlinks[a * 2 + 1] {
+                            v.reverse();
+                        }
+                        if a < lines.len() - 1 {
+                            v.pop();
+                        }
+                        vertices.append(&mut v);
+                    }
+
+                    // Is it clockwise order?
+                    is_clockwise = is_clockwise_order(&vertices);
+
                     // don't add the same poly more than once
                     let mut test_poly = lines.clone();
                     test_poly.sort();
-                    existing_poly = existing_polygons.contains(&test_poly);
-                    if !existing_poly {
-                        existing_polygons.insert(test_poly);
-                    } else {
-                        output_poly = false;
+                    if !existing_polygons.contains(&test_poly) {
+                        if is_clockwise {
+                            existing_polygons.insert(test_poly);
+                            for a in 0..lines.len() {
+                                assigned[lines[a]] += 1;
+                            }
+
+                            // output the polygon
+                            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                            sfg.add_part(&vertices);
+                            bb.push(sfg.get_bounding_box());
+                            output.add_record(sfg);
+
+                            output
+                                .attributes
+                                .add_record(vec![FieldData::Int(fid)], false);
+                            fid += 1;
+                        }
                     }
-                    if output_poly {
+
+                    if !is_clockwise {
+                        // This could be a hull.
+                        test_poly = lines.clone();
+                        test_poly.sort();
+                        if !existing_hull.contains(&test_poly) {
+                            existing_hull.insert(test_poly);
+                            for a in 0..lines.len() {
+                                assigned[lines[a]] += 1;
+                            }
+
+                            // vertices.reverse();
+                            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                            sfg.add_part(&vertices);
+                            hull_geometries.push(sfg);
+                        }
+                    }
+                }
+
+                if assigned[i] < 2 {
+                    ///////////////////////////////////////
+                    // now check for a left-side polygon //
+                    ///////////////////////////////////////
+                    source_node = first_node_id(i); // start with the first node of the polyline
+                    target_node = last_node_id(i); // end with the last node of the polyline
+
+                    let mut prev = vec![num_endnodes; num_endnodes];
+
+                    target_found = false;
+
+                    current_node = source_node;
+                    loop {
+                        num_neighbours = endnodes[current_node].len();
+                        if num_neighbours > 1 {
+                            // We're at a junction and we should take the
+                            // rightmost line.
+                            max_val = node_angles[current_node][0];
+                            max_val_index = 0;
+                            for a in 1..num_neighbours {
+                                if node_angles[current_node][a] > max_val {
+                                    max_val = node_angles[current_node][a];
+                                    max_val_index = a;
+                                }
+                                if endnodes[current_node][a] == target_node {
+                                    neighbour_node = endnodes[current_node][a];
+                                    prev[neighbour_node] = current_node;
+                                    break;
+                                }
+                            }
+                            neighbour_node = endnodes[current_node][max_val_index];
+                            other_side = get_other_endnode(neighbour_node);
+                            prev[neighbour_node] = current_node;
+                            prev[other_side] = neighbour_node;
+                            if neighbour_node == target_node || other_side == target_node {
+                                target_found = true;
+                                break;
+                            }
+                            current_node = other_side;
+                        } else if num_neighbours == 1 {
+                            // There's only one way forward, so take it.
+                            neighbour_node = endnodes[current_node][0];
+                            other_side = get_other_endnode(neighbour_node);
+                            prev[neighbour_node] = current_node;
+                            prev[other_side] = neighbour_node;
+                            if neighbour_node == target_node || other_side == target_node {
+                                target_found = true;
+                                break;
+                            }
+                            current_node = other_side;
+                        } else {
+                            // because we've removed links to danling ars, this should never occur
+                            break;
+                        }
+                    }
+
+                    if target_found {
+                        // traverse from the target to the source
+                        let mut lines: Vec<usize> = vec![];
+                        let mut backlinks: Vec<usize> = vec![];
+                        k = target_node;
+                        num_vertices = 0;
+                        // let mut output_poly = true;
+                        while k != source_node {
+                            k = prev[k];
+                            backlinks.push(k);
+                            let pl = k / 2;
+                            if is_first_node(k) {
+                                // don't add polylines twice. Add at the first node.
+                                lines.push(pl);
+                                num_vertices += polylines[pl].len() - 1;
+                            }
+                        }
+                        backlinks.push(target_node);
+
                         // join the lines and then output the polygon
                         lines.reverse();
                         backlinks.reverse();
                         let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
                         for a in 0..lines.len() {
                             let pl = lines[a];
-                            // if pl == 10195 {
-                            //     println!("linked to 10195 at {}", i);
-                            // }
-                            assigned[pl] += 1;
+                            // assigned[pl] += 1;
                             let mut v = (polylines[pl].vertices).clone();
                             if backlinks[a * 2] > backlinks[a * 2 + 1] {
                                 v.reverse();
@@ -715,317 +760,50 @@ impl WhiteboxTool for Polygonize {
                             vertices.append(&mut v);
                         }
 
-                        let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                        if !is_clockwise_order(&vertices) {
-                            vertices.reverse();
-                        }
-                        sfg.add_part(&vertices);
-                        output.add_record(sfg);
-
-                        output
-                            .attributes
-                            .add_record(vec![FieldData::Int(fid)], false);
-                        fid += 1;
-                    }
-                } else if !existing_poly {
-                    source_node = first_node_id(i); // start with the first node of the polyline
-                    target_node = last_node_id(i); // end with the last node of the polyline
-
-                    if i == 599 {
-                        println!(
-                            "source: {} ({}) target: {}",
-                            source_node,
-                            source_node / 2 + 1,
-                            target_node
-                        );
-                    }
-
-                    let mut prev = vec![num_endnodes; num_endnodes];
-
-                    target_found = false;
-
-                    current_node = source_node;
-                    count = 0;
-                    loop {
-                        count += 1;
-                        if count > polylines.len() {
-                            break; // a kill switch for when things go wrong.
-                        }
-                        num_neighbours = endnodes[current_node].len();
-                        if num_neighbours == 0 {
-                            break;
-                        } else if num_neighbours == 1 {
-                            // There's only one way forward, so take it.
-                            neighbour_node = endnodes[current_node][0];
-                            other_side = get_other_endnode(neighbour_node);
-                            prev[neighbour_node] = current_node;
-                            prev[other_side] = neighbour_node;
-                            if i == 599 {
-                                println!(
-                                    "S current: {} ({}) neighbour: {} ({}) other: {}",
-                                    current_node,
-                                    current_node / 2 + 1,
-                                    neighbour_node,
-                                    neighbour_node / 2 + 1,
-                                    other_side
-                                );
-                            }
-                            if neighbour_node == source_node {
-                                // We've looped around to the same starting point. Something is wrong.
-                                break;
-                            }
-                            if neighbour_node == target_node || other_side == target_node {
-                                target_found = true;
-                                break;
-                            }
-                            current_node = other_side;
-                        } else {
-                            // We're at a junction and we should take the
-                            // leftmost line.
-                            let mut max_val = node_angles[current_node][0];
-                            let mut max_val_index = 0;
-                            for a in 1..num_neighbours {
-                                if node_angles[current_node][a] > max_val {
-                                    max_val = node_angles[current_node][a];
-                                    max_val_index = a;
-                                }
-                                if endnodes[current_node][a] == target_node {
-                                    max_val_index = a;
-                                    neighbour_node = endnodes[current_node][a];
-                                    // other_side = get_other_endnode(neighbour_node);
-                                    prev[neighbour_node] = current_node;
-                                    // prev[other_side] = neighbour_node;
-                                    if i == 599 {
-                                        println!("I'm here");
-                                    }
-                                    break;
-                                }
-                            }
-                            neighbour_node = endnodes[current_node][max_val_index];
-                            other_side = get_other_endnode(neighbour_node);
-                            prev[neighbour_node] = current_node;
-                            prev[other_side] = neighbour_node;
-                            if i == 599 {
-                                println!(
-                                    "M current: {} ({}) neighbour: {} ({}) other: {}",
-                                    current_node,
-                                    current_node / 2 + 1,
-                                    neighbour_node,
-                                    neighbour_node / 2 + 1,
-                                    other_side
-                                );
-                            }
-                            if neighbour_node == source_node {
-                                // We've looped around to the same starting point. Something is wrong.
-                                break;
-                            }
-                            if neighbour_node == target_node || other_side == target_node {
-                                target_found = true;
-                                break;
-                            }
-                            current_node = other_side;
-                        }
-                    }
-
-                    if target_found {
-                        // traverse from the target to the source
-                        let mut lines: Vec<usize> = vec![];
-                        let mut backlinks: Vec<usize> = vec![];
-                        let mut k = target_node;
-                        let mut num_vertices = 0;
-                        let mut output_poly = true;
-                        while k != source_node {
-                            k = prev[k];
-                            backlinks.push(k);
-                            if backlinks.len() > count * 2 + 1 {
-                                println!(
-                                    "I can't find my way back on {} {} {} {}",
-                                    i, count, source_node, prev[k]
-                                );
-                                output_poly = false;
-                                break;
-                            }
-                            let pl = k / 2;
-                            if !is_first_node(k) {
-                                // don't add polylines twice. Add at the ending node.
-                                lines.push(pl);
-                                num_vertices += polylines[pl].len() - 1;
-                            }
-                        }
-                        backlinks.push(target_node);
+                        // Is it clockwise order?
+                        is_clockwise = is_clockwise_order(&vertices);
 
                         // don't add the same poly more than once
                         let mut test_poly = lines.clone();
                         test_poly.sort();
-                        existing_poly = existing_polygons.contains(&test_poly);
-                        if !existing_poly {
-                            existing_polygons.insert(test_poly);
-                        } else {
-                            output_poly = false;
+                        if !existing_polygons.contains(&test_poly) {
+                            if is_clockwise {
+                                existing_polygons.insert(test_poly);
+                                for a in 0..lines.len() {
+                                    assigned[lines[a]] += 1;
+                                }
+
+                                // output the polygon
+                                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                                sfg.add_part(&vertices);
+                                bb.push(sfg.get_bounding_box());
+                                output.add_record(sfg);
+
+                                output
+                                    .attributes
+                                    .add_record(vec![FieldData::Int(fid)], false);
+                                fid += 1;
+                            }
                         }
-                        if output_poly {
-                            // println!("I'm here at {}", i);
 
-                            // join the lines and then output the polygon
-                            lines.reverse();
-                            backlinks.reverse();
-                            let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
-                            for a in 0..lines.len() {
-                                let pl = lines[a];
-                                assigned[pl] += 1;
-                                let mut v = (polylines[pl].vertices).clone();
-                                if backlinks[a * 2] > backlinks[a * 2 + 1] {
-                                    v.reverse();
+                        if !is_clockwise {
+                            // This could be a hull.
+                            test_poly = lines.clone();
+                            test_poly.sort();
+                            if !existing_hull.contains(&test_poly) {
+                                for a in 0..lines.len() {
+                                    assigned[lines[a]] += 1;
                                 }
-                                if a < lines.len() - 1 {
-                                    v.pop();
-                                }
-                                vertices.append(&mut v);
-                            }
+                                existing_hull.insert(test_poly);
 
-                            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                            if !is_clockwise_order(&vertices) {
-                                vertices.reverse();
+                                // vertices.reverse();
+                                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                                sfg.add_part(&vertices);
+                                hull_geometries.push(sfg);
                             }
-                            sfg.add_part(&vertices);
-                            output.add_record(sfg);
-
-                            output
-                                .attributes
-                                .add_record(vec![FieldData::Int(fid)], false);
-                            fid += 1;
-                        } else if !existing_poly {
-                            println!("No solution was found for {}", i);
                         }
                     }
                 }
-
-                // if assigned[i] < 2 {
-                //     // now try the right-sided poly
-                //     let mut prev = vec![num_endnodes; num_endnodes];
-
-                //     target_found = false;
-
-                //     current_node = source_node;
-                //     count = 0;
-                //     loop {
-                //         count += 1;
-                //         if count > polylines.len() {
-                //             break; // a kill switch for when things go wrong.
-                //         }
-                //         num_neighbours = endnodes[current_node].len();
-                //         if num_neighbours == 0 {
-                //             break;
-                //         } else if num_neighbours == 1 {
-                //             // There's only one way forward, so take it.
-                //             neighbour_node = endnodes[current_node][0];
-                //             other_side = get_other_endnode(neighbour_node);
-                //             prev[neighbour_node] = current_node;
-                //             prev[other_side] = neighbour_node;
-                //             if neighbour_node == source_node {
-                //                 // We've looped around to the same starting point. Something is wrong.
-                //                 break;
-                //             }
-                //             if neighbour_node == target_node || other_side == target_node {
-                //                 target_found = true;
-                //                 break;
-                //             }
-                //             current_node = other_side;
-                //         } else {
-                //             // We're at a junction and we should take the
-                //             // rightmost line.
-                //             let mut max_val = node_angles[current_node][0];
-                //             let mut max_val_index = 0;
-                //             for a in 1..num_neighbours {
-                //                 if node_angles[current_node][a] > max_val {
-                //                     max_val = node_angles[current_node][a];
-                //                     max_val_index = a;
-                //                 }
-                //             }
-                //             neighbour_node = endnodes[current_node][max_val_index];
-                //             other_side = get_other_endnode(neighbour_node);
-                //             prev[neighbour_node] = current_node;
-                //             prev[other_side] = neighbour_node;
-                //             if neighbour_node == source_node {
-                //                 // We've looped around to the same starting point. Something is wrong.
-                //                 break;
-                //             }
-                //             if neighbour_node == target_node || other_side == target_node {
-                //                 target_found = true;
-                //                 break;
-                //             }
-                //             current_node = other_side;
-                //         }
-                //     }
-
-                //     if target_found {
-                //         // traverse from the target to the source
-                //         let mut lines: Vec<usize> = vec![];
-                //         let mut backlinks: Vec<usize> = vec![];
-                //         let mut k = target_node;
-                //         let mut num_vertices = 0;
-                //         let mut output_poly = true;
-                //         while k != source_node {
-                //             k = prev[k];
-                //             backlinks.push(k);
-                //             if backlinks.len() > count * 2 + 1 {
-                //                 println!(
-                //                     "I can't find my way back on {} {} {} {}",
-                //                     i, count, source_node, prev[k]
-                //                 );
-                //                 output_poly = false;
-                //                 break;
-                //             }
-                //             let pl = k / 2;
-                //             if !is_first_node(k) {
-                //                 // don't add polylines twice. Add at the ending node.
-                //                 lines.push(pl);
-                //                 num_vertices += polylines[pl].len() - 1;
-                //             }
-                //         }
-                //         backlinks.push(target_node);
-
-                //         // don't add the same poly more than once
-                //         // let mut output_poly = true;
-                //         let mut test_poly = lines.clone();
-                //         test_poly.sort();
-                //         if !existing_polygons.contains(&test_poly) {
-                //             existing_polygons.insert(test_poly);
-                //         } else {
-                //             output_poly = false;
-                //         }
-                //         if output_poly {
-                //             // join the lines and then output the polygon
-                //             lines.reverse();
-                //             backlinks.reverse();
-                //             let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
-                //             for a in 0..lines.len() {
-                //                 let pl = lines[a];
-                //                 assigned[pl] += 1;
-                //                 let mut v = (polylines[pl].vertices).clone();
-                //                 if backlinks[a * 2] > backlinks[a * 2 + 1] {
-                //                     v.reverse();
-                //                 }
-                //                 if a < lines.len() - 1 {
-                //                     v.pop();
-                //                 }
-                //                 vertices.append(&mut v);
-                //             }
-
-                //             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-                //             if !is_clockwise_order(&vertices) {
-                //                 vertices.reverse();
-                //             }
-                //             sfg.add_part(&vertices);
-                //             output.add_record(sfg);
-
-                //             output
-                //                 .attributes
-                //                 .add_record(vec![FieldData::Int(fid)], false);
-                //             fid += 1;
-                //         }
-                //     }
-                // }
             }
 
             if verbose {
@@ -1033,6 +811,27 @@ impl WhiteboxTool for Polygonize {
                 if progress != old_progress {
                     println!("Finding polygons: {}%", progress);
                     old_progress = progress;
+                }
+            }
+        }
+
+        // can any of the hulls be added as holes in other polygons?
+        for a in 0..hull_geometries.len() {
+            let hull_bb = hull_geometries[a].get_bounding_box();
+            for b in 0..bb.len() {
+                if hull_bb.entirely_contained_within(bb[b]) {
+                    if output.records[b].num_parts > 1 {
+                        if poly_in_poly(
+                            &(hull_geometries[a].points),
+                            &(output.records[b].points[0..output.records[b].parts[1] as usize]),
+                        ) {
+                            output.records[b].add_part(&(hull_geometries[a].points));
+                        }
+                    } else {
+                        if poly_in_poly(&(hull_geometries[a].points), &(output.records[b].points)) {
+                            output.records[b].add_part(&(hull_geometries[a].points));
+                        }
+                    }
                 }
             }
         }

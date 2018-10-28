@@ -3521,7 +3521,47 @@ pick_from_list(
 ```
 
 
-#### 8.4.16 SplitWithLines
+#### 8.4.16 Polygonize
+
+This tool outputs a vector polygon layer from two or more intersecting line features
+contained in one or more input vector line files. Each space enclosed by the intersecting
+line set is converted to polygon added to the output layer. This tool should not be
+confused with the `LinesToPolygons` tool, which can be used to convert a vector file of
+polylines into a set of polygons, simply by closing each line feature. The `LinesToPolygons`
+tool does not deal with line intersection in the same way that the `Polygonize` tool does.
+
+*See Also*:
+
+`LinesToPolygons`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-inputs        Input vector polyline file
+-o, -\-output        Output vector polygon file
+
+
+*Python function*:
+
+~~~~{.python}
+polygonize(
+    inputs, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Polygonize -v --wd="/path/to/data/" ^
+-i='lines1.shp;lines2.shp;lines3.shp' -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.17 SplitWithLines
 
 This tool splits the lines or polygons in one layer using the lines in another layer
 to define the breaking points. Intersection points between geometries in both layers
@@ -3537,9 +3577,9 @@ and all of the attributes (excluding `FID`'s) of the input layer.
 
 **Flag**             **Description**
 -------------------  ---------------
--\-input             Input vector line or polygon file
+-i, -\-input         Input vector line or polygon file
 -\-split             Input vector polyline file
--o, -\-output        Output vector point file
+-o, -\-output        Output vector file
 
 
 *Python function*:
@@ -3562,7 +3602,7 @@ split_with_lines(
 ```
 
 
-#### 8.4.17 SumOverlay
+#### 8.4.18 SumOverlay
 
 This tool calculates the sum for each grid cell from a group of raster images.
 
@@ -3602,7 +3642,7 @@ sum_overlay(
 ```
 
 
-#### 8.4.18 WeightedOverlay
+#### 8.4.19 WeightedOverlay
 
 This tool performs a weighted overlay on multiple input images. It can be used to
 combine multiple factors with varying levels of weight or relative importance. The
@@ -3668,7 +3708,7 @@ weighted_overlay(
 ```
 
 
-#### 8.4.19 WeightedSum
+#### 8.4.20 WeightedSum
 
 This tool performs a weighted-sum overlay on multiple input raster images.
 If you have a stack of rasters that you would like to sum, each with an
@@ -10391,7 +10431,78 @@ lidar_block_minimum(
 ```
 
 
-#### 8.11.12 LidarColourize
+#### 8.11.12 LidarClassifySubset
+
+This tool classifies points within a user-specified LiDAR point cloud (`--base`) that correpond
+with points in a subset cloud (`--subset`). The subset point cloud may have been derived by filtering
+the original point cloud. The user must specify the names of the two input LAS files (i.e.
+the full and subset clouds) and the class value (`--subset_class`) to assign the matching points. This class
+value will be assigned to points in the base cloud, overwriting their input class values in the
+output LAS file (`--output`). Class values
+should be numerical (integer valued) and shoud follow the LAS specifications below:
+
+| Classification Value  | Meaning                              |
+| :-------------------- | :------------------------------------|
+| 0                     | Created never classified
+| 1                     | Unclassified3
+| 2                     | Ground
+| 3                     | Low Vegetation
+| 4                     | Medium Vegetation
+| 5                     | High Vegetation
+| 6                     | Building
+| 7                     | Low Point (noise)
+| 8                     | Reserved
+| 9                     | Water
+| 10                    | Rail
+| 11                    | Road Surface
+| 12                    | Reserved
+| 13                    |	Wire – Guard (Shield)
+| 14                    | Wire – Conductor (Phase)
+| 15                    | Transmission Tower
+| 16                    | Wire-structure Connector (e.g. Insulator)
+| 17                    | Bridge Deck
+| 18                    | High Noise
+
+The user may optionally specify a class value to be assigned to non-subset (i.e. non-matching)
+points (`--nonsubset_class`) in the base file. If this parameter is not specified, output
+non-sutset points will have the same class value as the base file.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-base              Input base LiDAR file
+-\-subset            Input subset LiDAR file
+-o, -\-output        Output LiDAR file
+-\-subset_class      Subset point class value (must be 0-18; see LAS specifications)
+-\-nonsubset_class   Non-subset point class value (must be 0-18; see LAS specifications)
+
+
+*Python function*:
+
+~~~~{.python}
+lidar_classify_subset(
+    base, 
+    subset, 
+    output, 
+    subset_class, 
+    nonsubset_class=None, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LidarClassifySubset -v ^
+--wd="/path/to/data/" --base="full_cloud.las" ^
+--subset="filtered_cloud.las" -o="output.las" ^
+--subset_class=2 
+
+
+```
+
+
+#### 8.11.13 LidarColourize
 
 Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
@@ -10425,7 +10536,7 @@ lidar_colourize(
 ```
 
 
-#### 8.11.13 LidarConstructVectorTin
+#### 8.11.14 LidarConstructVectorTin
 
 Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -10466,7 +10577,7 @@ lidar_construct_vector_tin(
 ```
 
 
-#### 8.11.14 LidarElevationSlice
+#### 8.11.15 LidarElevationSlice
 
 Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -10518,7 +10629,7 @@ lidar_elevation_slice(
 ```
 
 
-#### 8.11.15 LidarGroundPointFilter
+#### 8.11.16 LidarGroundPointFilter
 
 Identifies ground points within LiDAR dataset using a slope-based method.
 
@@ -10565,7 +10676,7 @@ lidar_ground_point_filter(
 ```
 
 
-#### 8.11.16 LidarHexBinning
+#### 8.11.17 LidarHexBinning
 
 The practice of binning point data to form a type of 2D histogram, density plot,
 or what is sometimes called a heatmap, is quite useful as an alternative for the
@@ -10624,7 +10735,7 @@ lidar_hex_binning(
 ```
 
 
-#### 8.11.17 LidarHillshade
+#### 8.11.18 LidarHillshade
 
 Calculates a hillshade value for points within a LAS file and stores these data in the RGB field.
 
@@ -10664,7 +10775,7 @@ lidar_hillshade(
 ```
 
 
-#### 8.11.18 LidarHistogram
+#### 8.11.19 LidarHistogram
 
 Creates a histogram from LiDAR data.
 
@@ -10700,7 +10811,7 @@ lidar_histogram(
 ```
 
 
-#### 8.11.19 LidarIdwInterpolation
+#### 8.11.20 LidarIdwInterpolation
 
 Interpolates LAS files using an inverse-distance weighted (IDW) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
 
@@ -10754,7 +10865,7 @@ lidar_idw_interpolation(
 ```
 
 
-#### 8.11.20 LidarInfo
+#### 8.11.21 LidarInfo
 
 This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
 data. The reported information will include including data on the header, point return frequency, and classification
@@ -10793,7 +10904,7 @@ lidar_info(
 ```
 
 
-#### 8.11.21 LidarJoin
+#### 8.11.22 LidarJoin
 
 Joins multiple LiDAR (LAS) files into a single LAS file.
 
@@ -10824,7 +10935,7 @@ lidar_join(
 ```
 
 
-#### 8.11.22 LidarKappaIndex
+#### 8.11.23 LidarKappaIndex
 
 Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
@@ -10858,7 +10969,7 @@ lidar_kappa_index(
 ```
 
 
-#### 8.11.23 LidarNearestNeighbourGridding
+#### 8.11.24 LidarNearestNeighbourGridding
 
 Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -10910,7 +11021,7 @@ lidar_nearest_neighbour_gridding(
 ```
 
 
-#### 8.11.24 LidarPointDensity
+#### 8.11.25 LidarPointDensity
 
 Calculates the spatial pattern of point density for a LiDAR data set. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
@@ -10959,7 +11070,7 @@ lidar_point_density(
 ```
 
 
-#### 8.11.25 LidarPointStats
+#### 8.11.26 LidarPointStats
 
 Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
@@ -11001,7 +11112,7 @@ lidar_point_stats(
 ```
 
 
-#### 8.11.26 LidarRemoveDuplicates
+#### 8.11.27 LidarRemoveDuplicates
 
 Removes duplicate points from a LiDAR data set.
 
@@ -11034,7 +11145,7 @@ lidar_remove_duplicates(
 ```
 
 
-#### 8.11.27 LidarRemoveOutliers
+#### 8.11.28 LidarRemoveOutliers
 
 Removes outliers (high and low points) in a LiDAR point cloud.
 
@@ -11070,7 +11181,7 @@ lidar_remove_outliers(
 ```
 
 
-#### 8.11.28 LidarSegmentation
+#### 8.11.29 LidarSegmentation
 
 Segments a LiDAR point cloud based on normal vectors.
 
@@ -11109,7 +11220,7 @@ lidar_segmentation(
 ```
 
 
-#### 8.11.29 LidarSegmentationBasedFilter
+#### 8.11.30 LidarSegmentationBasedFilter
 
 Identifies ground points within LiDAR point clouds using a segmentation based approach.
 
@@ -11150,7 +11261,7 @@ lidar_segmentation_based_filter(
 ```
 
 
-#### 8.11.30 LidarThin
+#### 8.11.31 LidarThin
 
 Thins a LiDAR point cloud, reducing point density.
 
@@ -11189,7 +11300,7 @@ lidar_thin(
 ```
 
 
-#### 8.11.31 LidarThinHighDensity
+#### 8.11.32 LidarThinHighDensity
 
 Thins points from high density areas within a LiDAR point cloud.
 
@@ -11227,7 +11338,7 @@ lidar_thin_high_density(
 ```
 
 
-#### 8.11.32 LidarTile
+#### 8.11.33 LidarTile
 
 Tiles a LiDAR LAS file into multiple LAS files.
 
@@ -11266,7 +11377,7 @@ lidar_tile(
 ```
 
 
-#### 8.11.33 LidarTileFootprint
+#### 8.11.34 LidarTileFootprint
 
 Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters
 are not specified, the tool works with all LAS files contained within the working directory.
@@ -11298,7 +11409,7 @@ lidar_tile_footprint(
 ```
 
 
-#### 8.11.34 LidarTinGridding
+#### 8.11.35 LidarTinGridding
 
 Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 
@@ -11344,7 +11455,7 @@ lidar_tin_gridding(
 ```
 
 
-#### 8.11.35 LidarTophatTransform
+#### 8.11.36 LidarTophatTransform
 
 Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 
@@ -11378,7 +11489,7 @@ lidar_tophat_transform(
 ```
 
 
-#### 8.11.36 NormalVectors
+#### 8.11.37 NormalVectors
 
 Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
@@ -11411,7 +11522,7 @@ normal_vectors(
 ```
 
 
-#### 8.11.37 SelectTilesByPolygon
+#### 8.11.38 SelectTilesByPolygon
 
 Copies LiDAR tiles overlapping with a polygon into an output directory.
 
@@ -14881,6 +14992,10 @@ tributary_identifier(
 >>./whitebox_tools -r=TributaryIdentifier -v ^
 --wd="/path/to/data/" --d8_pntr=D8.tif --streams=streams.tif ^
 -o=output.tif --esri_pntr --zero_background 
+
+
+```
+
 
 
 ```

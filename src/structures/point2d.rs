@@ -5,6 +5,7 @@ Created: 30/08/2018
 Last Modified: 30/08/2018
 License: MIT
 */
+// use std::f64::consts::PI;
 use std::ops::{Add, Mul, Sub};
 use std::{f64, fmt};
 
@@ -81,6 +82,24 @@ impl Point2D {
     /// Calculates the magnitude sqrt(x^2 + y^2) of the point.
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
+    }
+
+    pub fn change_in_heading(previous: Point2D, current: Point2D, next: Point2D) -> f64 {
+        let p1 = current - previous;
+        let p2 = next - current;
+        let mut ratio = (p1 * p2) / (p1.magnitude() * p2.magnitude());
+        // check for rounding errors; -1.0 < ratio < 1.0
+        if ratio > 1.0 {
+            ratio = 1.0;
+        }
+        if ratio < -1.0 {
+            ratio = -1.0;
+        }
+        if current.is_left(&previous, &next) >= 0.0 {
+            ratio.acos()
+        } else {
+            -1.0 * (ratio.acos())
+        }
     }
 
     pub fn sin_cos(&self) -> (f64, f64) {
