@@ -1,6 +1,6 @@
-(Updated 24-10-2018)
+(Updated 29-10-2018)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **387 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **52 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **388 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **52 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -447,6 +447,7 @@ Tools that are new in *WhiteboxTools*
 | LidarTinGridding                                  |                                                                                                                                                                |
 | LidarTophatTransform                              |                                                                                                                                                                |
 | LineIntersections                                 |                                                                                                                                                                |
+| LongestFlowpath                                   |                                                                                                                                                                |
 | MaxAnisotropyDev                                  |                                                                                                                                                                |
 | MaxAnisotropyDevSignature                         |                                                                                                                                                                |
 | MaxDifferenceFromMean                             |                                                                                                                                                                |

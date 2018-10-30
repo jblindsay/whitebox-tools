@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/10/2018
-Last Modified: 21/10/2018
+Last Modified: 28/10/2018
 License: MIT
 */
 extern crate kdtree;
@@ -395,40 +395,6 @@ impl WhiteboxTool for Polygonize {
             }
         }
 
-        /*
-        let mut fid = 1;
-        for i in 0..polylines.len() {
-            if is_internal[i] {
-                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                sfg.add_part(&polylines[i].vertices);
-                output.add_record(sfg);
-
-                output
-                    .attributes
-                    .add_record(vec![FieldData::Int(fid)], false);
-                fid += 1;
-            }
-        }
-
-        if verbose {
-            println!("Saving data...")
-        };
-        let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
-            Err(e) => return Err(e),
-        };
-
-        let elapsed_time = get_formatted_elapsed_time(start);
-
-        if verbose {
-            println!("{}", &format!("Elapsed Time: {}", elapsed_time));
-        }
-
-        return Ok(());
-        */
-
         // Find connecting arcs. These are arcs that don't form loops. The only way to
         // travel from one endnode to the other is to travel through the polyline. They
         // can be safely removed from the graph.
@@ -613,7 +579,6 @@ impl WhiteboxTool for Polygonize {
                     let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
                     for a in 0..lines.len() {
                         let pl = lines[a];
-                        // assigned[pl] += 1;
                         let mut v = (polylines[pl].vertices).clone();
                         if backlinks[a * 2] > backlinks[a * 2 + 1] {
                             v.reverse();

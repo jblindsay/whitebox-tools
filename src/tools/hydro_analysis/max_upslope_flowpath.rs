@@ -67,8 +67,7 @@ impl MaxUpslopeFlowpathLength {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --log --clip",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif",
             short_exe, name
         ).replace("*", &sep);
 

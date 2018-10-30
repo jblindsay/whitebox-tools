@@ -156,6 +156,7 @@ impl ToolManager {
         tool_names.push("ImpoundmentIndex".to_string());
         tool_names.push("Isobasins".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
+        tool_names.push("LongestFlowpath".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
         tool_names.push("RaiseWalls".to_string());
@@ -650,6 +651,7 @@ impl ToolManager {
             "jensonsnappourpoints" => {
                 Some(Box::new(tools::hydro_analysis::JensonSnapPourPoints::new()))
             }
+            "longestflowpath" => Some(Box::new(tools::hydro_analysis::LongestFlowpath::new())),
             "maxupslopeflowpathlength" => Some(Box::new(
                 tools::hydro_analysis::MaxUpslopeFlowpathLength::new(),
             )),

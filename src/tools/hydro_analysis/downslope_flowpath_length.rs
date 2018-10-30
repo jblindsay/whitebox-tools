@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 8, 2017
-Last Modified: 12/10/2018
+Last Modified: 29/10/2018
 License: MIT
 */
 
@@ -155,36 +155,32 @@ impl WhiteboxTool for DownslopeFlowpathLength {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-d8_pntr" || vec[0].to_lowercase() == "--d8_pntr" {
-                if keyval {
-                    d8_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-d8_pntr" {
+                d8_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    d8_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-watersheds"
-                || vec[0].to_lowercase() == "--watersheds"
-            {
-                if keyval {
-                    watersheds_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-watersheds" {
+                watersheds_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    watersheds_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-weights" || vec[0].to_lowercase() == "--weights" {
-                if keyval {
-                    weights_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-weights" {
+                weights_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    weights_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-esri_pntr"
-                || vec[0].to_lowercase() == "--esri_pntr"
-                || vec[0].to_lowercase() == "--esri_style"
-            {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 esri_style = true;
             }
         }
@@ -322,15 +318,15 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let (mut x, mut y): (isize, isize);
         for row in 0..rows {
             for col in 0..columns {
-                if pntr[(row, col)] >= 0.0 && pntr[(row, col)] != nodata {
-                    current_id = watersheds[(row, col)];
+                if pntr.get_value(row, col) >= 0.0 && pntr.get_value(row, col) != nodata {
+                    current_id = watersheds.get_value(row, col);
                     dist = 0f64;
                     flag = false;
                     x = col;
                     y = row;
                     while !flag {
                         // find its downslope neighbour
-                        dir = pntr[(y, x)];
+                        dir = pntr.get_value(y, x);
                         if dir > 0f64 && dir != nodata {
                             if dir > 128f64 || pntr_matches[dir as usize] == 999 {
                                 return Err(Error::new(ErrorKind::InvalidInput,
@@ -341,10 +337,10 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                             x += dx[c];
                             y += dy[c];
 
-                            dist += grid_lengths[c] * weights[(y, x)];
+                            dist += grid_lengths[c] * weights.get_value(y, x);
 
-                            if output[(y, x)] != -999f64 {
-                                dist += output[(y, x)] * weights[(y, x)];
+                            if output.get_value(y, x) != -999f64 {
+                                dist += output.get_value(y, x) * weights.get_value(y, x);
                                 flag = true;
                             } else if watersheds[(y, x)] != current_id {
                                 flag = true;
@@ -358,28 +354,30 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                     x = col;
                     y = row;
                     while !flag {
-                        output[(y, x)] = dist;
+                        output.set_value(y, x, dist);
 
                         // find its downslope neighbour
-                        dir = pntr[(y, x)];
+                        dir = pntr.get_value(y, x);
                         if dir > 0f64 && dir != nodata {
                             // move x and y accordingly
                             c = pntr_matches[dir as usize];
                             x += dx[c];
                             y += dy[c];
 
-                            dist -= grid_lengths[c] * weights[(y, x)];
+                            dist -= grid_lengths[c] * weights.get_value(y, x);
 
-                            if output[(y, x)] != -999f64 || watersheds[(y, x)] != current_id {
+                            if output.get_value(y, x) != -999f64
+                                || watersheds.get_value(y, x) != current_id
+                            {
                                 flag = true;
                             }
                         } else {
-                            output[(y, x)] = 0f64;
+                            output.set_value(y, x, 0f64);
                             flag = true;
                         }
                     }
                 } else {
-                    output[(row, col)] = out_nodata;
+                    output.set_value(row, col, out_nodata);
                 }
             }
             if verbose {
