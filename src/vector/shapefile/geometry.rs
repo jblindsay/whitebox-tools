@@ -10,7 +10,7 @@ use std::f64;
 use std::fmt;
 use structures::{BoundingBox, Point2D};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ShapefileGeometry {
     pub shape_type: ShapeType,
     pub x_min: f64,
@@ -454,7 +454,7 @@ m_array: {:?}",
 }
 
 #[repr(u16)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ShapeType {
     Null = 0,
     Point = 1,

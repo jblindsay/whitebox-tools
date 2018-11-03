@@ -60,11 +60,13 @@ Version 0.12.0 (XX-XX-2018)
 - The following tools were added to the project:
     BlockMaximumGridding
     BlockMinimumGridding
+    Clip
     JoinTables
     LasToShapefile
     LidarClassifySubset
     LinearityIndex
     LineIntersections
+    LongestFlowpath
     MergeTableWithCsv
     MergeVectors
     NearestNeighbourGridding

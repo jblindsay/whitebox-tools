@@ -252,6 +252,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***BufferRaster***: Maps a distance-based buffer around each non-background (non-zero/non-nodata) grid cell in an input image.
 - ***Centroid***: Calculates the centroid, or average location, of raster polygon objects.
 - ***CentroidVector***: Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+- ***Clip***: Extract all the features, or parts of features, that overlap with the features of the clip vector.
 - ***ClipRasterToPolygon***: Clips a raster to a vector polygon.
 - ***Clump***: Groups cells that form physically discrete areas, assigning them unique identifiers.
 - ***CompactnessRatio***: Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
@@ -352,7 +353,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***Isobasins***: Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 - ***JensonSnapPourPoints***: Moves outlet points used to specify points of interest in a watershedding operation to the nearest stream cell.
 - ***MaxUpslopeFlowpathLength***: Measures the maximum length of all upslope flowpaths draining each grid cell.
-- ***LongestFlowpath***: Delineates the longest flowpaths for given a group of subbasins or watersheds. 
+- ***LongestFlowpath***: Delineates the longest flowpaths for a group of subbasins or watersheds. 
 - ***NumInflowingNeighbours***: Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 - ***RaiseWalls***: Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
 - ***Rho8Pointer***: Calculates a stochastic Rho8 flow pointer raster from an input DEM.

@@ -7094,7 +7094,69 @@ jenson_snap_pour_points(
 ```
 
 
-#### 8.7.32 MaxUpslopeFlowpathLength
+#### 8.7.32 LongestFlowpath
+
+This tool delineates the longest flowpaths for given a group of subbasins or watersheds.
+Flowpaths are initiated along drainage divides and continue along the D8-defined
+flow direction until either the subbasin outlet or DEM edge is encountered. Each input
+subbasin/watershed will have an associated vector flowpath in the output image. `LongestFlowpath`
+is similar to the `r.lfp` plugin tool for GRASS GIS. The length of the longest flowpath
+draining to an outlet is related to the time of concentration, which is a parameter
+used in certain hydrological models.
+
+The user must input the filename of a digital elevation model (DEM), a basins raster, and the
+output vector. The DEM must be depressionless and should have been pre-processed using the
+`BreachDepressions` or `FillDepressions` tool. The *basins raster* must contain features
+that are delineated by categorical (integer valued) unique indentifier values. All non-NoData,
+non-zero valued grid cells in the basins raster are interpreted as belonging to features.
+In practice, this tool is usual run using either a single watershed, a group of contiguous
+non-overlapping watersheds, or a series of nested subbasins. These are often derived using
+the `Watershed` tool, based on a series of input outlets, or the `Subbasins` tool, based on
+an input stream network. If subbasins are input to `LongestFlowpath`, each traced flowpath
+will include the full upstream length, including the portions of the longest flowpaths that
+are contained within nested areas. Therefore, this can be a convienent method of delineating
+the longest flowpath to each bifurcation in a stream network.
+
+The output vector file will contain fields in the attribute table that identify the associated
+basin unique identifier (*BASIN*), the elevation of the flowpath source point on the divide
+(*UP_ELEV*), the elevation of the outlet point (*DN_ELEV*), the length of the flowpath (*LENGTH*),
+and finally, the average slope along the flowpath (*AVG_SLOPE*).
+
+*See Also*:
+
+`MaximumUpslopeFlowpath`, `BreachDepressions`, `FillDepressions`, `Watershed`, `Subbasins`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-dem           Input raster DEM file
+-\-basins            Input raster basins file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+longest_flowpath(
+    dem, 
+    basins, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=LongestFlowpath -v ^
+--wd="/path/to/data/" -i=DEM.tif --basins=basins.tif ^
+-o=output.tif 
+
+
+```
+
+
+#### 8.7.33 MaxUpslopeFlowpathLength
 
 Measures the maximum length of all upslope flowpaths draining each grid cell.
 
@@ -7119,17 +7181,13 @@ max_upslope_flowpath_length(
 
 ```
 >>./whitebox_tools -r=MaxUpslopeFlowpathLength -v ^
---wd="/path/to/data/" -i=DEM.tif ^
--o=output.tif
->>./whitebox_tools -r=MaxUpslopeFlowpathLength -v ^
---wd="/path/to/data/" --dem=DEM.tif -o=output.tif --log ^
---clip 
+--wd="/path/to/data/" -i=DEM.tif -o=output.tif 
 
 
 ```
 
 
-#### 8.7.33 NumInflowingNeighbours
+#### 8.7.34 NumInflowingNeighbours
 
 Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
 
@@ -7160,7 +7218,7 @@ num_inflowing_neighbours(
 ```
 
 
-#### 8.7.34 RaiseWalls
+#### 8.7.35 RaiseWalls
 
 Raises walls in a DEM along a line or around a polygon, e.g. a watershed.
 
@@ -7201,7 +7259,7 @@ raise_walls(
 ```
 
 
-#### 8.7.35 Rho8Pointer
+#### 8.7.36 Rho8Pointer
 
 Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
@@ -7234,7 +7292,7 @@ rho8_pointer(
 ```
 
 
-#### 8.7.36 Sink
+#### 8.7.37 Sink
 
 Identifies the depressions in a DEM, giving each feature a unique identifier.
 
@@ -7267,7 +7325,7 @@ sink(
 ```
 
 
-#### 8.7.37 SnapPourPoints
+#### 8.7.38 SnapPourPoints
 
 Moves outlet points used to specify points of interest in a watershedding operation to the cell with the highest flow accumulation in its neighbourhood.
 
@@ -7303,7 +7361,7 @@ snap_pour_points(
 ```
 
 
-#### 8.7.38 StochasticDepressionAnalysis
+#### 8.7.39 StochasticDepressionAnalysis
 
 Preforms a stochastic analysis of depressions within a DEM.
 
@@ -7342,7 +7400,7 @@ stochastic_depression_analysis(
 ```
 
 
-#### 8.7.39 StrahlerOrderBasins
+#### 8.7.40 StrahlerOrderBasins
 
 Identifies Strahler-order basins from an input stream network.
 
@@ -7378,7 +7436,7 @@ strahler_order_basins(
 ```
 
 
-#### 8.7.40 Subbasins
+#### 8.7.41 Subbasins
 
 Identifies the catchments, or sub-basin, draining to each link in a stream network.
 
@@ -7414,7 +7472,7 @@ subbasins(
 ```
 
 
-#### 8.7.41 TraceDownslopeFlowpaths
+#### 8.7.42 TraceDownslopeFlowpaths
 
 Traces downslope flowpaths from one or more target sites (i.e. seed points).
 
@@ -7452,7 +7510,7 @@ trace_downslope_flowpaths(
 ```
 
 
-#### 8.7.42 UnnestBasins
+#### 8.7.43 UnnestBasins
 
 Extract whole watersheds for a set of outlet points.
 
@@ -7488,7 +7546,7 @@ unnest_basins(
 ```
 
 
-#### 8.7.43 Watershed
+#### 8.7.44 Watershed
 
 Identifies the watershed, or drainage basin, draining to a set of target cells.
 
@@ -14996,9 +15054,6 @@ tributary_identifier(
 
 ```
 
-
-
-```
 
 
 

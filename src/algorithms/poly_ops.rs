@@ -6,7 +6,8 @@ Last Modified: 30/08/2018
 License: MIT
 */
 
-use structures::Point2D;
+use super::do_polylines_intersect;
+use structures::{Point2D, Polyline};
 
 /// Tests if a point is Left|On|Right of an infinite line,
 /// based on http://geomalgorithms.com/a03-_inclusion.html.
@@ -37,7 +38,7 @@ pub fn point_in_poly(p: &Point2D, poly: &[Point2D]) -> bool {
 /// Input:   p = a point,
 ///          poly[] = vertex points of a polygon poly[n+1] with poly[n]=poly[0]
 pub fn winding_number(p: &Point2D, poly: &[Point2D]) -> i32 {
-    if poly[0] != poly[poly.len() - 1] {
+    if !poly[0].nearly_equals(&poly[poly.len() - 1]) {
         panic!(
             "Error (from poly_ops::winding_num): point sequence does not form a closed polygon."
         );
@@ -82,6 +83,31 @@ pub fn poly_in_poly(contained_poly: &[Point2D], containing_poly: &[Point2D]) -> 
     true
 }
 
+/// Tests whether one polygon overlaps another polygon. Notice that
+/// for polygons that are overlap, confirmation of overlap occurs
+/// very quickly. In the case of overlapping polys, the function
+/// returns from the first tested vertex contained within the other.
+pub fn poly_overlaps_poly(poly1: &[Point2D], poly2: &[Point2D]) -> bool {
+    for p in poly1 {
+        if point_in_poly(p, poly2) {
+            return true;
+        }
+    }
+    if poly_in_poly(poly1, poly2) || poly_in_poly(poly2, poly1) {
+        return true;
+    }
+    if point_in_poly(&interior_point(poly1), poly2) {
+        return true;
+    }
+    if point_in_poly(&interior_point(poly2), poly1) {
+        return true;
+    }
+    if do_polylines_intersect(&Polyline::new(poly1, 0), &Polyline::new(poly2, 0)) {
+        return true;
+    }
+    false
+}
+
 /// Return true if the polygon is convex.
 pub fn poly_is_convex(poly: &[Point2D]) -> bool {
     // For each set of three adjacent points A, B, C,
@@ -117,30 +143,32 @@ pub fn poly_is_convex(poly: &[Point2D]) -> bool {
 
 /// Returns a point that is garaunteed to be within the poly.
 pub fn interior_point(poly: &[Point2D]) -> Point2D {
-    if poly[0] != poly[poly.len() - 1] {
+    if !poly[0].nearly_equals(&poly[poly.len() - 1]) {
         panic!(
             "Error (from poly_ops::interior_point): point squence does not form a closed polygon."
         );
     }
     let num_points = poly.len();
-    if num_points > 3 {
+    if num_points > 4 {
         for a in 1..num_points - 1 {
-            let midpoint = Point2D::midpoint(&poly[a - 1], &poly[a + 1]);
-            if point_in_poly(&midpoint, &poly) {
-                return midpoint;
+            if poly[a].is_left(&poly[a - 1], &poly[a + 1]) != 0f64 {
+                let midpoint = Point2D::midpoint(&poly[a - 1], &poly[a + 1]);
+                if point_in_poly(&midpoint, &poly) {
+                    return midpoint;
+                }
             }
         }
         // none of the tested points were interior, return one of the edge points
         return poly[0].clone();
-    } else if num_points == 3 {
+    } else if num_points == 4 {
         // it's a triangle
-        let midpoint = Point2D::centre_point(&poly);
+        let midpoint = Point2D::centre_point(&poly[0..3]);
         if point_in_poly(&midpoint, &poly) {
             return midpoint;
         }
         return poly[0].clone();
     }
-    panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point");
+    panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point; with only {} verticies, the feature is possibly co-linear {:?}", num_points, poly);
 }
 
 #[cfg(test)]

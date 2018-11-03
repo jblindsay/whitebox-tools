@@ -5,11 +5,10 @@ Created: 30/08/2018
 Last Modified: 30/08/2018
 License: MIT
 */
-// use std::f64::consts::PI;
 use std::ops::{Add, Mul, Sub};
 use std::{f64, fmt};
 
-const EPSILON: f64 = f64::EPSILON * 2.0;
+const EPSILON: f64 = std::f64::EPSILON; //f64::EPSILON * 2.0;
 
 /// A 2-D point, with x and y fields.
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
@@ -213,6 +212,13 @@ impl Point2D {
             }
         }
         false
+    }
+
+    pub fn fix_precision(&self, decimal_places: usize) -> Point2D {
+        let multiplier = 10f64.powf(decimal_places as f64);
+        let x = (self.x * multiplier).round() / multiplier;
+        let y = (self.y * multiplier).round() / multiplier;
+        Point2D::new(x, y)
     }
 }
 

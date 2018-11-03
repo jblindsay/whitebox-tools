@@ -20,7 +20,7 @@ use tools::*;
 use vector::ShapefileGeometry;
 use vector::*;
 
-/// This tool delineates the longest flowpaths for given a group of subbasins or watersheds.
+/// This tool delineates the longest flowpaths for a group of subbasins or watersheds.
 /// Flowpaths are initiated along drainage divides and continue along the D8-defined
 /// flow direction until either the subbasin outlet or DEM edge is encountered. Each input
 /// subbasin/watershed will have an associated vector flowpath in the output image. `LongestFlowpath`
@@ -44,7 +44,7 @@ use vector::*;
 /// The output vector file will contain fields in the attribute table that identify the associated
 /// basin unique identifier (*BASIN*), the elevation of the flowpath source point on the divide
 /// (*UP_ELEV*), the elevation of the outlet point (*DN_ELEV*), the length of the flowpath (*LENGTH*),
-/// and finally, the average slope along the flowpath (*AVG_SLOPE*).
+/// and finally, the average slope (*AVG_SLOPE*) along the flowpath, measured as a percent grade.
 ///
 /// # See Also
 /// `MaximumUpslopeFlowpath`, `BreachDepressions`, `FillDepressions`, `Watershed`, `Subbasins`
@@ -62,8 +62,7 @@ impl LongestFlowpath {
         let name = "LongestFlowpath".to_string();
         let toolbox = "Hydrological Analysis".to_string();
         let description =
-            "Delineates the longest flowpaths for given a group of subbasins or watersheds. "
-                .to_string();
+            "Delineates the longest flowpaths for a group of subbasins or watersheds. ".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -452,7 +451,7 @@ impl WhiteboxTool for LongestFlowpath {
         let mut output = Shapefile::new(&output_file, ShapeType::PolyLine)?;
 
         // set the projection information
-        // output.projection = input.get_wkt().clone();
+        output.projection = input.configs.coordinate_ref_system_wkt.clone();
 
         // add the attributes
         output
@@ -511,7 +510,7 @@ impl WhiteboxTool for LongestFlowpath {
             let source_z = input.get_value(row, col);
 
             let slope = if length > 0f64 {
-                ((source_z - basin_z) / length).atan().to_degrees()
+                100f64 * (source_z - basin_z) / length
             } else {
                 0f64
             };

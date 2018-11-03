@@ -9,11 +9,48 @@ License: MIT
 use std::ops::Index;
 use structures::{BoundingBox, Point2D};
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug)]
 pub struct Polyline {
     pub vertices: Vec<Point2D>,
+    pub source_file: usize,
     pub id: usize,
     pub split_points: Vec<(f64, Point2D)>,
+}
+
+impl PartialEq for Polyline {
+    fn eq(&self, other: &Self) -> bool {
+        // Equality is based on vertices coordinates only.
+        // The id, source_file and split points don't impact eqality.
+        // This is because equality is often used to identify duplicate polylines.
+        if self.len() == other.len() {
+            // polylines are considered equal even if they are reversed in order
+            let (starting_point_same, reversed) = if self[0].nearly_equals(&other[0]) {
+                (true, false)
+            } else if self[0].nearly_equals(&other[other.len() - 1]) {
+                (true, true)
+            } else {
+                (false, false)
+            };
+            if starting_point_same {
+                if !reversed {
+                    for p in 1..self.len() {
+                        if !(self[p].nearly_equals(&other[p])) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    for p in 1..self.len() {
+                        if !(self[p].nearly_equals(&other[other.len() - 1 - p])) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 impl Index<usize> for Polyline {
@@ -25,10 +62,21 @@ impl Index<usize> for Polyline {
 }
 
 impl Polyline {
-    /// Creates a new Circle,
+    /// Creates a new Polyline from vertices
     pub fn new(vertices: &[Point2D], id: usize) -> Polyline {
         Polyline {
             vertices: vertices.clone().to_vec(),
+            source_file: 0,
+            id: id,
+            split_points: vec![],
+        }
+    }
+
+    /// Creates a new empty Polyline
+    pub fn new_empty(id: usize) -> Polyline {
+        Polyline {
+            vertices: vec![],
+            source_file: 0,
             id: id,
             split_points: vec![],
         }
@@ -156,12 +204,31 @@ impl Polyline {
             }
             // push the last polyline
             ret.push(Polyline::new(&line, self.id));
+
+            for a in 0..ret.len() {
+                ret[a].source_file = self.source_file;
+            }
             return ret;
         }
-
-        ret.push(Polyline::new(&(self.vertices), self.id));
+        let mut pl = Polyline::new(&(self.vertices), self.id);
+        pl.source_file = self.source_file;
+        ret.push(pl);
         ret
     }
+
+    // pub fn snap_to_line(&self, other: &mut Self, precision: f64) {
+    //     // let box1 = self.get_bounding_box();
+    //     // let box2 = other.get_bounding_box();
+    //     // if box1.nearly_overlaps(box2, precision) {
+    //     for a in 0..self.len() {
+    //         for b in 0..other.len() {
+    //             if self.vertices[a].distance(&other.vertices[b]) < precision {
+    //                 other.vertices[b] = self.vertices[a].clone();
+    //             }
+    //         }
+    //     }
+    //     // }
+    // }
 
     pub fn get_bounding_box(&self) -> BoundingBox {
         BoundingBox::from_points(&self.vertices)

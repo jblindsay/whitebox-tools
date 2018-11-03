@@ -6,15 +6,24 @@ Last Modified: 15/10/2018
 License: MIT
 */
 
-use std::f64::EPSILON;
+// use std::f64::EPSILON;
 use structures::{BoundingBox, Point2D};
+
+const EPSILON: f64 = std::f64::EPSILON; //f64::EPSILON * 2.0;
 
 /// A data structure to hold line segments, defined by
 /// starting and ending points.
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct LineSegment {
     pub p1: Point2D,
     pub p2: Point2D,
+}
+
+impl PartialEq for LineSegment {
+    fn eq(&self, other: &Self) -> bool {
+        (self.p1.nearly_equals(&other.p1) && self.p2.nearly_equals(&other.p2))
+            || (self.p1.nearly_equals(&other.p2) && self.p2.nearly_equals(&other.p1))
+    }
 }
 
 impl LineSegment {
@@ -31,6 +40,15 @@ impl LineSegment {
     /// Based on https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
     /// and https://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
     pub fn get_intersection(&self, other: &Self) -> Option<LineSegment> {
+        if self == other {
+            return Some(self.clone());
+        }
+        // if (self.p1.distance_squared(&other.p1) + self.p2.distance_squared(&other.p2)) < 0.0001f64
+        //     || (self.p1.distance_squared(&other.p2) + self.p2.distance_squared(&other.p1))
+        //         < 0.0001f64
+        // {
+        //     return Some(self.clone());
+        // }
         let box1 = self.get_bounding_box();
         let box2 = other.get_bounding_box();
         if box1.overlaps(box2) {

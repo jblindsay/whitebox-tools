@@ -300,6 +300,23 @@ impl WhiteboxTool for Polygonize {
             }
         }
 
+        // Find duplicate polylines and remove them
+        let mut duplicates = vec![false; polylines.len()];
+        for i in 0..polylines.len() {
+            if !duplicates[i] {
+                for j in (i + 1)..polylines.len() {
+                    if polylines[i] == polylines[j] {
+                        duplicates[j] = true;
+                    }
+                }
+            }
+        }
+        for i in (0..polylines.len()).rev() {
+            if duplicates[i] {
+                polylines.remove(i);
+            }
+        }
+
         let num_endnodes = polylines.len() * 2;
         /*
             The structure of endnodes is as such:
@@ -351,16 +368,15 @@ impl WhiteboxTool for Polygonize {
                         is_acyclic_arc[i] = true;
                     }
                     if index != first_node_id(i) && !is_acyclic_arc[index / 2] {
+                        // && index != last_node_id(i)
                         endnodes[first_node_id(i)].push(index);
-                        if is_first_node(index) {
-                            p4 = polylines[index / 2][1];
-                            heading = Point2D::change_in_heading(p3, p1, p4);
-                            node_angles[first_node_id(i)].push(heading);
+                        p4 = if is_first_node(index) {
+                            polylines[index / 2][1]
                         } else {
-                            p4 = polylines[index / 2][polylines[index / 2].len() - 2];
-                            heading = Point2D::change_in_heading(p3, p1, p4);
-                            node_angles[first_node_id(i)].push(heading);
-                        }
+                            polylines[index / 2][polylines[index / 2].len() - 2]
+                        };
+                        heading = Point2D::change_in_heading(p3, p1, p4);
+                        node_angles[first_node_id(i)].push(heading);
                     }
                 }
             }
@@ -379,16 +395,15 @@ impl WhiteboxTool for Polygonize {
                     for a in 0..ret.len() {
                         let index = *ret[a].1;
                         if index != last_node_id(i) && !is_acyclic_arc[index / 2] {
+                            // && index != first_node_id(i)
                             endnodes[last_node_id(i)].push(index);
-                            if is_first_node(index) {
-                                p4 = polylines[index / 2][1];
-                                heading = Point2D::change_in_heading(p3, p2, p4);
-                                node_angles[last_node_id(i)].push(heading);
+                            p4 = if is_first_node(index) {
+                                polylines[index / 2][1]
                             } else {
-                                p4 = polylines[index / 2][polylines[index / 2].len() - 2];
-                                heading = Point2D::change_in_heading(p3, p2, p4);
-                                node_angles[last_node_id(i)].push(heading);
-                            }
+                                polylines[index / 2][polylines[index / 2].len() - 2]
+                            };
+                            heading = Point2D::change_in_heading(p3, p2, p4);
+                            node_angles[last_node_id(i)].push(heading);
                         }
                     }
                 }

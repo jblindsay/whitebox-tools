@@ -29,9 +29,31 @@ pub fn find_line_intersections(line1: &[Point2D], line2: &[Point2D]) -> Vec<Line
     ret
 }
 
+pub fn do_polylines_intersect(line1: &Polyline, line2: &Polyline) -> bool {
+    let box1 = line1.get_bounding_box();
+    let box2 = line2.get_bounding_box();
+    if box1.overlaps(box2) {
+        let mut ls1: LineSegment;
+        let mut ls2: LineSegment;
+        for a in 0..line1.len() - 1 {
+            ls1 = LineSegment::new(line1[a], line1[a + 1]);
+            for b in 0..line2.len() - 1 {
+                ls2 = LineSegment::new(line2[b], line2[b + 1]);
+                match ls1.get_intersection(&ls2) {
+                    Some(_) => {
+                        return true;
+                    }
+                    None => {} // do nothing, the don't intersect
+                }
+            }
+        }
+    }
+    false
+}
+
 pub fn find_split_points_at_line_intersections(line1: &mut Polyline, line2: &mut Polyline) {
     let box1 = line1.get_bounding_box();
-    let box2 = line1.get_bounding_box();
+    let box2 = line2.get_bounding_box();
     if box1.overlaps(box2) {
         let mut ls1: LineSegment;
         let mut ls2: LineSegment;
@@ -42,20 +64,28 @@ pub fn find_split_points_at_line_intersections(line1: &mut Polyline, line2: &mut
                 match ls1.get_intersection(&ls2) {
                     Some(ls) => {
                         line1.insert_split_point(
-                            a as f64 + ls.p1.distance_squared(&ls1.p1) / ls1.p2.distance_squared(&ls1.p1), //(ls.p1.x - ls1.p1.x) / (ls1.p2.x - ls1.p1.x),
+                            a as f64
+                                + ls.p1.distance_squared(&ls1.p1)
+                                    / ls1.p2.distance_squared(&ls1.p1), //(ls.p1.x - ls1.p1.x) / (ls1.p2.x - ls1.p1.x),
                             ls.p1,
                         );
                         line2.insert_split_point(
-                            b as f64 + ls.p1.distance_squared(&ls2.p1) / ls2.p2.distance_squared(&ls2.p1), //(ls.p1.x - ls2.p1.x) / (ls2.p2.x - ls2.p1.x),
+                            b as f64
+                                + ls.p1.distance_squared(&ls2.p1)
+                                    / ls2.p2.distance_squared(&ls2.p1), //(ls.p1.x - ls2.p1.x) / (ls2.p2.x - ls2.p1.x),
                             ls.p1,
                         );
                         if ls.p1 != ls.p2 {
                             line1.insert_split_point(
-                                a as f64 + ls.p2.distance_squared(&ls1.p1) / ls1.p2.distance_squared(&ls1.p1), //(ls.p2.x - ls1.p1.x) / (ls1.p2.x - ls1.p1.x),
+                                a as f64
+                                    + ls.p2.distance_squared(&ls1.p1)
+                                        / ls1.p2.distance_squared(&ls1.p1), //(ls.p2.x - ls1.p1.x) / (ls1.p2.x - ls1.p1.x),
                                 ls.p2,
                             );
                             line2.insert_split_point(
-                                b as f64 + ls.p2.distance_squared(&ls2.p1) / ls2.p2.distance_squared(&ls2.p1), //(ls.p2.x - ls2.p1.x) / (ls2.p2.x - ls2.p1.x),
+                                b as f64
+                                    + ls.p2.distance_squared(&ls2.p1)
+                                        / ls2.p2.distance_squared(&ls2.p1), //(ls.p2.x - ls2.p1.x) / (ls2.p2.x - ls2.p1.x),
                                 ls.p2,
                             );
                         }

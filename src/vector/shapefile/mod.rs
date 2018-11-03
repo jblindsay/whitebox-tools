@@ -140,22 +140,6 @@ impl Shapefile {
         Ok(sf)
     }
 
-    pub fn get_total_num_parts(&self) -> usize {
-        let mut ret = 0;
-        for a in 0..self.num_records {
-            ret += self.records[a].num_parts as usize;
-        }
-        ret
-    }
-
-    pub fn get_total_num_points(&self) -> usize {
-        let mut ret = 0;
-        for a in 0..self.num_records {
-            ret += self.records[a].num_points as usize;
-        }
-        ret
-    }
-
     pub fn initialize_using_file<'a>(
         file_name: &'a str,
         other: &'a Shapefile,
@@ -181,6 +165,22 @@ impl Shapefile {
             sf.attributes.header.num_fields = sf.attributes.fields.len() as u32;
         }
         Ok(sf)
+    }
+
+    pub fn get_total_num_parts(&self) -> usize {
+        let mut ret = 0;
+        for a in 0..self.num_records {
+            ret += self.records[a].num_parts as usize;
+        }
+        ret
+    }
+
+    pub fn get_total_num_points(&self) -> usize {
+        let mut ret = 0;
+        for a in 0..self.num_records {
+            ret += self.records[a].num_points as usize;
+        }
+        ret
     }
 
     /// Returns the filename, in shortened form (e.g. file.shp).
@@ -1021,7 +1021,7 @@ impl Shapefile {
         writer.write_i32::<LittleEndian>(self.header.shape_type.to_int())?;
 
         // extent
-        self.calculate_extent();
+        // self.calculate_extent();
         writer.write_f64::<LittleEndian>(self.header.x_min)?;
         writer.write_f64::<LittleEndian>(self.header.y_min)?;
         writer.write_f64::<LittleEndian>(self.header.x_max)?;
@@ -1220,7 +1220,7 @@ impl Shapefile {
                 self.header.z_min = 0f64;
                 self.header.z_max = 0f64;
             }
-            ShapeType::Point | ShapeType::PolyLine | ShapeType::Polygon | ShapeType::MultiPoint => {
+            ShapeType::Point => {
                 self.header.x_min = f64::INFINITY;
                 self.header.x_max = f64::NEG_INFINITY;
                 self.header.y_min = f64::INFINITY;
@@ -1229,7 +1229,31 @@ impl Shapefile {
                 self.header.m_max = 0f64;
                 self.header.z_min = 0f64;
                 self.header.z_max = 0f64;
+                for sg in &self.records {
+                    if sg.points[0].x < self.header.x_min {
+                        self.header.x_min = sg.points[0].x;
+                    }
+                    if sg.points[0].y < self.header.y_min {
+                        self.header.y_min = sg.points[0].y;
+                    }
 
+                    if sg.points[0].x > self.header.x_max {
+                        self.header.x_max = sg.points[0].x;
+                    }
+                    if sg.points[0].y > self.header.y_max {
+                        self.header.y_max = sg.points[0].y;
+                    }
+                }
+            }
+            ShapeType::PolyLine | ShapeType::Polygon | ShapeType::MultiPoint => {
+                self.header.x_min = f64::INFINITY;
+                self.header.x_max = f64::NEG_INFINITY;
+                self.header.y_min = f64::INFINITY;
+                self.header.y_max = f64::NEG_INFINITY;
+                self.header.m_min = 0f64;
+                self.header.m_max = 0f64;
+                self.header.z_min = 0f64;
+                self.header.z_max = 0f64;
                 for sg in &self.records {
                     if sg.x_min < self.header.x_min {
                         self.header.x_min = sg.x_min;
@@ -1246,10 +1270,38 @@ impl Shapefile {
                     }
                 }
             }
-            ShapeType::PointM
-            | ShapeType::PolyLineM
-            | ShapeType::PolygonM
-            | ShapeType::MultiPointM => {
+            ShapeType::PointM => {
+                self.header.x_min = f64::INFINITY;
+                self.header.x_max = f64::NEG_INFINITY;
+                self.header.y_min = f64::INFINITY;
+                self.header.y_max = f64::NEG_INFINITY;
+                self.header.m_min = f64::INFINITY;
+                self.header.m_max = f64::NEG_INFINITY;
+                self.header.z_min = 0f64;
+                self.header.z_max = 0f64;
+                for sg in &self.records {
+                    if sg.points[0].x < self.header.x_min {
+                        self.header.x_min = sg.points[0].x;
+                    }
+                    if sg.points[0].y < self.header.y_min {
+                        self.header.y_min = sg.points[0].y;
+                    }
+                    if sg.m_array[0] < self.header.m_min {
+                        self.header.m_min = sg.m_array[0];
+                    }
+
+                    if sg.points[0].x > self.header.x_max {
+                        self.header.x_max = sg.points[0].x;
+                    }
+                    if sg.points[0].y > self.header.y_max {
+                        self.header.y_max = sg.points[0].y;
+                    }
+                    if sg.m_array[0] > self.header.m_max {
+                        self.header.m_max = sg.m_array[0];
+                    }
+                }
+            }
+            ShapeType::PolyLineM | ShapeType::PolygonM | ShapeType::MultiPointM => {
                 self.header.x_min = f64::INFINITY;
                 self.header.x_max = f64::NEG_INFINITY;
                 self.header.y_min = f64::INFINITY;
@@ -1281,10 +1333,44 @@ impl Shapefile {
                     }
                 }
             }
-            ShapeType::PointZ
-            | ShapeType::PolyLineZ
-            | ShapeType::PolygonZ
-            | ShapeType::MultiPointZ => {
+            ShapeType::PointZ => {
+                self.header.x_min = f64::INFINITY;
+                self.header.x_max = f64::NEG_INFINITY;
+                self.header.y_min = f64::INFINITY;
+                self.header.y_max = f64::NEG_INFINITY;
+                self.header.m_min = f64::INFINITY;
+                self.header.m_max = f64::NEG_INFINITY;
+                self.header.z_min = f64::INFINITY;
+                self.header.z_max = f64::NEG_INFINITY;
+                for sg in &self.records {
+                    if sg.points[0].x < self.header.x_min {
+                        self.header.x_min = sg.points[0].x;
+                    }
+                    if sg.points[0].y < self.header.y_min {
+                        self.header.y_min = sg.points[0].y;
+                    }
+                    if sg.m_array[0] < self.header.m_min {
+                        self.header.m_min = sg.m_array[0];
+                    }
+                    if sg.z_array[0] < self.header.z_min {
+                        self.header.z_min = sg.z_array[0];
+                    }
+
+                    if sg.points[0].x > self.header.x_max {
+                        self.header.x_max = sg.points[0].x;
+                    }
+                    if sg.points[0].y > self.header.y_max {
+                        self.header.y_max = sg.points[0].y;
+                    }
+                    if sg.m_array[0] > self.header.m_max {
+                        self.header.m_max = sg.m_array[0];
+                    }
+                    if sg.z_array[0] > self.header.z_min {
+                        self.header.z_min = sg.z_array[0];
+                    }
+                }
+            }
+            ShapeType::PolyLineZ | ShapeType::PolygonZ | ShapeType::MultiPointZ => {
                 self.header.x_min = f64::INFINITY;
                 self.header.x_max = f64::NEG_INFINITY;
                 self.header.y_min = f64::INFINITY;

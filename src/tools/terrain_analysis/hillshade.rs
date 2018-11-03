@@ -10,6 +10,7 @@ use num_cpus;
 use raster::*;
 use std::env;
 use std::f64;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
@@ -263,6 +264,7 @@ impl WhiteboxTool for Hillshade {
                 let (mut fx, mut fy): (f64, f64);
                 let mut tan_slope: f64;
                 let mut aspect: f64;
+                let half_pi = PI / 2f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -282,8 +284,9 @@ impl WhiteboxTool for Hillshade {
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
-                                aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                                    + 90f64 * (fx / (fx).abs())).to_radians();
+                                // aspect = (180f64 - ((fy / fx).atan()).to_degrees()
+                                //     + 90f64 * (fx / (fx).abs())).to_radians();
+                                aspect = PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs());
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;
                                 term3 = cos_theta * (azimuth - aspect).sin();

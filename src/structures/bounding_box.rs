@@ -114,6 +114,17 @@ impl BoundingBox {
         true
     }
 
+    pub fn nearly_overlaps(&self, other: Self, precision: f64) -> bool {
+        if (other.min_y - self.max_y) > precision
+            || (other.min_x - self.max_x) > precision
+            || (self.min_y - other.max_y) > precision
+            || (self.min_x - other.max_x) > precision
+        {
+            return false;
+        }
+        true
+    }
+
     pub fn intersects_edge_of(&self, other: BoundingBox) -> bool {
         let mut one_inside_found = false;
         let mut one_outside_found = false;
