@@ -72,6 +72,7 @@ impl ToolManager {
         tool_names.push("EdgeProportion".to_string());
         tool_names.push("EliminateCoincidentPoints".to_string());
         tool_names.push("ElongationRatio".to_string());
+        tool_names.push("Erase".to_string());
         tool_names.push("ErasePolygonFromRaster".to_string());
         tool_names.push("EuclideanAllocation".to_string());
         tool_names.push("EuclideanDistance".to_string());
@@ -516,6 +517,7 @@ impl ToolManager {
                 tools::gis_analysis::EliminateCoincidentPoints::new(),
             )),
             "elongationratio" => Some(Box::new(tools::gis_analysis::ElongationRatio::new())),
+            "erase" => Some(Box::new(tools::gis_analysis::Erase::new())),
             "erasepolygonfromraster" => {
                 Some(Box::new(tools::gis_analysis::ErasePolygonFromRaster::new()))
             }

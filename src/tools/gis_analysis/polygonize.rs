@@ -564,7 +564,7 @@ impl WhiteboxTool for Polygonize {
                         }
                         current_node = other_side;
                     } else {
-                        // because we've removed links to danling ars, this should never occur
+                        // because we've removed links to danling arcs, this should never occur
                         break;
                     }
                 }
@@ -699,7 +699,7 @@ impl WhiteboxTool for Polygonize {
                             }
                             current_node = other_side;
                         } else {
-                            // because we've removed links to danling ars, this should never occur
+                            // because we've removed links to danling arcs, this should never occur
                             break;
                         }
                     }

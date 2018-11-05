@@ -267,6 +267,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***EdgeProportion***: Calculate the proportion of cells in a raster polygon that are edge cells.
 - ***EliminateCoincidentPoints***: Removes any coincident, or nearly coincident, points from a vector points file.
 - ***ElongationRatio***: Calculates the elongation ratio for vector polygons.
+- ***Erase***: Removes all the features, or parts of features, that overlap with the features of the erase vector polygon.
 - ***ErasePolygonFromRaster***: Erases (cuts out) a vector polygon from a raster.
 - ***EuclideanAllocation***: Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform. 
 - ***EuclideanDistance***: Calculates the Shih and Wu (2004) Euclidean distance transform.

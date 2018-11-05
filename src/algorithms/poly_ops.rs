@@ -7,6 +7,7 @@ License: MIT
 */
 
 use super::do_polylines_intersect;
+use std::f64::EPSILON;
 use structures::{Point2D, Polyline};
 
 /// Tests if a point is Left|On|Right of an infinite line,
@@ -75,6 +76,9 @@ pub fn winding_number(p: &Point2D, poly: &[Point2D]) -> i32 {
 /// very quickly. In the case of disjoint (non-overlapping) polys, the function
 /// returns from the first tested vertex.
 pub fn poly_in_poly(contained_poly: &[Point2D], containing_poly: &[Point2D]) -> bool {
+    if !point_in_poly(&interior_point(contained_poly), containing_poly) {
+        return false;
+    }
     for p in contained_poly {
         if !point_in_poly(p, containing_poly) {
             return false;
@@ -151,7 +155,8 @@ pub fn interior_point(poly: &[Point2D]) -> Point2D {
     let num_points = poly.len();
     if num_points > 4 {
         for a in 1..num_points - 1 {
-            if poly[a].is_left(&poly[a - 1], &poly[a + 1]) != 0f64 {
+            if poly[a].is_left(&poly[a - 1], &poly[a + 1]).abs() > EPSILON {
+                // it's not co-linear
                 let midpoint = Point2D::midpoint(&poly[a - 1], &poly[a + 1]);
                 if point_in_poly(&midpoint, &poly) {
                     return midpoint;
@@ -162,12 +167,13 @@ pub fn interior_point(poly: &[Point2D]) -> Point2D {
         return poly[0].clone();
     } else if num_points == 4 {
         // it's a triangle
-        let midpoint = Point2D::centre_point(&poly[0..3]);
+        let midpoint = Point2D::centre_point(&poly[0..3]); // The fourth point is a duplicate of the first.
         if point_in_poly(&midpoint, &poly) {
             return midpoint;
         }
         return poly[0].clone();
     }
+    // you need at least four points to create a polygon (including the duplicated first/last vertex)
     panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point; with only {} verticies, the feature is possibly co-linear {:?}", num_points, poly);
 }
 
