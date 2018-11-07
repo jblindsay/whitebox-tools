@@ -1,8 +1,8 @@
 /* 
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 4/11/2018
-Last Modified: 4/11/2018
+Created: 5/11/2018
+Last Modified: 5/11/2018
 License: MIT
 */
 extern crate kdtree;
@@ -13,29 +13,36 @@ use algorithms::{
 };
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use num_cpus;
+// use num_cpus;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::sync::mpsc;
-use std::sync::Arc;
-use std::thread;
-use structures::{BoundingBox, Polyline};
+// use std::sync::mpsc;
+// use std::sync::Arc;
+// use std::thread;
+use structures::{BoundingBox, MultiPolyline, Polyline};
 use tools::*;
 use vector::*;
 
 const EPSILON: f64 = std::f64::EPSILON;
 
-/// This tool will remove all the features, or parts of features, that overlap with the features
-/// of the erase vector file. The erasing operation is one of the most common vector overlay
-/// operations in GIS and effectively imposes the boundary of the erase layer on a set of input
-/// vector features, or target features.
+/// This tool will remove all the overlapping features, or parts of overlapping features, between
+/// input and overlay vector files, outputting only the features that occur in one of the two
+/// inputs but not both. The *Symmetrical Difference* is related to the Boolean
+/// exclusive-or (**XOR**) operation in  set theory and is one of the common vector overlay
+/// operations in GIS. The user must specify  the names of the input and overlay vector files
+/// as well as the output vector file name. The tool operates on vector points,
+/// lines, or polygon, but both the input and overlay files must contain the same ShapeType.
+///
+/// The *Symmetrical Difference* can also be derived using a combination of other vector
+/// overlay operations, as either `(A union B) difference (A intersect B)`, or
+/// `(A difference B) union (B difference A)`.
 ///
 /// # See Also
-/// `Clip`
-pub struct Erase {
+/// `Intersect`, `Difference`, `Union`, `Clip`, `Erase`
+pub struct SymmetricalDifference {
     name: String,
     description: String,
     toolbox: String,
@@ -43,13 +50,13 @@ pub struct Erase {
     example_usage: String,
 }
 
-impl Erase {
-    pub fn new() -> Erase {
+impl SymmetricalDifference {
+    pub fn new() -> SymmetricalDifference {
         // public constructor
-        let name = "Erase".to_string();
+        let name = "SymmetricalDifference".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
         let description =
-            "Removes all the features, or parts of features, that overlap with the features of the erase vector polygon."
+            "Outputs the features that occur in one of the two vector inputs but not both, i.e. no overlapping features."
                 .to_string();
 
         let mut parameters = vec![];
@@ -65,11 +72,11 @@ impl Erase {
         });
 
         parameters.push(ToolParameter {
-            name: "Input Erase Polygon Vector File".to_owned(),
-            flags: vec!["--erase".to_owned()],
-            description: "Input erase polygon vector file.".to_owned(),
+            name: "Input Overlay Vector File".to_owned(),
+            flags: vec!["--overlay".to_owned()],
+            description: "Input overlay vector file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
-                VectorGeometryType::Polygon,
+                VectorGeometryType::Any,
             )),
             default_value: None,
             optional: false,
@@ -98,11 +105,11 @@ impl Erase {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lines1.shp --erase=erase_poly.shp -o=out_file.shp",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -input=layer1.shp --overlay=layer2.shp -o=out_file.shp",
             short_exe, name
         ).replace("*", &sep);
 
-        Erase {
+        SymmetricalDifference {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -112,7 +119,7 @@ impl Erase {
     }
 }
 
-impl WhiteboxTool for Erase {
+impl WhiteboxTool for SymmetricalDifference {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -154,7 +161,7 @@ impl WhiteboxTool for Erase {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut erase_file = String::new();
+        let mut overlay_file = String::new();
         let mut output_file = String::new();
 
         // read the arguments
@@ -180,8 +187,8 @@ impl WhiteboxTool for Erase {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-erase" {
-                erase_file = if keyval {
+            } else if flag_val == "-overlay" {
+                overlay_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
@@ -210,8 +217,8 @@ impl WhiteboxTool for Erase {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !erase_file.contains(&sep) && !erase_file.contains("/") {
-            erase_file = format!("{}{}", working_directory, erase_file);
+        if !overlay_file.contains(&sep) && !overlay_file.contains("/") {
+            overlay_file = format!("{}{}", working_directory, overlay_file);
         }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
@@ -221,110 +228,78 @@ impl WhiteboxTool for Erase {
             println!("Reading data...")
         };
 
-        let erase = Arc::new(Shapefile::read(&erase_file)?);
-
-        // The erase file must be of Polygon base ShapeType
-        if erase.header.shape_type.base_shape_type() != ShapeType::Polygon {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "The input erase vector data must be of POLYGON base shape type.",
-            ));
-        }
-
-        // Get the bounding boxes of each of the erase parts.
-        let mut erase_bb: Vec<BoundingBox> = vec![];
-        let mut erase_polylines: Vec<Polyline> = vec![];
-        let mut is_erase_part_a_hole: Vec<bool> = vec![];
-        let mut first_point_in_part: usize;
-        let mut last_point_in_part: usize;
-        for record_num in 0..erase.num_records {
-            let record = erase.get_record(record_num);
-            for part in 0..record.num_parts as usize {
-                first_point_in_part = record.parts[part] as usize;
-                last_point_in_part = if part < record.num_parts as usize - 1 {
-                    record.parts[part + 1] as usize - 1
-                } else {
-                    record.num_points as usize - 1
-                };
-                erase_bb.push(BoundingBox::from_points(
-                    &(record.points[first_point_in_part..=last_point_in_part]),
-                ));
-
-                // Create a polyline from the part
-                let mut pl = Polyline::new(
-                    &(record.points[first_point_in_part..=last_point_in_part]),
-                    record_num,
-                );
-                pl.source_file = 1; // 1 will mean the erase file and 2 will mean the input file.
-                erase_polylines.push(pl);
-
-                if record.is_hole(part as i32) {
-                    is_erase_part_a_hole.push(true);
-                } else {
-                    is_erase_part_a_hole.push(false);
-                }
-            }
-        }
+        let overlay = Shapefile::read(&overlay_file)?;
 
         let input = Shapefile::read(&input_file)?;
         let projection = input.projection.clone();
 
+        // The overlay file must be of the same ShapeType as the input file
+        if overlay.header.shape_type != input.header.shape_type {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input and overlay vector inputs must be of the same shape type.",
+            ));
+        }
+
         // create output file
         let mut output =
-            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, true)?;
+            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, false)?;
         output.projection = projection;
 
-        let (table_contains_fid, fid_field_num) = match output.attributes.get_field_num("FID") {
-            Some(v) => (true, v),
-            None => (false, 0),
-        };
+        // add the attributes
+        output
+            .attributes
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 7u8, 0u8));
 
-        let erase_bb = Arc::new(erase_bb);
-        let is_erase_part_a_hole = Arc::new(is_erase_part_a_hole);
-
-        let num_procs = num_cpus::get();
-        let (tx, rx) = mpsc::channel();
+        let num_decimals = 6;
+        let precision = 1f64 / num_decimals as f64;
 
         match input.header.shape_type.base_shape_type() {
             ShapeType::Point => {
-                let erase_polylines = Arc::new(erase_polylines);
-                for tid in 0..num_procs {
-                    let input = input.clone();
-                    let erase_bb = erase_bb.clone();
-                    let erase_polylines = erase_polylines.clone();
-                    let is_erase_part_a_hole = is_erase_part_a_hole.clone();
-                    let tx = tx.clone();
-                    thread::spawn(move || {
-                        let mut p: Point2D;
-                        let mut out: bool;
-                        for record_num in (0..input.num_records).filter(|r| r % num_procs == tid) {
-                            out = false;
-                            let record = input.get_record(record_num);
-                            p = record.points[0];
-                            for a in 0..erase_polylines.len() {
-                                if erase_bb[a].is_point_in_box(p.x, p.y) {
-                                    if point_in_poly(&p, &(erase_polylines[a].vertices)) {
-                                        if !is_erase_part_a_hole[a] {
-                                            out = true;
-                                        } else {
-                                            out = false;
-                                        }
-                                    }
-                                }
-                            }
-                            tx.send((record_num, out)).unwrap();
-                        }
-                    });
+                // place the points from both files into a KD-tree
+                let dimensions = 2;
+                let capacity_per_node = 64;
+                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut p: Point2D;
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    p = record.points[0];
+                    tree.add([p.x, p.y], 1).unwrap();
+                }
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    p = record.points[0];
+                    tree.add([p.x, p.y], 2).unwrap();
                 }
 
-                let mut output_feature: Vec<bool> = vec![false; input.num_records];
-                for r in 0..input.num_records {
-                    let (record_num, out) = rx.recv().unwrap();
-                    if !out {
-                        output_feature[record_num] = true;
+                // now see which ones overlap
+                let mut fid = 1;
+                let num_total_points = (input.num_records + overlay.num_records - 1) as f64;
+                let mut output_point: bool;
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    p = record.points[0];
+                    let ret = tree
+                        .within(&[p.x, p.y], precision, &squared_euclidean)
+                        .unwrap();
+
+                    output_point = true;
+                    for a in 0..ret.len() {
+                        if *(ret[a].1) == 2 {
+                            output_point = false;
+                            break;
+                        }
+                    }
+                    if output_point {
+                        // it is not overlapped by another point in the overlay file.
+                        output.add_record(record.clone());
+                        output
+                            .attributes
+                            .add_record(vec![FieldData::Int(fid)], false);
+                        fid += 1;
                     }
                     if verbose {
-                        progress = (100.0_f64 * r as f64 / (input.num_records - 1) as f64) as usize;
+                        progress = (100.0_f64 * record_num as f64 / num_total_points) as usize;
                         if progress != old_progress {
                             println!("Progress: {}%", progress);
                             old_progress = progress;
@@ -332,25 +307,31 @@ impl WhiteboxTool for Erase {
                     }
                 }
 
-                let mut fid = 1;
-                for r in 0..input.num_records {
-                    if output_feature[r] {
-                        let record = input.get_record(r).clone();
-                        output.add_record(record);
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    p = record.points[0];
+                    let ret = tree
+                        .within(&[p.x, p.y], precision, &squared_euclidean)
+                        .unwrap();
 
-                        if table_contains_fid {
-                            let mut att = input.attributes.get_record(r).clone();
-                            att[fid_field_num] = FieldData::Int(fid);
-                            fid += 1;
-                            output.attributes.add_record(att, false);
-                        } else {
-                            output
-                                .attributes
-                                .add_record(input.attributes.get_record(r).clone(), false)
+                    output_point = true;
+                    for a in 0..ret.len() {
+                        if *(ret[a].1) == 1 {
+                            output_point = false;
+                            break;
                         }
                     }
+                    if output_point {
+                        // it is not overlapped by another point in the overlay file.
+                        output.add_record(record.clone());
+                        output
+                            .attributes
+                            .add_record(vec![FieldData::Int(fid)], false);
+                        fid += 1;
+                    }
                     if verbose {
-                        progress = (100.0_f64 * r as f64 / (input.num_records - 1) as f64) as usize;
+                        progress = (100.0_f64 * (record_num + input.num_records) as f64
+                            / num_total_points) as usize;
                         if progress != old_progress {
                             println!("Progress: {}%", progress);
                             old_progress = progress;
@@ -359,112 +340,173 @@ impl WhiteboxTool for Erase {
                 }
             }
             ShapeType::MultiPoint => {
-                let erase_polylines = Arc::new(erase_polylines);
-                let mut fid = 1;
+                // place the points from both files into a KD-tree
+                let dimensions = 2;
+                let capacity_per_node = 64;
+                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut p: Point2D;
+                let mut total_points = 0;
                 for record_num in 0..input.num_records {
-                    let record = input.get_record(record_num).clone();
-                    let record = Arc::new(record);
-                    let num_points = record.num_points as usize;
-                    for tid in 0..num_procs {
-                        let record = record.clone();
-                        let erase_bb = erase_bb.clone();
-                        let erase_polylines = erase_polylines.clone();
-                        let is_erase_part_a_hole = is_erase_part_a_hole.clone();
-                        let tx = tx.clone();
-                        thread::spawn(move || {
-                            let mut p: Point2D;
-                            let mut out: bool;
-                            for point_num in (0..num_points).filter(|r| r % num_procs == tid) {
-                                p = record.points[point_num].clone();
-                                out = false;
-                                for a in 0..erase_polylines.len() {
-                                    if erase_bb[a].is_point_in_box(p.x, p.y) {
-                                        if point_in_poly(&p, &(erase_polylines[a].vertices)) {
-                                            if !is_erase_part_a_hole[a] {
-                                                out = true;
-                                            } else {
-                                                out = false;
-                                            }
-                                        }
-                                    }
-                                }
-                                tx.send((point_num, out)).unwrap();
-                            }
-                        });
+                    let record = input.get_record(record_num);
+                    for p in &record.points {
+                        tree.add([p.x, p.y], 1).unwrap();
+                        total_points += 1;
                     }
-                    let mut output_feature: Vec<bool> = vec![false; num_points];
-                    let mut num_out_pnts = 0;
-                    for _ in 0..num_points {
-                        let (point_num, out) = rx.recv().unwrap();
-                        if !out {
-                            output_feature[point_num] = true;
-                            num_out_pnts += 1;
-                        }
+                }
+                let num_points_input = total_points;
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    for p in &record.points {
+                        tree.add([p.x, p.y], 2).unwrap();
+                        total_points += 1;
                     }
-                    if num_out_pnts > 0 {
-                        let mut sfg = ShapefileGeometry::new(input.header.shape_type);
-                        match input.header.shape_type.dimension() {
-                            ShapeTypeDimension::XY => {
-                                for point_num in 0..num_points {
-                                    if output_feature[point_num] {
-                                        sfg.add_point((record.points[point_num]).clone());
-                                    }
-                                }
-                            }
-                            ShapeTypeDimension::Measure => {
-                                for point_num in 0..num_points {
-                                    if output_feature[point_num] {
-                                        sfg.add_pointm(
-                                            (record.points[point_num]).clone(),
-                                            record.m_array[point_num],
-                                        );
-                                    }
-                                }
-                            }
-                            ShapeTypeDimension::Z => {
-                                for point_num in 0..num_points {
-                                    if output_feature[point_num] {
-                                        sfg.add_pointz(
-                                            (record.points[point_num]).clone(),
-                                            record.m_array[point_num],
-                                            record.z_array[point_num],
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                        output.add_record(sfg);
-                        if table_contains_fid {
-                            let mut att = input.attributes.get_record(record_num).clone();
-                            att[fid_field_num] = FieldData::Int(fid);
-                            fid += 1;
-                            output.attributes.add_record(att, false);
-                        } else {
-                            output
-                                .attributes
-                                .add_record(input.attributes.get_record(record_num).clone(), false)
-                        }
-                    }
+                }
 
-                    if verbose {
-                        progress = (100.0_f64 * record_num as f64 / (input.num_records - 1) as f64)
-                            as usize;
-                        if progress != old_progress {
-                            println!("Progress: {}%", progress);
-                            old_progress = progress;
+                // now see which ones overlap
+                // let mut fid = 1;
+                let num_total_points = (total_points - 1) as f64;
+                let mut output_point = vec![true; total_points];
+                let mut num_out_pnts = total_points;
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    for i in 0..record.points.len() {
+                        p = record.points[i];
+                        let ret = tree
+                            .within(&[p.x, p.y], precision, &squared_euclidean)
+                            .unwrap();
+
+                        for j in 0..ret.len() {
+                            if *(ret[j].1) == 2 {
+                                num_out_pnts -= 1;
+                                output_point[i] = false;
+                                break;
+                            }
+                        }
+                        if verbose {
+                            progress = (100.0_f64 * i as f64 / num_total_points) as usize;
+                            if progress != old_progress {
+                                println!("Progress: {}%", progress);
+                                old_progress = progress;
+                            }
                         }
                     }
                 }
+
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    for i in 0..record.points.len() {
+                        p = record.points[i];
+                        let ret = tree
+                            .within(&[p.x, p.y], precision, &squared_euclidean)
+                            .unwrap();
+
+                        for j in 0..ret.len() {
+                            if *(ret[j].1) == 1 {
+                                num_out_pnts -= 1;
+                                output_point[i + num_points_input] = false;
+                                break;
+                            }
+                        }
+                        if verbose {
+                            progress = (100.0_f64 * (i + num_points_input) as f64
+                                / num_total_points) as usize;
+                            if progress != old_progress {
+                                println!("Progress: {}%", progress);
+                                old_progress = progress;
+                            }
+                        }
+                    }
+                }
+
+                if num_out_pnts > 0 {
+                    let mut sfg = ShapefileGeometry::new(input.header.shape_type);
+                    match input.header.shape_type.dimension() {
+                        ShapeTypeDimension::XY => {
+                            for record_num in 0..input.num_records {
+                                let record = input.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i] {
+                                        sfg.add_point((record.points[i]).clone());
+                                    }
+                                }
+                            }
+
+                            for record_num in 0..overlay.num_records {
+                                let record = overlay.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i + num_points_input] {
+                                        sfg.add_point((record.points[i]).clone());
+                                    }
+                                }
+                            }
+                        }
+                        ShapeTypeDimension::Measure => {
+                            for record_num in 0..input.num_records {
+                                let record = input.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i] {
+                                        sfg.add_pointm(
+                                            (record.points[i]).clone(),
+                                            record.m_array[i],
+                                        );
+                                    }
+                                }
+                            }
+
+                            for record_num in 0..overlay.num_records {
+                                let record = overlay.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i + num_points_input] {
+                                        sfg.add_pointm(
+                                            (record.points[i]).clone(),
+                                            record.m_array[i],
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                        ShapeTypeDimension::Z => {
+                            for record_num in 0..input.num_records {
+                                let record = input.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i] {
+                                        sfg.add_pointz(
+                                            (record.points[i]).clone(),
+                                            record.m_array[i],
+                                            record.z_array[i],
+                                        );
+                                    }
+                                }
+                            }
+
+                            for record_num in 0..overlay.num_records {
+                                let record = overlay.get_record(record_num);
+                                for i in 0..record.points.len() {
+                                    if output_point[i + num_points_input] {
+                                        sfg.add_pointz(
+                                            (record.points[i]).clone(),
+                                            record.m_array[i],
+                                            record.z_array[i],
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    output.add_record(sfg);
+                    output
+                        .attributes
+                        .add_record(vec![FieldData::Int(1i32)], false);
+                } else {
+                    println!("WARNING: no features were ouput from the tool.");
+                }
             }
             ShapeType::PolyLine => {
-                // The polyline splitline method makes keeping track of
-                // measure and z data for split lines difficult. Regardless
-                // of the input shapefile dimension, the output will be XY only.
                 output.header.shape_type = ShapeType::PolyLine;
-
-                // First, find the itersection points and split the input features up at these sites
-                let mut features_bb: Vec<BoundingBox> = vec![];
-                let mut features_polylines: Vec<Polyline> = vec![];
+                // let mut features_bb: Vec<BoundingBox> = vec![];
+                let mut first_point_in_part: usize;
+                let mut last_point_in_part: usize;
+                let mut polylines: Vec<Polyline> = vec![];
                 for record_num in 0..input.num_records {
                     let record = input.get_record(record_num);
                     for part in 0..record.num_parts as usize {
@@ -474,87 +516,138 @@ impl WhiteboxTool for Erase {
                         } else {
                             record.num_points as usize - 1
                         };
-                        features_bb.push(BoundingBox::from_points(
-                            &(record.points[first_point_in_part..=last_point_in_part]),
-                        ));
+                        // features_bb.push(BoundingBox::from_points(
+                        //     &(record.points[first_point_in_part..=last_point_in_part]),
+                        // ));
 
                         // Create a polyline from the part
                         let mut pl = Polyline::new(
                             &(record.points[first_point_in_part..=last_point_in_part]),
                             record_num,
                         );
-                        pl.source_file = 2; // 1 will mean the erase file and 2 will mean the input file.
-                        features_polylines.push(pl);
+                        pl.source_file = 1;
+                        polylines.push(pl);
                     }
                 }
 
-                // hunt for intersections in the overlapping bounding boxes
-                for record_num1 in 0..features_polylines.len() {
-                    for record_num2 in 0..erase_polylines.len() {
-                        if features_bb[record_num1].overlaps(erase_bb[record_num2]) {
-                            // find any intersections between the polylines
-                            find_split_points_at_line_intersections(
-                                &mut features_polylines[record_num1],
-                                &mut erase_polylines[record_num2],
-                            );
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    for part in 0..record.num_parts as usize {
+                        first_point_in_part = record.parts[part] as usize;
+                        last_point_in_part = if part < record.num_parts as usize - 1 {
+                            record.parts[part + 1] as usize - 1
+                        } else {
+                            record.num_points as usize - 1
+                        };
+
+                        // Create a polyline from the part
+                        let mut pl = Polyline::new(
+                            &(record.points[first_point_in_part..=last_point_in_part]),
+                            record_num,
+                        );
+                        pl.source_file = 2;
+                        polylines.push(pl);
+                    }
+                }
+
+                let mut p: Point2D;
+                for i in 0..polylines.len() {
+                    for j in 0..polylines[i].len() {
+                        p = polylines[i][j];
+                        polylines[i].vertices[j] = p.fix_precision(num_decimals);
+                    }
+                }
+
+                // Break the polylines up into shorter lines at junction points.
+                let dimensions = 2;
+                let capacity_per_node = 64;
+                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut p: Point2D;
+                for i in 0..polylines.len() {
+                    for j in 0..polylines[i].len() {
+                        p = polylines[i][j];
+                        tree.add([p.x, p.y], (i, j)).unwrap();
+                    }
+                }
+
+                let mut num_neighbours: Vec<Vec<u8>> = Vec::with_capacity(polylines.len());
+                for i in 0..polylines.len() {
+                    let mut line_num_neighbours = Vec::with_capacity(polylines[i].len());
+                    for j in 0..polylines[i].len() {
+                        p = polylines[i][j];
+                        let ret = tree
+                            .within(&[p.x, p.y], precision, &squared_euclidean)
+                            .unwrap();
+
+                        let mut n = 0u8;
+                        for a in 0..ret.len() {
+                            let k = ret[a].1;
+                            if k.0 != i {
+                                n += 1u8;
+                            }
                         }
+                        line_num_neighbours.push(n);
+                    }
+
+                    num_neighbours.push(line_num_neighbours);
+                }
+
+                let mut features_polylines: Vec<Polyline> = vec![];
+                let mut id: usize;
+                for i in 0..polylines.len() {
+                    id = polylines[i].id;
+                    let mut pl = Polyline::new_empty(id);
+                    pl.vertices.push(polylines[i][0]);
+                    pl.source_file = polylines[i].source_file;
+                    for j in 1..polylines[i].len() {
+                        if num_neighbours[i][j] > 1
+                            || num_neighbours[i][j] == 1 && num_neighbours[i][j - 1] == 0
+                            || num_neighbours[i][j] == 0 && num_neighbours[i][j - 1] == 1
+                        {
+                            // it's a junction, split the poly
+                            pl.vertices.push(polylines[i][j]);
+                            features_polylines.push(pl.clone());
+                            pl = Polyline::new_empty(id);
+                            pl.vertices.push(polylines[i][j]);
+                            pl.source_file = polylines[i].source_file;
+                        } else {
+                            pl.vertices.push(polylines[i][j]);
+                        }
+                    }
+                    features_polylines.push(pl.clone());
+                }
+
+                // Find duplicate polylines and remove them
+                let mut duplicate = vec![false; features_polylines.len()];
+                for i in 0..features_polylines.len() {
+                    if !duplicate[i] {
+                        for j in (i + 1)..features_polylines.len() {
+                            if features_polylines[i] == features_polylines[j] {
+                                if features_polylines[i].source_file
+                                    != features_polylines[j].source_file
+                                {
+                                    duplicate[i] = true;
+                                    duplicate[j] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                for i in (0..features_polylines.len()).rev() {
+                    if duplicate[i] {
+                        features_polylines.remove(i);
                     }
                 }
 
                 let mut fid = 1i32;
-                for record_num1 in 0..features_polylines.len() {
-                    let split_lines = features_polylines[record_num1].split();
-                    for j in 0..split_lines.len() {
-                        if split_lines[j].len() > 1 {
-                            let mut out = false;
-                            let p = Point2D::midpoint(&split_lines[j][0], &split_lines[j][1]); // lies along the polyline
-                            for record_num2 in 0..erase_polylines.len() {
-                                if erase_bb[record_num2].is_point_in_box(p.x, p.y) {
-                                    if point_in_poly(&p, &(erase_polylines[record_num2].vertices)) {
-                                        if !is_erase_part_a_hole[record_num2] {
-                                            out = true;
-                                        } else {
-                                            out = false;
-                                        }
-                                    }
-                                }
-                            }
-                            if !out {
-                                // output the polylines
-                                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                                sfg.add_part(&(split_lines[j].vertices));
-                                output.add_record(sfg);
-
-                                if table_contains_fid {
-                                    let mut att = input
-                                        .attributes
-                                        .get_record(features_polylines[record_num1].id)
-                                        .clone();
-                                    att[fid_field_num] = FieldData::Int(fid);
-                                    fid += 1;
-                                    output.attributes.add_record(att, false);
-                                } else {
-                                    output.attributes.add_record(
-                                        input
-                                            .attributes
-                                            .get_record(features_polylines[record_num1].id)
-                                            .clone(),
-                                        false,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if verbose {
-                        progress = (100.0_f64 * (record_num1 + 1) as f64
-                            / features_polylines.len() as f64)
-                            as usize;
-                        if progress != old_progress {
-                            println!("Progress: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
+                for i in 0..features_polylines.len() {
+                    let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                    sfg.add_part(&features_polylines[i].vertices);
+                    output.add_record(sfg);
+                    output
+                        .attributes
+                        .add_record(vec![FieldData::Int(fid)], false);
+                    fid += 1;
                 }
             }
             ShapeType::Polygon => {
@@ -563,15 +656,16 @@ impl WhiteboxTool for Erase {
                 // of the input shapefile dimension, the output will be XY only.
                 output.header.shape_type = ShapeType::Polygon;
 
-                // output.header.shape_type = ShapeType::PolyLine;
-                let mut fid = 1i32;
+                let mut multipolylines: Vec<MultiPolyline> = vec![];
+                let mut is_part_a_hole: Vec<Vec<bool>> = vec![];
+                let mut first_point_in_part: usize;
+                let mut last_point_in_part: usize;
 
-                for record_num in 0..input.num_records {
-                    let record = input.get_record(record_num);
-                    let mut polygons: Vec<Polyline> = vec![];
-                    let mut is_part_a_hole: Vec<bool> = vec![];
-                    let mut features_bb: Vec<BoundingBox> = vec![];
-                    let mut erase_feature_overlaps = vec![false; erase_polylines.len()];
+                // Read in the features
+                for record_num in 0..overlay.num_records {
+                    let record = overlay.get_record(record_num);
+                    let mut mpl = MultiPolyline::new(record_num);
+                    let mut holes = vec![false; record.num_parts as usize];
                     for part in 0..record.num_parts as usize {
                         first_point_in_part = record.parts[part] as usize;
                         last_point_in_part = if part < record.num_parts as usize - 1 {
@@ -583,48 +677,94 @@ impl WhiteboxTool for Erase {
                         // Create a polyline from the part
                         let mut pl = Polyline::new(
                             &(record.points[first_point_in_part..=last_point_in_part]),
-                            part,
+                            record_num,
+                        );
+                        pl.source_file = 1;
+                        mpl.push(&pl);
+
+                        if record.is_hole(part as i32) {
+                            holes[part] = true;
+                        }
+                    }
+                    multipolylines.push(mpl);
+                    is_part_a_hole.push(holes);
+                }
+
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    let mut mpl = MultiPolyline::new(record_num);
+                    let mut holes = vec![false; record.num_parts as usize];
+                    for part in 0..record.num_parts as usize {
+                        first_point_in_part = record.parts[part] as usize;
+                        last_point_in_part = if part < record.num_parts as usize - 1 {
+                            record.parts[part + 1] as usize - 1
+                        } else {
+                            record.num_points as usize - 1
+                        };
+
+                        // Create a polyline from the part
+                        let mut pl = Polyline::new(
+                            &(record.points[first_point_in_part..=last_point_in_part]),
+                            record_num,
                         );
                         pl.source_file = 2;
-                        let plbb = pl.get_bounding_box();
-                        let mut overlaps_with_erase = false;
-                        for i in 0..erase_polylines.len() {
-                            if plbb.overlaps(erase_bb[i]) {
-                                if poly_overlaps_poly(
-                                    &(pl.vertices),
-                                    &(erase_polylines[i].vertices),
-                                ) {
-                                    overlaps_with_erase = true;
-                                    erase_feature_overlaps[i] = true;
-                                    // break;
+                        mpl.push(&pl);
+
+                        if record.is_hole(part as i32) {
+                            holes[part] = true;
+                        }
+                    }
+                    multipolylines.push(mpl);
+                    is_part_a_hole.push(holes);
+                }
+
+                // Perform the overlay on individual features.
+                let mut fid = 1i32;
+                for record_num in 0..multipolylines.len() {
+                    let mut polygons: Vec<Polyline> = vec![];
+                    let mut is_part_a_hole2: Vec<bool> = vec![];
+
+                    // find overlapping features in other file
+                    let mut overlaps_with_feature: bool;
+                    for i in 0..multipolylines.len() {
+                        overlaps_with_feature = false;
+                        if multipolylines[i][0].source_file
+                            != multipolylines[record_num][0].source_file
+                        {
+                            if multipolylines[record_num]
+                                .get_bounding_box()
+                                .overlaps(multipolylines[i].get_bounding_box())
+                            {
+                                for j in 0..multipolylines[record_num].len() {
+                                    for k in 0..multipolylines[i].len() {
+                                        if poly_overlaps_poly(
+                                            &(multipolylines[record_num][j].vertices),
+                                            &(multipolylines[i][k].vertices),
+                                        ) {
+                                            overlaps_with_feature = true;
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                         }
-                        if overlaps_with_erase {
-                            features_bb.push(pl.get_bounding_box());
-                            polygons.push(pl);
-
-                            if record.is_hole(part as i32) {
-                                is_part_a_hole.push(true);
-                            } else {
-                                is_part_a_hole.push(false);
+                        if overlaps_with_feature {
+                            for j in 0..multipolylines[i].len() {
+                                polygons.push(multipolylines[i][j].clone());
+                                is_part_a_hole2.push(is_part_a_hole[i][j]);
                             }
                         }
                     }
+
                     if polygons.len() > 0 {
-                        // it overlaps with at least one eraseping feature
-                        for i in 0..erase_polylines.len() {
-                            if erase_feature_overlaps[i] {
-                                polygons.push(erase_polylines[i].clone());
-                                is_part_a_hole.push(is_erase_part_a_hole[i]);
-                                features_bb.push(erase_bb[i].clone());
-                            }
+                        let feature_source_file = multipolylines[record_num][0].source_file;
+
+                        for j in 0..multipolylines[record_num].len() {
+                            polygons.push(multipolylines[record_num][j].clone());
+                            is_part_a_hole2.push(is_part_a_hole[record_num][j]);
                         }
 
                         // convert to fixed precision
-                        let num_decimals = 6;
-                        let precision = EPSILON; // 1f64 / num_decimals as f64;
-
                         let mut p: Point2D;
                         for i in 0..polygons.len() {
                             for j in 0..polygons[i].len() {
@@ -683,7 +823,6 @@ impl WhiteboxTool for Erase {
                                     // it's a junction, split the poly
                                     pl.vertices.push(polygons[i][j]);
                                     features_polylines.push(pl.clone());
-                                    // id += 1;
                                     pl = Polyline::new_empty(id);
                                     pl.vertices.push(polygons[i][j]);
                                     pl.source_file = polygons[i].source_file;
@@ -712,7 +851,7 @@ impl WhiteboxTool for Erase {
                         }
 
                         // hunt for intersections
-                        features_bb = Vec::with_capacity(features_polylines.len());
+                        let mut features_bb = Vec::with_capacity(features_polylines.len());
                         for i in 0..features_polylines.len() {
                             features_bb.push(features_polylines[i].get_bounding_box());
                         }
@@ -944,41 +1083,6 @@ impl WhiteboxTool for Erase {
                             }
                         }
 
-                        /*
-                        ////////////////////////////////////////////////////////////////////
-                        if record_num == 1419 {
-                            let mut output2 = Shapefile::initialize_using_file(
-                                &output_file,
-                                &input,
-                                input.header.shape_type,
-                                true,
-                            )?;
-                            output2.header.shape_type = ShapeType::PolyLine;
-                            for i in 0..polylines.len() {
-                                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                                sfg.add_part(&(polylines[i].vertices));
-                                output2.add_record(sfg);
-
-                                output2
-                                    .attributes
-                                    .add_record(vec![FieldData::Int(fid)], false);
-                                fid += 1;
-                            }
-
-                            if verbose {
-                                println!("Saving data...")
-                            };
-                            let _ = match output2.write() {
-                                Ok(_) => if verbose {
-                                    println!("Output file written")
-                                },
-                                Err(e) => return Err(e),
-                            };
-                            return Ok(());
-                        }
-                        ////////////////////////////////////////////////////////////////////
-                        */
-
                         ///////////////////////////////////////////////////////////////////////////////////////////
                         // This is the main part of the analysis. It is responsible for rebuilding the polygons. //
                         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -999,7 +1103,7 @@ impl WhiteboxTool for Erase {
                         let mut target_found: bool;
                         let mut assigned = vec![0usize; polylines.len()];
                         let mut is_clockwise: bool;
-                        let mut overlaps_with_erase: bool;
+                        let mut overlaps_with_other: bool;
                         let mut overlaps_with_poly: bool;
                         let mut last_index: usize;
                         for i in 0..polylines.len() {
@@ -1069,7 +1173,7 @@ impl WhiteboxTool for Erase {
                                         }
                                         current_node = other_side;
                                     } else {
-                                        // because we've removed links to danling arcs, this should never occur
+                                        // because we've removed links to dangling arcs, this should never occur
                                         break;
                                     }
                                 }
@@ -1141,15 +1245,17 @@ impl WhiteboxTool for Erase {
                                                     }
                                                 }
                                                 p = interior_point(&vertices);
-                                                overlaps_with_erase = false;
+                                                overlaps_with_other = false;
                                                 overlaps_with_poly = false;
                                                 for j in 0..polygons.len() {
                                                     if point_in_poly(&p, &(polygons[j].vertices)) {
-                                                        if polygons[j].source_file == 1 {
-                                                            if !is_part_a_hole[j] {
-                                                                overlaps_with_erase = true;
+                                                        if polygons[j].source_file
+                                                            != feature_source_file
+                                                        {
+                                                            if !is_part_a_hole2[j] {
+                                                                overlaps_with_other = true;
                                                             } else {
-                                                                overlaps_with_erase = false;
+                                                                overlaps_with_other = false;
                                                                 break;
                                                             }
                                                         } else {
@@ -1158,33 +1264,14 @@ impl WhiteboxTool for Erase {
                                                     }
                                                 }
 
-                                                if !overlaps_with_erase && overlaps_with_poly {
+                                                if !overlaps_with_other && overlaps_with_poly {
                                                     // output the polygon
                                                     let mut sfg =
                                                         ShapefileGeometry::new(ShapeType::Polygon);
                                                     sfg.add_part(&vertices);
                                                     bb.push(sfg.get_bounding_box());
-                                                    // output.add_record(sfg);
-
-                                                    // if table_contains_fid {
-                                                    //     let mut att = input
-                                                    //         .attributes
-                                                    //         .get_record(record_num)
-                                                    //         .clone();
-                                                    //     att[fid_field_num] = FieldData::Int(fid);
-                                                    //     fid += 1;
-                                                    //     output.attributes.add_record(att, false);
-                                                    // } else {
-                                                    //     output.attributes.add_record(
-                                                    //         input
-                                                    //             .attributes
-                                                    //             .get_record(record_num)
-                                                    //             .clone(),
-                                                    //         false,
-                                                    //     )
-                                                    // }
                                                     feature_geometries.push(sfg);
-                                                } else if overlaps_with_erase && overlaps_with_poly
+                                                } else if overlaps_with_other && overlaps_with_poly
                                                 {
                                                     let mut test_poly = lines.clone();
                                                     test_poly.sort();
@@ -1229,15 +1316,17 @@ impl WhiteboxTool for Erase {
                                                     }
                                                 }
                                                 p = interior_point(&vertices);
-                                                overlaps_with_erase = false;
+                                                overlaps_with_other = false;
                                                 overlaps_with_poly = false;
                                                 for j in 0..polygons.len() {
                                                     if point_in_poly(&p, &(polygons[j].vertices)) {
-                                                        if polygons[j].source_file == 1 {
-                                                            if !is_part_a_hole[j] {
-                                                                overlaps_with_erase = true;
+                                                        if polygons[j].source_file
+                                                            != feature_source_file
+                                                        {
+                                                            if !is_part_a_hole2[j] {
+                                                                overlaps_with_other = true;
                                                             } else {
-                                                                overlaps_with_erase = false;
+                                                                overlaps_with_other = false;
                                                                 break;
                                                             }
                                                         } else {
@@ -1245,7 +1334,7 @@ impl WhiteboxTool for Erase {
                                                         }
                                                     }
                                                 }
-                                                if !overlaps_with_erase && overlaps_with_poly {
+                                                if !overlaps_with_other && overlaps_with_poly {
                                                     let mut sfg =
                                                         ShapefileGeometry::new(ShapeType::Polygon);
                                                     sfg.add_part(&vertices);
@@ -1334,7 +1423,6 @@ impl WhiteboxTool for Erase {
                                         let mut backlinks: Vec<usize> = vec![];
                                         k = target_node;
                                         num_vertices = 0;
-                                        // let mut output_poly = true;
                                         while k != source_node {
                                             k = prev[k];
                                             backlinks.push(k);
@@ -1392,18 +1480,20 @@ impl WhiteboxTool for Erase {
                                                         }
                                                     }
                                                     p = interior_point(&vertices);
-                                                    overlaps_with_erase = false;
+                                                    overlaps_with_other = false;
                                                     overlaps_with_poly = false;
                                                     for j in 0..polygons.len() {
                                                         if point_in_poly(
                                                             &p,
                                                             &(polygons[j].vertices),
                                                         ) {
-                                                            if polygons[j].source_file == 1 {
-                                                                if !is_part_a_hole[j] {
-                                                                    overlaps_with_erase = true;
+                                                            if polygons[j].source_file
+                                                                != feature_source_file
+                                                            {
+                                                                if !is_part_a_hole2[j] {
+                                                                    overlaps_with_other = true;
                                                                 } else {
-                                                                    overlaps_with_erase = false;
+                                                                    overlaps_with_other = false;
                                                                     break;
                                                                 }
                                                             } else {
@@ -1411,37 +1501,15 @@ impl WhiteboxTool for Erase {
                                                             }
                                                         }
                                                     }
-                                                    if !overlaps_with_erase && overlaps_with_poly {
+                                                    if !overlaps_with_other && overlaps_with_poly {
                                                         // output the polygon
                                                         let mut sfg = ShapefileGeometry::new(
                                                             ShapeType::Polygon,
                                                         );
                                                         sfg.add_part(&vertices);
                                                         bb.push(sfg.get_bounding_box());
-                                                        // output.add_record(sfg);
-
-                                                        // if table_contains_fid {
-                                                        //     let mut att = input
-                                                        //         .attributes
-                                                        //         .get_record(record_num)
-                                                        //         .clone();
-                                                        //     att[fid_field_num] =
-                                                        //         FieldData::Int(fid);
-                                                        //     fid += 1;
-                                                        //     output
-                                                        //         .attributes
-                                                        //         .add_record(att, false);
-                                                        // } else {
-                                                        //     output.attributes.add_record(
-                                                        //         input
-                                                        //             .attributes
-                                                        //             .get_record(record_num)
-                                                        //             .clone(),
-                                                        //         false,
-                                                        //     )
-                                                        // }
                                                         feature_geometries.push(sfg);
-                                                    } else if overlaps_with_erase
+                                                    } else if overlaps_with_other
                                                         && overlaps_with_poly
                                                     {
                                                         let mut test_poly = lines.clone();
@@ -1487,18 +1555,20 @@ impl WhiteboxTool for Erase {
                                                         }
                                                     }
                                                     p = interior_point(&vertices);
-                                                    overlaps_with_erase = false;
+                                                    overlaps_with_other = false;
                                                     overlaps_with_poly = false;
                                                     for j in 0..polygons.len() {
                                                         if point_in_poly(
                                                             &p,
                                                             &(polygons[j].vertices),
                                                         ) {
-                                                            if polygons[j].source_file == 1 {
-                                                                if !is_part_a_hole[j] {
-                                                                    overlaps_with_erase = true;
+                                                            if polygons[j].source_file
+                                                                != feature_source_file
+                                                            {
+                                                                if !is_part_a_hole2[j] {
+                                                                    overlaps_with_other = true;
                                                                 } else {
-                                                                    overlaps_with_erase = false;
+                                                                    overlaps_with_other = false;
                                                                     break;
                                                                 }
                                                             } else {
@@ -1506,7 +1576,7 @@ impl WhiteboxTool for Erase {
                                                             }
                                                         }
                                                     }
-                                                    if !overlaps_with_erase && overlaps_with_poly {
+                                                    if !overlaps_with_other && overlaps_with_poly {
                                                         let mut sfg = ShapefileGeometry::new(
                                                             ShapeType::Polygon,
                                                         );
@@ -1553,34 +1623,37 @@ impl WhiteboxTool for Erase {
 
                         for a in 0..feature_geometries.len() {
                             output.add_record(feature_geometries[a].clone());
-                            if table_contains_fid {
-                                let mut att = input.attributes.get_record(record_num).clone();
-                                att[fid_field_num] = FieldData::Int(fid);
-                                fid += 1;
-                                output.attributes.add_record(att, false);
-                            } else {
-                                output.attributes.add_record(
-                                    input.attributes.get_record(record_num).clone(),
-                                    false,
-                                )
-                            }
-                        }
-                    } else {
-                        output.add_record(record.clone());
-                        if table_contains_fid {
-                            let mut att = input.attributes.get_record(record_num).clone();
-                            att[fid_field_num] = FieldData::Int(fid);
-                            fid += 1;
-                            output.attributes.add_record(att, false);
-                        } else {
                             output
                                 .attributes
-                                .add_record(input.attributes.get_record(record_num).clone(), false)
+                                .add_record(vec![FieldData::Int(fid)], false);
+                            fid += 1;
+                            // if table_contains_fid {
+                            //     let mut att = input.attributes.get_record(record_num).clone();
+                            //     att[fid_field_num] = FieldData::Int(fid);
+                            //     fid += 1;
+                            //     output.attributes.add_record(att, false);
+                            // } else {
+                            //     output.attributes.add_record(
+                            //         input.attributes.get_record(record_num).clone(),
+                            //         false,
+                            //     )
+                            // }
                         }
+                    } else {
+                        let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                        for i in 0..multipolylines[record_num].len() {
+                            sfg.add_part(&multipolylines[record_num][i].vertices);
+                        }
+                        output.add_record(sfg);
+                        output
+                            .attributes
+                            .add_record(vec![FieldData::Int(fid)], false);
+                        fid += 1;
                     }
 
                     if verbose {
-                        progress = (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64)
+                        progress = (100.0_f64 * (record_num + 1) as f64
+                            / multipolylines.len() as f64)
                             as usize;
                         if progress != old_progress {
                             println!("Progress: {}%", progress);
@@ -1588,6 +1661,46 @@ impl WhiteboxTool for Erase {
                         }
                     }
                 }
+
+                /*        
+
+                        /*
+                        ////////////////////////////////////////////////////////////////////
+                        if record_num == 1419 {
+                            let mut output2 = Shapefile::initialize_using_file(
+                                &output_file,
+                                &input,
+                                input.header.shape_type,
+                                true,
+                            )?;
+                            output2.header.shape_type = ShapeType::PolyLine;
+                            for i in 0..polylines.len() {
+                                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                                sfg.add_part(&(polylines[i].vertices));
+                                output2.add_record(sfg);
+
+                                output2
+                                    .attributes
+                                    .add_record(vec![FieldData::Int(fid)], false);
+                                fid += 1;
+                            }
+
+                            if verbose {
+                                println!("Saving data...")
+                            };
+                            let _ = match output2.write() {
+                                Ok(_) => if verbose {
+                                    println!("Output file written")
+                                },
+                                Err(e) => return Err(e),
+                            };
+                            return Ok(());
+                        }
+                        ////////////////////////////////////////////////////////////////////
+                        */
+
+                }
+                */
             }
             _ => {
                 return Err(Error::new(

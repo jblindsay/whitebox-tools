@@ -22,6 +22,18 @@ use std::path;
 use structures::Array2D;
 use tools::*;
 
+/// This tool can be used to remove the depressions in a digital elevation model, a
+/// common requirement of spatial hydrological operations such as flow accumulation
+/// and watershed modelling. The algorithm based on:
+///
+/// > Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
+/// flow path enforcement in digital elevation models.* **Hydrological Processes**,
+/// 30(6): 846–857. DOI: 10.1002/hyp.10648
+///
+/// It uses a breach-first, fill-second approach.
+///
+/// ** See Also:**
+/// `FillDepressions`
 pub struct BreachDepressions {
     name: String,
     description: String,

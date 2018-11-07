@@ -314,6 +314,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***SmoothVectors***: Smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType.
 - ***SplitWithLines***: Splits the lines or polygons in one layer using the lines in another layer
 - ***SumOverlay***: Calculates the sum for each grid cell from a group of raster images.
+- ***SymmetricalDifference***: Outputs the features that occur in one of the two vector inputs but not both, i.e. no overlapping features.
 - ***TINGridding***: Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 - ***VectorHexBinning***: Hex-bins a set of vector points.
 - ***VoronoiDiagram***: s tool creates a vector Voronoi diagram for a set of vector points.

@@ -75,6 +75,7 @@ Version 0.12.0 (XX-XX-2018)
     Polygonize
     RasterToVectorLines
     SplitWithLines
+    SymmetricalDifference
     VoronoiDiagram
 
 

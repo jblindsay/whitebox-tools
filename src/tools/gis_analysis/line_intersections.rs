@@ -18,13 +18,13 @@ use structures::BoundingBox;
 use tools::*;
 use vector::*;
 
-/// This tool identifies points where the features of two vector line layers intersect.
-/// The user must specify the names of two input vector line files and the output file.
-/// The output file will be a vector of POINT ShapeType. If the input vectors intersect
-/// at a line segment, the beginning and end vertices of the segment will be present in
-/// the output file. A warning is issued if intersection line segments are identified
-/// during analysis. If no intersections are found between the input line files, the
-/// output file will not be saved and a warning will be issued.
+/// This tool identifies points where the features of two vector line/polygon layers
+/// intersect. The user must specify the names of two input vector line files and the
+/// output file. The output file will be a vector of POINT ShapeType. If the input
+/// vectors intersect at a line segment, the beginning and end vertices of the segment
+/// will be present in the output file. A warning is issued if intersection line segments
+/// are identified during analysis. If no intersections are found between the input line
+/// files, the output file will not be saved and a warning will be issued.
 ///
 /// Each intersection point will contain `PARENT1` and `PARENT2` attribute fields,
 /// identifying the instersecting features in the first and second input line files
@@ -52,7 +52,7 @@ impl LineIntersections {
             flags: vec!["--i1".to_owned(), "--input1".to_owned()],
             description: "Input vector polyline file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
-                VectorGeometryType::Line,
+                VectorGeometryType::LineOrPolygon,
             )),
             default_value: None,
             optional: false,
@@ -63,7 +63,7 @@ impl LineIntersections {
             flags: vec!["--i2".to_owned(), "--input2".to_owned()],
             description: "Input vector polyline file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
-                VectorGeometryType::Line,
+                VectorGeometryType::LineOrPolygon,
             )),
             default_value: None,
             optional: false,
@@ -216,20 +216,24 @@ impl WhiteboxTool for LineIntersections {
         let input1 = Arc::new(Shapefile::read(&input1_file)?);
 
         // make sure the input vector file is of polyline type
-        if input1.header.shape_type.base_shape_type() != ShapeType::PolyLine {
+        if input1.header.shape_type.base_shape_type() != ShapeType::PolyLine
+            && input1.header.shape_type.base_shape_type() != ShapeType::Polygon
+        {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "The input vector data must be of POLYLINE base shape type.",
+                "The input vector data must be of POLYLINE or POLYGON base shape type.",
             ));
         }
 
         let input2 = Arc::new(Shapefile::read(&input2_file)?);
 
         // make sure the input vector file is of polyline type
-        if input2.header.shape_type.base_shape_type() != ShapeType::PolyLine {
+        if input2.header.shape_type.base_shape_type() != ShapeType::PolyLine
+            && input2.header.shape_type.base_shape_type() != ShapeType::Polygon
+        {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "The input vector data must be of POLYLINE base shape type.",
+                "The input vector data must be of POLYLINE or POLYGON base shape type.",
             ));
         }
 

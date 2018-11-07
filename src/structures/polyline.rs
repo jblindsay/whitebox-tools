@@ -9,6 +9,46 @@ License: MIT
 use std::ops::Index;
 use structures::{BoundingBox, Point2D};
 
+/// A storage container for multiple related polylines.
+#[derive(Default, Clone, Debug)]
+pub struct MultiPolyline {
+    parts: Vec<Polyline>,
+    pub id: usize,
+    bounding_box: BoundingBox,
+}
+
+impl Index<usize> for MultiPolyline {
+    type Output = Polyline;
+
+    fn index<'a>(&'a self, index: usize) -> &'a Polyline {
+        &self.parts[index]
+    }
+}
+
+impl MultiPolyline {
+    /// Creates a new MultiPolyline
+    pub fn new(id: usize) -> MultiPolyline {
+        MultiPolyline {
+            parts: vec![],
+            bounding_box: BoundingBox::default(),
+            id: id,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.parts.len()
+    }
+
+    pub fn push(&mut self, polyline: &Polyline) {
+        self.parts.push(polyline.clone());
+        self.bounding_box.expand_to(polyline.get_bounding_box());
+    }
+
+    pub fn get_bounding_box(&self) -> BoundingBox {
+        self.bounding_box.clone()
+    }
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Polyline {
     pub vertices: Vec<Point2D>,

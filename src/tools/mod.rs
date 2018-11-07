@@ -120,6 +120,7 @@ impl ToolManager {
         tool_names.push("SmoothVectors".to_string());
         tool_names.push("SplitWithLines".to_string());
         tool_names.push("SumOverlay".to_string());
+        tool_names.push("SymmetricalDifference".to_string());
         tool_names.push("TINGridding".to_string());
         tool_names.push("VectorHexBinning".to_string());
         tool_names.push("VoronoiDiagram".to_string());
@@ -591,6 +592,9 @@ impl ToolManager {
             "smoothvectors" => Some(Box::new(tools::gis_analysis::SmoothVectors::new())),
             "splitwithlines" => Some(Box::new(tools::gis_analysis::SplitWithLines::new())),
             "sumoverlay" => Some(Box::new(tools::gis_analysis::SumOverlay::new())),
+            "symmetricaldifference" => {
+                Some(Box::new(tools::gis_analysis::SymmetricDifference::new()))
+            }
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),
             "voronoidiagram" => Some(Box::new(tools::gis_analysis::VoronoiDiagram::new())),
@@ -1410,6 +1414,7 @@ enum VectorGeometryType {
     Point,
     Line,
     Polygon,
+    LineOrPolygon,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

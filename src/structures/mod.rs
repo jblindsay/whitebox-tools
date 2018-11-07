@@ -17,4 +17,5 @@ pub use self::line_segment::LineSegment;
 pub use self::n_minimizer::NMinimizer;
 pub use self::point2d::Direction;
 pub use self::point2d::Point2D;
+pub use self::polyline::MultiPolyline;
 pub use self::polyline::Polyline;

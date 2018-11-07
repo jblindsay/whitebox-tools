@@ -3047,7 +3047,49 @@ average_overlay(
 ```
 
 
-#### 8.4.2 ClipRasterToPolygon
+#### 8.4.2 Clip
+
+This tool will extract all the features, or parts of features, that overlap with the features
+of the clip vector file. The clipping operation is one of the most common vector overlay
+operations in GIS and effectively imposes the boundary of the clip layer on a set of input
+vector features, or target features. The operation is sometimes likened to a 'cookie-cutter'.
+The input vector file can be of any feature type (i.e. points, lines, polygons), however, the
+clip vector must consist of polygons.
+
+*See Also*:
+
+`Erase`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-clip              Input clip polygon vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+clip(
+    i, 
+    clip, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Clip -v --wd="/path/to/data/" ^
+-i=lines1.shp --clip=clip_poly.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.3 ClipRasterToPolygon
 
 Clips a raster to a vector polygon.
 
@@ -3083,7 +3125,7 @@ clip_raster_to_polygon(
 ```
 
 
-#### 8.4.3 CountIf
+#### 8.4.4 CountIf
 
 Counts the number of occurrences of a specified value in a cell-stack of rasters.
 
@@ -3117,7 +3159,47 @@ count_if(
 ```
 
 
-#### 8.4.4 ErasePolygonFromRaster
+#### 8.4.5 Erase
+
+This tool will remove all the features, or parts of features, that overlap with the features
+of the erase vector file. The erasing operation is one of the most common vector overlay
+operations in GIS and effectively imposes the boundary of the erase layer on a set of input
+vector features, or target features.
+
+*See Also*:
+
+`Clip`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-erase             Input erase polygon vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+erase(
+    i, 
+    erase, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Erase -v --wd="/path/to/data/" ^
+-i=lines1.shp --erase=erase_poly.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.6 ErasePolygonFromRaster
 
 Erases (cuts out) a vector polygon from a raster.
 
@@ -3151,7 +3233,7 @@ erase_polygon_from_raster(
 ```
 
 
-#### 8.4.5 HighestPosition
+#### 8.4.7 HighestPosition
 
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 
@@ -3183,15 +3265,15 @@ highest_position(
 ```
 
 
-#### 8.4.6 LineIntersections
+#### 8.4.8 LineIntersections
 
-This tool identifies points where the features of two vector line layers intersect.
-The user must specify the names of two input vector line files and the output file.
-The output file will be a vector of POINT ShapeType. If the input vectors intersect
-at a line segment, the beginning and end vertices of the segment will be present in
-the output file. A warning is issued if intersection line segments are identified
-during analysis. If no intersections are found between the input line files, the
-output file will not be saved and a warning will be issued.
+This tool identifies points where the features of two vector line/polygon layers
+intersect. The user must specify the names of two input vector line files and the
+output file. The output file will be a vector of POINT ShapeType. If the input
+vectors intersect at a line segment, the beginning and end vertices of the segment
+will be present in the output file. A warning is issued if intersection line segments
+are identified during analysis. If no intersections are found between the input line
+files, the output file will not be saved and a warning will be issued.
 
 Each intersection point will contain `PARENT1` and `PARENT2` attribute fields,
 identifying the instersecting features in the first and second input line files
@@ -3228,7 +3310,7 @@ line_intersections(
 ```
 
 
-#### 8.4.7 LowestPosition
+#### 8.4.9 LowestPosition
 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
@@ -3259,7 +3341,7 @@ lowest_position(
 ```
 
 
-#### 8.4.8 MaxAbsoluteOverlay
+#### 8.4.10 MaxAbsoluteOverlay
 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
@@ -3291,7 +3373,7 @@ max_absolute_overlay(
 ```
 
 
-#### 8.4.9 MaxOverlay
+#### 8.4.11 MaxOverlay
 
 Evaluates the maximum value for each grid cell from a stack of input rasters.
 
@@ -3322,7 +3404,7 @@ max_overlay(
 ```
 
 
-#### 8.4.10 MinAbsoluteOverlay
+#### 8.4.12 MinAbsoluteOverlay
 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -3354,7 +3436,7 @@ min_absolute_overlay(
 ```
 
 
-#### 8.4.11 MinOverlay
+#### 8.4.13 MinOverlay
 
 Evaluates the minimum value for each grid cell from a stack of input rasters.
 
@@ -3385,7 +3467,7 @@ min_overlay(
 ```
 
 
-#### 8.4.12 PercentEqualTo
+#### 8.4.14 PercentEqualTo
 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
@@ -3419,7 +3501,7 @@ percent_equal_to(
 ```
 
 
-#### 8.4.13 PercentGreaterThan
+#### 8.4.15 PercentGreaterThan
 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
@@ -3453,7 +3535,7 @@ percent_greater_than(
 ```
 
 
-#### 8.4.14 PercentLessThan
+#### 8.4.16 PercentLessThan
 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
@@ -3487,7 +3569,7 @@ percent_less_than(
 ```
 
 
-#### 8.4.15 PickFromList
+#### 8.4.17 PickFromList
 
 Outputs the value from a raster stack specified by a position raster.
 
@@ -3521,7 +3603,7 @@ pick_from_list(
 ```
 
 
-#### 8.4.16 Polygonize
+#### 8.4.18 Polygonize
 
 This tool outputs a vector polygon layer from two or more intersecting line features
 contained in one or more input vector line files. Each space enclosed by the intersecting
@@ -3561,7 +3643,7 @@ polygonize(
 ```
 
 
-#### 8.4.17 SplitWithLines
+#### 8.4.19 SplitWithLines
 
 This tool splits the lines or polygons in one layer using the lines in another layer
 to define the breaking points. Intersection points between geometries in both layers
@@ -3602,7 +3684,7 @@ split_with_lines(
 ```
 
 
-#### 8.4.18 SumOverlay
+#### 8.4.20 SumOverlay
 
 This tool calculates the sum for each grid cell from a group of raster images.
 
@@ -3642,7 +3724,41 @@ sum_overlay(
 ```
 
 
-#### 8.4.19 WeightedOverlay
+#### 8.4.21 SymmetricDifference
+
+Removes all the features, or parts of features, that overlap with the features of the overlay vector polygon.
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-overlay           Input overlay vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+symmetric_difference(
+    i, 
+    overlay, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=SymmetricDifference -v ^
+--wd="/path/to/data/" -input=layer1.shp --overlay=layer2.shp ^
+-o=out_file.shp 
+
+
+```
+
+
+#### 8.4.22 WeightedOverlay
 
 This tool performs a weighted overlay on multiple input images. It can be used to
 combine multiple factors with varying levels of weight or relative importance. The
@@ -3708,7 +3824,7 @@ weighted_overlay(
 ```
 
 
-#### 8.4.20 WeightedSum
+#### 8.4.23 WeightedSum
 
 This tool performs a weighted-sum overlay on multiple input raster images.
 If you have a stack of rasters that you would like to sum, each with an
@@ -6101,7 +6217,18 @@ basins(
 
 #### 8.7.4 BreachDepressions
 
-Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
+This tool can be used to remove the depressions in a digital elevation model, a
+common requirement of spatial hydrological operations such as flow accumulation
+and watershed modelling. The algorithm based on:
+
+> Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
+flow path enforcement in digital elevation models.* **Hydrological Processes**,
+30(6): 846–857. DOI: 10.1002/hyp.10648
+
+It uses a breach-first, fill-second approach.
+
+** See Also:**
+`FillDepressions`
 
 *Parameters*:
 
@@ -7096,7 +7223,7 @@ jenson_snap_pour_points(
 
 #### 8.7.32 LongestFlowpath
 
-This tool delineates the longest flowpaths for given a group of subbasins or watersheds.
+This tool delineates the longest flowpaths for a group of subbasins or watersheds.
 Flowpaths are initiated along drainage divides and continue along the D8-defined
 flow direction until either the subbasin outlet or DEM edge is encountered. Each input
 subbasin/watershed will have an associated vector flowpath in the output image. `LongestFlowpath`
@@ -7120,7 +7247,7 @@ the longest flowpath to each bifurcation in a stream network.
 The output vector file will contain fields in the attribute table that identify the associated
 basin unique identifier (*BASIN*), the elevation of the flowpath source point on the divide
 (*UP_ELEV*), the elevation of the outlet point (*DN_ELEV*), the length of the flowpath (*LENGTH*),
-and finally, the average slope along the flowpath (*AVG_SLOPE*).
+and finally, the average slope (*AVG_SLOPE*) along the flowpath, measured as a percent grade.
 
 *See Also*:
 
@@ -15053,6 +15180,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 
