@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
-Last Modified: February 7, 2018
+Last Modified: 07/11/2018
 License: MIT
 */
 
@@ -223,8 +223,14 @@ fn run() -> Result<(), Error> {
             verbose = true;
         } else if arg.starts_with("-") {
             // it's an arg to be fed to the tool
-            // println!("arg: {}", arg); //temp
-            tool_args_vec.push(arg.trim().to_string().clone());
+            if !arg.contains("-17976931348623157") {
+                // The QGIS plugin doesn't seem to handle numerical arguments that don't supply default values very well.
+                // When this is the case, it will use an extremely large negative value, starting with the sequence above,
+                // as the default. So if this number occurs in the argument, it means that the value was unspecified. If
+                // it's an optional parameter, the tool will be able to handle this situation. If not, an error will likely
+                // be thrown by the absence of the parameter.
+                tool_args_vec.push(arg.trim().to_string().clone());
+            }
         } else if !arg.contains("whitebox_tools") {
             // add it to the keywords list
             keywords.push(

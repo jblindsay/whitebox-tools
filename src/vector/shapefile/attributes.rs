@@ -180,17 +180,9 @@ impl ShapefileAttributes {
         self.fields.push(field.clone());
         self.header.num_fields += 1;
         self.get_field_hashmap();
-        // println!("{}", field.name);
         for record_index in 0..self.data.len() {
             self.data[record_index].push(FieldData::Null);
-            // println!("{:?}", self.data[record_index]);
         }
-        // println!(
-        //     "{} {} {}",
-        //     self.header.num_records,
-        //     self.header.num_fields,
-        //     self.data.len(),
-        // );
     }
 
     /// Adds a Vec of fields to the table
@@ -207,6 +199,15 @@ impl ShapefileAttributes {
         self.get_field_hashmap();
     }
 
+    /// Clears the fields and table of the table
+    pub fn reinitialize(&mut self) {
+        self.fields.clear();
+        self.header.num_fields = 0;
+        self.data.clear();
+        self.header.num_records = 0;
+        self.field_map.clear();
+    }
+
     /// Returns a field from the table
     pub fn get_field<'a>(&'a self, index: usize) -> &'a AttributeField {
         &self.fields[index]
@@ -215,6 +216,16 @@ impl ShapefileAttributes {
     /// Returns the fields of a table
     pub fn get_fields<'a>(&'a self) -> &'a Vec<AttributeField> {
         &self.fields
+    }
+
+    /// Evaluates whether or not the table contains a field
+    pub fn contains_field(&self, field: &AttributeField) -> bool {
+        for att in &self.fields {
+            if att == field {
+                return true;
+            }
+        }
+        false
     }
 
     /// Adds an attribute record to the table.

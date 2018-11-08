@@ -84,6 +84,7 @@ impl ToolManager {
         tool_names.push("HighestPosition".to_string());
         tool_names.push("HoleProportion".to_string());
         tool_names.push("IdwInterpolation".to_string());
+        tool_names.push("Intersect".to_string());
         tool_names.push("LayerFootprint".to_string());
         tool_names.push("LinearityIndex".to_string());
         tool_names.push("LineIntersections".to_string());
@@ -540,6 +541,7 @@ impl ToolManager {
             "highestposition" => Some(Box::new(tools::gis_analysis::HighestPosition::new())),
             "holeproportion" => Some(Box::new(tools::gis_analysis::HoleProportion::new())),
             "idwinterpolation" => Some(Box::new(tools::gis_analysis::IdwInterpolation::new())),
+            "intersect" => Some(Box::new(tools::gis_analysis::Intersect::new())),
             "layerfootprint" => Some(Box::new(tools::gis_analysis::LayerFootprint::new())),
             "lineintersections" => Some(Box::new(tools::gis_analysis::LineIntersections::new())),
             "linearityindex" => Some(Box::new(tools::gis_analysis::LinearityIndex::new())),
@@ -593,7 +595,7 @@ impl ToolManager {
             "splitwithlines" => Some(Box::new(tools::gis_analysis::SplitWithLines::new())),
             "sumoverlay" => Some(Box::new(tools::gis_analysis::SumOverlay::new())),
             "symmetricaldifference" => {
-                Some(Box::new(tools::gis_analysis::SymmetricDifference::new()))
+                Some(Box::new(tools::gis_analysis::SymmetricalDifference::new()))
             }
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),

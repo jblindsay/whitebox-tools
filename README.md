@@ -279,6 +279,7 @@ The library currently contains more than 370 tools, which are each grouped based
 - ***HighestPosition***: Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 - ***HoleProportion***: Calculates the proportion of the total area of a polygon's holes relative to the area of the polygon's hull.
 - ***IdwInterpolation***: Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+- ***Intersect***: Identifies the parts of features in common between two input vector layers.
 - ***LayerFootprint***: Creates a vector polygon footprint of the area covered by a raster grid or vector layer.
 - ***LinearityIndex***: Calculates the linearity index for vector polygons.
 - ***LineIntersections***: Identifies points where the features of two vector line layers intersect.

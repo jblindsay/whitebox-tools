@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/11/2018
-Last Modified: 5/11/2018
+Last Modified: 8/11/2018
 License: MIT
 */
 extern crate kdtree;
@@ -13,15 +13,11 @@ use algorithms::{
 };
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-// use num_cpus;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-// use std::sync::mpsc;
-// use std::sync::Arc;
-// use std::thread;
 use structures::{BoundingBox, MultiPolyline, Polyline};
 use tools::*;
 use vector::*;
@@ -39,6 +35,17 @@ const EPSILON: f64 = std::f64::EPSILON;
 /// The *Symmetrical Difference* can also be derived using a combination of other vector
 /// overlay operations, as either `(A union B) difference (A intersect B)`, or
 /// `(A difference B) union (B difference A)`.
+///
+/// The attributes of the two input vectors will be merged in the output attribute table.
+/// Fields that are duplicated between the inputs will share a single attribute in the
+/// output. Fields that only exist in one of the two inputs will be populated by `null`
+/// in the output table. Multipoint ShapeTypes however will simply contain a single
+/// ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
+/// ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
+/// be transfered to the output geometries. If the input attribute table contains fields
+/// that measure the geometric properties of their associated features (e.g. length or area),
+/// these fields will not be updated to reflect changes in geometry shape and size
+/// resulting from the overlay operation.
 ///
 /// # See Also
 /// `Intersect`, `Difference`, `Union`, `Clip`, `Erase`
@@ -251,6 +258,34 @@ impl WhiteboxTool for SymmetricalDifference {
             .attributes
             .add_field(&AttributeField::new("FID", FieldDataType::Int, 7u8, 0u8));
 
+        let mut input_field_mapping = vec![0; input.attributes.get_num_fields()];
+        for i in 0..input.attributes.get_num_fields() {
+            let att = input.attributes.get_field(i);
+            if att.name != "FID" {
+                if !output.attributes.contains_field(att) {
+                    output.attributes.add_field(&(att.clone()));
+                    input_field_mapping[i] = output.attributes.get_num_fields() - 1;
+                } else {
+                    input_field_mapping[i] = output.attributes.get_field_num(&att.name).unwrap();
+                }
+            }
+        }
+
+        let mut overlay_field_mapping = vec![0; overlay.attributes.get_num_fields()];
+        for i in 0..overlay.attributes.get_num_fields() {
+            let att = overlay.attributes.get_field(i);
+            if att.name != "FID" {
+                if !output.attributes.contains_field(att) {
+                    output.attributes.add_field(&(att.clone()));
+                    overlay_field_mapping[i] = output.attributes.get_num_fields() - 1;
+                } else {
+                    overlay_field_mapping[i] = output.attributes.get_field_num(&att.name).unwrap();
+                }
+            }
+        }
+
+        let num_attributes = output.attributes.get_num_fields();
+
         let num_decimals = 6;
         let precision = 1f64 / num_decimals as f64;
 
@@ -293,10 +328,16 @@ impl WhiteboxTool for SymmetricalDifference {
                     if output_point {
                         // it is not overlapped by another point in the overlay file.
                         output.add_record(record.clone());
-                        output
-                            .attributes
-                            .add_record(vec![FieldData::Int(fid)], false);
+                        let mut out_atts = vec![FieldData::Null; num_attributes];
+                        out_atts[0] = FieldData::Int(fid);
                         fid += 1;
+                        let atts = input.attributes.get_record(record_num);
+                        for att_num in 0..atts.len() {
+                            if input_field_mapping[att_num] != 0 {
+                                out_atts[input_field_mapping[att_num]] = atts[att_num].clone();
+                            }
+                        }
+                        output.attributes.add_record(out_atts, false);
                     }
                     if verbose {
                         progress = (100.0_f64 * record_num as f64 / num_total_points) as usize;
@@ -324,10 +365,16 @@ impl WhiteboxTool for SymmetricalDifference {
                     if output_point {
                         // it is not overlapped by another point in the overlay file.
                         output.add_record(record.clone());
-                        output
-                            .attributes
-                            .add_record(vec![FieldData::Int(fid)], false);
+                        let mut out_atts = vec![FieldData::Null; num_attributes];
+                        out_atts[0] = FieldData::Int(fid);
                         fid += 1;
+                        let atts = overlay.attributes.get_record(record_num);
+                        for att_num in 0..atts.len() {
+                            if overlay_field_mapping[att_num] != 0 {
+                                out_atts[overlay_field_mapping[att_num]] = atts[att_num].clone();
+                            }
+                        }
+                        output.attributes.add_record(out_atts, false);
                     }
                     if verbose {
                         progress = (100.0_f64 * (record_num + input.num_records) as f64
@@ -419,6 +466,14 @@ impl WhiteboxTool for SymmetricalDifference {
                 }
 
                 if num_out_pnts > 0 {
+                    // attributes aren't provided for multipoints overlay.
+                    output.attributes.reinitialize();
+                    output.attributes.add_field(&AttributeField::new(
+                        "FID",
+                        FieldDataType::Int,
+                        7u8,
+                        0u8,
+                    ));
                     let mut sfg = ShapefileGeometry::new(input.header.shape_type);
                     match input.header.shape_type.dimension() {
                         ShapeTypeDimension::XY => {
@@ -590,6 +645,14 @@ impl WhiteboxTool for SymmetricalDifference {
                     }
 
                     num_neighbours.push(line_num_neighbours);
+
+                    if verbose {
+                        progress = (100.0_f64 * (i + 1) as f64 / polylines.len() as f64) as usize;
+                        if progress != old_progress {
+                            println!("Progress: {}%", progress);
+                            old_progress = progress;
+                        }
+                    }
                 }
 
                 let mut features_polylines: Vec<Polyline> = vec![];
@@ -615,6 +678,14 @@ impl WhiteboxTool for SymmetricalDifference {
                         }
                     }
                     features_polylines.push(pl.clone());
+
+                    if verbose {
+                        progress = (100.0_f64 * (i + 1) as f64 / polylines.len() as f64) as usize;
+                        if progress != old_progress {
+                            println!("Progress: {}%", progress);
+                            old_progress = progress;
+                        }
+                    }
                 }
 
                 // Find duplicate polylines and remove them
@@ -644,10 +715,25 @@ impl WhiteboxTool for SymmetricalDifference {
                     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                     sfg.add_part(&features_polylines[i].vertices);
                     output.add_record(sfg);
-                    output
-                        .attributes
-                        .add_record(vec![FieldData::Int(fid)], false);
+                    let mut out_atts = vec![FieldData::Null; num_attributes];
+                    out_atts[0] = FieldData::Int(fid);
                     fid += 1;
+                    if features_polylines[i].source_file == 2 {
+                        let atts = overlay.attributes.get_record(features_polylines[i].id);
+                        for att_num in 0..atts.len() {
+                            if overlay_field_mapping[att_num] != 0 {
+                                out_atts[overlay_field_mapping[att_num]] = atts[att_num].clone();
+                            }
+                        }
+                    } else {
+                        let atts = input.attributes.get_record(features_polylines[i].id);
+                        for att_num in 0..atts.len() {
+                            if input_field_mapping[att_num] != 0 {
+                                out_atts[input_field_mapping[att_num]] = atts[att_num].clone();
+                            }
+                        }
+                    }
+                    output.attributes.add_record(out_atts, false);
                 }
             }
             ShapeType::Polygon => {
@@ -1105,6 +1191,8 @@ impl WhiteboxTool for SymmetricalDifference {
                         let mut is_clockwise: bool;
                         let mut overlaps_with_other: bool;
                         let mut overlaps_with_poly: bool;
+                        let mut poly_is_hole: bool;
+                        let mut other_is_hole: bool;
                         let mut last_index: usize;
                         for i in 0..polylines.len() {
                             if !is_acyclic_arc[i] && assigned[i] < 2 {
@@ -1247,19 +1335,28 @@ impl WhiteboxTool for SymmetricalDifference {
                                                 p = interior_point(&vertices);
                                                 overlaps_with_other = false;
                                                 overlaps_with_poly = false;
+                                                poly_is_hole = false;
+                                                other_is_hole = false;
                                                 for j in 0..polygons.len() {
                                                     if point_in_poly(&p, &(polygons[j].vertices)) {
                                                         if polygons[j].source_file
                                                             != feature_source_file
                                                         {
-                                                            if !is_part_a_hole2[j] {
+                                                            if !is_part_a_hole2[j] && !other_is_hole
+                                                            {
                                                                 overlaps_with_other = true;
                                                             } else {
                                                                 overlaps_with_other = false;
-                                                                break;
+                                                                other_is_hole = true;
                                                             }
                                                         } else {
-                                                            overlaps_with_poly = true;
+                                                            if !is_part_a_hole2[j] && !poly_is_hole
+                                                            {
+                                                                overlaps_with_poly = true;
+                                                            } else {
+                                                                overlaps_with_poly = false;
+                                                                poly_is_hole = true;
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1318,19 +1415,28 @@ impl WhiteboxTool for SymmetricalDifference {
                                                 p = interior_point(&vertices);
                                                 overlaps_with_other = false;
                                                 overlaps_with_poly = false;
+                                                poly_is_hole = false;
+                                                other_is_hole = false;
                                                 for j in 0..polygons.len() {
                                                     if point_in_poly(&p, &(polygons[j].vertices)) {
                                                         if polygons[j].source_file
                                                             != feature_source_file
                                                         {
-                                                            if !is_part_a_hole2[j] {
+                                                            if !is_part_a_hole2[j] && !other_is_hole
+                                                            {
                                                                 overlaps_with_other = true;
                                                             } else {
                                                                 overlaps_with_other = false;
-                                                                break;
+                                                                other_is_hole = true;
                                                             }
                                                         } else {
-                                                            overlaps_with_poly = true;
+                                                            if !is_part_a_hole2[j] && !poly_is_hole
+                                                            {
+                                                                overlaps_with_poly = true;
+                                                            } else {
+                                                                overlaps_with_poly = false;
+                                                                poly_is_hole = true;
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1482,6 +1588,8 @@ impl WhiteboxTool for SymmetricalDifference {
                                                     p = interior_point(&vertices);
                                                     overlaps_with_other = false;
                                                     overlaps_with_poly = false;
+                                                    poly_is_hole = false;
+                                                    other_is_hole = false;
                                                     for j in 0..polygons.len() {
                                                         if point_in_poly(
                                                             &p,
@@ -1490,14 +1598,23 @@ impl WhiteboxTool for SymmetricalDifference {
                                                             if polygons[j].source_file
                                                                 != feature_source_file
                                                             {
-                                                                if !is_part_a_hole2[j] {
+                                                                if !is_part_a_hole2[j]
+                                                                    && !other_is_hole
+                                                                {
                                                                     overlaps_with_other = true;
                                                                 } else {
                                                                     overlaps_with_other = false;
-                                                                    break;
+                                                                    other_is_hole = true;
                                                                 }
                                                             } else {
-                                                                overlaps_with_poly = true;
+                                                                if !is_part_a_hole2[j]
+                                                                    && !poly_is_hole
+                                                                {
+                                                                    overlaps_with_poly = true;
+                                                                } else {
+                                                                    overlaps_with_poly = false;
+                                                                    poly_is_hole = true;
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -1557,6 +1674,8 @@ impl WhiteboxTool for SymmetricalDifference {
                                                     p = interior_point(&vertices);
                                                     overlaps_with_other = false;
                                                     overlaps_with_poly = false;
+                                                    poly_is_hole = false;
+                                                    other_is_hole = false;
                                                     for j in 0..polygons.len() {
                                                         if point_in_poly(
                                                             &p,
@@ -1565,14 +1684,23 @@ impl WhiteboxTool for SymmetricalDifference {
                                                             if polygons[j].source_file
                                                                 != feature_source_file
                                                             {
-                                                                if !is_part_a_hole2[j] {
+                                                                if !is_part_a_hole2[j]
+                                                                    && !other_is_hole
+                                                                {
                                                                     overlaps_with_other = true;
                                                                 } else {
                                                                     overlaps_with_other = false;
-                                                                    break;
+                                                                    other_is_hole = true;
                                                                 }
                                                             } else {
-                                                                overlaps_with_poly = true;
+                                                                if !is_part_a_hole2[j]
+                                                                    && !poly_is_hole
+                                                                {
+                                                                    overlaps_with_poly = true;
+                                                                } else {
+                                                                    overlaps_with_poly = false;
+                                                                    poly_is_hole = true;
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -1623,21 +1751,32 @@ impl WhiteboxTool for SymmetricalDifference {
 
                         for a in 0..feature_geometries.len() {
                             output.add_record(feature_geometries[a].clone());
-                            output
-                                .attributes
-                                .add_record(vec![FieldData::Int(fid)], false);
+
+                            let mut out_atts = vec![FieldData::Null; num_attributes];
+                            out_atts[0] = FieldData::Int(fid);
                             fid += 1;
-                            // if table_contains_fid {
-                            //     let mut att = input.attributes.get_record(record_num).clone();
-                            //     att[fid_field_num] = FieldData::Int(fid);
-                            //     fid += 1;
-                            //     output.attributes.add_record(att, false);
-                            // } else {
-                            //     output.attributes.add_record(
-                            //         input.attributes.get_record(record_num).clone(),
-                            //         false,
-                            //     )
-                            // }
+                            if multipolylines[record_num][0].source_file == 1 {
+                                let atts = overlay
+                                    .attributes
+                                    .get_record(multipolylines[record_num][0].id);
+                                for att_num in 0..atts.len() {
+                                    if overlay_field_mapping[att_num] != 0 {
+                                        out_atts[overlay_field_mapping[att_num]] =
+                                            atts[att_num].clone();
+                                    }
+                                }
+                            } else {
+                                let atts = input
+                                    .attributes
+                                    .get_record(multipolylines[record_num][0].id);
+                                for att_num in 0..atts.len() {
+                                    if input_field_mapping[att_num] != 0 {
+                                        out_atts[input_field_mapping[att_num]] =
+                                            atts[att_num].clone();
+                                    }
+                                }
+                            }
+                            output.attributes.add_record(out_atts, false);
                         }
                     } else {
                         let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
@@ -1645,10 +1784,31 @@ impl WhiteboxTool for SymmetricalDifference {
                             sfg.add_part(&multipolylines[record_num][i].vertices);
                         }
                         output.add_record(sfg);
-                        output
-                            .attributes
-                            .add_record(vec![FieldData::Int(fid)], false);
+
+                        let mut out_atts = vec![FieldData::Null; num_attributes];
+                        out_atts[0] = FieldData::Int(fid);
                         fid += 1;
+                        if multipolylines[record_num][0].source_file == 1 {
+                            let atts = overlay
+                                .attributes
+                                .get_record(multipolylines[record_num][0].id);
+                            for att_num in 0..atts.len() {
+                                if overlay_field_mapping[att_num] != 0 {
+                                    out_atts[overlay_field_mapping[att_num]] =
+                                        atts[att_num].clone();
+                                }
+                            }
+                        } else {
+                            let atts = input
+                                .attributes
+                                .get_record(multipolylines[record_num][0].id);
+                            for att_num in 0..atts.len() {
+                                if input_field_mapping[att_num] != 0 {
+                                    out_atts[input_field_mapping[att_num]] = atts[att_num].clone();
+                                }
+                            }
+                        }
+                        output.attributes.add_record(out_atts, false);
                     }
 
                     if verbose {
@@ -1661,46 +1821,6 @@ impl WhiteboxTool for SymmetricalDifference {
                         }
                     }
                 }
-
-                /*        
-
-                        /*
-                        ////////////////////////////////////////////////////////////////////
-                        if record_num == 1419 {
-                            let mut output2 = Shapefile::initialize_using_file(
-                                &output_file,
-                                &input,
-                                input.header.shape_type,
-                                true,
-                            )?;
-                            output2.header.shape_type = ShapeType::PolyLine;
-                            for i in 0..polylines.len() {
-                                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                                sfg.add_part(&(polylines[i].vertices));
-                                output2.add_record(sfg);
-
-                                output2
-                                    .attributes
-                                    .add_record(vec![FieldData::Int(fid)], false);
-                                fid += 1;
-                            }
-
-                            if verbose {
-                                println!("Saving data...")
-                            };
-                            let _ = match output2.write() {
-                                Ok(_) => if verbose {
-                                    println!("Output file written")
-                                },
-                                Err(e) => return Err(e),
-                            };
-                            return Ok(());
-                        }
-                        ////////////////////////////////////////////////////////////////////
-                        */
-
-                }
-                */
             }
             _ => {
                 return Err(Error::new(
