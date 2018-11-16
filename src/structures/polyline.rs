@@ -273,6 +273,41 @@ impl Polyline {
     pub fn get_bounding_box(&self) -> BoundingBox {
         BoundingBox::from_points(&self.vertices)
     }
+
+    pub fn nearly_equals(&self, other: &Self, precision: f64) -> bool {
+        // Equality is based on vertices coordinates only.
+        // The id, source_file and split points don't impact eqality.
+        // This is because equality is often used to identify duplicate polylines.
+        let prec = precision * precision;
+        if self.len() == other.len() {
+            // polylines are considered equal even if they are reversed in order
+            let (starting_point_same, reversed) = if self[0].distance_squared(&other[0]) <= prec {
+                (true, false)
+            } else if self[0].distance_squared(&other[other.len() - 1]) <= prec {
+                (true, true)
+            } else {
+                (false, false)
+            };
+            if starting_point_same {
+                if !reversed {
+                    for p in 1..self.len() {
+                        if self[p].distance_squared(&other[p]) > prec {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    for p in 1..self.len() {
+                        if self[p].distance_squared(&other[other.len() - 1 - p]) > prec {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 #[cfg(test)]

@@ -3724,9 +3724,34 @@ sum_overlay(
 ```
 
 
-#### 8.4.21 SymmetricDifference
+#### 8.4.21 SymmetricalDifference
 
-Removes all the features, or parts of features, that overlap with the features of the overlay vector polygon.
+This tool will remove all the overlapping features, or parts of overlapping features, between
+input and overlay vector files, outputting only the features that occur in one of the two
+inputs but not both. The *Symmetrical Difference* is related to the Boolean
+exclusive-or (**XOR**) operation in  set theory and is one of the common vector overlay
+operations in GIS. The user must specify  the names of the input and overlay vector files
+as well as the output vector file name. The tool operates on vector points,
+lines, or polygon, but both the input and overlay files must contain the same ShapeType.
+
+The *Symmetrical Difference* can also be derived using a combination of other vector
+overlay operations, as either `(A union B) difference (A intersect B)`, or
+`(A difference B) union (B difference A)`.
+
+The attributes of the two input vectors will be merged in the output attribute table.
+Fields that are duplicated between the inputs will share a single attribute in the
+output. Fields that only exist in one of the two inputs will be populated by `null`
+in the output table. Multipoint ShapeTypes however will simply contain a single
+ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
+ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
+be transfered to the output geometries. If the input attribute table contains fields
+that measure the geometric properties of their associated features (e.g. length or area),
+these fields will not be updated to reflect changes in geometry shape and size
+resulting from the overlay operation.
+
+*See Also*:
+
+`Intersect`, `Difference`, `Union`, `Clip`, `Erase`
 
 *Parameters*:
 
@@ -3740,7 +3765,7 @@ Removes all the features, or parts of features, that overlap with the features o
 *Python function*:
 
 ~~~~{.python}
-symmetric_difference(
+symmetrical_difference(
     i, 
     overlay, 
     output, 
@@ -3750,7 +3775,7 @@ symmetric_difference(
 *Command-line Interface*:
 
 ```
->>./whitebox_tools -r=SymmetricDifference -v ^
+>>./whitebox_tools -r=SymmetricalDifference -v ^
 --wd="/path/to/data/" -input=layer1.shp --overlay=layer2.shp ^
 -o=out_file.shp 
 

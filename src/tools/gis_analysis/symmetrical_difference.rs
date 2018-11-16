@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/11/2018
-Last Modified: 8/11/2018
+Last Modified: 08/11/2018
 License: MIT
 */
 extern crate kdtree;
@@ -286,8 +286,8 @@ impl WhiteboxTool for SymmetricalDifference {
 
         let num_attributes = output.attributes.get_num_fields();
 
-        let num_decimals = 6;
-        let precision = 1f64 / num_decimals as f64;
+        // let num_decimals = 6;
+        let precision = EPSILON; //1f64 / num_decimals as f64;
 
         match input.header.shape_type.base_shape_type() {
             ShapeType::Point => {
@@ -605,13 +605,13 @@ impl WhiteboxTool for SymmetricalDifference {
                     }
                 }
 
-                let mut p: Point2D;
-                for i in 0..polylines.len() {
-                    for j in 0..polylines[i].len() {
-                        p = polylines[i][j];
-                        polylines[i].vertices[j] = p.fix_precision(num_decimals);
-                    }
-                }
+                // let mut p: Point2D;
+                // for i in 0..polylines.len() {
+                //     for j in 0..polylines[i].len() {
+                //         p = polylines[i][j];
+                //         polylines[i].vertices[j] = p.fix_precision(num_decimals);
+                //     }
+                // }
 
                 // Break the polylines up into shorter lines at junction points.
                 let dimensions = 2;
@@ -850,14 +850,14 @@ impl WhiteboxTool for SymmetricalDifference {
                             is_part_a_hole2.push(is_part_a_hole[record_num][j]);
                         }
 
-                        // convert to fixed precision
-                        let mut p: Point2D;
-                        for i in 0..polygons.len() {
-                            for j in 0..polygons[i].len() {
-                                p = polygons[i][j];
-                                polygons[i].vertices[j] = p.fix_precision(num_decimals);
-                            }
-                        }
+                        // // convert to fixed precision
+                        // let mut p: Point2D;
+                        // for i in 0..polygons.len() {
+                        //     for j in 0..polygons[i].len() {
+                        //         p = polygons[i][j];
+                        //         polygons[i].vertices[j] = p.fix_precision(num_decimals);
+                        //     }
+                        // }
 
                         // Break the polygons up into lines at junction points.
                         let dimensions = 2;
@@ -936,6 +936,21 @@ impl WhiteboxTool for SymmetricalDifference {
                             }
                         }
 
+                        // Remove any zero-length line segments
+                        for i in 0..polygons.len() {
+                            for j in (1..polygons[i].len()).rev() {
+                                if polygons[i][j] == polygons[i][j - 1] {
+                                    polygons[i].remove(j);
+                                }
+                            }
+                        }
+                        // Remove any single-point lines result from above.
+                        for i in (0..polygons.len()).rev() {
+                            if polygons[i].len() < 2 {
+                                polygons.remove(i);
+                            }
+                        }
+
                         // hunt for intersections
                         let mut features_bb = Vec::with_capacity(features_polylines.len());
                         for i in 0..features_polylines.len() {
@@ -966,11 +981,26 @@ impl WhiteboxTool for SymmetricalDifference {
                             }
                         }
 
-                        // convert to fixed precision
-                        for i in 0..polylines.len() {
-                            for j in 0..polylines[i].len() {
-                                p = polylines[i][j];
-                                polylines[i].vertices[j] = p.fix_precision(num_decimals);
+                        // // convert to fixed precision
+                        // for i in 0..polylines.len() {
+                        //     for j in 0..polylines[i].len() {
+                        //         p = polylines[i][j];
+                        //         polylines[i].vertices[j] = p.fix_precision(num_decimals);
+                        //     }
+                        // }
+
+                        // Remove any zero-length line segments
+                        for i in 0..polygons.len() {
+                            for j in (1..polygons[i].len()).rev() {
+                                if polygons[i][j] == polygons[i][j - 1] {
+                                    polygons[i].remove(j);
+                                }
+                            }
+                        }
+                        // Remove any single-point lines result from above.
+                        for i in (0..polygons.len()).rev() {
+                            if polygons[i].len() < 2 {
+                                polygons.remove(i);
                             }
                         }
 

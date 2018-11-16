@@ -43,6 +43,9 @@ impl LineSegment {
         if self == other {
             return Some(self.clone());
         }
+        if self.p1 == self.p2 || other.p1 == other.p2 {
+            return None;
+        }
         // if (self.p1.distance_squared(&other.p1) + self.p2.distance_squared(&other.p2)) < 0.0001f64
         //     || (self.p1.distance_squared(&other.p2) + self.p2.distance_squared(&other.p1))
         //         < 0.0001f64

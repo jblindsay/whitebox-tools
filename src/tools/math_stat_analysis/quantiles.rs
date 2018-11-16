@@ -52,7 +52,7 @@ impl Quantiles {
             flags: vec!["--num_quantiles".to_owned()],
             description: "Number of quantiles.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("4".to_owned()),
+            default_value: Some("5".to_owned()),
             optional: false,
         });
 

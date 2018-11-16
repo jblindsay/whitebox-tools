@@ -61,6 +61,7 @@ Version 0.12.0 (XX-XX-2018)
     BlockMaximumGridding
     BlockMinimumGridding
     Clip
+    Dissolve
     Erase
     JoinTables
     Intersect

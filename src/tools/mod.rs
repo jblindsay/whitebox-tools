@@ -69,6 +69,8 @@ impl ToolManager {
         tool_names.push("CreateHexagonalVectorGrid".to_string());
         tool_names.push("CreatePlane".to_string());
         tool_names.push("CreateRectangularVectorGrid".to_string());
+        tool_names.push("Difference".to_string());
+        tool_names.push("Dissolve".to_string());
         tool_names.push("EdgeProportion".to_string());
         tool_names.push("EliminateCoincidentPoints".to_string());
         tool_names.push("ElongationRatio".to_string());
@@ -123,6 +125,7 @@ impl ToolManager {
         tool_names.push("SumOverlay".to_string());
         tool_names.push("SymmetricalDifference".to_string());
         tool_names.push("TINGridding".to_string());
+        tool_names.push("Union".to_string());
         tool_names.push("VectorHexBinning".to_string());
         tool_names.push("VoronoiDiagram".to_string());
         tool_names.push("WeightedOverlay".to_string());
@@ -514,6 +517,8 @@ impl ToolManager {
             "createrectangularvectorgrid" => Some(Box::new(
                 tools::gis_analysis::CreateRectangularVectorGrid::new(),
             )),
+            "difference" => Some(Box::new(tools::gis_analysis::Difference::new())),
+            "dissolve" => Some(Box::new(tools::gis_analysis::Dissolve::new())),
             "edgeproportion" => Some(Box::new(tools::gis_analysis::EdgeProportion::new())),
             "eliminatecoincidentpoints" => Some(Box::new(
                 tools::gis_analysis::EliminateCoincidentPoints::new(),
@@ -598,6 +603,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::SymmetricalDifference::new()))
             }
             "tingridding" => Some(Box::new(tools::gis_analysis::TINGridding::new())),
+            "union" => Some(Box::new(tools::gis_analysis::Union::new())),
             "vectorhexbinning" => Some(Box::new(tools::gis_analysis::VectorHexBinning::new())),
             "voronoidiagram" => Some(Box::new(tools::gis_analysis::VoronoiDiagram::new())),
             "weightedoverlay" => Some(Box::new(tools::gis_analysis::WeightedOverlay::new())),

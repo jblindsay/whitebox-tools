@@ -2,20 +2,52 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
-Last Modified: 13/10/2018
+Last Modified: 15/11/2018
 License: MIT
 
 NOTES: Add anisotropy option.
 */
 
 use raster::*;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use std::env;
 use std::f64;
 use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
+use structures::Array2D;
 use tools::*;
 
+/// This tool can be used to perform cost-distance or least-cost pathway analyses. Specifically,
+/// this tool can be used to calculate the accumulated cost of traveling from the 'source grid
+/// cell' to each other grid cell in a raster dataset. It is based on the costs associated with
+/// traveling through each cell along a pathway represented in a cost (or friction) surface. If
+/// there are multiple source grid cells, each cell in the resulting cost-accumulation surface
+/// will reflect the accumulated cost to the source cell that is connected by the minimum accumulated
+/// cost-path. The user must specify the names of the raster file containing the source cells
+/// (`--source`), the raster file containing the cost surface information (`--cost`), the output
+/// cost-accumulation surface raster (`--out_accum`), and the output back-link raster (`--out_backlink`).
+/// Source cells are designated as all positive, non-zero valued grid cells in the source raster.
+/// The cost (friction) raster can be created by combining the various cost factors associated with
+/// the specific problem (e.g. slope gradient, visibility, etc.) using a raster calculator or the
+/// `WeightedOverlay` tool.
+///
+/// While the cost-accumulation surface raster can be helpful for visualizing
+/// the three-dimensional characteristics of the 'cost landscape', it is actually the back-link raster
+/// that is used as inputs to the other two cost-distance tools, `CostAllocation` and `CostPathway`, to
+/// determine the least-cost linkages among neighbouring grid cells on the cost surface. If the
+/// accumulated cost surface is analogous to a digital elevation model (DEM) then the back-link raster
+/// is equivalent to the D8 flow-direction pointer. In fact, it is created in a similar way and uses
+/// the same convention for designating 'flow directions' between neighbouring grid cells. The algorithm
+/// for the cost distance accumulation operation uses a type of priority-flood method similar to
+/// what is used for depression filling and flow accumulation operations.
+///
+/// NoData values in the input cost surface image are ignored during processing and assigned NoData values
+/// in the outputs. The output cost accumulation raster is of the float data type and continuous data scale.
+///
+/// # See Also:
+/// `CostAllocation`, `CostPathway`, `WeightedOverlay`
 pub struct CostDistance {
     name: String,
     description: String,
@@ -147,34 +179,31 @@ impl WhiteboxTool for CostDistance {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-source" || vec[0].to_lowercase() == "--source" {
-                if keyval {
-                    source_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-source" {
+                source_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    source_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-cost" || vec[0].to_lowercase() == "--cost" {
-                if keyval {
-                    cost_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-cost" {
+                cost_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    cost_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-out_accum"
-                || vec[0].to_lowercase() == "--out_accum"
-            {
-                if keyval {
-                    accum_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_accum" {
+                accum_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    accum_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-out_backlink"
-                || vec[0].to_lowercase() == "--out_backlink"
-            {
-                if keyval {
-                    backlink_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_backlink" {
+                backlink_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    backlink_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -225,6 +254,7 @@ impl WhiteboxTool for CostDistance {
         let start = Instant::now();
         let rows = source.configs.rows as isize;
         let columns = source.configs.columns as isize;
+        let num_cells = (rows * columns) as usize;
         let nodata = cost.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&accum_file, &cost);
@@ -233,13 +263,23 @@ impl WhiteboxTool for CostDistance {
 
         let mut backlink = Raster::initialize_using_file(&backlink_file, &cost);
 
+        let mut minheap = BinaryHeap::with_capacity(num_cells);
+
+        let mut solved_cells = 0;
         for row in 0..rows {
             for col in 0..columns {
-                if source[(row, col)] > 0.0 && cost[(row, col)] != nodata {
-                    output[(row, col)] = 0.0;
-                    backlink[(row, col)] = -1.0;
-                } else if cost[(row, col)] == nodata {
-                    output[(row, col)] = nodata;
+                if source.get_value(row, col) > 0.0 && cost.get_value(row, col) != nodata {
+                    output.set_value(row, col, 0.0);
+                    backlink.set_value(row, col, 0.0);
+                    minheap.push(GridCell {
+                        row: row,
+                        column: col,
+                        priority: 0f64,
+                    });
+                    solved_cells += 1;
+                } else if cost.get_value(row, col) == nodata {
+                    output.set_value(row, col, nodata);
+                    solved_cells += 1;
                 }
             }
             if verbose {
@@ -251,6 +291,67 @@ impl WhiteboxTool for CostDistance {
             }
         }
 
+        let mut new_cost: f64;
+        let mut accum_val: f64;
+        let (mut cost1, mut cost2): (f64, f64);
+        let (mut row, mut col): (isize, isize);
+        let (mut row_n, mut col_n): (isize, isize);
+        let cell_size_x = source.configs.resolution_x;
+        let cell_size_y = source.configs.resolution_y;
+        let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
+        let dist = [
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+            diag_cell_size,
+            cell_size_x,
+            diag_cell_size,
+            cell_size_y,
+        ];
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+        let backlink_dir = [16.0, 32.0, 64.0, 128.0, 1.0, 2.0, 4.0, 8.0];
+        let mut solved: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
+        while !minheap.is_empty() {
+            let cell = minheap.pop().unwrap();
+            row = cell.row;
+            col = cell.column;
+            if solved.get_value(row, col) == 0 {
+                solved.set_value(row, col, 1);
+                solved_cells += 1;
+                accum_val = output.get_value(row, col);
+                cost1 = cost.get_value(row, col);
+                for n in 0..8 {
+                    col_n = col + dx[n];
+                    row_n = row + dy[n];
+                    if output.get_value(row_n, col_n) != nodata {
+                        cost2 = cost.get_value(row_n, col_n);
+                        new_cost = accum_val + (cost1 + cost2) / 2.0 * dist[n];
+                        if new_cost < output.get_value(row_n, col_n) {
+                            if solved.get_value(row_n, col_n) == 0 {
+                                output.set_value(row_n, col_n, new_cost);
+                                backlink.set_value(row_n, col_n, backlink_dir[n]);
+                                minheap.push(GridCell {
+                                    row: row_n,
+                                    column: col_n,
+                                    priority: new_cost,
+                                });
+                            }
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        }
+
+        /*
         let mut new_cost: f64;
         let mut accum_val: f64;
         let (mut cost1, mut cost2): (f64, f64);
@@ -538,61 +639,7 @@ impl WhiteboxTool for CostDistance {
                 }
             }
         }
-
-        /*
-        The following was an experiment to use a region-growing operation to perform the cost-distance
-        accumulation. It worked fine but was no more efficient that the iterative scan approach and
-        had the disadvantage of not being suitable for updating progress for long periods.
         */
-
-        // let mut zout: f64; // value of row, col in output raster
-        // let (mut row, mut col): (isize, isize);
-        // let (mut row_n, mut col_n): (isize, isize);
-        // let mut rg_queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
-        // let mut new_cost: f64;
-        // let mut cost_val: f64;
-        // let mut cost_n: f64;
-
-        // let num_src_cells = starting_pts.len() as f64;
-        // let mut i = 0.0;
-        // for cell in starting_pts {
-        //     i += 1.0;
-        //     row = cell.0;
-        //     col = cell.1;
-        //     rg_queue.push_back((row, col));
-        //     while !rg_queue.is_empty() {
-        //         let cell = rg_queue.pop_front().unwrap();
-        //         row = cell.0;
-        //         col = cell.1;
-        //         zout = output[(row, col)];
-        //         cost_val = cost[(row, col)];
-        //         if zout < 0.0 || col < 0 || row < 0 || col >= columns || row >= rows  {
-        //             println!("{} {} {}", zout, row, col);
-        //             break;
-        //         }
-        //         for n in 0..8 {
-        //             row_n = row + dy[n];
-        //             col_n = col + dx[n];
-        //             cost_n = cost[(row_n, col_n)];
-        //             if cost_n != nodata {
-        //                 new_cost = zout + (cost_val + cost_n) / 2.0 * grid_lengths[n];
-        //                 if new_cost < output[(row_n, col_n)] {
-        //                     output.set_value(row_n, col_n, new_cost);
-        //                     backlink.set_value(row_n, col_n, backlink_dir[n]);
-        //                     rg_queue.push_back((row_n, col_n));
-        //                 }
-        //             }
-        //         }
-
-        //         if verbose {
-        //             progress = (100.0_f64 * i / num_src_cells) as usize;
-        //             if progress != old_progress {
-        //                 println!("Progress: {}%", progress);
-        //                 old_progress = progress;
-        //             }
-        //         }
-        //     }
-        // }
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "spectrum.plt".to_string();
@@ -639,5 +686,34 @@ impl WhiteboxTool for CostDistance {
         }
 
         Ok(())
+    }
+}
+
+#[derive(PartialEq, Debug)]
+struct GridCell {
+    row: isize,
+    column: isize,
+    // priority: usize,
+    priority: f64,
+}
+
+impl Eq for GridCell {}
+
+impl PartialOrd for GridCell {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        // Some(other.priority.cmp(&self.priority))
+        other.priority.partial_cmp(&self.priority)
+    }
+}
+
+impl Ord for GridCell {
+    fn cmp(&self, other: &GridCell) -> Ordering {
+        // other.priority.cmp(&self.priority)
+        let ord = self.partial_cmp(other).unwrap();
+        match ord {
+            Ordering::Greater => Ordering::Less,
+            Ordering::Less => Ordering::Greater,
+            Ordering::Equal => ord,
+        }
     }
 }
