@@ -25,7 +25,7 @@ use vector::*;
 const EPSILON: f64 = std::f64::EPSILON;
 
 /// The result of the `Intersect` vector overlay operation includes all the feature parts that
-/// occur in both input layers, excluding all other parts. It is roughly analogous to the **AND**
+/// occur in both input layers, excluding all other parts. It is analogous to the **OR**
 /// logical operator and multiplication in arithmetic. This tool is one of the common vector overlay
 /// operations in GIS. The user must specify the names of the input and overlay vector files
 /// as well as the output vector file name. The tool operates on vector points,

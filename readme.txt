@@ -78,7 +78,14 @@ Version 0.12.0 (XX-XX-2018)
     RasterToVectorLines
     SplitWithLines
     SymmetricalDifference
+    Union
     VoronoiDiagram
+
+- Modified the algorithm used by the CostDistance tool from an iterative method of
+  finding the minimum cost surface to one that uses a priority-flood approach. This
+  is far more efficient. Also, there was a bug in the original code that was the 
+  result of a mis-match between the neighbouring cell distances and the back-link 
+  direction. In some cases this resulted in an infinite loop, which is now resolved.
 
 
 Version 0.11.0 (01-10-2018)
