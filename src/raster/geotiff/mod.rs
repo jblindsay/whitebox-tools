@@ -2,12 +2,13 @@
 pub mod geokeys;
 pub mod tiff_consts;
 
+extern crate libflate;
 extern crate lzw;
-// extern crate flate2;
 
 // use flate2::read::GzDecoder;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use raster::geotiff::geokeys::*;
+use raster::geotiff::libflate::zlib::Decoder;
 use raster::geotiff::tiff_consts::*;
 use raster::*;
 use spatial_ref_system::esri_wkt_from_epsg;
@@ -22,6 +23,7 @@ use std::io::prelude::*;
 use std::io::BufWriter;
 use std::io::Error;
 use std::io::ErrorKind;
+use std::io::Read;
 use utils::{ByteOrderReader, Endianness};
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
@@ -324,11 +326,12 @@ pub fn read_geotiff<'a>(
     if compression != COMPRESS_NONE
         && compression != COMPRESS_PACKBITS
         && compression != COMPRESS_LZW
+        && compression != COMPRESS_DEFLATE
     {
         println!("Compression: {}", compression);
         return Err(Error::new(
             ErrorKind::InvalidData,
-            "The GeoTIFF decoder currently only supports PACKBITS and LZW compression.",
+            "The WhiteboxTools GeoTIFF decoder currently only supports PACKBITS, LZW, and DEFLATE compression.",
         ));
     }
 
@@ -518,6 +521,7 @@ pub fn read_geotiff<'a>(
     let block_counts: Vec<u32>; // = vec![];
 
     if ifd_map.contains_key(&322) {
+        // it's a tile oriented file.
         block_padding = true;
 
         block_width = match ifd_map.get(&322) {
@@ -666,31 +670,38 @@ pub fn read_geotiff<'a>(
             let offset = block_offsets[j * blocks_across + i] as usize;
             let n = block_counts[j * blocks_across + i] as usize;
             let mut buf: Vec<u8> = vec![];
-            match compression {
-                COMPRESS_NONE => {
-                    // no compression
-                    buf = th.buffer[offset..(offset + n)].to_vec();
-                }
-                COMPRESS_PACKBITS => {
-                    buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
-                }
-                COMPRESS_LZW => {
-                    let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
-                    let mut compressed = &th.buffer[offset..(offset + n)];
-                    while compressed.len() > 0 {
-                        let (start, bytes) = dec.decode_bytes(&compressed).unwrap();
-                        compressed = &compressed[start..];
-                        buf.extend(bytes.iter().map(|&i| i));
+            if n != 0 {
+                // it's not a sparse tile
+                match compression {
+                    COMPRESS_NONE => {
+                        // no compression
+                        buf = th.buffer[offset..(offset + n)].to_vec();
                     }
-                }
-                // COMPRESS_DEFLATE => {
-                //     let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
-                // }
-                _ => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "The GeoTIFF decoder currently only supports PACKBITS and LZW compression.",
-                    ))
+                    COMPRESS_PACKBITS => {
+                        buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
+                    }
+                    COMPRESS_LZW => {
+                        let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
+                        let mut compressed = &th.buffer[offset..(offset + n)];
+                        while compressed.len() > 0 {
+                            let (start, bytes) = dec.decode_bytes(&compressed).unwrap();
+                            compressed = &compressed[start..];
+                            buf.extend(bytes.iter().map(|&i| i));
+                        }
+                    }
+                    COMPRESS_DEFLATE => {
+                        // let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
+                        let mut compressed = &th.buffer[offset..(offset + n)];
+                        let mut decoder = Decoder::new(&compressed[..]).unwrap();
+                        // let mut decoded_data = Vec::new();
+                        decoder.read_to_end(&mut buf).unwrap();
+                    }
+                    _ => {
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The WhiteboxTools GeoTIFF decoder currently only supports PACKBITS, LZW, and DEFLATE compression.",
+                        ))
+                    }
                 }
             }
             let mut bor = ByteOrderReader::new(buf, configs.endian);
@@ -703,258 +714,306 @@ pub fn read_geotiff<'a>(
             xmax = min(xmax, width);
             ymax = min(ymax, height);
 
+            let skip_bytes = if xmin + blk_w > width {
+                xmin + blk_w - width
+            } else {
+                0
+            };
+
             let mut off = 0;
 
-            match mode {
-                IM_GRAYINVERT | IM_GRAY => {
-                    //ImageMode::GrayInvert | ImageMode::Gray => {
-                    match sample_format[0] {
-                        1 => {
-                            // unsigned integer
-                            match bits_per_sample[0] {
-                                8 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let i = y * width + x;
-                                                data[i] = bor.read_u8() as f64; //buf[off] as f64;
-                                                off += 1;
+            if n != 0 {
+                match mode {
+                    IM_GRAYINVERT | IM_GRAY => {
+                        //ImageMode::GrayInvert | ImageMode::Gray => {
+                        match sample_format[0] {
+                            1 => {
+                                // unsigned integer
+                                match bits_per_sample[0] {
+                                    8 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let i = y * width + x;
+                                                    data[i] = bor.read_u8() as f64; //buf[off] as f64;
+                                                    off += 1;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes);
                                             }
                                         }
                                     }
-                                }
-                                16 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_u16(); // g.ByteOrder.Uint16(g.buf[g.off : g.off+2])
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
-                                                off += 2;
+                                    16 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_u16(); // g.ByteOrder.Uint16(g.buf[g.off : g.off+2])
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 2;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 2);
                                             }
                                         }
                                     }
+                                    32 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_u32();
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 4;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 4);
+                                            }
+                                        }
+                                    }
+                                    64 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_u64();
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 8;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 8);
+                                            }
+                                        }
+                                    }
+                                    _ => {
+                                        return Err(Error::new(
+                                            ErrorKind::InvalidData,
+                                            "The raster was not read correctly",
+                                        ))
+                                    }
                                 }
-                                32 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_u32();
+                            }
+                            2 => {
+                                // signed integer
+                                match bits_per_sample[0] {
+                                    8 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let i = y * width + x;
+                                                    data[i] = bor.read_i8() as f64;
+                                                    off += 1;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes);
+                                            }
+                                        }
+                                    }
+                                    16 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_i16();
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 2;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 2);
+                                            }
+                                        }
+                                    }
+                                    32 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_i32();
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 4;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 4);
+                                            }
+                                        }
+                                    }
+                                    64 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_i64();
+                                                    let i = y * width + x;
+                                                    data[i] = value as f64;
+                                                    off += 8;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 8);
+                                            }
+                                        }
+                                    }
+                                    _ => {
+                                        return Err(Error::new(
+                                            ErrorKind::InvalidData,
+                                            "The raster was not read correctly",
+                                        ))
+                                    }
+                                }
+                            }
+                            3 => {
+                                // floating point
+                                match bits_per_sample[0] {
+                                    32 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                let value = bor.read_f32();
                                                 let i = y * width + x;
                                                 data[i] = value as f64;
                                                 off += 4;
                                             }
-                                        }
-                                    }
-                                }
-                                64 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_u64();
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
-                                                off += 8;
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 4);
                                             }
                                         }
                                     }
-                                }
-                                _ => {
-                                    return Err(Error::new(
-                                        ErrorKind::InvalidData,
-                                        "The raster was not read correctly",
-                                    ))
+                                    64 => {
+                                        for y in ymin..ymax {
+                                            for x in xmin..xmax {
+                                                if off <= bor.len() {
+                                                    let value = bor.read_f64();
+                                                    let i = y * width + x;
+                                                    data[i] = value;
+                                                    off += 8;
+                                                }
+                                            }
+                                            if skip_bytes > 0 {
+                                                bor.inc_pos(skip_bytes * 8);
+                                            }
+                                        }
+                                    }
+                                    _ => {
+                                        return Err(Error::new(
+                                            ErrorKind::InvalidData,
+                                            "The raster was not read correctly",
+                                        ))
+                                    }
                                 }
                             }
-                        }
-                        2 => {
-                            // signed integer
-                            match bits_per_sample[0] {
-                                8 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let i = y * width + x;
-                                                data[i] = bor.read_i8() as f64;
-                                                off += 1;
-                                            }
-                                        }
-                                    }
-                                }
-                                16 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_i16();
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
-                                                off += 2;
-                                            }
-                                        }
-                                    }
-                                }
-                                32 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_i32();
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
-                                                off += 4;
-                                            }
-                                        }
-                                    }
-                                }
-                                64 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_i64();
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
-                                                off += 8;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {
-                                    return Err(Error::new(
-                                        ErrorKind::InvalidData,
-                                        "The raster was not read correctly",
-                                    ))
-                                }
+                            _ => {
+                                return Err(Error::new(
+                                    ErrorKind::InvalidData,
+                                    "The raster was not read correctly",
+                                ))
                             }
                         }
-                        3 => {
-                            // floating point
-                            match bits_per_sample[0] {
-                                32 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            let value = bor.read_f32();
-                                            let i = y * width + x;
-                                            data[i] = value as f64;
-                                            off += 4;
-                                        }
-                                    }
-                                }
-                                64 => {
-                                    for y in ymin..ymax {
-                                        for x in xmin..xmax {
-                                            if off <= bor.len() {
-                                                let value = bor.read_f64();
-                                                let i = y * width + x;
-                                                data[i] = value;
-                                                off += 8;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {
-                                    return Err(Error::new(
-                                        ErrorKind::InvalidData,
-                                        "The raster was not read correctly",
-                                    ))
-                                }
+                    }
+                    IM_PALETTED => {
+                        //ImageMode::Paletted => {
+                        for y in ymin..ymax {
+                            for x in xmin..xmax {
+                                let i = y * width + x;
+                                let value = bor.read_u8() as usize;
+                                data[i] = palette[value] as f64;
                             }
                         }
-                        _ => {
+                    }
+                    IM_RGB => {
+                        //ImageMode::RGB => {
+                        if bits_per_sample[0] == 8 {
+                            for y in ymin..ymax {
+                                for x in xmin..xmax {
+                                    let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
+                                    let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
+                                    let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
+                                    let a = 255u32;
+                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    let i = y * width + x;
+                                    data[i] = value as f64;
+                                }
+                            }
+                        } else if bits_per_sample[0] == 16 {
+                            // the spec doesn't talk about 16-bit RGB images so
+                            // I'm not sure why I bother with this. They specifically
+                            // say that RGB images are 8-bits per channel. Anyhow,
+                            // I rescale the 16-bits to an 8-bit channel for simplicity.
+                            for y in ymin..ymax {
+                                for x in xmin..xmax {
+                                    let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let a = 255u32;
+                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    let i = y * width + x;
+                                    data[i] = value as f64;
+                                }
+                            }
+                        } else {
                             return Err(Error::new(
                                 ErrorKind::InvalidData,
                                 "The raster was not read correctly",
-                            ))
+                            ));
                         }
                     }
-                }
-                IM_PALETTED => {
-                    //ImageMode::Paletted => {
-                    for y in ymin..ymax {
-                        for x in xmin..xmax {
-                            let i = y * width + x;
-                            let value = bor.read_u8() as usize;
-                            data[i] = palette[value] as f64;
+                    IM_NRGBA | IM_RGBA => {
+                        //ImageMode::NRGBA | ImageMode::RGBA => {
+                        if bits_per_sample[0] == 8 {
+                            for y in ymin..ymax {
+                                for x in xmin..xmax {
+                                    let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
+                                    let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
+                                    let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
+                                    let a = bor.read_u8() as u32;
+                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    let i = y * width + x;
+                                    data[i] = value as f64;
+                                }
+                            }
+                        } else if bits_per_sample[0] == 16 {
+                            // the spec doesn't talk about 16-bit RGB images so
+                            // I'm not sure why I bother with this. They specifically
+                            // say that RGB images are 8-bits per channel. Anyhow,
+                            // I rescale the 16-bits to an 8-bit channel for simplicity.
+                            for y in ymin..ymax {
+                                for x in xmin..xmax {
+                                    let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let a = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
+                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    let i = y * width + x;
+                                    data[i] = value as f64;
+                                }
+                            }
+                        } else {
+                            return Err(Error::new(
+                                ErrorKind::InvalidData,
+                                "The raster was not read correctly",
+                            ));
                         }
                     }
-                }
-                IM_RGB => {
-                    //ImageMode::RGB => {
-                    if bits_per_sample[0] == 8 {
-                        for y in ymin..ymax {
-                            for x in xmin..xmax {
-                                let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
-                                let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
-                                let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
-                                let a = 255u32;
-                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                let i = y * width + x;
-                                data[i] = value as f64;
-                            }
-                        }
-                    } else if bits_per_sample[0] == 16 {
-                        // the spec doesn't talk about 16-bit RGB images so
-                        // I'm not sure why I bother with this. They specifically
-                        // say that RGB images are 8-bits per channel. Anyhow,
-                        // I rescale the 16-bits to an 8-bit channel for simplicity.
-                        for y in ymin..ymax {
-                            for x in xmin..xmax {
-                                let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let a = 255u32;
-                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                let i = y * width + x;
-                                data[i] = value as f64;
-                            }
-                        }
-                    } else {
+                    _ => {
                         return Err(Error::new(
                             ErrorKind::InvalidData,
                             "The raster was not read correctly",
-                        ));
+                        ))
                     }
                 }
-                IM_NRGBA | IM_RGBA => {
-                    //ImageMode::NRGBA | ImageMode::RGBA => {
-                    if bits_per_sample[0] == 8 {
-                        for y in ymin..ymax {
-                            for x in xmin..xmax {
-                                let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
-                                let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
-                                let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
-                                let a = bor.read_u8() as u32;
-                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                let i = y * width + x;
-                                data[i] = value as f64;
-                            }
-                        }
-                    } else if bits_per_sample[0] == 16 {
-                        // the spec doesn't talk about 16-bit RGB images so
-                        // I'm not sure why I bother with this. They specifically
-                        // say that RGB images are 8-bits per channel. Anyhow,
-                        // I rescale the 16-bits to an 8-bit channel for simplicity.
-                        for y in ymin..ymax {
-                            for x in xmin..xmax {
-                                let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let a = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                let i = y * width + x;
-                                data[i] = value as f64;
-                            }
-                        }
-                    } else {
-                        return Err(Error::new(
-                            ErrorKind::InvalidData,
-                            "The raster was not read correctly",
-                        ));
+            } else {
+                // GDAL supports sparse tiles. That is, if the block count is zero,
+                // instead of reading the block, simply assume it is filled with either
+                // nodata, if the value is defined, or zeros otherwise.
+                for y in ymin..ymax {
+                    for x in xmin..xmax {
+                        let i = y * width + x;
+                        data[i] = configs.nodata;
                     }
-                }
-                _ => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "The raster was not read correctly",
-                    ))
                 }
             }
 

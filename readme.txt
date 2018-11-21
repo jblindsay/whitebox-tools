@@ -86,6 +86,12 @@ Version 0.12.0 (XX-XX-2018)
   is far more efficient. Also, there was a bug in the original code that was the 
   result of a mis-match between the neighbouring cell distances and the back-link 
   direction. In some cases this resulted in an infinite loop, which is now resolved.
+- Improvements have been made to the WhiteboxTools GeoTIFF reader. A bug has been
+  fixed that prevented tile-oriented (in contrast to the more common strip-oriented)
+  TIFF files from being read properly. Support has been added for reading rasters
+  that have been compressed using the DEFLATE algorithm. Lastly, the WhiteboxTools
+  GeoTIFF reader now supports sparse rasters, as implemented by GDAL's GeoTIFF driver.
+- An issue in the SAGA raster format reader has been fixed.
 
 
 Version 0.11.0 (01-10-2018)

@@ -66,7 +66,7 @@ impl LongestFlowpath {
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input File".to_owned(),
+            name: "Input DEM File".to_owned(),
             flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
@@ -424,7 +424,6 @@ impl WhiteboxTool for LongestFlowpath {
                 }
 
                 basin_val_n = basins.get_value(row_n, col_n);
-                //if basin_val != basin_nodata && basin_val != 0f64 {
                 if basin_val_n != basin_val {
                     list_of_basins.push(row * columns + col);
                 }
@@ -493,6 +492,7 @@ impl WhiteboxTool for LongestFlowpath {
         list_of_basins.reverse();
         let (mut x, mut y): (f64, f64);
         let mut prev_dir: i8;
+        let mut first_cell_encountered: bool;
         let mut current_id = 1i32;
         let mut flag: bool;
         let mut already_added_point: bool;
@@ -519,16 +519,22 @@ impl WhiteboxTool for LongestFlowpath {
 
             // descend the flowpath
             prev_dir = 99; // this way the first point in the line is always output.
+            first_cell_encountered = false;
             flag = true;
             while flag {
                 if input.get_value(row, col) != nodata {
                     dir = flow_dir.get_value(row, col);
-                    already_added_point = if dir != prev_dir {
-                        x = input.get_x_from_column(col);
-                        y = input.get_y_from_row(row);
-                        points.push(Point2D::new(x, y));
+                    already_added_point = if dir != prev_dir || !first_cell_encountered {
                         prev_dir = dir;
-                        true
+                        if basins.get_value(row, col) == basin_val {
+                            x = input.get_x_from_column(col);
+                            y = input.get_y_from_row(row);
+                            points.push(Point2D::new(x, y));
+                            first_cell_encountered = true;
+                            true
+                        } else {
+                            false
+                        }
                     } else {
                         false
                     };

@@ -41,7 +41,7 @@ Dr. John B. Lindsay &#169; 2017-2018  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-October 10, 2018  \
+November 20, 2018  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -497,6 +497,33 @@ The *WhiteboxTools Runner* does not rely on the *Whitebox GAT* user interface at
 Eventually most of *Whitebox GAT's* approximately 400 tools [will be ported](https://github.com/jblindsay/whitebox-tools/blob/master/tool_porting.md) to *WhiteboxTools*, although this is an immense task. Opportunities to parallelize algorithms will be sought during porting. All new plugin tools will be added to *Whitebox GAT* using this library of functions.
 
 The library currently contains more than 370 tools, which are each grouped into themed toolboxes including: *Data Tools*, *Geomorphometric Analysis* (i.e. digital terrain analysis), *GIS Analysis*, *Hydrological Analysis*, *Image Analysis*, *LiDAR Analysis*, *Mathematical and Statistical Analysis*, and *Stream Network Analysis*. To retrieve detailed information about a tool's input arguments and example usage, either use the ```toolhelp``` command from the terminal, or the ```tool_help('tool_name')``` function from the *whitebox_tools.py* script. The following is a complete listing of available tools, with brief descriptions, tool parameter, and example usage.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1803,7 +1830,52 @@ create_rectangular_vector_grid(
 ```
 
 
-#### 8.2.11 EliminateCoincidentPoints
+#### 8.2.11 Dissolve
+
+This tool can be used to remove the interior, or shared, boundaries within a vector
+polygon coverage. You can either dissolve all interior boundaries or dissolve those
+boundaries along polygons with the same value of a user-specified attribute within
+the vector's attribute table. It may be desirable to use the `VectorCleaning` tool
+to correct any topological errors resulting from the slight misalignment of nodes
+along shared boundaries in the vector coverage before performing the `Dissolve` operation.
+
+*See Also*:
+
+`Clip`, `Erase`, `Polygonize`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-field             Dissolve field attribute (optional)
+-o, -\-output        Output vector file
+-\-snap              Snap tolerance
+
+
+*Python function*:
+
+~~~~{.python}
+dissolve(
+    i, 
+    output, 
+    field=None, 
+    snap=0.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Dissolve -v --wd="/path/to/data/" ^
+-input=layer1.shp --field=SIZE -o=out_file.shp ^
+--snap=0.0000001 
+
+
+```
+
+
+#### 8.2.12 EliminateCoincidentPoints
 
 This tool can be used to remove any coincident, or nearly coincident, points
 from a vector points file. The user must specify the name of the input file,
@@ -1842,7 +1914,7 @@ eliminate_coincident_points(
 ```
 
 
-#### 8.2.12 ExtendVectorLines
+#### 8.2.13 ExtendVectorLines
 
 This tool can be used to extend vector lines by a specified distance. The user must
 input the names of the input and output shapefiles, the distance to extend features
@@ -1881,7 +1953,7 @@ extend_vector_lines(
 ```
 
 
-#### 8.2.13 ExtractNodes
+#### 8.2.14 ExtractNodes
 
 Converts vector lines or polygons into vertex points.
 
@@ -1912,7 +1984,7 @@ extract_nodes(
 ```
 
 
-#### 8.2.14 ExtractRasterValuesAtPoints
+#### 8.2.15 ExtractRasterValuesAtPoints
 
 Extracts the values of raster(s) at vector point locations.
 
@@ -1944,7 +2016,7 @@ extract_raster_values_at_points(
 ```
 
 
-#### 8.2.15 FindLowestOrHighestPoints
+#### 8.2.16 FindLowestOrHighestPoints
 
 Locates the lowest and/or highest valued cells in a raster.
 
@@ -1978,7 +2050,7 @@ find_lowest_or_highest_points(
 ```
 
 
-#### 8.2.16 IdwInterpolation
+#### 8.2.17 IdwInterpolation
 
 Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 
@@ -2031,7 +2103,7 @@ idw_interpolation(
 ```
 
 
-#### 8.2.17 LayerFootprint
+#### 8.2.18 LayerFootprint
 
 This tool creates a vector polygon footprint of the area covered by a raster grid or vector
 layer. It will create a vector rectangle corresponding to the bounding box. The user must
@@ -2076,7 +2148,7 @@ layer_footprint(
 ```
 
 
-#### 8.2.18 Medoid
+#### 8.2.19 Medoid
 
 This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
 of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid
@@ -2122,7 +2194,7 @@ medoid(
 ```
 
 
-#### 8.2.19 MinimumBoundingBox
+#### 8.2.20 MinimumBoundingBox
 
 This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
 completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
@@ -2167,7 +2239,7 @@ minimum_bounding_box(
 ```
 
 
-#### 8.2.20 MinimumBoundingCircle
+#### 8.2.21 MinimumBoundingCircle
 
 This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
 circle to completely enclose a feature.
@@ -2205,7 +2277,7 @@ minimum_bounding_circle(
 ```
 
 
-#### 8.2.21 MinimumBoundingEnvelope
+#### 8.2.22 MinimumBoundingEnvelope
 
 This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
 rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y
@@ -2245,7 +2317,7 @@ minimum_bounding_envelope(
 ```
 
 
-#### 8.2.22 MinimumConvexHull
+#### 8.2.23 MinimumConvexHull
 
 This tool creates a vector convex polygon around vector features. The convex hull
 is a convex closure of a set of points or polygon verticies and can be may be
@@ -2287,7 +2359,7 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.23 NearestNeighbourGridding
+#### 8.2.24 NearestNeighbourGridding
 
 Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 
@@ -2334,7 +2406,7 @@ nearest_neighbour_gridding(
 ```
 
 
-#### 8.2.24 PolygonArea
+#### 8.2.25 PolygonArea
 
 This tool calculates the area of vector polygons, adding the result to the
 vector's attribute table (AREA field). The area calculation will account
@@ -2366,7 +2438,7 @@ polygon_area(
 ```
 
 
-#### 8.2.25 PolygonLongAxis
+#### 8.2.26 PolygonLongAxis
 
 This tool can be used to map the long axis of polygon features. The long axis is the
 longer of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2401,7 +2473,7 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.26 PolygonPerimeter
+#### 8.2.27 PolygonPerimeter
 
 This tool calculates the perimeter of vector polygons, adding the result
 to the vector's attribute table (PERIMETER field). The area calculation will
@@ -2433,7 +2505,7 @@ polygon_perimeter(
 ```
 
 
-#### 8.2.27 PolygonShortAxis
+#### 8.2.28 PolygonShortAxis
 
 This tool can be used to map the short axis of polygon features. The short axis is the
 shorter of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2468,7 +2540,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.28 RasterCellAssignment
+#### 8.2.29 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -2503,7 +2575,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.29 Reclass
+#### 8.2.30 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -2545,7 +2617,7 @@ reclass(
 ```
 
 
-#### 8.2.30 ReclassEqualInterval
+#### 8.2.31 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -2583,7 +2655,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.31 ReclassFromFile
+#### 8.2.32 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -2617,7 +2689,7 @@ reclass_from_file(
 ```
 
 
-#### 8.2.32 SmoothVectors
+#### 8.2.33 SmoothVectors
 
 This tool smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType. The algorithm
 uses a simple moving average method for smoothing, where the size of the averaging window is specified
@@ -2653,7 +2725,7 @@ smooth_vectors(
 ```
 
 
-#### 8.2.33 TinGridding
+#### 8.2.34 TinGridding
 
 Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
 and linear interpolation within each triangular-shaped plane.
@@ -2699,7 +2771,7 @@ tin_gridding(
 ```
 
 
-#### 8.2.34 VectorHexBinning
+#### 8.2.35 VectorHexBinning
 
 The practice of binning point data to form a type of 2D histogram, density plot,
 or what is sometimes called a heatmap, is quite useful as an alternative for the
@@ -2756,7 +2828,7 @@ vector_hex_binning(
 ```
 
 
-#### 8.2.35 VoronoiDiagram
+#### 8.2.36 VoronoiDiagram
 
 This tool creates a vector Voronoi diagram for a set of vector points. The
 Voronoi diagram is the dual graph of the Delaunay triangulation. The tool
@@ -2883,7 +2955,36 @@ cost_allocation(
 
 #### 8.3.3 CostDistance
 
-Performs cost-distance accumulation on a cost surface and a group of source cells.
+This tool can be used to perform cost-distance or least-cost pathway analyses. Specifically,
+this tool can be used to calculate the accumulated cost of traveling from the 'source grid
+cell' to each other grid cell in a raster dataset. It is based on the costs associated with
+traveling through each cell along a pathway represented in a cost (or friction) surface. If
+there are multiple source grid cells, each cell in the resulting cost-accumulation surface
+will reflect the accumulated cost to the source cell that is connected by the minimum accumulated
+cost-path. The user must specify the names of the raster file containing the source cells
+(`--source`), the raster file containing the cost surface information (`--cost`), the output
+cost-accumulation surface raster (`--out_accum`), and the output back-link raster (`--out_backlink`).
+Source cells are designated as all positive, non-zero valued grid cells in the source raster.
+The cost (friction) raster can be created by combining the various cost factors associated with
+the specific problem (e.g. slope gradient, visibility, etc.) using a raster calculator or the
+`WeightedOverlay` tool.
+
+While the cost-accumulation surface raster can be helpful for visualizing
+the three-dimensional characteristics of the 'cost landscape', it is actually the back-link raster
+that is used as inputs to the other two cost-distance tools, `CostAllocation` and `CostPathway`, to
+determine the least-cost linkages among neighbouring grid cells on the cost surface. If the
+accumulated cost surface is analogous to a digital elevation model (DEM) then the back-link raster
+is equivalent to the D8 flow-direction pointer. In fact, it is created in a similar way and uses
+the same convention for designating 'flow directions' between neighbouring grid cells. The algorithm
+for the cost distance accumulation operation uses a type of priority-flood method similar to
+what is used for depression filling and flow accumulation operations.
+
+NoData values in the input cost surface image are ignored during processing and assigned NoData values
+in the outputs. The output cost accumulation raster is of the float data type and continuous data scale.
+
+*See Also*:
+:
+`CostAllocation`, `CostPathway`, `WeightedOverlay`
 
 *Parameters*:
 
@@ -3159,7 +3260,65 @@ count_if(
 ```
 
 
-#### 8.4.5 Erase
+#### 8.4.5 Difference
+
+This tool will remove all the overlapping features, or parts of overlapping features, between
+input and overlay vector files, outputting only the features that occur in one of the two
+inputs but not both. The *Symmetrical Difference* is related to the Boolean
+exclusive-or (**XOR**) operation in  set theory and is one of the common vector overlay
+operations in GIS. The user must specify  the names of the input and overlay vector files
+as well as the output vector file name. The tool operates on vector points,
+lines, or polygon, but both the input and overlay files must contain the same ShapeType.
+
+The *Symmetrical Difference* can also be derived using a combination of other vector
+overlay operations, as either `(A union B) difference (A intersect B)`, or
+`(A difference B) union (B difference A)`.
+
+The attributes of the two input vectors will be merged in the output attribute table.
+Fields that are duplicated between the inputs will share a single attribute in the
+output. Fields that only exist in one of the two inputs will be populated by `null`
+in the output table. Multipoint ShapeTypes however will simply contain a single
+ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
+ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
+be transfered to the output geometries. If the input attribute table contains fields
+that measure the geometric properties of their associated features (e.g. length or area),
+these fields will not be updated to reflect changes in geometry shape and size
+resulting from the overlay operation.
+
+*See Also*:
+
+`Intersect`, `Difference`, `Union`, `Clip`, `Erase`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-overlay           Input overlay vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+difference(
+    i, 
+    overlay, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Difference -v --wd="/path/to/data/" ^
+-input=layer1.shp --overlay=layer2.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.6 Erase
 
 This tool will remove all the features, or parts of features, that overlap with the features
 of the erase vector file. The erasing operation is one of the most common vector overlay
@@ -3199,7 +3358,7 @@ erase(
 ```
 
 
-#### 8.4.6 ErasePolygonFromRaster
+#### 8.4.7 ErasePolygonFromRaster
 
 Erases (cuts out) a vector polygon from a raster.
 
@@ -3233,7 +3392,7 @@ erase_polygon_from_raster(
 ```
 
 
-#### 8.4.7 HighestPosition
+#### 8.4.8 HighestPosition
 
 Identifies the stack position of the maximum value within a raster stack on a cell-by-cell basis.
 
@@ -3265,7 +3424,63 @@ highest_position(
 ```
 
 
-#### 8.4.8 LineIntersections
+#### 8.4.9 Intersect
+
+The result of the `Intersect` vector overlay operation includes all the feature parts that
+occur in both input layers, excluding all other parts. It is analogous to the **OR**
+logical operator and multiplication in arithmetic. This tool is one of the common vector overlay
+operations in GIS. The user must specify the names of the input and overlay vector files
+as well as the output vector file name. The tool operates on vector points,
+lines, or polygon, but both the input and overlay files must contain the same ShapeType.
+
+The `Intersect` tool is similar to the `Clip` tool. The difference is that the overlay vector
+layer in a `Clip` operation must always be polygons, regardless of whether the input layer
+consists of points or polylines.
+
+The attributes of the two input vectors will be merged in the output attribute table.
+Note, duplicate fields should not exist between the inputs layers, as they will share a
+single attribute in the output (assigned from the first layer). Multipoint ShapeTypes will
+simply contain a single  ouptut feature indentifier (`FID`) attribute. Also, note that depending
+on the ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
+be transfered to the output geometries. If the input attribute table contains fields
+that measure the geometric properties of their associated features (e.g. length or area),
+these fields will not be updated to reflect changes in geometry shape and size
+resulting from the overlay operation.
+
+*See Also*:
+
+`Difference`, `Union`, `SymmetricalDifference`, `Clip`, `Erase`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-overlay           Input overlay vector file
+-o, -\-output        Output vector file
+
+
+*Python function*:
+
+~~~~{.python}
+intersect(
+    i, 
+    overlay, 
+    output, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Intersect -v --wd="/path/to/data/" ^
+-input=layer1.shp --overlay=layer2.shp -o=out_file.shp 
+
+
+```
+
+
+#### 8.4.10 LineIntersections
 
 This tool identifies points where the features of two vector line/polygon layers
 intersect. The user must specify the names of two input vector line files and the
@@ -3310,7 +3525,7 @@ line_intersections(
 ```
 
 
-#### 8.4.9 LowestPosition
+#### 8.4.11 LowestPosition
 
 Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
 
@@ -3341,7 +3556,7 @@ lowest_position(
 ```
 
 
-#### 8.4.10 MaxAbsoluteOverlay
+#### 8.4.12 MaxAbsoluteOverlay
 
 Evaluates the maximum absolute value for each grid cell from a stack of input rasters.
 
@@ -3373,7 +3588,7 @@ max_absolute_overlay(
 ```
 
 
-#### 8.4.11 MaxOverlay
+#### 8.4.13 MaxOverlay
 
 Evaluates the maximum value for each grid cell from a stack of input rasters.
 
@@ -3404,7 +3619,7 @@ max_overlay(
 ```
 
 
-#### 8.4.12 MinAbsoluteOverlay
+#### 8.4.14 MinAbsoluteOverlay
 
 Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -3436,7 +3651,7 @@ min_absolute_overlay(
 ```
 
 
-#### 8.4.13 MinOverlay
+#### 8.4.15 MinOverlay
 
 Evaluates the minimum value for each grid cell from a stack of input rasters.
 
@@ -3467,7 +3682,7 @@ min_overlay(
 ```
 
 
-#### 8.4.14 PercentEqualTo
+#### 8.4.16 PercentEqualTo
 
 Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
 
@@ -3501,7 +3716,7 @@ percent_equal_to(
 ```
 
 
-#### 8.4.15 PercentGreaterThan
+#### 8.4.17 PercentGreaterThan
 
 Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
 
@@ -3535,7 +3750,7 @@ percent_greater_than(
 ```
 
 
-#### 8.4.16 PercentLessThan
+#### 8.4.18 PercentLessThan
 
 Calculates the percentage of a raster stack that have cell values less than an input on a cell-by-cell basis.
 
@@ -3569,7 +3784,7 @@ percent_less_than(
 ```
 
 
-#### 8.4.17 PickFromList
+#### 8.4.19 PickFromList
 
 Outputs the value from a raster stack specified by a position raster.
 
@@ -3603,7 +3818,7 @@ pick_from_list(
 ```
 
 
-#### 8.4.18 Polygonize
+#### 8.4.20 Polygonize
 
 This tool outputs a vector polygon layer from two or more intersecting line features
 contained in one or more input vector line files. Each space enclosed by the intersecting
@@ -3643,7 +3858,7 @@ polygonize(
 ```
 
 
-#### 8.4.19 SplitWithLines
+#### 8.4.21 SplitWithLines
 
 This tool splits the lines or polygons in one layer using the lines in another layer
 to define the breaking points. Intersection points between geometries in both layers
@@ -3684,7 +3899,7 @@ split_with_lines(
 ```
 
 
-#### 8.4.20 SumOverlay
+#### 8.4.22 SumOverlay
 
 This tool calculates the sum for each grid cell from a group of raster images.
 
@@ -3724,7 +3939,7 @@ sum_overlay(
 ```
 
 
-#### 8.4.21 SymmetricalDifference
+#### 8.4.23 SymmetricalDifference
 
 This tool will remove all the overlapping features, or parts of overlapping features, between
 input and overlay vector files, outputting only the features that occur in one of the two
@@ -3783,7 +3998,63 @@ symmetrical_difference(
 ```
 
 
-#### 8.4.22 WeightedOverlay
+#### 8.4.24 Union
+
+This tool splits vector layers at their overlaps, creating a layer containing all the portions from both
+input and overlay layers. The *Union* is related to the Boolean
+**OR** operation in  set theory and is one of the common vector overlay
+operations in GIS. The user must specify  the names of the input and overlay vector files
+as well as the output vector file name. The tool operates on vector points,
+lines, or polygon, but both the input and overlay files must contain the same ShapeType.
+
+The attributes of the two input vectors will be merged in the output attribute table.
+Fields that are duplicated between the inputs will share a single attribute in the
+output. Fields that only exist in one of the two inputs will be populated by `null`
+in the output table. Multipoint ShapeTypes however will simply contain a single
+ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
+ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
+be transfered to the output geometries. If the input attribute table contains fields
+that measure the geometric properties of their associated features (e.g. length or area),
+these fields will not be updated to reflect changes in geometry shape and size
+resulting from the overlay operation.
+
+*See Also*:
+
+`Intersect`, `Difference`, `SymmetricalDifference`, `Clip`, `Erase`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-\-overlay           Input overlay vector file
+-o, -\-output        Output vector file
+-\-snap              Snap tolerance
+
+
+*Python function*:
+
+~~~~{.python}
+union(
+    i, 
+    overlay, 
+    output, 
+    snap=0.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=Union -v --wd="/path/to/data/" ^
+-input=layer1.shp --overlay=layer2.shp -o=out_file.shp ^
+--snap=0.0000001 
+
+
+```
+
+
+#### 8.4.25 WeightedOverlay
 
 This tool performs a weighted overlay on multiple input images. It can be used to
 combine multiple factors with varying levels of weight or relative importance. The
@@ -3849,7 +4120,7 @@ weighted_overlay(
 ```
 
 
-#### 8.4.23 WeightedSum
+#### 8.4.26 WeightedSum
 
 This tool performs a weighted-sum overlay on multiple input raster images.
 If you have a stack of rasters that you would like to sum, each with an
@@ -13505,7 +13776,7 @@ Transforms raster values into quantiles.
 quantiles(
     i, 
     output, 
-    num_quantiles=4, 
+    num_quantiles=5, 
     callback=default_callback)
 ~~~~
 
@@ -15205,32 +15476,6 @@ tributary_identifier(
 
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

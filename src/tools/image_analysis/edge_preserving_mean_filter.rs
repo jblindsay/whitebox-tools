@@ -167,7 +167,7 @@ impl WhiteboxTool for EdgePreservingMeanFilter {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-filter" || flag_val == "-filter" {
+            } else if flag_val == "-filter" {
                 filter_size = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap() as usize
                 } else {

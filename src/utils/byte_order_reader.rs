@@ -20,6 +20,10 @@ impl ByteOrderReader {
         self.pos = position;
     }
 
+    pub fn inc_pos(&mut self, skip: usize) {
+        self.pos += skip;
+    }
+
     pub fn pos(&self) -> usize {
         self.pos
     }

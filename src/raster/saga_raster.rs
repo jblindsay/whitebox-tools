@@ -9,7 +9,8 @@ use std::io::ErrorKind;
 use std::io::SeekFrom;
 use std::mem;
 use std::path::Path;
-use utils::Endianness;
+use utils;
+use utils::ByteOrderReader;
 
 pub fn read_saga(
     file_name: &String,
@@ -175,8 +176,8 @@ pub fn read_saga(
     };
 
     let num_cells = configs.rows * configs.columns;
-    //data = vec![configs.nodata; num_cells];
     data.clear();
+    data.reserve(num_cells);
     for _ in 0..num_cells {
         data.push(configs.nodata);
     }
@@ -191,24 +192,23 @@ pub fn read_saga(
 
         try!(f.read(&mut buffer));
 
-        let mut offset: usize;
+        let mut bor = if configs.endian == Endianness::LittleEndian {
+            ByteOrderReader::new(buffer, utils::Endianness::LittleEndian)
+        } else {
+            ByteOrderReader::new(buffer, utils::Endianness::BigEndian)
+        };
+        bor.pos = 0;
+
         match configs.data_type {
             DataType::F64 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 8], f64>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                            buffer[offset + 4],
-                            buffer[offset + 5],
-                            buffer[offset + 6],
-                            buffer[offset + 7],
-                        ])
-                    } * z_factor;
+                    data[k] = bor.read_f64() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -217,26 +217,18 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j >= num_cells - 1 {
-                        break;
                     }
                 }
             }
             DataType::F32 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 4], f32>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                        ])
-                    } as f64
-                        * z_factor;
+                    data[k] = bor.read_f32() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -245,26 +237,18 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::I32 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 4], i32>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                        ])
-                    } as f64
-                        * z_factor;
+                    data[k] = bor.read_i32() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -273,26 +257,18 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::U32 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 4], u32>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                        ])
-                    } as f64
-                        * z_factor;
+                    data[k] = bor.read_u32() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -301,21 +277,18 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::I16 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset + 1]])
-                    } as f64
-                        * z_factor;
+                    data[k] = bor.read_i16() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -324,21 +297,18 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::U16 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = unsafe {
-                        mem::transmute::<[u8; 2], u16>([buffer[offset], buffer[offset + 1]])
-                    } as f64
-                        * z_factor;
+                    data[k] = bor.read_u16() as f64 * z_factor;
+
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -347,17 +317,17 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::I8 => {
-                for i in 0..buf_size {
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = (buffer[i] as i8) as f64 * z_factor;
+                    data[k] = bor.read_i8() as f64 * z_factor;
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -366,17 +336,17 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
             DataType::U8 => {
-                for i in 0..buf_size {
+                for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = buffer[i] as f64 * z_factor;
+                    data[k] = bor.read_u8() as f64 * z_factor;
+                    j += 1;
+                    if j == num_cells {
+                        break;
+                    }
                     col += 1;
                     if col >= configs.columns {
                         col = 0;
@@ -385,10 +355,6 @@ pub fn read_saga(
                         } else {
                             row += 1;
                         }
-                    }
-                    j += 1;
-                    if j == num_cells {
-                        break;
                     }
                 }
             }
