@@ -362,6 +362,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -422,7 +423,7 @@ callback -- Custom function for handling tool text outputs.
         if headers: args.append("--headers")
         return self.run_tool('export_table_to_csv', args, callback) # returns 1 if error
 
-    def join_tables(self, input1, pkey, input2, fkey, import, callback=None):
+    def join_tables(self, input1, pkey, input2, fkey, import_field, callback=None):
         """Merge a vector's attribute table with another table based on a common field.
 
         Keyword arguments:
@@ -431,7 +432,7 @@ callback -- Custom function for handling tool text outputs.
         pkey -- Primary key field. 
         input2 -- Input foreign vector file (i.e. source of data to be imported). 
         fkey -- Foreign key field. 
-        import -- Imported field (all fields will be imported if not specified). 
+        import_field -- Imported field (all fields will be imported if not specified). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -439,7 +440,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--pkey='{}'".format(pkey))
         args.append("--input2='{}'".format(input2))
         args.append("--fkey='{}'".format(fkey))
-        args.append("--import='{}'".format(import))
+        args.append("--import_field='{}'".format(import_field))
         return self.run_tool('join_tables', args, callback) # returns 1 if error
 
     def lines_to_polygons(self, i, output, callback=None):
@@ -456,7 +457,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('lines_to_polygons', args, callback) # returns 1 if error
 
-    def merge_table_with_csv(self, i, pkey, csv, fkey, import=None, callback=None):
+    def merge_table_with_csv(self, i, pkey, csv, fkey, import_field=None, callback=None):
         """Merge a vector's attribute table with a table contained within a CSV text file.
 
         Keyword arguments:
@@ -465,7 +466,7 @@ callback -- Custom function for handling tool text outputs.
         pkey -- Primary key field. 
         csv -- Input CSV file (i.e. source of data to be imported). 
         fkey -- Foreign key field. 
-        import -- Imported field (all fields will be imported if not specified). 
+        import_field -- Imported field (all fields will be imported if not specified). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -473,7 +474,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--pkey='{}'".format(pkey))
         args.append("--csv='{}'".format(csv))
         args.append("--fkey='{}'".format(fkey))
-        if import is not None: args.append("--import='{}'".format(import))
+        if import_field is not None: args.append("--import_field='{}'".format(import_field))
         return self.run_tool('merge_table_with_csv', args, callback) # returns 1 if error
 
     def merge_vectors(self, inputs, output, callback=None):
@@ -1560,7 +1561,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('highest_position', args, callback) # returns 1 if error
 
-    def intersect(self, i, overlay, output, callback=None):
+    def intersect(self, i, overlay, output, snap=0.0, callback=None):
         """Identifies the parts of features in common between two input vector layers.
 
         Keyword arguments:
@@ -1568,12 +1569,14 @@ callback -- Custom function for handling tool text outputs.
         i -- Input vector file. 
         overlay -- Input overlay vector file. 
         output -- Output vector file. 
+        snap -- Snap tolerance. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
         args.append("--overlay='{}'".format(overlay))
         args.append("--output='{}'".format(output))
+        args.append("--snap={}".format(snap))
         return self.run_tool('intersect', args, callback) # returns 1 if error
 
     def line_intersections(self, input1, input2, output, callback=None):
@@ -1770,7 +1773,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('sum_overlay', args, callback) # returns 1 if error
 
-    def symmetrical_difference(self, i, overlay, output, callback=None):
+    def symmetrical_difference(self, i, overlay, output, snap=0.0, callback=None):
         """Outputs the features that occur in one of the two vector inputs but not both, i.e. no overlapping features.
 
         Keyword arguments:
@@ -1778,12 +1781,14 @@ callback -- Custom function for handling tool text outputs.
         i -- Input vector file. 
         overlay -- Input overlay vector file. 
         output -- Output vector file. 
+        snap -- Snap tolerance. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
         args.append("--overlay='{}'".format(overlay))
         args.append("--output='{}'".format(output))
+        args.append("--snap={}".format(snap))
         return self.run_tool('symmetrical_difference', args, callback) # returns 1 if error
 
     def union(self, i, overlay, output, snap=0.0, callback=None):

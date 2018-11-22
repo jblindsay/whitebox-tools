@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 07/10/2018
-Last Modified: 12/10/2018
+Last Modified: 22/11/2018
 License: MIT
 */
 
@@ -23,8 +23,8 @@ use vector::{FieldData, Shapefile};
 /// second table that corresponds with the data contained within the primary key in the table, must be
 /// specified. Both the primary and foreign keys should either be strings (text) or integer values.
 /// *Fields containing decimal values are not good candidates for keys.* Lastly, the names of the field
-/// within the second file to include in the merge operation can also be input (`--import`). If the
-/// `--import` field is not input, all fields in the attribute table of the second file, that are not
+/// within the second file to include in the merge operation can also be input (`--import_field`). If the
+/// `--import_field` field is not input, all fields in the attribute table of the second file, that are not
 /// the foreign key nor FID, will be imported to the first table.
 ///
 /// Merging works for one-to-one and many-to-one database relations. A *one-to-one* relations exists when
@@ -111,7 +111,7 @@ impl JoinTables {
 
         parameters.push(ToolParameter {
             name: "Imported Field".to_owned(),
-            flags: vec!["--import".to_owned()],
+            flags: vec!["--import_field".to_owned()],
             description: "Imported field (all fields will be imported if not specified)."
                 .to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
@@ -134,7 +134,7 @@ impl JoinTables {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=properties.shp --pkey=TYPE --i2=land_class.shp --fkey=VALUE --import=NEW_VALUE",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=properties.shp --pkey=TYPE --i2=land_class.shp --fkey=VALUE --import_field=NEW_VALUE",
             short_exe, name
         ).replace("*", &sep);
 
@@ -228,7 +228,7 @@ impl WhiteboxTool for JoinTables {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-import" {
+            } else if flag_val == "-import_field" {
                 import_field = if keyval {
                     vec[1].to_string()
                 } else {

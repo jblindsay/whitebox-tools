@@ -692,8 +692,8 @@ derived. The *foreign key* (`--fkey` flag), the identifying field within the
 second table that corresponds with the data contained within the primary key in the table, must be
 specified. Both the primary and foreign keys should either be strings (text) or integer values.
 *Fields containing decimal values are not good candidates for keys.* Lastly, the names of the field
-within the second file to include in the merge operation can also be input (`--import`). If the
-`--import` field is not input, all fields in the attribute table of the second file, that are not
+within the second file to include in the merge operation can also be input (`--import_field`). If the
+`--import_field` field is not input, all fields in the attribute table of the second file, that are not
 the foreign key nor FID, will be imported to the first table.
 
 Merging works for one-to-one and many-to-one database relations. A *one-to-one* relations exists when
@@ -723,7 +723,7 @@ will correspond to only one foreign key containing the population and area data.
 -\-pkey              Primary key field
 -\-i2, -\-input2     Input foreign vector file (i.e. source of data to be imported)
 -\-fkey              Foreign key field
--\-import            Imported field (all fields will be imported if not specified)
+-\-import_field      Imported field (all fields will be imported if not specified)
 
 
 *Python function*:
@@ -734,7 +734,7 @@ join_tables(
     pkey, 
     input2, 
     fkey, 
-    import, 
+    import_field, 
     callback=default_callback)
 ~~~~
 
@@ -743,7 +743,7 @@ join_tables(
 ```
 >>./whitebox_tools -r=JoinTables -v --wd="/path/to/data/" ^
 --i1=properties.shp --pkey=TYPE --i2=land_class.shp ^
---fkey=VALUE --import=NEW_VALUE 
+--fkey=VALUE --import_field=NEW_VALUE 
 
 
 ```
@@ -803,7 +803,7 @@ header row, i.e. the first row must contain information about the names of the v
 CSV file that corresponds with the data contained within the *primary key* in the table, must also
 be specified. Both the primary and foreign keys should either be strings (text) or integer values.
 *Fields containing decimal values are not good candidates for keys.* Lastly, the user may optionally
-specify the name of a field within the CSV file to import in the merge operation (`--import` flag).
+specify the name of a field within the CSV file to import in the merge operation (`--import_field` flag).
 If this flag is not specified, all of the fields within the CSV, with the exception of the foreign
 key, will be appended to the attribute table.
 
@@ -834,7 +834,7 @@ will correspond to only one foreign key containing the population and area data.
 -\-pkey              Primary key field
 -\-csv               Input CSV file (i.e. source of data to be imported)
 -\-fkey              Foreign key field
--\-import            Imported field (all fields will be imported if not specified)
+-\-import_field      Imported field (all fields will be imported if not specified)
 
 
 *Python function*:
@@ -845,7 +845,7 @@ merge_table_with_csv(
     pkey, 
     csv, 
     fkey, 
-    import=None, 
+    import_field=None, 
     callback=default_callback)
 ~~~~
 
@@ -855,9 +855,9 @@ merge_table_with_csv(
 >>./whitebox_tools -r=MergeTableWithCsv -v ^
 --wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
 --csv=land_class.csv --fkey=VALUE ^
---import=NEW_VALUE
->>./whitebox_tools -r=MergeTableWithCsv -v ^
---wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
+--import_field=NEW_VALUE
+>>./whitebox_tools -r=MergeTableWithCsv ^
+-v --wd="/path/to/data/" -i=properties.shp --pkey=TYPE ^
 --csv=land_class.csv --fkey=VALUE 
 
 
@@ -3458,6 +3458,7 @@ resulting from the overlay operation.
 -i, -\-input         Input vector file
 -\-overlay           Input overlay vector file
 -o, -\-output        Output vector file
+-\-snap              Snap tolerance
 
 
 *Python function*:
@@ -3467,6 +3468,7 @@ intersect(
     i, 
     overlay, 
     output, 
+    snap=0.0, 
     callback=default_callback)
 ~~~~
 
@@ -3474,7 +3476,8 @@ intersect(
 
 ```
 >>./whitebox_tools -r=Intersect -v --wd="/path/to/data/" ^
--input=layer1.shp --overlay=layer2.shp -o=out_file.shp 
+-input=layer1.shp --overlay=layer2.shp -o=out_file.shp ^
+--snap=0.0000001 
 
 
 ```
@@ -3975,6 +3978,7 @@ resulting from the overlay operation.
 -i, -\-input         Input vector file
 -\-overlay           Input overlay vector file
 -o, -\-output        Output vector file
+-\-snap              Snap tolerance
 
 
 *Python function*:
@@ -3984,6 +3988,7 @@ symmetrical_difference(
     i, 
     overlay, 
     output, 
+    snap=0.0, 
     callback=default_callback)
 ~~~~
 
@@ -3992,7 +3997,7 @@ symmetrical_difference(
 ```
 >>./whitebox_tools -r=SymmetricalDifference -v ^
 --wd="/path/to/data/" -input=layer1.shp --overlay=layer2.shp ^
--o=out_file.shp 
+-o=out_file.shp --snap=0.0000001 
 
 
 ```
@@ -15475,6 +15480,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 11/10/2018
-Last Modified: 12/10/2018
+Last Modified: 22/11/2018
 License: MIT
 */
 
@@ -29,7 +29,7 @@ use vector::{AttributeField, FieldData, FieldDataType, Shapefile};
 /// CSV file that corresponds with the data contained within the *primary key* in the table, must also
 /// be specified. Both the primary and foreign keys should either be strings (text) or integer values.
 /// *Fields containing decimal values are not good candidates for keys.* Lastly, the user may optionally
-/// specify the name of a field within the CSV file to import in the merge operation (`--import` flag).
+/// specify the name of a field within the CSV file to import in the merge operation (`--import_field` flag).
 /// If this flag is not specified, all of the fields within the CSV, with the exception of the foreign
 /// key, will be appended to the attribute table.
 ///
@@ -114,7 +114,7 @@ impl MergeTableWithCsv {
 
         parameters.push(ToolParameter {
             name: "Imported Field".to_owned(),
-            flags: vec!["--import".to_owned()],
+            flags: vec!["--import_field".to_owned()],
             description: "Imported field (all fields will be imported if not specified)."
                 .to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
@@ -137,7 +137,7 @@ impl MergeTableWithCsv {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=properties.shp --pkey=TYPE --csv=land_class.csv --fkey=VALUE --import=NEW_VALUE
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=properties.shp --pkey=TYPE --csv=land_class.csv --fkey=VALUE --import_field=NEW_VALUE
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=properties.shp --pkey=TYPE --csv=land_class.csv --fkey=VALUE",
             short_exe, name
         ).replace("*", &sep);

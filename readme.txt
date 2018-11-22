@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.12.0 (XX-XX-2018)
+Version 0.12.0 (22-11-2018)
 - The following tools were added to the project:
     BlockMaximumGridding
     BlockMinimumGridding
