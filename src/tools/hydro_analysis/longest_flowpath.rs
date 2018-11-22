@@ -37,9 +37,8 @@ use vector::*;
 /// non-overlapping watersheds, or a series of nested subbasins. These are often derived using
 /// the `Watershed` tool, based on a series of input outlets, or the `Subbasins` tool, based on
 /// an input stream network. If subbasins are input to `LongestFlowpath`, each traced flowpath
-/// will include the full upstream length, including the portions of the longest flowpaths that
-/// are contained within nested areas. Therefore, this can be a convienent method of delineating
-/// the longest flowpath to each bifurcation in a stream network.
+/// will include only the non-overlapping portions within nested areas. Therefore, this can be a
+/// convienent method of delineating the longest flowpath to each bifurcation in a stream network.
 ///
 /// The output vector file will contain fields in the attribute table that identify the associated
 /// basin unique identifier (*BASIN*), the elevation of the flowpath source point on the divide
@@ -455,31 +454,34 @@ impl WhiteboxTool for LongestFlowpath {
         // add the attributes
         output
             .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 5u8, 0u8));
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
 
-        output
-            .attributes
-            .add_field(&AttributeField::new("BASIN", FieldDataType::Real, 8u8, 3u8));
+        output.attributes.add_field(&AttributeField::new(
+            "BASIN",
+            FieldDataType::Real,
+            10u8,
+            3u8,
+        ));
 
         output.attributes.add_field(&AttributeField::new(
             "UP_ELEV",
             FieldDataType::Real,
-            8u8,
+            10u8,
             3u8,
         ));
 
         output.attributes.add_field(&AttributeField::new(
             "DN_ELEV",
             FieldDataType::Real,
-            8u8,
+            10u8,
             3u8,
         ));
 
         output.attributes.add_field(&AttributeField::new(
             "LENGTH",
             FieldDataType::Real,
-            8u8,
-            3u8,
+            18u8,
+            34u8,
         ));
 
         output.attributes.add_field(&AttributeField::new(

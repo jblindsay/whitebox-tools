@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 8/11/2018
-Last Modified: 8/11/2018
+Last Modified: 21/11/2018
 License: MIT
 */
 extern crate kdtree;
@@ -98,6 +98,15 @@ impl Intersect {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Snap Tolerance".to_owned(),
+            flags: vec!["--snap".to_owned()],
+            description: "Snap tolerance.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -110,7 +119,7 @@ impl Intersect {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -input=layer1.shp --overlay=layer2.shp -o=out_file.shp",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -input=layer1.shp --overlay=layer2.shp -o=out_file.shp --snap=0.0000001",
             short_exe, name
         ).replace("*", &sep);
 
@@ -168,6 +177,7 @@ impl WhiteboxTool for Intersect {
         let mut input_file = String::new();
         let mut overlay_file = String::new();
         let mut output_file = String::new();
+        let mut precision = std::f64::EPSILON;
 
         // read the arguments
         if args.len() == 0 {
@@ -204,6 +214,15 @@ impl WhiteboxTool for Intersect {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-snap" {
+                precision = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+                if precision == 0f64 {
+                    precision = std::f64::EPSILON;
+                }
             }
         }
 
@@ -283,9 +302,6 @@ impl WhiteboxTool for Intersect {
         }
 
         let num_attributes = output.attributes.get_num_fields();
-
-        // let num_decimals = 6;
-        let precision = EPSILON; //1f64 / num_decimals as f64;
 
         match input.header.shape_type.base_shape_type() {
             ShapeType::Point => {
@@ -754,76 +770,123 @@ impl WhiteboxTool for Intersect {
                                 is_part_a_hole2.push(is_part_a_hole[record_num][j]);
                             }
 
-                            // // convert to fixed precision
-                            // let mut p: Point2D;
-                            // for i in 0..polygons.len() {
-                            //     for j in 0..polygons[i].len() {
-                            //         p = polygons[i][j];
-                            //         polygons[i].vertices[j] = p.fix_precision(num_decimals);
-                            //     }
-                            // }
-
-                            // Break the polygons up into lines at junction points.
+                            // Break the polygons up into line segments at junction points and endnodes.
+                            let mut p: Point2D;
                             let dimensions = 2;
                             let capacity_per_node = 64;
-                            let mut snap_tree =
-                                KdTree::new_with_capacity(dimensions, capacity_per_node);
-                            let mut p: Point2D;
+                            let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
                             for i in 0..polygons.len() {
                                 for j in 0..polygons[i].len() {
                                     p = polygons[i][j];
-                                    snap_tree.add([p.x, p.y], (i, j)).unwrap();
-                                }
-                            }
-
-                            let mut num_neighbours: Vec<Vec<u8>> =
-                                Vec::with_capacity(polygons.len());
-                            for i in 0..polygons.len() {
-                                let mut line_num_neighbours = Vec::with_capacity(polygons[i].len());
-                                for j in 0..polygons[i].len() {
-                                    p = polygons[i][j];
-                                    let ret = snap_tree
-                                        .within(&[p.x, p.y], precision, &squared_euclidean)
-                                        .unwrap();
-
-                                    let mut n = 0u8;
-                                    for a in 0..ret.len() {
-                                        let k = ret[a].1;
-                                        if k.0 != i {
-                                            n += 1u8;
-                                        }
+                                    if j > 0 && j < polygons[i].len() - 1 {
+                                        tree.add([p.x, p.y], (i, j, false)).unwrap();
+                                    } else {
+                                        // end node
+                                        tree.add([p.x, p.y], (i, j, true)).unwrap();
                                     }
-                                    line_num_neighbours.push(n);
                                 }
-
-                                num_neighbours.push(line_num_neighbours);
                             }
 
                             let mut features_polylines: Vec<Polyline> = vec![];
                             let mut id: usize;
+                            let mut jn: usize;
+                            let mut endnode_n: bool;
+                            let mut dist1: f64;
+                            let mut dist2: f64;
+                            let mut num_neighbours: usize;
+                            let mut neighbour_set = HashSet::new();
                             for i in 0..polygons.len() {
-                                id = polygons[i].id;
-                                let mut pl = Polyline::new_empty(id);
+                                let mut line_node = vec![false; polygons[i].len()];
+                                line_node[0] = true;
+                                line_node[polygons[i].len() - 1] = true;
+                                for j in 1..polygons[i].len() - 1 {
+                                    p = polygons[i][j];
+                                    let ret = tree
+                                        .within(&[p.x, p.y], precision, &squared_euclidean)
+                                        .unwrap();
+
+                                    neighbour_set.clear();
+                                    for n in &ret {
+                                        let data = *n.1;
+                                        id = data.0;
+                                        if id != i {
+                                            neighbour_set.insert(id);
+                                        }
+                                    }
+                                    num_neighbours = neighbour_set.len();
+
+                                    if num_neighbours > 1 {
+                                        // If this point connects three or more polygons, it's a junction.
+                                        line_node[j] = true;
+                                    } else if num_neighbours == 1 {
+                                        // what is the neighbouring polygon and node?
+                                        id = 0;
+                                        jn = 0;
+                                        endnode_n = false;
+                                        for n in &ret {
+                                            let data = *n.1;
+                                            id = data.0;
+                                            if id != i {
+                                                jn = data.1;
+                                                endnode_n = data.2;
+                                                break;
+                                            }
+                                        }
+
+                                        if endnode_n {
+                                            // The point may be mid-line, but the neighbouring poly is at an endnode.
+                                            // We'll have to split this poly here too.
+                                            line_node[j] = true;
+                                        } else if jn != 0 {
+                                            // This is the cleverest part of the process. It handles polygons
+                                            // that are on the outside. That is polygons that have a neighbouring
+                                            // poly on one side and no poly on the other side. Part of the polygon
+                                            // will be a shared boundary but some of it will be part of the exterior
+                                            // hull of the polygon group. The vertex where this split happens isn't
+                                            // a junction that can be recognized by the ret.len() > 2 criteria.
+                                            // Instead, we're hunting for vertices with 1 neighbouring poly but
+                                            // where the vertex before it or after it are not neighbouring the
+                                            // same poly.
+                                            dist1 = (polygons[i][j - 1]
+                                                .distance(&polygons[id][jn - 1])).min(
+                                                polygons[i][j - 1].distance(&polygons[id][jn + 1]),
+                                            );
+                                            dist2 = (polygons[i][j + 1]
+                                                .distance(&polygons[id][jn - 1])).min(
+                                                polygons[i][j + 1].distance(&polygons[id][jn + 1]),
+                                            );
+                                            if dist1 > precision || dist2 > precision {
+                                                line_node[j] = true;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                let mut pl = Polyline::new_empty(i);
                                 pl.vertices.push(polygons[i][0]);
-                                pl.source_file = polygons[i].source_file;
                                 for j in 1..polygons[i].len() {
-                                    if num_neighbours[i][j] > 1
-                                        || num_neighbours[i][j] == 1
-                                            && num_neighbours[i][j - 1] == 0
-                                        || num_neighbours[i][j] == 0
-                                            && num_neighbours[i][j - 1] == 1
-                                    {
-                                        // it's a junction, split the poly
-                                        pl.vertices.push(polygons[i][j]);
+                                    pl.vertices.push(polygons[i][j]);
+                                    if line_node[j] {
                                         features_polylines.push(pl.clone());
-                                        pl = Polyline::new_empty(id);
-                                        pl.vertices.push(polygons[i][j]);
-                                        pl.source_file = polygons[i].source_file;
-                                    } else {
+                                        pl = Polyline::new_empty(i);
                                         pl.vertices.push(polygons[i][j]);
                                     }
                                 }
-                                features_polylines.push(pl.clone());
+                            }
+
+                            // Remove any zero-length line segments
+                            for i in 0..features_polylines.len() {
+                                for j in (1..features_polylines[i].len()).rev() {
+                                    if features_polylines[i][j] == features_polylines[i][j - 1] {
+                                        features_polylines[i].remove(j);
+                                    }
+                                }
+                            }
+                            // Remove any single-point lines result from above.
+                            for i in (0..features_polylines.len()).rev() {
+                                if features_polylines[i].len() < 2 {
+                                    features_polylines.remove(i);
+                                }
                             }
 
                             // Find duplicate polylines and remove them
@@ -831,8 +894,11 @@ impl WhiteboxTool for Intersect {
                             for i in 0..features_polylines.len() {
                                 if !duplicate[i] {
                                     for j in (i + 1)..features_polylines.len() {
-                                        if features_polylines[i] == features_polylines[j] {
+                                        if features_polylines[i]
+                                            .nearly_equals(&features_polylines[j], precision)
+                                        {
                                             duplicate[j] = true;
+                                            break; // we don't really have more than two overlapping lines ever.
                                         }
                                     }
                                 }
@@ -840,21 +906,6 @@ impl WhiteboxTool for Intersect {
                             for i in (0..features_polylines.len()).rev() {
                                 if duplicate[i] {
                                     features_polylines.remove(i);
-                                }
-                            }
-
-                            // Remove any zero-length line segments
-                            for i in 0..polygons.len() {
-                                for j in (1..polygons[i].len()).rev() {
-                                    if polygons[i][j] == polygons[i][j - 1] {
-                                        polygons[i].remove(j);
-                                    }
-                                }
-                            }
-                            // Remove any single-point lines result from above.
-                            for i in (0..polygons.len()).rev() {
-                                if polygons[i].len() < 2 {
-                                    polygons.remove(i);
                                 }
                             }
 

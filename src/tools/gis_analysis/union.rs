@@ -1009,6 +1009,7 @@ impl WhiteboxTool for Union {
                                 features_polylines.remove(i);
                             }
                         }
+
                         // hunt for intersections
                         let mut features_bb = Vec::with_capacity(features_polylines.len());
                         for i in 0..features_polylines.len() {

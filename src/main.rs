@@ -188,14 +188,6 @@ fn run() -> Result<(), Error> {
             || arg.starts_with("-list_tools")
             || arg.starts_with("--list_tools")
         {
-            // let mut v = arg.replace("--listtools", "")
-            //     .replace("-listtools", "")
-            //     .replace("\"", "")
-            //     .replace("\'", "");
-            // if v.starts_with("=") {
-            //     v = v[1..v.len()].to_string();
-            // }
-            // keywords = v.split(" ").map(|s| s.to_string()).collect();
             list_tools = true;
         } else if arg.starts_with("-viewcode") || arg.starts_with("--viewcode") {
             let mut v = arg

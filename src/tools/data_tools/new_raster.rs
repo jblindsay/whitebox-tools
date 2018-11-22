@@ -31,11 +31,6 @@ impl NewRasterFromBase {
         let toolbox = "Data Tools".to_string();
         let description = "Creates a new raster using a base image.".to_string();
 
-        // let mut parameters = "--base          Input base raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--value         Constant value to fill raster with; either 'nodata' or numberic value (default is nodata).\n");
-        // parameters.push_str("--data_type     Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').\n");
-
         let mut parameters = vec![];
         parameters.push(ToolParameter {
             name: "Input Base File".to_owned(),
@@ -152,36 +147,31 @@ impl WhiteboxTool for NewRasterFromBase {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-base"
-                || vec[0].to_lowercase() == "--base"
-                || vec[0].to_lowercase() == "-i"
-            {
-                if keyval {
-                    base_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-base" || flag_val == "-i" {
+                base_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    base_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-value" || vec[0].to_lowercase() == "--value" {
-                if keyval {
-                    out_val_str = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-value" {
+                out_val_str = if keyval {
+                    vec[1].to_string()
                 } else {
-                    out_val_str = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-data_type"
-                || vec[0].to_lowercase() == "--data_type"
-                || vec[0].to_lowercase() == "--datatype"
-            {
-                if keyval {
-                    data_type = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-data_type" || flag_val == "-datatype" {
+                data_type = if keyval {
+                    vec[1].to_string()
                 } else {
-                    data_type = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 

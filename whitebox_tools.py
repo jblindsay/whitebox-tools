@@ -361,6 +361,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -421,6 +422,26 @@ callback -- Custom function for handling tool text outputs.
         if headers: args.append("--headers")
         return self.run_tool('export_table_to_csv', args, callback) # returns 1 if error
 
+    def join_tables(self, input1, pkey, input2, fkey, import, callback=None):
+        """Merge a vector's attribute table with another table based on a common field.
+
+        Keyword arguments:
+
+        input1 -- Input primary vector file (i.e. the table to be modified). 
+        pkey -- Primary key field. 
+        input2 -- Input foreign vector file (i.e. source of data to be imported). 
+        fkey -- Foreign key field. 
+        import -- Imported field (all fields will be imported if not specified). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--pkey='{}'".format(pkey))
+        args.append("--input2='{}'".format(input2))
+        args.append("--fkey='{}'".format(fkey))
+        args.append("--import='{}'".format(import))
+        return self.run_tool('join_tables', args, callback) # returns 1 if error
+
     def lines_to_polygons(self, i, output, callback=None):
         """Converts vector polylines to polygons.
 
@@ -434,6 +455,40 @@ callback -- Custom function for handling tool text outputs.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('lines_to_polygons', args, callback) # returns 1 if error
+
+    def merge_table_with_csv(self, i, pkey, csv, fkey, import=None, callback=None):
+        """Merge a vector's attribute table with a table contained within a CSV text file.
+
+        Keyword arguments:
+
+        i -- Input primary vector file (i.e. the table to be modified). 
+        pkey -- Primary key field. 
+        csv -- Input CSV file (i.e. source of data to be imported). 
+        fkey -- Foreign key field. 
+        import -- Imported field (all fields will be imported if not specified). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--pkey='{}'".format(pkey))
+        args.append("--csv='{}'".format(csv))
+        args.append("--fkey='{}'".format(fkey))
+        if import is not None: args.append("--import='{}'".format(import))
+        return self.run_tool('merge_table_with_csv', args, callback) # returns 1 if error
+
+    def merge_vectors(self, inputs, output, callback=None):
+        """Combines two or more input vectors of the same ShapeType creating a single, new output vector.
+
+        Keyword arguments:
+
+        inputs -- Input vector files. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('merge_vectors', args, callback) # returns 1 if error
 
     def multi_part_to_single_part(self, i, output, exclude_holes=True, callback=None):
         """Converts a vector file containing multi-part features into a vector containing only single-part features.
@@ -494,6 +549,20 @@ callback -- Custom function for handling tool text outputs.
         args = []
         args.append("--input='{}'".format(i))
         return self.run_tool('print_geo_tiff_tags', args, callback) # returns 1 if error
+
+    def raster_to_vector_lines(self, i, output, callback=None):
+        """Converts a raster lines features into a vector of the POLYLINE shapetype.
+
+        Keyword arguments:
+
+        i -- Input raster lines file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('raster_to_vector_lines', args, callback) # returns 1 if error
 
     def raster_to_vector_points(self, i, output, callback=None):
         """Converts a raster dataset to a vector of the POINT shapetype.
@@ -657,6 +726,50 @@ callback -- Custom function for handling tool text outputs.
         args.append("--type={}".format(type))
         return self.run_tool('aggregate_raster', args, callback) # returns 1 if error
 
+    def block_maximum_gridding(self, i, field, output, use_z=False, cell_size=None, base=None, callback=None):
+        """Creates a raster grid based on a set of vector points and assigns grid values using a block maximum scheme.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use z-coordinate instead of field?. 
+        output -- Output raster file. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('block_maximum_gridding', args, callback) # returns 1 if error
+
+    def block_minimum_gridding(self, i, field, output, use_z=False, cell_size=None, base=None, callback=None):
+        """Creates a raster grid based on a set of vector points and assigns grid values using a block minimum scheme.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use z-coordinate instead of field?. 
+        output -- Output raster file. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('block_minimum_gridding', args, callback) # returns 1 if error
+
     def centroid(self, i, output, text_output=False, callback=None):
         """Calculates the centroid, or average location, of raster polygon objects.
 
@@ -782,6 +895,24 @@ callback -- Custom function for handling tool text outputs.
         args.append("--xorig={}".format(xorig))
         args.append("--yorig={}".format(yorig))
         return self.run_tool('create_rectangular_vector_grid', args, callback) # returns 1 if error
+
+    def dissolve(self, i, output, field=None, snap=0.0, callback=None):
+        """Removes the interior, or shared, boundaries within a vector polygon coverage.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        field -- Dissolve field attribute (optional). 
+        output -- Output vector file. 
+        snap -- Snap tolerance. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        args.append("--snap={}".format(snap))
+        return self.run_tool('dissolve', args, callback) # returns 1 if error
 
     def eliminate_coincident_points(self, i, output, tolerance, callback=None):
         """Removes any coincident, or nearly coincident, points from a vector points file.
@@ -942,7 +1073,7 @@ callback -- Custom function for handling tool text outputs.
 
         i -- Input vector file. 
         output -- Output vector polygon file. 
-        features -- Find the minimum bounding rectangles around each individual vector feature. 
+        features -- Find the minimum bounding circle around each individual vector feature. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -958,7 +1089,7 @@ callback -- Custom function for handling tool text outputs.
 
         i -- Input vector file. 
         output -- Output vector polygon file. 
-        features -- Find the minimum bounding rectangles around each individual vector feature. 
+        features -- Find the minimum bounding envelop around each individual vector feature. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -982,6 +1113,30 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         if features: args.append("--features")
         return self.run_tool('minimum_convex_hull', args, callback) # returns 1 if error
+
+    def nearest_neighbour_gridding(self, i, field, output, use_z=False, cell_size=None, base=None, max_dist=None, callback=None):
+        """Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
+
+        Keyword arguments:
+
+        i -- Input vector Points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use z-coordinate instead of field?. 
+        output -- Output raster file. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        max_dist -- Maximum search distance (optional). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        if max_dist is not None: args.append("--max_dist='{}'".format(max_dist))
+        return self.run_tool('nearest_neighbour_gridding', args, callback) # returns 1 if error
 
     def polygon_area(self, i, callback=None):
         """Calculates the area of vector polygons.
@@ -1129,7 +1284,7 @@ callback -- Custom function for handling tool text outputs.
         i -- Input vector points file. 
         field -- Input field name in attribute table. 
         use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
-        output -- Output vector polygon file. 
+        output -- Output raster file. 
         resolution -- Output raster's grid resolution. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -1158,6 +1313,20 @@ callback -- Custom function for handling tool text outputs.
         args.append("--width='{}'".format(width))
         args.append("--orientation={}".format(orientation))
         return self.run_tool('vector_hex_binning', args, callback) # returns 1 if error
+
+    def voronoi_diagram(self, i, output, callback=None):
+        """Creates a vector Voronoi diagram for a set of vector points.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('voronoi_diagram', args, callback) # returns 1 if error
 
     ###############################
     # GIS Analysis/Distance Tools #
@@ -1279,6 +1448,22 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('average_overlay', args, callback) # returns 1 if error
 
+    def clip(self, i, clip, output, callback=None):
+        """Extract all the features, or parts of features, that overlap with the features of the clip vector.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        clip -- Input clip polygon vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--clip='{}'".format(clip))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('clip', args, callback) # returns 1 if error
+
     def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=False, callback=None):
         """Clips a raster to a vector polygon.
 
@@ -1313,6 +1498,38 @@ callback -- Custom function for handling tool text outputs.
         args.append("--value='{}'".format(value))
         return self.run_tool('count_if', args, callback) # returns 1 if error
 
+    def difference(self, i, overlay, output, callback=None):
+        """Outputs the features that occur in one of the two vector inputs but not both, i.e. no overlapping features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        overlay -- Input overlay vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--overlay='{}'".format(overlay))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('difference', args, callback) # returns 1 if error
+
+    def erase(self, i, erase, output, callback=None):
+        """Removes all the features, or parts of features, that overlap with the features of the erase vector polygon.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        erase -- Input erase polygon vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--erase='{}'".format(erase))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('erase', args, callback) # returns 1 if error
+
     def erase_polygon_from_raster(self, i, polygons, output, callback=None):
         """Erases (cuts out) a vector polygon from a raster.
 
@@ -1342,6 +1559,38 @@ callback -- Custom function for handling tool text outputs.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('highest_position', args, callback) # returns 1 if error
+
+    def intersect(self, i, overlay, output, callback=None):
+        """Identifies the parts of features in common between two input vector layers.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        overlay -- Input overlay vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--overlay='{}'".format(overlay))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('intersect', args, callback) # returns 1 if error
+
+    def line_intersections(self, input1, input2, output, callback=None):
+        """Identifies points where the features of two vector line layers intersect.
+
+        Keyword arguments:
+
+        input1 -- Input vector polyline file. 
+        input2 -- Input vector polyline file. 
+        output -- Output vector point file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('line_intersections', args, callback) # returns 1 if error
 
     def lowest_position(self, inputs, output, callback=None):
         """Identifies the stack position of the minimum value within a raster stack on a cell-by-cell basis.
@@ -1477,6 +1726,36 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('pick_from_list', args, callback) # returns 1 if error
 
+    def polygonize(self, inputs, output, callback=None):
+        """Creates a polygon layer from two or more intersecting line features contained in one or more input vector line files.
+
+        Keyword arguments:
+
+        inputs -- Input vector polyline file. 
+        output -- Output vector polygon file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('polygonize', args, callback) # returns 1 if error
+
+    def split_with_lines(self, i, split, output, callback=None):
+        """Splits the lines or polygons in one layer using the lines in another layer.
+
+        Keyword arguments:
+
+        i -- Input vector line or polygon file. 
+        split -- Input vector polyline file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--split='{}'".format(split))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('split_with_lines', args, callback) # returns 1 if error
+
     def sum_overlay(self, inputs, output, callback=None):
         """Calculates the sum for each grid cell from a group of raster images.
 
@@ -1490,6 +1769,40 @@ callback -- Custom function for handling tool text outputs.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('sum_overlay', args, callback) # returns 1 if error
+
+    def symmetrical_difference(self, i, overlay, output, callback=None):
+        """Outputs the features that occur in one of the two vector inputs but not both, i.e. no overlapping features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        overlay -- Input overlay vector file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--overlay='{}'".format(overlay))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('symmetrical_difference', args, callback) # returns 1 if error
+
+    def union(self, i, overlay, output, snap=0.0, callback=None):
+        """Splits vector layers at their overlaps, creating a layer containing all the portions from both input and overlay layers.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        overlay -- Input overlay vector file. 
+        output -- Output vector file. 
+        snap -- Snap tolerance. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--overlay='{}'".format(overlay))
+        args.append("--output='{}'".format(output))
+        args.append("--snap={}".format(snap))
+        return self.run_tool('union', args, callback) # returns 1 if error
 
     def weighted_overlay(self, factors, weights, output, cost=None, constraints=None, scale_max=1.0, callback=None):
         """Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
@@ -1598,6 +1911,30 @@ callback -- Custom function for handling tool text outputs.
         args = []
         args.append("--input='{}'".format(i))
         return self.run_tool('hole_proportion', args, callback) # returns 1 if error
+
+    def linearity_index(self, i, callback=None):
+        """Calculates the linearity index for vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('linearity_index', args, callback) # returns 1 if error
+
+    def patch_orientation(self, i, callback=None):
+        """Calculates the orientation of vector polygons.
+
+        Keyword arguments:
+
+        i -- Input vector polygon file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('patch_orientation', args, callback) # returns 1 if error
 
     def perimeter_area_ratio(self, i, callback=None):
         """Calculates the perimeter-area ratio of vector polygons.
@@ -3071,6 +3408,22 @@ callback -- Custom function for handling tool text outputs.
         args.append("--snap_dist='{}'".format(snap_dist))
         return self.run_tool('jenson_snap_pour_points', args, callback) # returns 1 if error
 
+    def longest_flowpath(self, dem, basins, output, callback=None):
+        """Delineates the longest flowpaths for a group of subbasins or watersheds.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        basins -- Input raster basins file. 
+        output -- Output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--basins='{}'".format(basins))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('longest_flowpath', args, callback) # returns 1 if error
+
     def max_upslope_flowpath_length(self, dem, output, callback=None):
         """Measures the maximum length of all upslope flowpaths draining each grid cell.
 
@@ -4501,38 +4854,6 @@ callback -- Custom function for handling tool text outputs.
     # LiDAR Tools #
     ###############
 
-    def block_maximum(self, i=None, output=None, resolution=1.0, callback=None):
-        """Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
-
-        Keyword arguments:
-
-        i -- Input LiDAR file. 
-        output -- Output file. 
-        resolution -- Output raster's grid resolution. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        if i is not None: args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
-        args.append("--resolution={}".format(resolution))
-        return self.run_tool('block_maximum', args, callback) # returns 1 if error
-
-    def block_minimum(self, i=None, output=None, resolution=1.0, callback=None):
-        """Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
-
-        Keyword arguments:
-
-        i -- Input LiDAR file. 
-        output -- Output file. 
-        resolution -- Output raster's grid resolution. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        if i is not None: args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
-        args.append("--resolution={}".format(resolution))
-        return self.run_tool('block_minimum', args, callback) # returns 1 if error
-
     def classify_overlap_points(self, i, output, resolution=2.0, filter=False, callback=None):
         """Classifies or filters LAS points in regions of overlapping flight lines.
 
@@ -4653,6 +4974,70 @@ callback -- Custom function for handling tool text outputs.
         if i is not None: args.append("--input='{}'".format(i))
         return self.run_tool('las_to_multipoint_shapefile', args, callback) # returns 1 if error
 
+    def las_to_shapefile(self, i=None, callback=None):
+        """Converts one or more LAS files into a vector Shapefile of POINT ShapeType.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        return self.run_tool('las_to_shapefile', args, callback) # returns 1 if error
+
+    def lidar_block_maximum(self, i=None, output=None, resolution=1.0, callback=None):
+        """Creates a block-maximum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        output -- Output file. 
+        resolution -- Output raster's grid resolution. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--resolution={}".format(resolution))
+        return self.run_tool('lidar_block_maximum', args, callback) # returns 1 if error
+
+    def lidar_block_minimum(self, i=None, output=None, resolution=1.0, callback=None):
+        """Creates a block-minimum raster from an input LAS file. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        output -- Output file. 
+        resolution -- Output raster's grid resolution. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--resolution={}".format(resolution))
+        return self.run_tool('lidar_block_minimum', args, callback) # returns 1 if error
+
+    def lidar_classify_subset(self, base, subset, output, subset_class, nonsubset_class=None, callback=None):
+        """Classifies the values in one LiDAR point cloud that correpond with points in a subset cloud.
+
+        Keyword arguments:
+
+        base -- Input base LiDAR file. 
+        subset -- Input subset LiDAR file. 
+        output -- Output LiDAR file. 
+        subset_class -- Subset point class value (must be 0-18; see LAS specifications). 
+        nonsubset_class -- Non-subset point class value (must be 0-18; see LAS specifications). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--base='{}'".format(base))
+        args.append("--subset='{}'".format(subset))
+        args.append("--output='{}'".format(output))
+        args.append("--subset_class='{}'".format(subset_class))
+        if nonsubset_class is not None: args.append("--nonsubset_class='{}'".format(nonsubset_class))
+        return self.run_tool('lidar_classify_subset', args, callback) # returns 1 if error
+
     def lidar_colourize(self, in_lidar, in_image, output, callback=None):
         """Adds the red-green-blue colour fields of a LiDAR (LAS) file based on an input image.
 
@@ -4715,7 +5100,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--outclassval={}".format(outclassval))
         return self.run_tool('lidar_elevation_slice', args, callback) # returns 1 if error
 
-    def lidar_ground_point_filter(self, i, output, radius=2.0, min_neighbours=0, slope_threshold=45.0, height_threshold=1.0, classify=False, slope_norm=True, callback=None):
+    def lidar_ground_point_filter(self, i, output, radius=2.0, min_neighbours=0, slope_threshold=45.0, height_threshold=1.0, classify=True, slope_norm=True, callback=None):
         """Identifies ground points within LiDAR dataset using a slope-based method.
 
         Keyword arguments:
@@ -5983,7 +6368,7 @@ callback -- Custom function for handling tool text outputs.
         if standardized: args.append("--standardized")
         return self.run_tool('principal_component_analysis', args, callback) # returns 1 if error
 
-    def quantiles(self, i, output, num_quantiles=4, callback=None):
+    def quantiles(self, i, output, num_quantiles=5, callback=None):
         """Transforms raster values into quantiles.
 
         Keyword arguments:
@@ -6556,7 +6941,7 @@ callback -- Custom function for handling tool text outputs.
 
         streams -- Input raster streams file. 
         d8_pntr -- Input raster D8 pointer file. 
-        output -- Output raster file. 
+        output -- Output vector file. 
         esri_pntr -- D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
         """
