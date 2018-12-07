@@ -155,16 +155,29 @@ impl Polyline {
         self.vertices[self.vertices.len() - 1]
     }
 
+    /// Inserts a point vertex at the end of the line.
+    pub fn push(&mut self, v: Point2D) {
+        self.vertices.push(v);
+    }
+
+    /// Inserts a point vertex at a specific index.
     pub fn insert(&mut self, index: usize, v: Point2D) {
         if index <= self.len() {
             self.vertices.insert(index, v);
         }
     }
 
+    /// Removes a point vertex at a specified index.
     pub fn remove(&mut self, index: usize) {
         if index <= self.len() {
             self.vertices.remove(index);
         }
+    }
+
+    /// Closes the line by pushing a duplicate of the first vertex.
+    pub fn close_line(&mut self) {
+        let v = self.first_vertex().clone();
+        self.push(v);
     }
 
     pub fn get_split_point(&self, index: usize) -> (f64, Point2D) {

@@ -966,12 +966,12 @@ impl WhiteboxTool for Intersect {
 
                             let num_endnodes = polylines.len() * 2;
                             /*
-                            The structure of endnodes is as such:
-                            1. the starting node for polyline 'a' is a * 2.
-                            2. the ending node for polyline 'a' is a * 2 + 1.
-                            3. endnode to polyline = e / 2
-                            4. is an endnode a starting point? e % 2 == 0
-                        */
+                                The structure of endnodes is as such:
+                                1. the starting node for polyline 'a' is a * 2.
+                                2. the ending node for polyline 'a' is a * 2 + 1.
+                                3. endnode to polyline = e / 2
+                                4. is an endnode a starting point? e % 2 == 0
+                            */
                             let mut endnodes: Vec<Vec<usize>> = vec![vec![]; num_endnodes];
 
                             // now add the endpoints of each polyline into a kd tree
@@ -1036,7 +1036,7 @@ impl WhiteboxTool for Intersect {
                                 if !is_acyclic_arc[i] {
                                     // check the last vertex
                                     let ret = kdtree
-                                        .within(&[p2.x, p2.y], EPSILON, &squared_euclidean)
+                                        .within(&[p2.x, p2.y], precision, &squared_euclidean)
                                         .unwrap();
                                     if ret.len() == 1 {
                                         is_acyclic_arc[i] = true;

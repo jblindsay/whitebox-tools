@@ -14,6 +14,11 @@ use std::path;
 use structures::Array2D;
 use tools::*;
 
+/// `FlowLengthDiff` calculates the local maximum absolute difference in downslope flowpath length,
+/// which is useful in mapping drainage divides and ridges.
+///
+/// # See Also
+/// `MaxBranchLength`
 pub struct FlowLengthDiff {
     name: String,
     description: String,

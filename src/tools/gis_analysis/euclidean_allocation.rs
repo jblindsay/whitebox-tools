@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: 13/10/2018
+Last Modified: 25/11/2018
 License: MIT
 */
 
@@ -14,6 +14,19 @@ use std::path;
 use structures::Array2D;
 use tools::*;
 
+/// This tool assigns grid cells in the output image the value of the nearest target cell in
+/// the input image, measured by the Euclidean distance (i.e. straight-line distance). Thus,
+/// `EuclideanAllocation` essentially creates the Voronoi diagram for a set of target cells.
+/// Target cells are all non-zero, non-NoData grid cells in the input image. Distances are
+/// calculated using the same efficient algorithm (Shih and Wu, 2003) as the `EuclideanDistance`
+/// tool.
+///
+/// # References
+/// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
+/// neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
+///
+/// # See Also
+/// `EuclideanDistance`, `VoronoiDiagram`, `CostAllocation`
 pub struct EuclideanAllocation {
     name: String,
     description: String,
@@ -284,7 +297,7 @@ impl WhiteboxTool for EuclideanAllocation {
                 }
             }
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * (rows - row) as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress (2 of 3): {}%", progress);
                     old_progress = progress;

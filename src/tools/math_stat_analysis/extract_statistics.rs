@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 15, 2017
-Last Modified: 12/10/2018
+Last Modified: 25/11/2018
 License: MIT
 
 Notes: Compared with the original Whitebox GAT tool, this will output a table
@@ -26,6 +26,22 @@ use std::sync::Arc;
 use std::thread;
 use tools::*;
 
+/// This tool can be used to extract common descriptive statistics associated with the distribution
+/// of some underlying data raster based on feature units defined by a feature definition raster.
+/// For example, this tool can be used to measure the maximum or average slope gradient (data image)
+/// for each of a group of watersheds (feature definitions). Although the data raster can contain any
+/// type of data, the feature definition raster must be categorical, i.e. it must define area entities
+/// using integer values.
+///
+/// If an output image name is specified, the tool will assign the descriptive statistic value to
+/// each of the spatial entities defined in the feature definition raster. If text output is selected,
+/// an HTML table will be output, which can then be readily copied into a spreadsheet program for
+/// further analysis. This is a very powerful and useful tool for creating numerical summary data from
+/// spatial data which can then be interrogated using statistical analyses. At least one output type
+/// (image or text) must be specified for the tool to operate.
+///
+/// NoData values in either of the two input images are ignored during the calculation of the
+/// descriptive statistic.
 pub struct ExtractRasterStatistics {
     name: String,
     description: String,
@@ -398,6 +414,7 @@ impl WhiteboxTool for ExtractRasterStatistics {
         // output the raster, if specified.
         if !output_file.is_empty() {
             let mut output = Raster::initialize_using_file(&output_file, &input);
+            output.configs.data_type = DataType::F32;
             let out_stat = if stat_type.contains("av") {
                 features_average.clone()
             } else if stat_type.contains("min") {

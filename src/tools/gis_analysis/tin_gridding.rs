@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/09/2018
-Last Modified: 13/10/2018
+Last Modified: 05/12/2018
 License: MIT
 */
 
@@ -45,8 +45,8 @@ impl TINGridding {
             name: "Input Vector Points File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector points file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::RasterAndVector(
-                VectorGeometryType::Any,
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
             )),
             default_value: None,
             optional: false,

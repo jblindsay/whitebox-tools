@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
-Last Modified: 13/10/2018
+Last Modified: 25/11/2018
 License: MIT
 */
 
@@ -14,6 +14,27 @@ use std::path;
 use structures::Array2D;
 use tools::*;
 
+/// This tool will estimate the Euclidean distance (i.e. straight-line distance) between each
+/// grid cell and the nearest 'target cell' in the input image. Target cells are all non-zero,
+/// non-NoData grid cells. Distance in the output image is measured in the same units as the
+/// horizontal units of the input image.
+///
+/// # Algorithm Description
+/// The algorithm is based on the highly efficient distance transform of Shih and Wu (2003).
+/// It makes four passes of the image; the first pass initializes the output image; the second
+/// and third passes calculate the minimum squared Euclidean distance by examining the 3 x 3
+/// neighbourhood surrounding each cell; the last pass takes the square root of cell values,
+/// transforming them into true Euclidean distances, and deals with NoData values that may be
+/// present. All NoData value grid cells in the input image will contain NoData values in the
+/// output image. As such, NoData is not a suitable background value for non-target cells.
+/// Background areas should be designated with zero values.
+///
+/// # References
+/// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
+/// neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
+///
+/// # See Also
+/// `EuclideanAllocation`, `CostDistance`
 pub struct EuclideanDistance {
     name: String,
     description: String,
@@ -175,6 +196,7 @@ impl WhiteboxTool for EuclideanDistance {
         let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
 
         let mut h: f64;
         let mut which_cell: usize;
@@ -280,7 +302,7 @@ impl WhiteboxTool for EuclideanDistance {
                 }
             }
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * (rows - row) as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress (2 of 3): {}%", progress);
                     old_progress = progress;

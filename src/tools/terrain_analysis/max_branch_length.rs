@@ -4,10 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 9, 2017
 Last Modified: 12/10/2018
 License: MIT
-
-Notes: Based on Lindsay JB, Seibert J. 2013. Measuring the significance of a divide 
-to local drainage patterns. International Journal of Geographical Information Science, 
-27: 1453-1468. DOI: 10.1080/13658816.2012.705289
 */
 
 use num_cpus;
@@ -22,6 +18,37 @@ use std::thread;
 use structures::Array2D;
 use tools::*;
 
+/// Maximum branch length (`Bmax`) is the longest branch length between a grid cell's flowpath
+/// and the flowpaths initiated at each of its neighbours. It can be conceptualized as the
+/// downslope distance that a volume of water that is split into two portions by a drainage
+/// divide would travel before reuniting.
+///
+/// If the two flowpaths of neighbouring grid cells do not intersect, `Bmax` is simply the
+/// flowpath length from the starting cell to its terminus at the edge of the grid or a cell
+/// with undefined flow direction (i.e. a pit cell either in a topographic depression or at
+/// the edge of a major body of water).
+///
+/// The pattern of `Bmax` derived from a DEM should be familiar to anyone who has interpreted
+/// upslope contributing area images. In fact, `Bmax` can be thought of as the complement of
+/// upslope contributing area. Whereas contributing area is greatest along valley bottoms and lowest at
+/// drainage divides, `Bmax` is greatest at divides and lowest along channels. The two topographic
+/// attributes are also distinguished by their units of measurements; `Bmax` is a length rather
+/// than an area. The presence of a major drainage divide between neighbouring grid cells is apparent in
+/// a `Bmax` image as a linear feature, often two grid cells wide, of relatively high values. This
+/// property makes `Bmax` a useful land surface parameter for mapping ridges and divides.
+///
+/// `Bmax` is useful in the study of landscape structure, particularly with respect to drainage patterns.
+/// The index gives the relative significance of a specific location along a divide, with respect to the
+/// dispersion of materials across the landscape, in much the same way that stream ordering can be used
+/// to assess stream size.
+///
+/// # See Also
+/// `FlowLengthDiff`
+///
+/// # Reference
+/// Lindsay JB, Seibert J. 2013. Measuring the significance of a divide to local drainage patterns.
+/// International Journal of Geographical Information Science, 27: 1453-1468. DOI:
+/// 10.1080/13658816.2012.705289
 pub struct MaxBranchLength {
     name: String,
     description: String,

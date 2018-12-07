@@ -528,37 +528,37 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let eight_grid_res = input.configs.resolution_x * 8f64;
+                let eight_grid_res = input.configs.resolution_x as f32 * 8f32;
                 let mut z: f64;
                 let mut zn: f64;
-                let (mut a, mut b): (f64, f64);
+                let (mut a, mut b): (f32, f32);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![
                         Normal {
-                            a: 0f64,
-                            b: 0f64,
-                            c: 0f64
+                            a: 0f32,
+                            b: 0f32,
+                            c: 0f32
                         };
                         columns as usize
                     ];
-                    let mut values = [0f64; 9];
+                    let mut values = [0f32; 9];
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
                             for i in 0..8 {
                                 zn = input.get_value(row + dy[i], col + dx[i]);
                                 if zn != nodata {
-                                    values[i] = zn * z_factor;
+                                    values[i] = (zn * z_factor) as f32;
                                 } else {
-                                    values[i] = z * z_factor;
+                                    values[i] = (z * z_factor) as f32;
                                 }
                             }
                             a = -(values[2] - values[4]
-                                + 2f64 * (values[1] - values[5])
+                                + 2f32 * (values[1] - values[5])
                                 + values[0]
                                 - values[6]);
                             b = -(values[6] - values[4]
-                                + 2f64 * (values[7] - values[3])
+                                + 2f32 * (values[7] - values[3])
                                 + values[0]
                                 - values[2]);
                             data[col as usize] = Normal {
@@ -574,9 +574,9 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         }
 
         let zero_vector = Normal {
-            a: 0f64,
-            b: 0f64,
-            c: 0f64,
+            a: 0f32,
+            b: 0f32,
+            c: 0f32,
         };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
@@ -629,18 +629,18 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                 }
                 let mut z: f64;
                 let mut dfm_value: f64;
-                let mut threshold_adj: f64;
+                let mut threshold_adj: f32;
                 let (mut xn, mut yn): (isize, isize);
-                let (mut a, mut b, mut c): (f64, f64, f64);
-                let mut diff: f64;
-                let mut w: f64;
-                let mut sum_w: f64;
+                let (mut a, mut b, mut c): (f32, f32, f32);
+                let mut diff: f32;
+                let mut w: f32;
+                let mut sum_w: f32;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![
                         Normal {
-                            a: 0f64,
-                            b: 0f64,
-                            c: 0f64
+                            a: 0f32,
+                            b: 0f32,
+                            c: 0f32
                         };
                         columns as usize
                     ];
@@ -650,17 +650,17 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                         threshold_adj = if dfm_value < 0f64 && dfm_value > dfm_threshold {
                             (max_norm_diff * (1f64 - reduction * dfm_value / dfm_threshold))
                                 .to_radians()
-                                .cos()
+                                .cos() as f32
                         } else if dfm_value <= dfm_threshold {
-                            (max_norm_diff * (1f64 - reduction)).to_radians().cos()
+                            (max_norm_diff * (1f64 - reduction)).to_radians().cos() as f32
                         } else {
-                            threshold
+                            threshold as f32
                         };
                         if z != nodata {
-                            sum_w = 0f64;
-                            a = 0f64;
-                            b = 0f64;
-                            c = 0f64;
+                            sum_w = 0f32;
+                            a = 0f32;
+                            b = 0f32;
+                            c = 0f32;
                             for n in 0..num_pixels_in_filter {
                                 xn = col + dx[n];
                                 yn = row + dy[n];
@@ -759,14 +759,15 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                                 //&& exclusions.get_value(yn, xn) == 0f64 {
                                 diff = nv_smooth
                                     .get_value(row, col)
-                                    .angle_between(nv_smooth.get_value(yn, xn));
+                                    .angle_between(nv_smooth.get_value(yn, xn))
+                                    as f64;
                                 if diff > threshold_adj {
                                     w = (diff - threshold_adj) * (diff - threshold_adj);
                                     sum_w += w;
-                                    z += -(nv_smooth.get_value(yn, xn).a * x[n]
-                                        + nv_smooth.get_value(yn, xn).b * y[n]
-                                        - nv_smooth.get_value(yn, xn).c * zn)
-                                        / nv_smooth.get_value(yn, xn).c
+                                    z += -(nv_smooth.get_value(yn, xn).a as f64 * x[n]
+                                        + nv_smooth.get_value(yn, xn).b as f64 * y[n]
+                                        - nv_smooth.get_value(yn, xn).c as f64 * zn)
+                                        / nv_smooth.get_value(yn, xn).c as f64
                                         * w;
                                 }
                             }
@@ -833,14 +834,14 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
 
 #[derive(Clone, Copy, Debug)]
 struct Normal {
-    a: f64,
-    b: f64,
-    c: f64,
+    a: f32,
+    b: f32,
+    c: f32,
 }
 
 impl Normal {
     #[inline]
-    fn angle_between(self, other: Normal) -> f64 {
+    fn angle_between(self, other: Normal) -> f32 {
         /*
          Note that this is actually not the angle between the vectors but
          rather the cosine of the angle between the vectors. This improves

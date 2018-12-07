@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 13/11/2018
-Last Modified: 14/11/2018
+Last Modified: 22/11/2018
 License: MIT
 */
 extern crate kdtree;
@@ -54,7 +54,7 @@ impl Dissolve {
             flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input vector file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
-                VectorGeometryType::Any,
+                VectorGeometryType::Polygon,
             )),
             default_value: None,
             optional: false,

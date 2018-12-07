@@ -142,27 +142,13 @@ pub fn read_whitebox(
         f.read(&mut buffer)?;
 
         // read the file's bytes into a buffer
-        //try!(f.read_to_end(&mut buffer));
+        let mut bor = ByteOrderReader::new(buffer, configs.endian);
 
-        //try!(br.fill_buf().unwrap()(&mut buffer));
-
-        let mut offset: usize;
         match configs.data_type {
             DataType::F64 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
-                    data.push(unsafe {
-                        mem::transmute::<[u8; 8], f64>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                            buffer[offset + 4],
-                            buffer[offset + 5],
-                            buffer[offset + 6],
-                            buffer[offset + 7],
-                        ])
-                    });
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_f64() as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -170,7 +156,6 @@ pub fn read_whitebox(
                 }
             }
             DataType::F32 => {
-                let mut bor = ByteOrderReader::new(buffer, configs.endian);
                 bor.pos = 0;
                 for _ in 0..buf_size {
                     data.push(bor.read_f32() as f64);
@@ -179,31 +164,11 @@ pub fn read_whitebox(
                         break;
                     }
                 }
-                // for i in 0..buf_size {
-                //     offset = i * data_size;
-                //     data.push(unsafe {
-                //                   mem::transmute::<[u8; 4], f32>([buffer[offset],
-                //                                                   buffer[offset + 1],
-                //                                                   buffer[offset + 2],
-                //                                                   buffer[offset + 3]])
-                //               } as f64);
-                //     j += 1;
-                //     if j == num_cells {
-                //         break;
-                //     }
-                // }
             }
             DataType::I32 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
-                    data.push(unsafe {
-                        mem::transmute::<[u8; 4], i32>([
-                            buffer[offset],
-                            buffer[offset + 1],
-                            buffer[offset + 2],
-                            buffer[offset + 3],
-                        ])
-                    } as f64);
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_i32() as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -211,11 +176,9 @@ pub fn read_whitebox(
                 }
             }
             DataType::I16 => {
-                for i in 0..buf_size {
-                    offset = i * data_size;
-                    data.push(unsafe {
-                        mem::transmute::<[u8; 2], i16>([buffer[offset], buffer[offset + 1]])
-                    } as f64);
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_i16() as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -223,8 +186,9 @@ pub fn read_whitebox(
                 }
             }
             DataType::U8 => {
-                for i in 0..buf_size {
-                    data.push(buffer[i] as f64);
+                bor.pos = 0;
+                for _ in 0..buf_size {
+                    data.push(bor.read_u8() as f64);
                     j += 1;
                     if j == num_cells {
                         break;
@@ -232,7 +196,6 @@ pub fn read_whitebox(
                 }
             }
             DataType::RGBA32 => {
-                let mut bor = ByteOrderReader::new(buffer, configs.endian);
                 bor.pos = 0;
                 for _ in 0..buf_size {
                     data.push(bor.read_f32() as i32 as u32 as f64);

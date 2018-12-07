@@ -55,6 +55,7 @@ impl ToolManager {
         tool_names.push("BlockMaximumGridding".to_string());
         tool_names.push("BlockMinimumGridding".to_string());
         tool_names.push("BufferRaster".to_string());
+        tool_names.push("BufferVector".to_string());
         tool_names.push("Centroid".to_string());
         tool_names.push("CentroidVector".to_string());
         tool_names.push("Clip".to_string());
@@ -497,6 +498,7 @@ impl ToolManager {
                 Some(Box::new(tools::gis_analysis::BlockMinimumGridding::new()))
             }
             "bufferraster" => Some(Box::new(tools::gis_analysis::BufferRaster::new())),
+            "buffervector" => Some(Box::new(tools::gis_analysis::BufferVector::new())),
             "centroid" => Some(Box::new(tools::gis_analysis::Centroid::new())),
             "centroidvector" => Some(Box::new(tools::gis_analysis::CentroidVector::new())),
             "clip" => Some(Box::new(tools::gis_analysis::Clip::new())),
