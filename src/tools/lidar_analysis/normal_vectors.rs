@@ -7,8 +7,10 @@ License: MIT
 */
 
 use self::na::Vector3;
-use lidar::*;
-use na;
+use crate::lidar::*;
+use crate::na;
+use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
+use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
@@ -17,8 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch3D};
-use tools::*;
 
 /// Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 pub struct NormalVectors {

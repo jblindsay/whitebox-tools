@@ -9,12 +9,12 @@ NOTE: This algorithm can't easily be parallelized because the output raster must
 and written to during the same loop.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 pub struct ThickenRasterLine {
     name: String,

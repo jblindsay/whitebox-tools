@@ -5,8 +5,8 @@ Created: 30/08/2018
 Last Modified: 30/08/2018
 License: MIT
 */
+use crate::structures::{Direction, Point2D};
 use std::cmp::Ordering;
-use structures::{Direction, Point2D};
 
 /// Returns the convex hull of a vector of Point2D in counter-clockwise order.
 pub fn convex_hull(points: &mut Vec<Point2D>) -> Vec<Point2D> {

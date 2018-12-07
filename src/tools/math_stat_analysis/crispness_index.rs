@@ -4,24 +4,11 @@ Authors: Dr. John Lindsay
 Created: August 15, 2017
 Last Modified: 12/10/2018
 License: MIT
-
-NOTES: This index (C) is taken from Lindsay (2006) Sensitivity of channel mapping techniques to uncertainty in digital
-elevation data: 
-
-C = SS_mp ∕ SS_B = [∑(pij − p-bar)^2] ∕ [ ∑pij(1 − p-bar)^2 + p2(RC − ∑pij)]
-
-Please note that there is an error in the original published equation. Specifically, the denominator
-read:
-
-∑pij(1 - p_bar)^2 + p_bar^2 (RC - ∑pij)
-
-instead of the original:
-
-∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -33,8 +20,20 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
+/// This index (C) is taken from Lindsay (2006) Sensitivity of channel mapping techniques to uncertainty in digital
+/// elevation data:
+///
+/// C = SS_mp ∕ SS_B = [∑(pij − p-bar)^2] ∕ [ ∑pij(1 − p-bar)^2 + p2(RC − ∑pij)]
+///
+/// Please note that there is an error in the original published equation. Specifically, the denominator
+/// read:
+///
+/// ∑pij(1 - p_bar)^2 + p_bar^2 (RC - ∑pij)
+///
+/// instead of the original:
+///
+/// ∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
 pub struct CrispnessIndex {
     name: String,
     description: String,

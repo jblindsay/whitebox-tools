@@ -6,12 +6,12 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This can be used to identify the centroid point of a vector polyline or polygon feature or a group of
 /// vector points. The output is a vector shapefile of points. For multi-part polyline or polygon features,

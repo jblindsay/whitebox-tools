@@ -6,7 +6,8 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -15,7 +16,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
 
 pub struct CrossTabulation {
     name: String,

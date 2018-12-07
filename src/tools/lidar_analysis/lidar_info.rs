@@ -6,7 +6,8 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
 use std;
 use std::env;
 use std::fs::File;
@@ -16,7 +17,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 use std::u16;
-use tools::*;
 
 /// This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
 /// data. The reported information will include including data on the header, point return frequency, and classification

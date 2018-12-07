@@ -6,12 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// Assigns the Strahler stream order to each link in a stream network.
 pub struct StrahlerStreamOrder {

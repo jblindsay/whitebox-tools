@@ -6,8 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,8 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
 /// This tool implements a modified form of the algorithm described by
 ///  Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving

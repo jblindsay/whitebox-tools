@@ -6,14 +6,14 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms;
-use lidar::*;
+use crate::algorithms;
+use crate::lidar::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Point2D};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct ClipLidarToPolygon {
     name: String,

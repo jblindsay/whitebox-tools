@@ -6,12 +6,12 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// This tool performs a weighted overlay on multiple input images. It can be used to
 /// combine multiple factors with varying levels of weight or relative importance. The

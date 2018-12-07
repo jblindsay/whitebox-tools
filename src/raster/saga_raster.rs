@@ -1,4 +1,5 @@
-use raster::*;
+use super::*;
+use crate::utils::ByteOrderReader;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -9,8 +10,6 @@ use std::io::ErrorKind;
 use std::io::SeekFrom;
 use std::mem;
 use std::path::Path;
-use utils;
-use utils::ByteOrderReader;
 
 pub fn read_saga(
     file_name: &String,
@@ -19,7 +18,7 @@ pub fn read_saga(
 ) -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".sdat", ".sgrd");
-    let f = try!(File::open(header_file));
+    let f = File::open(header_file)?;
     let f = BufReader::new(f);
     let mut data_file_offset = 0u64;
     let mut top_to_bottom = false;
@@ -158,8 +157,8 @@ pub fn read_saga(
 
     // read the data file
     let data_file = file_name.replace(".sgrd", ".sdat");
-    let mut f = try!(File::open(data_file.clone()));
-    try!(f.seek(SeekFrom::Start(data_file_offset)));
+    let mut f = File::open(data_file.clone())?;
+    f.seek(SeekFrom::Start(data_file_offset))?;
 
     let data_size = if configs.data_type == DataType::F64 {
         8
@@ -190,12 +189,12 @@ pub fn read_saga(
     while j < num_cells {
         let mut buffer = vec![0; buf_size * data_size];
 
-        try!(f.read(&mut buffer));
+        f.read(&mut buffer)?;
 
         let mut bor = if configs.endian == Endianness::LittleEndian {
-            ByteOrderReader::new(buffer, utils::Endianness::LittleEndian)
+            ByteOrderReader::new(buffer, Endianness::LittleEndian)
         } else {
-            ByteOrderReader::new(buffer, utils::Endianness::BigEndian)
+            ByteOrderReader::new(buffer, Endianness::BigEndian)
         };
         bor.pos = 0;
 
@@ -393,7 +392,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     // Save the header file
     let header_file = r.file_name.replace(".sdat", ".sgrd");
-    let f = try!(File::create(header_file.clone()));
+    let f = File::create(header_file.clone())?;
     let mut writer = BufWriter::new(f);
 
     // get the short file NAME
@@ -402,46 +401,46 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         None => "".to_string(),
     };
 
-    try!(writer.write_all(format!("NAME\t= {}\n", short_name).as_bytes()));
+    writer.write_all(format!("NAME\t= {}\n", short_name).as_bytes())?;
 
     if r.configs.metadata.len() > 0 {
-        try!(writer.write_all(format!("DESCRIPTION\t= {}\n", r.configs.metadata[0]).as_bytes()));
+        writer.write_all(format!("DESCRIPTION\t= {}\n", r.configs.metadata[0]).as_bytes())?;
     } else {
-        try!(writer.write_all("DESCRIPTION\t=\n".as_bytes()));
+        writer.write_all("DESCRIPTION\t=\n".as_bytes())?;
     }
 
     if r.configs.xy_units != "not specified" {
-        try!(writer.write_all(format!("UNIT\t= {}\n", r.configs.xy_units).as_bytes()));
+        writer.write_all(format!("UNIT\t= {}\n", r.configs.xy_units).as_bytes())?;
     } else {
-        try!(writer.write_all("UNIT\t=\n".as_bytes()));
+        writer.write_all("UNIT\t=\n".as_bytes())?;
     }
 
-    try!(writer.write_all("DATAFILE_OFFSET\t= 0\n".as_bytes()));
+    writer.write_all("DATAFILE_OFFSET\t= 0\n".as_bytes())?;
 
     match r.configs.data_type {
         DataType::F64 => {
-            try!(writer.write_all("DATAFORMAT\t= DOUBLE\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= DOUBLE\n".as_bytes())?;
         }
         DataType::F32 => {
-            try!(writer.write_all("DATAFORMAT\t= FLOAT\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= FLOAT\n".as_bytes())?;
         }
         DataType::I32 => {
-            try!(writer.write_all("DATAFORMAT\t= INTEGER\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= INTEGER\n".as_bytes())?;
         }
         DataType::U32 => {
-            try!(writer.write_all("DATAFORMAT\t= INTEGER_UNSIGNED\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= INTEGER_UNSIGNED\n".as_bytes())?;
         }
         DataType::I16 => {
-            try!(writer.write_all("DATAFORMAT\t= SHORTINT\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= SHORTINT\n".as_bytes())?;
         }
         DataType::U16 => {
-            try!(writer.write_all("DATAFORMAT\t= SHORTINT_UNSIGNED\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= SHORTINT_UNSIGNED\n".as_bytes())?;
         }
         DataType::U8 => {
-            try!(writer.write_all("DATAFORMAT\t= BYTE_UNSIGNED\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= BYTE_UNSIGNED\n".as_bytes())?;
         }
         DataType::I8 => {
-            try!(writer.write_all("DATAFORMAT\t= BYTE\n".as_bytes()));
+            writer.write_all("DATAFORMAT\t= BYTE\n".as_bytes())?;
         }
         _ => {
             return Err(Error::new(
@@ -455,39 +454,37 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     if r.configs.endian == Endianness::LittleEndian {
-        try!(writer.write_all("BYTEORDER_BIG\t= FALSE\n".as_bytes()));
+        writer.write_all("BYTEORDER_BIG\t= FALSE\n".as_bytes())?;
     } else {
-        try!(writer.write_all("BYTEORDER_BIG\t= TRUE\n".as_bytes()));
+        writer.write_all("BYTEORDER_BIG\t= TRUE\n".as_bytes())?;
     }
 
-    try!(writer.write_all(format!("POSITION_XMIN\t= {}\n", r.configs.west).as_bytes()));
+    writer.write_all(format!("POSITION_XMIN\t= {}\n", r.configs.west).as_bytes())?;
 
-    try!(writer.write_all(format!("POSITION_YMIN\t= {}\n", r.configs.south).as_bytes()));
+    writer.write_all(format!("POSITION_YMIN\t= {}\n", r.configs.south).as_bytes())?;
 
-    try!(writer.write_all(format!("CELLCOUNT_X\t= {}\n", r.configs.columns).as_bytes()));
+    writer.write_all(format!("CELLCOUNT_X\t= {}\n", r.configs.columns).as_bytes())?;
 
-    try!(writer.write_all(format!("CELLCOUNT_Y\t= {}\n", r.configs.rows).as_bytes()));
+    writer.write_all(format!("CELLCOUNT_Y\t= {}\n", r.configs.rows).as_bytes())?;
 
-    try!(
-        writer.write_all(
-            format!(
-                "CELLSIZE\t= {}\n",
-                (r.configs.resolution_x + r.configs.resolution_y) / 2.0
-            ).as_bytes()
-        )
-    );
+    writer.write_all(
+        format!(
+            "CELLSIZE\t= {}\n",
+            (r.configs.resolution_x + r.configs.resolution_y) / 2.0
+        ).as_bytes(),
+    )?;
 
-    try!(writer.write_all("Z_FACTOR\t= 1.000000\n".as_bytes()));
+    writer.write_all("Z_FACTOR\t= 1.000000\n".as_bytes())?;
 
-    try!(writer.write_all(format!("NODATA_VALUE\t= {}\n", r.configs.nodata).as_bytes()));
+    writer.write_all(format!("NODATA_VALUE\t= {}\n", r.configs.nodata).as_bytes())?;
 
-    try!(writer.write_all("TOPTOBOTTOM\t= FALSE\n".as_bytes()));
+    writer.write_all("TOPTOBOTTOM\t= FALSE\n".as_bytes())?;
 
     let _ = writer.flush();
 
     // write the data file
     let data_file = r.file_name.replace(".sgrd", ".sdat");
-    let f = try!(File::create(&data_file));
+    let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 
     let mut u16_bytes: [u8; 2];
@@ -501,7 +498,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u64_bytes = unsafe { mem::transmute(r.data[i]) };
-                    try!(writer.write(&u64_bytes));
+                    writer.write(&u64_bytes)?;
                 }
             }
         }
@@ -511,7 +508,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
-                    try!(writer.write(&u32_bytes));
+                    writer.write(&u32_bytes)?;
                 }
             }
         }
@@ -521,7 +518,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as i32) };
-                    try!(writer.write(&u32_bytes));
+                    writer.write(&u32_bytes)?;
                 }
             }
         }
@@ -531,7 +528,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
-                    try!(writer.write(&u32_bytes));
+                    writer.write(&u32_bytes)?;
                 }
             }
         }
@@ -541,7 +538,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as i16) };
-                    try!(writer.write(&u16_bytes));
+                    writer.write(&u16_bytes)?;
                 }
             }
         }
@@ -551,7 +548,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
-                    try!(writer.write(&u16_bytes));
+                    writer.write(&u16_bytes)?;
                 }
             }
         }
@@ -560,7 +557,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
-                    try!(writer.write(&[r.data[i] as u8]));
+                    writer.write(&[r.data[i] as u8])?;
                 }
             }
         }

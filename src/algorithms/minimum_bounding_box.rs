@@ -6,9 +6,9 @@ Last Modified: 14/09/2018
 License: MIT
 */
 
-use algorithms::convex_hull;
+use super::convex_hull;
+use crate::structures::Point2D;
 use std::f64;
-use structures::Point2D;
 
 #[derive(Copy, Clone, Debug)]
 pub enum MinimizationCriterion {

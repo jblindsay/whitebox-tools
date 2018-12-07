@@ -8,8 +8,9 @@ License: MIT
 Notes: Some degree of DEM smoothing is likely required to get reasonable results.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct PennockLandformClass {
     name: String,

@@ -13,8 +13,10 @@ Notes: The 3D space-filling nature of point clouds under heavy forest cover do n
 
 use self::na::Vector3;
 use self::rand::Rng;
-use lidar::*;
-use na;
+use crate::lidar::*;
+use crate::na;
+use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
+use crate::tools::*;
 use num_cpus;
 use rand;
 use std::cmp;
@@ -26,8 +28,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch3D};
-use tools::*;
 
 /// Segments a LiDAR point cloud based on normal vectors.
 pub struct LidarSegmentation {

@@ -8,13 +8,13 @@ License: MIT
 NOTES: Add support for vector seed points.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct TraceDownslopeFlowpaths {
     name: String,

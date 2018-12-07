@@ -9,12 +9,12 @@ NOTES: 1. This tool outputs a LAS file, compared with the original Whitebox GAT 
        2. It would be good to add the ability to input multiple LAS files.
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 pub struct FilterLidarScanAngles {
     name: String,

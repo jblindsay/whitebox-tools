@@ -1,12 +1,16 @@
-use std::io::Error;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
+use super::*;
 use std::f64;
 use std::fs::File;
-use raster::*;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::BufWriter;
+use std::io::Error;
 
-pub fn read_arcascii(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_arcascii(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the file
     let f = File::open(file_name)?;
     let f = BufReader::new(f);
@@ -25,29 +29,58 @@ pub fn read_arcascii(file_name: &String, configs: &mut RasterConfigs, data: &mut
             vec = line_split.collect::<Vec<&str>>();
         }
         if vec[0].to_lowercase().contains("nrows") {
-            configs.rows = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
+            configs.rows = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("ncols") {
-            configs.columns = vec[vec.len()-1].trim().parse::<f32>().unwrap() as usize;
+            configs.columns = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
         } else if vec[0].to_lowercase().contains("xllcorner") {
-            xllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            xllcenter = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("yllcorner") {
-            yllcenter = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            yllcenter = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("xllcenter") {
-            xllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            xllcorner = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("yllcenter") {
-            yllcorner = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            yllcorner = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("cellsize") {
-            configs.resolution_x = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
-            configs.resolution_y = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
+            configs.resolution_x = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+            configs.resolution_y = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
         } else if vec[0].to_lowercase().contains("nodata_value") {
-            if vec[vec.len()-1].contains(".") {
+            if vec[vec.len() - 1].contains(".") {
                 //likely_float = true;
                 configs.data_type = DataType::F32;
             } else {
                 configs.data_type = DataType::I32;
             }
-            configs.nodata = vec[vec.len()-1].trim().to_string().parse::<f64>().unwrap();
-        } else { // it's a data line
+            configs.nodata = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+        } else {
+            // it's a data line
             for val in vec {
                 if !val.trim().to_string().is_empty() {
                     data.push(val.trim().to_string().parse::<f64>().unwrap());
@@ -59,23 +92,24 @@ pub fn read_arcascii(file_name: &String, configs: &mut RasterConfigs, data: &mut
     // set the North, East, South, and West coodinates
     if xllcorner != f64::NEG_INFINITY {
         //h.cellCornerMode = true
-        configs.east = xllcorner + (configs.columns as f64)*configs.resolution_x;
+        configs.east = xllcorner + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcorner;
         configs.south = yllcorner;
-        configs.north = yllcorner + (configs.rows as f64)*configs.resolution_y;
+        configs.north = yllcorner + (configs.rows as f64) * configs.resolution_y;
     } else {
         //h.cellCornerMode = false
-        configs.east = xllcenter - (0.5 * configs.resolution_x) + (configs.columns as f64)*configs.resolution_x;
+        configs.east = xllcenter - (0.5 * configs.resolution_x)
+            + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcenter - (0.5 * configs.resolution_x);
         configs.south = yllcenter - (0.5 * configs.resolution_y);
-        configs.north = yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64)*configs.resolution_y;
+        configs.north =
+            yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
     Ok(())
 }
 
 pub fn write_arcascii<'a>(r: &'a mut Raster) -> Result<(), Error> {
-
     // Save the file
     let f = File::create(&(r.file_name))?;
     let mut writer = BufWriter::new(f);
@@ -92,7 +126,10 @@ pub fn write_arcascii<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let s = format!("YLLCORNER {}\n", r.configs.south);
     writer.write_all(s.as_bytes())?;
 
-    let s = format!("CELLSIZE {}\n", (r.configs.resolution_x + r.configs.resolution_y) / 2.0);
+    let s = format!(
+        "CELLSIZE {}\n",
+        (r.configs.resolution_x + r.configs.resolution_y) / 2.0
+    );
     writer.write_all(s.as_bytes())?;
 
     let s = format!("NODATA_VALUE {}\n", &format!("{:.*} ", 2, r.configs.nodata));
@@ -114,7 +151,6 @@ pub fn write_arcascii<'a>(r: &'a mut Raster) -> Result<(), Error> {
             s2 = String::new();
             col = 0;
         }
-        //try!(writer.write_all(format!("{:.*}", 2, r.data[i]).as_bytes()));
     }
 
     let _ = writer.flush();

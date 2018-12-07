@@ -11,9 +11,11 @@ NOTES:
 2. Need to add the ability to exclude points based on max scan angle divation.
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::raster::*;
+use crate::structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::fs;
@@ -22,8 +24,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 pub struct LidarIdwInterpolation {
     name: String,

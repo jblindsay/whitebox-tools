@@ -10,7 +10,9 @@ methods for flow path enforcement in digital elevation models. Hydrological Proc
 30(6): 846–857. DOI: 10.1002/hyp.10648
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
@@ -19,8 +21,6 @@ use std::f64;
 use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// This tool can be used to remove the depressions in a digital elevation model, a
 /// common requirement of spatial hydrological operations such as flow accumulation
@@ -32,7 +32,7 @@ use tools::*;
 ///
 /// It uses a breach-first, fill-second approach.
 ///
-/// ** See Also:**
+/// # See Also:
 /// `FillDepressions`
 pub struct BreachDepressions {
     name: String,

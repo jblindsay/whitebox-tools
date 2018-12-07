@@ -6,7 +6,9 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -15,8 +17,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
 use std::process::Command;
-use structures::{DistanceMetric, FixedRadiusSearch3D};
-use tools::*;
 
 pub struct LidarKappaIndex {
     name: String,

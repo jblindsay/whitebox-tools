@@ -8,8 +8,9 @@ License: MIT
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::collections::HashSet;
 use std::env;
 use std::f64;
@@ -18,7 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
 pub struct MajorityFilter {

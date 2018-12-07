@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
-use vector::*;
 
 /// This tool can be used to remove any coincident, or nearly coincident, points
 /// from a vector points file. The user must specify the name of the input file,

@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
+use crate::vector::{FieldData, ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::{FieldData, ShapeType, Shapefile};
 
 /// Creates a raster grid based on a set of vector points and assigns grid values using a block maximum scheme.
 pub struct BlockMaximumGridding {

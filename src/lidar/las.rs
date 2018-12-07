@@ -1,24 +1,27 @@
-#![allow(dead_code, unused_assignments)]
-// extern crate time;
-// extern crate chrono;
-use chrono::prelude::*;
-extern crate zip;
+/* 
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: 15/01/2017
+Last Modified: 07/12/2018
+License: MIT
+*/
 
-use self::zip::read::{ZipArchive, ZipFile};
-use self::zip::result::ZipResult;
-use self::zip::write::{FileOptions, ZipWriter};
-use self::zip::CompressionMethod;
-use utils::{ByteOrderReader, Endianness};
-use lidar::header::LasHeader;
-use lidar::point_data::{ColourData, PointData, WaveformPacket};
-use lidar::vlr::Vlr;
-use raster::geotiff::geokeys::GeoKeys;
+#![allow(dead_code, unused_assignments)]
+use chrono::prelude::*;
+use zip::read::{ZipArchive, ZipFile};
+use zip::result::ZipResult;
+use zip::write::{FileOptions, ZipWriter};
+use zip::CompressionMethod;
+use crate::utils::{ByteOrderReader, Endianness};
+use super::header::LasHeader;
+use super::point_data::{ColourData, PointData, WaveformPacket};
+use super::vlr::Vlr;
+use crate::raster::geotiff::geokeys::GeoKeys;
 use std::f64;
 use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-// use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Seek;
 use std::io::{Error, ErrorKind};
@@ -26,8 +29,8 @@ use std::mem;
 use std::ops::Index;
 use std::path::Path;
 use std::str;
-use structures::BoundingBox;
-use spatial_ref_system::esri_wkt_from_epsg;
+use crate::structures::BoundingBox;
+use crate::spatial_ref_system::esri_wkt_from_epsg;
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -480,7 +483,7 @@ impl LasFile {
                     //     i += 1;
                     // }
 
-                    let mut block_size = 1024 * 1024 * 500;
+                    let block_size = 1024 * 1024 * 500;
                     let mut start_byte = 0usize;
                     let mut end_byte = block_size;
                     let mut bytes_read = 0;

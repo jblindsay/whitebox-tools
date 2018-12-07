@@ -6,13 +6,13 @@ Last Modified: 25/11/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// This tool will estimate the Euclidean distance (i.e. straight-line distance) between each
 /// grid cell and the nearest 'target cell' in the input image. Target cells are all non-zero,

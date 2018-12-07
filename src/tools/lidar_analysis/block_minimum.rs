@@ -6,9 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::fs;
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct LidarBlockMinimum {
     name: String,

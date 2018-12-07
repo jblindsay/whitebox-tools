@@ -6,8 +6,9 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::collections::HashMap;
 use std::env;
 use std::f64;
@@ -16,7 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct Reclass {
     name: String,

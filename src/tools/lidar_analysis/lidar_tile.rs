@@ -5,14 +5,14 @@ Created: June 26, 2017
 Last Modified: 29/08/2018
 License: MIT
 */
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
 use std;
 use std::env;
 use std::fs::DirBuilder;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
-use tools::*;
 
 /// Tiles a LiDAR LAS file into multiple LAS files.
 pub struct LidarTile {

@@ -6,12 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms::is_clockwise_order;
+use crate::algorithms::is_clockwise_order;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool can be used to convert a vector file containing multi-part features into a vector
 /// containing only single-part features. Any multi-part polygons or lines within the input
@@ -290,7 +290,7 @@ impl WhiteboxTool for MultiPartToSinglePart {
                 let mut geometries =
                     vec![ShapefileGeometry::new(input.header.shape_type); num_composite_features];
 
-                let mut feature_num = -1;
+                let mut feature_num = -1isize;
                 for part in 0..record.num_parts as usize {
                     if !record.is_hole(part as i32) {
                         feature_num += 1;

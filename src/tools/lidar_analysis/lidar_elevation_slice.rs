@@ -6,12 +6,12 @@ Last Modified: February 14, 2018
 License: MIT
 */
 
+use crate::lidar::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
-use std::path;
 use std::io::{Error, ErrorKind};
-use lidar::*;
-use tools::*;
+use std::path;
 
 pub struct LidarElevationSlice {
     name: String,
@@ -22,46 +22,47 @@ pub struct LidarElevationSlice {
 }
 
 impl LidarElevationSlice {
-    pub fn new() -> LidarElevationSlice { // public constructor
+    pub fn new() -> LidarElevationSlice {
+        // public constructor
         let name = "LidarElevationSlice".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description = "Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.".to_string();
-                
+
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input LiDAR file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Output File".to_owned(), 
-            flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output LiDAR file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Minimum Elevation Value".to_owned(), 
-            flags: vec!["--minz".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Minimum Elevation Value".to_owned(),
+            flags: vec!["--minz".to_owned()],
             description: "Minimum elevation value (optional).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
-        
-        parameters.push(ToolParameter{
-            name: "Maximum Elevation Value".to_owned(), 
-            flags: vec!["--maxz".to_owned()], 
+
+        parameters.push(ToolParameter {
+            name: "Maximum Elevation Value".to_owned(),
+            flags: vec!["--maxz".to_owned()],
             description: "Maximum elevation value (optional).".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter{
@@ -73,41 +74,49 @@ impl LidarElevationSlice {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Class Value Assigned to Points Within Range (Optional)".to_owned(), 
-            flags: vec!["--inclassval".to_owned()], 
-            description: "Optional parameter specifying the class value assigned to points within the slice.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Class Value Assigned to Points Within Range (Optional)".to_owned(),
+            flags: vec!["--inclassval".to_owned()],
+            description:
+                "Optional parameter specifying the class value assigned to points within the slice."
+                    .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("2".to_owned()),
-            optional: true
+            optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Class Value Assigned to Points Outside Range (Optional)".to_owned(), 
-            flags: vec!["--outclassval".to_owned()], 
-            description: "Optional parameter specifying the class value assigned to points within the slice.".to_owned(),
+        parameters.push(ToolParameter {
+            name: "Class Value Assigned to Points Outside Range (Optional)".to_owned(),
+            flags: vec!["--outclassval".to_owned()],
+            description:
+                "Optional parameter specifying the class value assigned to points within the slice."
+                    .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("1".to_owned()),
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "").replace(".exe", "").replace(".", "").replace(&sep, "");
+        let mut short_exe = e
+            .replace(&p, "")
+            .replace(".exe", "")
+            .replace(".", "")
+            .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --minz=100.0 --maxz=250.0
 >>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --class
 >>.*{0} -r={1} -v -i=\"*path*to*data*input.las\" -o=\"*path*to*data*output.las\" --minz=100.0 --maxz=250.0 --inclassval=1 --outclassval=0", short_exe, name).replace("*", &sep);
-    
-        LidarElevationSlice { 
-            name: name, 
-            description: description, 
+
+        LidarElevationSlice {
+            name: name,
+            description: description,
             toolbox: toolbox,
-            parameters: parameters, 
-            example_usage: usage 
+            parameters: parameters,
+            example_usage: usage,
         }
     }
 }
@@ -116,7 +125,7 @@ impl WhiteboxTool for LidarElevationSlice {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -147,7 +156,12 @@ impl WhiteboxTool for LidarElevationSlice {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self, args: Vec<String>, working_directory: &'a str, verbose: bool) -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut minz = -f64::INFINITY;
@@ -158,7 +172,10 @@ impl WhiteboxTool for LidarElevationSlice {
 
         // read the arguments
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -166,46 +183,52 @@ impl WhiteboxTool for LidarElevationSlice {
             let cmd = arg.split("="); // in case an equals sign was used
             let vec = cmd.collect::<Vec<&str>>();
             let mut keyval = false;
-            if vec.len() > 1 { keyval = true; }
+            if vec.len() > 1 {
+                keyval = true;
+            }
             if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
-                    input_file = args[i+1].to_string();
+                    input_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
-                    output_file = args[i+1].to_string();
+                    output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-maxz" || vec[0].to_lowercase() == "--maxz" {
                 if keyval {
                     maxz = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    maxz = args[i+1].to_string().parse::<f64>().unwrap();
+                    maxz = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-minz" || vec[0].to_lowercase() == "--minz" {
                 if keyval {
                     minz = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
-                    minz = args[i+1].to_string().parse::<f64>().unwrap();
+                    minz = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-class" || vec[0].to_lowercase() == "--class" {
                 filter = false;
-            } else if vec[0].to_lowercase() == "-inclassval" || vec[0].to_lowercase() == "--inclassval" {
+            } else if vec[0].to_lowercase() == "-inclassval"
+                || vec[0].to_lowercase() == "--inclassval"
+            {
                 filter = false;
                 if keyval {
                     in_class_value = vec[1].to_string().parse::<u8>().unwrap();
                 } else {
-                    in_class_value = args[i+1].to_string().parse::<u8>().unwrap();
+                    in_class_value = args[i + 1].to_string().parse::<u8>().unwrap();
                 }
-            } else if vec[0].to_lowercase() == "-outclassval" || vec[0].to_lowercase() == "--outclassval" {
+            } else if vec[0].to_lowercase() == "-outclassval"
+                || vec[0].to_lowercase() == "--outclassval"
+            {
                 filter = false;
                 if keyval {
                     out_class_value = vec[1].to_string().parse::<u8>().unwrap();
                 } else {
-                    out_class_value = args[i+1].to_string().parse::<u8>().unwrap();
+                    out_class_value = args[i + 1].to_string().parse::<u8>().unwrap();
                 }
             }
         }
@@ -224,7 +247,10 @@ impl WhiteboxTool for LidarElevationSlice {
         }
 
         if in_class_value > 31 || out_class_value > 31 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Error: Either the in-slice or out-of-slice class values are larger than 31."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Error: Either the in-slice or out-of-slice class values are larger than 31.",
+            ));
         }
 
         let sep = path::MAIN_SEPARATOR;
@@ -235,15 +261,24 @@ impl WhiteboxTool for LidarElevationSlice {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose { println!("Reading input LAS file..."); }
+        if verbose {
+            println!("Reading input LAS file...");
+        }
         let input: LasFile = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
-            Err(_) => return Err(Error::new(ErrorKind::NotFound, format!("No such file or directory ({})", input_file))),
+            Err(_) => {
+                return Err(Error::new(
+                    ErrorKind::NotFound,
+                    format!("No such file or directory ({})", input_file),
+                ))
+            }
         };
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
 
-        if verbose { println!("Performing analysis..."); }
+        if verbose {
+            println!("Performing analysis...");
+        }
         let mut z: f64;
         let mut progress: i32;
         let mut old_progress: i32 = -1;
@@ -275,59 +310,130 @@ impl WhiteboxTool for LidarElevationSlice {
                 let pr = input.get_record(i);
                 let pr2: LidarPointRecord;
                 match pr {
-                    LidarPointRecord::PointRecord0 { mut point_data }  => {
+                    LidarPointRecord::PointRecord0 { mut point_data } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord0 { point_data: point_data };
-
-                    },
-                    LidarPointRecord::PointRecord1 { mut point_data, gps_data } => {
+                        pr2 = LidarPointRecord::PointRecord0 {
+                            point_data: point_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord1 {
+                        mut point_data,
+                        gps_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord1 { point_data: point_data, gps_data: gps_data };
-                    },
-                    LidarPointRecord::PointRecord2 { mut point_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord1 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord2 {
+                        mut point_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord2 { point_data: point_data, colour_data: colour_data };
-                    },
-                    LidarPointRecord::PointRecord3 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord2 {
+                            point_data: point_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord3 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord3 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord4 { mut point_data, gps_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord3 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord4 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord4 { point_data: point_data,
-                            gps_data: gps_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord5 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord4 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord5 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord5 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord6 { mut point_data, gps_data } => {
+                        pr2 = LidarPointRecord::PointRecord5 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord6 {
+                        mut point_data,
+                        gps_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord6 { point_data: point_data,
-                            gps_data: gps_data};
-                    },
-                    LidarPointRecord::PointRecord7 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord6 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord7 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord7 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord8 { mut point_data, gps_data, colour_data } => {
+                        pr2 = LidarPointRecord::PointRecord7 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord8 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord8 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data};
-                    },
-                    LidarPointRecord::PointRecord9 { mut point_data, gps_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord8 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                        };
+                    }
+                    LidarPointRecord::PointRecord9 {
+                        mut point_data,
+                        gps_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord9 { point_data: point_data,
-                            gps_data: gps_data, wave_packet: wave_packet};
-                    },
-                    LidarPointRecord::PointRecord10 { mut point_data, gps_data, colour_data, wave_packet } => {
+                        pr2 = LidarPointRecord::PointRecord9 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
+                    LidarPointRecord::PointRecord10 {
+                        mut point_data,
+                        gps_data,
+                        colour_data,
+                        wave_packet,
+                    } => {
                         point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord10 { point_data: point_data,
-                            gps_data: gps_data, colour_data: colour_data, wave_packet: wave_packet};
-                    },
+                        pr2 = LidarPointRecord::PointRecord10 {
+                            point_data: point_data,
+                            gps_data: gps_data,
+                            colour_data: colour_data,
+                            wave_packet: wave_packet,
+                        };
+                    }
                 }
                 output.add_point_record(pr2);
                 if verbose {
@@ -342,7 +448,9 @@ impl WhiteboxTool for LidarElevationSlice {
         }
 
         if num_points_filtered > 0 {
-            if verbose { println!("Writing output LAS file..."); }
+            if verbose {
+                println!("Writing output LAS file...");
+            }
             let _ = match output.write() {
                 Ok(_) => println!("Complete!"),
                 Err(e) => println!("error while writing: {:?}", e),

@@ -6,15 +6,15 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::{Array2D, Point2D};
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{Array2D, Point2D};
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool converts a raster stream file into a vector file. The user must specify
 /// 1) the name of the raster streams file, 2) the name of the D8 flow pointer file,

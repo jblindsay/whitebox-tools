@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D, Point2D};
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, DistanceMetric, FixedRadiusSearch2D, Point2D};
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// The practice of binning point data to form a type of 2D histogram, density plot,
 /// or what is sometimes called a heatmap, is quite useful as an alternative for the

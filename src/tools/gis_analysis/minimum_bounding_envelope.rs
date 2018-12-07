@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
 /// rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y

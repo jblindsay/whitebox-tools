@@ -6,7 +6,8 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 use std::env;
@@ -14,7 +15,6 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::isize;
 use std::path;
-use tools::*;
 
 /// Thins points from high density areas within a LiDAR point cloud.
 pub struct LidarThinHighDensity {

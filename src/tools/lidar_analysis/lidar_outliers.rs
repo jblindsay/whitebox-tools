@@ -10,7 +10,9 @@ difference between a point and the averge elevation of its neighbourhood, calcul
 without the point, exceeds a threshold (elev_diff).
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
@@ -19,8 +21,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 pub struct LidarRemoveOutliers {
     name: String,

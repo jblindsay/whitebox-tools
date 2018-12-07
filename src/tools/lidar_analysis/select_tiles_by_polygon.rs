@@ -6,8 +6,11 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms;
-use lidar::*;
+use crate::algorithms;
+use crate::lidar::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use num_cpus;
 use std::env;
 use std::f64;
@@ -17,9 +20,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::{BoundingBox, Point2D};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 /// Copies LiDAR tiles overlapping with a polygon into an output directory.
 pub struct SelectTilesByPolygon {

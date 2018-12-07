@@ -8,8 +8,9 @@ License: MIT
 NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
 pub struct DiversityFilter {

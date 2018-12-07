@@ -7,18 +7,19 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{find_split_points_at_line_intersections, is_clockwise_order, poly_in_poly};
+use crate::algorithms::{
+    find_split_points_at_line_intersections, is_clockwise_order, poly_in_poly,
+};
+use crate::structures::{BoundingBox, Polyline};
+use crate::tools::*;
+use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::env;
-// use std::f64::EPSILON;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Polyline};
-use tools::*;
-use vector::*;
 
 const EPSILON: f64 = std::f64::EPSILON; //1.0e-7f64;
 
@@ -242,7 +243,7 @@ impl WhiteboxTool for Polygonize {
                         };
 
                         // Create a polyline from the part
-                        let mut pl = Polyline::new(
+                        let pl = Polyline::new(
                             &(record.points[first_point_in_part..=last_point_in_part]),
                             record_num,
                         );

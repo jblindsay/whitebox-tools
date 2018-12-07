@@ -31,18 +31,6 @@ by the WhiteboxTools library:
 
 */
 
-extern crate byteorder;
-extern crate chrono;
-extern crate kdtree;
-extern crate lzw;
-extern crate nalgebra as na;
-extern crate num_cpus;
-extern crate rand;
-extern crate serde;
-extern crate serde_json;
-extern crate statrs;
-// extern crate time;
-
 pub mod algorithms;
 pub mod lidar;
 pub mod raster;
@@ -53,10 +41,11 @@ pub mod tools;
 pub mod utils;
 pub mod vector;
 
+use crate::tools::ToolManager;
+use nalgebra as na;
 use std::env;
 use std::io::Error;
 use std::path;
-use tools::ToolManager;
 
 #[macro_use]
 extern crate serde_derive;

@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::convex_hull;
+use crate::algorithms::convex_hull;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool creates a vector convex polygon around vector features. The convex hull
 /// is a convex closure of a set of points or polygon verticies and can be may be

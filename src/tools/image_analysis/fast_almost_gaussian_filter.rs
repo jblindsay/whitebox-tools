@@ -6,14 +6,14 @@ Last Modified: 19/05/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// Reference: P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing:
 /// Techniques and Applications (DICTA), 2010 International Conference on.

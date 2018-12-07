@@ -6,12 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms::is_clockwise_order;
+use crate::algorithms::is_clockwise_order;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// Converts vector polylines into polygons. Note that this tool will close polygons
 /// that are open and will ensure that the first part of an input line is interpreted

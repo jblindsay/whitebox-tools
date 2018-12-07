@@ -6,14 +6,14 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::{FieldData, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufWriter, Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::{FieldData, Shapefile};
 
 /// This tool can be used to export a vector's attribute table to a comma separated values (CSV)
 /// file. CSV files stores tabular data (numbers and text) in plain-text form such that each row

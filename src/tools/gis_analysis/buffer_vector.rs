@@ -7,10 +7,13 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{
+use crate::algorithms::{
     find_split_points_at_line_intersections, interior_point, is_clockwise_order, point_in_poly,
     poly_in_poly, polygon_area,
 };
+use crate::structures::{BoundingBox, MultiPolyline, Polyline};
+use crate::tools::*;
+use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
@@ -18,9 +21,6 @@ use std::collections::{BinaryHeap, HashSet};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, MultiPolyline, Polyline};
-use tools::*;
-use vector::*;
 
 const EPSILON: f64 = std::f64::EPSILON;
 
@@ -344,10 +344,10 @@ impl WhiteboxTool for BufferVector {
             }
             let dissolved = dissolve_polygons(polygons, precision);
 
-            output.header.shape_type = ShapeType::PolyLine;
+            // output.header.shape_type = ShapeType::PolyLine;
             for record_num in 0..dissolved.len() {
                 // output the polygon
-                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
                 for i in 0..dissolved[record_num].len() {
                     sfg.add_part(&(dissolved[record_num][i].vertices));
                 }
@@ -778,13 +778,13 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
     // let mut other_is_hole: bool;
     let mut last_index: usize;
 
-    for i in 0..polylines.len() {
-        let mut mp = MultiPolyline::new(i + 1);
-        mp.push(&polylines[i]);
-        feature_geometries.push(mp);
-    }
+    // for i in 0..polylines.len() {
+    //     let mut mp = MultiPolyline::new(i + 1);
+    //     mp.push(&polylines[i]);
+    //     feature_geometries.push(mp);
+    // }
 
-    return feature_geometries;
+    // return feature_geometries;
 
     // println!("12962 {:?}", endnodes[12962]);
     // println!("12963 {:?}", endnodes[12963]);

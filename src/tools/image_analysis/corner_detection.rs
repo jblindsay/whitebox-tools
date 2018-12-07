@@ -8,8 +8,9 @@ License: MIT
 NOTES: http://homepages.inf.ed.ac.uk/rbf/HIPR2/hitmiss.htm
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Identifies corner patterns in boolean images using hit-and-miss pattern mattching.
 pub struct CornerDetection {

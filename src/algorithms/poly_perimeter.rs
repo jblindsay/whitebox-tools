@@ -6,7 +6,7 @@ Last Modified: 25/09/2018
 License: MIT
 */
 
-use structures::Point2D;
+use crate::structures::Point2D;
 
 /// Calculates the perimeter of a polygon defined by a series of verticies.
 pub fn polygon_perimeter(vertices: &[Point2D]) -> f64 {

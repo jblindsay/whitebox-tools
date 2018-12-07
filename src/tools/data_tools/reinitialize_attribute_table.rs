@@ -6,11 +6,11 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
 /// Caution: this tool overwrites the input file's attribute table.
@@ -162,7 +162,7 @@ impl WhiteboxTool for ReinitializeAttributeTable {
 
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
-            let mut new_record = record.clone();
+            let new_record = record.clone();
             output.add_record(new_record);
             output
                 .attributes

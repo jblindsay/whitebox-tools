@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::polygon_perimeter;
+use crate::algorithms::polygon_perimeter;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool calculates the perimeter of vector polygons, adding the result
 /// to the vector's attribute table (PERIMETER field). The area calculation will

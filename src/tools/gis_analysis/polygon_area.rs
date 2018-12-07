@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::polygon_area;
+use crate::algorithms::polygon_area;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool calculates the area of vector polygons, adding the result to the
 /// vector's attribute table (AREA field). The area calculation will account

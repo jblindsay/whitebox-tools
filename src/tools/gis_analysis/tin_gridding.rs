@@ -7,16 +7,16 @@ License: MIT
 */
 
 use self::na::Vector3;
-use algorithms::{point_in_poly, triangulate};
-use na;
-use raster::*;
+use crate::algorithms::{point_in_poly, triangulate};
+use crate::na;
+use crate::raster::*;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::*;
 
 /// Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
 /// and linear interpolation within each triangular-shaped plane.

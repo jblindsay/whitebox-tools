@@ -6,13 +6,13 @@ Last Modified: 22/11/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::{FieldData, Shapefile};
 use std::collections::HashMap;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::{FieldData, Shapefile};
 
 /// This tool can be used to join (i.e. merge) a vector's attribute table with a second table. The
 /// user must specify the name of the vector file (and associated attribute file) as well as the

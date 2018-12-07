@@ -6,8 +6,8 @@ Last Modified: 18/10/2018
 License: MIT
 */
 
+use super::{BoundingBox, Point2D};
 use std::ops::Index;
-use structures::{BoundingBox, Point2D};
 
 /// A storage container for multiple related polylines.
 #[derive(Default, Clone, Debug)]
@@ -326,7 +326,7 @@ impl Polyline {
 #[cfg(test)]
 mod test {
     use super::Polyline;
-    use structures::Point2D;
+    use crate::structures::Point2D;
 
     #[test]
     fn test_polyline_split() {

@@ -11,14 +11,14 @@ Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Pr
 and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::{Array2D, BoundingBox};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{Array2D, BoundingBox};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 /// Rasterizes vector streams based on Lindsay (2016) method.
 pub struct RasterizeStreams {

@@ -1,4 +1,4 @@
-use structures::Point2D;
+use crate::structures::Point2D;
 
 /// Checks whether a sequence of Point2D are in clockwise order.
 pub fn is_clockwise_order(points: &[Point2D]) -> bool {

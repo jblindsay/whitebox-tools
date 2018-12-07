@@ -5,8 +5,8 @@ Created: 30/08/2018
 Last Modified: 30/08/2018
 License: MIT
 */
+use super::Point2D;
 use std::f64;
-use structures::Point2D;
 
 #[derive(Clone, Copy, Debug)]
 pub struct BoundingBox {

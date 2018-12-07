@@ -9,8 +9,10 @@ NOTES: This tool provides a full workflow D8 flow operation. This includes remov
 the D8 pointer raster and finally the D8 flow accumulation operation. 
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
@@ -22,8 +24,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
 /// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.
 pub struct FlowAccumulationFullWorkflow {

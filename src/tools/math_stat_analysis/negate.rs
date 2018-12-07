@@ -9,8 +9,9 @@ NOTE: This tool differs from the Whitebox GAT equivalent in that in additional t
 of continous data, it also handles Boolean data by reversing values (i.e. 0-1 to 1-0).
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -18,7 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct Negate {
     name: String,

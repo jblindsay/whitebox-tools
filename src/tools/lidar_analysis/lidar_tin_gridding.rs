@@ -7,17 +7,17 @@ License: MIT
 */
 
 use self::na::Vector3;
-use algorithms::{point_in_poly, triangulate};
-use lidar::*;
-use na;
+use crate::algorithms::{point_in_poly, triangulate};
+use crate::lidar::*;
+use crate::na;
+use crate::raster::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
-use structures::{BoundingBox, Point2D};
-use tools::*;
 
 /// Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 pub struct LidarTINGridding {

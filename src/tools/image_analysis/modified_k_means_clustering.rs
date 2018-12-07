@@ -6,10 +6,11 @@ Last Modified: Dec. 30, 2017
 License: MIT
 */
 
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::tools::*;
 use num_cpus;
 use rand::prelude::*;
-use raster::*;
-use rendering::html::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -21,7 +22,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// This modified k-means algorithm is similar to that described by Mather (2004).
 /// The main difference between the traditional k-means and this technique is that the user

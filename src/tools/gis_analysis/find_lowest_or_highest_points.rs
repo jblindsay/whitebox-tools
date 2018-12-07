@@ -6,8 +6,10 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
+use crate::vector::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,8 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use tools::*;
-use vector::*;
 
 /// Locates the lowest and/or highest valued cells in a raster.
 pub struct FindLowestOrHighestPoints {

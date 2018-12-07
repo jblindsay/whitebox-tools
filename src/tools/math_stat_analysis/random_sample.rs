@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use rand::prelude::*;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// This tool can be used to create a random sample of grid cells. The user specifies
 /// the base raster file, which is used to determine the grid dimensions and georeference

@@ -6,13 +6,13 @@ Last Modified: 26/09/2018
 License: MIT
 */
 
-use algorithms::polygon_area;
+use crate::algorithms::polygon_area;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This calculates the proportion of the total area of a polygon's holes (i.e. islands)
 /// relative to the area of the polygon's hull. It can be a useful measure of shape

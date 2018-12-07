@@ -6,8 +6,9 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -21,7 +22,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct Anova {
     name: String,

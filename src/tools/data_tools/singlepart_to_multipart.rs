@@ -6,12 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms::{is_clockwise_order, poly_in_poly};
+use crate::algorithms::{is_clockwise_order, poly_in_poly};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool can be used to convert a vector file containing single-part features into a vector
 /// containing multi-part features. The user has the option to either group features based on an
@@ -548,7 +548,7 @@ impl WhiteboxTool for SinglePartToMultiPart {
                         }
                     }
 
-                    let mut max_id = id - 1;
+                    let max_id = id - 1;
 
                     for id in 0..=max_id {
                         let mut sfg = ShapefileGeometry::new(output.header.shape_type);
@@ -557,7 +557,7 @@ impl WhiteboxTool for SinglePartToMultiPart {
                             if feature_num[record_num] == id {
                                 i = record_num;
                                 let record = input.get_record(record_num);
-                                let mut points = record.points.clone();
+                                let points = record.points.clone();
                                 let mut measures: Vec<f64> =
                                     Vec::with_capacity(record.num_points as usize);
                                 let mut z_values: Vec<f64> =
@@ -653,7 +653,7 @@ impl WhiteboxTool for SinglePartToMultiPart {
                         }
                     }
 
-                    let mut max_id = id - 1;
+                    let max_id = id - 1;
 
                     for id in 0..=max_id {
                         let mut sfg = ShapefileGeometry::new(output.header.shape_type);
@@ -662,7 +662,7 @@ impl WhiteboxTool for SinglePartToMultiPart {
                             if feature_num[record_num] == id {
                                 i = record_num;
                                 let record = input.get_record(record_num);
-                                let mut points = record.points.clone();
+                                let points = record.points.clone();
                                 let mut measures: Vec<f64> =
                                     Vec::with_capacity(record.num_points as usize);
                                 let mut z_values: Vec<f64> =
@@ -758,7 +758,7 @@ impl WhiteboxTool for SinglePartToMultiPart {
                         }
                     }
 
-                    let mut max_id = id - 1;
+                    let max_id = id - 1;
 
                     // polygons contained within other polygons with the same field id will be considered holes
                     let mut is_contained = vec![false; input.num_records];

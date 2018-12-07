@@ -6,11 +6,11 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// Combines two or more input vectors of the same ShapeType creating a single, new output
 /// vector. Importantly, the attribute table of the output vector will contain the ubiquitous
@@ -289,7 +289,7 @@ impl WhiteboxTool for MergeVectors {
             let short_name = input.get_short_filename().replace(".shp", "");
 
             for record_num in 0..input.num_records {
-                let mut record = input.get_record(record_num).clone();
+                let record = input.get_record(record_num).clone();
                 output.add_record(record);
 
                 // attributes

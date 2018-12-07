@@ -7,18 +7,18 @@ License: MIT
 */
 
 use self::na::Vector3;
-use algorithms::triangulate;
-use lidar::*;
-use na;
+use crate::algorithms::triangulate;
+use crate::lidar::*;
+use crate::na;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use num_cpus;
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
 pub struct LidarConstructVectorTIN {
@@ -349,7 +349,7 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                     let mut old_progress: usize = 1;
 
                     let mut input = match LasFile::new(&input_file, "r") {
-                        Ok(mut lf) => lf,
+                        Ok(lf) => lf,
                         Err(err) => panic!(
                             "Error reading file {}: {}",
                             input_file.replace("\"", ""),

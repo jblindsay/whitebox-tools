@@ -4,21 +4,13 @@ Authors: Dr. John Lindsay
 Created: 10/05/2018
 Last Modified: 13/10/2018
 License: MIT
-
-NOTES: Most IDW tool have the option to work either based on a fixed number of neighbouring 
-points or a fixed neighbourhood size. This tool is currently configured to perform the later
-only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require 
-use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance 
-does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
-other options here. 
-
-Another change that will need to be implemented is the use of a nodal function. The original 
-Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the 
-former.
 */
 
+use crate::raster::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
+use crate::vector::{FieldData, ShapeType, Shapefile};
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -26,11 +18,19 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
-use vector::{FieldData, ShapeType, Shapefile};
 
-/// Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+/// This tool interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+///
+/// Most IDW tool have the option to work either based on a fixed number of neighbouring
+/// points or a fixed neighbourhood size. This tool is currently configured to perform the later
+/// only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require
+/// use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance
+/// does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
+/// other options here.
+///
+/// Another change that will need to be implemented is the use of a nodal function. The original
+/// Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the
+/// former.
 pub struct IdwInterpolation {
     name: String,
     description: String,

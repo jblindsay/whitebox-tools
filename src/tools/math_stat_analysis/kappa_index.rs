@@ -6,7 +6,8 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::cmp::max;
 use std::cmp::min;
 use std::env;
@@ -17,7 +18,6 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
 use std::process::Command;
-use tools::*;
 
 pub struct KappaIndex {
     name: String,

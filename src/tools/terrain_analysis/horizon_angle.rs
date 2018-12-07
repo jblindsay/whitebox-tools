@@ -8,8 +8,9 @@ License: MIT
 NOTES: The tool should have the option to output a distance raster as well.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct HorizonAngle {
     name: String,

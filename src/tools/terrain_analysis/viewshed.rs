@@ -17,8 +17,11 @@ computationally intensive task. Depending on the size of the input DEM grid and 
 number of viewing stations, this operation may take considerable time to complete.
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::vector::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -26,9 +29,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
-use vector::*;
 
 pub struct Viewshed {
     name: String,

@@ -1,4 +1,5 @@
-use raster::*;
+use super::*;
+use crate::utils::Endianness;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -7,7 +8,6 @@ use std::io::BufWriter;
 use std::io::Error;
 use std::io::ErrorKind;
 use std::mem;
-use utils::Endianness;
 
 pub fn read_idrisi(
     file_name: &String,
@@ -16,7 +16,7 @@ pub fn read_idrisi(
 ) -> Result<(), Error> {
     // read the header file
     let header_file = file_name.replace(".rst", ".rdc");
-    let f = try!(File::open(header_file));
+    let f = File::open(header_file)?;
     let f = BufReader::new(f);
 
     for line in f.lines() {
@@ -124,7 +124,7 @@ pub fn read_idrisi(
 
     // read the data file
     let data_file = file_name.replace(".rdc", ".rst");
-    let mut f = try!(File::open(data_file.clone()));
+    let mut f = File::open(data_file.clone())?;
 
     let data_size = if configs.data_type == DataType::F32 {
         4
@@ -143,7 +143,7 @@ pub fn read_idrisi(
     while j < num_cells {
         let mut buffer = vec![0; buf_size * data_size];
 
-        try!(f.read(&mut buffer));
+        f.read(&mut buffer)?;
 
         // read the file's bytes into a buffer
         //try!(f.read_to_end(&mut buffer));
@@ -243,26 +243,26 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     // Save the header file
     let header_file = r.file_name.replace(".rst", ".rdc");
-    let f = try!(File::create(header_file));
+    let f = File::create(header_file)?;
     let mut writer = BufWriter::new(f);
 
-    try!(writer.write_all("file format : IDRISI Raster A.1\n".as_bytes()));
+    writer.write_all("file format : IDRISI Raster A.1\n".as_bytes())?;
 
-    try!(writer.write_all(format!("file title  : {}\n", r.configs.title).as_bytes()));
+    writer.write_all(format!("file title  : {}\n", r.configs.title).as_bytes())?;
 
     match r.configs.data_type {
         DataType::F32 => {
-            try!(writer.write_all("data type   : real\n".as_bytes()));
+            writer.write_all("data type   : real\n".as_bytes())?;
         }
         DataType::U32 => {
             // rgb
-            try!(writer.write_all("data type   : RGB24\n".as_bytes()));
+            writer.write_all("data type   : RGB24\n".as_bytes())?;
         }
         DataType::I16 => {
-            try!(writer.write_all("data type   : integer\n".as_bytes()));
+            writer.write_all("data type   : integer\n".as_bytes())?;
         }
         DataType::U8 => {
-            try!(writer.write_all("data type   : byte\n".as_bytes()));
+            writer.write_all("data type   : byte\n".as_bytes())?;
         }
         _ => {
             return Err(Error::new(
@@ -275,73 +275,73 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
     }
 
-    try!(writer.write_all("file type   : binary\n".as_bytes()));
+    writer.write_all("file type   : binary\n".as_bytes())?;
 
     let s = format!("columns     : {}\n", r.configs.columns);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("rows        : {}\n", r.configs.rows);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("ref. system : {}\n", r.configs.coordinate_ref_system_wkt);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("ref. units  : {}\n", r.configs.xy_units);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
-    try!(writer.write_all("unit dist.  : 1.0000000\n".as_bytes()));
+    writer.write_all("unit dist.  : 1.0000000\n".as_bytes())?;
 
     let s = format!("min. X      : {}\n", r.configs.west);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("max. X      : {}\n", r.configs.east);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("min. Y      : {}\n", r.configs.south);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("max. Y      : {}\n", r.configs.north);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
-    try!(writer.write_all("pos'n error : unknown\n".as_bytes()));
+    writer.write_all("pos'n error : unknown\n".as_bytes())?;
 
-    try!(writer.write_all("resolution  : unknown\n".as_bytes()));
+    writer.write_all("resolution  : unknown\n".as_bytes())?;
 
     let s = format!("min. value  : {}\n", r.configs.minimum);
-    try!(writer.write_all(s.as_bytes())); //.expect("Unable to write data)
+    writer.write_all(s.as_bytes())?; //.expect("Unable to write data)
 
     let s = format!("max. value  : {}\n", r.configs.maximum);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("display min : {}\n", r.configs.display_min);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("display max : {}\n", r.configs.display_max);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("value units : {}\n", r.configs.z_units);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
-    try!(writer.write_all("value error : unknown\n".as_bytes()));
+    writer.write_all("value error : unknown\n".as_bytes())?;
 
-    try!(writer.write_all("flag value  : none\n".as_bytes()));
+    writer.write_all("flag value  : none\n".as_bytes())?;
 
-    try!(writer.write_all("flag def'n  : none\n".as_bytes()));
+    writer.write_all("flag def'n  : none\n".as_bytes())?;
 
-    try!(writer.write_all("legend cats : 0\n".as_bytes()));
+    writer.write_all("legend cats : 0\n".as_bytes())?;
 
-    try!(writer.write_all("byteorder   : LITTLE_ENDIAN\n".as_bytes()));
+    writer.write_all("byteorder   : LITTLE_ENDIAN\n".as_bytes())?;
 
     for md in &r.configs.metadata {
         let s = format!("comment     : {}\n", md.replace(":", ";"));
-        try!(writer.write_all(s.as_bytes()));
+        writer.write_all(s.as_bytes())?;
     }
 
     let _ = writer.flush();
 
     // read the data file
     let data_file = r.file_name.replace(".rdc", ".rst");
-    let f = try!(File::create(&data_file));
+    let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 
     let mut u16_bytes: [u8; 2];
@@ -353,7 +353,7 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
         DataType::F32 => {
             for i in 0..num_cells {
                 u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
-                try!(writer.write(&u32_bytes));
+                writer.write(&u32_bytes)?;
             }
         }
         DataType::U32 => {
@@ -370,12 +370,12 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
         DataType::I16 => {
             for i in 0..num_cells {
                 u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
-                try!(writer.write(&u16_bytes));
+                writer.write(&u16_bytes)?;
             }
         }
         DataType::U8 => {
             for i in 0..num_cells {
-                try!(writer.write(&[r.data[i] as u8]));
+                writer.write(&[r.data[i] as u8])?;
             }
         }
         _ => {

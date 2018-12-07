@@ -2,16 +2,14 @@
 pub mod geokeys;
 pub mod tiff_consts;
 
-extern crate libflate;
-extern crate lzw;
-
 // use flate2::read::GzDecoder;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use raster::geotiff::geokeys::*;
-use raster::geotiff::libflate::zlib::Decoder;
-use raster::geotiff::tiff_consts::*;
-use raster::*;
-use spatial_ref_system::esri_wkt_from_epsg;
+use crate::raster::geotiff::geokeys::*;
+use crate::raster::geotiff::tiff_consts::*;
+use crate::raster::*;
+use crate::spatial_ref_system::esri_wkt_from_epsg;
+use crate::utils::{ByteOrderReader, Endianness};
+use libflate::zlib::Decoder;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::default::Default;
@@ -24,7 +22,6 @@ use std::io::BufWriter;
 use std::io::Error;
 use std::io::ErrorKind;
 use std::io::Read;
-use utils::{ByteOrderReader, Endianness};
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let mut f = File::open(file_name.clone())?;
@@ -691,7 +688,7 @@ pub fn read_geotiff<'a>(
                     }
                     COMPRESS_DEFLATE => {
                         // let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
-                        let mut compressed = &th.buffer[offset..(offset + n)];
+                        let compressed = &th.buffer[offset..(offset + n)];
                         let mut decoder = Decoder::new(&compressed[..]).unwrap();
                         // let mut decoded_data = Vec::new();
                         decoder.read_to_end(&mut buf).unwrap();

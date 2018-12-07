@@ -6,8 +6,12 @@ Last Modified: 29/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::structures::{Array2D, Point2D};
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,10 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{Array2D, Point2D};
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool delineates the longest flowpaths for a group of subbasins or watersheds.
 /// Flowpaths are initiated along drainage divides and continue along the D8-defined

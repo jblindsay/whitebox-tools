@@ -8,8 +8,10 @@ License: MIT
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -19,8 +21,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
 /// Performs a high pass filter based on a median filter.
 pub struct HighPassMedianFilter {

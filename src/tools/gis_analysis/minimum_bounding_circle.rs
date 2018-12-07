@@ -6,15 +6,15 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::smallest_enclosing_circle;
+use crate::algorithms::smallest_enclosing_circle;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
 /// circle to completely enclose a feature.

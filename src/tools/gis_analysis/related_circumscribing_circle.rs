@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{polygon_area, smallest_enclosing_circle};
+use crate::algorithms::{polygon_area, smallest_enclosing_circle};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool can be used to calculate the related circumscribing circle (Mcgarigal et al. 2002)
 /// for vector polygon features. The related circumscribing circle values calculated for each

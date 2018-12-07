@@ -8,14 +8,14 @@ License: MIT
 
 extern crate kdtree;
 
+use crate::lidar::*;
+use crate::tools::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use lidar::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// This tool classifies points within a user-specified LiDAR point cloud (`--base`) that correpond
 /// with points in a subset cloud (`--subset`). The subset point cloud may have been derived by filtering

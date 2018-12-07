@@ -25,8 +25,11 @@ considered before running this tool on a particular data set. This tool is best 
 on systems with high core-counts and plenty of memory.
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::utils::get_formatted_elapsed_time;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -34,9 +37,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::Array2D;
-use tools::*;
-use utils::get_formatted_elapsed_time;
 
 pub struct VisibilityIndex {
     name: String,

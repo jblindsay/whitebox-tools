@@ -6,7 +6,9 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
@@ -15,8 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 /// Performs a white top-hat transform on a Lidar dataset; as an estimate of height above ground, this is useful for modelling the vegetation canopy.
 pub struct LidarTophatTransform {

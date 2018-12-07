@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
 /// completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned

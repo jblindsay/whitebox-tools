@@ -6,7 +6,8 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
@@ -15,7 +16,6 @@ use std::f64;
 use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 pub struct DepthInSink {
     name: String,

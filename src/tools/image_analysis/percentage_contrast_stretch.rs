@@ -10,8 +10,9 @@ NOTES: 1. The tool should be updated to take multiple file inputs.
           this tool will operate on RGB images in addition to greyscale images.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -20,7 +21,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Performs a percentage linear contrast stretch on input images.
 pub struct PercentageContrastStretch {

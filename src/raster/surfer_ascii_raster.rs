@@ -1,15 +1,19 @@
-use std::io::Error;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
-use std::io::ErrorKind;
+use super::*;
 use std::f64;
 use std::fs::File;
-use raster::*;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::BufWriter;
+use std::io::Error;
+use std::io::ErrorKind;
 
-pub fn read_surfer_ascii_raster(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_surfer_ascii_raster(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the file
-    let f = try!(File::open(file_name));
+    let f = File::open(file_name)?;
     let f = BufReader::new(f);
 
     configs.nodata = 1.71041e38;
@@ -30,11 +34,17 @@ pub fn read_surfer_ascii_raster(file_name: &String, configs: &mut RasterConfigs,
         if line_num == 0 {
             // this line should contain the string DSAA; if not, there is a problem.
             if !vec[0].to_lowercase().contains("dsaa") {
-                return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The Surfer file appears to be improperly formated.",
+                ));
             }
         } else if line_num == 1 {
             if vec.len() != 2 {
-                return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The Surfer file appears to be improperly formated.",
+                ));
             }
             configs.columns = vec[0].trim().parse::<f32>().unwrap() as usize;
             configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
@@ -46,23 +56,33 @@ pub fn read_surfer_ascii_raster(file_name: &String, configs: &mut RasterConfigs,
             }
         } else if line_num == 2 {
             if vec.len() != 2 {
-                return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The Surfer file appears to be improperly formated.",
+                ));
             }
             configs.west = vec[0].trim().to_string().parse::<f64>().unwrap();
             configs.east = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if line_num == 3 {
             if vec.len() != 2 {
-                return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The Surfer file appears to be improperly formated.",
+                ));
             }
             configs.south = vec[0].trim().to_string().parse::<f64>().unwrap();
             configs.north = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if line_num == 4 {
             if vec.len() != 2 {
-                return Err(Error::new(ErrorKind::InvalidData, "The Surfer file appears to be improperly formated."));
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The Surfer file appears to be improperly formated.",
+                ));
             }
             configs.minimum = vec[0].trim().to_string().parse::<f64>().unwrap();
             configs.maximum = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else { // it's a data line
+        } else {
+            // it's a data line
             let mut val_num;
             let mut i;
             for val in vec {
@@ -95,27 +115,32 @@ pub fn read_surfer_ascii_raster(file_name: &String, configs: &mut RasterConfigs,
 }
 
 pub fn write_surfer_ascii_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
-
-    if r.configs.nodata != 1.71041e38 { r.configs.nodata = 1.71041e38; }
+    if r.configs.nodata != 1.71041e38 {
+        r.configs.nodata = 1.71041e38;
+    }
 
     // figure out the minimum and maximum values
     for val in &r.data {
         let v = *val;
         if v != r.configs.nodata {
-            if v < r.configs.minimum { r.configs.minimum = v; }
-            if v > r.configs.maximum { r.configs.maximum = v; }
+            if v < r.configs.minimum {
+                r.configs.minimum = v;
+            }
+            if v > r.configs.maximum {
+                r.configs.maximum = v;
+            }
         }
     }
 
     // Save the file
-    let f = try!(File::create(&(r.file_name)));
+    let f = File::create(&(r.file_name))?;
     let mut writer = BufWriter::new(f);
 
-    try!(writer.write_all("DSAA\n".as_bytes()));
-    try!(writer.write_all(format!("{} {}\n", r.configs.columns, r.configs.rows).as_bytes()));
-    try!(writer.write_all(format!("{} {}\n", r.configs.west, r.configs.east).as_bytes()));
-    try!(writer.write_all(format!("{} {}\n", r.configs.south, r.configs.north).as_bytes()));
-    try!(writer.write_all(format!("{} {}\n", r.configs.minimum, r.configs.maximum).as_bytes()));
+    writer.write_all("DSAA\n".as_bytes())?;
+    writer.write_all(format!("{} {}\n", r.configs.columns, r.configs.rows).as_bytes())?;
+    writer.write_all(format!("{} {}\n", r.configs.west, r.configs.east).as_bytes())?;
+    writer.write_all(format!("{} {}\n", r.configs.south, r.configs.north).as_bytes())?;
+    writer.write_all(format!("{} {}\n", r.configs.minimum, r.configs.maximum).as_bytes())?;
 
     // write the data
     let mut s2 = String::new();
@@ -141,7 +166,7 @@ pub fn write_surfer_ascii_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 }
             }
         }
-        try!(writer.write_all(s2.as_bytes()));
+        writer.write_all(s2.as_bytes())?;
         s2 = String::new();
     }
 

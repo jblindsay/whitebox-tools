@@ -6,9 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
-use rendering::html::*;
-use rendering::LineGraph;
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::LineGraph;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -17,9 +20,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use structures::Array2D;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct MaxAnisotropyDevSignature {
     name: String,

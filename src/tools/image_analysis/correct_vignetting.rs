@@ -6,8 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -16,9 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 /// This tool can be used to reduce vignetting within an image. Vignetting refers to the
 /// reducuction of image brightness away from the image centre (i.e. the principal point).

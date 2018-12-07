@@ -6,16 +6,16 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use lidar::*;
-use raster::*;
+use crate::lidar::*;
+use crate::raster::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Point2D};
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool can be used to create a rectangular vector grid. The extent of the rectangular
 /// grid is based on the extent of a user-specified base file (any supported raster format,

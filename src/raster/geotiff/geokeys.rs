@@ -1,8 +1,7 @@
-use raster::geotiff::IfdDirectory;
+use super::IfdDirectory;
+use crate::utils::{ByteOrderReader, Endianness};
 use std::collections::HashMap;
 use std::fmt;
-use utils::{ByteOrderReader, Endianness};
-// use std::mem;
 use std::mem::transmute;
 
 macro_rules! hashmap {

@@ -7,10 +7,13 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{
+use crate::algorithms::{
     find_split_points_at_line_intersections, interior_point, is_clockwise_order, point_in_poly,
     poly_in_poly, poly_overlaps_poly,
 };
+use crate::structures::{BoundingBox, MultiPolyline, Polyline};
+use crate::tools::*;
+use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
@@ -18,9 +21,6 @@ use std::collections::{BinaryHeap, HashSet};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, MultiPolyline, Polyline};
-use tools::*;
-use vector::*;
 
 const EPSILON: f64 = std::f64::EPSILON;
 

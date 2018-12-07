@@ -8,7 +8,9 @@ License: MIT
 NOTES: Add anisotropy option.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::env;
@@ -16,8 +18,6 @@ use std::f64;
 use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// This tool can be used to perform cost-distance or least-cost pathway analyses. Specifically,
 /// this tool can be used to calculate the accumulated cost of traveling from the 'source grid

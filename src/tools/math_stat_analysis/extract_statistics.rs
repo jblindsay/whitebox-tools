@@ -10,8 +10,9 @@ with each of the mean, min, max, range, std dev, and total. The output raster ca
 only represent one statistic, given by the --stat flag.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -24,7 +25,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// This tool can be used to extract common descriptive statistics associated with the distribution
 /// of some underlying data raster based on feature units defined by a feature definition raster.

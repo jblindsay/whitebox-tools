@@ -8,7 +8,9 @@ License: MIT
 NOTES: Correlation is calculated for each pair of numeric attributes.
 */
 
-use rendering::html::*;
+use crate::rendering::html::*;
+use crate::tools::*;
+use crate::vector::{FieldData, Shapefile};
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -16,8 +18,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
-use vector::{FieldData, Shapefile};
 
 pub struct AttributeCorrelation {
     name: String,

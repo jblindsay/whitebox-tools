@@ -6,12 +6,12 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool calculates the linearity index of polygon features based on a regression analysis.
 /// The index is simply the coefficient of determination (r-squared) calculated from a regression

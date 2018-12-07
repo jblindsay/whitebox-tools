@@ -7,8 +7,9 @@ License: MIT
 */
 
 use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use statrs;
 use std::env;
 use std::f64;
@@ -22,7 +23,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct ImageRegression {
     name: String,

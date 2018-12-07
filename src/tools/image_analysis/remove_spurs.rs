@@ -9,8 +9,9 @@ NOTE: This algorithm can't easily be parallelized because the output raster must
 and written to during the same loop. Doing so would involve using a mutex.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -18,7 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct RemoveSpurs {
     name: String,

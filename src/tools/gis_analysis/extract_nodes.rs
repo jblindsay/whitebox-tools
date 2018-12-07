@@ -6,11 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// Converts vector lines or polygons into vertex points.
 pub struct ExtractNodes {

@@ -6,11 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool can be used to extend vector lines by a specified distance. The user must
 /// input the names of the input and output shapefiles, the distance to extend features

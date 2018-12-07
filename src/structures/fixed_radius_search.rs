@@ -5,11 +5,11 @@ Last Modified: 13/09/2018
 License: MIT
 */
 
+use super::n_minimizer::NMinimizer;
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 use std::f64;
-use structures::NMinimizer;
 
 /// DistanceMetric is a simple enum specifying a method for measuring distances.
 pub enum DistanceMetric {

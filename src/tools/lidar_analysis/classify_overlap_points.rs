@@ -18,13 +18,13 @@ When the LAS encoder is updated to output v 1.4 LAS files, the overlap flag shou
 designate overlapping points in 'classify' mode rather than class 12.
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 pub struct ClassifyOverlapPoints {
     name: String,
@@ -239,7 +239,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
         for i in 0..n_points {
             match input.get_record(i) {
                 LidarPointRecord::PointRecord1 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                 } => {
                     x = point_data.x;
@@ -248,7 +248,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     gps_time = gps_data;
                 }
                 LidarPointRecord::PointRecord3 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     colour_data,
                 } => {
@@ -259,7 +259,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = colour_data;
                 }
                 LidarPointRecord::PointRecord4 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     wave_packet,
                 } => {
@@ -270,7 +270,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = wave_packet;
                 }
                 LidarPointRecord::PointRecord5 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     colour_data,
                     wave_packet,
@@ -283,7 +283,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = wave_packet;
                 }
                 LidarPointRecord::PointRecord6 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                 } => {
                     x = point_data.x;
@@ -292,7 +292,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     gps_time = gps_data;
                 }
                 LidarPointRecord::PointRecord7 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     colour_data,
                 } => {
@@ -303,7 +303,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = colour_data;
                 }
                 LidarPointRecord::PointRecord8 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     colour_data,
                 } => {
@@ -314,7 +314,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = colour_data;
                 }
                 LidarPointRecord::PointRecord9 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     wave_packet,
                 } => {
@@ -325,7 +325,7 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     let _ = wave_packet;
                 }
                 LidarPointRecord::PointRecord10 {
-                    mut point_data,
+                    point_data,
                     gps_data,
                     colour_data,
                     wave_packet,

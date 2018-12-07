@@ -6,8 +6,9 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -19,7 +20,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// NoData values in the input image are ignored during the convolution operation.
 /// This can lead to unexpected behavior at the edges of images (since the default behavior

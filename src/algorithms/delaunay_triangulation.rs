@@ -43,8 +43,8 @@ println!("{:?}", result.triangles); // [0, 2, 1, 0, 3, 2]
 ```
 */
 
+use crate::structures::Point2D;
 use std::f64;
-use structures::Point2D;
 
 /// Represents the area outside of the triangulation.
 /// Halfedges on the convex hull (which don't have an adjacent halfedge)

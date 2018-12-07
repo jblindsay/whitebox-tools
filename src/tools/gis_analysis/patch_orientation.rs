@@ -6,12 +6,12 @@ Last Modified: 16/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool calculates the orientation of polygon features based on the slope of a reduced major
 /// axis (RMA) regression line. The regression analysis use the vertices of the exterior hull nodes

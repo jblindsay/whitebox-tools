@@ -6,9 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
-use rendering::html::*;
-use rendering::LineGraph;
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::LineGraph;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -17,9 +20,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use structures::Array2D;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct MaxElevDevSignature {
     name: String,
@@ -350,13 +350,13 @@ impl WhiteboxTool for MaxElevDevSignature {
             }
         }
 
+        let mut z: f64;
         for site in 0..signature_sites.len() {
             let (row, col) = signature_sites[site];
             let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
             let mut n: i32;
             let (mut mean, mut sum, mut sum_sqr): (f64, f64, f64);
             let (mut v, mut s): (f64, f64);
-            let mut z: f64;
             z = input.get_value(row, col);
             if z != nodata {
                 for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) {

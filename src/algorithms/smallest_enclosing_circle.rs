@@ -9,8 +9,8 @@ NOTES: The logic of this algorithm is based on
        https://www.nayuki.io/res/smallest-enclosing-circle/SmallestEnclosingCircle.cs and
        https://www.nayuki.io/res/smallest-enclosing-circle/SmallestEnclosingCircle.cpp
 */
+use crate::structures::{Circle, Point2D};
 use rand::prelude::*;
-use structures::{Circle, Point2D};
 
 /// Returns the smallest circle that encloses all the given points. Runs in expected O(n) time,
 /// randomized.

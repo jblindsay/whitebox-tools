@@ -6,7 +6,7 @@ Last Modified: 27/09/2018
 License: MIT
 */
 
-use structures::Point2D;
+use super::Point2D;
 
 const MULTIPLICATIVE_EPSILON: f64 = 1f64 + 1e-14;
 

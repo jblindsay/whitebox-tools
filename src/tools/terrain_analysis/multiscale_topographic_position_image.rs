@@ -6,8 +6,9 @@ Last Modified: 12/10/2017
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,7 +16,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 pub struct MultiscaleTopographicPositionImage {

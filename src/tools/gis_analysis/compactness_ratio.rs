@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{polygon_area, polygon_perimeter};
+use crate::algorithms::{polygon_area, polygon_perimeter};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// The compactness ratio is an indicator of polygon shape complexity. The compactness
 /// ratio is defined as the polygon area divided by its perimeter. Unlike some other

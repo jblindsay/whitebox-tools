@@ -6,8 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms::convex_hull;
-use lidar::*;
+use crate::algorithms::convex_hull;
+use crate::lidar::*;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use num_cpus;
 use std::env;
 use std::fs;
@@ -16,10 +20,6 @@ use std::path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters
 /// are not specified, the tool works with all LAS files contained within the working directory.

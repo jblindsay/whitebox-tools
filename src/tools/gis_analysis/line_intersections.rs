@@ -6,7 +6,10 @@ Last Modified: 16/10/2018
 License: MIT
 */
 
-use algorithms::find_line_intersections;
+use crate::algorithms::find_line_intersections;
+use crate::structures::BoundingBox;
+use crate::tools::*;
+use crate::vector::*;
 use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
@@ -14,9 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::BoundingBox;
-use tools::*;
-use vector::*;
 
 /// This tool identifies points where the features of two vector line/polygon layers
 /// intersect. The user must specify the names of two input vector line files and the

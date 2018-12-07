@@ -7,7 +7,12 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{find_split_points_at_line_intersections, interior_point, is_clockwise_order};
+use crate::algorithms::{
+    find_split_points_at_line_intersections, interior_point, is_clockwise_order,
+};
+use crate::structures::{BoundingBox, Polyline};
+use crate::tools::*;
+use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
@@ -16,9 +21,6 @@ use std::env;
 use std::f64::EPSILON;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Polyline};
-use tools::*;
-use vector::*;
 
 /// This tool splits the lines or polygons in one layer using the lines in another layer
 /// to define the breaking points. Intersection points between geometries in both layers
@@ -265,7 +267,7 @@ impl WhiteboxTool for SplitWithLines {
                 };
 
                 // Create a polyline from the part
-                let mut pl = Polyline::new(
+                let pl = Polyline::new(
                     &(record.points[first_point_in_part..=last_point_in_part]),
                     record_num,
                 );
@@ -290,7 +292,7 @@ impl WhiteboxTool for SplitWithLines {
                 };
 
                 // Create a polyline from the part
-                let mut pl = Polyline::new(
+                let pl = Polyline::new(
                     &(record.points[first_point_in_part..=last_point_in_part]),
                     record_num + num_polys,
                 );

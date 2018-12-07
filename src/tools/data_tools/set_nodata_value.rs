@@ -6,8 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::ParameterFileType;
+use crate::tools::ParameterType;
+use crate::tools::ToolParameter;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,10 +19,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::ParameterFileType;
-use tools::ParameterType;
-use tools::ToolParameter;
-use tools::*;
 
 pub struct SetNodataValue {
     name: String,

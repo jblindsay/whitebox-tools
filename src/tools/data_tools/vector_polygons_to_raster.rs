@@ -6,15 +6,15 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use algorithms::point_in_poly;
-use raster::*;
+use crate::algorithms::point_in_poly;
+use crate::raster::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
+use crate::vector::{FieldData, ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Point2D};
-use tools::*;
-use vector::{FieldData, ShapeType, Shapefile};
 
 pub struct VectorPolygonsToRaster {
     name: String,

@@ -9,8 +9,10 @@ Notes: Assumes that each of the three input rasters have the same number of rows
        columns and that any nodata cells present are the same among each of the inputs.
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -18,8 +20,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
 pub struct D8MassFlux {
     name: String,

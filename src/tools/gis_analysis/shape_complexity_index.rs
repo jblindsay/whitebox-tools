@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{convex_hull, polygon_area};
+use crate::algorithms::{convex_hull, polygon_area};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool provides a measure of overall polygon shape complexity, or irregularity,
 /// for vector polygons. Several shape indices have been created to compare a polygon's

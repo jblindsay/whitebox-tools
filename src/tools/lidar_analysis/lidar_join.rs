@@ -6,12 +6,12 @@ Last Modified: 29/08/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
 use std;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 pub struct LidarJoin {
     name: String,

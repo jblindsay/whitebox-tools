@@ -6,9 +6,10 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use na::{DMatrix, DVector};
-use raster::*;
-use rendering::html::*;
+use crate::na::{DMatrix, DVector};
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::tools::*;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -16,7 +17,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
 
 /// This tool can be used to interpolate a trend surface from a raster image. The
 /// technique uses a polynomial, least-squares regression analysis. The user must
@@ -394,7 +394,7 @@ impl WhiteboxTool for TrendSurface {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!(
+            let s = format!(
                 "<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>",
                 (j + 1),
                 12,

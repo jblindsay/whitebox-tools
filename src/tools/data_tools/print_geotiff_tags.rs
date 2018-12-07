@@ -6,14 +6,14 @@ Last Modified: March 2, 2018
 License: MIT
 */
 
+use crate::raster::geotiff::*;
+use crate::tools::*;
 use std::env;
-use std::path;
 use std::io::{Error, ErrorKind};
-use raster::geotiff::*;
-use tools::*;
-use tools::ToolParameter;
-use tools::ParameterType;
-use tools::ParameterFileType;
+use std::path;
+// use crate::tools::ToolParameter;
+// use crate::tools::ParameterType;
+// use crate::tools::ParameterFileType;
 
 pub struct PrintGeoTiffTags {
     name: String,
@@ -31,18 +31,18 @@ impl PrintGeoTiffTags {
         let description = "Prints the tags within a GeoTIFF.".to_string();
 
         let mut parameters = vec![];
-        parameters.push(ToolParameter{
-            name: "Input GeoTIFF Raster File".to_owned(), 
-            flags: vec!["-i".to_owned(), "--input".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Input GeoTIFF Raster File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
             description: "Input GeoTIFF file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false
+            optional: false,
         });
 
         // parameters.push(ToolParameter{
-        //     name: "Output HTML File".to_owned(), 
-        //     flags: vec!["-o".to_owned(), "--output".to_owned()], 
+        //     name: "Output HTML File".to_owned(),
+        //     flags: vec!["-o".to_owned(), "--output".to_owned()],
         //     description: "Output HTML file.".to_owned(),
         //     parameter_type: ParameterType::NewFile(ParameterFileType::Html),
         //     default_value: None,
@@ -52,17 +52,18 @@ impl PrintGeoTiffTags {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tiff",
-                            short_exe,
-                            name)
-                .replace("*", &sep);
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tiff",
+            short_exe, name
+        ).replace("*", &sep);
 
         PrintGeoTiffTags {
             name: name,
@@ -78,7 +79,7 @@ impl WhiteboxTool for PrintGeoTiffTags {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -102,17 +103,20 @@ impl WhiteboxTool for PrintGeoTiffTags {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         // let mut output_file = String::new();
 
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "Tool run with no paramters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no paramters.",
+            ));
         }
         for i in 0..args.len() {
             let mut arg = args[i].replace("\"", "");
@@ -129,12 +133,12 @@ impl WhiteboxTool for PrintGeoTiffTags {
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            // } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-            //     if keyval {
-            //         output_file = vec[1].to_string();
-            //     } else {
-            //         output_file = args[i + 1].to_string();
-            //     }
+                // } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+                //     if keyval {
+                //         output_file = vec[1].to_string();
+                //     } else {
+                //         output_file = args[i + 1].to_string();
+                //     }
             }
         }
 
@@ -149,11 +153,15 @@ impl WhiteboxTool for PrintGeoTiffTags {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-    
+
         // make sure that it is a tiff file
-        if !input_file.to_lowercase().ends_with(".tiff") && !input_file.to_lowercase().ends_with(".tif") {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                                  "The input file must be in a GeoTIFF format."));
+        if !input_file.to_lowercase().ends_with(".tiff")
+            && !input_file.to_lowercase().ends_with(".tif")
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input file must be in a GeoTIFF format.",
+            ));
         }
 
         match print_tags(&input_file) {

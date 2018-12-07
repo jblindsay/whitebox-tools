@@ -8,8 +8,9 @@ License: MIT
 NOTES: This tool should be updated to incorporate the option for an area-slope based threshold.
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// Extracts stream grid cells from a flow accumulation raster.
 pub struct ExtractStreams {

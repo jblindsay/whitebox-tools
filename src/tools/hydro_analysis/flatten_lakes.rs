@@ -11,15 +11,15 @@ a lake elevation attribute is not specified, the tool would then default to chec
 elevation on each lake's coastline.
 */
 
-use algorithms;
-use raster::*;
+use crate::algorithms;
+use crate::raster::*;
+use crate::structures::{BoundingBox, Point2D};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Point2D};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct FlattenLakes {
     name: String,

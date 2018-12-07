@@ -12,13 +12,13 @@ This tools provides similar functionality to the ESRI Thin LAS (2D) and LasTools
 high variability in point density, consider using the LidarThinHighDesnity tool instead.
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// Thins a LiDAR point cloud, reducing point density.
 pub struct LidarThin {

@@ -6,10 +6,12 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::LineGraph;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
-use rendering::html::*;
-use rendering::LineGraph;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -21,8 +23,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
 /// Plots the stream longitudinal profiles for one or more rivers.
 pub struct LongProfile {

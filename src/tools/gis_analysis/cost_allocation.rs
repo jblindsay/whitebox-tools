@@ -8,13 +8,13 @@ License: MIT
 NOTES: This tool is essentially the same as the watershed tool in functionality.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 pub struct CostAllocation {
     name: String,

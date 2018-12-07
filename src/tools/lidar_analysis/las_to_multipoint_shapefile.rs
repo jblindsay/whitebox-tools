@@ -6,7 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use num_cpus;
 use std::env;
 use std::fs;
@@ -15,9 +18,6 @@ use std::path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// Converts one or more LAS files into MultipointZ vector Shapefiles. When the input parameter is
 /// not specified, the tool grids all LAS files contained within the working directory.
@@ -224,13 +224,11 @@ impl WhiteboxTool for LasToMultipointShapefile {
                     let ret_val = match LasFile::new(&input_file, "r") {
                         Ok(mut input) => {
                             // create the output file
-                            let mut output = match Shapefile::new(
-                                &output_file,
-                                ShapeType::MultiPointZ,
-                            ) {
-                                Ok(output) => output,
-                                Err(e) => panic!("Error creating output file:\n{:?}", e), // TODO: fix this panic.
-                            };
+                            let mut output =
+                                match Shapefile::new(&output_file, ShapeType::MultiPointZ) {
+                                    Ok(output) => output,
+                                    Err(e) => panic!("Error creating output file:\n{:?}", e), // TODO: fix this panic.
+                                };
                             output.projection = input.get_wkt();
 
                             // add the attributes

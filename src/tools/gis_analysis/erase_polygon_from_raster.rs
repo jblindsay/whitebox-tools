@@ -6,14 +6,14 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms;
-use raster::*;
+use crate::algorithms;
+use crate::raster::*;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct ErasePolygonFromRaster {
     name: String,

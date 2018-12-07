@@ -4,21 +4,13 @@ Authors: Dr. John Lindsay
 Created: January 2, 2018
 Last Modified: 12/10/2018
 License: MIT
-
-Notes: This tool will perform a Kolmogorov-Smirnov (K-S) test for normality to evaluate 
-whether the frequency distribution of values within a raster image are drawn from a 
-Gaussian (normal) distribution. The user must specify the name of the raster image. The 
-test can be performed optionally on the entire image or on a random sub-sample of pixel 
-values of a user-specified size. In evaluating the significance of the test, it is 
-important to keep in mind that given a sufficiently large sample, extremely small and 
-non-notable differences can be found to be statistically significant. Furthermore 
-statistical significance says nothing about the practical significance of a difference.
 */
 
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::Histogram;
+use crate::tools::*;
 use rand::prelude::*;
-use raster::*;
-use rendering::html::*;
-use rendering::Histogram;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -27,8 +19,15 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
 
+/// This tool will perform a Kolmogorov-Smirnov (K-S) test for normality to evaluate
+/// whether the frequency distribution of values within a raster image are drawn from a
+/// Gaussian (normal) distribution. The user must specify the name of the raster image. The
+/// test can be performed optionally on the entire image or on a random sub-sample of pixel
+/// values of a user-specified size. In evaluating the significance of the test, it is
+/// important to keep in mind that given a sufficiently large sample, extremely small and
+/// non-notable differences can be found to be statistically significant. Furthermore
+/// statistical significance says nothing about the practical significance of a difference.
 pub struct KSTestForNormality {
     name: String,
     description: String,

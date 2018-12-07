@@ -6,14 +6,14 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::{Array2D, BoundingBox};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{Array2D, BoundingBox};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct RaiseWalls {
     name: String,

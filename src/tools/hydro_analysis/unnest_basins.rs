@@ -4,36 +4,34 @@ Authors: Dr. John Lindsay
 Created: 27/04/2018
 Last Modified: 12/10/2018
 License: MIT
-
-HELP:
-In some applications it is necessary to relate a measured variable for a group of 
-hydrometric stations (e.g. characteristics of flow timing and duration or water 
-chemistry) to some characteristics of each outlet's catchment (e.g. mean slope, 
-area of wetlands, etc.). When the group of outlets are nested, i.e. some stations 
-are located downstream of others, then performing a watershed operation will 
-result in inappropriate watershed delineation. In particular, the delineated 
-watersheds of each nested outlet will not include the catchment areas of upstream 
-outlets. This creates a serious problem for this type of application.
-
-The Unnest Basin tool can be used to perform a watershedding operation based on a 
-group of specified pour points, i.e. outlets or target cells, such that each 
-complete watershed is delineated. The user must specify the name of a flow pointer 
-(flow direction) raster, a pour point raster, and the name of the output rasters. 
-Multiple numbered outputs will be created, one for each nesting level. Pour point, 
-or target, cells are denoted in the input pour-point image as any non-zero, 
-non-NoData value. The flow pointer raster should be generated using the D8 
-algorithm.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
-use vector::*;
 
+/// In some applications it is necessary to relate a measured variable for a group of
+/// hydrometric stations (e.g. characteristics of flow timing and duration or water
+/// chemistry) to some characteristics of each outlet's catchment (e.g. mean slope,
+/// area of wetlands, etc.). When the group of outlets are nested, i.e. some stations
+/// are located downstream of others, then performing a watershed operation will
+/// result in inappropriate watershed delineation. In particular, the delineated
+/// watersheds of each nested outlet will not include the catchment areas of upstream
+/// outlets. This creates a serious problem for this type of application.
+///
+/// The Unnest Basin tool can be used to perform a watershedding operation based on a
+/// group of specified pour points, i.e. outlets or target cells, such that each
+/// complete watershed is delineated. The user must specify the name of a flow pointer
+/// (flow direction) raster, a pour point raster, and the name of the output rasters.
+/// Multiple numbered outputs will be created, one for each nesting level. Pour point,
+/// or target, cells are denoted in the input pour-point image as any non-zero,
+/// non-NoData value. The flow pointer raster should be generated using the D8
+/// algorithm.
 pub struct UnnestBasins {
     name: String,
     description: String,

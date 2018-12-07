@@ -8,15 +8,15 @@ License: MIT
 NOTES: This tool needs to be parallelized.
 */
 
-use lidar::*;
-use raster::*;
+use crate::lidar::*;
+use crate::raster::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 pub struct FlightlineOverlap {
     name: String,
@@ -266,7 +266,7 @@ impl WhiteboxTool for FlightlineOverlap {
             for i in 0..n_points {
                 match input.get_record(i) {
                     LidarPointRecord::PointRecord1 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                     } => {
                         x = point_data.x;
@@ -274,7 +274,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         gps_time = gps_data;
                     }
                     LidarPointRecord::PointRecord3 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         colour_data,
                     } => {
@@ -284,7 +284,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = colour_data;
                     }
                     LidarPointRecord::PointRecord4 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         wave_packet,
                     } => {
@@ -294,7 +294,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = wave_packet;
                     }
                     LidarPointRecord::PointRecord5 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         colour_data,
                         wave_packet,
@@ -306,7 +306,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = wave_packet;
                     }
                     LidarPointRecord::PointRecord6 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                     } => {
                         x = point_data.x;
@@ -314,7 +314,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         gps_time = gps_data;
                     }
                     LidarPointRecord::PointRecord7 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         colour_data,
                     } => {
@@ -324,7 +324,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = colour_data;
                     }
                     LidarPointRecord::PointRecord8 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         colour_data,
                     } => {
@@ -334,7 +334,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = colour_data;
                     }
                     LidarPointRecord::PointRecord9 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         wave_packet,
                     } => {
@@ -344,7 +344,7 @@ impl WhiteboxTool for FlightlineOverlap {
                         let _ = wave_packet;
                     }
                     LidarPointRecord::PointRecord10 {
-                        mut point_data,
+                        point_data,
                         gps_data,
                         colour_data,
                         wave_packet,

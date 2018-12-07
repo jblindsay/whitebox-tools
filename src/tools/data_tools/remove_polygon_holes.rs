@@ -6,13 +6,13 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool can be used to remove holes from the features within a vector
 /// polygon file. The user must specify the name of the input vector file,
@@ -216,7 +216,7 @@ impl WhiteboxTool for RemovePolygonHoles {
             }
             output.add_record(sfg);
 
-            let mut atts = input.attributes.get_record(record_num);
+            let atts = input.attributes.get_record(record_num);
             output.attributes.add_record(atts, false);
 
             if verbose {

@@ -6,9 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use raster::*;
-use rendering::html::*;
-use rendering::LineGraph;
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::LineGraph;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -17,8 +19,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct ImageStackProfile {
     name: String,

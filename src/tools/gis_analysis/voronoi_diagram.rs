@@ -6,16 +6,16 @@ Last Modified: 05/12/2018
 License: MIT
 */
 
-use algorithms::triangulate;
+use crate::algorithms::triangulate;
+use crate::structures::BoundingBox;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::*;
 use std::collections::HashMap;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::BoundingBox;
-use structures::Point2D;
-use tools::*;
-use vector::*;
 
 /// This tool creates a vector Voronoi diagram for a set of vector points. The
 /// Voronoi diagram is the dual graph of the Delaunay triangulation. The tool

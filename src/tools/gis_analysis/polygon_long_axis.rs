@@ -6,15 +6,15 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool can be used to map the long axis of polygon features. The long axis is the
 /// longer of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box

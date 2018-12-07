@@ -4,22 +4,20 @@ Authors: Dr. John Lindsay
 Created: July 6, 2017
 Last Modified: 12/10/2018
 License: MIT
-
-NOTE: At the moment this tool determines input/output raster formats based on extensions, but due to file 
-extension naming collisions, it would be good to add user hints. For example, the extension 'grd' could
-belong to a SurferAscii or a Surfer7Binary. This is more important for distinguishing output 
-files since input files can be read and distiguishing features idenfitied from the file structure.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::ParameterFileType;
-use tools::ParameterType;
-use tools::ToolParameter;
-use tools::*;
 
+/// This tool converts raster data from one format to another. It determines input/output raster
+/// formats based on extensions, but due to file extension naming collisions, it would be good to
+/// add user hints. For example, the extension 'grd' could belong to a SurferAscii or a Surfer7Binary.
+/// This is more important for distinguishing output files since input files can be read and
+/// distiguishing features idenfitied from the file structure. At the moment, this tool does not
+/// support user hints however.
 pub struct ConvertRasterFormat {
     name: String,
     description: String,

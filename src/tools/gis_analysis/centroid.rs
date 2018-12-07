@@ -8,12 +8,12 @@ License: MIT
 NOTES: Will need to add support for vector polygons eventually.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// This tool calculates the centroid, or average location, of raster polygon objects.
 /// For vector features, use the `CentroidVector` tool instead.

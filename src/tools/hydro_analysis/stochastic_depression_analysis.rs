@@ -4,35 +4,14 @@ Authors: Dr. John Lindsay
 Created: 11/05/2018
 Last Modified: 12/10/2018
 License: MIT
-
-NOTES: This tool differs from the original Whitebox GAT tool in a few significant ways:
-
-1. The Whitebox GAT tool took an error histogram as an input. In practice people found
-   it difficult to create this input. Usually they just generated a normal distribution
-   in a spreadsheet using information about the DEM RMSE. As such, this tool takes a
-   RMSE input and generates the histogram internally. This is far more convienent for
-   most applications but loses the flexibility of specifying the error distribution 
-   more completely.
-
-2. The Whitebox GAT tool generated the error fields using the turning bands method. 
-   This tool generates a random Gaussian error field with no spatial autocorrelation
-   and then applies local spatial averaging using a Gaussian filter (the size of 
-   which depends of the error autocorrelation length input) to increase the level of
-   autocorrelation. We use the Fast Almost Gaussian Filter of Peter Kovesi (2010), 
-   which uses five repeat passes of a mean filter, based on an integral image. This
-   filter method is highly efficient. This results in a very significant performance
-   increase compared with the original tool.
-
-3. The tool operates concurrently, compared with the original tool which calculated
-   pdep in serial. Again, this parallel processing can significantly improve the 
-   performance, particularly when the tool is applied on hardware with four or
-   more processors.
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
 use rand::distributions::StandardNormal;
 use rand::prelude::*;
-use raster::*;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 use std::env;
@@ -43,10 +22,32 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use structures::Array2D;
-use tools::*;
 
-/// Preforms a stochastic analysis of depressions within a DEM.
+/// Preforms a stochastic analysis of depressions within a DEM, calculating the
+/// probability of each cell belonging to a depression.
+///
+/// This tool differs from the original Whitebox GAT tool in a few significant ways:
+///
+/// 1. The Whitebox GAT tool took an error histogram as an input. In practice people found
+///    it difficult to create this input. Usually they just generated a normal distribution
+///    in a spreadsheet using information about the DEM RMSE. As such, this tool takes a
+///    RMSE input and generates the histogram internally. This is far more convienent for
+///    most applications but loses the flexibility of specifying the error distribution
+///    more completely.
+///
+/// 2. The Whitebox GAT tool generated the error fields using the turning bands method.
+///    This tool generates a random Gaussian error field with no spatial autocorrelation
+///    and then applies local spatial averaging using a Gaussian filter (the size of
+///    which depends of the error autocorrelation length input) to increase the level of
+///    autocorrelation. We use the Fast Almost Gaussian Filter of Peter Kovesi (2010),
+///    which uses five repeat passes of a mean filter, based on an integral image. This
+///    filter method is highly efficient. This results in a very significant performance
+///    increase compared with the original tool.
+///
+/// 3. The tool operates concurrently, compared with the original tool which calculated
+///    pdep in serial. Again, this parallel processing can significantly improve the
+///    performance, particularly when the tool is applied on hardware with four or
+///    more processors.
 pub struct StochasticDepressionAnalysis {
     name: String,
     description: String,

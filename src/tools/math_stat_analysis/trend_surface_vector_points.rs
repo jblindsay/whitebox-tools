@@ -6,9 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use na::{DMatrix, DVector};
-use raster::*;
-use rendering::html::*;
+use crate::na::{DMatrix, DVector};
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::tools::*;
+use crate::vector::{FieldData, ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -17,8 +19,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
-use vector::{FieldData, ShapeType, Shapefile};
 
 /// This tool can be used to interpolate a trend surface from a vector points file. The
 /// technique uses a polynomial, least-squares regression analysis. The user must specify
@@ -499,7 +499,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
         writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
-            let mut s = format!(
+            let s = format!(
                 "<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>",
                 (j + 1),
                 12,

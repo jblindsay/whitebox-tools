@@ -14,17 +14,19 @@ for now it's just Shapefiles.
 // use std::fmt;
 
 // private sub-module defined in other files
-mod shapefile;
+pub mod shapefile;
 
 // exports identifiers from private sub-modules in the current module namespace
-pub use self::shapefile::geometry::*;
-pub use self::shapefile::ShapeType;
-pub use self::shapefile::Shapefile;
-pub use self::shapefile::{
-    AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
-    ShapefileAttributes,
-};
-pub use structures::Point2D;
+// pub use self::shapefile::attributes::{
+//     AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
+//     ShapefileAttributes,
+// };
+pub use crate::vector::shapefile::attributes::*;
+pub use crate::vector::shapefile::geometry::*;
+// pub use self::shapefile::geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
+pub use crate::structures::Point2D;
+pub use crate::vector::shapefile::geometry::ShapeType;
+pub use crate::vector::shapefile::Shapefile;
 
 // /// A 2-D point, with x and y fields.
 // #[derive(Default, Copy, Clone, Debug)]

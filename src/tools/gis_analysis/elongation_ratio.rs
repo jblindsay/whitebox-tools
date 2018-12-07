@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
-use algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::algorithms::{minimum_bounding_box, MinimizationCriterion};
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool can be used to calculate the elongation ratio for vector polygons. The
 /// elongation ratio values calculated for each vector polygon feature will be placed

@@ -7,8 +7,8 @@ License: MIT
 */
 
 use super::do_polylines_intersect;
+use crate::structures::{Point2D, Polyline};
 use std::f64::EPSILON;
-use structures::{Point2D, Polyline};
 
 /// Tests if a point is Left|On|Right of an infinite line,
 /// based on http://geomalgorithms.com/a03-_inclusion.html.

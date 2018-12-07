@@ -7,7 +7,7 @@ License: MIT
 */
 
 // use std::f64::EPSILON;
-use structures::{BoundingBox, Point2D};
+use super::{BoundingBox, Point2D};
 
 const EPSILON: f64 = std::f64::EPSILON; //f64::EPSILON * 2.0;
 

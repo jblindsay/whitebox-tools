@@ -6,8 +6,9 @@ Last Modified: December 31, 2017
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,7 +16,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// This can be used to calculate the radius of gyration (RoG) for the polygon
 /// features within a raster image. RoG measures how far across the landscape a polygon

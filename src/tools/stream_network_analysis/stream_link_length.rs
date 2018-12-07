@@ -6,13 +6,13 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 /// Estimates the length of each link (or tributary) in a stream network.
 pub struct StreamLinkLength {

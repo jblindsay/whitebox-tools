@@ -6,13 +6,13 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
 /// of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid

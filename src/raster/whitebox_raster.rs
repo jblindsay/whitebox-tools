@@ -1,5 +1,6 @@
+use super::*;
 use byteorder::{LittleEndian, WriteBytesExt};
-use raster::*;
+use crate::utils::Endianness;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -7,7 +8,6 @@ use std::io::Error;
 use std::io::ErrorKind;
 use std::io::{BufReader, BufWriter};
 use std::mem;
-use utils::Endianness;
 
 pub fn read_whitebox(
     file_name: &String,

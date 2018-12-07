@@ -1,9 +1,9 @@
-use lidar::las::GlobalEncodingField;
+use super::las::GlobalEncodingField;
+use crate::utils::{ByteOrderReader, Endianness};
 use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
-use utils::{ByteOrderReader, Endianness};
 
 #[derive(Default, Clone, Debug)]
 pub struct LasHeader {

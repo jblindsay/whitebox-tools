@@ -7,16 +7,16 @@ License: MIT
 */
 
 use self::na::Vector3;
-use algorithms::triangulate;
-use na;
+use crate::algorithms::triangulate;
+use crate::na;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::ShapefileGeometry;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Point2D;
-use tools::*;
-use vector::ShapefileGeometry;
-use vector::*;
 
 /// This tool creates a vector triangular irregular network (TIN) for a set of vector points.
 pub struct ConstructVectorTIN {

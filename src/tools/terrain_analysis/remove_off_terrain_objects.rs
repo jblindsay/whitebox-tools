@@ -8,14 +8,14 @@ License: MIT
 Note: This algorithm could be parallelized
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::{Array2D, DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
 use std::collections::VecDeque;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{Array2D, DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
 
 pub struct RemoveOffTerrainObjects {
     name: String,

@@ -6,8 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use rendering::html::*;
-use rendering::Histogram;
+use crate::rendering::html::*;
+use crate::rendering::Histogram;
+use crate::tools::*;
+use crate::vector::{FieldData, Shapefile};
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -16,8 +18,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
-use vector::{FieldData, Shapefile};
 
 pub struct AttributeHistogram {
     name: String,

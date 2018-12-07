@@ -6,7 +6,7 @@ Last Modified: 15/10/2018
 License: MIT
 */
 
-use structures::{BoundingBox, LineSegment, Point2D, Polyline};
+use crate::structures::{BoundingBox, LineSegment, Point2D, Polyline};
 
 pub fn find_line_intersections(line1: &[Point2D], line2: &[Point2D]) -> Vec<LineSegment> {
     let mut ret: Vec<LineSegment> = vec![];

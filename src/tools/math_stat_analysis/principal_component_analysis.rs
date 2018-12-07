@@ -10,10 +10,11 @@ because of the calculation of the co-variances. As such, if the entire image sta
 fit in memory, the tool will not work.
 */
 
-use na::DMatrix;
-use raster::*;
-use rendering::html::*;
-use rendering::LineGraph;
+use crate::na::DMatrix;
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::rendering::LineGraph;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -22,7 +23,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
 
 pub struct PrincipalComponentAnalysis {
     name: String,

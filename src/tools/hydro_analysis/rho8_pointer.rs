@@ -6,9 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
 use rand::prelude::*;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -16,7 +17,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct Rho8Pointer {
     name: String,

@@ -4,20 +4,13 @@ Authors: Dr. John Lindsay
 Created: 01/04/2018
 Last Modified: 12/10/2018
 License: MIT
-
-Notes: This tool uses the algorithm described in:
-
-Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes 
-and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
-
-See also:
-
-Saunders, W. 1999. Preparation of DEMs for use in environmental modeling analysis, in: ESRI User
-Conference. pp. 24-30.
 */
 
+use crate::raster::*;
+use crate::structures::{Array2D, BoundingBox};
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use num_cpus;
-use raster::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::VecDeque;
@@ -28,10 +21,17 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{Array2D, BoundingBox};
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
+/// Burns streams into a DEM using the FillBurn (Saunders, 1999) method. This tool uses the
+/// algorithm described in:
+///
+/// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
+/// and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
+///
+/// And:
+///
+/// Saunders, W. 1999. Preparation of DEMs for use in environmental modeling analysis, in: ESRI User
+/// Conference. pp. 24-30.
 pub struct FillBurn {
     name: String,
     description: String,

@@ -2,14 +2,15 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 14, 2017
-Last Modified: 13/10/2018
+Last Modified: 07/12/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
 use rand::distributions::StandardNormal;
 use rand::prelude::*;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,7 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct TurningBandsSimulation {
     name: String,

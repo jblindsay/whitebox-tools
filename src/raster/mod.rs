@@ -2,11 +2,9 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
-Last Modified: July 7, 2017
+Last Modified: 07/12/2018
 License: MIT
 */
-
-extern crate num_cpus;
 
 pub mod arcascii_raster;
 pub mod arcbinary_raster;
@@ -18,15 +16,17 @@ pub mod surfer7_raster;
 pub mod surfer_ascii_raster;
 pub mod whitebox_raster;
 
-use raster::arcascii_raster::*;
-use raster::arcbinary_raster::*;
-use raster::geotiff::*;
-use raster::grass_raster::*;
-use raster::idrisi_raster::*;
-use raster::saga_raster::*;
-use raster::surfer7_raster::*;
-use raster::surfer_ascii_raster::*;
-use raster::whitebox_raster::*;
+use self::arcascii_raster::*;
+use self::arcbinary_raster::*;
+use self::geotiff::*;
+use self::grass_raster::*;
+use self::idrisi_raster::*;
+use self::saga_raster::*;
+use self::surfer7_raster::*;
+use self::surfer_ascii_raster::*;
+use self::whitebox_raster::*;
+use crate::structures::Array2D;
+use crate::utils::*;
 use std::cmp::Ordering::Equal;
 use std::default::Default;
 use std::f64;
@@ -40,8 +40,6 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use utils::*;
 
 /// Raster is a common data structure that abstracts over several raster data formats,
 /// including GeoTIFFs, ArcGIS ASCII and binary rasters, Whitebox rasters, Idrisi

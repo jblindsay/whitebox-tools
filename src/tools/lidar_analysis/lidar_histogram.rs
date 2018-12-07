@@ -6,9 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
-use rendering::html::*;
-use rendering::Histogram;
+use crate::lidar::*;
+use crate::rendering::html::*;
+use crate::rendering::Histogram;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -17,7 +18,6 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
-use tools::*;
 
 pub struct LidarHistogram {
     name: String,

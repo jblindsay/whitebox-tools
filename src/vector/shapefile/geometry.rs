@@ -5,10 +5,10 @@ Created: 10/04/2018
 Last Modified: 30/09/2018
 License: MIT
 */
-use algorithms::point_in_poly;
+use crate::algorithms::point_in_poly;
+use crate::structures::{BoundingBox, Point2D};
 use std::f64;
 use std::fmt;
-use structures::{BoundingBox, Point2D};
 
 #[derive(Clone, Debug)]
 pub struct ShapefileGeometry {

@@ -6,8 +6,9 @@ Last Modified: January 2, 2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,7 +16,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 /// This tool will create an image mosaic from one or more input image files using
 /// one of three resampling methods including, nearest neighbour, bilinear interpolation,

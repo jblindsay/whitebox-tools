@@ -6,7 +6,9 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use lidar::*;
+use crate::lidar::*;
+use crate::tools::*;
+use crate::vector::*;
 use num_cpus;
 use std::env;
 use std::fs;
@@ -15,8 +17,6 @@ use std::path;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use tools::*;
-use vector::*;
 
 /// This tool converts one or more LAS files into a POINT vector. When the input parameter is
 /// not specified, the tool grids all LAS files contained within the working directory.

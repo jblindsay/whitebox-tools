@@ -6,9 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::rendering::html::*;
+use crate::tools::*;
 use num_cpus;
-use raster::*;
-use rendering::html::*;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -20,7 +21,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use tools::*;
 
 pub struct ImageCorrelation {
     name: String,

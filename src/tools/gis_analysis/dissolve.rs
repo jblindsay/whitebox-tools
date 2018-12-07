@@ -7,18 +7,19 @@ License: MIT
 */
 extern crate kdtree;
 
-use algorithms::{interior_point, is_clockwise_order, point_in_poly, poly_in_poly, polygon_area};
+use crate::algorithms::{
+    interior_point, is_clockwise_order, point_in_poly, poly_in_poly, polygon_area,
+};
+use crate::structures::{BoundingBox, Polyline};
+use crate::tools::*;
+use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::cmp::Ordering;
-// use std::collections::{BinaryHeap, HashSet};
 use std::collections::HashSet;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::{BoundingBox, Polyline};
-use tools::*;
-use vector::*;
 
 const EPSILON: f64 = std::f64::EPSILON;
 
@@ -312,7 +313,7 @@ impl WhiteboxTool for Dissolve {
                 };
 
                 // Create a polyline from the part
-                let mut pl = Polyline::new(
+                let pl = Polyline::new(
                     &(record.points[first_point_in_part..=last_point_in_part]),
                     record_num,
                 );

@@ -8,15 +8,15 @@ License: MIT
 NOTES: This tool differs from the Whitebox GAT tool in that it only takes a single raster input.
 */
 
-use algorithms::point_in_poly;
-use raster::*;
+use crate::algorithms::point_in_poly;
+use crate::raster::*;
+use crate::structures::BoundingBox;
+use crate::structures::Point2D;
+use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::BoundingBox;
-use structures::Point2D;
-use tools::*;
-use vector::{ShapeType, Shapefile};
 
 pub struct ClipRasterToPolygon {
     name: String,

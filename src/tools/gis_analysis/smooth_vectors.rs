@@ -6,11 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// This tool smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType. The algorithm
 /// uses a simple moving average method for smoothing, where the size of the averaging window is specified

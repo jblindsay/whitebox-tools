@@ -8,12 +8,12 @@ License: MIT
 NOTES: This tool is essentially the same as the TraceDownslopeFlowpaths tool in functionality.
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
 
 pub struct CostPathway {
     name: String,

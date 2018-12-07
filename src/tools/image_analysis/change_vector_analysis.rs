@@ -6,12 +6,12 @@ Last Modified: 29/04/2018
 License: MIT
 */
 
-use raster::*;
+use crate::raster::*;
+use crate::structures::Array2D;
+use crate::tools::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use structures::Array2D;
-use tools::*;
 
 /// Change Vector Analysis (CVA) is a change detection method that characterizes the
 /// magnitude and change direction in spectral space between two times. A change vector

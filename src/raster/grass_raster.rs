@@ -1,14 +1,18 @@
-use std::io::Error;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::prelude::*;
+use super::*;
 use std::f64;
 use std::fs::File;
-use raster::*;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::BufWriter;
+use std::io::Error;
 
-pub fn read_grass_raster(file_name: &String, configs: &mut RasterConfigs, data: &mut Vec<f64>) -> Result<(), Error> {
+pub fn read_grass_raster(
+    file_name: &String,
+    configs: &mut RasterConfigs,
+    data: &mut Vec<f64>,
+) -> Result<(), Error> {
     // read the file
-    let f = try!(File::open(file_name));
+    let f = File::open(file_name)?;
     let f = BufReader::new(f);
 
     //let mut likely_float = false;
@@ -52,7 +56,8 @@ pub fn read_grass_raster(file_name: &String, configs: &mut RasterConfigs, data: 
             if vec[1].contains("float") {
                 //likely_float = true;
                 configs.data_type = DataType::F32;
-            } if vec[1].contains("double") {
+            }
+            if vec[1].contains("double") {
                 //likely_float = true;
                 configs.data_type = DataType::F64;
             } else {
@@ -61,7 +66,8 @@ pub fn read_grass_raster(file_name: &String, configs: &mut RasterConfigs, data: 
             configs.nodata = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("multiplier") {
             multiplier = vec[1].trim().to_string().parse::<f64>().unwrap();
-        } else { // it's a data line
+        } else {
+            // it's a data line
             if !null_is_str {
                 let mut val_num;
                 for val in vec {
@@ -90,49 +96,66 @@ pub fn read_grass_raster(file_name: &String, configs: &mut RasterConfigs, data: 
 }
 
 pub fn write_grass_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
-
     // Save the file
-    let f = try!(File::create(&(r.file_name)));
+    let f = File::create(&(r.file_name))?;
     let mut writer = BufWriter::new(f);
 
-    let s = format!("north:                   {}\n", &format!("{:.*} ", 2, r.configs.north));
-    try!(writer.write_all(s.as_bytes()));
+    let s = format!(
+        "north:                   {}\n",
+        &format!("{:.*} ", 2, r.configs.north)
+    );
+    writer.write_all(s.as_bytes())?;
 
-    let s = format!("south:                   {}\n", &format!("{:.*} ", 2, r.configs.south));
-    try!(writer.write_all(s.as_bytes()));
+    let s = format!(
+        "south:                   {}\n",
+        &format!("{:.*} ", 2, r.configs.south)
+    );
+    writer.write_all(s.as_bytes())?;
 
-    let s = format!("east:                    {}\n", &format!("{:.*} ", 2, r.configs.east));
-    try!(writer.write_all(s.as_bytes()));
+    let s = format!(
+        "east:                    {}\n",
+        &format!("{:.*} ", 2, r.configs.east)
+    );
+    writer.write_all(s.as_bytes())?;
 
-    let s = format!("west:                    {}\n", &format!("{:.*} ", 2, r.configs.west));
-    try!(writer.write_all(s.as_bytes()));
+    let s = format!(
+        "west:                    {}\n",
+        &format!("{:.*} ", 2, r.configs.west)
+    );
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("rows:                    {}\n", r.configs.rows);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     let s = format!("cols:                    {}\n", r.configs.columns);
-    try!(writer.write_all(s.as_bytes()));
+    writer.write_all(s.as_bytes())?;
 
     if r.configs.data_type == DataType::F32 || r.configs.data_type == DataType::F64 {
-        let s = format!("null:                    {}\n", &format!("{:.*} ", 2, r.configs.nodata));
-        try!(writer.write_all(s.as_bytes()));
+        let s = format!(
+            "null:                    {}\n",
+            &format!("{:.*} ", 2, r.configs.nodata)
+        );
+        writer.write_all(s.as_bytes())?;
     } else {
-        let s = format!("null:                    {}\n", &format!("{:.*} ", 0, r.configs.nodata));
-        try!(writer.write_all(s.as_bytes()));
+        let s = format!(
+            "null:                    {}\n",
+            &format!("{:.*} ", 0, r.configs.nodata)
+        );
+        writer.write_all(s.as_bytes())?;
     }
 
     if r.configs.data_type == DataType::F32 {
         let s = format!("type:                    float\n");
-        try!(writer.write_all(s.as_bytes()));
+        writer.write_all(s.as_bytes())?;
     } else if r.configs.data_type == DataType::F64 {
         let s = format!("type:                    double\n");
-        try!(writer.write_all(s.as_bytes()));
+        writer.write_all(s.as_bytes())?;
     } else {
         let s = format!("type:                    int\n");
-        try!(writer.write_all(s.as_bytes()));
+        writer.write_all(s.as_bytes())?;
     }
 
-    try!(writer.write_all("".as_bytes()));
+    writer.write_all("".as_bytes())?;
 
     // write the data
     let mut s2 = String::new();
@@ -147,7 +170,7 @@ pub fn write_grass_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
             col += 1;
             if col == r.configs.columns {
-                try!(writer.write_all(s2.as_bytes()));
+                writer.write_all(s2.as_bytes())?;
                 s2 = String::new();
                 col = 0;
             }
@@ -161,7 +184,7 @@ pub fn write_grass_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
             col += 1;
             if col == r.configs.columns {
-                try!(writer.write_all(s2.as_bytes()));
+                writer.write_all(s2.as_bytes())?;
                 s2 = String::new();
                 col = 0;
             }

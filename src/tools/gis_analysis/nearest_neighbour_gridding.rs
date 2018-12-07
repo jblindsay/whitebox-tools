@@ -6,8 +6,11 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::structures::{DistanceMetric, FixedRadiusSearch2D};
+use crate::tools::*;
+use crate::vector::{FieldData, ShapeType, Shapefile};
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -15,9 +18,6 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::{DistanceMetric, FixedRadiusSearch2D};
-use tools::*;
-use vector::{FieldData, ShapeType, Shapefile};
 
 /// Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 pub struct NearestNeighbourGridding {

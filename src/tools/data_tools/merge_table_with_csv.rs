@@ -6,6 +6,8 @@ Last Modified: 22/11/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::{AttributeField, FieldData, FieldDataType, Shapefile};
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
@@ -13,8 +15,6 @@ use std::io::prelude::*;
 use std::io::{BufReader, Error, ErrorKind};
 use std::path;
 use std::{f64, i32};
-use tools::*;
-use vector::{AttributeField, FieldData, FieldDataType, Shapefile};
 
 /// This tool can be used to merge a vector's attribute table with data contained within a comma
 /// separated values (CSV) text file. CSV files stores tabular data (numbers and text) in plain-text

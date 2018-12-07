@@ -6,11 +6,11 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
+use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use tools::*;
-use vector::*;
 
 /// Converts vector polygons into polylines.
 pub struct PolygonsToLines {

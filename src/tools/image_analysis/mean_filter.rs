@@ -6,8 +6,9 @@ Last Modified: 13/10/2018
 License: MIT
 */
 
+use crate::raster::*;
+use crate::structures::Array2D;
 use num_cpus;
-use raster::*;
 use std::env;
 use std::f64;
 use std::f64::consts::PI;
@@ -17,11 +18,10 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use structures::Array2D;
-use tools::ParameterFileType;
-use tools::ParameterType;
-use tools::ToolParameter;
-use tools::*;
+// use tools::ParameterFileType;
+// use tools::ParameterType;
+// use tools::ToolParameter;
+use crate::tools::*;
 
 pub struct MeanFilter {
     name: String,

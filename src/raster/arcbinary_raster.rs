@@ -1,4 +1,5 @@
-use raster::*;
+use super::*;
+use crate::utils::Endianness;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -6,7 +7,6 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Error;
 use std::mem;
-use utils::Endianness;
 
 pub fn read_arcbinary(
     file_name: &String,
