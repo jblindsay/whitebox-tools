@@ -122,6 +122,21 @@ impl Polyline {
         }
     }
 
+    /// Creates a new Polyline with capacity
+    pub fn new_with_capacity(id: usize, capacity: usize) -> Polyline {
+        Polyline {
+            vertices: Vec::with_capacity(capacity),
+            source_file: 0,
+            id: id,
+            split_points: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.vertices.clear();
+        self.split_points.clear();
+    }
+
     // returns the number of verticies
     pub fn len(&self) -> usize {
         self.vertices.len()

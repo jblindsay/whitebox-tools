@@ -90,7 +90,7 @@ pub fn is_clockwise_order(points: &[Point2D]) -> bool {
 #[cfg(test)]
 mod test {
     use super::is_clockwise_order;
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_is_clockwise_order() {
         let mut points: Vec<Point2D> = Vec::new();

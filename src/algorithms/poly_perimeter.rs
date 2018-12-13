@@ -26,7 +26,7 @@ pub fn polygon_perimeter(vertices: &[Point2D]) -> f64 {
 #[cfg(test)]
 mod test {
     use super::polygon_perimeter;
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_closed_polygon_perimeter() {
         let poly = [

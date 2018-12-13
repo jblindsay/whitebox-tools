@@ -79,7 +79,7 @@ impl DrainagePreservingSmoothing {
             flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("8.0".to_owned()),
+            default_value: Some("15.0".to_owned()),
             optional: true,
         });
 
@@ -88,7 +88,16 @@ impl DrainagePreservingSmoothing {
             flags: vec!["--num_iter".to_owned()],
             description: "Number of iterations.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("5".to_owned()),
+            default_value: Some("10".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Maximum Elevation Change".to_owned(),
+            flags: vec!["--max_diff".to_owned()],
+            description: "Maximum allowable absolute elevation change (optional).".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.0".to_owned()),
             optional: true,
         });
 
@@ -200,6 +209,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         let mut reduction = 80f64;
         let mut dfm_threshold = 0.15;
         let mut z_factor = 1f64;
+        let mut max_z_diff = f64::INFINITY;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -263,6 +273,12 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                 dfm_threshold = dfm_threshold.abs();
             } else if flag_val == "-zfactor" {
                 z_factor = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-max_diff" {
+                max_z_diff = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
@@ -774,7 +790,12 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                         }
                         if sum_w > 0f64 {
                             // this is a division-by-zero safeguard and must be in place.
-                            output.set_value(row, col, z / sum_w);
+                            zn = z / sum_w;
+                            if (zn - input.get_value(row, col)).abs() <= max_z_diff {
+                                output.set_value(row, col, zn);
+                            } else {
+                                output.set_value(row, col, input.get_value(row, col));
+                            }
                         } else {
                             output.set_value(row, col, input.get_value(row, col));
                         }

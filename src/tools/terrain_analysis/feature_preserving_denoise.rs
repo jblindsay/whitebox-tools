@@ -20,9 +20,33 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool implements a modified form of the algorithm described by
-///  Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
-///  mesh denoising.
+/// This tool implements a highly modified form of the DEM de-noising algorithm described
+/// by Sun et al. (2007). It is very effective at removing surface roughness from digital
+/// elevation models (DEMs), without significantly altering breaks-in-slope. As such,
+/// this tool should be used for smoothing DEMs rather than either smoothing with 
+/// low-pass filters (e.g. mean, median, Gaussian filters) or grid size coarsening 
+/// by resampling. The algorithm works by 1) calculating the surface normal 3D vector 
+/// of each grid cell in the DEM, 2) smoothing the normal vector field using a 
+/// filtering scheme that applies more weight to neighbours with lower angular difference
+/// in surface normal vectors, and 3) uses the smoothed normal vector field to update
+/// the elevations in the input DEM.
+/// 
+/// Sun et al.'s (2007) original method was intended to work on input point clouds and
+/// fitted triangular irregular networks (TINs). The algorithm has been modified to
+/// work with input raster DEMs instead. In so doing, this algorithm calculates surface
+/// normal vectors from the planes fitted to 3 x 3 neighbourhoods surrounding each 
+/// grid cell, rather than the triangular facet. The normal vector field smoothing and
+/// elevation updating procedures are also based on raster filtering operations. These
+/// modifications make this tool more efficient than Sun's original method, but will 
+/// also result in a slightly different output than what would be achieved with Sun's
+/// method. 
+/// 
+/// # Reference
+/// Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
+/// mesh denoising.
+/// 
+/// # See Also:
+/// `DrainagePreservingSmoothing`
 pub struct FeaturePreservingDenoise {
     name: String,
     description: String,
@@ -71,7 +95,7 @@ impl FeaturePreservingDenoise {
             flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("8.0".to_owned()),
+            default_value: Some("15.0".to_owned()),
             optional: true,
         });
 
@@ -80,16 +104,16 @@ impl FeaturePreservingDenoise {
             flags: vec!["--num_iter".to_owned()],
             description: "Number of iterations.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("5".to_owned()),
+            default_value: Some("10".to_owned()),
             optional: true,
         });
 
         parameters.push(ToolParameter {
             name: "Maximum Elevation Change".to_owned(),
             flags: vec!["--max_diff".to_owned()],
-            description: "Maximum absolute elevation change (optional).".to_owned(),
+            description: "Maximum allowable absolute elevation change (optional).".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("5.0".to_owned()),
+            default_value: Some("2.0".to_owned()),
             optional: true,
         });
 

@@ -1,41 +1,41 @@
 /* 
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Last Modified: 13/09/2018
+Last Modified: 13/12/2018
 License: MIT
 */
 
-/// NMinimizer is can be used to find the 'n' lowest values in a set of values of type T.
+/// NMaximizer is can be used to find the 'n' largest values in a set of values of type T.
 /// It is useful as an alternative to an approach that would use a priority queue, which
-/// would have larger memory requirements (to create the queue). NMinimizer is an
+/// would have larger memory requirements (to create the queue). NMaximizer is an
 /// efficient and small memory solution.
 ///
 /// ## Example
-///     let mut lows = NMinimizer::new(4);
+///     let mut highs = NMaximizer::new(4);
 ///
 ///     let data = vec![4.0, 3.0, -2.0, 9.0, 3.0, 2.0, 1.0, 8.0, 5.0];
 ///     for val in data {
-///         lows.insert(val);
+///         highs.insert(val);
 ///     }
 ///     
 ///     for i in 0..4 {
-///         println!("{}", lows.get(i).unwrap());
+///         println!("{}", highs.get(i).unwrap());
 ///     }
-pub struct NMinimizer<T: Copy + PartialOrd + PartialEq> {
+pub struct NMaximizer<T: Copy + PartialOrd + PartialEq> {
     values: Vec<T>,
     n: usize,
 }
 
-impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
-    /// Creates a new NMinimizer object
-    pub fn new(n: usize) -> NMinimizer<T> {
+impl<T: Copy + PartialOrd + PartialEq> NMaximizer<T> {
+    /// Creates a new NMaximizer object
+    pub fn new(n: usize) -> NMaximizer<T> {
         if n == 0 {
-            panic!("Invalid NMinimizer 'n' value.");
+            panic!("Invalid NMaximizer 'n' value.");
         }
         // values must have a capacity of n+1 so that
         // there is no reallocation of the Vec after
         // insertion and before the end is popped.
-        NMinimizer {
+        NMaximizer {
             n: n,
             values: Vec::with_capacity(n + 1),
         }
@@ -44,15 +44,15 @@ impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
     /// Inserts a value into the minimizer
     pub fn insert(&mut self, value: T) {
         if self.values.len() == self.n {
-            // First see if it is bigger than the current largest value in the
+            // First see if it is less than the current smallest value in the
             // list of values. If the set is large compared to N, the probability
             // that a new value is one of the current minima is low. In this
             // way, the majority of values will not need to be sorted at all.
-            // Instead, they only need to be compared with the largest current
-            // minima.
-            if value < self.values[self.n - 1] {
+            // Instead, they only need to be compared with the smallest current
+            // maxima.
+            if value > self.values[self.n - 1] {
                 for a in 0..self.n {
-                    if value < self.values[a] {
+                    if value > self.values[a] {
                         self.values.insert(a, value);
                         self.values.pop();
                         break;
@@ -62,7 +62,7 @@ impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
         } else {
             // If the size of the minima set is
             for a in 0..self.n {
-                if self.values.len() == a || value < self.values[a] {
+                if self.values.len() == a || value > self.values[a] {
                     self.values.insert(a, value);
                     break;
                 }
@@ -86,7 +86,7 @@ impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
     }
 
     /// Returns all of the minima as a vector.
-    pub fn get_minima(&self) -> Vec<T> {
+    pub fn get_maxima(&self) -> Vec<T> {
         self.values.clone()
     }
 
@@ -110,81 +110,81 @@ impl<T: Copy + PartialOrd + PartialEq> NMinimizer<T> {
 
 #[cfg(test)]
 mod test {
-    use super::NMinimizer;
+    use super::NMaximizer;
     use std::cmp::Ordering;
 
     #[test]
     #[should_panic]
-    fn test_nminimizer_new() {
-        let mut lows = NMinimizer::new(0);
-        lows.insert(6.0);
+    fn test_nmaximizer_new() {
+        let mut highs = NMaximizer::new(0);
+        highs.insert(6.0);
     }
 
     #[test]
-    fn test_nminimizer_insert() {
-        let mut lows = NMinimizer::new(4);
+    fn test_nmaximizer_insert() {
+        let mut highs = NMaximizer::new(4);
 
         for val in [4.0, 3.0, -2.0, 9.0, 3.0, 2.0, 1.0, 8.0].into_iter() {
-            lows.insert(*val);
+            highs.insert(*val);
         }
-        assert_eq!(lows.get_minima(), vec![-2.0, 1.0, 2.0, 3.0]);
+        assert_eq!(highs.get_maxima(), vec![9.0, 8.0, 4.0, 3.0]);
     }
 
     #[test]
-    fn test_nminimizer_insert_values() {
-        let mut lows = NMinimizer::new(4);
+    fn test_nmaximizer_insert_values() {
+        let mut highs = NMaximizer::new(4);
 
         let mut data = vec![4.0, 3.0, -2.0, 9.0, 3.0, 2.0, 1.0, 8.0, 5.0];
-        lows.insert_values(&data);
+        highs.insert_values(&data);
         data.push(6.0);
 
-        assert_eq!(lows.get_minima(), vec![-2.0, 1.0, 2.0, 3.0]);
+        assert_eq!(highs.get_maxima(), vec![9.0, 8.0, 5.0, 4.0]);
     }
 
     #[test]
-    fn test_nminimizer_size() {
-        let mut lows = NMinimizer::new(4);
+    fn test_nmaximizer_size() {
+        let mut highs = NMaximizer::new(4);
 
         let data = vec![4.0, 3.0];
-        lows.insert_values(&data);
+        highs.insert_values(&data);
 
-        assert_eq!(lows.size(), 2);
+        assert_eq!(highs.size(), 2);
     }
 
     #[test]
-    fn test_nminimizer_custom_struct() {
-        let mut lows = NMinimizer::new(3);
-        lows.insert(CustomStruct {
+    fn test_nmaximizer_custom_struct() {
+        let mut highs = NMaximizer::new(3);
+        highs.insert(CustomStruct {
             value: 7i32,
             dist: 5f64,
         });
-        lows.insert(CustomStruct {
+        highs.insert(CustomStruct {
             value: 5i32,
             dist: 13f64,
         });
-        lows.insert(CustomStruct {
+        highs.insert(CustomStruct {
             value: 4i32,
             dist: 3f64,
         });
-        lows.insert(CustomStruct {
+        highs.insert(CustomStruct {
             value: 6i32,
             dist: 1f64,
         });
-        lows.insert(CustomStruct {
+        highs.insert(CustomStruct {
             value: 3i32,
             dist: 20f64,
         });
 
         assert_eq!(
-            lows.get_minima(),
+            highs.get_maxima(),
             vec![
                 CustomStruct {
-                    value: 6i32,
-                    dist: 1f64,
+                    value: 3i32,
+                    dist: 20f64,
                 },
                 CustomStruct {
-                    value: 4i32,
-                    dist: 3f64,
+                    value: 5i32,
+                    dist: 13f64,
                 },
                 CustomStruct {
                     value: 7i32,

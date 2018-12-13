@@ -174,7 +174,7 @@ pub fn minimum_bounding_box(
 #[cfg(test)]
 mod test {
     use super::{minimum_bounding_box, MinimizationCriterion};
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_minimum_bounding_box() {
         let mut points: Vec<Point2D> = Vec::new();

@@ -85,7 +85,7 @@ fn find_lowest_point(p: &mut Vec<Point2D>) {
 #[cfg(test)]
 mod test {
     use super::convex_hull;
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_convex_hull() {
         let mut points: Vec<Point2D> = Vec::new();

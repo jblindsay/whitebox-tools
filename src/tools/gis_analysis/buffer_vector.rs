@@ -1,15 +1,15 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/11/2018
-Last Modified: 22/11/2018
+Last Modified: 07/12/2018
 License: MIT
 */
 extern crate kdtree;
 
 use crate::algorithms::{
     find_split_points_at_line_intersections, interior_point, is_clockwise_order, point_in_poly,
-    poly_in_poly, polygon_area,
+    poly_in_poly,
 };
 use crate::structures::{BoundingBox, MultiPolyline, Polyline};
 use crate::tools::*;
@@ -19,6 +19,7 @@ use kdtree::KdTree;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::env;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 
@@ -257,7 +258,8 @@ impl WhiteboxTool for BufferVector {
         let angular_resolution = 2f64 * std::f64::consts::PI / num_vertices_in_circle as f64;
         let (mut x, mut y): (f64, f64);
         let mut p: Point2D;
-        let mut slope: f64;
+        let (mut slope, mut slope1, mut slope2): (f64, f64, f64);
+        let (mut slope3, mut slope4): (f64, f64);
         let mut polygons: Vec<Polyline> = Vec::with_capacity(input.num_records);
 
         match input.header.shape_type.base_shape_type() {
@@ -269,7 +271,8 @@ impl WhiteboxTool for BufferVector {
                     let record = input.get_record(record_num);
                     p = record.points[0];
 
-                    let mut circle = Polyline::new_empty(record_num);
+                    let mut circle =
+                        Polyline::new_with_capacity(record_num, num_vertices_in_circle + 1);
                     for i in 0..num_vertices_in_circle {
                         slope = i as f64 * angular_resolution;
                         x = p.x + distance * slope.sin();
@@ -293,6 +296,9 @@ impl WhiteboxTool for BufferVector {
                 }
             }
             ShapeType::MultiPoint => {
+                if distance < 0f64 {
+                    return Err(Error::new(ErrorKind::InvalidInput, "Error: distance < 0.0"));
+                }
                 let mut total_points = 0;
                 for record_num in 0..input.num_records {
                     let record = input.get_record(record_num);
@@ -305,7 +311,8 @@ impl WhiteboxTool for BufferVector {
                         points_read += 1;
                         p = record.points[i];
 
-                        let mut circle = Polyline::new_empty(points_read);
+                        let mut circle =
+                            Polyline::new_with_capacity(points_read, num_vertices_in_circle + 1);
                         for i in 0..num_vertices_in_circle {
                             slope = i as f64 * angular_resolution;
                             x = p.x + distance * slope.sin();
@@ -328,7 +335,410 @@ impl WhiteboxTool for BufferVector {
                     }
                 }
             }
-            // ShapeType::PolyLine => {}
+            ShapeType::PolyLine => {
+                if distance < 0f64 {
+                    return Err(Error::new(ErrorKind::InvalidInput, "Error: distance < 0.0"));
+                }
+                let right_angle = std::f64::consts::PI / 2f64;
+                let mut slope: f64;
+                // let mut slopes = Vec::with_capacity(num_vertices_in_circle + 4);
+                let mut total_points = 0;
+                let (mut x, mut y): (f64, f64);
+                let (mut x_translated, mut y_translated): (f64, f64);
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    total_points += record.points.len();
+                }
+                let mut p1: Point2D;
+                let mut p2: Point2D;
+                let mut p3: Point2D;
+                // output.header.shape_type = ShapeType::PolyLine;
+                for record_num in 0..input.num_records {
+                    let record = input.get_record(record_num);
+                    let mut line_polys: Vec<Polyline> = Vec::with_capacity(input.num_records);
+                    let mut line1 = Polyline::new_empty(record_num);
+                    let mut line2 = Polyline::new_empty(record_num);
+                    for i in 0..record.points.len() {
+                        p = record.points[i];
+                        if i == 0 || i == record.points.len() - 1 {
+                            slope = if i == 0 {
+                                (record.points[i + 1].y - p.y).atan2(record.points[i + 1].x - p.x)
+                            } else {
+                                (p.y - record.points[i - 1].y).atan2(p.x - record.points[i - 1].x)
+                            };
+
+                            slope1 = slope + right_angle;
+                            // if slope1 < 0.0 {
+                            //     slope1 += 2.0 * PI;
+                            // }
+                            // if slope1 > 2.0 * PI {
+                            //     slope1 -= 2.0 * PI;
+                            // }
+                            slope2 = slope - right_angle;
+                            // if slope2 < 0.0 {
+                            //     slope2 += 2.0 * PI;
+                            // }
+                            // if slope2 > 2.0 * PI {
+                            //     slope2 -= 2.0 * PI;
+                            // }
+
+                            if i == 0 {
+                                // x = p.x + distance * slope2.cos();
+                                // y = p.y + distance * slope2.sin();
+                                // line1.push(Point2D::new(x, y));
+                                for j in 0..(num_vertices_in_circle / 2 + 1) {
+                                    slope = slope2 - j as f64 * angular_resolution;
+                                    x = p.x + distance * slope.cos();
+                                    y = p.y + distance * slope.sin();
+                                    line1.push(Point2D::new(x, y));
+                                }
+                            // x = p.x + distance * slope1.cos();
+                            // y = p.y + distance * slope1.sin();
+                            // line1.push(Point2D::new(x, y));
+                            } else {
+                                // x = p.x + distance * slope1.cos();
+                                // y = p.y + distance * slope1.sin();
+                                // line1.push(Point2D::new(x, y));
+                                for j in 0..(num_vertices_in_circle / 2 + 1) {
+                                    slope = slope1 - j as f64 * angular_resolution;
+                                    x = p.x + distance * slope.cos();
+                                    y = p.y + distance * slope.sin();
+                                    line1.push(Point2D::new(x, y));
+                                }
+                                // x = p.x + distance * slope2.cos();
+                                // y = p.y + distance * slope2.sin();
+                                // line1.push(Point2D::new(x, y));
+                            }
+
+                            x = p.x + distance * slope2.cos();
+                            y = p.y + distance * slope2.sin();
+                            line2.push(Point2D::new(x, y));
+
+                        // let mut added_slope1 = false;
+                        // let mut added_slope2 = false;
+                        // let mut circle =
+                        //     Polyline::new_with_capacity(i, num_vertices_in_circle + 3);
+                        // for j in 0..num_vertices_in_circle {
+                        //     slope = j as f64 * angular_resolution;
+                        //     if j > 0 {
+                        //         if slope1 > ((j - 1) as f64 * angular_resolution)
+                        //             && slope1 < slope
+                        //         {
+                        //             x = p.x + distance * slope1.cos();
+                        //             y = p.y + distance * slope1.sin();
+                        //             circle.push(Point2D::new(x, y));
+                        //             added_slope1 = true;
+                        //         }
+                        //         if slope2 > ((j - 1) as f64 * angular_resolution)
+                        //             && slope2 < slope
+                        //         {
+                        //             x = p.x + distance * slope2.cos();
+                        //             y = p.y + distance * slope2.sin();
+                        //             circle.push(Point2D::new(x, y));
+                        //             added_slope2 = true;
+                        //         }
+                        //     }
+                        //     if slope == slope1 {
+                        //         added_slope1 = true;
+                        //     }
+                        //     if slope == slope2 {
+                        //         added_slope2 = true;
+                        //     }
+                        //     // if (added_slope1 && !added_slope2)
+                        //     //     || (!added_slope1 && added_slope2)
+                        //     // {
+                        //     x = p.x + distance * slope.cos();
+                        //     y = p.y + distance * slope.sin();
+                        //     circle.push(Point2D::new(x, y));
+                        //     // }
+                        // }
+
+                        // if !added_slope1 {
+                        //     x = p.x + distance * slope1.cos();
+                        //     y = p.y + distance * slope1.sin();
+                        //     circle.push(Point2D::new(x, y));
+                        // }
+
+                        // if !added_slope2 {
+                        //     x = p.x + distance * slope2.cos();
+                        //     y = p.y + distance * slope2.sin();
+                        //     circle.push(Point2D::new(x, y));
+                        // }
+
+                        // // now add a last point same as the first.
+                        // circle.close_line();
+                        // line_polys.push(circle);
+
+                        // x_translated = p.x + distance * slope1.cos();
+                        // y_translated = p.y + distance * slope1.sin();
+                        // line1.push(Point2D::new(x_translated, y_translated));
+
+                        // x_translated = p.x + distance * slope2.cos();
+                        // y_translated = p.y + distance * slope2.sin();
+                        // line2.push(Point2D::new(x_translated, y_translated));
+                        } else {
+                            slope =
+                                (p.y - record.points[i - 1].y).atan2(p.x - record.points[i - 1].x);
+
+                            slope1 = slope + right_angle;
+                            // if slope1 < 0.0 {
+                            //     slope1 += 2.0 * PI;
+                            // }
+                            // if slope1 > 2.0 * PI {
+                            //     slope1 -= 2.0 * PI;
+                            // }
+                            slope2 = slope - right_angle;
+                            // if slope2 < 0.0 {
+                            //     slope2 += 2.0 * PI;
+                            // }
+                            // if slope2 > 2.0 * PI {
+                            //     slope2 -= 2.0 * PI;
+                            // }
+
+                            x = p.x + distance * slope1.cos();
+                            y = p.y + distance * slope1.sin();
+                            line1.push(Point2D::new(x, y));
+                            // line_polys.push(line1);
+                            // line1 = Polyline::new_empty(record_num);
+
+                            x = p.x + distance * slope2.cos();
+                            y = p.y + distance * slope2.sin();
+                            line2.push(Point2D::new(x, y));
+                            // line_polys.push(line2);
+                            // line2 = Polyline::new_empty(record_num);
+
+                            slope =
+                                (record.points[i + 1].y - p.y).atan2(record.points[i + 1].x - p.x);
+
+                            slope3 = slope + right_angle;
+                            // if slope3 < 0.0 {
+                            //     slope3 += 2.0 * PI;
+                            // }
+                            // if slope3 > 2.0 * PI {
+                            //     slope3 -= 2.0 * PI;
+                            // }
+                            slope4 = slope - right_angle;
+                            // if slope4 < 0.0 {
+                            //     slope4 += 2.0 * PI;
+                            // }
+                            // if slope4 > 2.0 * PI {
+                            //     slope4 -= 2.0 * PI;
+                            // }
+
+                            if record.points[i + 1].is_left(&record.points[i - 1], &p) < 0.0 {
+                                // if Point2D::change_in_heading(
+                                //     record.points[i - 1],
+                                //     p,
+                                //     record.points[i + 1],
+                                // ) > 0.0
+                                // {
+                                let mut slope_change = slope3 - slope1;
+
+                                let mut num_ticks =
+                                    (slope_change.abs() / angular_resolution).floor() as usize;
+                                if num_ticks > 0 {
+                                    if slope_change > 0.0 {
+                                        slope_change -= 2.0 * PI;
+                                        num_ticks = (slope_change.abs() / angular_resolution)
+                                            .floor()
+                                            as usize;
+                                    }
+                                    for j in 0..num_ticks {
+                                        slope = slope1 - j as f64 * angular_resolution;
+                                        x = p.x + distance * slope.cos();
+                                        y = p.y + distance * slope.sin();
+                                        line1.push(Point2D::new(x, y));
+                                    }
+                                }
+
+                                line_polys.push(line2);
+                                line2 = Polyline::new_empty(record_num);
+                            } else if record.points[i + 1].is_left(&record.points[i - 1], &p) > 0.0
+                            {
+                                // } else if Point2D::change_in_heading(
+                                //     record.points[i - 1],
+                                //     p,
+                                //     record.points[i + 1],
+                                // ) < 0.0
+                                // {
+                                let mut slope_change = slope4 - slope2;
+                                let mut num_ticks =
+                                    (slope_change.abs() / angular_resolution).floor() as usize;
+                                if num_ticks > 0 {
+                                    if slope_change < 0.0 {
+                                        slope_change += 2.0 * PI;
+                                        num_ticks = (slope_change.abs() / angular_resolution)
+                                            .floor()
+                                            as usize;
+                                    }
+                                    for j in 0..num_ticks {
+                                        slope = slope2 + j as f64 * angular_resolution;
+                                        x = p.x + distance * slope.cos();
+                                        y = p.y + distance * slope.sin();
+                                        line2.push(Point2D::new(x, y));
+                                    }
+                                }
+
+                                // line1.push(Point2D::new(0.0, 0.0));
+                                line_polys.push(line1);
+                                line1 = Polyline::new_empty(record_num);
+                                // for j in 0..num_ticks {
+                                //     slope = slope1 + j as f64 * angular_resolution;
+                                //     x = p.x + distance * slope.cos();
+                                //     y = p.y + distance * slope.sin();
+                                //     line1.push(Point2D::new(x, y));
+                                // }
+                            }
+
+                            //         let mut added_slope1 = false;
+                            //         let mut added_slope2 = false;
+                            //         let mut added_slope3 = false;
+                            //         let mut added_slope4 = false;
+                            //         // let mut circle =
+                            //         //     Polyline::new_with_capacity(i, num_vertices_in_circle + 3);
+                            //         for j in 0..num_vertices_in_circle {
+                            //             slope = j as f64 * angular_resolution;
+                            //             if j > 0 {
+                            //                 if slope1 > ((j - 1) as f64 * angular_resolution)
+                            //                     && slope1 < slope
+                            //                 {
+                            //                     x = p.x + distance * slope1.cos();
+                            //                     y = p.y + distance * slope1.sin();
+                            //                     line1.push(Point2D::new(x, y));
+                            //                     // circle.push(Point2D::new(x, y));
+                            //                     added_slope1 = true;
+                            //                 }
+                            //                 if slope2 > ((j - 1) as f64 * angular_resolution)
+                            //                     && slope2 < slope
+                            //                 {
+                            //                     x = p.x + distance * slope2.cos();
+                            //                     y = p.y + distance * slope2.sin();
+                            //                     line2.push(Point2D::new(x, y));
+                            //                     // circle.push(Point2D::new(x, y));
+                            //                     added_slope2 = true;
+                            //                 }
+
+                            //                 if slope3 > ((j - 1) as f64 * angular_resolution)
+                            //                     && slope3 < slope
+                            //                 {
+                            //                     x = p.x + distance * slope3.cos();
+                            //                     y = p.y + distance * slope3.sin();
+                            //                     line1.push(Point2D::new(x, y));
+                            //                     // circle.push(Point2D::new(x, y));
+                            //                     added_slope3 = true;
+                            //                 }
+
+                            //                 if slope4 > ((j - 1) as f64 * angular_resolution)
+                            //                     && slope4 < slope
+                            //                 {
+                            //                     x = p.x + distance * slope4.cos();
+                            //                     y = p.y + distance * slope4.sin();
+                            //                     line2.push(Point2D::new(x, y));
+                            //                     // circle.push(Point2D::new(x, y));
+                            //                     added_slope4 = true;
+                            //                 }
+                            //             }
+                            //             if slope == slope1 {
+                            //                 added_slope1 = true;
+                            //             }
+                            //             if slope == slope2 {
+                            //                 added_slope2 = true;
+                            //             }
+                            //             if slope == slope3 {
+                            //                 added_slope3 = true;
+                            //             }
+                            //             if slope == slope4 {
+                            //                 added_slope4 = true;
+                            //             }
+
+                            //             if (added_slope1 && !added_slope3)
+                            //                 || (!added_slope1 && added_slope3)
+                            //             {
+                            //                 x = p.x + distance * slope.cos();
+                            //                 y = p.y + distance * slope.sin();
+                            //                 line1.push(Point2D::new(x, y));
+                            //             }
+
+                            //             if (added_slope2 && !added_slope4)
+                            //                 || (!added_slope2 && added_slope4)
+                            //             {
+                            //                 x = p.x + distance * slope.cos();
+                            //                 y = p.y + distance * slope.sin();
+                            //                 line2.push(Point2D::new(x, y));
+                            //             }
+
+                            //             // if (added_slope1 && !added_slope3)
+                            //             //     || (!added_slope1 && added_slope3)
+                            //             //     || (added_slope2 && !added_slope4)
+                            //             //     || (!added_slope2 && added_slope4)
+                            //             // {
+                            //             //     x = p.x + distance * slope.cos();
+                            //             //     y = p.y + distance * slope.sin();
+                            //             //     circle.push(Point2D::new(x, y));
+                            //             // }
+                            //         }
+
+                            //         if !added_slope1 {
+                            //             x = p.x + distance * slope1.cos();
+                            //             y = p.y + distance * slope1.sin();
+                            //             line1.push(Point2D::new(x, y));
+                            //             // circle.push(Point2D::new(x, y));
+                            //         }
+
+                            //         if !added_slope2 {
+                            //             x = p.x + distance * slope2.cos();
+                            //             y = p.y + distance * slope2.sin();
+                            //             line2.push(Point2D::new(x, y));
+                            //             // circle.push(Point2D::new(x, y));
+                            //         }
+
+                            //         if !added_slope3 {
+                            //             x = p.x + distance * slope3.cos();
+                            //             y = p.y + distance * slope3.sin();
+                            //             line1.push(Point2D::new(x, y));
+                            //             // circle.push(Point2D::new(x, y));
+                            //         }
+
+                            //         if !added_slope4 {
+                            //             x = p.x + distance * slope4.cos();
+                            //             y = p.y + distance * slope4.sin();
+                            //             line2.push(Point2D::new(x, y));
+                            //             // circle.push(Point2D::new(x, y));
+                            //         }
+
+                            x = p.x + distance * slope3.cos();
+                            y = p.y + distance * slope3.sin();
+                            line1.push(Point2D::new(x, y));
+
+                            x = p.x + distance * slope4.cos();
+                            y = p.y + distance * slope4.sin();
+                            line2.push(Point2D::new(x, y));
+
+                            // now add a last point same as the first.
+                            // circle.close_line();
+                            // line_polys.push(circle);
+                        }
+                    }
+
+                    line_polys.push(line1);
+                    line_polys.push(line2);
+
+                    let dissolved = dissolve_polygons(line_polys, precision);
+                    for i in 0..dissolved.len() {
+                        for j in 0..dissolved[i].len() {
+                            polygons.push(dissolved[i][j].clone());
+                        }
+                    }
+                    if verbose {
+                        progress = (100.0_f64 * record_num as f64 / (input.num_records - 1) as f64)
+                            as usize;
+                        if progress != old_progress {
+                            println!("Progress: {}%", progress);
+                            old_progress = progress;
+                        }
+                    }
+                }
+            }
             // ShapeType::Polygon => {}
             _ => {
                 return Err(Error::new(
@@ -338,16 +748,18 @@ impl WhiteboxTool for BufferVector {
             }
         }
 
+        dissolve = false;
+
         if dissolve {
             if verbose {
                 println!("Dissolving polygons...");
             }
             let dissolved = dissolve_polygons(polygons, precision);
 
-            // output.header.shape_type = ShapeType::PolyLine;
+            output.header.shape_type = ShapeType::PolyLine;
             for record_num in 0..dissolved.len() {
                 // output the polygon
-                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                 for i in 0..dissolved[record_num].len() {
                     sfg.add_part(&(dissolved[record_num][i].vertices));
                 }
@@ -367,10 +779,10 @@ impl WhiteboxTool for BufferVector {
                 }
             }
         } else {
-            // output.header.shape_type = ShapeType::PolyLine;
+            output.header.shape_type = ShapeType::PolyLine;
             for record_num in 0..polygons.len() {
                 // output the polygon
-                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                 sfg.add_part(&polygons[record_num].vertices);
                 output.add_record(sfg);
 
@@ -393,9 +805,11 @@ impl WhiteboxTool for BufferVector {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -465,6 +879,15 @@ fn last_node_id(polyline: usize) -> usize {
 
 pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPolyline> {
     let mut polygons2 = polygons.clone();
+
+    let mut feature_geometries: Vec<MultiPolyline> = vec![];
+    for i in 0..polygons2.len() {
+        let mut mp = MultiPolyline::new(i + 1);
+        mp.push(&polygons2[i]);
+        feature_geometries.push(mp);
+    }
+
+    return feature_geometries;
 
     // Remove any zero-length line segments
     for i in 0..polygons2.len() {
@@ -541,36 +964,34 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
         }
     }
 
-    let mut interior_line = vec![false; polylines.len()];
-    for i in 0..polylines.len() {
-        let bb = polylines[i].get_bounding_box();
-        let test_point = Point2D::midpoint(&(polylines[i][0]), &(polylines[i][1]));
-        for j in 0..polygons2.len() {
-            if bb.overlaps(features_bb[j]) && polylines[i].id != polygons2[j].id {
-                if point_in_poly(&test_point, &polygons2[j].vertices) {
-                    interior_line[i] = true;
-                    break;
-                }
-            }
-        }
-    }
+    // let mut interior_line = vec![false; polylines.len()];
+    // for i in 0..polylines.len() {
+    //     let bb = polylines[i].get_bounding_box();
+    //     let test_point = Point2D::midpoint(&(polylines[i][0]), &(polylines[i][1]));
+    //     for j in 0..polygons2.len() {
+    //         if bb.overlaps(features_bb[j]) && polylines[i].id != polygons2[j].id {
+    //             if point_in_poly(&test_point, &polygons2[j].vertices) {
+    //                 interior_line[i] = true;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    // }
 
-    for i in (0..polylines.len()).rev() {
-        if interior_line[i] {
-            polylines.remove(i);
-        }
-    }
+    // for i in (0..polylines.len()).rev() {
+    //     if interior_line[i] {
+    //         polylines.remove(i);
+    //     }
+    // }
 
-    /*
-    let mut feature_geometries: Vec<MultiPolyline> = vec![];
-    for i in 0..polylines.len() {
-        let mut mp = MultiPolyline::new(i + 1);
-        mp.push(&polylines[i]);
-        feature_geometries.push(mp);
-    }
+    // let mut feature_geometries: Vec<MultiPolyline> = vec![];
+    // for i in 0..polylines.len() {
+    //     let mut mp = MultiPolyline::new(i + 1);
+    //     mp.push(&polylines[i]);
+    //     feature_geometries.push(mp);
+    // }
 
-    return feature_geometries;
-    */
+    // return feature_geometries;
 
     let num_endnodes = polylines.len() * 2;
     /*
@@ -778,13 +1199,13 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
     // let mut other_is_hole: bool;
     let mut last_index: usize;
 
-    // for i in 0..polylines.len() {
-    //     let mut mp = MultiPolyline::new(i + 1);
-    //     mp.push(&polylines[i]);
-    //     feature_geometries.push(mp);
-    // }
+    for i in 0..polylines.len() {
+        let mut mp = MultiPolyline::new(i + 1);
+        mp.push(&polylines[i]);
+        feature_geometries.push(mp);
+    }
 
-    // return feature_geometries;
+    return feature_geometries;
 
     // println!("12962 {:?}", endnodes[12962]);
     // println!("12963 {:?}", endnodes[12963]);
@@ -830,15 +1251,6 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
                     }
                     neighbour_node = endnodes[current_node][max_val_index];
                     other_side = get_other_endnode(neighbour_node);
-                    // if i == 3602 {
-                    //     println!(
-                    //         "neighbour_node {} ({}) other_side {} ({})",
-                    //         neighbour_node,
-                    //         neighbour_node / 2,
-                    //         other_side,
-                    //         other_side / 2
-                    //     );
-                    // }
                     if prev[other_side] != num_endnodes && other_side != target_node {
                         break;
                     }
@@ -1049,31 +1461,14 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
                 loop {
                     num_neighbours = endnodes[current_node].len();
                     if num_neighbours > 1 {
-                        // We're at a junction and we should take the
-                        // rightmost line.
-                        max_val = node_angles[current_node][0];
-                        max_val_index = 0;
-                        for a in 1..num_neighbours {
-                            if node_angles[current_node][a] > max_val {
-                                max_val = node_angles[current_node][a];
-                                max_val_index = a;
-                            }
-                            if endnodes[current_node][a] == target_node {
-                                neighbour_node = endnodes[current_node][a];
-                                prev[neighbour_node] = current_node;
-                                break;
-                            }
-                        }
-                        neighbour_node = endnodes[current_node][max_val_index];
-
                         // // We're at a junction and we should take the
-                        // // leftmost line.
-                        // let mut min_val = node_angles[current_node][0];
-                        // let mut min_val_index = 0;
+                        // // rightmost line.
+                        // max_val = node_angles[current_node][0];
+                        // max_val_index = 0;
                         // for a in 1..num_neighbours {
-                        //     if node_angles[current_node][a] < min_val {
-                        //         min_val = node_angles[current_node][a];
-                        //         min_val_index = a;
+                        //     if node_angles[current_node][a] > max_val {
+                        //         max_val = node_angles[current_node][a];
+                        //         max_val_index = a;
                         //     }
                         //     if endnodes[current_node][a] == target_node {
                         //         neighbour_node = endnodes[current_node][a];
@@ -1081,7 +1476,24 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
                         //         break;
                         //     }
                         // }
-                        // neighbour_node = endnodes[current_node][min_val_index];
+                        // neighbour_node = endnodes[current_node][max_val_index];
+
+                        // We're at a junction and we should take the
+                        // leftmost line.
+                        let mut min_val = node_angles[current_node][0];
+                        let mut min_val_index = 0;
+                        for a in 1..num_neighbours {
+                            if node_angles[current_node][a] < min_val {
+                                min_val = node_angles[current_node][a];
+                                min_val_index = a;
+                            }
+                            if endnodes[current_node][a] == target_node {
+                                neighbour_node = endnodes[current_node][a];
+                                prev[neighbour_node] = current_node;
+                                break;
+                            }
+                        }
+                        neighbour_node = endnodes[current_node][min_val_index];
                         other_side = get_other_endnode(neighbour_node);
                         if prev[other_side] != num_endnodes && other_side != target_node {
                             break;
@@ -1209,7 +1621,7 @@ pub fn dissolve_polygons(polygons: Vec<Polyline>, precision: f64) -> Vec<MultiPo
                                 }
                                 if overlaps_with_poly {
                                     // output the polygon
-                                    let mut sfg = Polyline::new(&vertices, fid);
+                                    let sfg = Polyline::new(&vertices, fid);
                                     fid += 1;
                                     bb.push(sfg.get_bounding_box());
                                     let mut mp = MultiPolyline::new(fid);

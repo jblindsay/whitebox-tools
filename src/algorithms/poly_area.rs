@@ -27,7 +27,7 @@ pub fn polygon_area(vertices: &[Point2D]) -> f64 {
 #[cfg(test)]
 mod test {
     use super::polygon_area;
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_closed_polygon_area() {
         let poly = [

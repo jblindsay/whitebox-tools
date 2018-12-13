@@ -180,7 +180,7 @@ pub fn interior_point(poly: &[Point2D]) -> Point2D {
 #[cfg(test)]
 mod test {
     use super::*;
-    use structures::Point2D;
+    use crate::structures::Point2D;
     #[test]
     fn test_point_in_poly() {
         let poly = [

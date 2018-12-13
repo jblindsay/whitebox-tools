@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 18, 2017
@@ -16,7 +16,16 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use std::cmp::Ordering::Equal;
 
+/// This tool calculates the root-mean-square-error (RMSE) or root-mean-square-difference (RMSD) from two
+/// input rasters. If the two input rasters possess the same number of rows and columns, the RMSE is 
+/// calucated on a cell-by-cell basis, otherwise bilinear resampling is used. In addition to RMSE,
+/// the tool also reports other common accuracy statistics including the mean verical error, the
+/// 95% confidence limit (RMSE x 1.96), and the 90% linear error (LE90), which is the 90% percentile of 
+/// the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy 
+/// statistics when the residuals are non-Gaussian. The LE90 requires sorting the residual values, which
+/// can be a relatively slow operation for larger rasters. 
 pub struct RootMeanSquareError {
     name: String,
     description: String,
@@ -65,7 +74,8 @@ impl RootMeanSquareError {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RootMeanSquareError {
             name: name,
@@ -182,10 +192,14 @@ impl WhiteboxTool for RootMeanSquareError {
         let nodata = input.configs.nodata;
         let nodata_base = base_raster.configs.nodata;
 
+        // let num_valid_cells = input.num_valid_cells();
+        // the 90th percentile lies at the bottom of the top 10% highest absolute residual values.
+        // let target_num_cells = (0.1 * num_valid_cells as f64) as usize; 
+        
         if base_raster.configs.rows as isize == rows
             && base_raster.configs.columns as isize == columns
         {
-            // The two grids are the same resolution. This simplifies calculation greatly.
+            // The two grids are the same resolution. This simplifies the calculation greatly.
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -195,20 +209,24 @@ impl WhiteboxTool for RootMeanSquareError {
                 thread::spawn(move || {
                     let mut z1: f64;
                     let mut z2: f64;
+                    let mut z_diff: f64;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut n = 0i32;
                         let mut s = 0.0f64;
                         let mut sq = 0.0f64;
+                        let mut data: Vec<f32> = Vec::with_capacity(columns as usize);
                         for col in 0..columns {
                             z1 = input[(row, col)];
                             z2 = base_raster[(row, col)];
                             if z1 != nodata && z2 != nodata_base {
+                                z_diff = z2 - z1;
                                 n += 1;
-                                s += z1 - z2;
-                                sq += (z1 - z2) * (z1 - z2);
+                                s += z_diff;
+                                sq += z_diff * z_diff;
+                                data.push(z_diff.abs() as f32);
                             }
                         }
-                        tx.send((n, s, sq)).unwrap();
+                        tx.send((n, s, sq, data)).unwrap();
                     }
                 });
             }
@@ -216,11 +234,16 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut num_cells = 0i32;
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
+            let mut residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
-                let (a, b, c) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().unwrap();
                 num_cells += a;
                 sum += b;
                 sq_sum += c;
+
+                for i in 0..d.len() {
+                    residuals.push(d[i]);
+                }
 
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -233,19 +256,26 @@ impl WhiteboxTool for RootMeanSquareError {
 
             let rmse = (sq_sum / num_cells as f64).sqrt();
             let mean_vertical_error = sum / num_cells as f64;
+            let ninety_percent_cell = (0.9 * num_cells as f64) as usize;
+            if verbose {
+                println!("Sorting the residuals...");
+            }
+            residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+            let le90 = residuals[ninety_percent_cell];
 
             println!("\nVertical Accuracy Analysis:\n");
             println!("Comparison File: {}", input_file);
             println!("Base File: {}", base_file);
-            println!("Mean vertical error: {:.4}", mean_vertical_error);
-            println!("RMSE: {:.4}", rmse);
+            println!("Mean vertical error: {:.5}", mean_vertical_error);
+            println!("RMSE: {:.5}", rmse);
             println!(
-                "Accuracy at 95% confidence limit (m): {:.4}",
+                "Accuracy at 95-percent confidence limit: {:.5}",
                 rmse * 1.96f64
             );
+            println!("LE90: {:.5}", le90);
         } else {
-            /* The two grids are not of the same resolution. Bilinear resampling will have to be 
-                carried out to estimate z-values. Base image = source; input image = destination */
+            /* The two grids are not of the same resolution. Bilinear resampling will have to be
+            carried out to estimate z-values. Base image = source; input image = destination */
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -257,6 +287,7 @@ impl WhiteboxTool for RootMeanSquareError {
                     let mut x: f64;
                     let mut z1: f64;
                     let mut z2: f64;
+                    let mut z_diff: f64;
                     let mut src_row: f64;
                     let mut src_col: f64;
                     let mut origin_row: isize;
@@ -277,6 +308,7 @@ impl WhiteboxTool for RootMeanSquareError {
                         let mut n = 0i32;
                         let mut s = 0.0f64;
                         let mut sq = 0.0f64;
+                        let mut data: Vec<f32> = Vec::with_capacity(columns as usize);
                         for col in 0..columns {
                             z1 = input[(row, col)];
                             if z1 != nodata {
@@ -335,13 +367,14 @@ impl WhiteboxTool for RootMeanSquareError {
                                 }
 
                                 if z2 != nodata_base && !z2.is_nan() {
+                                    z_diff = z2 - z1;
                                     n += 1;
-                                    s += z1 - z2;
-                                    sq += (z1 - z2) * (z1 - z2);
+                                    s += z_diff;
+                                    sq += z_diff * z_diff;
                                 }
                             }
                         }
-                        tx.send((n, s, sq)).unwrap();
+                        tx.send((n, s, sq, data)).unwrap();
                     }
                 });
             }
@@ -349,11 +382,16 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut num_cells = 0i32;
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
+            let mut residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
-                let (a, b, c) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().unwrap();
                 num_cells += a;
                 sum += b;
                 sq_sum += c;
+
+                for i in 0..d.len() {
+                    residuals.push(d[i]);
+                }
 
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -366,16 +404,23 @@ impl WhiteboxTool for RootMeanSquareError {
 
             let rmse = (sq_sum / num_cells as f64).sqrt();
             let mean_vertical_error = sum / num_cells as f64;
+            let ninety_percent_cell = (0.9 * num_cells as f64) as usize;
+            if verbose {
+                println!("Sorting the residuals...");
+            }
+            residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+            let le90 = residuals[ninety_percent_cell];
 
             println!("\nVertical Accuracy Analysis:\n");
             println!("Comparison File: {}", input_file);
             println!("Base File: {}", base_file);
-            println!("Mean vertical error: {:.4}", mean_vertical_error);
-            println!("RMSE: {:.4}", rmse);
+            println!("Mean vertical error: {:.5}", mean_vertical_error);
+            println!("RMSE: {:.5}", rmse);
             println!(
-                "Accuracy at 95% confidence limit (m): {:.4}",
+                "Accuracy at 95-percent confidence limit: {:.5}",
                 rmse * 1.96f64
             );
+            println!("LE90: {:.5}", le90);
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);

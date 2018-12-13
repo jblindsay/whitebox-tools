@@ -100,7 +100,7 @@ pub fn find_split_points_at_line_intersections(line1: &mut Polyline, line2: &mut
 #[cfg(test)]
 mod test {
     use super::find_line_intersections;
-    use structures::{LineSegment, Point2D};
+    use crate::structures::{LineSegment, Point2D};
 
     #[test]
     fn test_find_line_intersections() {

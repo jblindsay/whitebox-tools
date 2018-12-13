@@ -135,7 +135,7 @@ fn make_circumcircle(a: Point2D, b: Point2D, c: Point2D) -> Circle {
 #[cfg(test)]
 mod test {
     use super::smallest_enclosing_circle;
-    use structures::{Circle, Point2D};
+    use crate::structures::{Circle, Point2D};
     #[test]
     fn test_smallest_enclosing_circle() {
         // make a square

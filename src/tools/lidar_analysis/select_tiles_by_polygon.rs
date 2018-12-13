@@ -197,7 +197,8 @@ impl WhiteboxTool for SelectTilesByPolygon {
             Err(why) => println!("{:?}", why.kind()),
             Ok(paths) => for path in paths {
                 let s = format!("{:?}", path.unwrap().path());
-                if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                if s.replace("\"", "").to_lowercase().ends_with(".las") ||
+                s.replace("\"", "").to_lowercase().ends_with(".laz") {
                     inputs.push(format!("{:?}", s.replace("\"", "")));
                 }
             },
