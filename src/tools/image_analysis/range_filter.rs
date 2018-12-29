@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
@@ -85,7 +85,8 @@ impl RangeFilter {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RangeFilter {
             name: name,
@@ -385,9 +386,11 @@ impl WhiteboxTool for RangeFilter {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

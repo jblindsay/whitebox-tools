@@ -1,4 +1,4 @@
-/* 
+/*
 This file is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/04/2018
@@ -293,14 +293,7 @@ impl ShapefileGeometry {
         // This approach is based on the method described by Paul Bourke, March 1998
         // http://paulbourke.net/geometry/clockwise/index.html
 
-        let (mut x0, mut y0, mut x1, mut y1, mut x2, mut y2): (
-            f64,
-            f64,
-            f64,
-            f64,
-            f64,
-            f64,
-        );
+        let (mut x0, mut y0, mut x1, mut y1, mut x2, mut y2): (f64, f64, f64, f64, f64, f64);
         let mut n1: usize;
         let mut n2: usize;
         let mut n3: usize;

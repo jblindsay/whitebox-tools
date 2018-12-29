@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 1, 2018
@@ -76,7 +76,8 @@ impl LidarRemoveDuplicates {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\"",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         LidarRemoveDuplicates {
             name: name,

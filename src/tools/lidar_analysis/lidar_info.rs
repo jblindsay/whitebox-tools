@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
@@ -90,7 +90,8 @@ impl LidarInfo {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --vlr --geokeys\"
 .*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         LidarInfo {
             name: name,

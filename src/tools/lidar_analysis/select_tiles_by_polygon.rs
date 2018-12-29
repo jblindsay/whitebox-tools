@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/08/2018
@@ -195,13 +195,16 @@ impl WhiteboxTool for SelectTilesByPolygon {
 
         match fs::read_dir(input_directory.clone()) {
             Err(why) => println!("{:?}", why.kind()),
-            Ok(paths) => for path in paths {
-                let s = format!("{:?}", path.unwrap().path());
-                if s.replace("\"", "").to_lowercase().ends_with(".las") ||
-                s.replace("\"", "").to_lowercase().ends_with(".laz") {
-                    inputs.push(format!("{:?}", s.replace("\"", "")));
+            Ok(paths) => {
+                for path in paths {
+                    let s = format!("{:?}", path.unwrap().path());
+                    if s.replace("\"", "").to_lowercase().ends_with(".las")
+                        || s.replace("\"", "").to_lowercase().ends_with(".laz")
+                    {
+                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                    }
                 }
-            },
+            }
         }
 
         let polygons = Arc::new(Shapefile::read(&polygons_file)?);

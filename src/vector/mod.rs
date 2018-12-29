@@ -1,4 +1,4 @@
-/* 
+/*
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
@@ -6,7 +6,7 @@ Last Modified: 12/04/2018
 License: MIT
 */
 
-/* 
+/*
 Eventually this will be used to support multiple vector formats but
 for now it's just Shapefiles.
 */

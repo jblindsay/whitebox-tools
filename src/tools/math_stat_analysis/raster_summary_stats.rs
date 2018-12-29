@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
@@ -58,7 +58,8 @@ impl RasterSummaryStats {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=DEM.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RasterSummaryStats {
             name: name,

@@ -1,4 +1,3 @@
-
 pub fn get_css() -> String {
     "<style type=\"text/css\">
             h1 {
@@ -52,5 +51,6 @@ pub fn get_css() -> String {
                 font-weight: bold;
                 text-align: center;
             }
-        </style>".to_string()
+        </style>"
+        .to_string()
 }

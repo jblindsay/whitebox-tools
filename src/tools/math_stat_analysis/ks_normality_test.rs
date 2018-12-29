@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 2, 2018
@@ -400,14 +400,16 @@ impl WhiteboxTool for KSTestForNormality {
             &format!(
                 "<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>",
                 dmax
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
                     "<strong>Significance (p-value)</strong>: {:.4}<br>",
                     p_value
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
         } else {
             writer.write_all(

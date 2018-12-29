@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay and Kevin Roberts
 Created: 24/10/2018
@@ -290,10 +290,11 @@ impl WhiteboxTool for LidarClassifySubset {
             kdtree.add([p.x, p.y, p.z], i).unwrap();
         }
 
-        let tolerance = 2f64 * base_lidar
-            .header
-            .x_scale_factor
-            .max(subset_lidar.header.x_scale_factor);
+        let tolerance = 2f64
+            * base_lidar
+                .header
+                .x_scale_factor
+                .max(subset_lidar.header.x_scale_factor);
 
         // now output the data
         let mut output = LasFile::initialize_using_file(&output_file, &base_lidar);

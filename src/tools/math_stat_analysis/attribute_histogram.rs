@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
@@ -84,7 +84,8 @@ impl AttributeHistogram {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lakes.shp --field=HEIGHT -o=outfile.html",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         AttributeHistogram {
             name: name,

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22 2017
@@ -22,7 +22,7 @@ use std::path;
 /// tool.
 ///
 /// # References
-/// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
+/// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
 /// neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
 ///
 /// # See Also
@@ -75,7 +75,8 @@ impl EuclideanAllocation {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         EuclideanAllocation {
             name: name,
@@ -334,9 +335,11 @@ impl WhiteboxTool for EuclideanAllocation {
             println!("Saving data...")
         };
         let _ = match allocation.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

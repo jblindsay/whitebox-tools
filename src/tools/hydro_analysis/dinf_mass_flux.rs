@@ -1,11 +1,11 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 29, 2017
 Last Modified: 12/10/2018
 License: MIT
 
-Notes: Assumes that each of the three input rasters have the same number of rows and 
+Notes: Assumes that each of the three input rasters have the same number of rows and
        columns and that any nodata cells present are the same among each of the inputs.
 */
 
@@ -274,14 +274,7 @@ impl WhiteboxTool for DInfMassFlux {
                 let mut e0: f64;
                 let mut af: f64;
                 let mut ac: f64;
-                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                );
+                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
 
                 let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
                 let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
@@ -640,9 +633,11 @@ impl WhiteboxTool for DInfMassFlux {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

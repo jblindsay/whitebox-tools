@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 21, 2018
@@ -453,7 +453,8 @@ impl WhiteboxTool for LongProfileFromPoints {
             (format!(
                 "<p><strong>Input DEM</strong>: {}<br>",
                 dem.get_short_filename()
-            )).as_bytes(),
+            ))
+            .as_bytes(),
         )?;
 
         writer.write_all(("</p>").as_bytes())?;

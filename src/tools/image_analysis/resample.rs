@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 1 2018
@@ -485,9 +485,11 @@ impl WhiteboxTool for Resample {
             println!("Saving data...")
         };
         let _ = match destination.write() {
-            Ok(_) => if verbose {
-                println!("Destination file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Destination file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

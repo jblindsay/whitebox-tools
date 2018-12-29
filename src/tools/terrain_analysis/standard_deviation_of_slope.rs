@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Anthony Francioni
 Created: May 26, 2018
@@ -99,7 +99,8 @@ impl StandardDeviationOfSlope {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         StandardDeviationOfSlope {
             name: name,

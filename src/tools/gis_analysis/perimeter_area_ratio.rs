@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/09/2018
@@ -65,7 +65,8 @@ impl PerimeterAreaRatio {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=polygons.shp",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         PerimeterAreaRatio {
             name: name,
@@ -231,9 +232,11 @@ impl WhiteboxTool for PerimeterAreaRatio {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

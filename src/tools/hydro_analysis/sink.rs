@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 1, 2017
@@ -198,7 +198,7 @@ impl WhiteboxTool for Sink {
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently
-        have nodata edges, whereby the DEM does not occupy the full extent of 
+        have nodata edges, whereby the DEM does not occupy the full extent of
         the raster. One approach to doing this would be simply to scan the
         raster, looking for cells that neighbour nodata values. However, this
         assumes that there are no interior nodata holes in the dataset. Instead,
@@ -223,7 +223,7 @@ impl WhiteboxTool for Sink {
             queue.push_back((rows, col));
         }
 
-        /* 
+        /*
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
         in a significant performance gain over the use of f64s.
@@ -373,9 +373,11 @@ impl WhiteboxTool for Sink {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

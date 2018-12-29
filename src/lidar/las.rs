@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/01/2017
@@ -7,16 +7,14 @@ License: MIT
 */
 
 #![allow(dead_code, unused_assignments)]
-use chrono::prelude::*;
-use zip::read::{ZipArchive, ZipFile};
-use zip::result::ZipResult;
-use zip::write::{FileOptions, ZipWriter};
-use zip::CompressionMethod;
-use crate::utils::{ByteOrderReader, Endianness};
 use super::header::LasHeader;
 use super::point_data::{ColourData, PointData, WaveformPacket};
 use super::vlr::Vlr;
 use crate::raster::geotiff::geokeys::GeoKeys;
+use crate::spatial_ref_system::esri_wkt_from_epsg;
+use crate::structures::BoundingBox;
+use crate::utils::{ByteOrderReader, Endianness};
+use chrono::prelude::*;
 use std::f64;
 use std::fmt;
 use std::fs;
@@ -29,8 +27,10 @@ use std::mem;
 use std::ops::Index;
 use std::path::Path;
 use std::str;
-use crate::structures::BoundingBox;
-use crate::spatial_ref_system::esri_wkt_from_epsg;
+use zip::read::{ZipArchive, ZipFile};
+use zip::result::ZipResult;
+use zip::write::{FileOptions, ZipWriter};
+use zip::CompressionMethod;
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -510,7 +510,7 @@ impl LasFile {
                 }
                 match f.compression() {
                     CompressionMethod::Stored | CompressionMethod::Deflated | CompressionMethod::Bzip2 => (),
-                    _ => return Err(Error::new(ErrorKind::InvalidData, 
+                    _ => return Err(Error::new(ErrorKind::InvalidData,
                     "Either the file is formatted incorrectly or it is an unsupported compression type.")),
                 }
                 let file_size: usize = f.size() as usize;
@@ -525,11 +525,11 @@ impl LasFile {
             }
         };
 
-        if buffer.len() < 375 { 
+        if buffer.len() < 375 {
             // The buffer is less than the header size. This is a sign
             // that there is something wrong with the file. Issue an error
-            return Err(Error::new(ErrorKind::InvalidData, 
-                    format!("The file {} appears to be formatted incorrectly. Buffer size is smaller than the LAS header size.", self.get_short_filename())))
+            return Err(Error::new(ErrorKind::InvalidData,
+                    format!("The file {} appears to be formatted incorrectly. Buffer size is smaller than the LAS header size.", self.get_short_filename())));
         }
 
         self.header.project_id_used = true;
@@ -651,12 +651,15 @@ impl LasFile {
                 } else if vlr.record_id == 34_737 {
                     self.geokeys.add_ascii_params(&vlr.binary_data);
                 } else if vlr.record_id == 2112 {
-                    let skip = if vlr.binary_data[vlr.binary_data.len()-1] == 0u8 {
+                    let skip = if vlr.binary_data[vlr.binary_data.len() - 1] == 0u8 {
                         1
                     } else {
                         0
                     };
-                    self.wkt = String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len()-skip]).trim().to_string();
+                    self.wkt =
+                        String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len() - skip])
+                            .trim()
+                            .to_string();
                 }
                 self.vlr_data.push(vlr);
             }

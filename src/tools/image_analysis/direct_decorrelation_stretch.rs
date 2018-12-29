@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 21, 2017
@@ -86,7 +86,8 @@ impl DirectDecorrelationStretch {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=image.tif -o=output.tif -k=0.4",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         DirectDecorrelationStretch {
             name: name,
@@ -305,7 +306,8 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                         data_b,
                         histo_blue,
                         num_cells,
-                    )).unwrap();
+                    ))
+                    .unwrap();
                 }
             });
         }

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/05/2018
@@ -439,7 +439,8 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             </head>
             <body>
                 <h1>Trend Surface Analysis Report</h1>
-                "#.as_bytes(),
+                "#
+            .as_bytes(),
         )?;
 
         writer.write_all((format!("<p><strong>Input</strong>: {}</p>", input_file)).as_bytes())?;
@@ -582,9 +583,11 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

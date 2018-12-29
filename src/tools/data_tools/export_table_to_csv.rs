@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/04/2018
@@ -83,7 +83,8 @@ impl ExportTableToCsv {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lines.shp -o=output.csv --headers",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ExportTableToCsv {
             name: name,

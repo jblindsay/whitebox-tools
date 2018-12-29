@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
@@ -65,7 +65,8 @@ impl ToDegrees {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ToDegrees {
             name: name,
@@ -225,9 +226,11 @@ impl WhiteboxTool for ToDegrees {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

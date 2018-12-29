@@ -9,6 +9,7 @@ License: MIT
 use crate::raster::*;
 use crate::tools::*;
 use num_cpus;
+use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -16,16 +17,15 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::cmp::Ordering::Equal;
 
 /// This tool calculates the root-mean-square-error (RMSE) or root-mean-square-difference (RMSD) from two
-/// input rasters. If the two input rasters possess the same number of rows and columns, the RMSE is 
+/// input rasters. If the two input rasters possess the same number of rows and columns, the RMSE is
 /// calucated on a cell-by-cell basis, otherwise bilinear resampling is used. In addition to RMSE,
 /// the tool also reports other common accuracy statistics including the mean verical error, the
-/// 95% confidence limit (RMSE x 1.96), and the 90% linear error (LE90), which is the 90% percentile of 
-/// the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy 
+/// 95% confidence limit (RMSE x 1.96), and the 90% linear error (LE90), which is the 90% percentile of
+/// the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy
 /// statistics when the residuals are non-Gaussian. The LE90 requires sorting the residual values, which
-/// can be a relatively slow operation for larger rasters. 
+/// can be a relatively slow operation for larger rasters.
 pub struct RootMeanSquareError {
     name: String,
     description: String,
@@ -194,8 +194,8 @@ impl WhiteboxTool for RootMeanSquareError {
 
         // let num_valid_cells = input.num_valid_cells();
         // the 90th percentile lies at the bottom of the top 10% highest absolute residual values.
-        // let target_num_cells = (0.1 * num_valid_cells as f64) as usize; 
-        
+        // let target_num_cells = (0.1 * num_valid_cells as f64) as usize;
+
         if base_raster.configs.rows as isize == rows
             && base_raster.configs.columns as isize == columns
         {
@@ -371,6 +371,7 @@ impl WhiteboxTool for RootMeanSquareError {
                                     n += 1;
                                     s += z_diff;
                                     sq += z_diff * z_diff;
+                                    data.push(z_diff.abs() as f32);
                                 }
                             }
                         }

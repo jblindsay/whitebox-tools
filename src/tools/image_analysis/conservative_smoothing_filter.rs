@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
@@ -85,7 +85,8 @@ impl ConservativeSmoothingFilter {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ConservativeSmoothingFilter {
             name: name,
@@ -396,9 +397,11 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

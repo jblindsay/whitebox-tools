@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/06/2017
@@ -651,9 +651,11 @@ impl WhiteboxTool for LidarGroundPointFilter {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Complete!")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

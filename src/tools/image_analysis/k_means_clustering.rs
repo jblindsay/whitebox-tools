@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 27, 2017
@@ -631,9 +631,11 @@ impl WhiteboxTool for KMeansClustering {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {
@@ -673,7 +675,8 @@ impl WhiteboxTool for KMeansClustering {
                         "<strong>Image {}</strong>: {}<br>",
                         i + 1,
                         input_files[i].clone()
-                    ).as_bytes(),
+                    )
+                    .as_bytes(),
                 )?;
             }
             writer.write_all(
@@ -686,7 +689,8 @@ impl WhiteboxTool for KMeansClustering {
                 &format!(
                     "<strong>Percent change threshold</strong>: {:.3}%<br>",
                     percent_changed_threshold
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             writer.write_all(
                 &format!("<strong>Min. cluster size</strong>: {}<br>", min_class_size).as_bytes(),
@@ -719,7 +723,8 @@ impl WhiteboxTool for KMeansClustering {
                         "<tr><td>{}</td><td class=\"numberCell\">{}</td></tr>",
                         a + 1,
                         class_n[a]
-                    ).as_bytes(),
+                    )
+                    .as_bytes(),
                 )?;
             }
             writer.write_all("</table></p>".as_bytes())?;

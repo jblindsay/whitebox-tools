@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 19, 2017
@@ -186,17 +186,19 @@ impl WhiteboxTool for FlightlineOverlap {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
-                        )
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".las", ".tif")
+                                    .replace(".LAS", ".tif"),
+                            )
+                        }
                     }
-                },
+                }
             }
         } else {
             inputs.push(input_file.clone());

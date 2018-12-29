@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 15, 2017
@@ -68,7 +68,8 @@ impl SplitColourComposite {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         SplitColourComposite {
             name: name,
@@ -254,9 +255,11 @@ impl WhiteboxTool for SplitColourComposite {
             println!("Saving red image...")
         };
         let _ = match output_r.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -270,9 +273,11 @@ impl WhiteboxTool for SplitColourComposite {
             println!("Saving green image...")
         };
         let _ = match output_g.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -286,9 +291,11 @@ impl WhiteboxTool for SplitColourComposite {
             println!("Saving blue image...")
         };
         let _ = match output_b.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 2, 2018
@@ -81,7 +81,8 @@ impl RandomSample {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --base=in.tif -o=out.tif --num_samples=1000",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RandomSample {
             name: name,

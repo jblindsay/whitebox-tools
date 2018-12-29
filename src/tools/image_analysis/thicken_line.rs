@@ -1,11 +1,11 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
 Last Modified: 13/10/2018
 License: MIT
 
-NOTE: This algorithm can't easily be parallelized because the output raster must be read 
+NOTE: This algorithm can't easily be parallelized because the output raster must be read
 and written to during the same loop.
 */
 
@@ -64,7 +64,8 @@ impl ThickenRasterLine {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ThickenRasterLine {
             name: name,
@@ -233,9 +234,11 @@ impl WhiteboxTool for ThickenRasterLine {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

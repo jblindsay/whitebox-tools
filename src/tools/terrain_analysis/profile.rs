@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 21, 2018
@@ -222,12 +222,7 @@ impl WhiteboxTool for Profile {
         let mut series_names = vec![];
         // let (mut x_st, mut x_end, mut y_st, mut y_end): (f64, f64, f64, f64);
         // let (mut col_st, mut col_end, mut row_st, mut row_end): (f64, f64, f64, f64);
-        let (mut st_row, mut st_col, mut end_row, mut end_col): (
-            isize,
-            isize,
-            isize,
-            isize,
-        );
+        let (mut st_row, mut st_col, mut end_row, mut end_col): (isize, isize, isize, isize);
         let mut start_point_in_part: usize;
         let mut end_point_in_part: usize;
         let (mut row, mut col): (isize, isize);
@@ -334,7 +329,8 @@ impl WhiteboxTool for Profile {
             (format!(
                 "<p><strong>Input Surface</strong>: {}<br>",
                 surface.get_short_filename()
-            )).as_bytes(),
+            ))
+            .as_bytes(),
         )?;
 
         writer.write_all(("</p>").as_bytes())?;

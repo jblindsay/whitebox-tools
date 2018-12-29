@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 30, 2017
@@ -607,9 +607,11 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {
@@ -649,7 +651,8 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                         "<strong>Image {}</strong>: {}<br>",
                         i + 1,
                         input_files[i].clone()
-                    ).as_bytes(),
+                    )
+                    .as_bytes(),
                 )?;
             }
             writer.write_all(
@@ -662,13 +665,15 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 &format!(
                     "<strong>Percent change threshold</strong>: {:.3}%<br>",
                     percent_changed_threshold
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             writer.write_all(
                 &format!(
                     "<strong>Cluster merger distance</strong>: {}<br>",
                     merger_dist.sqrt()
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             // if initialization_mode == 0 {
             //     writer.write_all("<strong>Initialize method</strong>: random<br>".to_string().as_bytes())?;
@@ -690,7 +695,8 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                         "<tr><td>{}</td><td class=\"numberCell\">{}</td></tr>",
                         a + 1,
                         class_n[a]
-                    ).as_bytes(),
+                    )
+                    .as_bytes(),
                 )?;
             }
             writer.write_all("</table></p>".as_bytes())?;

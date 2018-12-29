@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/08/2018
@@ -315,12 +315,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
                 let i_n = i_n.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
+                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                     let mut n: i32;
                     let (mut mean, mut sum): (f64, f64);
                     let mut z: f64;

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
@@ -268,7 +268,8 @@ impl WhiteboxTool for BalanceContrastEnhancement {
                     b_e,
                     b_sqr_total,
                     num_pixels,
-                )).unwrap();
+                ))
+                .unwrap();
             });
         }
 

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 1, 2018
@@ -243,7 +243,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         (format!(
                             "<p><strong>Input DEM</strong>: {}",
                             input.get_short_filename()
-                        )).as_bytes(),
+                        ))
+                        .as_bytes(),
                     )?;
                 }
                 let rows = input.configs.rows as isize;
@@ -386,7 +387,8 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                         (format!(
                             "<p><strong>Input DEM</strong>: {}",
                             input.get_short_filename()
-                        )).as_bytes(),
+                        ))
+                        .as_bytes(),
                     )?;
                 }
                 let rows = input.configs.rows as isize;

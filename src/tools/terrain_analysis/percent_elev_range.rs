@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
@@ -84,7 +84,8 @@ impl PercentElevRange {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         PercentElevRange {
             name: name,
@@ -360,9 +361,11 @@ impl WhiteboxTool for PercentElevRange {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

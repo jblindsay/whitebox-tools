@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 8/11/2018
@@ -891,12 +891,12 @@ impl WhiteboxTool for Difference {
 
                             let num_endnodes = polylines.len() * 2;
                             /*
-                            The structure of endnodes is as such:
-                            1. the starting node for polyline 'a' is a * 2.
-                            2. the ending node for polyline 'a' is a * 2 + 1.
-                            3. endnode to polyline = e / 2
-                            4. is an endnode a starting point? e % 2 == 0
-                        */
+                                The structure of endnodes is as such:
+                                1. the starting node for polyline 'a' is a * 2.
+                                2. the ending node for polyline 'a' is a * 2 + 1.
+                                3. endnode to polyline = e / 2
+                                4. is an endnode a starting point? e % 2 == 0
+                            */
                             let mut endnodes: Vec<Vec<usize>> = vec![vec![]; num_endnodes];
 
                             // now add the endpoints of each polyline into a kd tree
@@ -1081,12 +1081,8 @@ impl WhiteboxTool for Difference {
                             let mut num_neighbours: usize;
                             let mut existing_polygons = HashSet::new();
                             let mut existing_hull = HashSet::new();
-                            let mut feature_geometries: Vec<
-                                ShapefileGeometry,
-                            > = vec![];
-                            let mut hull_geometries: Vec<
-                                ShapefileGeometry,
-                            > = vec![];
+                            let mut feature_geometries: Vec<ShapefileGeometry> = vec![];
+                            let mut hull_geometries: Vec<ShapefileGeometry> = vec![];
                             let mut p: Point2D;
                             let mut max_val: f64;
                             let mut max_val_index: usize;
@@ -1175,12 +1171,8 @@ impl WhiteboxTool for Difference {
 
                                     if target_found {
                                         // traverse from the target to the source
-                                        let mut lines: Vec<
-                                            usize,
-                                        > = vec![];
-                                        let mut backlinks: Vec<
-                                        usize,
-                                    > = vec![];
+                                        let mut lines: Vec<usize> = vec![];
+                                        let mut backlinks: Vec<usize> = vec![];
                                         k = target_node;
                                         num_vertices = 0;
                                         while k != source_node {
@@ -1198,9 +1190,8 @@ impl WhiteboxTool for Difference {
                                         // join the lines
                                         lines.reverse();
                                         backlinks.reverse();
-                                        let mut vertices: Vec<
-                                        Point2D,
-                                    > = Vec::with_capacity(num_vertices);
+                                        let mut vertices: Vec<Point2D> =
+                                            Vec::with_capacity(num_vertices);
                                         for a in 0..lines.len() {
                                             let pl = lines[a];
                                             let mut v = (polylines[pl].vertices).clone();
@@ -1446,9 +1437,7 @@ impl WhiteboxTool for Difference {
 
                                         if target_found {
                                             // traverse from the target to the source
-                                            let mut lines: Vec<
-                                            usize,
-                                        > = vec![];
+                                            let mut lines: Vec<usize> = vec![];
                                             let mut backlinks: Vec<usize> = vec![];
                                             k = target_node;
                                             num_vertices = 0;
@@ -1467,7 +1456,8 @@ impl WhiteboxTool for Difference {
                                             // join the lines and then output the polygon
                                             lines.reverse();
                                             backlinks.reverse();
-                                            let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
+                                            let mut vertices: Vec<Point2D> =
+                                                Vec::with_capacity(num_vertices);
                                             for a in 0..lines.len() {
                                                 let pl = lines[a];
                                                 let mut v = (polylines[pl].vertices).clone();
@@ -1721,9 +1711,11 @@ impl WhiteboxTool for Difference {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

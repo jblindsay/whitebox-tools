@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
@@ -66,7 +66,8 @@ impl FillSingleCellPits {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=NewRaster.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         FillSingleCellPits {
             name: name,

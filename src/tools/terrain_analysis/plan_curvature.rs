@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 1, 2017
@@ -77,7 +77,8 @@ impl PlanCurvature {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         PlanCurvature {
             name: name,
@@ -264,7 +265,8 @@ impl WhiteboxTool for PlanCurvature {
                             if p > 0.0f64 {
                                 data[col as usize] = ((zxx * zy2 - 2.0f64 * zxy * zx * zy
                                     + zyy * zx2)
-                                    / p.powf(1.5f64)).to_degrees()
+                                    / p.powf(1.5f64))
+                                .to_degrees()
                                     * 100f64;
                             }
                         }
@@ -303,9 +305,11 @@ impl WhiteboxTool for PlanCurvature {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

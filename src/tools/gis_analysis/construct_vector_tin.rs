@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
@@ -97,7 +97,8 @@ impl ConstructVectorTIN {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --field=HEIGHT -o=tin.shp
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=points.shp --use_z -o=tin.shp",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ConstructVectorTIN {
             name: name,
@@ -367,7 +368,8 @@ impl WhiteboxTool for ConstructVectorTIN {
                     if fx != 0f64 {
                         tan_slope = (fx * fx + fy * fy).sqrt();
                         aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                            + 90f64 * (fx / (fx).abs())).to_radians();
+                            + 90f64 * (fx / (fx).abs()))
+                        .to_radians();
                         term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                         term2 = sin_theta / tan_slope;
                         term3 = cos_theta * (azimuth - aspect).sin();
@@ -410,9 +412,11 @@ impl WhiteboxTool for ConstructVectorTIN {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

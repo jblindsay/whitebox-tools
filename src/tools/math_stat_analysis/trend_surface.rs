@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/04/2018
@@ -92,7 +92,8 @@ impl TrendSurface {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o='output.tif' --order=2",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         TrendSurface {
             name: name,
@@ -334,7 +335,8 @@ impl WhiteboxTool for TrendSurface {
             </head>
             <body>
                 <h1>Trend Surface Analysis Report</h1>
-                "#.as_bytes(),
+                "#
+            .as_bytes(),
         )?;
 
         writer.write_all((format!("<p><strong>Input</strong>: {}</p>", input_file)).as_bytes())?;
@@ -478,9 +480,11 @@ impl WhiteboxTool for TrendSurface {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

@@ -1,12 +1,12 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
 Last Modified: 12/10/2018
 License: MIT
 
-Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal 
-methods for flow path enforcement in digital elevation models. Hydrological Processes, 
+Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal
+methods for flow path enforcement in digital elevation models. Hydrological Processes,
 30(6): 846–857. DOI: 10.1002/hyp.10648
 */
 
@@ -32,7 +32,7 @@ use std::path;
 ///
 /// It uses a breach-first, fill-second approach.
 ///
-/// # See Also:
+/// # See Also
 /// `FillDepressions`
 pub struct BreachDepressions {
     name: String,
@@ -101,7 +101,8 @@ impl BreachDepressions {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         BreachDepressions {
             name: name,
@@ -251,7 +252,7 @@ impl WhiteboxTool for BreachDepressions {
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently
-        have nodata edges, whereby the DEM does not occupy the full extent of 
+        have nodata edges, whereby the DEM does not occupy the full extent of
         the raster. One approach to doing this would be simply to scan the
         raster, looking for cells that neighbour nodata values. However, this
         assumes that there are no interior nodata holes in the dataset. Instead,
@@ -276,7 +277,7 @@ impl WhiteboxTool for BreachDepressions {
             queue.push_back((rows, col));
         }
 
-        /* 
+        /*
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
         in a significant performance gain over the use of f64s.
@@ -523,9 +524,11 @@ impl WhiteboxTool for BreachDepressions {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
@@ -303,7 +303,7 @@ impl WhiteboxTool for ReclassFromFile {
             // create a hashmap to hold the assign values
             // the key is the old_value and the value is the new_value.
             /* Note: Rust doesn't support using HashMaps with floating-point keys because it is unsafe.
-                NaN != NaN and due to rounding errors sometimes 0.1 ! = 0.1. To deal with this, we apply 
+                NaN != NaN and due to rounding errors sometimes 0.1 ! = 0.1. To deal with this, we apply
                 a multiplier of 10000 and convert to an i64.
             */
             let multiplier = 10000f64;
@@ -368,9 +368,11 @@ impl WhiteboxTool for ReclassFromFile {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

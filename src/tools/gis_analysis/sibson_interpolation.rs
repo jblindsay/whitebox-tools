@@ -35,7 +35,7 @@ use vector::*;
 /// diagram, of each grid intersection. Weights are determined by the captured area by the Voronoi cell
 /// that is created when the grid intersection is inserted into the point set.
 ///
-/// # See Also:
+/// # See Also
 /// 'VoronoiDiagram`, LidarTINGridding, ConstructVectorTIN
 pub struct SibsonInterpolation {
     name: String,

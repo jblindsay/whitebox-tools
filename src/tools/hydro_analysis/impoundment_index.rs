@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/05/2018
@@ -214,8 +214,8 @@ impl WhiteboxTool for ImpoundmentIndex {
 
         /*
         There are three stages to the calculation of the impoundment index:
-        
-        1. Calculate the dam height. This involves examining the various 
+
+        1. Calculate the dam height. This involves examining the various
         topographic profiles centred on each grid cell in the DEM (oriented
         in each of the cardinal directions) and determining the largest
         dam feature, of a user-specified length, that can be built through
@@ -225,7 +225,7 @@ impl WhiteboxTool for ImpoundmentIndex {
         the number of inflowing neighbours, and the maximum downstream dam elevation.
 
         3. A flow-path tracing operation is used for the flow accumulation. This
-        operation calculates the number of upslope grid cells that are less 
+        operation calculates the number of upslope grid cells that are less
         than the calculated dam height.
         */
 
@@ -244,7 +244,7 @@ impl WhiteboxTool for ImpoundmentIndex {
         let grid_area = input.configs.resolution_x * input.configs.resolution_y;
 
         // Calculate dam heights
-        /* 
+        /*
         Each cell will be assigned the altitude (ASL) of the highest dam that
         passes through the cell. Potential dams are calculated for each
         grid cell in the N-S, NE-SW, E-W, SE-NW directions.
@@ -381,12 +381,12 @@ impl WhiteboxTool for ImpoundmentIndex {
         The following steps are part of a priority flood operation. This operation serves
         several purposes. First, it is used to calculate the flow directions and number
         of inflowing neighbourings for each grid cell. These are useful during the index
-        calculation, which is essentially a flow accumulation operation that progresses as 
+        calculation, which is essentially a flow accumulation operation that progresses as
         a flow-path tracing operation from the divide cells downstream. Secondly, the priority
-        flood operation is useful for calculating the maximum downstream dam height, stored in 
+        flood operation is useful for calculating the maximum downstream dam height, stored in
         the filled_dem Array2D. These data serve as the 'cutoff_z' variable in the calculation
         of the index. Elevation values contained within the accumulated elevation list that are
-        less than the cuttoff_z for a grid cell are propagated to the next downstream cell. 
+        less than the cuttoff_z for a grid cell are propagated to the next downstream cell.
         That is, the dam elevation at a cell determines which upslope cells are within the
         flooded area, and the maximum downstream dam elevation determines which upstream cells
         are accumulated downstream. Because a downstream dam elevation may actually be higher
@@ -530,7 +530,7 @@ impl WhiteboxTool for ImpoundmentIndex {
             }
         }
 
-        /* 
+        /*
         Perform the index calculation. This is essentially a downstream-directed flow-path
         tracing and accumulation operation that begins at the divides and ends at outlets.
         Divides are cells with no inflowing neighbours. A flow-path continues downstream
@@ -660,9 +660,11 @@ impl WhiteboxTool for ImpoundmentIndex {
             println!("Saving index data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -684,9 +686,11 @@ impl WhiteboxTool for ImpoundmentIndex {
             println!("Saving dam height data...")
         };
         let _ = match output_hgt.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

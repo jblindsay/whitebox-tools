@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/10/2018
@@ -82,7 +82,8 @@ impl RasterToVectorLines {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=lines.tif -o=lines.shp",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RasterToVectorLines {
             name: name,
@@ -371,10 +372,8 @@ impl WhiteboxTool for RasterToVectorLines {
 
                         // find the highest unvisited neighbour
                         let mut highest = 0i8;
-                        let mut other_unvisited_neighbours: Vec<(
-                            isize,
-                            isize,
-                        )> = Vec::with_capacity(9);
+                        let mut other_unvisited_neighbours: Vec<(isize, isize)> =
+                            Vec::with_capacity(9);
                         r = 0isize;
                         c = 0isize;
                         for i in 0..8 {
@@ -438,9 +437,11 @@ impl WhiteboxTool for RasterToVectorLines {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

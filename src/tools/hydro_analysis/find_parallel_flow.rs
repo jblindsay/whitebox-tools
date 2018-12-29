@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
@@ -76,7 +76,8 @@ impl FindParallelFlow {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --d8_pntr=pointer.tif -o=out.tif --streams='streams.tif'",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         FindParallelFlow {
             name: name,

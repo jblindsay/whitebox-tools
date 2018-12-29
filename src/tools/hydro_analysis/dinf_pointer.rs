@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
@@ -68,7 +68,8 @@ impl DInfPointer {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         DInfPointer {
             name: name,
@@ -195,14 +196,7 @@ impl WhiteboxTool for DInfPointer {
                 let mut e0: f64;
                 let mut af: f64;
                 let mut ac: f64;
-                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                    f64,
-                );
+                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
 
                 let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
                 let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
@@ -334,9 +328,11 @@ impl WhiteboxTool for DInfPointer {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

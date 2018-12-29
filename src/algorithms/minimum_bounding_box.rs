@@ -1,4 +1,4 @@
-/* 
+/*
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/09/2018

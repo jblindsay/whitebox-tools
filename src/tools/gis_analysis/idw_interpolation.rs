@@ -1,9 +1,20 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/05/2018
 Last Modified: 13/10/2018
 License: MIT
+
+Most IDW tool have the option to work either based on a fixed number of neighbouring
+/// points or a fixed neighbourhood size. This tool is currently configured to perform the later
+/// only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require
+/// use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance
+/// does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
+/// other options here.
+///
+/// Another change that will need to be implemented is the use of a nodal function. The original
+/// Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the
+/// former.
 */
 
 use crate::raster::*;
@@ -20,17 +31,6 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool interpolates vector points into a raster surface using an inverse-distance weighted scheme.
-///
-/// Most IDW tool have the option to work either based on a fixed number of neighbouring
-/// points or a fixed neighbourhood size. This tool is currently configured to perform the later
-/// only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require
-/// use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance
-/// does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
-/// other options here.
-///
-/// Another change that will need to be implemented is the use of a nodal function. The original
-/// Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the
-/// former.
 pub struct IdwInterpolation {
     name: String,
     description: String,
@@ -689,9 +689,11 @@ impl WhiteboxTool for IdwInterpolation {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

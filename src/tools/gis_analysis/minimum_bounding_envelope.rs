@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/09/2018
@@ -86,7 +86,8 @@ impl MinimumBoundingEnvelope {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.shp --features",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         MinimumBoundingEnvelope {
             name: name,
@@ -245,9 +246,11 @@ impl WhiteboxTool for MinimumBoundingEnvelope {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
         } else {
@@ -278,9 +281,11 @@ impl WhiteboxTool for MinimumBoundingEnvelope {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
         }

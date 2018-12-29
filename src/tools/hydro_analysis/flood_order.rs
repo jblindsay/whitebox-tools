@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
@@ -66,7 +66,8 @@ impl FloodOrder {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         FloodOrder {
             name: name,
@@ -189,7 +190,7 @@ impl WhiteboxTool for FloodOrder {
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently
-        have nodata edges, whereby the DEM does not occupy the full extent of 
+        have nodata edges, whereby the DEM does not occupy the full extent of
         the raster. One approach to doing this would be simply to scan the
         raster, looking for cells that neighbour nodata values. However, this
         assumes that there are no interior nodata holes in the dataset. Instead,
@@ -214,7 +215,7 @@ impl WhiteboxTool for FloodOrder {
             queue.push_back((rows, col));
         }
 
-        /* 
+        /*
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
         in a significant performance gain over the use of f64s.
@@ -319,9 +320,11 @@ impl WhiteboxTool for FloodOrder {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

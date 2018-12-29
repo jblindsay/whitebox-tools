@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 22, 2017
@@ -76,7 +76,8 @@ impl ProfileCurvature {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ProfileCurvature {
             name: name,
@@ -264,7 +265,8 @@ impl WhiteboxTool for ProfileCurvature {
                             if p > 0.0f64 {
                                 data[col as usize] =
                                     ((zxx * zx2 + 2.0f64 * zxy * zx * zy + zyy * zy2)
-                                        / (p * q.powf(1.5f64))).to_degrees()
+                                        / (p * q.powf(1.5f64)))
+                                    .to_degrees()
                                         * 100f64;
                             }
                         }
@@ -303,9 +305,11 @@ impl WhiteboxTool for ProfileCurvature {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

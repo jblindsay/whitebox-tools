@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 8/11/2018
@@ -848,11 +848,13 @@ impl WhiteboxTool for Intersect {
                                             // where the vertex before it or after it are not neighbouring the
                                             // same poly.
                                             dist1 = (polygons[i][j - 1]
-                                                .distance(&polygons[id][jn - 1])).min(
+                                                .distance(&polygons[id][jn - 1]))
+                                            .min(
                                                 polygons[i][j - 1].distance(&polygons[id][jn + 1]),
                                             );
                                             dist2 = (polygons[i][j + 1]
-                                                .distance(&polygons[id][jn - 1])).min(
+                                                .distance(&polygons[id][jn - 1]))
+                                            .min(
                                                 polygons[i][j + 1].distance(&polygons[id][jn + 1]),
                                             );
                                             if dist1 > precision || dist2 > precision {
@@ -1156,13 +1158,9 @@ impl WhiteboxTool for Intersect {
                             let mut num_neighbours: usize;
                             let mut existing_polygons = HashSet::new();
                             let mut existing_hull = HashSet::new();
-                            let mut feature_geometries: Vec<
-                                ShapefileGeometry,
-                            > = vec![];
+                            let mut feature_geometries: Vec<ShapefileGeometry> = vec![];
                             let mut overlay_poly_id: Vec<usize> = vec![];
-                            let mut hull_geometries: Vec<
-                                ShapefileGeometry,
-                            > = vec![];
+                            let mut hull_geometries: Vec<ShapefileGeometry> = vec![];
                             let mut p: Point2D;
                             let mut max_val: f64;
                             let mut max_val_index: usize;
@@ -1251,12 +1249,8 @@ impl WhiteboxTool for Intersect {
 
                                     if target_found {
                                         // traverse from the target to the source
-                                        let mut lines: Vec<
-                                            usize,
-                                        > = vec![];
-                                        let mut backlinks: Vec<
-                                        usize,
-                                    > = vec![];
+                                        let mut lines: Vec<usize> = vec![];
+                                        let mut backlinks: Vec<usize> = vec![];
                                         k = target_node;
                                         num_vertices = 0;
                                         while k != source_node {
@@ -1274,9 +1268,8 @@ impl WhiteboxTool for Intersect {
                                         // join the lines
                                         lines.reverse();
                                         backlinks.reverse();
-                                        let mut vertices: Vec<
-                                        Point2D,
-                                    > = Vec::with_capacity(num_vertices);
+                                        let mut vertices: Vec<Point2D> =
+                                            Vec::with_capacity(num_vertices);
                                         for a in 0..lines.len() {
                                             let pl = lines[a];
                                             let mut v = (polylines[pl].vertices).clone();
@@ -1513,9 +1506,7 @@ impl WhiteboxTool for Intersect {
 
                                         if target_found {
                                             // traverse from the target to the source
-                                            let mut lines: Vec<
-                                            usize,
-                                        > = vec![];
+                                            let mut lines: Vec<usize> = vec![];
                                             let mut backlinks: Vec<usize> = vec![];
                                             k = target_node;
                                             num_vertices = 0;
@@ -1534,7 +1525,8 @@ impl WhiteboxTool for Intersect {
                                             // join the lines and then output the polygon
                                             lines.reverse();
                                             backlinks.reverse();
-                                            let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
+                                            let mut vertices: Vec<Point2D> =
+                                                Vec::with_capacity(num_vertices);
                                             for a in 0..lines.len() {
                                                 let pl = lines[a];
                                                 let mut v = (polylines[pl].vertices).clone();
@@ -1783,9 +1775,11 @@ impl WhiteboxTool for Intersect {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

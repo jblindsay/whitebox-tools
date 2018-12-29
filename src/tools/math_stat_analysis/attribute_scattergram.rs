@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
@@ -356,13 +356,15 @@ impl WhiteboxTool for AttributeScattergram {
             &format!(
                 "<p><strong>X Field Name</strong>: {}</p>",
                 field_name_x.clone()
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
         writer.write_all(
             &format!(
                 "<p><strong>Y Field Name</strong>: {}</p>",
                 field_name_y.clone()
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
 
         let graph = Scattergram {

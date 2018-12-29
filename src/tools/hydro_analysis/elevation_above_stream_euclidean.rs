@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 11, 2018
@@ -351,9 +351,11 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
             println!("Saving data...")
         };
         let _ = match allocation.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

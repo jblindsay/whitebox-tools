@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 19, 2017
@@ -69,7 +69,8 @@ impl RasterHistogram {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.tif\" -o=outfile.html",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RasterHistogram {
             name: name,

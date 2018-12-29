@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 25, 2017
@@ -447,9 +447,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving intensity data...")
             };
             let _ = match output_i.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -464,9 +466,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving hue data...")
             };
             let _ = match output_h.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -483,9 +487,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving saturation data...")
             };
             let _ = match output_s.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -689,9 +695,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving intensity data...")
             };
             let _ = match output_i.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -708,9 +716,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving hue data...")
             };
             let _ = match output_h.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -727,9 +737,11 @@ impl WhiteboxTool for RgbToIhs {
                 println!("Saving saturation data...")
             };
             let _ = match output_s.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
             if verbose {

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/09/2018
@@ -69,7 +69,8 @@ impl RemovePolygonHoles {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=polygons.shp --output=no_holes.shp",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         RemovePolygonHoles {
             name: name,
@@ -233,9 +234,11 @@ impl WhiteboxTool for RemovePolygonHoles {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

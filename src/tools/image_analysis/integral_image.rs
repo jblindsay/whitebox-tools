@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
@@ -63,7 +63,8 @@ impl IntegralImage {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         IntegralImage {
             name: name,

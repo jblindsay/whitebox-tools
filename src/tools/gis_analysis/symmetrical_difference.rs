@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/11/2018
@@ -943,18 +943,12 @@ impl WhiteboxTool for SymmetricalDifference {
                                         // Instead, we're hunting for vertices with 1 neighbouring poly but
                                         // where the vertex before it or after it are not neighbouring the
                                         // same poly.
-                                        dist1 =
-                                            (polygons[i][j - 1].distance(&polygons[id][jn - 1]))
-                                                .min(
-                                                    polygons[i][j - 1]
-                                                        .distance(&polygons[id][jn + 1]),
-                                                );
-                                        dist2 =
-                                            (polygons[i][j + 1].distance(&polygons[id][jn - 1]))
-                                                .min(
-                                                    polygons[i][j + 1]
-                                                        .distance(&polygons[id][jn + 1]),
-                                                );
+                                        dist1 = (polygons[i][j - 1]
+                                            .distance(&polygons[id][jn - 1]))
+                                        .min(polygons[i][j - 1].distance(&polygons[id][jn + 1]));
+                                        dist2 = (polygons[i][j + 1]
+                                            .distance(&polygons[id][jn - 1]))
+                                        .min(polygons[i][j + 1].distance(&polygons[id][jn + 1]));
                                         if dist1 > precision || dist2 > precision {
                                             line_node[j] = true;
                                         }
@@ -1357,9 +1351,7 @@ impl WhiteboxTool for SymmetricalDifference {
                                 if target_found {
                                     // traverse from the target to the source
                                     let mut lines: Vec<usize> = vec![];
-                                    let mut backlinks: Vec<
-                                        usize,
-                                    > = vec![];
+                                    let mut backlinks: Vec<usize> = vec![];
                                     k = target_node;
                                     num_vertices = 0;
                                     while k != source_node {
@@ -1377,9 +1369,8 @@ impl WhiteboxTool for SymmetricalDifference {
                                     // join the lines
                                     lines.reverse();
                                     backlinks.reverse();
-                                    let mut vertices: Vec<
-                                        Point2D,
-                                    > = Vec::with_capacity(num_vertices);
+                                    let mut vertices: Vec<Point2D> =
+                                        Vec::with_capacity(num_vertices);
                                     for a in 0..lines.len() {
                                         let pl = lines[a];
                                         let mut v = (polylines[pl].vertices).clone();
@@ -1611,9 +1602,7 @@ impl WhiteboxTool for SymmetricalDifference {
 
                                     if target_found {
                                         // traverse from the target to the source
-                                        let mut lines: Vec<
-                                            usize,
-                                        > = vec![];
+                                        let mut lines: Vec<usize> = vec![];
                                         let mut backlinks: Vec<usize> = vec![];
                                         k = target_node;
                                         num_vertices = 0;
@@ -1632,7 +1621,8 @@ impl WhiteboxTool for SymmetricalDifference {
                                         // join the lines and then output the polygon
                                         lines.reverse();
                                         backlinks.reverse();
-                                        let mut vertices: Vec<Point2D> = Vec::with_capacity(num_vertices);
+                                        let mut vertices: Vec<Point2D> =
+                                            Vec::with_capacity(num_vertices);
                                         for a in 0..lines.len() {
                                             let pl = lines[a];
                                             let mut v = (polylines[pl].vertices).clone();
@@ -1922,9 +1912,11 @@ impl WhiteboxTool for SymmetricalDifference {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

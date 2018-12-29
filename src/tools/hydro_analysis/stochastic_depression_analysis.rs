@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/05/2018
@@ -386,12 +386,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                     let mut sum_n: i32;
                     let mut i_prev: f64;
                     let mut n_prev: i32;
-                    let (mut x1, mut x2, mut y1, mut y2): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
+                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                     let mut num_cells: i32;
 
                     for iteration_num in 0..n {
@@ -599,7 +594,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
 
                     /*
                     Find the data edges. This is complicated by the fact that DEMs frequently
-                    have nodata edges, whereby the DEM does not occupy the full extent of 
+                    have nodata edges, whereby the DEM does not occupy the full extent of
                     the raster. One approach to doing this would be simply to scan the
                     raster, looking for cells that neighbour nodata values. However, this
                     assumes that there are no interior nodata holes in the dataset. Instead,
@@ -624,7 +619,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                         queue.push_back((rows, col));
                     }
 
-                    /* 
+                    /*
                     minheap is the priority queue. Note that I've tested using integer-based
                     priority values, by multiplying the elevations, but this didn't result
                     in a significant performance gain over the use of f64s.

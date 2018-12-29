@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
@@ -303,25 +303,27 @@ impl WhiteboxTool for LidarTINGridding {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
-                        )
-                    } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-                        // assumes the zip file contains LAS data.
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".zip", ".tif")
-                                .replace(".ZIP", ".tif"),
-                        )
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".las", ".tif")
+                                    .replace(".LAS", ".tif"),
+                            )
+                        } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                            // assumes the zip file contains LAS data.
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".zip", ".tif")
+                                    .replace(".ZIP", ".tif"),
+                            )
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
@@ -607,12 +609,7 @@ impl WhiteboxTool for LidarTINGridding {
                     let num_triangles = result.triangles.len() / 3;
 
                     let (mut p1, mut p2, mut p3): (usize, usize, usize);
-                    let (mut top, mut bottom, mut left, mut right): (
-                        f64,
-                        f64,
-                        f64,
-                        f64,
-                    );
+                    let (mut top, mut bottom, mut left, mut right): (f64, f64, f64, f64);
 
                     let (mut top_row, mut bottom_row, mut left_col, mut right_col): (
                         isize,
@@ -623,11 +620,7 @@ impl WhiteboxTool for LidarTINGridding {
                     let mut tri_points: Vec<Point2D> = vec![Point2D::new(0f64, 0f64); 4];
                     let mut k: f64;
                     let mut norm: Vector3<f64>;
-                    let (mut a, mut b, mut c): (
-                        Vector3<f64>,
-                        Vector3<f64>,
-                        Vector3<f64>,
-                    );
+                    let (mut a, mut b, mut c): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
                     let (mut x, mut y): (f64, f64);
                     let mut zn: f64;
                     let mut i: usize;

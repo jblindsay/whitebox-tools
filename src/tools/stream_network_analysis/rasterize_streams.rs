@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 11, 2018
@@ -7,7 +7,7 @@ License: MIT
 
 Notes: This tool uses the algorithm described in:
 
-Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes 
+Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
 and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
 */
 
@@ -467,9 +467,11 @@ impl WhiteboxTool for RasterizeStreams {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

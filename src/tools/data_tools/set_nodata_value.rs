@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Sept. 10, 2017
@@ -82,7 +82,8 @@ impl SetNodataValue {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=in.tif -o=newRaster.tif --back_value=1.0",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         SetNodataValue {
             name: name,

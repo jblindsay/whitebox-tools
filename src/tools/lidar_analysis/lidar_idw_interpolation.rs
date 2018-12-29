@@ -1,11 +1,11 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 3, 2017
 Last Modified: 12/10/2018
 License: MIT
 
-NOTES: 
+NOTES:
 1. This tool is designed to work either by specifying a single input and output file or
    a working directory containing multiple input LAS files.
 2. Need to add the ability to exclude points based on max scan angle divation.
@@ -356,24 +356,26 @@ impl WhiteboxTool for LidarIdwInterpolation {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
-                        )
-                    } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".zip", ".tif")
-                                .replace(".ZIP", ".tif"),
-                        )
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".las", ".tif")
+                                    .replace(".LAS", ".tif"),
+                            )
+                        } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".zip", ".tif")
+                                    .replace(".ZIP", ".tif"),
+                            )
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {

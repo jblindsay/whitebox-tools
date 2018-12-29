@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay and Anthony Francioni
 Created: 06/09/2018
@@ -837,9 +837,11 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {
@@ -867,7 +869,7 @@ impl Normal {
          Note that this is actually not the angle between the vectors but
          rather the cosine of the angle between the vectors. This improves
          the performance considerably. Also note that we do not need to worry
-         about checking for division by zero here because 'c' will always be 
+         about checking for division by zero here because 'c' will always be
          non-zero and therefore the vector magnitude cannot be zero.
         */
         let denom = ((self.a * self.a + self.b * self.b + self.c * self.c)

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 18, 2017
@@ -304,13 +304,15 @@ impl WhiteboxTool for CrossTabulation {
             &format!(
                 "<p><strong>Image 1</strong> (columns): {}</p>",
                 input_file1.clone()
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
         writer.write_all(
             &format!(
                 "<p><strong>Image 2</strong> (rows): {}</p>",
                 input_file2.clone()
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
 
         // output the table.

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/05/2018
@@ -6,7 +6,7 @@ Last Modified: 12/10/2018
 License: MIT
 
 NOTES: This tool thins a LiDAR point cloud such that no more than one point exists within each grid cell of a
-superimposed grid of a user-specified resolution. When a cell contains more than one point in the input 
+superimposed grid of a user-specified resolution. When a cell contains more than one point in the input
 data set, the remaining point can be selected as the lowest, highest, first, last, or nearest the centre.
 This tools provides similar functionality to the ESRI Thin LAS (2D) and LasTools lasthin tools. If there is
 high variability in point density, consider using the LidarThinHighDesnity tool instead.

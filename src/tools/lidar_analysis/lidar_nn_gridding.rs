@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
@@ -331,25 +331,27 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
-                        )
-                    } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-                        // assumes the zip file contains LAS data.
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".zip", ".tif")
-                                .replace(".ZIP", ".tif"),
-                        )
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".las", ".tif")
+                                    .replace(".LAS", ".tif"),
+                            )
+                        } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                            // assumes the zip file contains LAS data.
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".zip", ".tif")
+                                    .replace(".ZIP", ".tif"),
+                            )
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {

@@ -1,19 +1,19 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 10, 2018
 Last Modified: 12/10/2018
 License: MIT
 
-Help: This tool can be used to calculate the viewshed (i.e. the visible area) from a 
-location (i.e. viewing station) or group of locations based on the topography defined 
-by an input digital elevation model (DEM). The user must specify the name of the input 
-DEM, a viewing station input vector file, the output file name, and the viewing height. 
-Viewing station locations are specified as points within an input shapefile. The output 
-image indicates the number of stations visible from each grid cell. The viewing height 
-is in the same units as the elevations of the DEM and represent a height above the ground 
-elevation from which the viewshed is calculated. Viewshed analysis is a very 
-computationally intensive task. Depending on the size of the input DEM grid and the 
+Help: This tool can be used to calculate the viewshed (i.e. the visible area) from a
+location (i.e. viewing station) or group of locations based on the topography defined
+by an input digital elevation model (DEM). The user must specify the name of the input
+DEM, a viewing station input vector file, the output file name, and the viewing height.
+Viewing station locations are specified as points within an input shapefile. The output
+image indicates the number of stations visible from each grid cell. The viewing height
+is in the same units as the elevations of the DEM and represent a height above the ground
+elevation from which the viewshed is calculated. Viewshed analysis is a very
+computationally intensive task. Depending on the size of the input DEM grid and the
 number of viewing stations, this operation may take considerable time to complete.
 */
 
@@ -672,9 +672,11 @@ impl WhiteboxTool for Viewshed {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

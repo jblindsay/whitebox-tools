@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: January 30, 2018
@@ -238,7 +238,8 @@ impl WhiteboxTool for HypsometricAnalysis {
                         (format!(
                             "<p><strong>Input DEM</strong>: {}",
                             input.get_short_filename()
-                        )).as_bytes(),
+                        ))
+                        .as_bytes(),
                     )?;
                 }
                 let rows = input.configs.rows as isize;
@@ -319,7 +320,8 @@ impl WhiteboxTool for HypsometricAnalysis {
                         (format!(
                             "<p><strong>Input DEM</strong>: {}",
                             input.get_short_filename()
-                        )).as_bytes(),
+                        ))
+                        .as_bytes(),
                     )?;
                 }
                 let rows = input.configs.rows as isize;

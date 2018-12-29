@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: August 15, 2017
@@ -83,7 +83,8 @@ impl CrispnessIndex {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -o=crispness.html",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         CrispnessIndex {
             name: name,
@@ -381,7 +382,8 @@ ranging from 0-1. The input image contains values outside this range. <em>Theref
             <td class=\"numberCell\">{}</td>
         </tr>",
                 format!("{:.*}", 4, total_dev)
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
 
         writer.write_all(
@@ -391,7 +393,8 @@ ranging from 0-1. The input image contains values outside this range. <em>Theref
             <td class=\"numberCell\">{}</td>
         </tr>",
                 format!("{:.*}", 4, denominator)
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
 
         writer.write_all(
@@ -401,7 +404,8 @@ ranging from 0-1. The input image contains values outside this range. <em>Theref
             <td class=\"numberCell\">{}</td>
         </tr>",
                 format!("{:.*}", 4, crispness)
-            ).as_bytes(),
+            )
+            .as_bytes(),
         )?;
 
         writer.write_all("</table>".as_bytes())?;

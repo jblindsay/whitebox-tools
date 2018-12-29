@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
@@ -76,7 +76,8 @@ impl FillDepressions {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --fix_flats",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         FillDepressions {
             name: name,
@@ -207,7 +208,7 @@ impl WhiteboxTool for FillDepressions {
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently
-        have nodata edges, whereby the DEM does not occupy the full extent of 
+        have nodata edges, whereby the DEM does not occupy the full extent of
         the raster. One approach to doing this would be simply to scan the
         raster, looking for cells that neighbour nodata values. However, this
         assumes that there are no interior nodata holes in the dataset. Instead,
@@ -232,7 +233,7 @@ impl WhiteboxTool for FillDepressions {
             queue.push_back((rows, col));
         }
 
-        /* 
+        /*
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
         in a significant performance gain over the use of f64s.
@@ -281,7 +282,7 @@ impl WhiteboxTool for FillDepressions {
             }
         }
 
-        /* 
+        /*
         The following code follows the scenario of a priority-flood method without the extra
         complication of an embedded region-growing operation for in-depression sites.
         */
@@ -330,8 +331,8 @@ impl WhiteboxTool for FillDepressions {
         This code uses a slightly more complex priority flood approach that uses an embedded
         region-growing operation for cells within depressions. It offers a slight speed up
         over the traditional approach, but I have noticed that sometimes it doesn't work
-        as expected. I'm not sure why and it would require some effort to track down the bug. 
-        Given that most DEMs have relatively few cells within depressions, the speed up of 
+        as expected. I'm not sure why and it would require some effort to track down the bug.
+        Given that most DEMs have relatively few cells within depressions, the speed up of
         this approach is perhaps not worthwhile and it is certainly more complex.
         */
         // // Perform the priority flood operation.
@@ -433,7 +434,6 @@ impl WhiteboxTool for FillDepressions {
         // the approach used here is to perform a region-growing operation, looking
         // for nodata values along the raster's edges.
         // */
-
         // //let mut stack = Vec::with_capacity((rows * columns) as usize);
         // let mut queue: VecDeque<(isize, isize)> = VecDeque::with_capacity((rows * columns) as usize);
         // for row in 0..rows {
@@ -560,9 +560,11 @@ impl WhiteboxTool for FillDepressions {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

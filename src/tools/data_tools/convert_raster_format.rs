@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
@@ -69,7 +69,8 @@ impl ConvertRasterFormat {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ConvertRasterFormat {
             name: name,

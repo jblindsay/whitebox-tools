@@ -4,7 +4,7 @@ pub struct Scattergram {
     pub height: f64,
     pub data_x: Vec<Vec<f64>>,
     pub data_y: Vec<Vec<f64>>,
-    pub series_labels: Vec<String>, 
+    pub series_labels: Vec<String>,
     pub x_axis_label: String,
     pub y_axis_label: String,
     pub draw_trendline: bool,
@@ -19,7 +19,8 @@ impl Scattergram {
         let data_y2 = format!("{:?}", self.data_y);
         let series_labels2 = format!("{:?}", self.series_labels);
         let mut s = String::new();
-        s.push_str(&format!("
+        s.push_str(&format!(
+            "
     <script>
       var plot = {{
         dataX: {},
@@ -34,19 +35,20 @@ impl Scattergram {
         drawLegend: {},
         drawGreyBackground: {},
         parentId: \"{}\"
-      }};", 
-      data_x2,
-      data_y2,
-      series_labels2,
-      self.x_axis_label, 
-      self.y_axis_label, 
-      self.width, 
-      self.height,
-      self.draw_trendline,
-      self.draw_gridlines,
-      self.draw_legend,
-      self.draw_grey_background,
-      self.parent_id));
+      }};",
+            data_x2,
+            data_y2,
+            series_labels2,
+            self.x_axis_label,
+            self.y_axis_label,
+            self.width,
+            self.height,
+            self.draw_trendline,
+            self.draw_gridlines,
+            self.draw_legend,
+            self.draw_grey_background,
+            self.parent_id
+        ));
 
         s.push_str(&r#"
       function update(svg) {
@@ -755,7 +757,7 @@ impl Scattergram {
 
       update(null);
     </script>"#);
-        
+
         s
     }
 }

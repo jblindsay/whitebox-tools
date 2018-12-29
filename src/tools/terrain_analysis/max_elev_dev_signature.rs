@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 1, 2018
@@ -431,7 +431,8 @@ impl WhiteboxTool for MaxElevDevSignature {
             (format!(
                 "<p><strong>Input DEM</strong>: {}<br>",
                 input.get_short_filename()
-            )).as_bytes(),
+            ))
+            .as_bytes(),
         )?;
 
         writer.write_all(("</p>").as_bytes())?;

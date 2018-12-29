@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: February 27, 2018
@@ -461,12 +461,7 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                 let i_n = i_n.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
+                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                     let mut n: i32;
                     let mut sum: f64;
                     let mut z: f64;
@@ -547,7 +542,8 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                             a: a,
                             b: b,
                             c: eight_grid_res,
-                        })).acos()
+                        }))
+                        .acos()
                         .to_degrees();
                     } else {
                         diff = 0f64;
@@ -638,7 +634,8 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
             (format!(
                 "<p><strong>Input DEM</strong>: {}<br>",
                 input.get_short_filename()
-            )).as_bytes(),
+            ))
+            .as_bytes(),
         )?;
 
         writer.write_all(("</p>").as_bytes())?;
@@ -713,7 +710,7 @@ impl Normal {
          Note that this is actually not the angle between the vectors but
          rather the cosine of the angle between the vectors. This improves
          the performance considerably. Also note that we do not need to worry
-         about checking for division by zero here because 'c' will always be 
+         about checking for division by zero here because 'c' will always be
          non-zero and therefore the vector magnitude cannot be zero.
         */
         let denom = ((self.a * self.a + self.b * self.b + self.c * self.c)

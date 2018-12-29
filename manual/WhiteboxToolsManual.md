@@ -610,7 +610,12 @@ convert_nodata_to_zero(
 
 #### 8.1.3 ConvertRasterFormat
 
-Converts raster data from one format to another.
+This tool converts raster data from one format to another. It determines input/output raster
+formats based on extensions, but due to file extension naming collisions, it would be good to
+add user hints. For example, the extension 'grd' could belong to a SurferAscii or a Surfer7Binary.
+This is more important for distinguishing output files since input files can be read and
+distiguishing features idenfitied from the file structure. At the moment, this tool does not
+support user hints however.
 
 *Parameters*:
 
@@ -1556,7 +1561,46 @@ block_minimum_gridding(
 ```
 
 
-#### 8.2.4 Centroid
+#### 8.2.4 BufferVector
+
+This tool
+
+*See Also*:
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-i, -\-input         Input vector file
+-o, -\-output        Output vector file
+-\-dist, -\-distance Buffer distance
+-\-dissolve          Optional flag to request the output polygons be dissolved
+-\-snap              Snap tolerance
+
+
+*Python function*:
+
+~~~~{.python}
+buffer_vector(
+    i, 
+    output, 
+    distance=10.0, 
+    dissolve=True, 
+    snap=0.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=BufferVector -v --wd="/path/to/data/" ^
+-input=layer1.shp -o=out_file.shp --dist=25.0 --dissolve 
+
+
+```
+
+
+#### 8.2.5 Centroid
 
 This tool calculates the centroid, or average location, of raster polygon objects.
 For vector features, use the `CentroidVector` tool instead.
@@ -1597,7 +1641,7 @@ centroid(
 ```
 
 
-#### 8.2.5 CentroidVector
+#### 8.2.6 CentroidVector
 
 This can be used to identify the centroid point of a vector polyline or polygon feature or a group of
 vector points. The output is a vector shapefile of points. For multi-part polyline or polygon features,
@@ -1637,7 +1681,7 @@ centroid_vector(
 ```
 
 
-#### 8.2.6 Clump
+#### 8.2.7 Clump
 
 Groups cells that form physically discrete areas, assigning them unique identifiers.
 
@@ -1672,7 +1716,7 @@ clump(
 ```
 
 
-#### 8.2.7 ConstructVectorTin
+#### 8.2.8 ConstructVectorTin
 
 This tool creates a vector triangular irregular network (TIN) for a set of vector points.
 
@@ -1710,7 +1754,7 @@ construct_vector_tin(
 ```
 
 
-#### 8.2.8 CreateHexagonalVectorGrid
+#### 8.2.9 CreateHexagonalVectorGrid
 
 This tool can be used to create a hexagonal vector grid. The extent of the hexagonal
 grid is based on the extent of a user-specified base file (any supported raster format,
@@ -1749,7 +1793,7 @@ create_hexagonal_vector_grid(
 ```
 
 
-#### 8.2.9 CreatePlane
+#### 8.2.10 CreatePlane
 
 Creates a raster image based on the equation for a simple plane.
 
@@ -1787,7 +1831,7 @@ create_plane(
 ```
 
 
-#### 8.2.10 CreateRectangularVectorGrid
+#### 8.2.11 CreateRectangularVectorGrid
 
 This tool can be used to create a rectangular vector grid. The extent of the rectangular
 grid is based on the extent of a user-specified base file (any supported raster format,
@@ -1830,7 +1874,7 @@ create_rectangular_vector_grid(
 ```
 
 
-#### 8.2.11 Dissolve
+#### 8.2.12 Dissolve
 
 This tool can be used to remove the interior, or shared, boundaries within a vector
 polygon coverage. You can either dissolve all interior boundaries or dissolve those
@@ -1875,7 +1919,7 @@ dissolve(
 ```
 
 
-#### 8.2.12 EliminateCoincidentPoints
+#### 8.2.13 EliminateCoincidentPoints
 
 This tool can be used to remove any coincident, or nearly coincident, points
 from a vector points file. The user must specify the name of the input file,
@@ -1914,7 +1958,7 @@ eliminate_coincident_points(
 ```
 
 
-#### 8.2.13 ExtendVectorLines
+#### 8.2.14 ExtendVectorLines
 
 This tool can be used to extend vector lines by a specified distance. The user must
 input the names of the input and output shapefiles, the distance to extend features
@@ -1953,7 +1997,7 @@ extend_vector_lines(
 ```
 
 
-#### 8.2.14 ExtractNodes
+#### 8.2.15 ExtractNodes
 
 Converts vector lines or polygons into vertex points.
 
@@ -1984,7 +2028,7 @@ extract_nodes(
 ```
 
 
-#### 8.2.15 ExtractRasterValuesAtPoints
+#### 8.2.16 ExtractRasterValuesAtPoints
 
 Extracts the values of raster(s) at vector point locations.
 
@@ -2016,7 +2060,7 @@ extract_raster_values_at_points(
 ```
 
 
-#### 8.2.16 FindLowestOrHighestPoints
+#### 8.2.17 FindLowestOrHighestPoints
 
 Locates the lowest and/or highest valued cells in a raster.
 
@@ -2050,9 +2094,20 @@ find_lowest_or_highest_points(
 ```
 
 
-#### 8.2.17 IdwInterpolation
+#### 8.2.18 IdwInterpolation
 
-Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+This tool interpolates vector points into a raster surface using an inverse-distance weighted scheme.
+
+Most IDW tool have the option to work either based on a fixed number of neighbouring
+points or a fixed neighbourhood size. This tool is currently configured to perform the later
+only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require
+use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance
+does not appear to be satisfactory compared to the FixedRadiusSearch. I will need to explore
+other options here.
+
+Another change that will need to be implemented is the use of a nodal function. The original
+Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the
+former.
 
 *Parameters*:
 
@@ -2103,7 +2158,7 @@ idw_interpolation(
 ```
 
 
-#### 8.2.18 LayerFootprint
+#### 8.2.19 LayerFootprint
 
 This tool creates a vector polygon footprint of the area covered by a raster grid or vector
 layer. It will create a vector rectangle corresponding to the bounding box. The user must
@@ -2148,7 +2203,7 @@ layer_footprint(
 ```
 
 
-#### 8.2.19 Medoid
+#### 8.2.20 Medoid
 
 This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
 of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid
@@ -2194,7 +2249,7 @@ medoid(
 ```
 
 
-#### 8.2.20 MinimumBoundingBox
+#### 8.2.21 MinimumBoundingBox
 
 This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
 completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
@@ -2239,7 +2294,7 @@ minimum_bounding_box(
 ```
 
 
-#### 8.2.21 MinimumBoundingCircle
+#### 8.2.22 MinimumBoundingCircle
 
 This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
 circle to completely enclose a feature.
@@ -2277,7 +2332,7 @@ minimum_bounding_circle(
 ```
 
 
-#### 8.2.22 MinimumBoundingEnvelope
+#### 8.2.23 MinimumBoundingEnvelope
 
 This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
 rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y
@@ -2317,7 +2372,7 @@ minimum_bounding_envelope(
 ```
 
 
-#### 8.2.23 MinimumConvexHull
+#### 8.2.24 MinimumConvexHull
 
 This tool creates a vector convex polygon around vector features. The convex hull
 is a convex closure of a set of points or polygon verticies and can be may be
@@ -2359,7 +2414,7 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.24 NearestNeighbourGridding
+#### 8.2.25 NearestNeighbourGridding
 
 Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 
@@ -2406,7 +2461,7 @@ nearest_neighbour_gridding(
 ```
 
 
-#### 8.2.25 PolygonArea
+#### 8.2.26 PolygonArea
 
 This tool calculates the area of vector polygons, adding the result to the
 vector's attribute table (AREA field). The area calculation will account
@@ -2438,7 +2493,7 @@ polygon_area(
 ```
 
 
-#### 8.2.26 PolygonLongAxis
+#### 8.2.27 PolygonLongAxis
 
 This tool can be used to map the long axis of polygon features. The long axis is the
 longer of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2473,7 +2528,7 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.27 PolygonPerimeter
+#### 8.2.28 PolygonPerimeter
 
 This tool calculates the perimeter of vector polygons, adding the result
 to the vector's attribute table (PERIMETER field). The area calculation will
@@ -2505,7 +2560,7 @@ polygon_perimeter(
 ```
 
 
-#### 8.2.28 PolygonShortAxis
+#### 8.2.29 PolygonShortAxis
 
 This tool can be used to map the short axis of polygon features. The short axis is the
 shorter of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2540,7 +2595,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.29 RasterCellAssignment
+#### 8.2.30 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -2575,7 +2630,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.30 Reclass
+#### 8.2.31 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -2617,7 +2672,7 @@ reclass(
 ```
 
 
-#### 8.2.31 ReclassEqualInterval
+#### 8.2.32 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -2655,7 +2710,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.32 ReclassFromFile
+#### 8.2.33 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -2689,7 +2744,7 @@ reclass_from_file(
 ```
 
 
-#### 8.2.33 SmoothVectors
+#### 8.2.34 SmoothVectors
 
 This tool smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType. The algorithm
 uses a simple moving average method for smoothing, where the size of the averaging window is specified
@@ -2725,7 +2780,7 @@ smooth_vectors(
 ```
 
 
-#### 8.2.34 TinGridding
+#### 8.2.35 TinGridding
 
 Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
 and linear interpolation within each triangular-shaped plane.
@@ -2771,7 +2826,7 @@ tin_gridding(
 ```
 
 
-#### 8.2.35 VectorHexBinning
+#### 8.2.36 VectorHexBinning
 
 The practice of binning point data to form a type of 2D histogram, density plot,
 or what is sometimes called a heatmap, is quite useful as an alternative for the
@@ -2828,7 +2883,7 @@ vector_hex_binning(
 ```
 
 
-#### 8.2.36 VoronoiDiagram
+#### 8.2.37 VoronoiDiagram
 
 This tool creates a vector Voronoi diagram for a set of vector points. The
 Voronoi diagram is the dual graph of the Delaunay triangulation. The tool
@@ -3056,7 +3111,21 @@ cost_pathway(
 
 #### 8.3.5 EuclideanAllocation
 
-Assigns grid cells in the output raster the value of the nearest target cell in the input image, measured by the Shih and Wu (2004) Euclidean distance transform.
+This tool assigns grid cells in the output image the value of the nearest target cell in
+the input image, measured by the Euclidean distance (i.e. straight-line distance). Thus,
+`EuclideanAllocation` essentially creates the Voronoi diagram for a set of target cells.
+Target cells are all non-zero, non-NoData grid cells in the input image. Distances are
+calculated using the same efficient algorithm (Shih and Wu, 2003) as the `EuclideanDistance`
+tool.
+
+*Reference*:
+s
+Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
+neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
+
+*See Also*:
+
+`EuclideanDistance`, `VoronoiDiagram`, `CostAllocation`
 
 *Parameters*:
 
@@ -3087,7 +3156,29 @@ euclidean_allocation(
 
 #### 8.3.6 EuclideanDistance
 
-Calculates the Shih and Wu (2004) Euclidean distance transform.
+This tool will estimate the Euclidean distance (i.e. straight-line distance) between each
+grid cell and the nearest 'target cell' in the input image. Target cells are all non-zero,
+non-NoData grid cells. Distance in the output image is measured in the same units as the
+horizontal units of the input image.
+
+# Algorithm Description
+The algorithm is based on the highly efficient distance transform of Shih and Wu (2003).
+It makes four passes of the image; the first pass initializes the output image; the second
+and third passes calculate the minimum squared Euclidean distance by examining the 3 x 3
+neighbourhood surrounding each cell; the last pass takes the square root of cell values,
+transforming them into true Euclidean distances, and deals with NoData values that may be
+present. All NoData value grid cells in the input image will contain NoData values in the
+output image. As such, NoData is not a suitable background value for non-target cells.
+Background areas should be designated with zero values.
+
+*Reference*:
+s
+Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
+neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
+
+*See Also*:
+
+`EuclideanAllocation`, `CostDistance`
 
 *Parameters*:
 
@@ -4854,6 +4945,7 @@ rills, gullies, etc., which would otherwise be smoothed over.
 -\-filter            Size of the filter kernel
 -\-norm_diff         Maximum difference in normal vectors, in degrees
 -\-num_iter          Number of iterations
+-\-max_diff          Maximum allowable absolute elevation change (optional)
 -\-reduction         Maximum Amount to reduce the threshold angle by (0 = full smoothing; 100 = no 
                      smoothing) 
 -\-dfm               Difference from median threshold (in z-units), determines when a location is 
@@ -4868,8 +4960,9 @@ drainage_preserving_smoothing(
     dem, 
     output, 
     filter=11, 
-    norm_diff=8.0, 
-    num_iter=5, 
+    norm_diff=15.0, 
+    num_iter=10, 
+    max_diff=2.0, 
     reduction=80.0, 
     dfm=0.15, 
     zfactor=1.0, 
@@ -5022,9 +5115,35 @@ elev_relative_to_watershed_min_max(
 
 #### 8.6.11 FeaturePreservingDenoise
 
-This tool implements a modified form of the algorithm described by
+This tool implements a highly modified form of the DEM de-noising algorithm described
+by Sun et al. (2007). It is very effective at removing surface roughness from digital
+elevation models (DEMs), without significantly altering breaks-in-slope. As such,
+this tool should be used for smoothing DEMs rather than either smoothing with
+low-pass filters (e.g. mean, median, Gaussian filters) or grid size coarsening
+by resampling. The algorithm works by 1) calculating the surface normal 3D vector
+of each grid cell in the DEM, 2) smoothing the normal vector field using a
+filtering scheme that applies more weight to neighbours with lower angular difference
+in surface normal vectors, and 3) uses the smoothed normal vector field to update
+the elevations in the input DEM.
+
+Sun et al.'s (2007) original method was intended to work on input point clouds and
+fitted triangular irregular networks (TINs). The algorithm has been modified to
+work with input raster DEMs instead. In so doing, this algorithm calculates surface
+normal vectors from the planes fitted to 3 x 3 neighbourhoods surrounding each
+grid cell, rather than the triangular facet. The normal vector field smoothing and
+elevation updating procedures are also based on raster filtering operations. These
+modifications make this tool more efficient than Sun's original method, but will
+also result in a slightly different output than what would be achieved with Sun's
+method.
+
+*Reference*:
+
 Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
 mesh denoising.
+
+*See Also*:
+:
+`DrainagePreservingSmoothing`
 
 *Parameters*:
 
@@ -5035,6 +5154,7 @@ mesh denoising.
 -\-filter            Size of the filter kernel
 -\-norm_diff         Maximum difference in normal vectors, in degrees
 -\-num_iter          Number of iterations
+-\-max_diff          Maximum allowable absolute elevation change (optional)
 -\-zfactor           Optional multiplier for when the vertical and horizontal units are not the same
 
 
@@ -5045,8 +5165,9 @@ feature_preserving_denoise(
     dem, 
     output, 
     filter=11, 
-    norm_diff=8.0, 
-    num_iter=5, 
+    norm_diff=15.0, 
+    num_iter=10, 
+    max_diff=2.0, 
     zfactor=1.0, 
     callback=default_callback)
 ~~~~
@@ -5357,7 +5478,39 @@ max_anisotropy_dev_signature(
 
 #### 8.6.20 MaxBranchLength
 
-Lindsay and Seibert's (2013) branch length index is used to map drainage divides or ridge lines.
+Maximum branch length (`Bmax`) is the longest branch length between a grid cell's flowpath
+and the flowpaths initiated at each of its neighbours. It can be conceptualized as the
+downslope distance that a volume of water that is split into two portions by a drainage
+divide would travel before reuniting.
+
+If the two flowpaths of neighbouring grid cells do not intersect, `Bmax` is simply the
+flowpath length from the starting cell to its terminus at the edge of the grid or a cell
+with undefined flow direction (i.e. a pit cell either in a topographic depression or at
+the edge of a major body of water).
+
+The pattern of `Bmax` derived from a DEM should be familiar to anyone who has interpreted
+upslope contributing area images. In fact, `Bmax` can be thought of as the complement of
+upslope contributing area. Whereas contributing area is greatest along valley bottoms and lowest at
+drainage divides, `Bmax` is greatest at divides and lowest along channels. The two topographic
+attributes are also distinguished by their units of measurements; `Bmax` is a length rather
+than an area. The presence of a major drainage divide between neighbouring grid cells is apparent in
+a `Bmax` image as a linear feature, often two grid cells wide, of relatively high values. This
+property makes `Bmax` a useful land surface parameter for mapping ridges and divides.
+
+`Bmax` is useful in the study of landscape structure, particularly with respect to drainage patterns.
+The index gives the relative significance of a specific location along a divide, with respect to the
+dispersion of materials across the landscape, in much the same way that stream ordering can be used
+to assess stream size.
+
+*See Also*:
+
+`FlowLengthDiff`
+
+*Reference*:
+
+Lindsay JB, Seibert J. 2013. Measuring the significance of a divide to local drainage patterns.
+International Journal of Geographical Information Science, 27: 1453-1468. DOI:
+10.1080/13658816.2012.705289
 
 *Parameters*:
 
@@ -6528,7 +6681,8 @@ flow path enforcement in digital elevation models.* **Hydrological Processes**,
 
 It uses a breach-first, fill-second approach.
 
-** See Also:**
+*See Also*:
+:
 `FillDepressions`
 
 *Parameters*:
@@ -7075,7 +7229,16 @@ fd8_pointer(
 
 #### 8.7.19 FillBurn
 
-Burns streams into a DEM using the FillBurn (Saunders, 1999) method.
+Burns streams into a DEM using the FillBurn (Saunders, 1999) method. This tool uses the
+algorithm described in:
+
+Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
+and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
+
+And:
+
+Saunders, W. 1999. Preparation of DEMs for use in environmental modeling analysis, in: ESRI User
+Conference. pp. 24-30.
 
 *Parameters*:
 
@@ -7350,7 +7513,12 @@ flow_accumulation_full_workflow(
 
 #### 8.7.27 FlowLengthDiff
 
-Calculates the local maximum absolute difference in downslope flowpath length, useful in mapping drainage divides and ridges.
+`FlowLengthDiff` calculates the local maximum absolute difference in downslope flowpath length,
+which is useful in mapping drainage divides and ridges.
+
+*See Also*:
+
+`MaxBranchLength`
 
 *Parameters*:
 
@@ -7790,7 +7958,31 @@ snap_pour_points(
 
 #### 8.7.39 StochasticDepressionAnalysis
 
-Preforms a stochastic analysis of depressions within a DEM.
+Preforms a stochastic analysis of depressions within a DEM, calculating the
+probability of each cell belonging to a depression.
+
+This tool differs from the original Whitebox GAT tool in a few significant ways:
+
+1. The Whitebox GAT tool took an error histogram as an input. In practice people found
+it difficult to create this input. Usually they just generated a normal distribution
+in a spreadsheet using information about the DEM RMSE. As such, this tool takes a
+RMSE input and generates the histogram internally. This is far more convienent for
+most applications but loses the flexibility of specifying the error distribution
+more completely.
+
+2. The Whitebox GAT tool generated the error fields using the turning bands method.
+This tool generates a random Gaussian error field with no spatial autocorrelation
+and then applies local spatial averaging using a Gaussian filter (the size of
+which depends of the error autocorrelation length input) to increase the level of
+autocorrelation. We use the Fast Almost Gaussian Filter of Peter Kovesi (2010),
+which uses five repeat passes of a mean filter, based on an integral image. This
+filter method is highly efficient. This results in a very significant performance
+increase compared with the original tool.
+
+3. The tool operates concurrently, compared with the original tool which calculated
+pdep in serial. Again, this parallel processing can significantly improve the
+performance, particularly when the tool is applied on hardware with four or
+more processors.
 
 *Parameters*:
 
@@ -7939,7 +8131,23 @@ trace_downslope_flowpaths(
 
 #### 8.7.43 UnnestBasins
 
-Extract whole watersheds for a set of outlet points.
+In some applications it is necessary to relate a measured variable for a group of
+hydrometric stations (e.g. characteristics of flow timing and duration or water
+chemistry) to some characteristics of each outlet's catchment (e.g. mean slope,
+area of wetlands, etc.). When the group of outlets are nested, i.e. some stations
+are located downstream of others, then performing a watershed operation will
+result in inappropriate watershed delineation. In particular, the delineated
+watersheds of each nested outlet will not include the catchment areas of upstream
+outlets. This creates a serious problem for this type of application.
+
+The Unnest Basin tool can be used to perform a watershedding operation based on a
+group of specified pour points, i.e. outlets or target cells, such that each
+complete watershed is delineated. The user must specify the name of a flow pointer
+(flow direction) raster, a pour point raster, and the name of the output rasters.
+Multiple numbered outputs will be created, one for each nesting level. Pour point,
+or target, cells are denoted in the input pour-point image as any non-zero,
+non-NoData value. The flow pointer raster should be generated using the D8
+algorithm.
 
 *Parameters*:
 
@@ -12496,7 +12704,19 @@ cosh(
 
 #### 8.12.15 CrispnessIndex
 
-Calculates the Crispness Index, which is used to quantify how crisp (or conversely how fuzzy) a probability image is.
+This index (C) is taken from Lindsay (2006) Sensitivity of channel mapping techniques to uncertainty in digital
+elevation data:
+
+C = SS_mp ∕ SS_B = [∑(pij − p-bar)^2] ∕ [ ∑pij(1 − p-bar)^2 + p2(RC − ∑pij)]
+
+Please note that there is an error in the original published equation. Specifically, the denominator
+read:
+
+∑pij(1 - p_bar)^2 + p_bar^2 (RC - ∑pij)
+
+instead of the original:
+
+∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
 
 *Parameters*:
 
@@ -12754,7 +12974,22 @@ exp2(
 
 #### 8.12.23 ExtractRasterStatistics
 
-Extracts descriptive statistics for a group of patches in a raster.
+This tool can be used to extract common descriptive statistics associated with the distribution
+of some underlying data raster based on feature units defined by a feature definition raster.
+For example, this tool can be used to measure the maximum or average slope gradient (data image)
+for each of a group of watersheds (feature definitions). Although the data raster can contain any
+type of data, the feature definition raster must be categorical, i.e. it must define area entities
+using integer values.
+
+If an output image name is specified, the tool will assign the descriptive statistic value to
+each of the spatial entities defined in the feature definition raster. If text output is selected,
+an HTML table will be output, which can then be readily copied into a spreadsheet program for
+further analysis. This is a very powerful and useful tool for creating numerical summary data from
+spatial data which can then be interrogated using statistical analyses. At least one output type
+(image or text) must be specified for the tool to operate.
+
+NoData values in either of the two input images are ignored during the calculation of the
+descriptive statistic.
 
 *Parameters*:
 
@@ -13233,7 +13468,14 @@ kappa_index(
 
 #### 8.12.37 KsTestForNormality
 
-Evaluates whether the values in a raster are normally distributed.
+This tool will perform a Kolmogorov-Smirnov (K-S) test for normality to evaluate
+whether the frequency distribution of values within a raster image are drawn from a
+Gaussian (normal) distribution. The user must specify the name of the raster image. The
+test can be performed optionally on the entire image or on a random sub-sample of pixel
+values of a user-specified size. In evaluating the significance of the test, it is
+important to keep in mind that given a sufficiently large sample, extremely small and
+non-notable differences can be found to be statistically significant. Furthermore
+statistical significance says nothing about the practical significance of a difference.
 
 *Parameters*:
 
@@ -14002,7 +14244,14 @@ rescale_value_range(
 
 #### 8.12.60 RootMeanSquareError
 
-Calculates the RMSE and other accuracy statistics.
+This tool calculates the root-mean-square-error (RMSE) or root-mean-square-difference (RMSD) from two
+input rasters. If the two input rasters possess the same number of rows and columns, the RMSE is
+calucated on a cell-by-cell basis, otherwise bilinear resampling is used. In addition to RMSE,
+the tool also reports other common accuracy statistics including the mean verical error, the
+95% confidence limit (RMSE x 1.96), and the 90% linear error (LE90), which is the 90% percentile of
+the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy
+statistics when the residuals are non-Gaussian. The LE90 requires sorting the residual values, which
+can be a relatively slow operation for larger rasters.
 
 *Parameters*:
 
@@ -15480,6 +15729,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

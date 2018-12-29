@@ -72,11 +72,12 @@ pub fn read_saga(
                 }
             }
         } else if vec[0].to_lowercase().contains("byteorder_big") {
-            if vec[1].replace("=", "").trim().to_lowercase().contains("f") || vec[1]
-                .replace("=", "")
-                .trim()
-                .to_lowercase()
-                .contains("lsb")
+            if vec[1].replace("=", "").trim().to_lowercase().contains("f")
+                || vec[1]
+                    .replace("=", "")
+                    .trim()
+                    .to_lowercase()
+                    .contains("lsb")
             {
                 configs.endian = Endianness::LittleEndian;
             } else {
@@ -471,7 +472,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         format!(
             "CELLSIZE\t= {}\n",
             (r.configs.resolution_x + r.configs.resolution_y) / 2.0
-        ).as_bytes(),
+        )
+        .as_bytes(),
     )?;
 
     writer.write_all("Z_FACTOR\t= 1.000000\n".as_bytes())?;

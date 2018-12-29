@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
@@ -95,7 +95,8 @@ impl TophatTransform {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         TophatTransform {
             name: name,
@@ -270,7 +271,12 @@ impl WhiteboxTool for TophatTransform {
                 thread::spawn(move || {
                     let (mut z_n, mut z): (f64, f64);
                     let mut min_val: f64;
-                    let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
+                    let (mut start_col, mut end_col, mut start_row, mut end_row): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_min_vals: VecDeque<f64> =
                             VecDeque::with_capacity(filter_size_x);
@@ -348,7 +354,12 @@ impl WhiteboxTool for TophatTransform {
                 thread::spawn(move || {
                     let (mut z_n, mut z): (f64, f64);
                     let mut max_val: f64;
-                    let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
+                    let (mut start_col, mut end_col, mut start_row, mut end_row): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_max_vals: VecDeque<f64> =
                             VecDeque::with_capacity(filter_size_x);
@@ -431,9 +442,11 @@ impl WhiteboxTool for TophatTransform {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
 
@@ -451,7 +464,12 @@ impl WhiteboxTool for TophatTransform {
                 thread::spawn(move || {
                     let (mut z_n, mut z): (f64, f64);
                     let mut max_val: f64;
-                    let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
+                    let (mut start_col, mut end_col, mut start_row, mut end_row): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_max_vals: VecDeque<f64> =
                             VecDeque::with_capacity(filter_size_x);
@@ -529,7 +547,12 @@ impl WhiteboxTool for TophatTransform {
                 thread::spawn(move || {
                     let (mut z_n, mut z): (f64, f64);
                     let mut min_val: f64;
-                    let (mut start_col, mut end_col, mut start_row, mut end_row): (isize, isize, isize, isize);
+                    let (mut start_col, mut end_col, mut start_row, mut end_row): (
+                        isize,
+                        isize,
+                        isize,
+                        isize,
+                    );
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut filter_min_vals: VecDeque<f64> =
                             VecDeque::with_capacity(filter_size_x);
@@ -612,9 +635,11 @@ impl WhiteboxTool for TophatTransform {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
             if verbose {

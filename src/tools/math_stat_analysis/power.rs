@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 6, 2017
@@ -271,9 +271,11 @@ impl WhiteboxTool for Power {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
             if verbose {
@@ -340,9 +342,11 @@ impl WhiteboxTool for Power {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
             if verbose {
@@ -421,9 +425,11 @@ impl WhiteboxTool for Power {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
             if verbose {

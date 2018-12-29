@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 11, 2017
@@ -74,7 +74,8 @@ impl FlipImage {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=in.tif -o=out.tif --direction=h",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         FlipImage {
             name: name,

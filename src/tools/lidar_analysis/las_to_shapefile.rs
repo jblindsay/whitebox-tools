@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/10/2018
@@ -76,7 +76,8 @@ impl LasToShapefile {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.las",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         LasToShapefile {
             name: name,
@@ -176,12 +177,14 @@ impl WhiteboxTool for LasToShapefile {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {

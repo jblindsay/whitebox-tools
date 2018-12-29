@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dan Newman and John Lindsay
 Created: January 26, 2018
@@ -331,18 +331,8 @@ impl WhiteboxTool for MaxAnisotropyDev {
                 let i_n = i_n.clone();
                 let tx1 = tx.clone();
                 thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
-                    let (mut x3, mut x4, mut y3, mut y4): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
+                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+                    let (mut x3, mut x4, mut y3, mut y4): (isize, isize, isize, isize);
                     let mut n: i32;
                     let (mut mean, mut sum, mut sum_sqr): (f64, f64, f64);
                     let (mut v, mut s): (f64, f64);

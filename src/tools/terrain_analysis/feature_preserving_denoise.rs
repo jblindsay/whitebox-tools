@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: November 23, 2017
@@ -23,29 +23,29 @@ use std::thread;
 /// This tool implements a highly modified form of the DEM de-noising algorithm described
 /// by Sun et al. (2007). It is very effective at removing surface roughness from digital
 /// elevation models (DEMs), without significantly altering breaks-in-slope. As such,
-/// this tool should be used for smoothing DEMs rather than either smoothing with 
-/// low-pass filters (e.g. mean, median, Gaussian filters) or grid size coarsening 
-/// by resampling. The algorithm works by 1) calculating the surface normal 3D vector 
-/// of each grid cell in the DEM, 2) smoothing the normal vector field using a 
+/// this tool should be used for smoothing DEMs rather than either smoothing with
+/// low-pass filters (e.g. mean, median, Gaussian filters) or grid size coarsening
+/// by resampling. The algorithm works by 1) calculating the surface normal 3D vector
+/// of each grid cell in the DEM, 2) smoothing the normal vector field using a
 /// filtering scheme that applies more weight to neighbours with lower angular difference
 /// in surface normal vectors, and 3) uses the smoothed normal vector field to update
 /// the elevations in the input DEM.
-/// 
+///
 /// Sun et al.'s (2007) original method was intended to work on input point clouds and
 /// fitted triangular irregular networks (TINs). The algorithm has been modified to
 /// work with input raster DEMs instead. In so doing, this algorithm calculates surface
-/// normal vectors from the planes fitted to 3 x 3 neighbourhoods surrounding each 
+/// normal vectors from the planes fitted to 3 x 3 neighbourhoods surrounding each
 /// grid cell, rather than the triangular facet. The normal vector field smoothing and
 /// elevation updating procedures are also based on raster filtering operations. These
-/// modifications make this tool more efficient than Sun's original method, but will 
+/// modifications make this tool more efficient than Sun's original method, but will
 /// also result in a slightly different output than what would be achieved with Sun's
-/// method. 
-/// 
+/// method.
+///
 /// # Reference
 /// Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
 /// mesh denoising.
-/// 
-/// # See Also:
+///
+/// # See Also
 /// `DrainagePreservingSmoothing`
 pub struct FeaturePreservingDenoise {
     name: String,
@@ -605,9 +605,11 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {
@@ -635,7 +637,7 @@ impl Normal {
          Note that this is actually not the angle between the vectors but
          rather the cosine of the angle between the vectors. This improves
          the performance considerably. Also note that we do not need to worry
-         about checking for division by zero here because 'c' will always be 
+         about checking for division by zero here because 'c' will always be
          non-zero and therefore the vector magnitude cannot be zero.
         */
         let denom = ((self.a * self.a + self.b * self.b + self.c * self.c)

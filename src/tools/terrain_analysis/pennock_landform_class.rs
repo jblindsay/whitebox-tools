@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 12, 2017
@@ -328,10 +328,12 @@ impl WhiteboxTool for PennockLandformClass {
                                 slope = (fx * fx + fy * fy).sqrt().atan().to_degrees();
                                 plan = -1f64
                                     * ((zxx * zy2 - 2f64 * zxy * zx * zy + zyy * zx2)
-                                        / p.powf(1.5f64)).to_degrees();
+                                        / p.powf(1.5f64))
+                                    .to_degrees();
                                 prof = -1f64
                                     * ((zxx * zx2 - 2f64 * zxy * zx * zy + zyy * zy2)
-                                        / (p * q.powf(1.5f64))).to_degrees();
+                                        / (p * q.powf(1.5f64)))
+                                    .to_degrees();
 
                                 if prof < -prof_threshold
                                     && plan <= -plan_threshold
@@ -419,9 +421,11 @@ impl WhiteboxTool for PennockLandformClass {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

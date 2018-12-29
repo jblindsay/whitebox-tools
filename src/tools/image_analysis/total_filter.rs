@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 25, 2017
@@ -84,7 +84,8 @@ impl TotalFilter {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         TotalFilter {
             name: name,

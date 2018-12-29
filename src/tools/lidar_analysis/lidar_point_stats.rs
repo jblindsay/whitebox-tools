@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Feb. 18, 2018
@@ -8,7 +8,7 @@ License: MIT
 Notes:
 1. The num_pulses output is actually the number of pulses with at lease one return; specifically it is
    the sum of the early returns (first and only) in a grid cell. In areas of low reflectance, such as
-   over water surfaces, the system may have emited a significantly higher pulse rate but far fewer 
+   over water surfaces, the system may have emited a significantly higher pulse rate but far fewer
    returns are observed.
 2. If none of the output flags are specified, all of the possible output rasters are created.
 3. The default output raster format is GeoTIFF.
@@ -128,7 +128,8 @@ impl LidarPointStats {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las --resolution=1.0 --num_points",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         LidarPointStats {
             name: name,
@@ -250,12 +251,14 @@ impl WhiteboxTool for LidarPointStats {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                        }
                     }
-                },
+                }
             }
         } else {
             inputs.push(input_file.clone());
@@ -412,7 +415,8 @@ impl WhiteboxTool for LidarPointStats {
                             columns as isize,
                             f64::NEG_INFINITY,
                             nodata,
-                        ).unwrap();
+                        )
+                        .unwrap();
                         let out_file_elev_range =
                             input_file.replace(".las", "_elev_range.tif").clone();
                         let mut out_elev_range =

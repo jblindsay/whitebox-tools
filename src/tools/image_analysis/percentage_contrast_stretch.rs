@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 13, 2017
@@ -6,7 +6,7 @@ Last Modified: 13/10/2018
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
-       2. Unlike the original Whitebox GAT tool that this is based on, 
+       2. Unlike the original Whitebox GAT tool that this is based on,
           this tool will operate on RGB images in addition to greyscale images.
 */
 

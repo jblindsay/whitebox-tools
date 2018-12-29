@@ -190,7 +190,7 @@ pub struct PointData {
     // pub class_bit_field: ClassificationBitField,
     pub point_bit_field: u8,
     pub class_bit_field: u8, // contains class in 32-bit point records
-    pub classification: u8, // only used in 64-bit point records
+    pub classification: u8,  // only used in 64-bit point records
     pub scan_angle: i16,
     pub user_data: u8,
     pub point_source_id: u16,
@@ -199,14 +199,23 @@ pub struct PointData {
 
 impl fmt::Display for PointData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(x={}, y={}, z={}, i={}\n{}\n{}\nscan_angle={}, user_data={}, source_id={})",
-        self.x, self.y, self.z, self.intensity, self.point_bit_field, self.class_bit_field, self.scan_angle,
-        self.user_data, self.point_source_id)
+        write!(
+            f,
+            "(x={}, y={}, z={}, i={}\n{}\n{}\nscan_angle={}, user_data={}, source_id={})",
+            self.x,
+            self.y,
+            self.z,
+            self.intensity,
+            self.point_bit_field,
+            self.class_bit_field,
+            self.scan_angle,
+            self.user_data,
+            self.point_source_id
+        )
     }
 }
 
 impl PointData {
-
     // /// The return number of the point.
     // pub fn return_number(&self) -> u8 {
     //     self.bit_field.return_number()
@@ -225,7 +234,9 @@ impl PointData {
             0b0000_1111u8
         };
         let mut ret = self.point_bit_field & flag_val;
-        if ret == 0 { ret = 1; }
+        if ret == 0 {
+            ret = 1;
+        }
         ret
     }
 
@@ -242,21 +253,27 @@ impl PointData {
     pub fn number_of_returns(&self) -> u8 {
         if !self.is_64bit {
             let mut ret = (self.point_bit_field & 0b0011_1000u8) >> 3u8;
-            if ret == 0 { ret = 1; }
+            if ret == 0 {
+                ret = 1;
+            }
             return ret;
         }
         // else 64-bit mode
         let mut ret = (self.point_bit_field & 0b1111_0000u8) >> 4u8;
-        if ret == 0 { ret = 1; }
+        if ret == 0 {
+            ret = 1;
+        }
         ret
     }
 
     /// Sets the number of returns associated with the point.
     pub fn set_number_of_returns(&mut self, value: u8) {
         if !self.is_64bit {
-            self.point_bit_field = (self.point_bit_field & 0b1100_0111u8) | ((value & 0b0000_0111) << 3);
+            self.point_bit_field =
+                (self.point_bit_field & 0b1100_0111u8) | ((value & 0b0000_0111) << 3);
         } else {
-            self.point_bit_field = (self.point_bit_field & 0b0000_1111u8) | ((value & 0b0000_1111) << 4);
+            self.point_bit_field =
+                (self.point_bit_field & 0b0000_1111u8) | ((value & 0b0000_1111) << 4);
         }
     }
 
@@ -274,7 +291,7 @@ impl PointData {
     pub fn is_early_return(&self) -> bool {
         (self.return_number() == 1) | self.is_only_return()
     }
-    
+
     /// Returns 'true' if the the point is either a last return or the only return.
     pub fn is_late_return(&self) -> bool {
         self.return_number() == self.number_of_returns()
@@ -355,7 +372,7 @@ impl PointData {
     /// Returns the classification name associated with the ClassificationBitField
     pub fn classification(&self) -> u8 {
         if !self.is_64bit {
-            return self.class_bit_field & 0b0001_1111u8
+            return self.class_bit_field & 0b0001_1111u8;
         }
         self.classification // 64-bit mode
     }
@@ -363,7 +380,8 @@ impl PointData {
     /// Sets the point classification value.
     pub fn set_classification(&mut self, value: u8) {
         if !self.is_64bit {
-            self.class_bit_field = (self.class_bit_field & 0b1110_0000_u8) | (value & 0b0001_1111u8);
+            self.class_bit_field =
+                (self.class_bit_field & 0b1110_0000_u8) | (value & 0b0001_1111u8);
         } else {
             self.classification = value;
         }
@@ -513,10 +531,10 @@ impl PointData {
     /// Set the scanner channel
     pub fn set_scanner_channel(&mut self, value: u8) {
         if self.is_64bit {
-            self.class_bit_field = (self.class_bit_field & 0b1100_1111) | ((value & 0b0000_0011u8) << 4);
+            self.class_bit_field =
+                (self.class_bit_field & 0b1100_1111) | ((value & 0b0000_0011u8) << 4);
         }
     }
-
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]

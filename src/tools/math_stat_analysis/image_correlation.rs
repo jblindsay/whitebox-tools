@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 3, 2017
@@ -323,7 +323,8 @@ impl WhiteboxTool for ImageCorrelation {
                                 image1_total_deviation,
                                 image2_total_deviation,
                                 total_product_deviations,
-                            )).unwrap();
+                            ))
+                            .unwrap();
                         });
                     }
                     let mut image1_total_deviation = 0f64;

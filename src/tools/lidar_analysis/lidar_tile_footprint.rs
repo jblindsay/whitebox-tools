@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/08/2018
@@ -73,7 +73,8 @@ impl LidarTileFootprint {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.shp",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         LidarTileFootprint {
             name: name,
@@ -176,12 +177,14 @@ impl WhiteboxTool for LidarTileFootprint {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
@@ -261,7 +264,8 @@ impl WhiteboxTool for LidarTileFootprint {
                                 vec![],
                                 format!("Error reading file {}:\n{}", input_file, err),
                                 0,
-                            )).unwrap();
+                            ))
+                            .unwrap();
                         }
                     };
                 }
@@ -323,9 +327,11 @@ impl WhiteboxTool for LidarTileFootprint {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

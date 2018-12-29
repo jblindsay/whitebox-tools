@@ -38,9 +38,9 @@ mod kappa_index;
 mod ks_normality_test;
 mod less_than;
 mod list_unique_values;
+mod ln;
 mod log10;
 mod log2;
-mod ln;
 mod max;
 mod min;
 mod modulo;
@@ -75,7 +75,6 @@ mod truncate;
 mod turning_bands;
 mod xor;
 mod zscores;
-
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::abs::AbsoluteValue;
@@ -117,9 +116,9 @@ pub use self::kappa_index::KappaIndex;
 pub use self::ks_normality_test::KSTestForNormality;
 pub use self::less_than::LessThan;
 pub use self::list_unique_values::ListUniqueValues;
+pub use self::ln::Ln;
 pub use self::log10::Log10;
 pub use self::log2::Log2;
-pub use self::ln::Ln;
 pub use self::max::Max;
 pub use self::min::Min;
 pub use self::modulo::Modulo;

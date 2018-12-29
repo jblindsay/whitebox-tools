@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/04/2018
@@ -73,7 +73,8 @@ impl AttributeCorrelation {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.shp -o=outfile.html",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         AttributeCorrelation {
             name: name,

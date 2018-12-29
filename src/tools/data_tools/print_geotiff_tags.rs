@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 2, 2018
@@ -63,7 +63,8 @@ impl PrintGeoTiffTags {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input=DEM.tiff",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         PrintGeoTiffTags {
             name: name,

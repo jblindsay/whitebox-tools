@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
@@ -83,7 +83,8 @@ impl Clump {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --diag",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         Clump {
             name: name,
@@ -289,9 +290,11 @@ impl WhiteboxTool for Clump {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 5, 2017
@@ -86,7 +86,8 @@ impl DiversityFilter {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=25",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         DiversityFilter {
             name: name,
@@ -234,7 +235,7 @@ impl WhiteboxTool for DiversityFilter {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
-        /* 
+        /*
         Need to know if the image contains integer or floating point values.
         If it is floating point values, then a non-unit multiplier must be used.
         */
@@ -347,9 +348,11 @@ impl WhiteboxTool for DiversityFilter {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

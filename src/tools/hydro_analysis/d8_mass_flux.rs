@@ -1,11 +1,11 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 29, 2017
 Last Modified: 12/10/2018
 License: MIT
 
-Notes: Assumes that each of the three input rasters have the same number of rows and 
+Notes: Assumes that each of the three input rasters have the same number of rows and
        columns and that any nodata cells present are the same among each of the inputs.
 */
 
@@ -494,9 +494,11 @@ impl WhiteboxTool for D8MassFlux {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

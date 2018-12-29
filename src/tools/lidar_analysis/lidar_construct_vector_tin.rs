@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/09/2018
@@ -272,25 +272,27 @@ impl WhiteboxTool for LidarConstructVectorTIN {
             }
             match fs::read_dir(working_directory) {
                 Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
-                        )
-                    } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-                        // assumes the zip file contains LAS data.
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                        outputs.push(
-                            inputs[inputs.len() - 1]
-                                .replace(".zip", ".tif")
-                                .replace(".ZIP", ".tif"),
-                        )
+                Ok(paths) => {
+                    for path in paths {
+                        let s = format!("{:?}", path.unwrap().path());
+                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".las", ".tif")
+                                    .replace(".LAS", ".tif"),
+                            )
+                        } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
+                            // assumes the zip file contains LAS data.
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            outputs.push(
+                                inputs[inputs.len() - 1]
+                                    .replace(".zip", ".tif")
+                                    .replace(".ZIP", ".tif"),
+                            )
+                        }
                     }
-                },
+                }
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
@@ -463,7 +465,8 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
                                 aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                                    + 90f64 * (fx / (fx).abs())).to_radians();
+                                    + 90f64 * (fx / (fx).abs()))
+                                .to_radians();
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;
                                 term3 = cos_theta * (azimuth - aspect).sin();
@@ -503,9 +506,11 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                     };
 
                     let _ = match output.write() {
-                        Ok(_) => if verbose {
-                            println!("Output file written")
-                        },
+                        Ok(_) => {
+                            if verbose {
+                                println!("Output file written")
+                            }
+                        }
                         Err(e) => panic!("Error reading file {}:\n{:?}", input_file, e),
                     };
 

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 23, 2017
@@ -400,7 +400,8 @@ impl WhiteboxTool for LidarHistogram {
                 &format!(
                     "<br><strong>Clip amount</strong>: {}%</p>",
                     clip_percent * 100f64
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
         } else {
             writer.write_all("</p>".as_bytes())?;

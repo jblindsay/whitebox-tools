@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: March 15, 2018
@@ -346,7 +346,8 @@ impl WhiteboxTool for ImageStackProfile {
                     .write(
                         &format!("<td class=\"numberCell\">{}</td>", ydata[record_num][i])
                             .as_bytes(),
-                    ).unwrap();
+                    )
+                    .unwrap();
             }
             writer.write("</tr>".as_bytes()).unwrap();
         }

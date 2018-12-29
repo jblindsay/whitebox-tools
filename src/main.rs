@@ -1,4 +1,4 @@
-/* 
+/*
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
@@ -7,12 +7,12 @@ License: MIT
 */
 
 /*!
-WhiteboxTools is an advanced geospatial data analysis platform developed at 
-the University of Guelph's Geomorphometry and Hydrogeomatics Research Group (GHRG). 
+WhiteboxTools is an advanced geospatial data analysis platform developed at
+the University of Guelph's Geomorphometry and Hydrogeomatics Research Group (GHRG).
 
-WhiteboxTools is a command-line program and can be run either by calling it, 
-with appropriate commands and arguments, from a terminal application, or, more 
-conveniently, by calling it from a script. The following commands are recognized 
+WhiteboxTools is a command-line program and can be run either by calling it,
+with appropriate commands and arguments, from a terminal application, or, more
+conveniently, by calling it from a script. The following commands are recognized
 by the WhiteboxTools library:
 
 | Command           | Description                                                                                       |
@@ -106,15 +106,16 @@ fn run() -> Result<(), Error> {
         return Ok(());
     }
     for arg in args {
-        // let flag_val = arg.to_lowercase().replace("--", "-");
+        let flag_val = arg.to_lowercase().replace("--", "-");
         if arg.starts_with("-h") || arg.starts_with("--help") {
             help();
             return Ok(());
-        } else if arg.starts_with("-cd") || arg.starts_with("--cd") || arg.starts_with("--wd") {
+        } else if flag_val.starts_with("-cd") || flag_val.starts_with("-wd") {
             let mut v = arg
                 .replace("--cd", "")
                 .replace("--wd", "")
                 .replace("-cd", "")
+                .replace("-wd", "")
                 .replace("\"", "")
                 .replace("\'", "");
             if v.starts_with("=") {

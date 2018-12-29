@@ -1,4 +1,4 @@
-/* 
+/*
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 21, 2017
@@ -17,10 +17,10 @@ use self::geometry::*;
 //     AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
 //     ShapefileAttributes,
 // };
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use chrono::prelude::*;
 use crate::structures::Point2D;
 use crate::utils::{ByteOrderReader, Endianness};
+use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use chrono::prelude::*;
 // use geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use std::f64;
 use std::fmt;

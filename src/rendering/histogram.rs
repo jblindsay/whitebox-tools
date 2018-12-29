@@ -3,7 +3,7 @@ pub struct Histogram {
     pub width: f64,
     pub height: f64,
     pub freq_data: Vec<usize>,
-    pub min_bin_val: f64, 
+    pub min_bin_val: f64,
     pub bin_width: f64,
     pub x_axis_label: String,
     pub cumulative: bool,
@@ -13,10 +13,10 @@ impl Histogram {
     // pub fn new<'a>(
     //     target_id: String,
     //     width: f64,
-    //     height: f64, 
+    //     height: f64,
     //     freq_data: &'a Vec<usize>,
-    //     min_bin_val: f64, 
-    //     bin_width: f64, 
+    //     min_bin_val: f64,
+    //     bin_width: f64,
     //     cumulative: bool,
     //     x_axis_label: String) -> Histogram {
 
@@ -25,7 +25,7 @@ impl Histogram {
     //         width: width,
     //         height: height,
     //         freq_data: freq_data.clone(),
-    //         min_bin_val: min_bin_val, 
+    //         min_bin_val: min_bin_val,
     //         bin_width: bin_width,
     //         x_axis_label: x_axis_label.clone(),
     //         cumulative: cumulative,
@@ -35,7 +35,8 @@ impl Histogram {
     pub fn get_svg(&self) -> String {
         let data = format!("{:?}", self.freq_data);
         let mut s = String::new();
-        s.push_str(&format!(r#"
+        s.push_str(&format!(
+            r#"
     <script>
       var data = {};
       var cumulative = {};
@@ -48,15 +49,16 @@ impl Histogram {
       var isCumulative = false;
       var totalValue = -1;
       var pdf = false;
-      var isPdf = false;"#, 
-      data, 
-      self.cumulative, 
-      self.x_axis_label, 
-      self.width, 
-      self.height, 
-      self.min_bin_val, 
-      self.bin_width,
-      self.parent_id));
+      var isPdf = false;"#,
+            data,
+            self.cumulative,
+            self.x_axis_label,
+            self.width,
+            self.height,
+            self.min_bin_val,
+            self.bin_width,
+            self.parent_id
+        ));
 
         s.push_str(&r#"
       function update(svg) {
@@ -619,7 +621,7 @@ impl Histogram {
 
       update(null);
     </script>"#);
-        
+
         s
     }
 }

@@ -1,12 +1,12 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 28, 2017
 Last Modified: 12/10/2018
 License: MIT
 
-NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating 
-the D8 pointer raster and finally the D8 flow accumulation operation. 
+NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating
+the D8 pointer raster and finally the D8 flow accumulation operation.
 */
 
 use crate::raster::*;
@@ -374,7 +374,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently
-        have nodata edges, whereby the DEM does not occupy the full extent of 
+        have nodata edges, whereby the DEM does not occupy the full extent of
         the raster. One approach to doing this would be simply to scan the
         raster, looking for cells that neighbour nodata values. However, this
         assumes that there are no interior nodata holes in the dataset. Instead,
@@ -399,7 +399,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             queue.push_back((rows, col));
         }
 
-        /* 
+        /*
         minheap is the priority queue. Note that I've tested using integer-based
         priority values, by multiplying the elevations, but this didn't result
         in a significant performance gain over the use of f64s.
@@ -526,8 +526,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     /* Check to see if the flow direction could be improved; if so, capture its flow.
                     This is the main logic for the flow direction calculation. Basically,
                     we link cells to the neighbour that has the closest flow direction to the
-                    cell's aspect and is connected by a continuous downward path to an edge cell. 
-                    We are looking to minimize the absolute difference between the aspect and the 
+                    cell's aspect and is connected by a continuous downward path to an edge cell.
+                    We are looking to minimize the absolute difference between the aspect and the
                     D8 flow direction. */
                     if flow_dir[(row_n, col_n)] >= 0 {
                         let prospective_fd = directions[back_link[n] as usize];
@@ -584,9 +584,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             println!("Saving DEM data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -773,9 +775,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             println!("Saving flow pointer data...")
         };
         let _ = match pntr.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -794,9 +798,11 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             println!("Saving accumulation data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017
@@ -348,7 +348,7 @@ impl WhiteboxTool for LidarSegmentation {
                 }
                 point_id = stack.pop().unwrap();
                 /* Check the neighbours to see if there are any
-                points that have similar normal vectors and 
+                points that have similar normal vectors and
                 heights. */
                 let p: PointData = input.get_point_info(point_id);
                 let ret = frs.search(p.x, p.y, p.z);

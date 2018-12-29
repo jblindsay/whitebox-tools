@@ -1,6 +1,6 @@
 use super::*;
-use byteorder::{LittleEndian, WriteBytesExt};
 use crate::utils::Endianness;
+use byteorder::{LittleEndian, WriteBytesExt};
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -307,10 +307,10 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 writer.write_all("Data Type:\tI32\n".as_bytes())?;
             }
         }
-        DataType::F32 | DataType::RGBA32 => {
+        DataType::F32 | DataType::RGBA32 | DataType::U16 => {
             writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
         }
-        DataType::I32 | DataType::U16 => {
+        DataType::I32 => {
             writer.write_all("Data Type:\tI32\n".as_bytes())?;
         }
         DataType::I16 => {

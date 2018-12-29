@@ -3,12 +3,13 @@ pub mod geokeys;
 pub mod tiff_consts;
 
 // use flate2::read::GzDecoder;
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use crate::structures::{Point2D, PolynomialRegression2D};
 use crate::raster::geotiff::geokeys::*;
 use crate::raster::geotiff::tiff_consts::*;
 use crate::raster::*;
 use crate::spatial_ref_system::esri_wkt_from_epsg;
 use crate::utils::{ByteOrderReader, Endianness};
+use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use libflate::zlib::Decoder;
 use std::cmp::min;
 use std::collections::HashMap;
@@ -347,6 +348,20 @@ pub fn read_geotiff<'a>(
     //     _ => 0,
     // };
 
+    match ifd_map.get(&280) {
+        Some(ifd) => {
+            configs.display_min = ifd.interpret_as_u16()[0] as f64;
+        }
+        _ => {}
+    };
+
+    match ifd_map.get(&281) {
+        Some(ifd) => {
+            configs.display_max = ifd.interpret_as_u16()[0] as f64;
+        }
+        _ => {}
+    };
+
     let extra_samples = match ifd_map.get(&338) {
         Some(ifd) => ifd.interpret_as_u16()[0],
         _ => 0,
@@ -362,8 +377,12 @@ pub fn read_geotiff<'a>(
         _ => -32768f64,
     };
 
+    // GeoKeyDirectoryTag
     match ifd_map.get(&34735) {
-        Some(ifd) => geokeys.add_key_directory(&ifd.data, configs.endian),
+        Some(ifd) => {
+            configs.geo_key_directory = ifd.interpret_as_u16();
+            geokeys.add_key_directory(&ifd.data, configs.endian);
+        },
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidData,
@@ -372,35 +391,204 @@ pub fn read_geotiff<'a>(
         }
     };
 
+    // GeoDoubleParamsTag
     match ifd_map.get(&34736) {
-        Some(ifd) => geokeys.add_double_params(&ifd.data, configs.endian),
+        Some(ifd) => {
+            configs.geo_double_params = ifd.interpret_as_f64();
+            geokeys.add_double_params(&ifd.data, configs.endian);
+        },
         _ => {}
     };
 
+    // GeoAsciiParamsTag
     match ifd_map.get(&34737) {
-        Some(ifd) => geokeys.add_ascii_params(&ifd.data),
+        Some(ifd) => {
+            configs.geo_ascii_params = ifd.interpret_as_ascii();
+            geokeys.add_ascii_params(&ifd.data);
+        },
         _ => {}
     };
 
     let geokeys_map = geokeys.get_ifd_map(configs.endian);
 
-    let model_tiepoints = match ifd_map.get(&33922) {
+    // ModelTiePointTag
+    configs.model_tiepoint = match ifd_map.get(&33922) {
         Some(ifd) => ifd.interpret_as_f64(),
         _ => vec![0.0],
     };
 
-    let model_pixel_scale = match ifd_map.get(&33550) {
-        Some(ifd) => ifd.interpret_as_f64(),
-        _ => vec![0.0],
-    };
+    // ModelPixelScale
+    match ifd_map.get(&33550) {
+        Some(ifd) => {
+            let vals = ifd.interpret_as_f64();
+            if vals.len() != 3 {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error: the ModelPixelScaleTag (33550) is not specified correctly in the GeoTIFF file.",
+                ));
+            }
+            for i in 0..3 {
+                configs.model_pixel_scale[i] = vals[i];
+            }
+        }
+        _ => {}
+    }
 
-    if model_tiepoints.len() == 6 && model_pixel_scale.len() == 3 {
-        configs.resolution_x = model_pixel_scale[0];
-        configs.resolution_y = model_pixel_scale[1];
-        configs.west = model_tiepoints[3];
-        configs.east = configs.west + configs.resolution_x * configs.columns as f64;
-        configs.north = model_tiepoints[4];
-        configs.south = configs.north - configs.resolution_y * configs.rows as f64;
+    // ModelTransformationTag
+    match ifd_map.get(&33920) {
+        Some(ifd) => {
+            let vals = ifd.interpret_as_f64();
+            if vals.len() != 16 {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error: the ModelTransformationTag (33920) is not specified correctly in the GeoTIFF file.",
+                ));
+            }
+            for i in 0..16 {
+                configs.model_transformation[i] = vals[i];
+            }
+        }
+        _ => {}
+    }
+
+    if configs.model_tiepoint.len() == 6 {
+        // see if the model_pixel_scale tag was actually specified
+        if configs.model_pixel_scale[0] == 0.0 {
+            configs.model_pixel_scale[0] = 1.0;
+            configs.model_pixel_scale[1] = 1.0;
+            println!("Warning: The ModelPixelScaleTag (33550) is not specified. A pixel resolution of 1.0 has been assumed.");
+        }
+        // The common case of one tie-point and pixel size.
+        // The position and scale of the data is known exactly, and
+        // no rotation or shearing is needed to fit into the model space.
+        // Use the ModelTiepointTag to define the (X,Y,Z) coordinates
+        // of the known raster point, and the ModelPixelScaleTag to
+        // specify the scale.
+        configs.resolution_x = configs.model_pixel_scale[0];
+        configs.resolution_y = configs.model_pixel_scale[1];
+        let tx = configs.model_tiepoint[3] - configs.model_tiepoint[0] / configs.resolution_x;
+        let ty = configs.model_tiepoint[4] + configs.model_tiepoint[1] / configs.resolution_y;
+        // upper-left corner coordinates
+        let mut col = 0.0;
+        let mut row = 0.0;
+        configs.west = configs.resolution_x * col + tx;
+        configs.north = -configs.resolution_y * row + ty;
+        // lower-right corner coordinates
+        col = (configs.columns - 1) as f64;
+        row = (configs.rows - 1) as f64;
+        configs.east = configs.resolution_x * col + tx;
+        configs.south = -configs.resolution_y * row + ty;
+
+    } else if configs.model_tiepoint.len() > 6 {
+        // how many points are there?
+        let num_tie_points = configs.model_tiepoint.len() / 6;
+        let mut x = Vec::with_capacity(num_tie_points);
+        let mut y = Vec::with_capacity(num_tie_points);
+        let mut x_prime = Vec::with_capacity(num_tie_points);
+        let mut y_prime = Vec::with_capacity(num_tie_points);
+        for a in 0..num_tie_points {
+            let b = a * 6;
+            x.push(configs.model_tiepoint[b]);
+            y.push(configs.model_tiepoint[b + 1]);
+            x_prime.push(configs.model_tiepoint[b + 3]);
+            y_prime.push(configs.model_tiepoint[b + 4]);
+        }
+
+        let mut minxp = std::f64::MAX;
+        for i in 0..num_tie_points {
+            if x_prime[i] < minxp { minxp = x_prime[i]; }
+        }
+        for i in 0..num_tie_points {
+            x_prime[i] -= minxp;
+        }
+
+        let mut minyp = std::f64::MAX;
+        for i in 0..num_tie_points {
+            if y_prime[i] < minyp { minyp = y_prime[i]; }
+        }
+        for i in 0..num_tie_points {
+            y_prime[i] -= minyp;
+        }
+
+        let poly_order = 3;
+        let pr2d = PolynomialRegression2D::new(poly_order, &x_prime, &y_prime, &x, &y).unwrap();
+
+        // upper-left corner coordinates
+        let mut col = 0.0f64;
+        let mut row = 0.0f64;
+        let mut val = pr2d.get_value(col, row);
+        let upper_left_x = minxp + val.0;
+        let upper_left_y = minyp + val.1;
+
+        // upper-right corner coordinates
+        col = (configs.columns - 1) as f64;
+        row = 0.0;
+        val = pr2d.get_value(col, row);
+        let upper_right_x = minxp + val.0;
+        let upper_right_y = minyp + val.1;
+
+        // lower-left corner coordinates
+        col = 0.0;
+        row = (configs.rows - 1) as f64;
+        val = pr2d.get_value(col, row);
+        let lower_left_x = minxp + val.0;
+        let lower_left_y = minyp + val.1;
+
+        // lower-right corner coordinates
+        col = (configs.columns - 1) as f64;
+        row = (configs.rows - 1) as f64;
+        val = pr2d.get_value(col, row);
+        let lower_right_x = minxp + val.0;
+        let lower_right_y = minyp + val.1;
+
+        configs.west = lower_left_x.min(upper_left_x);
+        configs.east = lower_right_x.max(upper_right_x);
+        configs.south = lower_left_y.min(lower_right_y);
+        configs.north = upper_left_y.max(upper_right_y);
+
+        // resolution
+        let upper_right = Point2D::new(upper_right_x, upper_right_y);
+        let upper_left = Point2D::new(upper_left_x, upper_left_y);
+        let lower_left = Point2D::new(lower_left_x, lower_left_y);
+        configs.resolution_x = upper_right.distance(&upper_left) / configs.columns as f64;
+        configs.resolution_y = upper_left.distance(&lower_left) / configs.rows as f64;
+
+    } else if configs.model_transformation[0] != 0.0 {
+        configs.resolution_x = configs.model_transformation[0];
+        configs.resolution_y = configs.model_transformation[5].abs();
+        // upper-left corner coordinates
+        let mut col = 0.0;
+        let mut row = 0.0;
+        let upper_left_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
+        let upper_left_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
+        
+        // upper-right corner coordinates
+        col = (configs.columns - 1) as f64;
+        row = 0.0;
+        let upper_right_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
+        let upper_right_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
+        
+        // lower-left corner coordinates
+        col = 0.0;
+        row = (configs.rows - 1) as f64;
+        let lower_left_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
+        let lower_left_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
+        
+        // lower-right corner coordinates
+        col = (configs.columns - 1) as f64;
+        row = (configs.rows - 1) as f64;
+        let lower_right_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
+        let lower_right_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
+
+        configs.west = lower_left_x.min(upper_left_x);
+        configs.east = lower_right_x.max(upper_right_x);
+        configs.south = lower_left_y.min(lower_right_y);
+        configs.north = upper_left_y.max(upper_right_y);
+    } else {
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "The model-space/raster-space transformation cannot be defined.",
+        ));
     }
 
     // Get the EPSG code and WKT CRS
@@ -1405,7 +1593,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let mut ifd_entries: Vec<IfdEntry> = vec![];
         let mut larger_values_data: Vec<u8> = vec![];
 
-        /* 
+        /*
         IFD entries
 
         Bytes 0-1 The Tag that identifies the field.
@@ -1414,7 +1602,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
         The Value is expected to begin on a word boundary; the corresponding
         Value Offset will thus be an even number. This file offset may
-        point anywhere in the file, even after the image data. 
+        point anywhere in the file, even after the image data.
 
         To save time and space the Value Offset contains the Value instead of pointing to
         the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
@@ -1634,30 +1822,68 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
 
-        // ModelTiepointTag tag (33550)
-        ifd_entries.push(IfdEntry::new(
-            TAG_MODELPIXELSCALETAG,
-            DT_DOUBLE,
-            3u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_x);
-        let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_y);
-        let _ = larger_values_data.write_f64::<LittleEndian>(0f64);
+        // ModelPixelScaleTag tag (33550)
+        if r.configs.model_pixel_scale[0] == 0f64 && r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
+            ifd_entries.push(IfdEntry::new(
+                TAG_MODELPIXELSCALETAG,
+                DT_DOUBLE,
+                3u32,
+                larger_values_data.len() as u32,
+            ));
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_x);
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_y);
+            let _ = larger_values_data.write_f64::<LittleEndian>(0f64);
+        } else if r.configs.model_pixel_scale[0] != 0f64 {
+            ifd_entries.push(IfdEntry::new(
+                TAG_MODELPIXELSCALETAG,
+                DT_DOUBLE,
+                3u32,
+                larger_values_data.len() as u32,
+            ));
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[0]);
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[1]);
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[2]);
+        }
 
-        // ModelPixelScaleTag tag (33922)
-        ifd_entries.push(IfdEntry::new(
-            TAG_MODELTIEPOINTTAG,
-            DT_DOUBLE,
-            6u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // I
-        let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // J
-        let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // K
-        let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.west); // X
-        let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.north); // Y
-        let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // Z
+        if r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
+            // ModelTiepointTag tag (33922)
+            ifd_entries.push(IfdEntry::new(
+                TAG_MODELTIEPOINTTAG,
+                DT_DOUBLE,
+                6u32,
+                larger_values_data.len() as u32,
+            ));
+            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // I
+            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // J
+            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // K
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.west); // X
+            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.north); // Y
+            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // Z
+        } else if !r.configs.model_tiepoint.is_empty() {
+            // ModelTiepointTag tag (33922)
+            ifd_entries.push(IfdEntry::new(
+                TAG_MODELTIEPOINTTAG,
+                DT_DOUBLE,
+                r.configs.model_tiepoint.len() as u32,
+                larger_values_data.len() as u32,
+            ));
+            for i in 0..r.configs.model_tiepoint.len() {
+                let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_tiepoint[i]);
+            }
+        }
+
+        if r.configs.model_transformation[0] != 0f64 {
+            // ModelTransformationTag tag (33920)
+            ifd_entries.push(IfdEntry::new(
+                TAG_MODELTRANSFORMATIONTAG,
+                DT_DOUBLE,
+                16u32,
+                larger_values_data.len() as u32,
+            ));
+            for i in 0..16 {
+                let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_transformation[i]);
+            }
+        }
 
         // TAG_GDAL_NODATA tag (42113)
         let nodata_str = format!("{}", r.configs.nodata);
@@ -1887,53 +2113,97 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
 
-        // create the GeoKeyDirectoryTag tag (34735)
-        ifd_entries.push(IfdEntry::new(
-            TAG_GEOKEYDIRECTORYTAG,
-            DT_SHORT,
-            (4 + gk_entries.len() * 4) as u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyDirectoryVersion
-        let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyRevision
-        let _ = larger_values_data.write_u16::<LittleEndian>(0u16); // MinorRevision
-        let _ = larger_values_data.write_u16::<LittleEndian>(gk_entries.len() as u16); // NumberOfKeys
-
-        for entry in gk_entries {
-            let _ = larger_values_data.write_u16::<LittleEndian>(entry.tag); // KeyID
-            let _ = larger_values_data.write_u16::<LittleEndian>(entry.location); // TIFFTagLocation
-            let _ = larger_values_data.write_u16::<LittleEndian>(entry.count); // Count
-            let _ = larger_values_data.write_u16::<LittleEndian>(entry.value_offset); // Value_Offset
-        }
-
-        if double_params.len() > 0 {
-            // create the GeoDoubleParamsTag tag (34736)
+        if r.configs.geo_key_directory.is_empty() {
+            // create the GeoKeyDirectoryTag tag (34735)
             ifd_entries.push(IfdEntry::new(
-                TAG_GEODOUBLEPARAMSTAG,
-                DT_DOUBLE,
-                double_params.len() as u32,
+                TAG_GEOKEYDIRECTORYTAG,
+                DT_SHORT,
+                (4 + gk_entries.len() * 4) as u32,
                 larger_values_data.len() as u32,
             ));
-            for double_val in double_params {
-                let _ = larger_values_data.write_f64::<LittleEndian>(double_val);
+            let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyDirectoryVersion
+            let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyRevision
+            let _ = larger_values_data.write_u16::<LittleEndian>(0u16); // MinorRevision
+            let _ = larger_values_data.write_u16::<LittleEndian>(gk_entries.len() as u16); // NumberOfKeys
+
+            for entry in gk_entries {
+                let _ = larger_values_data.write_u16::<LittleEndian>(entry.tag); // KeyID
+                let _ = larger_values_data.write_u16::<LittleEndian>(entry.location); // TIFFTagLocation
+                let _ = larger_values_data.write_u16::<LittleEndian>(entry.count); // Count
+                let _ = larger_values_data.write_u16::<LittleEndian>(entry.value_offset); // Value_Offset
             }
-        }
 
-        if ascii_params.len() > 0 {
-            // create the GeoAsciiParamsTag tag (34737)
-            let mut ascii_params_bytes = ascii_params.into_bytes();
-            ascii_params_bytes.push(0);
-            ifd_entries.push(IfdEntry::new(
-                TAG_GEOASCIIPARAMSTAG,
-                DT_ASCII,
-                ascii_params_bytes.len() as u32,
-                larger_values_data.len() as u32,
-            ));
-            if ascii_params_bytes.len() % 2 == 1 {
-                // it has to end on a word so that the next value starts on a word
+            if double_params.len() > 0 {
+                // create the GeoDoubleParamsTag tag (34736)
+                ifd_entries.push(IfdEntry::new(
+                    TAG_GEODOUBLEPARAMSTAG,
+                    DT_DOUBLE,
+                    double_params.len() as u32,
+                    larger_values_data.len() as u32,
+                ));
+                for double_val in double_params {
+                    let _ = larger_values_data.write_f64::<LittleEndian>(double_val);
+                }
+            }
+
+            if ascii_params.len() > 0 {
+                // create the GeoAsciiParamsTag tag (34737)
+                let mut ascii_params_bytes = ascii_params.into_bytes();
                 ascii_params_bytes.push(0);
+                ifd_entries.push(IfdEntry::new(
+                    TAG_GEOASCIIPARAMSTAG,
+                    DT_ASCII,
+                    ascii_params_bytes.len() as u32,
+                    larger_values_data.len() as u32,
+                ));
+                if ascii_params_bytes.len() % 2 == 1 {
+                    // it has to end on a word so that the next value starts on a word
+                    ascii_params_bytes.push(0);
+                }
+                let _ = larger_values_data.write_all(&ascii_params_bytes);
             }
-            let _ = larger_values_data.write_all(&ascii_params_bytes);
+        } else {
+            // let num_keys = (r.configs.geo_key_directory.len() - 4) / 4;
+            // output the GeoKeyDirectoryTag tag (34735)
+            ifd_entries.push(IfdEntry::new(
+                TAG_GEOKEYDIRECTORYTAG,
+                DT_SHORT,
+                r.configs.geo_key_directory.len() as u32,
+                larger_values_data.len() as u32,
+            ));
+            for val in &r.configs.geo_key_directory {
+                let _ = larger_values_data.write_u16::<LittleEndian>(*val);
+            }
+
+            if r.configs.geo_double_params.len() > 0 {
+                // create the GeoDoubleParamsTag tag (34736)
+                ifd_entries.push(IfdEntry::new(
+                    TAG_GEODOUBLEPARAMSTAG,
+                    DT_DOUBLE,
+                    r.configs.geo_double_params.len() as u32,
+                    larger_values_data.len() as u32,
+                ));
+                for double_val in &r.configs.geo_double_params {
+                    let _ = larger_values_data.write_f64::<LittleEndian>(*double_val);
+                }
+            }
+
+            if !r.configs.geo_ascii_params.is_empty() {
+                // create the GeoAsciiParamsTag tag (34737)
+                let mut ascii_params_bytes = r.configs.geo_ascii_params.clone().into_bytes();
+                ascii_params_bytes.push(0);
+                ifd_entries.push(IfdEntry::new(
+                    TAG_GEOASCIIPARAMSTAG,
+                    DT_ASCII,
+                    ascii_params_bytes.len() as u32,
+                    larger_values_data.len() as u32,
+                ));
+                if ascii_params_bytes.len() % 2 == 1 {
+                    // it has to end on a word so that the next value starts on a word
+                    ascii_params_bytes.push(0);
+                }
+                let _ = larger_values_data.write_all(&ascii_params_bytes);
+            }
         }
 
         ///////////////////
@@ -1979,65 +2249,65 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         writer.write_all(&larger_values_data)?;
 
     /*
-            Required Fields for Bilevel Images
-            - ImageWidth 
-            - ImageLength 
-            - Compression 
-            - PhotometricInterpretation 
-            - StripOffsets 
-            - RowsPerStrip 
-            - StripByteCounts 
-            - XResolution 
-            - YResolution 
-            - ResolutionUnit
-        */
+        Required Fields for Bilevel Images
+        - ImageWidth
+        - ImageLength
+        - Compression
+        - PhotometricInterpretation
+        - StripOffsets
+        - RowsPerStrip
+        - StripByteCounts
+        - XResolution
+        - YResolution
+        - ResolutionUnit
+    */
 
     /*
-            Required Fields for Grayscale Images
-            - ImageWidth
-            - ImageLength
-            - BitsPerSample
-            - Compression
-            - PhotometricInterpretation
-            - StripOffsets
-            - RowsPerStrip
-            - StripByteCounts
-            - XResolution
-            - YResolution
-            - ResolutionUnit
-        */
+        Required Fields for Grayscale Images
+        - ImageWidth
+        - ImageLength
+        - BitsPerSample
+        - Compression
+        - PhotometricInterpretation
+        - StripOffsets
+        - RowsPerStrip
+        - StripByteCounts
+        - XResolution
+        - YResolution
+        - ResolutionUnit
+    */
 
     /*
-            Required Fields for Palette Colour Images
-            - ImageWidth
-            - ImageLength
-            - BitsPerSample
-            - Compression
-            - PhotometricInterpretation
-            - StripOffsets
-            - RowsPerStrip
-            - StripByteCounts
-            - XResolution
-            - YResolution
-            - ResolutionUnit
-            - ColorMap
-        */
+        Required Fields for Palette Colour Images
+        - ImageWidth
+        - ImageLength
+        - BitsPerSample
+        - Compression
+        - PhotometricInterpretation
+        - StripOffsets
+        - RowsPerStrip
+        - StripByteCounts
+        - XResolution
+        - YResolution
+        - ResolutionUnit
+        - ColorMap
+    */
 
     /*
-            Required Fields for RGB Images
-            - ImageWidth
-            - ImageLength
-            - BitsPerSample
-            - Compression
-            - PhotometricInterpretation
-            - StripOffsets
-            - SamplesPerPixel
-            - RowsPerStrip
-            - StripByteCounts
-            - XResolution
-            - YResolution
-            - ResolutionUnit
-        */
+        Required Fields for RGB Images
+        - ImageWidth
+        - ImageLength
+        - BitsPerSample
+        - Compression
+        - PhotometricInterpretation
+        - StripOffsets
+        - SamplesPerPixel
+        - RowsPerStrip
+        - StripByteCounts
+        - XResolution
+        - YResolution
+        - ResolutionUnit
+    */
     } else {
         //////////////////////
         // Write the header //
@@ -2224,7 +2494,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         let mut ifd_entries: Vec<IfdEntry> = vec![];
         let mut larger_values_data: Vec<u8> = vec![];
 
-        /* 
+        /*
         IFD entries
 
         Bytes 0-1 The Tag that identifies the field.
@@ -2233,7 +2503,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
         The Value is expected to begin on a word boundary; the corresponding
         Value Offset will thus be an even number. This file offset may
-        point anywhere in the file, even after the image data. 
+        point anywhere in the file, even after the image data.
 
         To save time and space the Value Offset contains the Value instead of pointing to
         the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
@@ -3004,7 +3274,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //     bytes. Whether the Value fits within 4 bytes is determined by the Type
     //     and Count of the field.
     //     */
-
     //     // ImageWidth tag (256)
     //     writer.write_u16::<LittleEndian>(TAG_IMAGEWIDTH)?; // Tag
     //     writer.write_u16::<LittleEndian>(DT_LONG)?; // Field type LONG
@@ -3381,7 +3650,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         - YResolution
     //         - ResolutionUnit
     //     */
-
     //     /*
     //         Required Fields for Grayscale Images
     //         - ImageWidth
@@ -3396,7 +3664,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         - YResolution
     //         - ResolutionUnit
     //     */
-
     //     /*
     //         Required Fields for Palette Colour Images
     //         - ImageWidth
@@ -3412,7 +3679,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         - ResolutionUnit
     //         - ColorMap
     //     */
-
     //     /*
     //         Required Fields for RGB Images
     //         - ImageWidth
@@ -3428,7 +3694,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //         - YResolution
     //         - ResolutionUnit
     //     */
-
     // } else {
 
     // }

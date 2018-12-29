@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
@@ -75,7 +75,8 @@ impl GaussianFilter {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma=2.0",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         GaussianFilter {
             name: name,

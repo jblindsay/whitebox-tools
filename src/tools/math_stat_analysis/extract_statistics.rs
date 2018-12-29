@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 15, 2017
@@ -461,9 +461,11 @@ impl WhiteboxTool for ExtractRasterStatistics {
                 println!("Saving data...")
             };
             let _ = match output.write() {
-                Ok(_) => if verbose {
-                    println!("Output file written")
-                },
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
                 Err(e) => return Err(e),
             };
         }
@@ -542,7 +544,8 @@ impl WhiteboxTool for ExtractRasterStatistics {
                 format!(
                     "<p><strong>Input feature definition file</strong>: {}</p>",
                     features_file
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
 
             writer.write_all("<br><table align=\"center\">".as_bytes())?;
@@ -582,7 +585,8 @@ impl WhiteboxTool for ExtractRasterStatistics {
                             format!("{:.*}", 4, features_range[id]),
                             format!("{:.*}", 4, features_std_deviation[id]),
                             format!("{:.*}", 4, features_total[id]),
-                        ).as_bytes(),
+                        )
+                        .as_bytes(),
                     )?;
                 }
             }

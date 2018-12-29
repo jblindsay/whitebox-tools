@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Simon Gudim
 Created: 04/05/2017
@@ -70,7 +70,8 @@ impl CornerDetection {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --sigma=2.0",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         CornerDetection {
             name: name,
@@ -267,9 +268,11 @@ impl WhiteboxTool for CornerDetection {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

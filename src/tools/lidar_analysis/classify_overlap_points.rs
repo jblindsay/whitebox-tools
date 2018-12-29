@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/04/2018
@@ -8,13 +8,13 @@ License: MIT
 NOTES: If the --filter flag is specified, points from overlapping flightlines (i.e. later GPS times)
 are culled from the output point cloud. If this flag is left off, then all overlapping points are
 classified as such by setting the classification to 12. Note that points are considered
-to be from different flightlines if their GPS times are different by greater than 15 units. Nearby 
+to be from different flightlines if their GPS times are different by greater than 15 units. Nearby
 points that are from the same flightline generally have times that differ by several orders of magnitude
-less than this threshold and neighbouring points from different flightlines generally have times that 
+less than this threshold and neighbouring points from different flightlines generally have times that
 differ by orders of magnitude higher than this threshold. This tool assumes that GPS data are available
 for the input LAS file.
 
-When the LAS encoder is updated to output v 1.4 LAS files, the overlap flag should be used to 
+When the LAS encoder is updated to output v 1.4 LAS files, the overlap flag should be used to
 designate overlapping points in 'classify' mode rather than class 12.
 */
 
@@ -95,7 +95,8 @@ impl ClassifyOverlapPoints {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.las --resolution=2.0",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         ClassifyOverlapPoints {
             name: name,

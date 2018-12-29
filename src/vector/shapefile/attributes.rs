@@ -1,11 +1,11 @@
-/* 
+/*
 This file is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/04/2018
 Last Modified: 12/04/2018
 License: MIT
 
-NOTE: Structures and functions for handling the Shapefile attribute table info 
+NOTE: Structures and functions for handling the Shapefile attribute table info
 contained with the associated .dbf file.
 */
 

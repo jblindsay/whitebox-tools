@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 18, 2017
@@ -84,7 +84,8 @@ impl WriteFunctionMemoryInsertion {
         let usage = format!(
             ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i1=input1.tif -i2=input2.tif -o=output.tif",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         WriteFunctionMemoryInsertion {
             name: name,
@@ -339,9 +340,11 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
         if verbose {

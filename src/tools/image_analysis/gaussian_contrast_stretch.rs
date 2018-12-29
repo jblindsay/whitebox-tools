@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/05/2018
@@ -6,7 +6,7 @@ Last Modified: 13/10/2018
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
-       2. Unlike the original Whitebox GAT tool that this is based on, 
+       2. Unlike the original Whitebox GAT tool that this is based on,
           this tool will operate on RGB images in addition to greyscale images.
 */
 
@@ -80,7 +80,8 @@ impl GaussianContrastStretch {
         let usage = format!(
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --num_tones=1024",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         GaussianContrastStretch {
             name: name,

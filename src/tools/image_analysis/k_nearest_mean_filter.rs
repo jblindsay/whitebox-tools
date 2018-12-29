@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 27, 2017
@@ -98,7 +98,8 @@ impl KNearestMeanFilter {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=9 -k=5
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filtery=7 --filtery=9  -k=5",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         KNearestMeanFilter {
             name: name,

@@ -1,12 +1,12 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/03/2018
 Last Modified: 13/10/2018
 License: MIT
 
-Note: The current implementation reads every raster into memory at one time. This is 
-because of the calculation of the co-variances. As such, if the entire image stack can't 
+Note: The current implementation reads every raster into memory at one time. This is
+because of the calculation of the co-variances. As such, if the entire image stack can't
 fit in memory, the tool will not work.
 */
 
@@ -390,7 +390,8 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
             </head>
             <body>
                 <h1>Principal Component Analysis Report</h1>
-                "#.as_bytes(),
+                "#
+            .as_bytes(),
         )?;
 
         writer.write_all(("<p><strong>Inputs</strong>:<br>").as_bytes())?;

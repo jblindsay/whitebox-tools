@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 4, 2017
@@ -46,7 +46,7 @@ use std::path;
 /// NoData values in the input cost surface image are ignored during processing and assigned NoData values
 /// in the outputs. The output cost accumulation raster is of the float data type and continuous data scale.
 ///
-/// # See Also:
+/// # See Also
 /// `CostAllocation`, `CostPathway`, `WeightedOverlay`
 pub struct CostDistance {
     name: String,
@@ -656,9 +656,11 @@ impl WhiteboxTool for CostDistance {
             println!("Saving data...")
         };
         let _ = match output.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 
@@ -672,9 +674,11 @@ impl WhiteboxTool for CostDistance {
         backlink.add_metadata_entry(format!("Cost raster: {}", cost_file));
         backlink.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
         let _ = match backlink.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

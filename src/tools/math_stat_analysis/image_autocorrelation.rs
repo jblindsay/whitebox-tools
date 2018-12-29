@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 16, 2017
@@ -461,14 +461,16 @@ impl WhiteboxTool for ImageAutocorrelation {
                 &format!(
                     "<tr><td>Number of cells included</td><td>{}</td class=\"numberCell\"></tr>",
                     n[a]
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             // if (units[a].equals("")) {
             writer.write_all(
                 &format!(
                     "<tr><td>Mean of cells included</td><td class=\"numberCell\">{:.*}</td></tr>",
                     4, mean[a]
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             // } else {
             //     retstr.append("Mean of cells included:\t\t").append(df2.format(mean[a])).append(" ").append(units[a]).append("\n");
@@ -478,7 +480,8 @@ impl WhiteboxTool for ImageAutocorrelation {
                 &format!(
                     "<tr><td>Expected value</td> <td class=\"numberCell\">{:.*}</td></tr>",
                     4, e_i[a]
-                ).as_bytes(),
+                )
+                .as_bytes(),
             )?;
             writer.write_all(&format!("<tr><td>Variance of I (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, var_normality[a]).as_bytes())?;
             writer.write_all(&format!("<tr><td>z test stat (normality assumption)</td> <td class=\"numberCell\">{:.*}</td></tr>", 4, z_n[a]).as_bytes())?;

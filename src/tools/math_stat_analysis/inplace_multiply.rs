@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/03/2018
@@ -63,7 +63,8 @@ impl InPlaceMultiply {
             ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2='in2.tif'\"
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1='in1.tif' --input2=10.5'",
             short_exe, name
-        ).replace("*", &sep);
+        )
+        .replace("*", &sep);
 
         InPlaceMultiply {
             name: name,
@@ -253,9 +254,11 @@ impl WhiteboxTool for InPlaceMultiply {
         in1.update_min_max();
         in1.update_display_min_max();
         let _ = match in1.write() {
-            Ok(_) => if verbose {
-                println!("Output file written")
-            },
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
             Err(e) => return Err(e),
         };
 

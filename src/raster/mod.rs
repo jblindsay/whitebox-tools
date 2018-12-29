@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 2, 2017
@@ -238,6 +238,12 @@ impl Raster {
         output.configs.pixel_is_area = input.configs.pixel_is_area;
         output.configs.epsg_code = input.configs.epsg_code;
         output.configs.coordinate_ref_system_wkt = input.configs.coordinate_ref_system_wkt.clone();
+        output.configs.model_tiepoint = input.configs.model_tiepoint.clone();
+        output.configs.model_pixel_scale = input.configs.model_pixel_scale.clone();
+        output.configs.model_transformation = input.configs.model_transformation.clone();
+        output.configs.geo_key_directory = input.configs.geo_key_directory.clone();
+        output.configs.geo_double_params = input.configs.geo_double_params.clone();
+        output.configs.geo_ascii_params = input.configs.geo_ascii_params.clone();
 
         if output.raster_type == RasterType::SurferAscii
             || output.raster_type == RasterType::Surfer7Binary
@@ -439,7 +445,8 @@ impl Raster {
             self.configs.columns as isize,
             self.configs.nodata,
             self.configs.nodata,
-        ).unwrap();
+        )
+        .unwrap();
         for row in 0..self.configs.rows as isize {
             data.set_row_data(row, self.get_row_data(row));
         }
@@ -1028,6 +1035,12 @@ pub struct RasterConfigs {
     pub pixel_is_area: bool,
     pub epsg_code: u16,
     pub coordinate_ref_system_wkt: String,
+    pub model_tiepoint: Vec<f64>,
+    pub model_pixel_scale: [f64; 3],
+    pub model_transformation: [f64; 16],
+    pub geo_key_directory: Vec<u16>,
+    pub geo_double_params: Vec<f64>,
+    pub geo_ascii_params: String,
     pub metadata: Vec<String>,
 }
 
@@ -1061,6 +1074,12 @@ impl Default for RasterConfigs {
             pixel_is_area: true,
             epsg_code: 0u16,
             coordinate_ref_system_wkt: "not specified".to_string(),
+            model_tiepoint: vec![],
+            model_pixel_scale: [0f64; 3],
+            model_transformation: [0f64; 16],
+            geo_key_directory: vec![],
+            geo_double_params: vec![],
+            geo_ascii_params: String::new(),
             metadata: vec![],
         }
     }
