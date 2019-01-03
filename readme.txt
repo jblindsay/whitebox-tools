@@ -56,8 +56,29 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.13.0 (XX-XX-201X)
+Version 0.13.0 (XX-XX-2019)
 - The following tools were added to the project:
+    MosaicWithFeathering
+
+- Support was added for GeoTIFF MODELTRANSFORMATIONTAG (Tag 33920).
+- Support was added for reading GeoTIFFs that have coordinate transformations 
+  defined by multiple tiepoints contained with the ModelTiepointTag (Tag 33922).
+  These rasters have their raster-to-model transform defined by a 2D polynomial
+  regression of the 3rd order.
+- The initialize_using_file function in the abstract Raster model now transfers
+  information contained in an input GeoTIFF's ModelTiePoint, ModelPixelScale,
+  ModelTransform, GeoKeyDirectory, GeoDoubleParms, and GeoAsciiParams tags to
+  the output raster. This means that if a GeoTIFF file is input to a Whitebox 
+  tool, and the output raster is specified to be of GeoTIFF format as well,
+  all of the coordinate information contain in the input raster will now be
+  contained in the output raster.
+- The FeaturePreservingDenoise and DrainagePreservingSmoothing tools, both of
+  which are used for DEM generalization, now represent surface normal vectors 
+  using 32-bit floats instead of the original double-precision values. This 
+  does not alter the results of these tools significantly, but does reduce the 
+  memory requirements and run-times of these tools substantially.
+- The LidarKappa tool now outputs a raster displaying the spatial distribution 
+  of the overall accuracy per grid cell (i.e. percent agreement).
 
 Version 0.12.0 (22-11-2018)
 - The following tools were added to the project:

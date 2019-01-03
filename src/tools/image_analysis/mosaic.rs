@@ -22,6 +22,10 @@ use std::thread;
 /// and cubic convolution. The order of the input source image files is important. Grid
 /// cells in the output image will be assigned the corresponding value determined from the
 /// first image found in the list to possess an overlapping coordinate.
+/// 
+/// This is the preferred mosaicing tool to use when appending multiple images with 
+/// little to no overlapping areas, e.g. tiled data. When images have significant overlap
+/// areas, users are advised to use the `MosaicWithFeathering` tool instead.
 ///
 /// Resample is very similar in operation to the Mosaic tool. The Resample tool should be
 /// used when there is an existing image into which you would like to dump information from
@@ -34,6 +38,9 @@ use std::thread;
 /// that represents the bounding rectangle of each of the two or more input images. Grid
 /// cells in the output image that do not overlap with any of the input images will be
 /// assigned the NoData value.
+/// 
+/// # See Also:
+/// `MosaicWithFeathering`
 pub struct Mosaic {
     name: String,
     description: String,
@@ -88,7 +95,7 @@ impl Mosaic {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=dest.tif --method='cc", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=dest.tif --method='cc'", short_exe, name).replace("*", &sep);
 
         Mosaic {
             name: name,

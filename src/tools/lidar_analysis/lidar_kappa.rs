@@ -1,13 +1,14 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 24, 2017
-Last Modified: 12/10/2018
+Created: 24/09/2017
+Last Modified: 02/01/2019
 License: MIT
 */
 
 use crate::lidar::*;
-use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
+use crate::raster::*;
+use crate::structures::{Array2D, DistanceMetric, FixedRadiusSearch3D};
 use crate::tools::*;
 use std::env;
 use std::f64;
@@ -61,6 +62,24 @@ impl LidarKappaIndex {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Output Class Accuracy Raster File".to_owned(),
+            flags: vec!["--class_accuracy".to_owned()],
+            description: "Output classification accuracy raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Grid Resolution".to_owned(),
+            flags: vec!["--resolution".to_owned()],
+            description: "Output raster's grid resolution.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -72,7 +91,7 @@ impl LidarKappaIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=class.tif --i2=reference.tif -o=kia.html", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --i1=class.las --i2=reference.las -o=kia.html --class_accuracy=new_file.tif --resolution=0.5", short_exe, name).replace("*", &sep);
 
         LidarKappaIndex {
             name: name,
@@ -128,6 +147,8 @@ impl WhiteboxTool for LidarKappaIndex {
         let mut input_file1 = String::new();
         let mut input_file2 = String::new();
         let mut output_file = String::new();
+        let mut class_accuracy_file = String::new();
+        let mut grid_res: f64 = 1.0;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -163,6 +184,18 @@ impl WhiteboxTool for LidarKappaIndex {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val.contains("-class_ac") {
+                class_accuracy_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-resolution" {
+                grid_res = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -189,6 +222,9 @@ impl WhiteboxTool for LidarKappaIndex {
         if !output_file.ends_with(".html") {
             output_file = output_file + ".html";
         }
+        if !class_accuracy_file.contains(&sep) && !class_accuracy_file.contains("/") {
+            class_accuracy_file = format!("{}{}", working_directory, class_accuracy_file);
+        }
 
         if verbose {
             println!("Reading data...")
@@ -208,9 +244,43 @@ impl WhiteboxTool for LidarKappaIndex {
         let num_points1 = input1.header.number_of_points;
         let num_points2 = input2.header.number_of_points;
 
+        // create the output raster
+        let west: f64 = input1.header.min_x;
+        let north: f64 = input1.header.max_y;
+        let rows: usize = (((north - input1.header.min_y) / grid_res).ceil()) as usize;
+        let columns: usize = (((input1.header.max_x - west) / grid_res).ceil()) as usize;
+        let south: f64 = north - rows as f64 * grid_res;
+        let east = west + columns as f64 * grid_res;
+        let nodata = -32768.0f64;
+        let half_grid_res = grid_res / 2.0;
+        let ns_range = north - south;
+        let ew_range = east - west;
+
+        let mut configs = RasterConfigs {
+            ..Default::default()
+        };
+        configs.rows = rows as usize;
+        configs.columns = columns as usize;
+        configs.north = north;
+        configs.south = south;
+        configs.east = east;
+        configs.west = west;
+        configs.resolution_x = grid_res;
+        configs.resolution_y = grid_res;
+        configs.nodata = nodata;
+        configs.data_type = DataType::F32;
+        configs.photometric_interp = PhotometricInterpretation::Continuous;
+
+        let mut class_accuracy = Raster::initialize_using_config(&class_accuracy_file, &configs);
+        class_accuracy.reinitialize_values(0f64);
+
+        // Create an Array2D to store the number of points in each grid cell
+        let mut num_points_cell: Array2D<u32> = Array2D::new(rows as isize, columns as isize, 0u32, u32::max_value())?;
+
         // Place all the input1 points into a FixedRadiusSearch3D
         let mut p1: PointData;
         let mut p2: PointData;
+        let (mut row, mut col): (isize, isize);
         let mut frs: FixedRadiusSearch3D<usize> =
             FixedRadiusSearch3D::new(0.1f64, DistanceMetric::SquaredEuclidean);
         for i in 0..num_points2 as usize {
@@ -239,10 +309,41 @@ impl WhiteboxTool for LidarKappaIndex {
                 error_matrix[class1][class2] += 1;
                 active_class[class1] = true;
                 active_class[class2] = true;
+
+                col = (((columns - 1) as f64 * (p1.x - west - half_grid_res) / ew_range)
+                    .round()) as isize;
+                row = (((rows - 1) as f64 * (north - half_grid_res - p1.y) / ns_range)
+                    .round()) as isize;
+
+                num_points_cell.increment(row, col, 1);
+                if class1 == class2 {
+                    class_accuracy.increment(row, col, 1f64);
+                }
             }
 
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points1 as f64) as i32;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let mut z: f64;
+        let mut n: u32;
+        for row in 0..rows as isize {
+            for col in 0..columns as isize {
+                n = num_points_cell.get_value(row, col);
+                if n > 0u32 {
+                    z = class_accuracy.get_value(row, col);
+                    class_accuracy.set_value(row, col, 100.0 * z / n as f64);
+                } else {
+                    class_accuracy.set_value(row, col, nodata);
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -572,6 +673,26 @@ impl WhiteboxTool for LidarKappaIndex {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        class_accuracy.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
+        class_accuracy.add_metadata_entry(format!("Input file 1: {}", input_file1));
+        class_accuracy.add_metadata_entry(format!("Input file 2: {}", input_file2));
+        class_accuracy.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+
+        if verbose {
+            println!("Saving data...")
+        };
+        let _ = match class_accuracy.write() {
+            Ok(_) => {
+                if verbose {
+                    println!("Output file written")
+                }
+            }
+            Err(e) => return Err(e),
+        };
+
         if verbose {
             println!(
                 "\n{}",

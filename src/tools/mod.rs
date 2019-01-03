@@ -221,6 +221,7 @@ impl ToolManager {
         tool_names.push("MinimumFilter".to_string());
         tool_names.push("ModifiedKMeansClustering".to_string());
         tool_names.push("Mosaic".to_string());
+        tool_names.push("MosaicWithFeathering".to_string());
         tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("Opening".to_string());
@@ -706,6 +707,7 @@ impl ToolManager {
                 Some(Box::new(image_analysis::ModifiedKMeansClustering::new()))
             }
             "mosaic" => Some(Box::new(image_analysis::Mosaic::new())),
+            "mosaicwithfeathering" => Some(Box::new(image_analysis::MosaicWithFeathering::new())),
             "normalizeddifferencevegetationindex" => Some(Box::new(
                 image_analysis::NormalizedDifferenceVegetationIndex::new(),
             )),

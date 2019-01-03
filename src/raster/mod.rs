@@ -25,7 +25,7 @@ use self::saga_raster::*;
 use self::surfer7_raster::*;
 use self::surfer_ascii_raster::*;
 use self::whitebox_raster::*;
-use crate::structures::Array2D;
+use crate::structures::{Array2D, BoundingBox};
 use crate::utils::*;
 use std::cmp::Ordering::Equal;
 use std::default::Default;
@@ -987,6 +987,10 @@ impl Raster {
         String::new()
     }
 
+    pub fn get_bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(self.configs.west, self.configs.east, self.configs.south, self.configs.north)
+    }
+
     pub fn is_in_geographic_coordinates(&self) -> bool {
         if self.configs.epsg_code == 4322
             || self.configs.epsg_code == 4326
@@ -1227,8 +1231,6 @@ pub enum PhotometricInterpretation {
     Boolean,
     RGB,
     Paletted,
-    // Rgb32,
-    // Rgb24,
     Unknown,
 }
 

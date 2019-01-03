@@ -105,7 +105,6 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
                 }
                 th.seek(cur_pos);
             }
-
             let ifd = IfdDirectory::new(tag_id, field_type, num_values, value_offset, data, endian);
             ifd_map.insert(tag_id, ifd.clone());
 
@@ -1284,7 +1283,6 @@ pub fn read_geotiff<'a>(
                     configs.data_type = DataType::U8;
                 }
                 IM_RGB => {
-                    //ImageMode::RGB => {
                     configs.photometric_interp = PhotometricInterpretation::RGB;
                     if bits_per_sample[0] == 8 {
                         configs.data_type = DataType::U8;
@@ -1298,11 +1296,22 @@ pub fn read_geotiff<'a>(
                     }
                 }
                 IM_NRGBA | IM_RGBA => {
-                    //ImageMode::NRGBA | ImageMode::RGBA => {
-                    if bits_per_sample[0] == 8 {
-                        configs.data_type = DataType::U32;
+                    // if bits_per_sample[0] == 8 {
+                    //     configs.data_type = DataType::U32;
+                    // } else if bits_per_sample[0] == 16 {
+                    //     configs.data_type = DataType::U64;
+                    // } else {
+                    //     return Err(Error::new(
+                    //         ErrorKind::InvalidData,
+                    //         "The raster was not read correctly",
+                    //     ));
+                    // }
+                    if bits_per_sample[0] == 8 && bits_per_sample.len() == 4 {
+                        configs.data_type = DataType::RGBA32;
+                    } else if bits_per_sample[0] == 8 && bits_per_sample.len() == 3 {
+                        configs.data_type = DataType::RGB24;
                     } else if bits_per_sample[0] == 16 {
-                        configs.data_type = DataType::U64;
+                        configs.data_type = DataType::U16;
                     } else {
                         return Err(Error::new(
                             ErrorKind::InvalidData,
@@ -3830,6 +3839,12 @@ impl IfdDirectory {
     }
 
     pub fn interpret_data(&self) -> String {
+        // sanity check: don't print out thousands of values in a tag.
+        let how_many_vals = if self.num_values < 100 {
+            self.num_values
+        } else {
+            100u32
+        };
         let mut bor = ByteOrderReader::new(self.data.clone(), self.byte_order);
         if self.ifd_type == 2 {
             // ascii
@@ -3837,7 +3852,7 @@ impl IfdDirectory {
         } else if self.ifd_type == 3 {
             // u16
             let mut vals: Vec<u16> = vec![];
-            for _ in 0..self.num_values {
+            for _ in 0..how_many_vals {
                 let val = bor.read_u16();
                 vals.push(val);
             }
@@ -3857,7 +3872,7 @@ impl IfdDirectory {
         } else if self.ifd_type == 4 {
             // u32
             let mut vals: Vec<u32> = vec![];
-            for _ in 0..self.num_values {
+            for _ in 0..how_many_vals {
                 let val = bor.read_u32();
                 vals.push(val);
             }
@@ -3865,7 +3880,7 @@ impl IfdDirectory {
         } else if self.ifd_type == 12 {
             // f64
             let mut vals: Vec<f64> = vec![];
-            for _ in 0..self.num_values {
+            for _ in 0..how_many_vals {
                 let val = bor.read_f64();
                 vals.push(val);
             }

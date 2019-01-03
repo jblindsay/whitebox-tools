@@ -407,16 +407,8 @@ impl WhiteboxTool for LidarPointStats {
                     }
 
                     if z_range || intensity_range {
-                        let mut min_z: Array2D<f64> =
-                            Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata)
-                                .unwrap();
-                        let mut max_z: Array2D<f64> = Array2D::new(
-                            rows as isize,
-                            columns as isize,
-                            f64::NEG_INFINITY,
-                            nodata,
-                        )
-                        .unwrap();
+                        let mut min_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata).unwrap();
+                        let mut max_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::NEG_INFINITY, nodata).unwrap();
                         let out_file_elev_range =
                             input_file.replace(".las", "_elev_range.tif").clone();
                         let mut out_elev_range =

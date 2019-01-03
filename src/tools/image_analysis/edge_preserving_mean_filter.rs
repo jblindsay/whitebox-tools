@@ -323,9 +323,11 @@ impl WhiteboxTool for EdgePreservingMeanFilter {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.display_min = input.configs.display_min;
-        output.configs.display_max = input.configs.display_max;
-        output.configs.palette = input.configs.palette.clone();
+        if !is_rgb_image {
+            output.configs.display_min = input.configs.display_min;
+            output.configs.display_max = input.configs.display_max;
+            output.configs.palette = input.configs.palette.clone();
+        }
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()

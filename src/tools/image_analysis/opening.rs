@@ -32,7 +32,7 @@ impl Opening {
         // public constructor
         let name = "Opening".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.".to_string();
+        let description = "An opening is a mathematical morphology operation involving a dilation (max filter) of an erosion (min filter) set.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
