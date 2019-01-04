@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/09/2018
-Last Modified: 12/10/2018
+Last Modified: 04/01/2019
 License: MIT
 */
 
@@ -16,8 +16,8 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool converts a raster stream file into a vector file. The user must specify
-/// 1) the name of the raster streams file, 2) the name of the D8 flow pointer file,
+/// This tool converts a raster stream file into a vector file. The user must specify: 1) 
+/// the name of the raster streams file, 2) the name of the D8 flow pointer file,
 /// and 3) the name of the output vector file. Streams in the input raster streams
 /// file are denoted by cells containing any positive, non-zero integer. A field in
 /// the vector database file, called STRM_VAL, will correspond to this positive
@@ -246,6 +246,9 @@ impl WhiteboxTool for RasterStreamsToVector {
         output
             .attributes
             .add_field(&AttributeField::new("FID", FieldDataType::Int, 5u8, 0u8));
+        output
+            .attributes
+            .add_field(&AttributeField::new("STRM_VAL", FieldDataType::Real, 10u8, 3u8));
 
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
@@ -322,11 +325,12 @@ impl WhiteboxTool for RasterStreamsToVector {
 
         let (mut row, mut col): (isize, isize);
         let (mut x, mut y): (f64, f64);
-        let (mut row_n, mut col_n): (isize, isize);
         let mut dir: usize;
         let mut prev_dir: usize;
         let mut c: usize;
         let mut current_id = 1i32;
+        let mut in_val: f64;
+        let mut in_val_n: f64;
         let mut flag: bool;
         let mut already_added_point: bool;
         while !stack.is_empty() {
@@ -334,81 +338,83 @@ impl WhiteboxTool for RasterStreamsToVector {
             row = cell.0;
             col = cell.1;
 
-            let mut points = vec![];
+            if num_inflowing.get_value(row, col) != -1i8 {
+                in_val = streams.get_value(row, col);
+                num_inflowing.set_value(row, col, -1i8);
 
-            // descend the flowpath
-            prev_dir = 99; // this way the first point in the line is always output.
-            flag = true;
-            while flag {
-                if pntr.get_value(row, col) != pntr_nodata {
-                    dir = pntr.get_value(row, col) as usize;
-                    already_added_point = if dir != prev_dir {
-                        x = pntr.get_x_from_column(col);
-                        y = pntr.get_y_from_row(row);
-                        points.push(Point2D::new(x, y));
-                        prev_dir = dir;
-                        true
-                    } else {
-                        false
-                    };
-                    if dir > 0
-                        && streams.get_value(row, col) > 0.0
-                        && streams.get_value(row, col) != nodata
-                    {
-                        if dir > 128 || pntr_matches[dir] == 999 {
-                            return Err(Error::new(
-                                ErrorKind::InvalidInput,
-                                "An unexpected value has been identified in the pointer image. 
-                            This tool requires a pointer grid that has been created using 
-                            either the D8 or Rho8 tools.",
-                            ));
-                        }
-                        c = pntr_matches[dir];
-                        row_n = row + dy[c];
-                        col_n = col + dx[c];
-                        if num_inflowing.get_value(row_n, col_n) > 1 {
-                            // it's a confluence, so stop descending the flowpath
-                            // if !already_added_point {
-                            // this way the last point in the line is always output.
-                            x = pntr.get_x_from_column(col_n);
-                            y = pntr.get_y_from_row(row_n);
-                            points.push(Point2D::new(x, y));
-                            // }
+                let mut points = vec![];
 
-                            // add the confluence to the stack
-                            stack.push((row_n, col_n));
-
-                            flag = false;
-                        }
-
-                        row = row_n;
-                        col = col_n;
-                    } else {
-                        if !already_added_point {
-                            // this way the last point in the line is always output.
+                // descend the flowpath
+                prev_dir = 99; // this way the first point in the line is always output.
+                flag = true;
+                while flag {
+                    if pntr.get_value(row, col) != pntr_nodata {
+                        dir = pntr.get_value(row, col) as usize;
+                        already_added_point = if dir != prev_dir {
                             x = pntr.get_x_from_column(col);
                             y = pntr.get_y_from_row(row);
                             points.push(Point2D::new(x, y));
+                            prev_dir = dir;
+                            true
+                        } else {
+                            false
+                        };
+                        if dir > 0
+                            && streams.get_value(row, col) > 0.0
+                            && streams.get_value(row, col) != nodata
+                        {
+                            if dir > 128 || pntr_matches[dir] == 999 {
+                                return Err(Error::new(
+                                    ErrorKind::InvalidInput,
+                                    "An unexpected value has been identified in the pointer image. 
+                                This tool requires a pointer grid that has been created using 
+                                either the D8 or Rho8 tools.",
+                                ));
+                            }
+                            c = pntr_matches[dir];
+                            row += dy[c];
+                            col += dx[c];
+
+                            in_val_n = streams.get_value(row, col);
+                            if num_inflowing.get_value(row, col) != 1 || 
+                                in_val_n != in_val {
+                                // it's a confluence, so stop descending the flowpath
+                                x = pntr.get_x_from_column(col);
+                                y = pntr.get_y_from_row(row);
+                                points.push(Point2D::new(x, y));
+
+                                // add the confluence to the stack
+                                stack.push((row, col));
+
+                                flag = false;
+                            }
+                        } else {
+                            if !already_added_point {
+                                // this way the last point in the line is always output.
+                                x = pntr.get_x_from_column(col);
+                                y = pntr.get_y_from_row(row);
+                                points.push(Point2D::new(x, y));
+                            }
+                            flag = false;
                         }
+                    } else {
                         flag = false;
                     }
-                } else {
-                    flag = false;
                 }
-            }
 
-            if points.len() > 1 {
-                if points[points.len() - 1] == points[points.len() - 2] {
-                    points.pop();
+                if points.len() > 1 {
+                    if points[points.len() - 1] == points[points.len() - 2] {
+                        points.pop();
+                    }
+                    let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                    sfg.add_part(&points);
+                    output.add_record(sfg);
+                    output
+                        .attributes
+                        .add_record(vec![FieldData::Int(current_id), FieldData::Real(in_val)], false);
+
+                    current_id += 1;
                 }
-                let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                sfg.add_part(&points);
-                output.add_record(sfg);
-                output
-                    .attributes
-                    .add_record(vec![FieldData::Int(current_id)], false);
-
-                current_id += 1;
             }
 
             if verbose {

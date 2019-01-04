@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: June 26, 2017
-Last Modified: 12/10/2018
+Last Modified: 04/01/2019
 License: MIT
 */
 
@@ -18,6 +18,32 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool is used to generate a flow accumulation grid (i.e. catchment area) using the 
+/// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction 
+/// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour, 
+/// i.e. flow divergence is not permitted. The user must specify the name of the input digital 
+/// elevation model (DEM). The DEM must have been hydrologically corrected to remove all spurious 
+/// depressions and flat areas. DEM pre-processing is usually achieved using the `BreachDepressions` or 
+/// `FillDepressions` tools.
+/// 
+/// In addition to the input DEM, the user must specify the output type. The output flow-accumulation 
+/// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
+/// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
+/// is `cells`. The user must also specify whether the output flow-accumulation grid should be 
+/// log-tranformed, i.e. the output, if this option is selected, will be the natural-logarithm of the 
+/// accumulated flow value. This is a transformation that is often performed to better visualize the 
+/// contributing area distribution. Because contributing areas tend to be very high along valley bottoms 
+/// and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of 
+/// values on hillslopes tends to be 'washed out' because the palette is stretched out to represent the 
+/// highest values. Log-transformation provides a means of compensating for this phenomenon. Importantly, 
+/// however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain 
+/// indices, such as the wetness index, or relative stream power index. 
+/// 
+/// Grid cells possessing the **NoData** value in the input flow-pointer grid are assigned the **NoData** 
+/// value in the output flow-accumulation image.
+/// 
+/// # See Also:
+/// `DInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`
 pub struct D8FlowAccumulation {
     name: String,
     description: String,
@@ -55,9 +81,9 @@ impl D8FlowAccumulation {
         parameters.push(ToolParameter{
             name: "Output Type".to_owned(), 
             flags: vec!["--out_type".to_owned()], 
-            description: "Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["cells".to_owned(), "specific contributing area".to_owned(), "catchment area".to_owned()]),
-            default_value: Some("specific contributing area".to_owned()),
+            description: "Output type; one of 'cells' (default), 'catchment area', and 'specific contributing area'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["cells".to_owned(), "catchment area".to_owned(), "specific contributing area".to_owned()]),
+            default_value: Some("cells".to_owned()),
             optional: true
         });
 
@@ -90,7 +116,7 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.dtifep --out_type='cells'
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='cells'
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='specific catchment area' --log --clip", short_exe, name).replace("*", &sep);
 
         D8FlowAccumulation {
@@ -385,7 +411,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                 col_n = col + dx[dir as usize];
                 output.increment(row_n, col_n, fa);
                 num_inflowing.decrement(row_n, col_n, 1i8);
-                if num_inflowing[(row_n, col_n)] == 0i8 {
+                if num_inflowing.get_value(row_n, col_n) == 0i8 {
                     stack.push((row_n, col_n));
                 }
             }
@@ -401,16 +427,31 @@ impl WhiteboxTool for D8FlowAccumulation {
         }
 
         let mut cell_area = cell_size_x * cell_size_y;
-        //let diag = (input.configs.resolution_x + input.configs.resolution_y).sqrt();
+        // if flow width is allowed to vary by direction, the flow accumulation output will not
+        // increase continuously downstream and any applications involving stream network
+        // extraction will encounter issues with discontinuous streams. The Whitebox GAT tool
+        // used a constant flow width value. I'm reverting this tool to the equivalent.
+        // let mut flow_widths = [
+        //     diag_cell_size,
+        //     cell_size_y,
+        //     diag_cell_size,
+        //     cell_size_x,
+        //     diag_cell_size,
+        //     cell_size_y,
+        //     diag_cell_size,
+        //     cell_size_x,
+        // ];
+
+        let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
         let mut flow_widths = [
-            diag_cell_size,
-            cell_size_y,
-            diag_cell_size,
-            cell_size_x,
-            diag_cell_size,
-            cell_size_y,
-            diag_cell_size,
-            cell_size_x,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
+            avg_cell_size,
         ];
         if out_type == "cells" {
             cell_area = 1.0;

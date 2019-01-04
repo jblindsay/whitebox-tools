@@ -340,7 +340,7 @@ impl WhiteboxTool for MosaicWithFeathering {
             });
         }
         let mut dist1_raster: Array2D<u32> = Array2D::new(rows1, columns1, u32::max_value(), u32::max_value())?;
-        for row in 0..rows1 {
+        for row in 0..rows1 {   
             let data = rx.recv().unwrap();
             dist1_raster.set_row_data(data.0, data.1);
             if verbose {

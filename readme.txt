@@ -79,6 +79,17 @@ Version 0.13.0 (XX-XX-2019)
   memory requirements and run-times of these tools substantially.
 - The LidarKappa tool now outputs a raster displaying the spatial distribution 
   of the overall accuracy per grid cell (i.e. percent agreement).
+- Fixed a bug with the RasterStreamsToVector tool that resulted in overlapping
+  traced streams.
+- The D8FlowAccumulation tool has been modifed to use a fixed flow-width to 
+  calculate specific contributing area, equal to the average grid cell resolution. 
+  The tool previously used a variable flow-width for SCA calculations, however,
+  1. this differs from the constant value used in Whitebox GAT, and 2. a 
+  variable flow-width means that flow accumulation values do not increase 
+  continuously in a downstream direction. This last issue was causing problems
+  with applications involving stream network extraction. This change does not
+  affect the 'cells' nor 'catchment area' outputs of the tool.
+
 
 Version 0.12.0 (22-11-2018)
 - The following tools were added to the project:

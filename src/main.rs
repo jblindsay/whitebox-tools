@@ -107,7 +107,7 @@ fn run() -> Result<(), Error> {
     }
     for arg in args {
         let flag_val = arg.to_lowercase().replace("--", "-");
-        if arg.starts_with("-h") || arg.starts_with("--help") {
+        if flag_val == "-h" || flag_val == "-help" {
             help();
             return Ok(());
         } else if flag_val.starts_with("-cd") || flag_val.starts_with("-wd") {
@@ -308,7 +308,7 @@ Example Usage:
 
 fn license() {
     let license_text = "whitebox-tools License
-Copyright 2017-2018 John Lindsay
+Copyright 2017-2019 John Lindsay
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the \"Software\"), to deal in the Software without restriction,
@@ -330,7 +330,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2018",
+        "whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2019",
         VERSION.unwrap_or("unknown")
     );
 }

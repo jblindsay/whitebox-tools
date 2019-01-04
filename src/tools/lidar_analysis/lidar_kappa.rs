@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/09/2017
-Last Modified: 02/01/2019
+Last Modified: 04/01/2019
 License: MIT
 */
 
@@ -19,6 +19,20 @@ use std::path;
 use std::path::Path;
 use std::process::Command;
 
+/// This tool performs a kappa index of agreement (KIA) analysis on the classification values of two LiDAR 
+/// (LAS) files. The output report HTML file should be displayed automatically but can also be displayed 
+/// afterwards in any web browser. As a measure of overall classification accuracy, the KIA is more robust 
+/// than the percent agreement calculation because it takes into account the agreement occurring by random 
+/// chance. In addition to the KIA, the tool will output the producer's and user's accuracy, the overall 
+/// accuracy, and the error matrix. The KIA is often used as a means of assessing the accuracy of an image 
+/// classification analysis; however the `LidarKappaIndex` tool performs the analysis on a point-to-point 
+/// basis, comparing the class values of the points in one input LAS file with the corresponding nearest 
+/// points in the second input LAS file.
+/// 
+/// The user must also specify the name and resolution of an output raster file, which is used to show the
+/// spatial distribution of class accuracy. Each grid cell contains the overall accuracy, i.e. the points 
+/// correctly classified divided by the total number of points contained within the cell, expressed as a 
+/// percentage.
 pub struct LidarKappaIndex {
     name: String,
     description: String,

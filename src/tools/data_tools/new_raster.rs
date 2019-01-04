@@ -145,7 +145,7 @@ impl WhiteboxTool for NewRasterFromBase {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-base" || flag_val == "-i" {
+            if flag_val == "-base" || flag_val == "-i" || flag_val == "-input" {
                 base_file = if keyval {
                     vec[1].to_string()
                 } else {

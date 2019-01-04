@@ -36,12 +36,12 @@ documentclass: report
 \newpage
 
 
-WhiteboxTools Version 0.12  \
-Dr. John B. Lindsay &#169; 2017-2018  \
+WhiteboxTools Version 0.13  \
+Dr. John B. Lindsay &#169; 2017-2019  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-November 20, 2018  \
+January 5, 2019  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -62,7 +62,7 @@ In addition to *Whitebox GAT*, the *WhiteboxTools* project is related to other G
 
 ### 1.1 Why is it named *WhiteboxTools*?
 
-The project name *WhiteboxTools* clearly takes it inspiration from the related project Whitebox GAT. However, the name *Whitebox* is intended to convey opposition to a 'black box' system, one for which only the inputs and outputs may be observed and the internal workings may not be scrutinized. *WhiteboxTools* is inspired by the concept of *open-access software*, the tenants of which were described by Lindsay (2014)[^1]. Open-*access* software can be viewed as a complimentary extension to the traditional open-*source* software (OSS) model of development. The concept of open access has been previously defined in the context of publishing scholarly literature in a way that removes financial, legal, and technical access barriers to knowledge transfer. Lindsay (2014) argued that the stated goals of reducing barriers associated with knowledge transfer applies equally to the software used in research. Open-access software is distinct from other OSS in that it has an explicitly stated design goal of reducing barriers to the transfer of knowledge to the user community. Direct insight into the workings of algorithm design and implementation allows for educational opportunities and increases the potential for rapid innovation, experimentation with algorithms, and community-directed development. This is particularly important in geomatics because many geospatial algorithms are complex and are strongly affected by implementation details. Also, there are often multiple competing algorithms for accomplishing the same task and the choice of one method over another can greatly impact the outcome of a workflow.
+The project name *WhiteboxTools* clearly takes it inspiration from the related project Whitebox GAT. However, the name *Whitebox* is intended to convey opposition to a 'black box' system, one for which only the inputs and outputs may be observed and the internal workings may not be scrutinized. *WhiteboxTools* is inspired by the concept of *open-access software*, the tenants of which were described by Lindsay (2014)[^1]. Open-*access* software can be viewed as a complementary extension to the traditional open-*source* software (OSS) model of development. The concept of open access has been previously defined in the context of publishing scholarly literature in a way that removes financial, legal, and technical access barriers to knowledge transfer. Lindsay (2014) argued that the stated goals of reducing barriers associated with knowledge transfer applies equally to the software used in research. Open-access software is distinct from other OSS in that it has an explicitly stated design goal of reducing barriers to the transfer of knowledge to the user community. Direct insight into the workings of algorithm design and implementation allows for educational opportunities and increases the potential for rapid innovation, experimentation with algorithms, and community-directed development. This is particularly important in geomatics because many geospatial algorithms are complex and are strongly affected by implementation details. Also, there are often multiple competing algorithms for accomplishing the same task and the choice of one method over another can greatly impact the outcome of a workflow.
 
 All OSS allow users the opportunity to download the source code and inspect the software’s internal workings. However, traditional OSS often does not lend itself to end-user source code inspection. Open-access software, by comparison, is *designed from the project's inception in a way that reduces the barriers that typically discourage end-users from examining the algorithm and implementation details associated with specific software artifacts*. WhiteboxTools attempts to address some of the barriers to knowledge transfer by allowing users to view the source code associated with each tool directly (e.g. `--viewcode=ExtendVectorLines`). This functionality removes the need to download separate, and often large, project source code files and eliminates the requisite familiarity with the project to identify the code sections related to the operation of the tool of interest. The `viewcode` flag is the embodiment of a design philosophy that is intended to empower the user community. Each tool included in the library has been written in a way to isolate the major functionality within a single file, thereby easing the task of interpreting the code (traditional coding style would split complex code among numerous files). This design goal is also why the developers have chosen to exclude external libraries commonly found in other similarly software (e.g. GDAL), thereby simplifying the installation process and code interpretation. This approach has the potential to encourage further community involvement and experimentation with geospatial analysis techniques. 
 
@@ -15790,7 +15790,6 @@ WhiteboxTools is distributed as is and without warranty of suitability for appli
 
 ## 11. Known Issues and Limitations
 
-- There is limited support for reading, writing, or analyzing vector data yet. Plans include native support for the ESRI Shapefile format and possibly GeoJSON data.
 - The LAZ compressed LiDAR data format is currently unsupported although zipped LAS files (.zip) are.
 - There is no support for reading waveform data contained within or associated with LAS files.
 - File directories cannot contain apostrophes (', e.g. /John's data/) as they will be interpreted in the arguments array as single quoted strings.
@@ -15802,7 +15801,7 @@ The **WhiteboxTools** library is distributed under the [MIT license](LICENSE.txt
 
 > The MIT License (MIT)
 >
-> Copyright (c) 2017-2018 John Lindsay
+> Copyright (c) 2017-2019 John Lindsay
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
