@@ -197,6 +197,7 @@ impl WhiteboxTool for SetNodataValue {
         let nodata = input.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.nodata = back_value;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -204,13 +205,13 @@ impl WhiteboxTool for SetNodataValue {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
+                let mut z: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![back_value; columns as usize];
                     for col in 0..columns {
-                        if input[(row, col)] != back_value {
-                            data[col as usize] = input[(row, col)];
-                        } else {
-                            data[col as usize] = nodata;
+                        z = input.get_value(row, col);
+                        if z != back_value && z != nodata {
+                            data[col as usize] = z;
                         }
                     }
                     tx.send((row, data)).unwrap();

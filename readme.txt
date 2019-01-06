@@ -56,8 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.13.0 (XX-XX-2019)
-- The following tools were added to the project:
+Version 0.13.0 (XX-01-2019)
+- The release largely focusses on bug-fixes rather than adding new features. The
+ following tools were added to the project:
     MosaicWithFeathering
 
 - Support was added for GeoTIFF MODELTRANSFORMATIONTAG (Tag 33920).
@@ -89,6 +90,8 @@ Version 0.13.0 (XX-XX-2019)
   continuously in a downstream direction. This last issue was causing problems
   with applications involving stream network extraction. This change does not
   affect the 'cells' nor 'catchment area' outputs of the tool.
+- Fixed a bug with the GeoTIFF NoData tag.
+- Fixed a bug with the SetNodataValue tool.
 
 
 Version 0.12.0 (22-11-2018)

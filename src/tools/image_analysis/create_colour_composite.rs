@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: July 19, 2017
-Last Modified: 13/10/2018
+Last Modified: 06/01/2019
 License: MIT
 */
 
@@ -18,7 +18,27 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Creates a colour-composite image from three bands of multispectral imagery.
+/// This tool can be used to create a colour-composite image from three bands of multi-spectral imagery. 
+/// The user must specify the names of the input images to enter into the red, green, and blue channels 
+/// of the resulting composite image. The output image uses the 32-bit aRGB colour model, and therefore, 
+/// in addition to red, green and blue bands, the user may optionally specify a fourth image that will 
+/// be used to determine pixel opacity (the 'a' channel). If no opacity image is specified, each pixel 
+/// will be opaque. This can be useful for cropping an image to an irregular-shaped boundary. The opacity 
+/// channel can also be used to create transparent gradients in the composite image.
+/// 
+/// A balance contrast enchancment (BCE) can optionally be performed on the bands prior to creation of
+/// the colour composite. While this operation will add to the runtime of `CreateColourComposite`, if
+/// the individual input bands have not already had contrast enchancements, then it is advisable that
+/// the BCE option be used to improve the quality of the resulting colour composite image.
+/// 
+/// NoData values in any of the input images are assigned NoData values in the output image and are not
+/// taken into account when performing the BCE operation. Please note, not all images have NoData values
+/// identified. When this is the case, and when the background value is 0 (often the case with 
+/// multispectral imagery), then the `CreateColourComposite` tool can be told to ignore zero values using 
+/// the `--zeros` flag.
+/// 
+/// # See Also
+/// `BalanceContrastEnhancment`
 pub struct CreateColourComposite {
     name: String,
     description: String,
@@ -93,6 +113,17 @@ impl CreateColourComposite {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Treat zeros as nodata?".to_owned(),
+            flags: vec!["--zeros".to_owned()],
+            description:
+                "Optional flag to indicate if zeros are nodata values."
+                    .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -105,7 +136,7 @@ impl CreateColourComposite {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif -o=output.tif
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif --opacity=a.tif -o=output.tif", short_exe, name).replace("*", &sep);
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --red=band3.tif --green=band2.tif --blue=band1.tif --opacity=a.tif -o=output.tif --enhance --zeros", short_exe, name).replace("*", &sep);
 
         CreateColourComposite {
             name: name,
@@ -158,6 +189,7 @@ impl WhiteboxTool for CreateColourComposite {
         let mut input4_used = false;
         let mut output_file = String::new();
         let mut enhance = false;
+        let mut no_zeros = false;
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -206,6 +238,9 @@ impl WhiteboxTool for CreateColourComposite {
                 }
             } else if vec[0].to_lowercase() == "-enchance" || vec[0].to_lowercase() == "--enhance" {
                 enhance = true;
+            } else if vec[0].to_lowercase() == "-zeros" {
+                // treat zero values as nodata.
+                no_zeros = true;
             }
         }
 
@@ -253,9 +288,14 @@ impl WhiteboxTool for CreateColourComposite {
 
         let rows = input_r.configs.rows as isize;
         let columns = input_r.configs.columns as isize;
-        let nodata_r = input_r.configs.nodata;
-        let nodata_g = input_g.configs.nodata;
-        let nodata_b = input_b.configs.nodata;
+        let mut nodata_r = input_r.configs.nodata;
+        let mut nodata_g = input_g.configs.nodata;
+        let mut nodata_b = input_b.configs.nodata;
+        if no_zeros {
+            nodata_r = 0f64;
+            nodata_g = 0f64;
+            nodata_b = 0f64;
+        }
         let red_min = input_r.configs.display_min;
         let green_min = input_g.configs.display_min;
         let blue_min = input_b.configs.display_min;
