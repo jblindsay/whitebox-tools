@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Sept. 10, 2017
+Created: 10/09/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -20,6 +20,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool will re-assign a user-defined background value in an input raster image the **NoData** value. 
+/// More precisely, the NoData value will be changed to the specified background value and any existing
+/// grid cells containing the previous NoData value, if it had been defined, will be changed to this new
+/// value. Most WhiteboxTools tools recognize NoData grid cells and treat them specially. NoData grid cells 
+/// are also often displayed transparently by GIS software. The user must specify the names of the input and
+/// output rasters and the background value. The default background value is zero, although any numeric 
+/// value is possible.
 pub struct SetNodataValue {
     name: String,
     description: String,
@@ -35,10 +42,6 @@ impl SetNodataValue {
         let toolbox = "Data Tools".to_string();
         let description =
             "Assign a specified value in an input image to the NoData value.".to_string();
-
-        // let mut parameters = "-i, --input     Input raster file.\n".to_owned();
-        // parameters.push_str("-o, --output    Output raster file.\n");
-        // parameters.push_str("--back_value    Background value to set to nodata (default is 0.0).\n");
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

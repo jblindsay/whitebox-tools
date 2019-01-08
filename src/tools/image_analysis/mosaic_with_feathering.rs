@@ -36,7 +36,7 @@ use std::thread;
 /// Users may want to use the `HistogramMatching` tool prior to mosaicing if the two input images differ 
 /// significantly in their radiometric properties. i.e. if image contrast differences exist.
 /// 
-/// # See Also:
+/// # See Also
 /// `Mosaic`, `HistogramMatching`
 pub struct MosaicWithFeathering {
     name: String,

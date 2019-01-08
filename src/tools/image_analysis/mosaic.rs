@@ -39,7 +39,7 @@ use std::thread;
 /// cells in the output image that do not overlap with any of the input images will be
 /// assigned the NoData value.
 /// 
-/// # See Also:
+/// # See Also
 /// `MosaicWithFeathering`
 pub struct Mosaic {
     name: String,

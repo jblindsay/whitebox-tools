@@ -41,7 +41,7 @@ Dr. John B. Lindsay &#169; 2017-2019  \
 Geomorphometry and Hydrogeomatics Research Group  \
 University of Guelph  \
 Guelph, Canada \
-January 5, 2019  \
+January 8, 2019  \
 
 ![](./img/GHRGLogoSm.png){width=54% height=54%}
 
@@ -1210,7 +1210,13 @@ remove_polygon_holes(
 
 #### 8.1.17 SetNodataValue
 
-Assign a specified value in an input image to the NoData value.
+This tool will re-assign a user-defined background value in an input raster image the **NoData** value.
+More precisely, the NoData value will be changed to the specified background value and any existing
+grid cells containing the previous NoData value, if it had been defined, will be changed to this new
+value. Most WhiteboxTools tools recognize NoData grid cells and treat them specially. NoData grid cells
+are also often displayed transparently by GIS software. The user must specify the names of the input and
+output rasters and the background value. The default background value is zero, although any numeric
+value is possible.
 
 *Parameters*:
 
@@ -1561,46 +1567,7 @@ block_minimum_gridding(
 ```
 
 
-#### 8.2.4 BufferVector
-
-This tool
-
-*See Also*:
-
-*Parameters*:
-
-**Flag**             **Description**
--------------------  ---------------
--i, -\-input         Input vector file
--o, -\-output        Output vector file
--\-dist, -\-distance Buffer distance
--\-dissolve          Optional flag to request the output polygons be dissolved
--\-snap              Snap tolerance
-
-
-*Python function*:
-
-~~~~{.python}
-buffer_vector(
-    i, 
-    output, 
-    distance=10.0, 
-    dissolve=True, 
-    snap=0.0, 
-    callback=default_callback)
-~~~~
-
-*Command-line Interface*:
-
-```
->>./whitebox_tools -r=BufferVector -v --wd="/path/to/data/" ^
--input=layer1.shp -o=out_file.shp --dist=25.0 --dissolve 
-
-
-```
-
-
-#### 8.2.5 Centroid
+#### 8.2.4 Centroid
 
 This tool calculates the centroid, or average location, of raster polygon objects.
 For vector features, use the `CentroidVector` tool instead.
@@ -1641,7 +1608,7 @@ centroid(
 ```
 
 
-#### 8.2.6 CentroidVector
+#### 8.2.5 CentroidVector
 
 This can be used to identify the centroid point of a vector polyline or polygon feature or a group of
 vector points. The output is a vector shapefile of points. For multi-part polyline or polygon features,
@@ -1681,7 +1648,7 @@ centroid_vector(
 ```
 
 
-#### 8.2.7 Clump
+#### 8.2.6 Clump
 
 Groups cells that form physically discrete areas, assigning them unique identifiers.
 
@@ -1716,7 +1683,7 @@ clump(
 ```
 
 
-#### 8.2.8 ConstructVectorTin
+#### 8.2.7 ConstructVectorTin
 
 This tool creates a vector triangular irregular network (TIN) for a set of vector points.
 
@@ -1754,7 +1721,7 @@ construct_vector_tin(
 ```
 
 
-#### 8.2.9 CreateHexagonalVectorGrid
+#### 8.2.8 CreateHexagonalVectorGrid
 
 This tool can be used to create a hexagonal vector grid. The extent of the hexagonal
 grid is based on the extent of a user-specified base file (any supported raster format,
@@ -1793,7 +1760,7 @@ create_hexagonal_vector_grid(
 ```
 
 
-#### 8.2.10 CreatePlane
+#### 8.2.9 CreatePlane
 
 Creates a raster image based on the equation for a simple plane.
 
@@ -1831,7 +1798,7 @@ create_plane(
 ```
 
 
-#### 8.2.11 CreateRectangularVectorGrid
+#### 8.2.10 CreateRectangularVectorGrid
 
 This tool can be used to create a rectangular vector grid. The extent of the rectangular
 grid is based on the extent of a user-specified base file (any supported raster format,
@@ -1874,7 +1841,7 @@ create_rectangular_vector_grid(
 ```
 
 
-#### 8.2.12 Dissolve
+#### 8.2.11 Dissolve
 
 This tool can be used to remove the interior, or shared, boundaries within a vector
 polygon coverage. You can either dissolve all interior boundaries or dissolve those
@@ -1919,7 +1886,7 @@ dissolve(
 ```
 
 
-#### 8.2.13 EliminateCoincidentPoints
+#### 8.2.12 EliminateCoincidentPoints
 
 This tool can be used to remove any coincident, or nearly coincident, points
 from a vector points file. The user must specify the name of the input file,
@@ -1958,7 +1925,7 @@ eliminate_coincident_points(
 ```
 
 
-#### 8.2.14 ExtendVectorLines
+#### 8.2.13 ExtendVectorLines
 
 This tool can be used to extend vector lines by a specified distance. The user must
 input the names of the input and output shapefiles, the distance to extend features
@@ -1997,7 +1964,7 @@ extend_vector_lines(
 ```
 
 
-#### 8.2.15 ExtractNodes
+#### 8.2.14 ExtractNodes
 
 Converts vector lines or polygons into vertex points.
 
@@ -2028,7 +1995,7 @@ extract_nodes(
 ```
 
 
-#### 8.2.16 ExtractRasterValuesAtPoints
+#### 8.2.15 ExtractRasterValuesAtPoints
 
 Extracts the values of raster(s) at vector point locations.
 
@@ -2060,7 +2027,7 @@ extract_raster_values_at_points(
 ```
 
 
-#### 8.2.17 FindLowestOrHighestPoints
+#### 8.2.16 FindLowestOrHighestPoints
 
 Locates the lowest and/or highest valued cells in a raster.
 
@@ -2094,11 +2061,8 @@ find_lowest_or_highest_points(
 ```
 
 
-#### 8.2.18 IdwInterpolation
+#### 8.2.17 IdwInterpolation
 
-This tool interpolates vector points into a raster surface using an inverse-distance weighted scheme.
-
-Most IDW tool have the option to work either based on a fixed number of neighbouring
 points or a fixed neighbourhood size. This tool is currently configured to perform the later
 only, using a FixedRadiusSearch structure. Using a fixed number of neighbours will require
 use of a KD-tree structure. I've been testing one Rust KD-tree library but its performance
@@ -2108,6 +2072,7 @@ other options here.
 Another change that will need to be implemented is the use of a nodal function. The original
 Whitebox GAT tool allows for use of a constant or a quadratic. This tool only allows the
 former.
+This tool interpolates vector points into a raster surface using an inverse-distance weighted scheme.
 
 *Parameters*:
 
@@ -2158,7 +2123,7 @@ idw_interpolation(
 ```
 
 
-#### 8.2.19 LayerFootprint
+#### 8.2.18 LayerFootprint
 
 This tool creates a vector polygon footprint of the area covered by a raster grid or vector
 layer. It will create a vector rectangle corresponding to the bounding box. The user must
@@ -2203,7 +2168,7 @@ layer_footprint(
 ```
 
 
-#### 8.2.20 Medoid
+#### 8.2.19 Medoid
 
 This tool calculates the medoid for a series of vector features contained in a shapefile. The medoid
 of a two-dimensional feature is conceptually similar its centroid, or mean position, but the medoid
@@ -2249,7 +2214,7 @@ medoid(
 ```
 
 
-#### 8.2.21 MinimumBoundingBox
+#### 8.2.20 MinimumBoundingBox
 
 This tool delineates the minimum bounding box (MBB) for a group of vectors. The MBB is the smallest box to
 completely enclose a feature. The algorithm works by rotating the feature, calculating the axis-aligned
@@ -2294,7 +2259,7 @@ minimum_bounding_box(
 ```
 
 
-#### 8.2.22 MinimumBoundingCircle
+#### 8.2.21 MinimumBoundingCircle
 
 This tool delineates the minimum bounding circle (MBC) for a group of vectors. The MBC is the smallest enclosing
 circle to completely enclose a feature.
@@ -2332,7 +2297,7 @@ minimum_bounding_circle(
 ```
 
 
-#### 8.2.23 MinimumBoundingEnvelope
+#### 8.2.22 MinimumBoundingEnvelope
 
 This tool delineates the minimum bounding axis-aligned box for a group of vector features. The is the smallest
 rectangle to completely enclose a feature, in which the sides of the envelope are aligned with the x and y
@@ -2372,7 +2337,7 @@ minimum_bounding_envelope(
 ```
 
 
-#### 8.2.24 MinimumConvexHull
+#### 8.2.23 MinimumConvexHull
 
 This tool creates a vector convex polygon around vector features. The convex hull
 is a convex closure of a set of points or polygon verticies and can be may be
@@ -2414,7 +2379,7 @@ minimum_convex_hull(
 ```
 
 
-#### 8.2.25 NearestNeighbourGridding
+#### 8.2.24 NearestNeighbourGridding
 
 Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 
@@ -2461,7 +2426,7 @@ nearest_neighbour_gridding(
 ```
 
 
-#### 8.2.26 PolygonArea
+#### 8.2.25 PolygonArea
 
 This tool calculates the area of vector polygons, adding the result to the
 vector's attribute table (AREA field). The area calculation will account
@@ -2493,7 +2458,7 @@ polygon_area(
 ```
 
 
-#### 8.2.27 PolygonLongAxis
+#### 8.2.26 PolygonLongAxis
 
 This tool can be used to map the long axis of polygon features. The long axis is the
 longer of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2528,7 +2493,7 @@ polygon_long_axis(
 ```
 
 
-#### 8.2.28 PolygonPerimeter
+#### 8.2.27 PolygonPerimeter
 
 This tool calculates the perimeter of vector polygons, adding the result
 to the vector's attribute table (PERIMETER field). The area calculation will
@@ -2560,7 +2525,7 @@ polygon_perimeter(
 ```
 
 
-#### 8.2.29 PolygonShortAxis
+#### 8.2.28 PolygonShortAxis
 
 This tool can be used to map the short axis of polygon features. The short axis is the
 shorter of the two primary axes of the minimum bounding box (MBB), i.e. the smallest box
@@ -2595,7 +2560,7 @@ polygon_short_axis(
 ```
 
 
-#### 8.2.30 RasterCellAssignment
+#### 8.2.29 RasterCellAssignment
 
 Assign row or column number to cells.
 
@@ -2630,7 +2595,7 @@ raster_cell_assignment(
 ```
 
 
-#### 8.2.31 Reclass
+#### 8.2.30 Reclass
 
 Reclassifies the values in a raster image.
 
@@ -2672,7 +2637,7 @@ reclass(
 ```
 
 
-#### 8.2.32 ReclassEqualInterval
+#### 8.2.31 ReclassEqualInterval
 
 Reclassifies the values in a raster image based on equal-ranges.
 
@@ -2710,7 +2675,7 @@ reclass_equal_interval(
 ```
 
 
-#### 8.2.33 ReclassFromFile
+#### 8.2.32 ReclassFromFile
 
 Reclassifies the values in a raster image using reclass ranges in a text file.
 
@@ -2744,7 +2709,7 @@ reclass_from_file(
 ```
 
 
-#### 8.2.34 SmoothVectors
+#### 8.2.33 SmoothVectors
 
 This tool smooths a vector coverage of either a POLYLINE or POLYGON base ShapeType. The algorithm
 uses a simple moving average method for smoothing, where the size of the averaging window is specified
@@ -2780,7 +2745,7 @@ smooth_vectors(
 ```
 
 
-#### 8.2.35 TinGridding
+#### 8.2.34 TinGridding
 
 Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
 and linear interpolation within each triangular-shaped plane.
@@ -2826,7 +2791,7 @@ tin_gridding(
 ```
 
 
-#### 8.2.36 VectorHexBinning
+#### 8.2.35 VectorHexBinning
 
 The practice of binning point data to form a type of 2D histogram, density plot,
 or what is sometimes called a heatmap, is quite useful as an alternative for the
@@ -2883,7 +2848,7 @@ vector_hex_binning(
 ```
 
 
-#### 8.2.37 VoronoiDiagram
+#### 8.2.36 VoronoiDiagram
 
 This tool creates a vector Voronoi diagram for a set of vector points. The
 Voronoi diagram is the dual graph of the Delaunay triangulation. The tool
@@ -3038,7 +3003,7 @@ NoData values in the input cost surface image are ignored during processing and 
 in the outputs. The output cost accumulation raster is of the float data type and continuous data scale.
 
 *See Also*:
-:
+
 `CostAllocation`, `CostPathway`, `WeightedOverlay`
 
 *Parameters*:
@@ -5142,7 +5107,7 @@ Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
 mesh denoising.
 
 *See Also*:
-:
+
 `DrainagePreservingSmoothing`
 
 *Parameters*:
@@ -6682,7 +6647,7 @@ flow path enforcement in digital elevation models.* **Hydrological Processes**,
 It uses a breach-first, fill-second approach.
 
 *See Also*:
-:
+
 `FillDepressions`
 
 *Parameters*:
@@ -6749,7 +6714,33 @@ breach_single_cell_pits(
 
 #### 8.7.6 D8FlowAccumulation
 
-Calculates a D8 flow accumulation raster from an input DEM.
+This tool is used to generate a flow accumulation grid (i.e. catchment area) using the
+D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction
+(SFD) method because the flow entering each grid cell is routed to only one downslope neighbour,
+i.e. flow divergence is not permitted. The user must specify the name of the input digital
+elevation model (DEM). The DEM must have been hydrologically corrected to remove all spurious
+depressions and flat areas. DEM pre-processing is usually achieved using the `BreachDepressions` or
+`FillDepressions` tools.
+
+In addition to the input DEM, the user must specify the output type. The output flow-accumulation
+can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
+or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
+is `cells`. The user must also specify whether the output flow-accumulation grid should be
+log-tranformed, i.e. the output, if this option is selected, will be the natural-logarithm of the
+accumulated flow value. This is a transformation that is often performed to better visualize the
+contributing area distribution. Because contributing areas tend to be very high along valley bottoms
+and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of
+values on hillslopes tends to be 'washed out' because the palette is stretched out to represent the
+highest values. Log-transformation provides a means of compensating for this phenomenon. Importantly,
+however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain
+indices, such as the wetness index, or relative stream power index.
+
+Grid cells possessing the **NoData** value in the input flow-pointer grid are assigned the **NoData**
+value in the output flow-accumulation image.
+
+*See Also*:
+:
+`DInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`
 
 *Parameters*:
 
@@ -6757,8 +6748,8 @@ Calculates a D8 flow accumulation raster from an input DEM.
 -------------------  ---------------
 -i, -\-dem           Input raster DEM file
 -o, -\-output        Output raster file
--\-out_type          Output type; one of 'cells', 'specific contributing area' (default), and 
-                     'catchment area' 
+-\-out_type          Output type; one of 'cells' (default), 'catchment area', and 'specific 
+                     contributing area' 
 -\-log               Optional flag to request the output be log-transformed
 -\-clip              Optional flag to request clipping the display max by 1%
 
@@ -6769,7 +6760,7 @@ Calculates a D8 flow accumulation raster from an input DEM.
 d8_flow_accumulation(
     dem, 
     output, 
-    out_type="specific contributing area", 
+    out_type="cells", 
     log=False, 
     clip=False, 
     callback=default_callback)
@@ -6779,7 +6770,7 @@ d8_flow_accumulation(
 
 ```
 >>./whitebox_tools -r=D8FlowAccumulation -v ^
---wd="/path/to/data/" --dem=DEM.tif -o=output.dtifep ^
+--wd="/path/to/data/" --dem=DEM.tif -o=output.tif ^
 --out_type='cells'
 >>./whitebox_tools -r=D8FlowAccumulation -v ^
 --wd="/path/to/data/" --dem=DEM.tif -o=output.tif ^
@@ -8282,7 +8273,7 @@ change_vector_analysis(
 
 #### 8.8.2 Closing
 
-A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
+A closing is a mathematical morphology operation involving an erosion (min filter) of a dilation (max filter) set.
 
 *Parameters*:
 
@@ -8317,7 +8308,28 @@ closing(
 
 #### 8.8.3 CreateColourComposite
 
-Creates a colour-composite image from three bands of multispectral imagery.
+This tool can be used to create a colour-composite image from three bands of multi-spectral imagery.
+The user must specify the names of the input images to enter into the red, green, and blue channels
+of the resulting composite image. The output image uses the 32-bit aRGB colour model, and therefore,
+in addition to red, green and blue bands, the user may optionally specify a fourth image that will
+be used to determine pixel opacity (the 'a' channel). If no opacity image is specified, each pixel
+will be opaque. This can be useful for cropping an image to an irregular-shaped boundary. The opacity
+channel can also be used to create transparent gradients in the composite image.
+
+A balance contrast enchancment (BCE) can optionally be performed on the bands prior to creation of
+the colour composite. While this operation will add to the runtime of `CreateColourComposite`, if
+the individual input bands have not already had contrast enchancements, then it is advisable that
+the BCE option be used to improve the quality of the resulting colour composite image.
+
+NoData values in any of the input images are assigned NoData values in the output image and are not
+taken into account when performing the BCE operation. Please note, not all images have NoData values
+identified. When this is the case, and when the background value is 0 (often the case with
+multispectral imagery), then the `CreateColourComposite` tool can be told to ignore zero values using
+the `--zeros` flag.
+
+*See Also*:
+
+`BalanceContrastEnhancment`
 
 *Parameters*:
 
@@ -8329,6 +8341,7 @@ Creates a colour-composite image from three bands of multispectral imagery.
 -\-opacity           Input opacity band image file (optional)
 -o, -\-output        Output colour composite file
 -\-enhance           Optional flag indicating whether a balance contrast enhancement is performed
+-\-zeros             Optional flag to indicate if zeros are nodata values
 
 
 *Python function*:
@@ -8341,6 +8354,7 @@ create_colour_composite(
     output, 
     opacity=None, 
     enhance=True, 
+    zeros=False, 
     callback=default_callback)
 ~~~~
 
@@ -8353,7 +8367,7 @@ create_colour_composite(
 >>./whitebox_tools ^
 -r=CreateColourComposite -v --wd="/path/to/data/" ^
 --red=band3.tif --green=band2.tif --blue=band1.tif ^
---opacity=a.tif -o=output.tif 
+--opacity=a.tif -o=output.tif --enhance --zeros 
 
 
 ```
@@ -8638,6 +8652,10 @@ and cubic convolution. The order of the input source image files is important. G
 cells in the output image will be assigned the corresponding value determined from the
 first image found in the list to possess an overlapping coordinate.
 
+This is the preferred mosaicing tool to use when appending multiple images with
+little to no overlapping areas, e.g. tiled data. When images have significant overlap
+areas, users are advised to use the `MosaicWithFeathering` tool instead.
+
 Resample is very similar in operation to the Mosaic tool. The Resample tool should be
 used when there is an existing image into which you would like to dump information from
 one or more source images. If the source images are more extensive than the destination
@@ -8649,6 +8667,10 @@ used when there is no existing destination image. In this case, a new image is c
 that represents the bounding rectangle of each of the two or more input images. Grid
 cells in the output image that do not overlap with any of the input images will be
 assigned the NoData value.
+
+*See Also*:
+
+`MosaicWithFeathering`
 
 *Parameters*:
 
@@ -8675,13 +8697,73 @@ mosaic(
 ```
 >>./whitebox_tools -r=Mosaic -v --wd='/path/to/data/' ^
 -i='image1.tif;image2.tif;image3.tif' -o=dest.tif ^
---method='cc 
+--method='cc' 
 
 
 ```
 
 
-#### 8.8.12 NormalizedDifferenceVegetationIndex
+#### 8.8.12 MosaicWithFeathering
+
+This tool will create a mosaic from two input images. It is similar in operation to the `Mosaic` tool,
+however, this tool is the preferred method of mosaicing images when there is significant overlap between
+the images. For areas of overlap, the feathering method will calculate the output value as a weighted
+combination of the two input values, where the weights are derived from the squared distance of the
+pixel to the edge of the data in each of the input raster files. Therefore, less weight is assigned to
+an image's pixel value where the pixel is very near the edge of the image. Note that the distance is
+actually calculated to the edge of the grid and not necessarily the edge of the data, which can differ
+if the image has been rotated during registration.  The result of this feathering method is that the
+output mosaic image should have very little evidence of the original image edges within the overlapping
+area.
+
+Unlike the Mosaic tool, which can take multiple input images, this tool only accepts two input images.
+Mosaic is therefore useful when there are many, adjacent or only slightly overlapping images, e.g. for
+tiled data sets.
+
+Users may want to use the `HistogramMatching` tool prior to mosaicing if the two input images differ
+significantly in their radiometric properties. i.e. if image contrast differences exist.
+
+*See Also*:
+
+`Mosaic`, `HistogramMatching`
+
+*Parameters*:
+
+**Flag**             **Description**
+-------------------  ---------------
+-\-i1, -\-input1     Input raster file to modify
+-\-i2, -\-input2     Input reference raster file
+-o, -\-output        Output raster file
+-\-method            Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 
+                     'cc' (cubic convolution) 
+-\-weight            
+
+
+*Python function*:
+
+~~~~{.python}
+mosaic_with_feathering(
+    input1, 
+    input2, 
+    output, 
+    method="cc", 
+    weight=4.0, 
+    callback=default_callback)
+~~~~
+
+*Command-line Interface*:
+
+```
+>>./whitebox_tools -r=MosaicWithFeathering -v ^
+--wd='/path/to/data/' --input1='image1.tif' ^
+--input2='image2.tif' -o='output.tif' --method='cc' ^
+--weight=4.0 
+
+
+```
+
+
+#### 8.8.13 NormalizedDifferenceVegetationIndex
 
 Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 
@@ -8724,9 +8806,9 @@ normalized_difference_vegetation_index(
 ```
 
 
-#### 8.8.13 Opening
+#### 8.8.14 Opening
 
-An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
+An opening is a mathematical morphology operation involving a dilation (max filter) of an erosion (min filter) set.
 
 *Parameters*:
 
@@ -8759,7 +8841,7 @@ opening(
 ```
 
 
-#### 8.8.14 RemoveSpurs
+#### 8.8.15 RemoveSpurs
 
 Removes the spurs (pruning operation) from a Boolean line image.; intended to be used on the output of the LineThinning tool.
 
@@ -8792,7 +8874,7 @@ remove_spurs(
 ```
 
 
-#### 8.8.15 Resample
+#### 8.8.16 Resample
 
 Resample is very similar in operation to the Mosaic tool. The Resample tool should
 be used when there is an existing image into which you would like to dump information
@@ -8837,7 +8919,7 @@ resample(
 ```
 
 
-#### 8.8.16 RgbToIhs
+#### 8.8.17 RgbToIhs
 
 Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
 
@@ -8888,7 +8970,7 @@ rgb_to_ihs(
 ```
 
 
-#### 8.8.17 SplitColourComposite
+#### 8.8.18 SplitColourComposite
 
 This tool splits an RGB colour composite image into seperate multispectral images.
 
@@ -8919,7 +9001,7 @@ split_colour_composite(
 ```
 
 
-#### 8.8.18 ThickenRasterLine
+#### 8.8.19 ThickenRasterLine
 
 Thickens single-cell wide lines within a raster image.
 
@@ -8950,7 +9032,7 @@ thicken_raster_line(
 ```
 
 
-#### 8.8.19 TophatTransform
+#### 8.8.20 TophatTransform
 
 Performs either a white or black top-hat transform on an input image.
 
@@ -8987,7 +9069,7 @@ tophat_transform(
 ```
 
 
-#### 8.8.20 WriteFunctionMemoryInsertion
+#### 8.8.21 WriteFunctionMemoryInsertion
 
 Performs a write function memory insertion for single-band multi-date change detection.
 
@@ -11630,7 +11712,20 @@ lidar_join(
 
 #### 8.11.23 LidarKappaIndex
 
-Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
+This tool performs a kappa index of agreement (KIA) analysis on the classification values of two LiDAR
+(LAS) files. The output report HTML file should be displayed automatically but can also be displayed
+afterwards in any web browser. As a measure of overall classification accuracy, the KIA is more robust
+than the percent agreement calculation because it takes into account the agreement occurring by random
+chance. In addition to the KIA, the tool will output the producer's and user's accuracy, the overall
+accuracy, and the error matrix. The KIA is often used as a means of assessing the accuracy of an image
+classification analysis; however the `LidarKappaIndex` tool performs the analysis on a point-to-point
+basis, comparing the class values of the points in one input LAS file with the corresponding nearest
+points in the second input LAS file.
+
+The user must also specify the name and resolution of an output raster file, which is used to show the
+spatial distribution of class accuracy. Each grid cell contains the overall accuracy, i.e. the points
+correctly classified divided by the total number of points contained within the cell, expressed as a
+percentage.
 
 *Parameters*:
 
@@ -11639,6 +11734,8 @@ Performs a kappa index of agreement (KIA) analysis on the classifications of two
 -\-i1, -\-input1     Input LiDAR classification file
 -\-i2, -\-input2     Input LiDAR reference file
 -o, -\-output        Output HTML file
+-\-class_accuracy    Output classification accuracy raster file
+-\-resolution        Output raster's grid resolution
 
 
 *Python function*:
@@ -11648,6 +11745,8 @@ lidar_kappa_index(
     input1, 
     input2, 
     output, 
+    class_accuracy, 
+    resolution=1.0, 
     callback=default_callback)
 ~~~~
 
@@ -11655,8 +11754,8 @@ lidar_kappa_index(
 
 ```
 >>./whitebox_tools -r=LidarKappaIndex -v ^
---wd="/path/to/data/" --i1=class.tif --i2=reference.tif ^
--o=kia.html 
+--wd="/path/to/data/" --i1=class.las --i2=reference.las ^
+-o=kia.html --class_accuracy=new_file.tif --resolution=0.5 
 
 
 ```
@@ -15234,8 +15333,8 @@ long_profile_from_points(
 
 #### 8.13.11 RasterStreamsToVector
 
-This tool converts a raster stream file into a vector file. The user must specify
-1) the name of the raster streams file, 2) the name of the D8 flow pointer file,
+This tool converts a raster stream file into a vector file. The user must specify: 1)
+the name of the raster streams file, 2) the name of the D8 flow pointer file,
 and 3) the name of the output vector file. Streams in the input raster streams
 file are denoted by cells containing any positive, non-zero integer. A field in
 the vector database file, called STRM_VAL, will correspond to this positive
@@ -15729,6 +15828,8 @@ tributary_identifier(
 
 
 ```
+
+
 
 
 

@@ -363,6 +363,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2085,7 +2086,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--out_type={}".format(out_type))
         return self.run_tool('downslope_index', args, callback) # returns 1 if error
 
-    def drainage_preserving_smoothing(self, dem, output, filter=11, norm_diff=8.0, num_iter=5, reduction=80.0, dfm=0.15, zfactor=1.0, callback=None):
+    def drainage_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=10, max_diff=2.0, reduction=80.0, dfm=0.15, zfactor=1.0, callback=None):
         """Reduces short-scale variation in an input DEM while preserving breaks-in-slope and small drainage features using a modified Sun et al. (2007) algorithm.
 
         Keyword arguments:
@@ -2095,6 +2096,7 @@ callback -- Custom function for handling tool text outputs.
         filter -- Size of the filter kernel. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
         num_iter -- Number of iterations. 
+        max_diff -- Maximum allowable absolute elevation change (optional). 
         reduction -- Maximum Amount to reduce the threshold angle by (0 = full smoothing; 100 = no smoothing). 
         dfm -- Difference from median threshold (in z-units), determines when a location is low-lying. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
@@ -2106,6 +2108,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--filter={}".format(filter))
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--num_iter={}".format(num_iter))
+        args.append("--max_diff={}".format(max_diff))
         args.append("--reduction={}".format(reduction))
         args.append("--dfm={}".format(dfm))
         args.append("--zfactor={}".format(zfactor))
@@ -2175,7 +2178,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('elev_relative_to_watershed_min_max', args, callback) # returns 1 if error
 
-    def feature_preserving_denoise(self, dem, output, filter=11, norm_diff=8.0, num_iter=5, zfactor=1.0, callback=None):
+    def feature_preserving_denoise(self, dem, output, filter=11, norm_diff=15.0, num_iter=10, max_diff=2.0, zfactor=1.0, callback=None):
         """Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
         Keyword arguments:
@@ -2185,6 +2188,7 @@ callback -- Custom function for handling tool text outputs.
         filter -- Size of the filter kernel. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
         num_iter -- Number of iterations. 
+        max_diff -- Maximum allowable absolute elevation change (optional). 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -2194,6 +2198,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--filter={}".format(filter))
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--num_iter={}".format(num_iter))
+        args.append("--max_diff={}".format(max_diff))
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('feature_preserving_denoise', args, callback) # returns 1 if error
 
@@ -2961,14 +2966,14 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('breach_single_cell_pits', args, callback) # returns 1 if error
 
-    def d8_flow_accumulation(self, dem, output, out_type="specific contributing area", log=False, clip=False, callback=None):
+    def d8_flow_accumulation(self, dem, output, out_type="cells", log=False, clip=False, callback=None):
         """Calculates a D8 flow accumulation raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
+        out_type -- Output type; one of 'cells' (default), 'catchment area', and 'specific contributing area'. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
         callback -- Custom function for handling tool text outputs.
@@ -3662,7 +3667,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('change_vector_analysis', args, callback) # returns 1 if error
 
     def closing(self, i, output, filterx=11, filtery=11, callback=None):
-        """A closing is a mathematical morphology operating involving an erosion (min filter) of a dilation (max filter) set.
+        """A closing is a mathematical morphology operation involving an erosion (min filter) of a dilation (max filter) set.
 
         Keyword arguments:
 
@@ -3679,7 +3684,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--filtery={}".format(filtery))
         return self.run_tool('closing', args, callback) # returns 1 if error
 
-    def create_colour_composite(self, red, green, blue, output, opacity=None, enhance=True, callback=None):
+    def create_colour_composite(self, red, green, blue, output, opacity=None, enhance=True, zeros=False, callback=None):
         """Creates a colour-composite image from three bands of multispectral imagery.
 
         Keyword arguments:
@@ -3690,6 +3695,7 @@ callback -- Custom function for handling tool text outputs.
         opacity -- Input opacity band image file (optional). 
         output -- Output colour composite file. 
         enhance -- Optional flag indicating whether a balance contrast enhancement is performed. 
+        zeros -- Optional flag to indicate if zeros are nodata values. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -3699,6 +3705,7 @@ callback -- Custom function for handling tool text outputs.
         if opacity is not None: args.append("--opacity='{}'".format(opacity))
         args.append("--output='{}'".format(output))
         if enhance: args.append("--enhance")
+        if zeros: args.append("--zeros")
         return self.run_tool('create_colour_composite', args, callback) # returns 1 if error
 
     def flip_image(self, i, output, direction="vertical", callback=None):
@@ -3851,6 +3858,26 @@ callback -- Custom function for handling tool text outputs.
         args.append("--method={}".format(method))
         return self.run_tool('mosaic', args, callback) # returns 1 if error
 
+    def mosaic_with_feathering(self, input1, input2, output, method="cc", weight=4.0, callback=None):
+        """Mosaics two images together using a feathering technique in overlapping areas to reduce edge-effects.
+
+        Keyword arguments:
+
+        input1 -- Input raster file to modify. 
+        input2 -- Input reference raster file. 
+        output -- Output raster file. 
+        method -- Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 'cc' (cubic convolution). 
+        weight -- . 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--output='{}'".format(output))
+        args.append("--method={}".format(method))
+        args.append("--weight={}".format(weight))
+        return self.run_tool('mosaic_with_feathering', args, callback) # returns 1 if error
+
     def normalized_difference_vegetation_index(self, nir, red, output, clip=0.0, osavi=False, callback=None):
         """Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
 
@@ -3872,7 +3899,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('normalized_difference_vegetation_index', args, callback) # returns 1 if error
 
     def opening(self, i, output, filterx=11, filtery=11, callback=None):
-        """An opening is a mathematical morphology operating involving a dilation (max filter) of an erosion (min filter) set.
+        """An opening is a mathematical morphology operation involving a dilation (max filter) of an erosion (min filter) set.
 
         Keyword arguments:
 
@@ -5249,7 +5276,7 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_join', args, callback) # returns 1 if error
 
-    def lidar_kappa_index(self, input1, input2, output, callback=None):
+    def lidar_kappa_index(self, input1, input2, output, class_accuracy, resolution=1.0, callback=None):
         """Performs a kappa index of agreement (KIA) analysis on the classifications of two LAS files.
 
         Keyword arguments:
@@ -5257,12 +5284,16 @@ callback -- Custom function for handling tool text outputs.
         input1 -- Input LiDAR classification file. 
         input2 -- Input LiDAR reference file. 
         output -- Output HTML file. 
+        class_accuracy -- Output classification accuracy raster file. 
+        resolution -- Output raster's grid resolution. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input1='{}'".format(input1))
         args.append("--input2='{}'".format(input2))
         args.append("--output='{}'".format(output))
+        args.append("--class_accuracy='{}'".format(class_accuracy))
+        args.append("--resolution={}".format(resolution))
         return self.run_tool('lidar_kappa_index', args, callback) # returns 1 if error
 
     def lidar_nearest_neighbour_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=None):
