@@ -15,6 +15,12 @@ use std::path;
 // use crate::tools::ParameterType;
 // use crate::tools::ParameterFileType;
 
+/// This tool can be used to view the tags contained within a GeoTiff file. Viewing 
+/// the tags of a GeoTiff file can be useful when trying to import the GeoTiff to
+/// different software environments. The user must specify the name of a GeoTiff file 
+/// and the tag information will be output to the StdOut output stream (e.g. console). 
+/// Note that tags that contain greater than 100 values will be truncated in the output. 
+/// GeoKeys will also be interpreted as per the GeoTIFF specification.
 pub struct PrintGeoTiffTags {
     name: String,
     description: String,

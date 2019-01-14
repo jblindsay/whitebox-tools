@@ -15,10 +15,7 @@ use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Reference: P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing:
-/// Techniques and Applications (DICTA), 2010 International Conference on.
-///
-/// The tool is somewhat modiied from Dr. Kovesi's original Matlab code in that it
+/// The tool is somewhat modified from Dr. Kovesi's original Matlab code in that it
 /// works with both greyscale and RGB images (decomposes to HSI and uses the intensity
 /// data) and it handles the case of rasters that contain NoData values. This adds
 /// complexity to the original 20 additions and 5 multiplications assertion of the
@@ -26,6 +23,10 @@ use std::path;
 ///
 /// Also note, for small values of sigma (< 1.8), you should probably just use the
 /// regular GaussianFilter tool.
+/// 
+/// # Reference 
+/// P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing:
+/// Techniques and Applications (DICTA), 2010 International Conference on.
 pub struct FastAlmostGaussianFilter {
     name: String,
     description: String,

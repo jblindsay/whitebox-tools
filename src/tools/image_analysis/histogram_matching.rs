@@ -20,6 +20,40 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool alters the cumulative distribution function (CDF) of a raster image to match, 
+/// as closely as possible, the CDF of a reference histogram. Histogram matching works by 
+/// first calculating the histogram of the input image. This input histogram and reference 
+/// histograms are each then converted into CDFs. Each grid cell value in the input image 
+/// is then mapped to the corresponding value in the reference CDF that has an equivalent 
+/// (or as close as possible) cumulative probability value. Histogram matching provides 
+/// the most flexible means of performing image contrast adjustment.
+/// 
+/// The reference histogram must be specified to the tool in the form of a text file (.txt), 
+/// provided using the `--histo_file` flag. This file must contain two columns (delimited by 
+/// a tab, space, comma, colon, or semicolon) where the first column contains the x value 
+/// (i.e. the values that will be assigned to the grid cells in the output image) and the second 
+/// column contains the frequency or probability. Note that 1) the file must not contain a 
+/// header row, 2) each x value/frequency pair must be on a separate row, and 3) the 
+/// frequency/probability must not be cumulative (i.e. the file must contain the histogram and 
+/// not the CDF). The CDF will be computed for the reference histogram automatically by the tool. 
+/// It is possible to create this type of histogram using the wide range of distribution tools 
+/// available in most spreadsheet programs (e.g. Excel or LibreOffice's Calc program). You must
+/// save the file as a text-only (ASCII) file.
+/// 
+/// `HistogramMatching` is related to the `HistogramMatchingTwoImages` tool, which can be used 
+/// when a reference CDF can be derived from a reference image. `HistogramEqualization` and 
+/// `GaussianContrastStretch` are similarly related tools frequently used for image contrast 
+/// adjustment, where the reference CDFs are uniform and Gaussian (normal) respectively.
+/// 
+/// **Notes:**
+/// - The algorithm can introduces gaps in the histograms (steps in the CDF). This is to be expected 
+/// because the histogram is being distorted. This is more prevalent for integer-level images.
+/// - Histogram matching is not appropriate for images containing categorical (class) data. 
+/// - This tool is not intended for images containing RGB data. If this is the case, the colour 
+/// channels should be split using the `SplitColourComposite` tool.
+/// 
+/// # See Also
+/// `HistogramMatchingTwoImages`, `HistogramEqualization`, `GaussianContrastStretch`, `SplitColourComposite`
 pub struct HistogramMatching {
     name: String,
     description: String,

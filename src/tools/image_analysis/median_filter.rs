@@ -4,8 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 15, 2017
 Last Modified: 13/10/2018
 License: MIT
-
-NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
 */
 
 use crate::raster::*;
@@ -22,7 +20,22 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Performs an efficient median filter based on Huang, Yang, and Tang's (1979) method.
+/// This tool performs a median filter on a raster image. Median filters, a type of low-pass filter, can be used to emphasize 
+/// the longer-range variability in an image, effectively acting to smooth the image. This can be useful for reducing the 
+/// noise in an image. The algorithm operates by calculating the median value (middle value in a sorted list) in a moving 
+/// window centred on each grid cell. Specifically, this tool uses the efficient running-median filtering algorithm of Huang 
+/// et al. (1979). The median value is not influenced by anomolously high or low values in the distribution to the extent 
+/// that the average is. As such, the median filter is far less sensitive to shot noise in an image than the mean filter. 
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`flags. 
+/// These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # Reference
+/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE 
+/// Transactions on Acoustics, Speech, and Signal Processing, 27(1), pp.13-18.
+/// 
+/// # See Also
+/// `BilateralFilter`, `EdgePreservingMeanFilter`, `GaussianFilter`, `MeanFilter`
 pub struct MedianFilter {
     name: String,
     description: String,

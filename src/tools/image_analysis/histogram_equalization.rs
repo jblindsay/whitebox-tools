@@ -22,6 +22,32 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool alters the cumulative distribution function (CDF) of a raster image to match, 
+/// as closely as possible, the CDF of a uniform distribution. Histogram equalization works 
+/// by first calculating the histogram of the input image. This input histogram is then 
+/// converted into a CDF. Each grid cell value in the input image is then mapped to the 
+/// corresponding value in the uniform distribution's CDF that has an equivalent (or as close 
+/// as possible) cumulative probability value. Histogram equalization provides a very effective 
+/// means of performing image contrast adjustment in an efficient manner with little need for 
+/// human input.
+/// 
+/// The user must specify the name of the input image to perform histogram equalization on. 
+/// The user must also specify the number of tones, corresponding to the number 
+/// of histogram bins used in the analysis.
+/// 
+/// `HistogramEqualization` is related to the `HistogramMatchingTwoImages` tool (used when an image's 
+/// CDF is to be matched to a reference CDF derived from a reference image). Similarly, `HistogramMatching`, 
+/// and `GaussianContrastStretch` are similarly related tools frequently used for image contrast 
+/// adjustment, where the reference CDFs are uniform and Gaussian (normal) respectively.
+/// 
+/// **Notes**:
+/// 
+/// - The algorithm can introduces gaps in the histograms (steps in the CDF). This is to be expected because 
+/// the histogram is being distorted. This is more prevalent for integer-level images.
+/// - Histogram equalization is not appropriate for images containing categorical (class) data. 
+/// 
+/// # See Also
+/// `HistogramMatching`, `HistogramMatchingTwoImages`, `GaussianContrastStretch`
 pub struct HistogramEqualization {
     name: String,
     description: String,

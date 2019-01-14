@@ -13,7 +13,7 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Converts vector polylines into polygons. Note that this tool will close polygons
+/// This tool converts vector polylines into polygons. Note that this tool will close polygons
 /// that are open and will ensure that the first part of an input line is interpreted
 /// as the polygon hull and subsequent parts are considered holes. The tool does not
 /// examine input lines for line crossings (self intersections), which are topological

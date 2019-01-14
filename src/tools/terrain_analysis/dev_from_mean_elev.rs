@@ -19,6 +19,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the difference between the elevation of each grid 
+/// cell and the mean elevation of the centering local neighbourhood, normalized by standard 
+/// deviation. Therefore, this index of topographic residual is essentially equivalent to a 
+/// local z-score. This attribute measures the relative topographic position as a fraction of 
+/// local relief, and so is normalized to the local surface roughness.
+/// 
+/// The user must specify the name (`--dem`) of the input digital elevation model (DEM), the 
+/// name of the output file (`--output`), and the size of the neighbourhood in the *x* and *y*
+/// directions (`--filterx` and `--filtery`), measured in grid size.
 pub struct DevFromMeanElev {
     name: String,
     description: String,

@@ -29,7 +29,7 @@ use std::path;
 /// output image. As such, NoData is not a suitable background value for non-target cells.
 /// Background areas should be designated with zero values.
 ///
-/// # References
+/// # Reference
 /// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
 /// neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.
 ///

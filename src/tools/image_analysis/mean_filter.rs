@@ -23,6 +23,27 @@ use std::thread;
 // use tools::ToolParameter;
 use crate::tools::*;
 
+/// This tool performs a mean filter operation on a raster image. A mean filter, a type of low-pass filter, can be 
+/// used to emphasize the longer-range variability in an image, effectively acting to smooth the image. This can be 
+/// useful for reducing the noise in an image. This tool utilized an integral image approach (Crow, 1984) to ensure highly 
+/// efficient filtering that is invariant to filter size. The algorithm operates by calculating the average value 
+/// in a moving window centred on each grid cell.  Neighbourhood size, or filter size, is specified in the x and y 
+/// dimensions using the `--filterx` and `--filtery`flags. These dimensions should be odd, positive integer values, 
+/// e.g. 3, 5, 7, 9... If the kernel filter size is the same in the x and y dimensions, the silent `--filter` flag
+/// may be used instead (command-line interface only).
+/// 
+/// Although commonly applied in digital image processing, mean filters are 
+/// generally considered to be quite harsh, with respect to their impact on the image, compared to other smoothing 
+/// filters such as the edge-preserving smoothing filters including the `BilateralFilter`, `MedianFilter`, `OlympicFilter`,
+/// `EdgePreservingMeanFilter` and even `GaussianFilter`.
+/// 
+/// `GaussianFilter` works with both greyscale and red-green-blue (RGB) images. RGB images are 
+/// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
+/// channel. NoData values in the input image are ignored during filtering. NoData values are assigned to all sites beyond
+/// the raster.
+/// 
+/// # See Also
+/// `BilateralFilter`, `EdgePreservingMeanFilter`, `GaussianFilter`, `MedianFilter`, `RgbToIhs`
 pub struct MeanFilter {
     name: String,
     description: String,

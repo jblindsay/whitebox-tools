@@ -17,6 +17,29 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool alters the cumulative distribution function (CDF) of a raster image to match, as closely 
+/// as possible, the CDF of a reference image. Histogram matching works by first calculating the 
+/// histograms of the input image (i.e. the image to be adjusted) and the reference image. These 
+/// histograms are then converted into CDFs. Each grid cell value in the input image is then mapped 
+/// to the corresponding value in the reference CDF that has the an equivalent (or as close as 
+/// possible) cumulative probability value. A common application of this is to match the images from 
+/// two sensors with slightly different responses, or images from the same sensor, but the sensor's 
+/// response is known to change over time.The size of the two images (rows and columns) do not need 
+/// to be the same, nor do they need to be geographically overlapping. 
+/// 
+/// `HistogramMatchingTwoImages` is related to the `HistogramMatching` tool, which can be used 
+/// when a reference CDF is used directly rather than deriving it from a reference image. 
+/// `HistogramEqualization` and `GaussianContrastStretch` are similarly related tools, where the 
+/// reference CDFs are uniform and Gaussian (normal) respectively.
+/// 
+/// The algorithm may introduces gaps in the histograms (steps in the CDF). This is to be expected 
+/// because the histograms are being distorted. This is more prevalent for integer-level images.
+/// Histogram matching is not appropriate for images containing categorical (class) data. It is also 
+/// not intended for images containing RGB data, in which case, the colour channels should be split 
+/// using the `SplitColourComposite` tool.
+/// 
+/// # See Also
+/// `HistogramMatching`, `HistogramEqualization`, `GaussianContrastStretch`, `SplitColourComposite`
 pub struct HistogramMatchingTwoImages {
     name: String,
     description: String,

@@ -4,8 +4,6 @@ Authors: Dr. John Lindsay
 Created: July 6, 2017
 Last Modified: 13/10/2018
 License: MIT
-
-NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
 */
 
 use crate::raster::*;
@@ -20,7 +18,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Assigns each cell in the output grid the most frequently occurring value (mode) in a moving window centred on each grid cell in the input raster.
+/// This tool performs a majority (or modal) filter on a raster image. A mode filter assigns each 
+/// cell in the output grid the most commonly occurring value, i.e. mode, in a moving window centred 
+/// on each grid cell. Mode filters should only be applied to input images of a categorical data 
+/// scale. The input image should contain integer values but floating point data will be handled using a multiplier.
+/// Because it requires binning the values in the window, a relatively computationally intensive 
+/// task, `MajorityFilter` is considerably less efficient than other smoothing filters. This may pose a problem
+/// for large images or large neighbourhoods. Like all WhiteboxTools' filters, however, this tool is 
+/// parallelized, benefitting from multi-core processors.
+///
+/// Neighbourhood size, or filter size, is determined by the user-defined x and y dimensions. These dimensions 
+/// should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.). 
+/// 
+/// NoData values in the input image are ignored during filtering. When the neighbourhood around a grid cell extends 
+/// beyond the edge of the grid, NoData values are assigned to these sites.
+/// 
+/// # See Also
+/// `MedianFilter`
 pub struct MajorityFilter {
     name: String,
     description: String,

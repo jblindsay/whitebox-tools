@@ -13,6 +13,15 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to create a new raster with the same coordinates and dimensions 
+/// (i.e. rows and columns) as an existing base image. The user must specify the name of the 
+/// base image (`--base`), the value that the new grid will be filled with (`--value` flag; 
+/// default of NoData), and the data type (`--data_type` flag; options include 'double', 
+/// 'float', and 'integer'). Notice that the functionality of this tool is the same as 
+/// multiplying the base image by zero and adding the constant value.
+/// 
+/// # See Also
+/// `RasterCellAssignment`
 pub struct NewRasterFromBase {
     name: String,
     description: String,

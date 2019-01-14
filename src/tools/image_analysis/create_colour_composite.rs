@@ -38,7 +38,7 @@ use std::thread;
 /// the `--zeros` flag.
 /// 
 /// # See Also
-/// `BalanceContrastEnhancment`
+/// `BalanceContrastEnhancement`, `SplitColourComposite`
 pub struct CreateColourComposite {
     name: String,
     description: String,

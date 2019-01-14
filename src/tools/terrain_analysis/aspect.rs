@@ -17,6 +17,49 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates slope aspect (i.e. slope orientation in degrees) for each grid cell 
+/// in an input digital elevation model (DEM). The user must specify the name of the input 
+/// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important 
+/// when the vertical and horizontal units are not the same in the DEM. When this is the case, 
+/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the 
+/// DEM is in the geographic coordinate system (latitude and longitude), the following equation 
+/// is used:
+/// 
+/// ```
+/// zfactor = 1.0 / (113200.0 x cos(mid_lat))
+/// ```
+/// 
+/// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// 
+/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given 
+/// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),
+/// 
+/// |  7  |  8  |  1  | \
+/// |  6  |  9  |  2  | \
+/// |  5  |  4  |  3  |
+/// 
+/// ```
+/// aspect = 180 - arctan(fy / fx) + 90(fx / |fx|)
+/// ```
+/// 
+/// where,
+/// 
+/// ```
+/// fx = (z3 - z5 + 2(z2 - z6) + z1 - z7)
+/// ```
+///
+///  and,
+/// 
+/// ```
+/// fy = (z7 - z5 + 2(z8 - z4) + z1 - z3)
+/// ```
+/// 
+/// # Reference
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// 
+/// # See Also
+/// `Slope`, `PlanCurvature`, `ProfileCurvature`
 pub struct Aspect {
     name: String,
     description: String,
