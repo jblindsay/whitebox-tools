@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
-Last Modified: 12/10/2018
+Created: 25/07/2017
+Last Modified: 17/01/2019
 License: MIT
 */
 
@@ -18,6 +18,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the average length of the flowpaths that run through each grid cell (in map horizontal units) 
+/// in in an input digital elevation model (DEM). The user must specify the name of 
+/// a DEM raster (`--dem`). It is important that this DEM is pre-processed to remove all topographic depressions and
+/// flat areas using a tool such as `BreachDepressions`. Several intermediate rasters are created and stored in 
+/// memory during the operation of this tool, which may limit the size of DEM that can be processed, depending
+/// on available system resources.
+/// 
+/// # See Also
+/// `AverageFlowpathSlope`, `BreachDepressions`
 pub struct AverageUpslopeFlowpathLength {
     name: String,
     description: String,
@@ -133,21 +142,19 @@ impl WhiteboxTool for AverageUpslopeFlowpathLength {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
+Created: 22/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,34 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM). 
+/// The user must specify the  name of the input DEM and the output hillshade image name. Other parameters that must 
+/// be specified include the illumination source azimuth (`--azimuth`), or sun direction (0-360 degrees), the 
+/// illumination source altitude (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle 
+/// from 0 to 90 degrees) and the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important 
+/// when the vertical and horizontal units are not the same in the DEM. When this is the case, 
+/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the 
+/// DEM is in the geographic coordinate system (latitude and longitude), the following equation 
+/// is used:
+/// 
+/// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
+/// 
+/// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// 
+/// The hillshade value (*HS*) of a DEM grid cell is calculate as:
+/// 
+/// > *HS* = tan(*s*) / [1 - tan(*s*)<sup>2</sup>]<sup>0.5</sup> x [sin(*Alt*) / tan(*s*) - cos(*Alt*) x sin(*Az* - *a*)]
+/// 
+/// where *s* and *a* are the local slope gradient and aspect (orientation) respectively and *Alt* and *Az*
+/// are the illumination source altitude and azimuth respectively. Slope and aspect are calculated using
+/// Horn's (1981) 3rd-order finate difference method.
+///
+/// # Reference
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// 
+/// # See Also
+/// `Aspect`, `Slope`
 pub struct Hillshade {
     name: String,
     description: String,

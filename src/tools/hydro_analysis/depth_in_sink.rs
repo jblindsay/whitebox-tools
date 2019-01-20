@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,23 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool measures the depth that each grid cell in an input (`--dem`) raster digital elevation model (DEM) 
+/// lies within a sink feature, i.e. a closed topographic depression. A sink, or depression, is a bowl-like 
+/// landscape feature, which is characterized by interior drainage and groundwater recharge. The `DepthInSink` tool 
+/// operates by differencing a filled DEM, using the same depression filling method as `FillDepressions`, and the 
+/// original surface model.
+/// 
+/// In addition to the names of the input DEM (`--dem`) and the output raster (`--output`), the user must specify 
+/// whether the background value (i.e. the value assigned to grid cells that are not contained within sinks) should be 
+/// set to 0.0 (`--zero_background`) Without this optional parameter specified, the tool will use the NoData value 
+/// as the background value.
+/// 
+/// # Reference
+/// Antonić, O., Hatic, D., & Pernar, R. (2001). DEM-based depth in sink as an environmental estimator. Ecological 
+/// Modelling, 138(1-3), 247-254.
+/// 
+/// # See Also
+/// `FillDepressions`
 pub struct DepthInSink {
     name: String,
     description: String,

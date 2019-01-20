@@ -404,6 +404,7 @@ impl ToolManager {
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
+        tool_names.push("Geomorphons".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
@@ -964,6 +965,7 @@ impl ToolManager {
             "fetchanalysis" => Some(Box::new(terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(terrain_analysis::FillMissingData::new())),
             "findridges" => Some(Box::new(terrain_analysis::FindRidges::new())),
+            "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),

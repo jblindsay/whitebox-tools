@@ -21,6 +21,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to set the elevations contained in a set of input vector lake polygons (`--lakes`) to 
+/// a consistent value within an input (`--dem`) digital elevation model (DEM). Lake flattening is
+/// a common pre-processing step for DEMs intended for use in hydrological applications. This algorithm
+/// determines lake elevation automatically based on the minimum perimeter elevation for each lake
+/// polygon. The minimum perimeter elevation is assumed to be the lake outlet elevation and is assigned 
+/// to the entire interior region of lake polygons, excluding island geometries. Note, this tool will not
+/// provide satisfactory results if the input vector polygons contain wide river features rather than true
+/// lakes.
+/// 
+/// # See Also
+/// `FillDepressions`
 pub struct FlattenLakes {
     name: String,
     description: String,

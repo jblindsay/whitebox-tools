@@ -19,6 +19,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the difference between the elevation of each grid 
+/// cell and the mean elevation of the centering local neighbourhood. This is similar to what a high-pass 
+/// filter calculates for imagery data, but is intended to work with DEM data instead. This attribute 
+/// measures the *relative topographic position*. `DiffFromMeanElev` 
+/// utilizes an integral image approach (Crow, 1984) to ensure highly efficient filtering that 
+/// is invariant with filter size. 
+/// 
+/// The user must specify the name (`--dem`) of the input digital elevation model (DEM), the 
+/// name of the output file (`--output`), and the size of the neighbourhood in the *x* and *y*
+/// directions (`--filterx` and `--filtery`), measured in grid size.
+/// 
+/// While `DevFromMeanElev` calculates the DIFF at a single, user-defined
+/// scale, the `MaxDifferenceFromMean` tool can be used to output the per-pixel maximum DIFF
+/// value across a range of input scales.
+/// 
+/// # See Also
+/// `DevFromMeanElev`, `MaxDifferenceFromMean`
 pub struct DiffFromMeanElev {
     name: String,
     description: String,

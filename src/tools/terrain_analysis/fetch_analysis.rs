@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 7, 2017
+Created: 07/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,37 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which each grid cell is assigned the distance, in meters, to the nearest 
+/// topographic obstacle in a specified direction. It is a modification of the algorithm described by Lapen and 
+/// Martz (1993). Unlike the original algorithm, Fetch Analysis is capable of analyzing fetch in any direction 
+/// from 0-360 degrees. The user must specify the name of an input digital elevation model (DEM) raster file, the 
+/// output raster name, a hypothetical wind direction, and a value for the height increment parameter. The algorithm 
+/// searches each grid cell in a path following the specified wind direction until the following condition is met:
+///
+///  > *Z*<sub>test</sub> >= *Z*<sub>core</sub> + *DI*
+///
+/// where *Z*<sub>core</sub> is the elevation of the grid cell at which fetch is being determined, *Z*<sub>test</sub> 
+/// is the elevation of the grid cell being tested as a topographic obstacle, *D* is the distance between the two 
+/// grid cells in meters, and *I* is the height increment in m/m. Lapen and Martz (1993) suggest values for *I* in 
+/// the range of 0.025 m/m to 0.1 m/m based on their study of snow re-distribution in low-relief agricultural 
+/// landscapes of the Canadian Prairies. If the directional search does not identify an obstacle grid cell before the 
+/// edge of the DEM is reached, the distance between the DEM edge and Zcore is entered. Edge distances are assigned 
+/// negative values to differentiate between these artificially truncated fetch values and those for which a valid 
+/// topographic obstacle was identified. Notice that linear interpolation is used to estimate the elevation of the 
+/// surface where a ray (i.e. the search path) does not intersect the DEM grid precisely at one of its nodes.
+///
+/// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to 
+/// operate for larger sized DEMs. This tool is parallelized to aid with computational efficiency. NoData valued 
+/// grid cells in the input image will be assigned NoData values in the output image. Fetch Analysis images are 
+/// best displayed using the blue-white-red bipolar palette to distinguish between the positive and negative 
+/// values that are present in the output.
+///
+/// # Reference
+/// Lapen, D. R., & Martz, L. W. (1993). The measurement of two simple topographic indices of wind sheltering-exposure 
+/// from raster digital elevation models. Computers & Geosciences, 19(6), 769-779.
+/// 
+/// # See Also
+/// `DirectionalRelief`, `HorizonAngle`, `RelativeAspect`
 pub struct FetchAnalysis {
     name: String,
     description: String,

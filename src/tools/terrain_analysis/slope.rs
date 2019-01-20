@@ -25,9 +25,7 @@ use std::thread;
 /// DEM is in the geographic coordinate system (latitude and longitude), the following equation 
 /// is used:
 /// 
-/// ```
-/// zfactor = 1.0 / (113200.0 x cos(mid_lat))
-/// ```
+/// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
 /// 
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
 /// 
@@ -38,21 +36,15 @@ use std::thread;
 /// |  6  |  9  |  2  | \
 /// |  5  |  4  |  3  |
 /// 
-/// ```
-/// slope = arctan(fx2 + fy2)^0.5
-/// ```
+/// > slope = arctan(f<sub>x</sub><sup>2</sup> + f<sub>y</sub><sup>2</sup>)<sup>0.5</sup>
 /// 
 /// where,
 /// 
-/// ```
-/// fx = (z3 - z5 + 2(z2 - z6) + z1 - z7)
-/// ```
-///
+/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>)
+/// 
 ///  and,
 /// 
-/// ```
-/// fy = (z7 - z5 + 2(z8 - z4) + z1 - z3)
-/// ```
+/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>)
 /// 
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 

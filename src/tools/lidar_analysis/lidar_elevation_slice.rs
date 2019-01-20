@@ -215,7 +215,6 @@ impl WhiteboxTool for LidarElevationSlice {
             } else if vec[0].to_lowercase() == "-inclassval"
                 || vec[0].to_lowercase() == "--inclassval"
             {
-                filter = false;
                 if keyval {
                     in_class_value = vec[1].to_string().parse::<u8>().unwrap();
                 } else {
@@ -224,7 +223,6 @@ impl WhiteboxTool for LidarElevationSlice {
             } else if vec[0].to_lowercase() == "-outclassval"
                 || vec[0].to_lowercase() == "--outclassval"
             {
-                filter = false;
                 if keyval {
                     out_class_value = vec[1].to_string().parse::<u8>().unwrap();
                 } else {

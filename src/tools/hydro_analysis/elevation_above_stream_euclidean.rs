@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: March 11, 2018
+Created: 11/03/2018
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,6 +14,25 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to calculate the elevation of each grid cell in a raster above the nearest stream cell, 
+/// measured along the straight-line distance. This terrain index, a measure of relative topographic position, is 
+/// related to the 'height above drainage' (HAND), as described by Renno et al. (2008). HAND is generally estimated 
+/// with distances measured along drainage flow-paths, which can be calculated using the `ElevationAboveStream` tool. 
+/// The user must specify the name of an input digital elevation model (`--dem`) and streams raster (`--streams`). 
+/// Stream cells are designated in this raster as all non-zero values. The output of this tool, 
+/// along with the `DownslopeDistanceToStream` tool, can be useful for preliminary flood plain mapping when combined 
+/// with high-accuracy DEM data.
+/// 
+/// The difference between `ElevationAboveStream` and `ElevationAboveStreamEuclidean` is that the former calculates 
+/// distances along drainage flow-paths while the latter calculates straight-line distances to streams channels.
+/// 
+/// # Reference
+/// Renno, C. D., Nobre, A. D., Cuartas, L. A., Soares, J. V., Hodnett, M. G., Tomasella, J., & Waterloo, M. J. 
+/// (2008). HAND, a new terrain descriptor using SRTM-DEM: Mapping terra-firme rainforest environments in Amazonia. 
+/// Remote Sensing of Environment, 112(9), 3469-3481.
+/// 
+/// # See Also
+/// `ElevationAboveStream`, `DownslopeDistanceToStream`, `ElevAbovePit`
 pub struct ElevationAboveStreamEuclidean {
     name: String,
     description: String,

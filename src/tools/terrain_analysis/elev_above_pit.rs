@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
+Created: 13/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool will calculate the elevation of each grid cell in a digital elevation model (DEM) above the nearest 
+/// downslope pit cell or grid edge cell, depending on which is encountered first during the flow-path traverse. 
+/// The resulting image is therefore a measure of relative landscape position. The user must specify the names of 
+/// a D8 flow pointer grid, a DEM file, and the output file. The flow pointer grid must be derived using the D8 
+/// flow algorithm.
+/// 
+/// # See Also
+/// `ElevationAboveStream`
 pub struct ElevAbovePit {
     name: String,
     description: String,

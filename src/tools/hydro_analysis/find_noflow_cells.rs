@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to find cells with undefined flow, i.e. no valid flow direction, based on the 
+/// D8 flow direction algorithm (`D8Pointer`). These cells are therefore either at the bottom of a topographic 
+/// depression or in the interior of a flat area. In a digital elevation model (DEM) that has been 
+/// pre-processed to remove all depressions and flat areas (`BreachDepressions`), this condition will only occur 
+/// along the edges of the grid, otherwise no-flow grid cells can be situation in the interior. The user must 
+/// specify the name (`--dem`) of the DEM.
+/// 
+/// # See Also
+/// `D8Pointer`, `BreachDepressions`
 pub struct FindNoFlowCells {
     name: String,
     description: String,

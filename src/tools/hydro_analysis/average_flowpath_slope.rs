@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 22, 2017
-Last Modified: 12/10/2018
+Created: 22/07/2017
+Last Modified: 17/01/2019
 License: MIT
 */
 
@@ -18,6 +18,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the average slope gradient (i.e. slope steepness in degrees) of the flowpaths that 
+/// pass through each grid cell in an input digital elevation model (DEM). The user must specify the name of 
+/// a DEM raster (`--dem`). It is important that this DEM is pre-processed to remove all topographic depressions and
+/// flat areas using a tool such as `BreachDepressions`. Several intermediate rasters are created and stored in 
+/// memory during the operation of this tool, which may limit the size of DEM that can be processed, depending
+/// on available system resources.
+/// 
+/// # See Also
+/// `AverageUpslopeFlowpathLength`, `BreachDepressions`
 pub struct AverageFlowpathSlope {
     name: String,
     description: String,
@@ -37,7 +46,7 @@ impl AverageFlowpathSlope {
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input File".to_owned(),
+            name: "Input DEM File".to_owned(),
             flags: vec!["-i".to_owned(), "--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
@@ -133,21 +142,19 @@ impl WhiteboxTool for AverageFlowpathSlope {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -300,7 +307,7 @@ impl WhiteboxTool for AverageFlowpathSlope {
             });
         }
 
-        let mut num_flowpaths: Array2D<i64> = Array2D::new(rows, columns, 0, 0)?;
+        let mut num_flowpaths: Array2D<i32> = Array2D::new(rows, columns, 0, 0)?;
         let mut total_flowpath_length: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         let mut total_upslope_divide_elev: Array2D<f64> = Array2D::new(rows, columns, 0f64, 0f64)?;
         let mut output = Raster::initialize_using_file(&output_file, &input);

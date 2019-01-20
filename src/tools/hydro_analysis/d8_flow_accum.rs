@@ -30,7 +30,7 @@ use std::thread;
 /// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
 /// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
 /// is `cells`. The user must also specify whether the output flow-accumulation grid should be 
-/// log-tranformed, i.e. the output, if this option is selected, will be the natural-logarithm of the 
+/// log-tranformed (`--log`), i.e. the output, if this option is selected, will be the natural-logarithm of the 
 /// accumulated flow value. This is a transformation that is often performed to better visualize the 
 /// contributing area distribution. Because contributing areas tend to be very high along valley bottoms 
 /// and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of 

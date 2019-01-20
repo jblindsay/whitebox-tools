@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
+Created: 27/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,29 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Finds the main stem, based on stream lengths, of each stream network.
+/// This tool can be used to identify the main channel in a stream network. The user must specify the names of 
+/// a D8 pointer (flow direction) raster (`--d8_pntr`), and a streams raster (`--streams`). The pointer raster 
+/// is used to traverse the stream network and should only be created using the `D8Pointer`. By default, the pointer
+/// raster is assumed to use the clockwise indexing method used by WhiteboxTools: 
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | 64 | 128 | 1  |
+/// | 32 |  0  | 2  |
+/// | 16 |  8  | 4  |
+/// 
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified. 
+/// 
+/// The streams raster should have been created using one of the DEM-based stream mapping methods, i.e. contributing 
+/// area thresholding. Stream grid cells are designated in the streams image as all positive, non-zero values. All 
+/// non-stream cells will be assigned the NoData value in the output image, unless the `--zero_background` parameter
+/// is specified.
+/// 
+/// The algorithm operates by traversing each stream and identifying the longest stream-path draining to each outlet. 
+/// When a confluence is encountered, the traverse follows the branch with the larger distance-to-head.
+/// 
+/// # See Also
+/// `D8Pointer`
 pub struct FindMainStem {
     name: String,
     description: String,
@@ -417,7 +439,7 @@ impl WhiteboxTool for FindMainStem {
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("Input d8 pointer file: {}", d8_file));
+        output.add_metadata_entry(format!("Input D8 pointer file: {}", d8_file));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 

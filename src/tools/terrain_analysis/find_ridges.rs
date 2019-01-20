@@ -17,6 +17,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to identify ridge cells in a digital elevation model (DEM). Ridge cells are those that 
+/// have lower neighbours either to the north and south or the east and west. Line thinning can optionally be used 
+/// to create single-cell wide ridge networks by specifying the `--line_thin` parameter.
 pub struct FindRidges {
     name: String,
     description: String,

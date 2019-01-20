@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 12/10/2018
 License: MIT
 
@@ -24,13 +24,14 @@ use std::path;
 
 /// This tool can be used to remove the depressions in a digital elevation model, a
 /// common requirement of spatial hydrological operations such as flow accumulation
-/// and watershed modelling. The algorithm based on:
+/// and watershed modelling. The tool based on on the efficient hybrid depression 
+/// breaching algorithm described by Lindsay (2016). It uses a breach-first, fill-second 
+/// approach to resolving continous flowpaths through depressions.
 ///
-/// > Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
+/// # Reference
+/// Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
 /// flow path enforcement in digital elevation models.* **Hydrological Processes**,
 /// 30(6): 846–857. DOI: 10.1002/hyp.10648
-///
-/// It uses a breach-first, fill-second approach.
 ///
 /// # See Also
 /// `FillDepressions`

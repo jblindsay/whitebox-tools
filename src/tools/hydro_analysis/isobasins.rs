@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: December 3, 2017
+Created: 03/12/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to divide a landscape into a group of nearly equal-sized watersheds, known as *isobasins*. 
+/// The user must specify the name (`--dem`) of a digital elevation model (DEM), the output raster name (`--output`), 
+/// and the isobasin target area (`--size`) specified in units of grid cells. The DEM must have been hydrologically 
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using either 
+/// the `BreachDepressions` or `FillDepressions` tool. Several temporary rasters are created during the execution 
+/// and stored in memory of this tool.
+/// 
+/// # See Also
+/// `Watershed`, `Basins`, `BreachDepressions`, `FillDepressions`
 pub struct Isobasins {
     name: String,
     description: String,

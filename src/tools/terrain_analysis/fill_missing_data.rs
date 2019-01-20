@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 14, 2017
+Created: 14/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to fill in small gaps in a raster or digital elevation model (DEM). The gaps, 
+/// or holes, must have recognized NoData values. If gaps do not currently have this characteristic, use 
+/// the `SetNodataValue` tool and ensure that the data are stored using a raster format that supports NoData 
+/// values. All valid, non-NoData values in the input raster will be assigned the same value in the output image.
+/// 
+/// The algorithm uses an inverse-distance weighted (IDW) scheme based on the valid values on the edge of 
+/// NoData gaps to estimate gap values. The user must specify the filter size (`--filter`), which determines 
+/// the size of gap that is filled, and the IDW weight (`--weight`).
+/// 
+/// The filter size, specified in grid cells, is used to determine how far the algorithm will search for valid, 
+/// non-NoData values. Therefore, setting a larger filter size allows for the filling of larger gaps in the input 
+/// raster. 
+/// 
+/// # See Also
+/// `SetNodataValue`
 pub struct FillMissingData {
     name: String,
     description: String,
@@ -31,7 +46,7 @@ impl FillMissingData {
         // public constructor
         let name = "FillMissingData".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Fills nodata holes in a DEM.".to_string();
+        let description = "Fills NoData holes in a DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -312,14 +327,14 @@ impl WhiteboxTool for FillMissingData {
                                     for j in 0..ret.len() {
                                         dist = ret[j].1 as f64;
                                         if dist > 0.0 {
-                                            sum_weights += 1.0 / dist.powf(weight); //(dist * dist);
+                                            sum_weights += 1.0 / dist.powf(weight);
                                         }
                                     }
                                     z = 0.0;
                                     for j in 0..ret.len() {
                                         dist = ret[j].1 as f64;
                                         if dist > 0.0 {
-                                            z += ret[j].0 * (1.0 / dist.powf(weight)) / sum_weights; //(dist * dist)) / sum_weights;
+                                            z += ret[j].0 * (1.0 / dist.powf(weight)) / sum_weights;
                                         }
                                     }
                                     if ret.len() > 0 {

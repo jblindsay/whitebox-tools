@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
+Created: 22/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the number of downslope neighbours of each grid cell in a raster digital elevation model (DEM). 
+/// The user must specify the name of the input DEM (`--dem`) and the output (`--output`) raster name. The tool examines 
+/// the eight neighbouring cells for each grid cell in a the DEM and counts the number of neighbours with an elevation 
+/// less than the centre cell of the 3 x 3 window. The output image can therefore have values raning from 0 to 8. A 
+/// raster grid cell with eight downslope neighbours is a peak and a cell with zero downslope neighbours is a pit. This 
+/// tool can be used with the `NumUpslopeNeighbours` tool to assess the degree of local flow divergence/convergence.
+/// 
+/// # See Also
+/// `NumUpslopeNeighbours`
 pub struct NumDownslopeNeighbours {
     name: String,
     description: String,

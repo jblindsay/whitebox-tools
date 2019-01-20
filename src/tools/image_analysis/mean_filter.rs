@@ -25,7 +25,7 @@ use crate::tools::*;
 
 /// This tool performs a mean filter operation on a raster image. A mean filter, a type of low-pass filter, can be 
 /// used to emphasize the longer-range variability in an image, effectively acting to smooth the image. This can be 
-/// useful for reducing the noise in an image. This tool utilized an integral image approach (Crow, 1984) to ensure highly 
+/// useful for reducing the noise in an image. This tool utilizes an integral image approach (Crow, 1984) to ensure highly 
 /// efficient filtering that is invariant to filter size. The algorithm operates by calculating the average value 
 /// in a moving window centred on each grid cell.  Neighbourhood size, or filter size, is specified in the x and y 
 /// dimensions using the `--filterx` and `--filtery`flags. These dimensions should be odd, positive integer values, 

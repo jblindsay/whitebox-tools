@@ -18,6 +18,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the elevation of each grid cell in a raster above the nearest stream cell, 
+/// measured along the downslope flowpath. This terrain index, a measure of relative topographic position, is 
+/// essentially equivalent to the 'height above drainage' (HAND), as described by Renno et al. (2008). The user must 
+/// specify the name of an input digital elevation model (`--dem`) and streams raster (`--streams`). The DEM 
+/// must have been pre-processed to remove artifact topographic depressions and flat areas (see `BreachDepressions`). 
+/// The streams raster should have been created using one of the DEM-based stream mapping methods, i.e. contributing 
+/// area thresholding. Stream cells are designated in this raster as all non-zero values. The output of this tool, 
+/// along with the `DownslopeDistanceToStream` tool, can be useful for preliminary flood plain mapping when combined 
+/// with high-accuracy DEM data.
+/// 
+/// The difference between `ElevationAboveStream` and `ElevationAboveStreamEuclidean` is that the former calculates 
+/// distances along drainage flow-paths while the latter calculates straight-line distances to streams channels.
+/// 
+/// # Reference
+/// Renno, C. D., Nobre, A. D., Cuartas, L. A., Soares, J. V., Hodnett, M. G., Tomasella, J., & Waterloo, M. J. 
+/// (2008). HAND, a new terrain descriptor using SRTM-DEM: Mapping terra-firme rainforest environments in Amazonia. 
+/// Remote Sensing of Environment, 112(9), 3469-3481.
+/// 
+/// # See Also
+/// `ElevationAboveStreamEuclidean`, `DownslopeDistanceToStream`, `ElevAbovePit`, `BreachDepressions`
 pub struct ElevationAboveStream {
     name: String,
     description: String,

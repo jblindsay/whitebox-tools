@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 1, 2017
-Last Modified: 12/10/2018
+Created: 01/06/2017
+Last Modified: 18/01/2019
 License: MIT
 */
 
@@ -28,9 +28,7 @@ use std::thread;
 /// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate 
 /// system (latitude and longitude), the following equation is used:
 /// 
-/// ```
-/// zfactor = 1.0 / (113200.0 x cos(mid_lat))
-/// ```
+/// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
 /// 
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
 /// 
@@ -177,27 +175,25 @@ impl WhiteboxTool for PlanCurvature {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-zfactor" || vec[0].to_lowercase() == "--zfactor" {
-                if keyval {
-                    z_factor = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-zfactor" {
+                z_factor = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    z_factor = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 

@@ -42,8 +42,8 @@ use std::thread;
 /// method.
 ///
 /// # Reference
-/// Sun, Rosin, Martin, and Langbein (2007) Fast and effective feature-preserving
-/// mesh denoising.
+/// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving 
+/// mesh denoising. IEEE Transactions on Visualization & Computer Graphics, (5), 925-938.
 ///
 /// # See Also
 /// `DrainagePreservingSmoothing`

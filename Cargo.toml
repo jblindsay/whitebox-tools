@@ -27,8 +27,11 @@ zip = "0.3.0"
 
 [profile.release]
 opt-level = 3
-# opt-level = "z"
-# lto = true
-# debug = false
-# codegen-units = 1
-# panic = "abort"
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 16
+panic = 'unwind'
+incremental = true
+overflow-checks = false

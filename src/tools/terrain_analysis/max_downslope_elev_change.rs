@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the maximum elevation drop between each grid cell and its neighbouring cells within
+/// a digital elevation model (DEM). The user must specify the name of the input DEM (`--dem`) and the output 
+/// (`--output`) raster name.
+/// 
+/// # See Also
+/// `MinDownslopeElevChange`, `NumDownslopeNeighbours`
 pub struct MaxDownslopeElevChange {
     name: String,
     description: String,

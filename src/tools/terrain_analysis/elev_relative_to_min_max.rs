@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 12, 2017
+Created: 12/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to express the elevation of a grid cell in a digital elevation model (DEM) as a 
+/// percentage of the relief between the DEM minimum and maximum values. As such, it provides a basic
+/// measure of relative topographic position.
+/// 
+/// # See Also
+/// `ElevRelativeToWatershedMinMax`, `ElevationAboveStream`, `ElevAbovePit`
 pub struct ElevRelativeToMinMax {
     name: String,
     description: String,

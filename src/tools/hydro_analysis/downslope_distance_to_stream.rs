@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 9, 2017
+Created: 9/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the distance from each grid cell in a raster to the nearest stream cell, 
+/// measured along the downslope flowpath. The user must specify the name of an input digital elevation model (`--dem`) 
+/// and streams raster (`--streams`). The DEM must have been pre-processed to remove artifact topographic depressions 
+/// and flat areas (see `BreachDepressions`). The streams raster should have been created using one of the DEM-based 
+/// stream mapping methods, i.e. contributing area thresholding. Stream cells are designated in this raster as all 
+/// non-zero values. The output of this tool, along with the `ElevationAboveStream` tool, can be useful for preliminary 
+/// flood plain mapping when combined with high-accuracy DEM data. 
+/// 
+/// # See Also
+/// `ElevationAboveStream`
 pub struct DownslopeDistanceToStream {
     name: String,
     description: String,

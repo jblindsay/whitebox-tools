@@ -18,6 +18,41 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the maximum deviation from mean elevation, *DEVmax* (Lindsay et al. 2015) for each
+/// grid cell in a digital elevation model (DEM) across a range specified spatial scales. *DEV*
+/// is an elevation residual index and is essentially equivalent to a local elevation z-score. 
+/// This attribute measures the *relative topographic position* as a fraction of 
+/// local relief, and so is normalized to the local surface roughness. The multi-scaled calculation 
+/// of *DEVmax* utilizes an integral image approach (Crow, 1984) to ensure highly efficient 
+/// filtering that is invariant with filter size, which is the algorithm characteristic that allows for 
+/// this densely sampled multi-scale analysis. In this way, `MaxElevationDeviation` allows users
+/// to estimate the locally optimal scale with which to estimate *DEV* on a pixel-by-pixel basis.
+/// This multi-scaled version of local topographic position can reveal significant terrain 
+/// characteristics and can aid with soil, vegetation, landform, and other mapping applications
+/// that depend on geomorphometric characterization. 
+/// 
+/// The user must specify the name (`--dem`) of the input digital elevation model (DEM). The range of scales that are
+/// evaluated in calculating *DEVmax* are determined by the user-specified `--min_scale`, `--max_scale`, and `--step`
+/// parameters. All filter radii between the minimum and maximum scales, increasing by `step`, will be evaluated. 
+/// The scale parameters are in units of grid cells and specify kernel size "radii" (*r*), such that:
+/// 
+/// > *d* = 2*r* + 1
+/// 
+/// That is, a radii of 1, 2, 3... yields a square filters of dimension (*d*) 3 x 3, 5 x 5, 7 x 7...
+/// 
+/// *DEV* is estimated at each tested filter size and every grid cell is assigned the maximum *DEV* value
+/// across the evaluated scales.
+/// 
+/// The user must specify the file names of two output rasters, including the magnitude (*DEVmax*) and a 
+/// second raster the assigns each pixel the scale at which *DEVmax* is encountered (*DEVscale*). The 
+/// *DEVscale* raster can be very useful for revealing multi-scale landscape structure.
+/// 
+/// # Reference
+/// Lindsay J, Cockburn J, Russell H. 2015. An integral image approach to performing multi-scale 
+/// topographic position analysis. Geomorphology, 245: 51-61.
+/// 
+/// # See Also
+/// `DevFromMeanElev`, `MaxDifferenceFromMean`
 pub struct MaxElevationDeviation {
     name: String,
     description: String,

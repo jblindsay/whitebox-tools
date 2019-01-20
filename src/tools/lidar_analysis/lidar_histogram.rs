@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Dec. 23, 2017
+Created: 23/12/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -19,6 +19,16 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool can be used to plot a histogram of data derived from a LiDAR file. The user must specify the
+/// name of the input LAS file (`--input`), the name of the output HTML file (`--output`), the parameter
+/// (`--parameter`) to be plotted, and the amount (in percent) to clip the upper and lower tails of the f
+/// requency distribution (`--clip`). The LiDAR parameters that can be plotted using `LidarHistogram` 
+/// include the point elevations, intensity values, scan angles, and class values.
+/// 
+/// Use the `LidarPointStats` tool instead to examine the spatial distribution of LiDAR points.
+/// 
+/// # See Also
+/// `LidarPointStats`
 pub struct LidarHistogram {
     name: String,
     description: String,
@@ -32,7 +42,7 @@ impl LidarHistogram {
         // public constructor
         let name = "LidarHistogram".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Creates a histogram from LiDAR data.".to_string();
+        let description = "Creates a histogram of LiDAR data.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -59,7 +69,7 @@ impl LidarHistogram {
             name: "Parameter".to_owned(),
             flags: vec!["--parameter".to_owned()],
             description:
-                "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class."
+                "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class'."
                     .to_owned(),
             parameter_type: ParameterType::OptionList(vec![
                 "elevation".to_owned(),

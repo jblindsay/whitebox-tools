@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
+Created: 22/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the number of upslope neighbours of each grid cell in a raster digital elevation model (DEM). 
+/// The user must specify the name of the input DEM (`--dem`) and the output (`--output`) raster name. The tool examines 
+/// the eight neighbouring cells for each grid cell in a the DEM and counts the number of neighbours with an elevation 
+/// less than the centre cell of the 3 x 3 window. The output raster can therefore have values ranging from 0 to 8, although 
+/// in a DEM that has been hydrologically conditioned (i.e. depressions and flats removed), the values of the output will 
+/// not exceed seven. This tool can be used with the `NumDownslopeNeighbours` tool to assess the degree of local flow 
+/// divergence/convergence.
+/// 
+/// # See Also
+/// `NumDownslopeNeighbours`
 pub struct NumUpslopeNeighbours {
     name: String,
     description: String,
