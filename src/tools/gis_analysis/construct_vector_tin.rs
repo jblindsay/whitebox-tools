@@ -18,7 +18,14 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool creates a vector triangular irregular network (TIN) for a set of vector points.
+/// This tool creates a vector triangular irregular network (TIN) for a set of vector points (`--input`)
+/// using a 2D [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) algorithm.
+/// TIN vertex heights can be assigned based on either a field in the vector's attribute table (`--field`),
+/// or alternatively, if the vector is of a z-dimension *ShapeTypeDimension*, the point z-values may be
+/// used for vertex heights (`--use_z`). For LiDAR points, use the `LidarConstructVectorTIN` tool instead.
+/// 
+/// # See Also
+/// `LidarConstructVectorTIN`
 pub struct ConstructVectorTIN {
     name: String,
     description: String,

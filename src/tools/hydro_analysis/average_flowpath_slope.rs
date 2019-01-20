@@ -350,7 +350,7 @@ impl WhiteboxTool for AverageFlowpathSlope {
         ];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
-        let mut val: i64;
+        let mut val: i32;
         let mut dir: i8;
         let mut length: f64;
         let mut z_mean: f64;

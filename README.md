@@ -6,6 +6,8 @@
 
 *This page is related to the stand-alone command-line program and Python scripting API for geospatial analysis, **WhiteboxTools**. If you are instead interested in the open-source GIS, **Whitebox GAT**, please see this [link](https://github.com/jblindsay/whitebox-geospatial-analysis-tools).*
 
+The official WhiteboxTools User Manual can be found [at this link](https://jblindsay.github.io/wbt_book/index.html).
+
 **Contents**
 
 1. [Description](#1-description)

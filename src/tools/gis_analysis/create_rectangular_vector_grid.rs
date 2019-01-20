@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/09/2018
-Last Modified: 13/10/2018
+Last Modified: 20/01/2019
 License: MIT
 */
 
@@ -19,8 +19,11 @@ use std::path;
 
 /// This tool can be used to create a rectangular vector grid. The extent of the rectangular
 /// grid is based on the extent of a user-specified base file (any supported raster format,
-/// shapefiles, or LAS files). The user must also specify the origin of the grid (x and y
-/// coordinates) and the grid cell width and height.
+/// shapefiles, or LAS files). The user must also specify the origin of the grid (`--xorig` 
+/// and `--yorig`) and the grid cell width and height (`--width` and `--height`).
+/// 
+/// # See Also
+/// `CreateHexagonalVectorGrid`
 pub struct CreateRectangularVectorGrid {
     name: String,
     description: String,
@@ -39,7 +42,7 @@ impl CreateRectangularVectorGrid {
         let mut parameters = vec![];
         parameters.push(ToolParameter {
             name: "Input Base File".to_owned(),
-            flags: vec!["-i".to_owned(), "--input".to_owned()],
+            flags: vec!["-i".to_owned(), "--base".to_owned(), "--input".to_owned()],
             description: "Input base file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::RasterAndVector(
                 VectorGeometryType::Any,
@@ -186,7 +189,7 @@ impl WhiteboxTool for CreateRectangularVectorGrid {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" {
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-base" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {

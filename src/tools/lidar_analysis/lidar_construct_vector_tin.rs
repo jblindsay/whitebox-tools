@@ -20,7 +20,16 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
 
-/// Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
+/// This tool creates a vector triangular irregular network (TIN) for a set of LiDAR points (`--input`)
+/// using a 2D [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) algorithm.
+/// LiDAR points may be excluded from the triangulation operation based on a number of criteria, 
+/// include the point return number (`--returns`), point classification value (`--exclude_cls`), or 
+/// a minimum (`--minz`) or maximum (`--maxz`) elevation. 
+/// 
+/// For vector points, use the `ConstructVectorTIN` tool instead. 
+/// 
+/// # See Also
+/// `ConstructVectorTIN`
 pub struct LidarConstructVectorTIN {
     name: String,
     description: String,

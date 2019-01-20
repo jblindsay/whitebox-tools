@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 2, 2017
-Last Modified: February 14, 2018
+Created: 02/06/2017
+Last Modified: 20/01/2019
 License: MIT
 */
 
@@ -13,6 +13,16 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to either extract or classify the elevation values (z) of LiDAR points within 
+/// a specified elevation range (slice). In addition to the names of the input and output LiDAR files
+/// (`--input` and `--output`), the user must specify the lower (`--minz`) and upper (`--maxz`) bounds of 
+/// the elevation range. By default, the tool will only output points within the elevation slice, filtering
+/// out all points lying outside of this range. If the `--class` parameter is used, the tool will operate
+/// by assigning a class value (`--inclassval`) to the classification bit of points within the slice and
+/// another class value (`--outclassval`) to those points falling outside the range.
+/// 
+/// # See Also
+/// `LidarRemoveOutliers`, `LidarClassifySubset`
 pub struct LidarElevationSlice {
     name: String,
     description: String,
@@ -186,48 +196,45 @@ impl WhiteboxTool for LidarElevationSlice {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-maxz" || vec[0].to_lowercase() == "--maxz" {
-                if keyval {
-                    maxz = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-maxz" {
+                maxz = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    maxz = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-minz" || vec[0].to_lowercase() == "--minz" {
-                if keyval {
-                    minz = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-minz" {
+                minz = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    minz = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-class" || vec[0].to_lowercase() == "--class" {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-class" {
                 filter = false;
-            } else if vec[0].to_lowercase() == "-inclassval"
-                || vec[0].to_lowercase() == "--inclassval"
-            {
-                if keyval {
-                    in_class_value = vec[1].to_string().parse::<u8>().unwrap();
+            } else if flag_val == "-inclassval" {
+                in_class_value = if keyval {
+                    vec[1].to_string().parse::<u8>().unwrap()
                 } else {
-                    in_class_value = args[i + 1].to_string().parse::<u8>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-outclassval"
-                || vec[0].to_lowercase() == "--outclassval"
-            {
-                if keyval {
-                    out_class_value = vec[1].to_string().parse::<u8>().unwrap();
+                    args[i + 1].to_string().parse::<u8>().unwrap()
+                };
+            } else if flag_val == "-outclassval" {
+                out_class_value = if keyval {
+                    vec[1].to_string().parse::<u8>().unwrap()
                 } else {
-                    out_class_value = args[i + 1].to_string().parse::<u8>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<u8>().unwrap()
+                };
             }
         }
 
