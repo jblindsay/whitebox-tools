@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,28 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the f
+/// lat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
+/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressions` algorithm is based on 
+/// the computationally efficient approach of examining each cell based on its spill elevation, starting from the 
+/// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm 
+/// first proposed by Wang and Liu (2006). It is currently the most efficient depression-removal algorithm available 
+/// in WhiteboxTools, although it is not significantly more efficient than the `BreachDepressions` tool, which is
+/// known to provide a solution to depression removal with less impact of the DEM.
+/// 
+/// If the input DEM has gaps, or missing-data holes, that contain NoData values, it is better to use the 
+/// `FillMissingData` tool to repair these gaps. This tool will interpolate values across the gaps and produce 
+/// a more natural-looking surface than the flat areas that are produced by depression filling. Importantly, the 
+/// `FillDepressions` tool algorithm implementation assumes that there are no 'donut hole' NoData gaps within the area 
+/// of valid data. Any NoData areas along the edge of the grid will simply be ignored and will remain NoData areas in 
+/// the output image.
+/// 
+/// # Reference
+/// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation 
+/// models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 20(2): 193-213.
+/// 
+/// # See Also
+/// `BreachDepressions`, `FillMissingData`
 pub struct FillDepressions {
     name: String,
     description: String,

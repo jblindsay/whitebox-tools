@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
+Created: 22/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -15,6 +15,15 @@ use std::i16;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to find the average value in each cell of a grid from a set of input images (`--inputs`). 
+/// It is therefore similar to the `WeightedSum` tool except that each input image is given equal weighting. This 
+/// tool operates on a cell-by-cell basis. Therefore, each of the input rasters must share the same number of rows 
+/// and columns and spatial extent. An error will be issued if this is not the case. At least two input rasters are 
+/// required to run this tool. Like each of the WhiteboxTools overlay tools, this tool has been optimized for 
+/// parallel processing.
+/// 
+/// # See Also
+/// `WeightedSum`
 pub struct AverageOverlay {
     name: String,
     description: String,

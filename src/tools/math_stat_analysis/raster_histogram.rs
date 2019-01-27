@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Dec. 19, 2017
-Last Modified: 13/10/2018
+Created: 19/12/2017
+Last Modified: 24/01/2019
 License: MIT
 */
 
@@ -19,6 +19,9 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool produces a histogram (i.e. a frequency distribution graph) for the values contained within
+/// an input raster file (`--input`). The histogram will be embeded within an output (`--output`)
+/// HTML file, which should be automatically displayed after the tool has completed.
 pub struct RasterHistogram {
     name: String,
     description: String,

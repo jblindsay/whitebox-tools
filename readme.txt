@@ -56,7 +56,20 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.14.0 (xx-xx-2019)
+Version 0.14.0 (27-01-2019)
+- The release largely focusses on bug-fixes rather than adding new features. The
+ following tools were added to the project:
+    CircularVarianceOfAspect
+    EdgeDensity
+    SurfaceAreaRatio
+
+- Fixed a bug that resulted in rasters with projected coordinate systems being
+  interpreted as geographic coordinates, thereby messing up the calculation of 
+  inter-cell distances for tools like slope, aspect, curvature, etc.
+- Fixed a bug with several of the math tools; output files took their data type
+  from the input file. In some cases, this does not work well because the input
+  is integer and the output must be floating point data.
+
 
 Version 0.13.0 (08-01-2019)
 - The release largely focusses on bug-fixes rather than adding new features. The

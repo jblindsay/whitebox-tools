@@ -244,15 +244,13 @@ impl Raster {
         output.configs.geo_key_directory = input.configs.geo_key_directory.clone();
         output.configs.geo_double_params = input.configs.geo_double_params.clone();
         output.configs.geo_ascii_params = input.configs.geo_ascii_params.clone();
-
+        
         if output.raster_type == RasterType::SurferAscii
             || output.raster_type == RasterType::Surfer7Binary
         {
             output.configs.nodata = 1.71041e38;
         }
-
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
-
         output
     }
 
@@ -1000,7 +998,7 @@ impl Raster {
             return true;
         }
         let wkt = self.configs.coordinate_ref_system_wkt.to_lowercase();
-        if !wkt.contains("projcs[") {
+        if !wkt.contains("projcs[") && !wkt.to_lowercase().contains("not specified") {
             return true;
         }
         if self.configs.xy_units.to_lowercase().contains("deg") {
@@ -1115,7 +1113,9 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
         Some(n) => n.to_string().to_lowercase(),
         None => "".to_string(),
     };
-
+    if extension.is_empty() {
+        panic!("The file type could not be determined for the file:\n{}\n due to missing extension.", file_name);
+    }
     if extension == "tas" || extension == "dep" {
         return RasterType::Whitebox;
     } else if extension == "tif" || extension == "tiff" {

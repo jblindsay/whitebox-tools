@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: March 1, 2018
+Created: 01/03/2018
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,7 +18,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Removes duplicate points from a LiDAR data set.
+/// This tool removes duplicate points from a LiDAR data set. Duplicates are determined
+/// by their x, y, and optionally (`--include_z`) z coordinates.
+/// 
+/// # See Also
+/// `EliminateCoincidentPoints`
 pub struct LidarRemoveDuplicates {
     name: String,
     description: String,

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
+Created: 01/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool outputs distribution summary statistics for input raster images (`--input`).
+/// The distribution statistics include the raster minimum, maximum, range, total, mean,
+/// variance, and standard deviation. These summary statistics are output to the system `stdout`.
 pub struct RasterSummaryStats {
     name: String,
     description: String,
@@ -31,7 +34,7 @@ impl RasterSummaryStats {
         let name = "RasterSummaryStats".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Measures a rasters average, standard deviation, num. non-nodata cells, and total."
+            "Measures a rasters min, max, average, standard deviation, num. non-nodata cells, and total."
                 .to_string();
 
         let mut parameters = vec![];
@@ -179,15 +182,23 @@ impl WhiteboxTool for RasterSummaryStats {
                     let mut n = 0;
                     let mut s = 0.0;
                     let mut sq = 0.0;
+                    let mut minz = f64::INFINITY;
+                    let mut maxz = f64::NEG_INFINITY;
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
                             n += 1;
                             s += z;
                             sq += z * z;
+                            if z < minz {
+                                minz = z;
+                            }
+                            if z > maxz {
+                                maxz = z;
+                            }
                         }
                     }
-                    tx.send((n, s, sq)).unwrap();
+                    tx.send((n, s, sq, minz, maxz)).unwrap();
                 }
             });
         }
@@ -195,12 +206,19 @@ impl WhiteboxTool for RasterSummaryStats {
         let mut num_cells = 0;
         let mut sum = 0.0;
         let mut sq_sum = 0.0;
+        let mut minz = f64::INFINITY;
+        let mut maxz = f64::NEG_INFINITY;
         for row in 0..rows {
-            let (a, b, c) = rx.recv().unwrap();
+            let (a, b, c, d, e) = rx.recv().unwrap();
             num_cells += a;
             sum += b;
             sq_sum += c;
-
+            if d < minz {
+                minz = d;
+            }
+            if e > maxz {
+                maxz = e;
+            }
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -221,6 +239,9 @@ impl WhiteboxTool for RasterSummaryStats {
             "Number of nodata grid cells: {}",
             input.num_cells() - num_cells
         );
+        println!("Image minimum: {}", minz);
+        println!("Image maximum: {}", maxz);
+        println!("Image range: {}", maxz - minz);
         println!("Image total: {}", sum);
         println!("Image average: {}", mean);
         println!("Image variance: {}", variance);

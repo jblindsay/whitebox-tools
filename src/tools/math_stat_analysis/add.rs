@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: 12/10/2018
+Created: 05/07/2017
+Last Modified: 24/01/2019
 License: MIT
 */
 
@@ -17,6 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which each grid cell is equal to the addition of the corresponding grid 
+/// cells in two input rasters or one input raster and a constant value.
+/// 
+/// # See Also
+/// `Subtract`, `Multiply`, `Divide`, `InPlaceAdd`
 pub struct Add {
     name: String,
     description: String,
@@ -249,6 +254,11 @@ impl WhiteboxTool for Add {
             }
 
             let mut output = Raster::initialize_using_file(&output_file, &in2);
+            if input1_constant.trunc() != input1_constant {
+                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                    output.configs.data_type = DataType::F32;
+                }
+            }
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
@@ -280,11 +290,12 @@ impl WhiteboxTool for Add {
                 }
                 Err(e) => return Err(e),
             };
-
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-            );
+            if verbose {
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
+            }
         } else if !input1_is_constant && input2_is_constant {
             if verbose {
                 println!("Reading data...")
@@ -319,6 +330,11 @@ impl WhiteboxTool for Add {
             }
 
             let mut output = Raster::initialize_using_file(&output_file, &in1);
+            if input2_constant.trunc() != input2_constant {
+                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                    output.configs.data_type = DataType::F32;
+                }
+            }
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);
@@ -350,11 +366,12 @@ impl WhiteboxTool for Add {
                 }
                 Err(e) => return Err(e),
             };
-
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-            );
+            if verbose {
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
+            }
         } else {
             // !input1_is_constant && !input2_is_constant
             if verbose {

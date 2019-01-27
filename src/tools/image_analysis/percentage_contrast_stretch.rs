@@ -22,7 +22,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Performs a percentage linear contrast stretch on input images.
+/// This tool performs a percentage contrast stretch on a raster image. This operation maps each grid cell value 
+/// in the input raster image (z<sub>in</sub>) onto a new scale that ranges from a lower-tail clip value (`min_val`) 
+/// to the upper-tail clip value (`max_val`), with the user-specified number of tonal values (`num_tones`), such that:
+/// 
+/// > z<sub>out</sub> = ((z<sub>in</sub> – min_val)/(max_val – min_val)) x num_tones
+/// 
+/// where z<sub>out</sub> is the output value. The values of `min_val` and `max_val` are determined from the frequency 
+/// distribution and the user-specified tail clip value (`--clip`). For example, if a value of 1% is specified, the tool 
+/// will determine the values in the input image for which 1% of the grid cells have a lower value `min_val` and 1% of 
+/// the grid cells have a higher value `max_val`. The user must also specify which tails (upper, lower, or both) to clip 
+/// (`--tail`).
+/// 
+/// This is a type of linear contrast stretch with saturation at the tails of the frequency distribution. This is 
+/// the same kind of stretch that is used to display raster type data on the fly in many GIS software packages, 
+/// such that the lower and upper tail values are set using the minimum and maximum display values and the number 
+/// of tonal values is determined by the number of palette entries.
+/// 
+/// # See Also
+/// `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`, `SigmoidalContrastStretch`, 
+/// `StandardDeviationContrastStretch`
 pub struct PercentageContrastStretch {
     name: String,
     description: String,

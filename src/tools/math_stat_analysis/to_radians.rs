@@ -201,6 +201,9 @@ impl WhiteboxTool for ToRadians {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

@@ -391,11 +391,13 @@ impl ToolManager {
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
+        tool_names.push("CircularVarianceOfAspect".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
         tool_names.push("DownslopeIndex".to_string());
         tool_names.push("DrainagePreservingSmoothing".to_string());
+        tool_names.push("EdgeDensity".to_string());
         tool_names.push("ElevAbovePit".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("ElevRelativeToMinMax".to_string());
@@ -404,7 +406,7 @@ impl ToolManager {
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
-        tool_names.push("Geomorphons".to_string());
+        // tool_names.push("Geomorphons".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
@@ -435,6 +437,7 @@ impl ToolManager {
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
         tool_names.push("StandardDeviationOfSlope".to_string());
+        tool_names.push("SurfaceAreaRatio".to_string());
         tool_names.push("TangentialCurvature".to_string());
         tool_names.push("TotalCurvature".to_string());
         tool_names.push("Viewshed".to_string());
@@ -946,6 +949,7 @@ impl ToolManager {
 
             // terrain_analysis
             "aspect" => Some(Box::new(terrain_analysis::Aspect::new())),
+            "circularvarianceofaspect" => Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new())),
             "devfrommeanelev" => Some(Box::new(terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => Some(Box::new(terrain_analysis::DirectionalRelief::new())),
@@ -953,6 +957,7 @@ impl ToolManager {
             "drainagepreservingsmoothing" => Some(Box::new(
                 terrain_analysis::DrainagePreservingSmoothing::new(),
             )),
+            "edgedensity" => Some(Box::new(terrain_analysis::EdgeDensity::new())),
             "elevabovepit" => Some(Box::new(terrain_analysis::ElevAbovePit::new())),
             "elevpercentile" => Some(Box::new(terrain_analysis::ElevPercentile::new())),
             "elevrelativetominmax" => Some(Box::new(terrain_analysis::ElevRelativeToMinMax::new())),
@@ -965,7 +970,7 @@ impl ToolManager {
             "fetchanalysis" => Some(Box::new(terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(terrain_analysis::FillMissingData::new())),
             "findridges" => Some(Box::new(terrain_analysis::FindRidges::new())),
-            "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
+            // "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),
@@ -1022,6 +1027,7 @@ impl ToolManager {
             "standarddeviationofslope" => {
                 Some(Box::new(terrain_analysis::StandardDeviationOfSlope::new()))
             }
+            "surfacearearatio" => Some(Box::new(terrain_analysis::SurfaceAreaRatio::new())),
             "tangentialcurvature" => Some(Box::new(terrain_analysis::TangentialCurvature::new())),
             "totalcurvature" => Some(Box::new(terrain_analysis::TotalCurvature::new())),
             "viewshed" => Some(Box::new(terrain_analysis::Viewshed::new())),

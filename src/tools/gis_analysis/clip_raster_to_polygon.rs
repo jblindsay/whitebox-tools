@@ -18,6 +18,17 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to clip an input raster (`--input`) to the extent of a vector polygon (shapefile). The user 
+/// must specify the name of the input clip file (`--polygons`), wich must be a vector of a Polygon base shape type. 
+/// The clip file may contain multiple polygon features. Polygon hole parts will be respected during clipping, i.e. 
+/// polygon holes will be removed from the output raster by setting them to a NoData background value. Raster grid 
+/// cells that fall outside of a polygons in the clip file will be assigned the NoData background value in the output 
+/// file. By default, the output raster will be cropped to the spatial extent of the clip file, unless the 
+/// `--maintain_dimensions` parameter is used, in which case the output grid extent will match that of the input raster. 
+/// The grid resolution of output raster is the same as the input raster.
+/// 
+/// # See Also
+/// `ErasePolygonFromRaster`
 pub struct ClipRasterToPolygon {
     name: String,
     description: String,

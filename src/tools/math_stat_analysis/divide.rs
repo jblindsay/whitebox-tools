@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: 12/10/2018
+Created: 05/07/2017
+Last Modified: 24/01/2019
 License: MIT
 */
 
@@ -17,6 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which each grid cell is equal to the division of the corresponding grid 
+/// cells in two input rasters or one input raster and a constant value.
+/// 
+/// # See Also
+/// `Multiply`, `Add`, `Subtract`, `InPlaceDivide`
 pub struct Divide {
     name: String,
     description: String,
@@ -257,6 +262,16 @@ impl WhiteboxTool for Divide {
             }
 
             let mut output = Raster::initialize_using_file(&output_file, &in2);
+            if input2_constant.trunc() != input2_constant {
+                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                    output.configs.data_type = DataType::F32;
+                }
+            }
+            if input1_constant.trunc() != input1_constant {
+                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                    output.configs.data_type = DataType::F32;
+                }
+            }
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 output.set_row_data(row, data);

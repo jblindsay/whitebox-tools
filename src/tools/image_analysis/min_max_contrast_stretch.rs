@@ -22,6 +22,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a minimum-maximum contrast stretch on a raster image. This operation maps each grid cell 
+/// value in the input raster image (z) onto a new scale that ranges from the user-specified lower-tail clip 
+/// value (`min_val`) to the upper-tail clip value (`max_val`), with the specified number of tonal values 
+/// (`num_tones`), such that:
+///
+/// > z<sub>out</sub> = ((z<sub>in</sub> – min_val)/(max_val – min_val)) x num_tones
+/// 
+/// where z<sub>out</sub> is the output value. Notice that any values in the input image that are less than 
+/// `min_val` are assigned a value of `min_val` in the output image. Similarly, any input values greater than 
+/// `max_val` are assigned a value of `max_val` in the output image. 
+/// 
+/// This is a type of linear contrast stretch with saturation at the tails of the frequency distribution. This is 
+/// the same kind of stretch that is used to display raster type data on the fly in many GIS software packages, 
+/// such that the lower and upper tail values are set using the minimum and maximum display values and the number 
+/// of tonal values is determined by the number of palette entries.
+/// 
+/// # See Also
+/// `GaussianContrastStretch`, `HistogramEqualization`, `PercentageContrastStretch`, `SigmoidalContrastStretch`, 
+/// `StandardDeviationContrastStretch`
 pub struct MinMaxContrastStretch {
     name: String,
     description: String,

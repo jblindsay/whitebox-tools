@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
+Created: 22/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -13,6 +13,18 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool outputs the cell value from a raster stack specified (`--inputs`) by a position raster (`--pos_input`). The 
+/// user must specify the name of the position raster, the names of the raster files contained in the stack (i.e. group 
+/// of rasters), and an output raster file name (`--output`). The tool, working on a cell-by-cell basis, will assign the 
+/// value to the output grid cell contained in the corresponding cell in the stack image in the position specified by the 
+/// cell value in the position raster. Importantly, the positions raster should be in zero-based order. That is, the first 
+/// image in the stack should be assigned the value zero, the second raster is assigned 1, and so on. 
+/// 
+/// At least two input rasters are required to run this tool. Each of the input rasters must share the same number of rows 
+/// and columns and spatial extent. An error will be issued if this is not the case. 
+/// 
+/// # See Also
+/// `CountIf`
 pub struct PickFromList {
     name: String,
     description: String,

@@ -364,6 +364,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -803,7 +804,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('centroid_vector', args, callback) # returns 1 if error
 
     def clump(self, i, output, diag=True, zero_back=False, callback=None):
-        """Groups cells that form physically discrete areas, assigning them unique identifiers.
+        """Groups cells that form discrete areas, assigning them unique identifiers.
 
         Keyword arguments:
 
@@ -2221,7 +2222,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('fetch_analysis', args, callback) # returns 1 if error
 
     def fill_missing_data(self, i, output, filter=11, weight=2.0, callback=None):
-        """Fills nodata holes in a DEM.
+        """Fills NoData holes in a DEM.
 
         Keyword arguments:
 
@@ -2253,6 +2254,28 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         if line_thin: args.append("--line_thin")
         return self.run_tool('find_ridges', args, callback) # returns 1 if error
+
+    def geomorphons(self, dem, output, search=3, threshold=0.0, tdist=0, forms=False, callback=None):
+        """Computes geomorphon patterns.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        search -- Look up distance. 
+        threshold -- Flatness threshold for the classification function (in degrees). 
+        tdist -- Distance (in cells) to begin reducing the flatness threshold to avoid problems with pseudo-flat lines-of-sight. 
+        forms -- Classify geomorphons into 10 common land morphologies, else, output ternary code. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--search={}".format(search))
+        args.append("--threshold={}".format(threshold))
+        args.append("--tdist={}".format(tdist))
+        if forms: args.append("--forms")
+        return self.run_tool('geomorphons', args, callback) # returns 1 if error
 
     def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=1.0, callback=None):
         """Calculates a hillshade raster from an input DEM.
@@ -5197,13 +5220,13 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('lidar_hillshade', args, callback) # returns 1 if error
 
     def lidar_histogram(self, i, output, parameter="elevation", clip=1.0, callback=None):
-        """Creates a histogram from LiDAR data.
+        """Creates a histogram of LiDAR data.
 
         Keyword arguments:
 
         i -- Input LiDAR file. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
-        parameter -- Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class. 
+        parameter -- Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class'. 
         clip -- Amount to clip distribution tails (in percent). 
         callback -- Custom function for handling tool text outputs.
         """
