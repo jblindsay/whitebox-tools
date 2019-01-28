@@ -30,7 +30,8 @@ use std::thread;
 /// 
 /// The distribution of `EdgeDensity` is highly dependent upon the value of the `norm_diff` used in the calculation. This
 /// threshold may require experimentation to find an appropriate value and is likely dependent upon the topography and
-/// source data.
+/// source data. Nonetheless, experience has shown that `EdgeDensity` provides one of the best measures of surface
+/// texture of any of the available roughness tools.
 /// 
 /// # See Also
 /// `CircularVarianceOfAspect`, `MultiscaleRoughness`, `SurfaceAreaRatio`, `RuggednessIndex`

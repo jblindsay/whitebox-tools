@@ -365,6 +365,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2015,6 +2016,22 @@ callback -- Custom function for handling tool text outputs.
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('aspect', args, callback) # returns 1 if error
 
+    def circular_variance_of_aspect(self, dem, output, filter=11, callback=None):
+        """Calculates the circular variance of aspect at a scale for a DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster roughness scale file. 
+        filter -- Size of the filter kernel. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        return self.run_tool('circular_variance_of_aspect', args, callback) # returns 1 if error
+
     def dev_from_mean_elev(self, dem, output, filterx=11, filtery=11, callback=None):
         """Calculates deviation from mean elevation.
 
@@ -2114,6 +2131,26 @@ callback -- Custom function for handling tool text outputs.
         args.append("--dfm={}".format(dfm))
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('drainage_preserving_smoothing', args, callback) # returns 1 if error
+
+    def edge_density(self, dem, output, filter=11, norm_diff=5.0, zfactor=1.0, callback=None):
+        """Calculates the density of edges, or breaks-in-slope within DEMs.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        filter -- Size of the filter kernel. 
+        norm_diff -- Maximum difference in normal vectors, in degrees. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        args.append("--norm_diff={}".format(norm_diff))
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('edge_density', args, callback) # returns 1 if error
 
     def elev_above_pit(self, dem, output, callback=None):
         """Calculate the elevation of each grid cell above the nearest downstream pit cell or grid edge cell.
@@ -2254,28 +2291,6 @@ callback -- Custom function for handling tool text outputs.
         args.append("--output='{}'".format(output))
         if line_thin: args.append("--line_thin")
         return self.run_tool('find_ridges', args, callback) # returns 1 if error
-
-    def geomorphons(self, dem, output, search=3, threshold=0.0, tdist=0, forms=False, callback=None):
-        """Computes geomorphon patterns.
-
-        Keyword arguments:
-
-        dem -- Input raster DEM file. 
-        output -- Output raster file. 
-        search -- Look up distance. 
-        threshold -- Flatness threshold for the classification function (in degrees). 
-        tdist -- Distance (in cells) to begin reducing the flatness threshold to avoid problems with pseudo-flat lines-of-sight. 
-        forms -- Classify geomorphons into 10 common land morphologies, else, output ternary code. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--output='{}'".format(output))
-        args.append("--search={}".format(search))
-        args.append("--threshold={}".format(threshold))
-        args.append("--tdist={}".format(tdist))
-        if forms: args.append("--forms")
-        return self.run_tool('geomorphons', args, callback) # returns 1 if error
 
     def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=1.0, callback=None):
         """Calculates a hillshade raster from an input DEM.
@@ -2824,6 +2839,20 @@ callback -- Custom function for handling tool text outputs.
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('standard_deviation_of_slope', args, callback) # returns 1 if error
+
+    def surface_area_ratio(self, dem, output, callback=None):
+        """Calculates a the surface area ratio of each grid cell in an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('surface_area_ratio', args, callback) # returns 1 if error
 
     def tangential_curvature(self, dem, output, zfactor=1.0, callback=None):
         """Calculates a tangential curvature raster from an input DEM.
@@ -6488,7 +6517,7 @@ callback -- Custom function for handling tool text outputs.
         return self.run_tool('raster_histogram', args, callback) # returns 1 if error
 
     def raster_summary_stats(self, i, callback=None):
-        """Measures a rasters average, standard deviation, num. non-nodata cells, and total.
+        """Measures a rasters min, max, average, standard deviation, num. non-nodata cells, and total.
 
         Keyword arguments:
 
