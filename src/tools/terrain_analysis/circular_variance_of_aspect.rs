@@ -217,11 +217,148 @@ impl WhiteboxTool for CircularVarianceOfAspect {
 
         let start = Instant::now();
 
-        // first calculate the aspect
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
+
+        // Smooth the DEM
+        let mut smoothed_dem = input.get_data_as_array2d();
+        if filter_size > 3 {
+            println!("Smoothing the input DEM...");
+            let sigma = (midpoint as f64 - 0.5) / 3f64;
+            let n = 5;
+            let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
+            let mut wl = w_ideal.floor() as isize;
+            if wl % 2 == 0 {
+                wl -= 1;
+            } // must be an odd integer
+            let wu = wl + 2;
+            let m =
+                ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64)
+                    / (-4 * wl - 4) as f64)
+                    .round() as isize;
+
+            // let sigma_actual =
+            //     (((m * wl * wl) as f64 + ((n - m) as f64) * (wu * wu) as f64 - n as f64) / 12f64)
+            //         .sqrt();
+            // if verbose {
+            //     println!("Actual sigma: {:.3}", sigma_actual);
+            // }
+            
+            let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
+            let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
+            let mut val: f64;
+            
+            let mut sum: f64;
+            let mut sum_n: i32;
+            let mut i_prev: f64;
+            let mut n_prev: i32;
+            let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+            let mut num_cells: i32;
+
+            for iteration_num in 0..n {
+                if verbose {
+                    println!("Loop {} of {}", iteration_num + 1, n);
+                }
+
+                let midpoint = if iteration_num < m {
+                    (wl as f64 / 2f64).floor() as isize
+                } else {
+                    (wu as f64 / 2f64).floor() as isize
+                };
+
+                if iteration_num == 0 {
+                    // First iteration
+                    // Create the integral images.
+                    for row in 0..rows {
+                        sum = 0f64;
+                        sum_n = 0;
+                        for col in 0..columns {
+                            val = input.get_value(row, col);
+                            if val == nodata {
+                                val = 0f64;
+                            } else {
+                                sum_n += 1;
+                            }
+                            sum += val;
+                            if row > 0 {
+                                i_prev = integral.get_value(row - 1, col);
+                                n_prev = integral_n.get_value(row - 1, col);
+                                integral.set_value(row, col, sum + i_prev);
+                                integral_n.set_value(row, col, sum_n + n_prev);
+                            } else {
+                                integral.set_value(row, col, sum);
+                                integral_n.set_value(row, col, sum_n);
+                            }
+                        }
+                    }
+                } else {
+                    // Create the integral image based on previous iteration output.
+                    // We don't need to recalculate the num_cells integral image.
+                    for row in 0..rows {
+                        sum = 0f64;
+                        for col in 0..columns {
+                            val = smoothed_dem.get_value(row, col);
+                            if val == nodata {
+                                val = 0f64;
+                            }
+                            sum += val;
+                            if row > 0 {
+                                i_prev = integral.get_value(row - 1, col);
+                                integral.set_value(row, col, sum + i_prev);
+                            } else {
+                                integral.set_value(row, col, sum);
+                            }
+                        }
+                    }
+                }
+
+                // Perform Filter
+                for row in 0..rows {
+                    y1 = row - midpoint - 1;
+                    if y1 < 0 {
+                        y1 = 0;
+                    }
+                    y2 = row + midpoint;
+                    if y2 >= rows {
+                        y2 = rows - 1;
+                    }
+
+                    for col in 0..columns {
+                        if input.get_value(row, col) != nodata {
+                            x1 = col - midpoint - 1;
+                            if x1 < 0 {
+                                x1 = 0;
+                            }
+                            x2 = col + midpoint;
+                            if x2 >= columns {
+                                x2 = columns - 1;
+                            }
+
+                            num_cells = integral_n[(y2, x2)] + integral_n[(y1, x1)]
+                                - integral_n[(y1, x2)]
+                                - integral_n[(y2, x1)];
+                            if num_cells > 0 {
+                                sum = integral[(y2, x2)] + integral[(y1, x1)]
+                                    - integral[(y1, x2)]
+                                    - integral[(y2, x1)];
+                                smoothed_dem.set_value(row, col, sum / num_cells as f64);
+                            } else {
+                                // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
+                                smoothed_dem.set_value(row, col, 0f64);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calculate the aspect
         let eight_grid_res = input.configs.resolution_x * 8.0;
         let mut z_factor = 1f64;
         if input.is_in_geographic_coordinates() {
@@ -235,10 +372,11 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         
         
         let num_procs = num_cpus::get() as isize;
+        let smoothed_dem = Arc::new(smoothed_dem);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            let input = input.clone();
-            // let rows = rows.clone();
+            // let input = input.clone();
+            let smoothed_dem = smoothed_dem.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
@@ -250,10 +388,10 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     let mut xdata = vec![0f64; columns as usize];
                     let mut ydata = vec![0f64; columns as usize];
                     for col in 0..columns {
-                        z = input.get_value(row, col);
+                        z = smoothed_dem.get_value(row, col);
                         if z != nodata {
                             for c in 0..8 {
-                                n[c] = input[(row + dy[c], col + dx[c])];
+                                n[c] = smoothed_dem[(row + dy[c], col + dx[c])];
                                 if n[c] != nodata {
                                     n[c] = n[c] * z_factor;
                                 } else {
@@ -305,7 +443,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 for col in 0..columns {
                     sumx += xc.get_value(row, col);
                     sumy += yc.get_value(row, col);
-                    if input.get_value(row, col) == nodata {
+                    if smoothed_dem.get_value(row, col) == nodata {
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
@@ -314,14 +452,14 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
                 }
             } else {
-                if input.get_value(0, 0) == nodata {
+                if smoothed_dem.get_value(0, 0) == nodata {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
                     xc.increment(row, col, xc.get_value(row, col-1));
                     yc.increment(row, col, yc.get_value(row, col-1));
                     i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if input.get_value(row, col) == nodata {
+                    if smoothed_dem.get_value(row, col) == nodata {
                         i_n.decrement(row, col, 1);
                     }
                 }
@@ -342,7 +480,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         for tid in 0..num_procs {
             let xc = xc.clone();
             let yc = yc.clone();
-            let input = input.clone();
+            let smoothed_dem = smoothed_dem.clone();
             let i_n = i_n.clone();
             let tx2 = tx2.clone();
             thread::spawn(move || {
@@ -369,7 +507,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     }
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input.get_value(row, col);
+                        z = smoothed_dem.get_value(row, col);
                         if z != nodata {
                             x1 = col - midpoint - 1;
                             if x1 < 0 {
@@ -413,10 +551,10 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
-            output.configs.data_type = DataType::F32;
-        }
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
+        // if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+        //     output.configs.data_type = DataType::F32;
+        // }
         for row in 0..rows {
             match rx2.recv() {
                 Ok(data) => {
@@ -440,7 +578,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "blue_white_red.plt".to_string();
+        output.configs.palette = "muted_spectrum.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
