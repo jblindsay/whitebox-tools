@@ -228,9 +228,103 @@ impl WhiteboxTool for CircularVarianceOfAspect {
 
         // Smooth the DEM
         let mut smoothed_dem = input.get_data_as_array2d();
-        if filter_size > 3 {
-            println!("Smoothing the input DEM...");
-            let sigma = (midpoint as f64 - 0.5) / 3f64;
+        println!("Smoothing the input DEM...");
+        let sigma = (midpoint as f64 - 0.5) / 3f64;
+        if sigma < 1.8 && filter_size > 3 {
+            let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
+            let two_sigma_sqr_d = 2.0 * sigma * sigma;
+
+            // figure out the size of the filter
+            let mut filter_size_smooth = 0;
+            let mut weight: f64;
+            for i in 0..250 {
+                weight =
+                    recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+                if weight <= 0.001 {
+                    filter_size_smooth = i * 2 + 1;
+                    break;
+                }
+            }
+
+            // the filter dimensions must be odd numbers such that there is a middle pixel
+            if filter_size_smooth % 2 == 0 {
+                filter_size_smooth += 1;
+            }
+
+            if filter_size_smooth < 3 {
+                filter_size_smooth = 3;
+            }
+
+            let num_pixels_in_filter = filter_size_smooth * filter_size_smooth;
+            let mut d_x = vec![0isize; num_pixels_in_filter];
+            let mut d_y = vec![0isize; num_pixels_in_filter];
+            let mut weights = vec![0.0; num_pixels_in_filter];
+
+            // fill the filter d_x and d_y values and the distance-weights
+            let midpoint_smoothed: isize = (filter_size_smooth as f64 / 2f64).floor() as isize + 1;
+            let mut a = 0;
+            let (mut x, mut y): (isize, isize);
+            for row in 0..filter_size {
+                for col in 0..filter_size {
+                    x = col as isize - midpoint_smoothed;
+                    y = row as isize - midpoint_smoothed;
+                    d_x[a] = x;
+                    d_y[a] = y;
+                    weight = recip_root_2_pi_times_sigma_d
+                        * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr_d).exp();
+                    weights[a] = weight;
+                    a += 1;
+                }
+            }
+
+            let d_x = Arc::new(d_x);
+            let d_y = Arc::new(d_y);
+            let weights = Arc::new(weights);
+            
+            let num_procs = num_cpus::get() as isize;
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let d_x = d_x.clone();
+                let d_y = d_y.clone();
+                let weights = weights.clone();
+                let tx1 = tx.clone();
+                thread::spawn(move || {
+                    let (mut sum, mut z_final): (f64, f64);
+                    let mut z: f64;
+                    let mut zn: f64;
+                    let (mut x, mut y): (isize, isize);
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z = input.get_value(row, col);
+                            if z != nodata {
+                                sum = 0.0;
+                                z_final = 0.0;
+                                for a in 0..num_pixels_in_filter {
+                                    x = col + d_x[a];
+                                    y = row + d_y[a];
+                                    zn = input.get_value(y, x);
+                                    if zn != nodata {
+                                        sum += weights[a];
+                                        z_final += weights[a] * zn;
+                                    }
+                                }
+                                data[col as usize] = z_final / sum;
+                            }
+                        }
+
+                        tx1.send((row, data)).unwrap();
+                    }
+                });
+            }
+
+            for _ in 0..rows {
+                let data = rx.recv().unwrap();
+                smoothed_dem.set_row_data(data.0, data.1);
+            }
+        } else {
+            // use a fast almost Gaussian filter for larger smoothing operations.
             let n = 5;
             let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
             let mut wl = w_ideal.floor() as isize;

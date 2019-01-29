@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 19, 2017
-Last Modified: 12/10/2017
+Created: 19/07/2017
+Last Modified: 29/01/2019
 License: MIT
 */
 
@@ -17,7 +17,29 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
+/// This tool creates a multiscale topographic position (MTP) image ([see here for an 
+/// example](https://www.uoguelph.ca/~hydrogeo/pubs/UpdatedPosterMapSm.png)) from three DEV<sub>max</sub> rasters of differing 
+/// spatial scale ranges. Specifically, `MultiscaleTopographicPositionImage` takes three DEV<sub>max</sub> *magnitude*
+/// rasters, created using the `MaxElevationDeviation` tool, as inputs. The three inputs should correspond to the elevation
+/// deviations in the local (`--local`), meso (`--meso`), and broad (`--broad`) scale ranges and will be forced into the 
+/// blue, green, and red colour components of the colour composite output (`--output`) raster. The image lightness value 
+/// (`--lightness`) controls the overall brightness of the output image, as depending on the topography and scale ranges,
+/// these images can appear relatively dark. Higher values result in brighter, more colourful output images. 
+/// 
+/// The output images can take some training to interpret correctly and a detailed explanation can be found in Lindsay et al. 
+/// (2015). Sites within the landscape that occupy prominent topographic positions, either
+/// low-lying or elevated, will be apparent by their bright colouring in the MTP image. Those that are coloured more strongly in
+/// the blue are promient at the local scale range; locations more strongly in the green are promient at the meso scale;
+/// and bright reds are associated with broad-scale landscape prominence. Of course, combination colours are also possible when
+/// topographic is elevated or low-lying across multiple scale ranges, e.g. a yellow area would indicated a site of prominent
+/// topographic position across the meso and broadest scale ranges. 
+/// 
+/// # Reference
+/// Lindsay J, Cockburn J, Russell H. 2015. An integral image approach to performing multi-scale 
+/// topographic position analysis. Geomorphology, 245: 51-61.
+/// 
+/// # See Also
+/// `MaxElevationDeviation`
 pub struct MultiscaleTopographicPositionImage {
     name: String,
     description: String,
@@ -331,7 +353,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
 
         let mut output = Raster::initialize_using_file(&output_file, &input_r);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::I32;
+        output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);

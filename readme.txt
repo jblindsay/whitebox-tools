@@ -56,6 +56,11 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 0.15.0 (XX-XX-2019)
+
+- Fixed a bug with the MultiscaleTopographicPositionImage tool that prevented proper output
+  for files in GeoTIFF format. 
+
 Version 0.14.0 (27-01-2019)
 - The release largely focusses on bug-fixes rather than adding new features. The
  following tools were added to the project:
