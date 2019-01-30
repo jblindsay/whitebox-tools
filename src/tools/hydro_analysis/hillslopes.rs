@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 16, 2017
+Created: 16/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,6 +14,26 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool will identify the hillslopes associated with a user-specified stream network. Hillslopes 
+/// include the catchment areas draining to the left and right sides of each stream link in the network as well 
+/// as the catchment areas draining to all channel heads. `Hillslopes` are conceptually similar to `Subbasins`, 
+/// except that sub-basins do not distinguish between the right-bank and left-bank catchment areas of stream links. 
+/// The `Subbasins` tool simply assigns a unique identifier to each stream link in a stream network. Each hillslope 
+/// output by this tool is assigned a unique, positive identifier  value. All grid cells in the output raster that 
+/// coincide with a stream cell are assigned an idenifiter of zero, i.e. stream cells do not belong to any hillslope.
+///
+/// The user must specify the name of a flow pointer 
+/// (flow direction) raster (`--d8_pntr`), a streams raster (`--streams`), and the output raster (`--output`).
+/// The flow pointer and streams rasters should be generated using the `D8Pointer` algorithm. This will require 
+/// a depressionless DEM, processed using either the `BreachDepressions` or `FillDepressions` tool. 
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// NoData values in the input flow pointer raster are assigned NoData values in the output image.
+/// 
+/// # See Also
+/// `StreamLinkIdentifier`, `Watershed`, `Subbasins`, `D8Pointer`, `BreachDepressions`, `FillDepressions`
 pub struct Hillslopes {
     name: String,
     description: String,

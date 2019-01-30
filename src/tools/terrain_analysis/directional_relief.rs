@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 07/07/2017
-Last Modified: 12/10/2018
+Last Modified: 30/01/2019
 License: MIT
 */
 
@@ -414,6 +414,9 @@ impl WhiteboxTool for DirectionalRelief {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

@@ -22,7 +22,7 @@ use std::path;
 /// `BreachDepressions`), which are designed to remove larger depression features.
 /// 
 /// # See Also
-/// `FillDepressions`, `BreachDepressions`
+/// `FillDepressions`, `BreachDepressions`, `FillSingleCellPits`
 pub struct BreachSingleCellPits {
     name: String,
     description: String,

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -19,6 +19,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs an opening operation on an input greyscale image (`--input`). An 
+/// [opening](https://en.wikipedia.org/wiki/Opening_(morphology)) is a mathematical morphology operation involving 
+/// a dilation (maximum filter) on an erosion (minimum filter) set. `Opening` operations, together with the 
+/// `Closing` operation, is frequently used in the fields of computer vision and digital image processing for 
+/// image noise removal. The user must specify the size of the moving window in both the x and y directions 
+/// (`--filterx` and `--filtery`).
+/// 
+/// # See Also
+/// `Closing`, `TophatTransform`
 pub struct Opening {
     name: String,
     description: String,

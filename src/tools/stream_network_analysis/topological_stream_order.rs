@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -13,7 +13,23 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Assigns each link in a stream network its topological order.
+/// This tool can be used to assign the topological stream order to each link in a stream network. According to this 
+/// stream numbering system, the link directly draining to the outlet is assigned an order of one. Each of the two 
+/// tributaries draining to the order-one link are assigned an order of two, and so on until the most distant link from 
+/// the catchment outlet has been assigned an order. The topological order can therefore be thought of as a measure of 
+/// the topological distance of each link in the network to the catchment outlet and is likely to be related to travel time.
+/// 
+/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells 
+/// are designated in the streams image as all positive, nonzero values. Thus all non-stream or background grid cells are 
+/// commonly assigned either zeros or NoData values. The pointer image is used to traverse the stream network and should only 
+/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the 
+/// `--zero_background` parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # See Also
+/// `HackStreamOrder`, `HortonStreamOrder`, `StrahlerStreamOrder`, `ShreveStreamMagnitude`
 pub struct TopologicalStreamOrder {
     name: String,
     description: String,

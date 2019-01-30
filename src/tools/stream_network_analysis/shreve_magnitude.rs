@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,25 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Assigns the Shreve stream magnitude to each link in a stream network.
+/// This tool can be used to assign the Shreve stream magnitude to each link in a stream network. Stream ordering is often used 
+/// in hydro-geomorphic and ecological studies to quantify the relative size and importance of a stream segment to the overall 
+/// river system. There are several competing stream ordering schemes. Shreve stream magnitude is equal to the number of 
+/// headwater links upstream of each link. Headwater stream links are assigned a magnitude of one. 
+/// 
+/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells 
+/// are designated in the streams raster as all positive, nonzero values. Thus all non-stream or background grid cells are 
+/// commonly assigned either zeros or NoData values. The pointer image is used to traverse the stream network and should only 
+/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the 
+/// `--zero_background` parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # Reference
+/// Shreve, R. L. (1966). Statistical law of stream numbers. The Journal of Geology, 74(1), 17-37.
+/// 
+/// # See Also
+/// `HortonStreamOrder`, `HackStreamOrder`, `StrahlerStreamMagnitude`, `TopologicalStreamOrder`
 pub struct ShreveStreamMagnitude {
     name: String,
     description: String,

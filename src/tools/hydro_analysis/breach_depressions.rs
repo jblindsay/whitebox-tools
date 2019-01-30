@@ -22,11 +22,15 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to remove the depressions in a digital elevation model, a
+/// This tool can be used to remove the depressions in a digital elevation model (DEM), a
 /// common requirement of spatial hydrological operations such as flow accumulation
 /// and watershed modelling. The tool based on on the efficient hybrid depression 
 /// breaching algorithm described by Lindsay (2016). It uses a breach-first, fill-second 
 /// approach to resolving continous flowpaths through depressions.
+/// 
+/// Notice that when the input DEM (`--dem`) contains deep, single-cell pits, it can be useful
+/// to apply the `FillSingleCellPits` before `BreachDepressions`, to avoid the creation of
+/// deep breach trenches.
 ///
 /// # Reference
 /// Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
@@ -34,7 +38,7 @@ use std::path;
 /// 30(6): 846–857. DOI: 10.1002/hyp.10648
 ///
 /// # See Also
-/// `FillDepressions`
+/// `FillDepressions`, `FillSingleCellPits`
 pub struct BreachDepressions {
     name: String,
     description: String,

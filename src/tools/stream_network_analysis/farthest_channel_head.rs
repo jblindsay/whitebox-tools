@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 12, 2017
+Created: 12/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,20 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Calculates the distance to the furthest upstream channel head for each stream cell.
+/// This tool calculates the upstream distance to the farthest stream head for each grid cell belonging to a 
+/// raster stream network. The user must specify the name of a raster containing streams data (`--streams`), where 
+/// stream grid cells are denoted by all positive non-zero values, and a D8 flow pointer (i.e. flow direction) raster 
+/// (`--d8_pntr`). The pointer image is used to traverse the stream network and must only be created using the D8 algorithm.
+/// Stream cells are designated in the streams image as all values 
+/// greater than zero. Thus, all non-stream or background grid cells are commonly assigned either zeros or NoData 
+/// values. Background cells will be assigned the NoData value in the output image, unless the `--zero_background` 
+/// parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # See Also
+/// `FindMainStem`
 pub struct FarthestChannelHead {
     name: String,
     description: String,

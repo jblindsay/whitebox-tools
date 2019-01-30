@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
+Created: 25/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -13,7 +13,32 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Assigns the Strahler stream order to each link in a stream network.
+/// This tool can be used to assign the Strahler stream order to each link in a stream network. Stream ordering is often used 
+/// in hydro-geomorphic and ecological studies to quantify the relative size and importance of a stream segment to the overall 
+/// river system. There are several competing stream ordering schemes. Based on to this common stream numbering system, headwater 
+/// stream links are assigned an order of one. Stream order only increases downstream when two links of equal order join, otherwise 
+/// the downstream link is assigned the larger of the two link orders. 
+/// 
+/// Strahler order and Horton order are similar approaches to assigning stream network hierarchy. Horton stream 
+/// order essentially starts with the Strahler order scheme, but subsequently replaces each of the assigned stream order 
+/// value along the main trunk of the network with the order value of the outlet. The main channel is not treated 
+/// differently compared with other tributaries in the Strahler ordering scheme.
+/// 
+/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells 
+/// are designated in the streams image as all positive, nonzero values. Thus all non-stream or background grid cells are 
+/// commonly assigned either zeros or NoData values. The pointer image is used to traverse the stream network and should only 
+/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the 
+/// `--zero_background` parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # Reference
+/// Strahler, A. N. (1957). Quantitative analysis of watershed geomorphology. Eos, Transactions American Geophysical Union, 
+/// 38(6), 913-920.
+/// 
+/// # See Also
+/// `HortonStreamOrder`, `HackStreamOrder`, `ShreveStreamMagnitude`, `TopologicalStreamOrder`
 pub struct StrahlerStreamOrder {
     name: String,
     description: String,

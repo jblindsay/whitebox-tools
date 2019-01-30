@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 12, 2017
+Created: 12/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,33 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Identifies the exterior/interior links and nodes in a stream network.
+/// This tool identifies all interior and exterior links, and source, link, and sink nodes in an input stream network 
+/// (`--streams`). The input streams file is used to designate which grid cells contain a stream and the pointer 
+/// image is used to traverse the stream network. Stream cells are designated in the streams image as all values 
+/// greater than zero. Thus, all non-stream or background grid cells are commonly assigned either zeros or NoData 
+/// values. Background cells will be assigned the NoData value in the output image, unless the `--zero_background` 
+/// parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// 
+/// Each feature is assigned the following identifier in the output image:
+///
+/// Value | Stream Type
+/// ----- | -----------
+///  1    | Exterior Link
+///  2    | Interior Link
+///  3    | Source Node (head water)
+///  4    | Link Node
+///  5    | Sink Node
+/// 
+/// The user must specify the names of an input stream file, a pointer (flow direction) file (`--d8_pntr`) 
+/// and the output raster file (`--output`). The flow pointer and streams rasters should be generated 
+/// using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either the 
+/// `BreachDepressions` or `FillDepressions` tool. flow direction) raster, and the output raster. 
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # See Also
+/// `StreamLinkIdentifier`
 pub struct StreamLinkClass {
     name: String,
     description: String,

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
-Last Modified: 13/10/2018
+Created: 11/07/2017
+Last Modified: 30/01/2019
 License: MIT
 */
 
@@ -16,6 +16,16 @@ use std::path;
 use std::sync::mpsc;
 use std::thread;
 
+/// This tool can be used to create a new raster with values that are determined by the equation of a simple plane. The user
+/// must specify the name of a base raster (`--base`) from which the output raster coordinate and dimensional information 
+/// will be taken. In addition the user must specify the values of the planar slope gradient (S; `--gradient`; `--aspect`) 
+/// in degrees, the planar slope direction or aspect (A; 0 to 360 degrees), and an constant value (k; `--constant`). The 
+/// equation of the plane is as follows:
+/// 
+/// > Z = tan(S) × sin(A - 180) × X + tan(S) × cos(A - 180) × Y + k 
+/// 
+/// where X and Y are the X and Y coordinates of each grid cell in the grid. Notice that A is the direction, 
+/// or azimuth, that the plane is facing
 pub struct CreatePlane {
     name: String,
     description: String,
@@ -247,6 +257,9 @@ impl WhiteboxTool for CreatePlane {
         let mut output = Raster::initialize_using_file(&output_file, &base);
         output.configs.data_type = DataType::F32;
         output.configs.palette = "spectrum.plt".to_string();
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();

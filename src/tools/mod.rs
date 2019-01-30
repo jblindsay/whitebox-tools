@@ -161,7 +161,7 @@ impl ToolManager {
         tool_names.push("FlowAccumulationFullWorkflow".to_string());
         tool_names.push("FlowLengthDiff".to_string());
         tool_names.push("Hillslopes".to_string());
-        tool_names.push("ImpoundmentIndex".to_string());
+        tool_names.push("ImpoundmentSizeIndex".to_string());
         tool_names.push("Isobasins".to_string());
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("LongestFlowpath".to_string());
@@ -625,7 +625,7 @@ impl ToolManager {
             }
             "flowlengthdiff" => Some(Box::new(hydro_analysis::FlowLengthDiff::new())),
             "hillslopes" => Some(Box::new(hydro_analysis::Hillslopes::new())),
-            "impoundmentindex" => Some(Box::new(hydro_analysis::ImpoundmentIndex::new())),
+            "impoundmentsizeindex" => Some(Box::new(hydro_analysis::ImpoundmentSizeIndex::new())),
             "isobasins" => Some(Box::new(hydro_analysis::Isobasins::new())),
             "jensonsnappourpoints" => Some(Box::new(hydro_analysis::JensonSnapPourPoints::new())),
             "longestflowpath" => Some(Box::new(hydro_analysis::LongestFlowpath::new())),

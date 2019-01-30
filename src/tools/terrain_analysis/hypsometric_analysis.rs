@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: January 30, 2018
+Created: 30/01/2018
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -19,6 +19,12 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool can be used to derive the hypsometric curve, or area-altitude curve, of one or more
+/// input digital elevation models (DEMs) (`--inputs`). A hypsometric curve is a histogram or cumulative 
+/// distribution function of elevations in a geographical area. 
+/// 
+/// # See Also
+/// `SlopeVsElevationPlot`
 pub struct HypsometricAnalysis {
     name: String,
     description: String,

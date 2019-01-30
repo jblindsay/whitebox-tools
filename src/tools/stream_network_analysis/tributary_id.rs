@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
+Created: 25/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,28 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Assigns a unique identifier to each tributary in a stream network.
+/// This tool can be used to assigns a unique identifier to each tributary in a stream network. A tributary is
+/// a section of a stream network extending from a channel head downstream to a confluence with a larger stream.
+/// Relative stream size is estimated using stream length as a surrogate. Tributaries therefore extend from channel
+/// heads downstream until a confluence is encountered in which the intersecting stream is longer, or an outlet
+/// cell is detected.
+/// 
+/// The input streams file (`--streams`) is used to designate which grid cells contain a stream and the pointer 
+/// image is used to traverse the stream network. Stream cells are designated in the streams image as all values 
+/// greater than zero. Thus, all non-stream or background grid cells are commonly assigned either zeros or NoData 
+/// values. Background cells will be assigned the NoData value in the output image, unless the `--zero_background` 
+/// parameter is used, in which case non-stream cells will be assinged zero values in the output. 
+/// 
+/// The user must specify the name of a flow pointer (flow direction) raster (`--d8_pntr`), a streams raster 
+/// (`--streams`), and the output raster (`--output`). The flow pointer and streams rasters should be generated 
+/// using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either the 
+/// `BreachDepressions` or `FillDepressions` tool. flow direction) raster, and the output raster. 
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # See Also
+/// `D8Pointer`, `StreamLinkIdentifier`, `BreachDepressions`, `FillDepressions`
 pub struct TributaryIdentifier {
     name: String,
     description: String,

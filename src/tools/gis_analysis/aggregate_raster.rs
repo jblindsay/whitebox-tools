@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: December 13, 2017
-Last Modified: 13/10/2018
+Created: 13/12/2017
+Last Modified: 20/01/2019
 License: MIT
 */
 
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to reduce the grid resolution of a raster by a user specified amount. For example, using 
+/// an aggregation factor (`--agg_factor`) of 2 would result in a raster with half the number of rows and columns. 
+/// The grid cell values (`--type`) in the output image will consist of the mean, sum, maximum, minimum, or range 
+/// of the overlapping grid cells in the input raster (four cells in the case of an aggregation factor of 2).
+/// 
+/// # See Also
+/// `Resample`
 pub struct AggregateRaster {
     name: String,
     description: String,
@@ -243,6 +250,9 @@ impl WhiteboxTool for AggregateRaster {
         configs.palette = input.configs.palette.clone();
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();

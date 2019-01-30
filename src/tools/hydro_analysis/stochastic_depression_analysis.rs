@@ -48,6 +48,13 @@ use std::thread;
 ///    pdep in serial. Again, this parallel processing can significantly improve the
 ///    performance, particularly when the tool is applied on hardware with four or
 ///    more processors.
+/// 
+/// # Reference
+/// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in 
+/// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.
+/// 
+/// # See Also
+/// `ImpoundmentSizeIndex`
 pub struct StochasticDepressionAnalysis {
     name: String,
     description: String,

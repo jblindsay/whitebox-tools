@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
+Created: 27/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,7 +14,15 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Estimates the length of each link (or tributary) in a stream network.
+/// This tool can be used to measure the length of each link in a stream network. The user must specify the names of 
+/// a stream link ID raster (`--linkid`), created using the `StreamLinkIdentifier` and D8 pointer raster (`--d8_pntr`). 
+/// The flow pointer raster is used to traverse the stream network and should only be created using the `D8Pointer` algorithm. 
+/// Stream cells are designated in the stream link ID raster as all non-zero, positive values. Background cells will be 
+/// assigned the NoData value in the output image, unless the `--zero_background` parameter is used, in which case non-stream 
+/// cells will be assinged zero values in the output.
+/// 
+/// # See Also
+/// `D8Pointer`, `StreamLinkSlope`
 pub struct StreamLinkLength {
     name: String,
     description: String,

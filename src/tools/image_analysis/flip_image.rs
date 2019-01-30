@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to flip, or reflect, an image (`--input`) either vertically, horizontally, or both. The 
+/// axis of reflection is specified using the `--direction` parameter. The input image is not reflected in place;
+/// rather, the reflected image is stored in a separate output (`--output`) file.
 pub struct FlipImage {
     name: String,
     description: String,

@@ -29,9 +29,9 @@ use std::thread;
 /// The output images can take some training to interpret correctly and a detailed explanation can be found in Lindsay et al. 
 /// (2015). Sites within the landscape that occupy prominent topographic positions, either
 /// low-lying or elevated, will be apparent by their bright colouring in the MTP image. Those that are coloured more strongly in
-/// the blue are promient at the local scale range; locations more strongly in the green are promient at the meso scale;
-/// and bright reds are associated with broad-scale landscape prominence. Of course, combination colours are also possible when
-/// topographic is elevated or low-lying across multiple scale ranges, e.g. a yellow area would indicated a site of prominent
+/// the blue are promient at the local scale range; locations that are more strongly green coloured are promient at the meso scale;
+/// and bright reds in the MTP image are associated with broad-scale landscape prominence. Of course, combination colours are also possible when
+/// topography is elevated or low-lying across multiple scale ranges. For example, a yellow area would indicated a site of prominent
 /// topographic position across the meso and broadest scale ranges. 
 /// 
 /// # Reference

@@ -73,7 +73,7 @@ pub use self::flood_order::FloodOrder;
 pub use self::flow_accum_full_workflow::FlowAccumulationFullWorkflow;
 pub use self::flow_length_diff::FlowLengthDiff;
 pub use self::hillslopes::Hillslopes;
-pub use self::impoundment_index::ImpoundmentIndex;
+pub use self::impoundment_index::ImpoundmentSizeIndex;
 pub use self::isobasins::Isobasins;
 pub use self::jenson_snap_pour_points::JensonSnapPourPoints;
 pub use self::longest_flowpath::LongestFlowpath;

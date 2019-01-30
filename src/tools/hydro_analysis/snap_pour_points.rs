@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
+Created: 27/072017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -14,6 +14,31 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// The `SnapPourPoints` tool can be used to move the location of vector pour points (i.e. outlets used in a `Watershed` 
+/// operation) (`--pour_pts`) to the location coincident with the highest flow accumulation (`--flow_accum`) value within 
+/// a specified maximum distance (`--snap_dist`). The pour points file (`--pour_pts`) must be a vector file of *Point* ShapeType. 
+/// 
+/// If the output of the `SnapPourPoints` tool is to be used with the `Watershed` tool, the flow accumulation raster should 
+/// be generated using the `D8FlowAccumulation` algorithm. The snap distance (`--snap_dist`), measured in map units (e.g. 
+/// meters), must also be specified. This distance will serve as the search radius placed around each pour point during the 
+/// search for the maximum flow accumulation. In general, each outlet will be relocated the distance specified by the snap 
+/// distance.
+/// 
+/// Lindsay et al. (2008) provide a detailed discussion of the `SnapPourPoints` technique, and other more sophisticated 
+/// techniques for adjusting pour point locations used in watershedding operations including Jenson's snap pour points
+/// (`JensonSnapPourPoints`) method. In most cases, the `JensonSnapPourPoints` tool should be prefered for applications of
+/// repositioning outlet points used in watershedding operations onto the digital stream lines contained in local drainage
+/// direction rasters. Jenson's method relocates outlet points to the *nearest* stream cell while `SnapPourPoints` relocated
+/// outlets to the *largest* stream (designated by the largest flow accumulation value). In the common situation where outlet
+/// cells are position near the confluence point of smaller tributary streams, the `SnapPourPoints` tool may re-position 
+/// outlets on the main-trunk stream, which will result in watershed delineation of incorrect sub-basins.
+/// 
+/// # Reference
+/// Lindsay JB, Rothwell JJ, and Davies H. 2008. Mapping outlet points used for watershed delineation onto DEM-derived stream 
+/// networks, Water Resources Research, 44, W08442, doi:10.1029/2007WR006507.
+/// 
+/// # See Also:
+/// `Watershed`, `JensonSnapPourPoints`, `D8FlowAccumulation`
 pub struct SnapPourPoints {
     name: String,
     description: String,

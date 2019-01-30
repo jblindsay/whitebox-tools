@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 21, 2017
-Last Modified: 12/10/2018
+Created: 21/06/2017
+Last Modified: 30/01/2019
 License: MIT
 */
 
@@ -358,6 +358,9 @@ impl WhiteboxTool for DevFromMeanElev {
         let i2 = Arc::new(integral2); // wrap integral2 in an Arc
         let i_n = Arc::new(integral_n); // wrap integral_n in an Arc
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let binned_data = bd.clone();

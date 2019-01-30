@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -19,6 +19,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a closing operation on an input greyscale image (`--input`). A 
+/// [closing](https://en.wikipedia.org/wiki/Closing_(morphology)) is a mathematical morphology operation involving 
+/// an erosion (minimum filter) of a dilation (maximum filter) set. `Closing` operations, together with the 
+/// `Opening` operation, is frequently used in the fields of computer vision and digital image processing for 
+/// image noise removal. The user must specify the size of the moving
+/// window in both the x and y directions (`--filterx` and `--filtery`).
+/// 
+/// # See Also
+/// `Opening`, `TophatTransform`
 pub struct Closing {
     name: String,
     description: String,

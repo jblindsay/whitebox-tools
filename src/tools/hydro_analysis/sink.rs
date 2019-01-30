@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
+Created: 01/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,14 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool identifies each sink (i.e. topographic depression) in a raster digital elevation model (DEM). A 
+/// sink, or depression, is a bowl-like landscape feature, which is characterized by interior drainage. Each 
+/// identified sink in the input DEM is assigned a unique, non-zero, positive value in the ouput raster. The 
+/// `Sink` tool essentially runs the `FillDepressions` tool followed by the `Clump` tool on all modified grid
+/// cells.
+/// 
+/// # See Also
+/// `FillDepressions`, `Clump`
 pub struct Sink {
     name: String,
     description: String,

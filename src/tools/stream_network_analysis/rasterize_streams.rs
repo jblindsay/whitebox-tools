@@ -4,11 +4,6 @@ Authors: Dr. John Lindsay
 Created: March 11, 2018
 Last Modified: 12/10/2018
 License: MIT
-
-Notes: This tool uses the algorithm described in:
-
-Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
-and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
 */
 
 use crate::raster::*;
@@ -20,7 +15,16 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Rasterizes vector streams based on Lindsay (2016) method.
+/// This tool can be used rasterize an input vector stream network (`--streams`) using on Lindsay (2016) method.
+/// The user must specify the name of an existing raster (`--base`), from which the output raster's grid resolution
+/// is determined.
+/// 
+/// # Reference
+/// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes and Landforms, 
+/// 41(5): 658–668. DOI: 10.1002/esp.3888
+/// 
+/// # See Also
+/// `RasterizeStreams`
 pub struct RasterizeStreams {
     name: String,
     description: String,

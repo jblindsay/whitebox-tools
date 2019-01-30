@@ -283,7 +283,7 @@ fn help() {
 
     let exe_name = &format!("whitebox-tools{}", ext);
     let sep: String = path::MAIN_SEPARATOR.to_string();
-    let s = "whitebox-tools Help
+    let s = "WhiteboxTools Help
 
 The following commands are recognized:
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
@@ -307,7 +307,7 @@ Example Usage:
 }
 
 fn license() {
-    let license_text = "whitebox-tools License
+    let license_text = "WhiteboxTools License
 Copyright 2017-2019 John Lindsay
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -330,7 +330,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "whitebox-tools v{} by Dr. John B. Lindsay (c) 2017-2019",
+        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2019
+
+WhiteboxTools an advanced geospatial data analysis platform developed at
+the University of Guelph's Geomorphometry and Hydrogeomatics Research 
+Group (GHRG). See https://www.uoguelph.ca/~hydrogeo/WhiteboxTools/index.html 
+for more details.",
         VERSION.unwrap_or("unknown")
     );
 }

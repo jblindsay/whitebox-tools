@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
-Last Modified: 12/10/2018
+Created: 22/06/2017
+Last Modified: 30/01/2019
 License: MIT
 */
 
@@ -246,6 +246,9 @@ impl WhiteboxTool for Slope {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;
