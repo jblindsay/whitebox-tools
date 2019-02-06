@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
-Last Modified: 29/08/2018
+Created: 26/06/2017
+Last Modified: 05/02/2019
 License: MIT
 */
 use crate::lidar::*;
@@ -14,7 +14,15 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
 
-/// Tiles a LiDAR LAS file into multiple LAS files.
+/// This tool can be used to break a LiDAR LAS file into multiple, non-overlapping tiles, each saved as a 
+/// single LAS file. The user must specify the parameter of the tile grid, including its origin (`--origin_x` and
+/// `--origin_y`) and the tile width and height (`--width` and `--height`). Tiles containing fewer points than
+/// specified in the `--min_points` parameter will not be output. This can be useful when tiling terrestrial LiDAR
+/// datasets because the low point density at the edges of the point cloud (i.e. most distant from the scan
+/// station) can result in poorly populated tiles containing relatively few points. 
+/// 
+/// # See Also
+/// `LidarJoin`, `LidarTileFootprint`
 pub struct LidarTile {
     name: String,
     description: String,
@@ -41,8 +49,8 @@ impl LidarTile {
         });
 
         parameters.push(ToolParameter {
-            name: "Tile Width in X Dimension".to_owned(),
-            flags: vec!["--width_x".to_owned()],
+            name: "Tile Width".to_owned(),
+            flags: vec!["--width".to_owned()],
             description: "Width of tiles in the X dimension; default 1000.0.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1000.0".to_owned()),
@@ -50,9 +58,9 @@ impl LidarTile {
         });
 
         parameters.push(ToolParameter {
-            name: "Tile Width in Y Dimension".to_owned(),
-            flags: vec!["--width_y".to_owned()],
-            description: "Width of tiles in the Y dimension.".to_owned(),
+            name: "Tile Height".to_owned(),
+            flags: vec!["--height".to_owned()],
+            description: "Height of tiles in the Y dimension.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1000.0".to_owned()),
             optional: true,
@@ -97,7 +105,7 @@ impl LidarTile {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v -i=*path*to*data*input.las --width_x=1000.0 --width_y=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v -i=*path*to*data*input.las --width=1000.0 --height=2500.0 -=min_points=100", short_exe, name).replace("*", &sep);
 
         LidarTile {
             name: name,
@@ -180,13 +188,13 @@ impl WhiteboxTool for LidarTile {
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if flag_val == "-width_x" {
+            } else if flag_val == "-width_x" || flag_val == "-width" {
                 if keyval {
                     width_x = vec[1].to_string().parse::<f64>().unwrap();
                 } else {
                     width_x = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
-            } else if flag_val == "-width_y" {
+            } else if flag_val == "-width_y" || flag_val == "-height" {
                 if keyval {
                     width_y = vec[1].to_string().parse::<f64>().unwrap();
                 } else {

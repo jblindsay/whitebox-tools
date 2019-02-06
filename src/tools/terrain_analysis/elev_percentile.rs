@@ -50,7 +50,7 @@ use std::thread;
 /// These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
 /// 
 /// # References
-/// Newman, D. R., Lindsay, J. B., & Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
 /// for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
 /// 
 /// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE 

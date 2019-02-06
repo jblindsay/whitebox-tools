@@ -34,11 +34,11 @@ use std::thread;
 /// to outliers in neighbouring elevations (e.g. the presence of off-terrain objects in the DEM).
 /// 
 /// # References
-/// Newman, D. R., Lindsay, J. B., & Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
 /// for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
 /// 
 /// # See Also
-/// `ElevPercentile`, `DevFromMeanElev`, `DiffFromMeanElev`
+/// `ElevPercentile`, `DevFromMeanElev`, `DiffFromMeanElev`, `RelativeTopographicPosition`
 pub struct PercentElevRange {
     name: String,
     description: String,

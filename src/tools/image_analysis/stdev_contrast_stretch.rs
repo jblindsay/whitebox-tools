@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
+Created: 13/07/2017
 Last Modified: 13/10/2018
 License: MIT
 
@@ -22,6 +22,22 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a standard deviation contrast stretch on a raster image. This operation maps each grid cell value 
+/// in the input raster image (z<sub>in</sub>) onto a new scale that ranges from a lower-tail clip value (`min_val`) 
+/// to the upper-tail clip value (`max_val`), with the user-specified number of tonal values (`num_tones`), such that:
+/// 
+/// > z<sub>out</sub> = ((z<sub>in</sub> – min_val)/(max_val – min_val)) x num_tones
+/// 
+/// where z<sub>out</sub> is the output value. The values of `min_val` and `max_val` are determined based on the image
+/// mean and standard deviation. Specifically, the user must specify the number of standard deviations (`--clip` or 
+/// `--stdev`) to be used in determining the min and max clip values. The tool will then calculate the input image mean
+/// and standard deviation and estimate the clip values from these statistics. 
+/// 
+/// This is the same kind of stretch that is used to display raster type data on the fly in many GIS software packages.
+/// 
+/// # See Also
+/// `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
+/// `SigmoidalContrastStretch`
 pub struct StandardDeviationContrastStretch {
     name: String,
     description: String,

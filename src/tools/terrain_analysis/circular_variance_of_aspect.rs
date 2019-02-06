@@ -228,7 +228,9 @@ impl WhiteboxTool for CircularVarianceOfAspect {
 
         // Smooth the DEM
         let mut smoothed_dem = input.get_data_as_array2d();
-        println!("Smoothing the input DEM...");
+        if verbose {
+            println!("Smoothing the input DEM...");
+        }
         let sigma = (midpoint as f64 - 0.5) / 3f64;
         if sigma < 1.8 && filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
@@ -537,7 +539,9 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 for col in 0..columns {
                     sumx += xc.get_value(row, col);
                     sumy += yc.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata {
+                    if smoothed_dem.get_value(row, col) == nodata || 
+                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                        // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
@@ -553,7 +557,9 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     xc.increment(row, col, xc.get_value(row, col-1));
                     yc.increment(row, col, yc.get_value(row, col-1));
                     i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata {
+                    if smoothed_dem.get_value(row, col) == nodata || 
+                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                        // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
                 }

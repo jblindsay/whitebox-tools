@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 4, 2017
+Created: 04/07/2017
 Last Modified: 13/10/2018
 License: MIT
 
@@ -16,6 +16,22 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This image processing tool can be used to thicken single-cell wide lines within a raster file along diagonal 
+/// sections of the lines. Because of the limitation of the raster data format, single-cell wide raster lines can 
+/// be traversed along diaganol sections without passing through a line grid cell. This causes problems for various 
+/// raster analysis functions for which lines are intended to be barriers. This tool will thicken raster lines, 
+/// such that it is impossible to cross a line without passing through a line grid cell. While this can also be 
+/// achieved using a maximum filter, unlike the filter approach, this tool will result in the smallest possible 
+/// thickening to achieve the desired result.
+/// 
+/// All non-zero, positive values are considered to be foreground pixels while all zero valued cells or NoData cells 
+/// are considered background pixels.
+/// 
+/// Note: Unlike other filter-based operations in *WhiteboxTools*, this algorithm can't easily be parallelized because 
+/// the output raster must be read and written to during the same loop.
+/// 
+/// # See Also
+/// `LineThinning`
 pub struct ThickenRasterLine {
     name: String,
     description: String,

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
-Last Modified: 13/10/2018
+Created: 25/06/2017
+Last Modified: 06/02/2019
 License: MIT
 */
 
@@ -28,7 +28,7 @@ use crate::tools::*;
 /// useful for reducing the noise in an image. This tool utilizes an integral image approach (Crow, 1984) to ensure highly 
 /// efficient filtering that is invariant to filter size. The algorithm operates by calculating the average value 
 /// in a moving window centred on each grid cell.  Neighbourhood size, or filter size, is specified in the x and y 
-/// dimensions using the `--filterx` and `--filtery`flags. These dimensions should be odd, positive integer values, 
+/// dimensions using the `--filterx` and `--filtery` flags. These dimensions should be odd, positive integer values, 
 /// e.g. 3, 5, 7, 9... If the kernel filter size is the same in the x and y dimensions, the silent `--filter` flag
 /// may be used instead (command-line interface only).
 /// 
@@ -37,10 +37,14 @@ use crate::tools::*;
 /// filters such as the edge-preserving smoothing filters including the `BilateralFilter`, `MedianFilter`, `OlympicFilter`,
 /// `EdgePreservingMeanFilter` and even `GaussianFilter`.
 /// 
-/// `GaussianFilter` works with both greyscale and red-green-blue (RGB) images. RGB images are 
+/// This tool works with both greyscale and red-green-blue (RGB) images. RGB images are 
 /// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
 /// channel. NoData values in the input image are ignored during filtering. NoData values are assigned to all sites beyond
 /// the raster.
+/// 
+/// # Reference
+/// Crow, F. C. (1984, January). Summed-area tables for texture mapping. In ACM SIGGRAPH computer graphics (Vol. 18, No. 
+/// 3, pp. 207-212). ACM.
 /// 
 /// # See Also
 /// `BilateralFilter`, `EdgePreservingMeanFilter`, `GaussianFilter`, `MedianFilter`, `RgbToIhs`
@@ -172,37 +176,38 @@ impl WhiteboxTool for MeanFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-filter" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
                 filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+            } else if flag_val == "-filterx" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
-                if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
+            } else if flag_val == "-filtery" {
+                filter_size_y = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             }
         }
 

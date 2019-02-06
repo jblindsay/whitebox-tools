@@ -1,12 +1,9 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
+Created: 13/07/2017
 Last Modified: 13/10/2018
 License: MIT
-
-NOTES: 1. The tool should be updated to take multiple file inputs.
-       2. Unlike the original Whitebox GAT tool that this is based on,
 */
 
 use crate::raster::*;
@@ -21,6 +18,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a gamma colour correction transform on an input image (`--input`), such that each 
+/// input pixel value (z<sub>in</sub><sup>) is mapped to the corresponding output value (z<sub>out</sub>) as:
+/// 
+/// > z<sub>out</sub> = z<sub>in</sub><sup>`gamma`</sup>
+/// 
+/// The user must specify the value of the `gamma` parameter. The input image may be of either a greyscale or RGB colour 
+/// composite data type.
 pub struct GammaCorrection {
     name: String,
     description: String,
@@ -34,7 +38,7 @@ impl GammaCorrection {
         // public constructor
         let name = "GammaCorrection".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "Performs a sigmoidal contrast stretch on input images.".to_string();
+        let description = "Performs a gamma correction on an input images.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -144,24 +148,25 @@ impl WhiteboxTool for GammaCorrection {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-gamma" || vec[0].to_lowercase() == "--gamma" {
-                if keyval {
-                    gamma = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-gamma" {
+                gamma = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    gamma = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: March 15, 2018
+Created: 15/03/2018
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -20,6 +20,20 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool can be used to plot an image stack profile (i.e. a signature) for a set of points (`--points`) and 
+/// a multispectral image stack (`--inputs`). The tool outputs an interactive SVG line graph embedded in an
+/// HTML document (`--output`). If the input points vector contains multiple points, each input point will 
+/// be associated with a single line in the output plot. The order of vertices in each signature line is
+/// determined by the order of images specified in the `--inputs` parameter. At least two input images are 
+/// required to run this operation. Note that this tool does not require multispectral images as 
+/// inputs; other types of data may also be used as the image stack. Also note that the input images should be
+/// single-band, continuous greytone rasters. RGB colour images are not good candidates for this tool.
+/// 
+/// If you require the raster values to be saved in the vector points file's attribute table, or if you need
+/// the raster values to be output as text, you may use the `ExtractRasterValuesAtPoints` tool instead.
+/// 
+/// # See Also
+/// `ExtractRasterValuesAtPoints`
 pub struct ImageStackProfile {
     name: String,
     description: String,

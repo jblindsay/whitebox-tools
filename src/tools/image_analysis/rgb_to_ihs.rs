@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 25, 2017
+Created: 25/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -11,13 +11,43 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Converts red, green, and blue (RGB) images into intensity, hue, and saturation (IHS) images.
+/// This tool transforms three raster images of multispectral data (red, green, and blue channels) into their equivalent 
+/// intensity, hue, and saturation (IHS; sometimes HSI or HIS) images. Intensity refers to the brightness of a color, hue 
+/// is related to the dominant wavelength of light and is perceived as color, and saturation is the purity of the color 
+/// (Koutsias et al., 2000). There are numerous algorithms for performing a red-green-blue (RGB) to IHS transformation. 
+/// This tool uses the transformation described by Haydn (1982). Note that, based on this transformation, the output 
+/// IHS values follow the ranges:
+/// 
+/// > 0 < I < 1 
+/// > 
+/// > 0 < H < 2PI 
+/// > 
+/// > 0 < S < 1
+/// 
+/// The user must specify the names of the red, green, and blue images (`--red`, `--green`, `--blue`). Importantly, these 
+/// images need not necessarily correspond with the specific regions of the electromagnetic spectrum that are red, green, 
+/// and blue. Rather, the input images are three multispectral images that could be used to create a RGB color composite. 
+/// The user must also specify the names of the output intensity, hue, and saturation images (`--intensity`, `--hue`, 
+/// `--saturation`). Image enhancements, such as contrast stretching, are often performed on the IHS components, which are 
+/// then inverse transformed back in RGB components to then create an improved color composite image.
+///
+/// # References
+/// Haydn, R., Dalke, G.W. and Henkel, J. (1982) Application of the IHS color transform to the processing of multisensor 
+/// data and image enhancement. Proc. of the Inter- national Symposium on Remote Sensing of Arid and Semiarid Lands, 
+/// Cairo, 599-616.
+/// 
+/// Koutsias, N., Karteris, M., and Chuvico, E. (2000). The use of intensity-hue-saturation transformation of Landsat-5 Thematic 
+/// Mapper data for burned land mapping. Photogrammetric Engineering and Remote Sensing, 66(7), 829-840.
+/// 
+/// # See Also
+/// `IhsToRgb`, `BalanceContrastEnhancement`, `DirectDecorrelationStretch`
 pub struct RgbToIhs {
     name: String,
     description: String,
@@ -311,9 +341,9 @@ impl WhiteboxTool for RgbToIhs {
             let red_max = input_r.configs.display_max;
             let green_max = input_g.configs.display_max;
             let blue_max = input_b.configs.display_max;
-            let overall_min = red_min.min(green_min.min(blue_min));
-            let overall_max = red_max.max(green_max.max(blue_max));
-            let range = overall_max - overall_min;
+            // let overall_min = red_min.min(green_min.min(blue_min));
+            // let overall_max = red_max.max(green_max.max(blue_max));
+            // let range = overall_max - overall_min;
 
             let start = Instant::now();
 
@@ -338,68 +368,45 @@ impl WhiteboxTool for RgbToIhs {
                 let input_b = input_b.clone();
                 let tx = tx.clone();
                 thread::spawn(move || {
-                    let (mut r, mut g, mut b): (f64, f64, f64);
-                    let (mut i, mut h, mut s, mut m): (f64, f64, f64, f64);
+                    // let (mut r, mut g, mut b): (u32, u32, u32);
+                    let (mut red, mut green, mut blue): (f64, f64, f64);
+                    // let (mut i, mut h, mut s, mut m): (f64, f64, f64, f64);
+                    // let mut value: f64;
+                    let red_range = red_max - red_min;
+                    let green_range = green_max - green_min;
+                    let blue_range = blue_max - blue_min;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut intensity_data = vec![nodata_r; columns as usize];
                         let mut hue_data = vec![nodata_r; columns as usize];
                         let mut saturation_data = vec![nodata_r; columns as usize];
                         for col in 0..columns {
-                            r = input_r[(row, col)];
-                            g = input_g[(row, col)];
-                            b = input_b[(row, col)];
-                            if r != nodata_r && g != nodata_g && b != nodata_b {
-                                r = (r - overall_min) / range;
-                                if r < 0f64 {
-                                    r = 0f64;
-                                }
-                                if r > 1f64 {
-                                    r = 1f64;
-                                }
+                            red = input_r[(row, col)];
+                            green = input_g[(row, col)];
+                            blue = input_b[(row, col)];
+                            if red != nodata_r && green != nodata_g && blue != nodata_b {
+                                // r = ((red - red_min) / (red_max - red_min) * 255f64) as u32;
+                                // if r > 255u32 {
+                                //     r = 255u32;
+                                // }
 
-                                g = (g - overall_min) / range;
-                                if g < 0f64 {
-                                    g = 0f64;
-                                }
-                                if g > 1f64 {
-                                    g = 1f64;
-                                }
+                                // g = ((green - green_min) / (green_max - green_min) * 255f64) as u32;
+                                // if g > 255u32 {
+                                //     g = 255u32;
+                                // }
 
-                                b = (b - overall_min) / range;
-                                if b < 0f64 {
-                                    b = 0f64;
-                                }
-                                if b > 1f64 {
-                                    b = 1f64;
-                                }
+                                // b = ((blue - blue_min) / (blue_max - blue_min) * 255f64) as u32;
+                                // if b > 255u32 {
+                                //     b = 255u32;
+                                // }
 
-                                m = r.min(g.min(b));
+                                red = (red - red_min) / red_range;
+                                green = (green - green_min) / green_range;
+                                blue = (blue - blue_min) / blue_range;
+                                let (h, s, i) = rgb2hsi(red, green, blue);
 
-                                i = r + g + b;
-
-                                if i == 3f64 {
-                                    h = 0f64;
-                                } else if m == b {
-                                    h = (g - b) / (i - 3f64 * b);
-                                } else if m == r {
-                                    h = (b - r) / (i - 3f64 * r) + 1f64;
-                                } else {
-                                    // m == g
-                                    h = (r - g) / (i - 3f64 * g) + 2f64;
-                                }
-
-                                if h <= 1f64 {
-                                    s = (i - 3f64 * b) / i;
-                                } else if h <= 2f64 {
-                                    s = (i - 3f64 * r) / i;
-                                } else {
-                                    // H <= 3
-                                    s = (i - 3f64 * g) / i;
-                                }
-
-                                intensity_data[col as usize] = i;
                                 hue_data[col as usize] = h;
                                 saturation_data[col as usize] = s;
+                                intensity_data[col as usize] = i;
                             }
                         }
                         tx.send((row, intensity_data, hue_data, saturation_data))
@@ -495,10 +502,12 @@ impl WhiteboxTool for RgbToIhs {
                 Err(e) => return Err(e),
             };
 
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
-            );
+            if verbose {
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                );
+            }
         } else {
             if verbose {
                 println!("Reading image data...")
@@ -574,15 +583,16 @@ impl WhiteboxTool for RgbToIhs {
                 }
             }
 
-            let range = overall_max - overall_min;
+            // let range = overall_max - overall_min;
 
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
                 let input = input.clone();
                 let tx = tx.clone();
                 thread::spawn(move || {
-                    let (mut r, mut g, mut b): (f64, f64, f64);
-                    let (mut i, mut h, mut s, mut m): (f64, f64, f64, f64);
+                    // let (mut r, mut g, mut b): (f64, f64, f64);
+                    // let (mut i, mut h, mut s, mut m): (f64, f64, f64, f64);
+                    // let (mut i, mut h, mut s): (f64, f64, f64);
                     let mut z: f64;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut intensity_data = vec![nodata; columns as usize];
@@ -591,57 +601,59 @@ impl WhiteboxTool for RgbToIhs {
                         for col in 0..columns {
                             z = input[(row, col)];
                             if z != nodata {
-                                r = (z as u32 & 0xFF) as f64;
-                                g = ((z as u32 >> 8) & 0xFF) as f64;
-                                b = ((z as u32 >> 16) & 0xFF) as f64;
+                                // r = (z as u32 & 0xFF) as f64;
+                                // g = ((z as u32 >> 8) & 0xFF) as f64;
+                                // b = ((z as u32 >> 16) & 0xFF) as f64;
 
-                                r = (r - overall_min) / range;
-                                if r < 0f64 {
-                                    r = 0f64;
-                                }
-                                if r > 1f64 {
-                                    r = 1f64;
-                                }
+                                // r = (r - overall_min) / range;
+                                // if r < 0f64 {
+                                //     r = 0f64;
+                                // }
+                                // if r > 1f64 {
+                                //     r = 1f64;
+                                // }
 
-                                g = (g - overall_min) / range;
-                                if g < 0f64 {
-                                    g = 0f64;
-                                }
-                                if g > 1f64 {
-                                    g = 1f64;
-                                }
+                                // g = (g - overall_min) / range;
+                                // if g < 0f64 {
+                                //     g = 0f64;
+                                // }
+                                // if g > 1f64 {
+                                //     g = 1f64;
+                                // }
 
-                                b = (b - overall_min) / range;
-                                if b < 0f64 {
-                                    b = 0f64;
-                                }
-                                if b > 1f64 {
-                                    b = 1f64;
-                                }
+                                // b = (b - overall_min) / range;
+                                // if b < 0f64 {
+                                //     b = 0f64;
+                                // }
+                                // if b > 1f64 {
+                                //     b = 1f64;
+                                // }
 
-                                m = r.min(g.min(b));
+                                // m = r.min(g.min(b));
 
-                                i = r + g + b;
+                                // i = r + g + b;
 
-                                if i == 3f64 {
-                                    h = 0f64;
-                                } else if m == b {
-                                    h = (g - b) / (i - 3f64 * b);
-                                } else if m == r {
-                                    h = (b - r) / (i - 3f64 * r) + 1f64;
-                                } else {
-                                    // m == g
-                                    h = (r - g) / (i - 3f64 * g) + 2f64;
-                                }
+                                // if i == 3f64 {
+                                //     h = 0f64;
+                                // } else if m == b {
+                                //     h = (g - b) / (i - 3f64 * b);
+                                // } else if m == r {
+                                //     h = (b - r) / (i - 3f64 * r) + 1f64;
+                                // } else {
+                                //     // m == g
+                                //     h = (r - g) / (i - 3f64 * g) + 2f64;
+                                // }
 
-                                if h <= 1f64 {
-                                    s = (i - 3f64 * b) / i;
-                                } else if h <= 2f64 {
-                                    s = (i - 3f64 * r) / i;
-                                } else {
-                                    // H <= 3
-                                    s = (i - 3f64 * g) / i;
-                                }
+                                // if h <= 1f64 {
+                                //     s = (i - 3f64 * b) / i;
+                                // } else if h <= 2f64 {
+                                //     s = (i - 3f64 * r) / i;
+                                // } else {
+                                //     // H <= 3
+                                //     s = (i - 3f64 * g) / i;
+                                // }
+
+                                let (h, s, i) = value2hsi(z);
 
                                 intensity_data[col as usize] = i;
                                 hue_data[col as usize] = h;
@@ -755,3 +767,96 @@ impl WhiteboxTool for RgbToIhs {
         Ok(())
     }
 }
+
+#[inline]
+fn value2hsi(value: f64) -> (f64, f64, f64) {
+    let r = (value as u32 & 0xFF) as f64 / 255f64;
+    let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+    let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+    let i = (r + g + b) / 3f64;
+
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
+
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
+
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
+    (h, s, i)
+}
+
+/// RGB values should be 0-1
+fn rgb2hsi(r: f64, g: f64, b: f64) -> (f64, f64, f64) {
+    let i = (r + g + b) / 3f64;
+
+    let rn = r / (r + g + b);
+    let gn = g / (r + g + b);
+    let bn = b / (r + g + b);
+
+    let mut h = if rn != gn || rn != bn {
+        ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+            .acos()
+    } else {
+        0f64
+    };
+    if b > g {
+        h = 2f64 * PI - h;
+    }
+
+    let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
+    (h, s, i)
+}
+
+// #[inline]
+// fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
+//     let mut r: u32;
+//     let mut g: u32;
+//     let mut b: u32;
+
+//     let x = i * (1f64 - s);
+
+//     if h < 2f64 * PI / 3f64 {
+//         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+//         let z = 3f64 * i - (x + y);
+//         r = (y * 255f64).round() as u32;
+//         g = (z * 255f64).round() as u32;
+//         b = (x * 255f64).round() as u32;
+//     } else if h < 4f64 * PI / 3f64 {
+//         let h = h - 2f64 * PI / 3f64;
+//         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+//         let z = 3f64 * i - (x + y);
+//         r = (x * 255f64).round() as u32;
+//         g = (y * 255f64).round() as u32;
+//         b = (z * 255f64).round() as u32;
+//     } else {
+//         let h = h - 4f64 * PI / 3f64;
+//         let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+//         let z = 3f64 * i - (x + y);
+//         r = (z * 255f64).round() as u32;
+//         g = (x * 255f64).round() as u32;
+//         b = (y * 255f64).round() as u32;
+//     }
+
+//     if r > 255u32 {
+//         r = 255u32;
+//     }
+//     if g > 255u32 {
+//         g = 255u32;
+//     }
+//     if b > 255u32 {
+//         b = 255u32;
+//     }
+
+//     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
+// }

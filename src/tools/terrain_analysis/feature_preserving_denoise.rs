@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: November 23, 2017
-Last Modified: 12/10/2018
+Created: 23/11/2017
+Last Modified: 31/01/2019
 License: MIT
 */
 
@@ -104,7 +104,7 @@ impl FeaturePreservingDenoise {
             flags: vec!["--num_iter".to_owned()],
             description: "Number of iterations.".to_owned(),
             parameter_type: ParameterType::Integer,
-            default_value: Some("10".to_owned()),
+            default_value: Some("3".to_owned()),
             optional: true,
         });
 
@@ -113,7 +113,7 @@ impl FeaturePreservingDenoise {
             flags: vec!["--max_diff".to_owned()],
             description: "Maximum allowable absolute elevation change (optional).".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("2.0".to_owned()),
+            default_value: Some("0.5".to_owned()),
             optional: true,
         });
 
@@ -199,7 +199,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut output_file = String::new();
         let mut filter_size = 11usize;
         let mut max_norm_diff = 8f64;
-        let mut num_iter = 5;
+        let mut num_iter = 3;
         let mut z_factor = 1f64;
         let mut max_z_diff = f64::INFINITY;
 
@@ -295,7 +295,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 
         if verbose {
             println!("Reading data...")
-        };
+        }
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
@@ -391,13 +391,15 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         }
 
         let t1 = Instant::now();
-        println!(
-            "{}",
-            format!(
-                "Calculating normal vectors: {}",
-                get_formatted_elapsed_time(start)
-            )
-        );
+        if verbose {
+            println!(
+                "{}",
+                format!(
+                    "Calculating normal vectors: {}",
+                    get_formatted_elapsed_time(start)
+                )
+            );
+        }
 
         //////////////////////////////////////////////////////////
         // Smooth the normal vector field of the fitted planes. //
@@ -503,13 +505,15 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
         }
 
-        println!(
-            "{}",
-            format!(
-                "Smoothing normal vectors: {}",
-                get_formatted_elapsed_time(t1)
-            )
-        );
+        if verbose {
+            println!(
+                "{}",
+                format!(
+                    "Smoothing normal vectors: {}",
+                    get_formatted_elapsed_time(t1)
+                )
+            );
+        }
 
         ///////////////////////////////////////////////////////////////////////////
         // Update the elevations of the DEM based on the smoothed normal vectors //
@@ -528,9 +532,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut zn: f64;
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.set_data_from_raster(&input)?;
-        println!("Updating elevations...");
+        if verbose {
+            println!("Updating elevations...");
+        }
         for loop_num in 0..num_iter {
-            println!("Iteration {} of {}...", loop_num + 1, num_iter);
+            if verbose {
+                println!("Iteration {} of {}...", loop_num + 1, num_iter);
+            }
 
             for row in 0..rows {
                 for col in 0..columns {
@@ -598,12 +606,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         output.add_metadata_entry(format!("Filter size: {}", filter_size));
         output.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff));
         output.add_metadata_entry(format!("Iterations: {}", num_iter));
+        output.add_metadata_entry(format!("Max. z difference: {}", max_z_diff));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
-        };
+        }
         let _ = match output.write() {
             Ok(_) => {
                 if verbose {

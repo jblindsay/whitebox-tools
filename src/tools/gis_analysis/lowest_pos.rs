@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 4, 2017
+Created: 04/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -14,6 +14,20 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool identifies the stack position (index) of the minimum value within a raster stack on a cell-by-cell 
+/// basis. For example, if five raster images (`--inputs`) are input to the tool, the output raster (`--output`) 
+/// would show which of the five input rasters contained the lowest value for each grid cell. The index value in 
+/// the output raster is the zero-order number of the raster stack, i.e. if the lowest value in the stack is 
+/// contained in the first image, the output value would be 0; if the lowest stack value were the second image, 
+/// the output value would be 1, and so on. If any of the cell values within the stack is NoData, the output raster 
+/// will contain the NoData value for the corresponding grid cell. The index value is related to the order of the
+/// input images.
+/// 
+/// # Warning
+/// Each of the input rasters must have the same spatial extent and number of rows and columns.
+/// 
+/// # See Also
+/// `HighestPosition`, `PickFromList`
 pub struct LowestPosition {
     name: String,
     description: String,

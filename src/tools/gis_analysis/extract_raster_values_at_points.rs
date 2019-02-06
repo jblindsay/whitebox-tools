@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/06/2018
-Last Modified: 17/06/2018
+Last Modified: 30/01/2019
 License: MIT
 */
 
@@ -14,7 +14,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// Extracts the values of raster(s) at vector point locations.
+/// This tool can be used to extract the values of one or more rasters (`--inputs`) at the sites of a set of vector points. 
+/// By default, the data is output to the attribute table of the input points (`--points`) vector; however,
+/// if the `--out_text` parameter is specified, the tool will additionally output point values as text data 
+/// to standard output (*stdout*). Attribute fields will be added to the table of the points file, with field
+/// names, *VALUE1*, *VALUE2*, *VALUE3*, etc. each corresponding to the order of input rasters.
+/// 
+/// If you need to plot a chart of values from a raster stack at a set of points, the `ImageStackProfile` may be
+/// more suitable for this application.
+/// 
+/// # See Also
+/// `ImageStackProfile`, `FindLowestOrHighestPoints`
 pub struct ExtractRasterValuesAtPoints {
     name: String,
     description: String,
@@ -49,6 +59,17 @@ impl ExtractRasterValuesAtPoints {
             )),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output text?".to_owned(),
+            flags: vec!["--out_text".to_owned()],
+            description:
+                "Output point values as text? Otherwise, the only output is to to the points file's attribute table."
+                    .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -117,6 +138,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
     ) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut points_file = String::new();
+        let mut output_text = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -134,23 +156,22 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--inputs" {
-                if keyval {
-                    input_files = vec[1].to_string();
+            if flag_val == "-i" || flag_val == "-inputs" {
+                input_files = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_files = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-points" {
                 points_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val.contains("-out_text") {
+                output_text = true;
             }
         }
-
-        // let mut progress: usize;
-        // let mut old_progress: usize = 1;
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -163,12 +184,12 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         let start = Instant::now();
 
         let mut cmd = input_files.split(";");
-        let mut vec = cmd.collect::<Vec<&str>>();
-        if vec.len() == 1 {
+        let mut v = cmd.collect::<Vec<&str>>();
+        if v.len() == 1 {
             cmd = input_files.split(",");
-            vec = cmd.collect::<Vec<&str>>();
+            v = cmd.collect::<Vec<&str>>();
         }
-        let num_files = vec.len();
+        let num_files = v.len();
         if num_files < 1 {
             return Err(Error::new(ErrorKind::InvalidInput,
                                 "There is something incorrect about the input files. At least one input is required to operate this tool."));
@@ -187,8 +208,9 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         }
 
         let (mut row, mut col): (isize, isize);
-        let mut x_vals = vec![];
-        let mut y_vals = vec![];
+        let mut x_vals = Vec::with_capacity(num_records);
+        let mut y_vals = Vec::with_capacity(num_records);
+        let mut raster_values = vec![vec![0f64; num_files]; num_records];
         for record_num in 0..num_records {
             let record = points.get_record(record_num);
             y_vals.push(record.points[0].y);
@@ -196,8 +218,8 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         }
 
         // add the attributes for each raster
-        for i in 0..vec.len() {
-            if !vec[i].trim().is_empty() {
+        for i in 0..num_files {
+            if !v[i].trim().is_empty() {
                 let val =
                     AttributeField::new(&format!("VALUE{}", i + 1), FieldDataType::Real, 12u8, 4u8);
                 points.attributes.add_field(&val);
@@ -206,7 +228,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
 
         let mut z: f64;
         let mut i = 1;
-        for value in vec {
+        for value in v {
             if !value.trim().is_empty() {
                 if verbose {
                     println!("Reading data...")
@@ -227,114 +249,22 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
                         &format!("VALUE{}", i),
                         FieldData::Real(z),
                     );
+
+                    if output_text {
+                        raster_values[record_num][i - 1] = z;
+                    }
                 }
 
                 i += 1;
             }
         }
-        // drop(attributes);
 
-        // let start = time::now();
-        // let rows = input.configs.rows as isize;
-        // let columns = input.configs.columns as isize;
-        // let nodata = input.configs.nodata;
-
-        // // loop through the raster, locating the min/max
-        // let rows_completed = Arc::new(Mutex::new(0..rows));
-        // let old_progress = Arc::new(Mutex::new(1));
-        // let num_procs = num_cpus::get() as isize;
-        // let (tx, rx) = mpsc::channel();
-        // for tid in 0..num_procs {
-        //     let input = input.clone();
-        //     let rows_completed = rows_completed.clone();
-        //     let old_progress = old_progress.clone();
-        //     let tx = tx.clone();
-        //     thread::spawn(move || {
-        //         let mut low_z = f64::INFINITY;
-        //         let mut low_row = 0isize;
-        //         let mut low_col = 0isize;
-        //         let mut high_z = f64::NEG_INFINITY;
-        //         let mut high_row = 0isize;
-        //         let mut high_col = 0isize;
-        //         let mut progress: usize;
-        //         // let mut old_progress: usize = 1;
-        //         for row in (0..rows).filter(|r| r % num_procs == tid) {
-        //             for col in 0..columns {
-        //                 z = input.get_value(row, col);
-        //                 if z != nodata {
-        //                     if z < low_z {
-        //                         low_z = z;
-        //                         low_col = col;
-        //                         low_row = row;
-        //                     }
-        //                     if z > high_z {
-        //                         high_z = z;
-        //                         high_col = col;
-        //                         high_row = row;
-        //                     }
-        //                 }
-        //             }
-        //             let r = match rows_completed.lock().unwrap().next() {
-        //                 Some(val) => val,
-        //                 None => 0, // There are no more tiles to interpolate
-        //             };
-        //             if verbose {
-        //                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-        //                 let mut p = old_progress.lock().unwrap();
-        //                 if progress != *p {
-        //                     println!("Progress: {}%", progress);
-        //                     *p = progress;
-        //                 }
-        //             }
-        //         }
-        //         tx.send((low_z, low_col, low_row, high_z, high_col, high_row))
-        //             .unwrap();
-        //     });
-        // }
-
-        // let mut low_z = f64::INFINITY;
-        // let mut low_row = 0isize;
-        // let mut low_col = 0isize;
-        // let mut high_z = f64::NEG_INFINITY;
-        // let mut high_row = 0isize;
-        // let mut high_col = 0isize;
-        // for _ in 0..num_procs {
-        //     let data = rx.recv().unwrap();
-        //     if data.0 < low_z {
-        //         low_z = data.0;
-        //         low_col = data.1;
-        //         low_row = data.2;
-        //     }
-        //     if data.3 > high_z {
-        //         high_z = data.3;
-        //         high_col = data.4;
-        //         high_row = data.5;
-        //     }
-        // }
-
-        // // add the vector record(s)
-        // let mut rec_num = 1i32;
-        // if out_type == "lowest" || out_type == "both" {
-        //     output.add_point_record(
-        //         input.get_x_from_column(low_col),
-        //         input.get_y_from_row(low_row),
-        //     );
-        //     output
-        //         .attributes
-        //         .add_record(vec![FieldData::Int(rec_num), FieldData::Real(low_z)], false);
-        //     rec_num += 1i32;
-        // }
-
-        // if out_type == "highest" || out_type == "both" {
-        //     output.add_point_record(
-        //         input.get_x_from_column(high_col),
-        //         input.get_y_from_row(high_row),
-        //     );
-        //     output.attributes.add_record(
-        //         vec![FieldData::Int(rec_num), FieldData::Real(high_z)],
-        //         false,
-        //     );
-        // }
+        if output_text {
+            println!("Point values:");
+            for record_num in 0..num_records {
+                println!("Point {} values: {:?}", record_num+1, raster_values[record_num]);
+            }
+        }
 
         let elapsed_time = get_formatted_elapsed_time(start);
 

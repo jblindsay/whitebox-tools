@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 25, 2017
-Last Modified: 13/10/2018
+Created: 25/07/2017
+Last Modified: 05/02/2019
 License: MIT
 */
 
@@ -11,13 +11,43 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Converts intensity, hue, and saturation (IHS) images into red, green, and blue (RGB) images.
+/// This tool transforms three intensity, hue, and saturation (IHS; sometimes HSI or HIS) raster images into three 
+/// equivalent multispectral images corresponding with the red, green, and blue channels of an RGB composite. Intensity 
+/// refers to the brightness of a color, hue is related to the dominant wavelength of light and is perceived as color, 
+/// and saturation is the purity of the color (Koutsias et al., 2000). There are numerous algorithms for performing a 
+/// red-green-blue (RGB) to IHS transformation. This tool uses the transformation described by Haydn (1982). Note that, 
+/// based on this transformation, the input IHS values must follow the ranges:
+/// 
+/// > 0 < I < 1
+/// > 
+/// > 0 < H < 2PI 
+/// > 
+/// > 0 < S < 1
+/// 
+/// The output red, green, and blue images will have values ranging from 0 to 255. The user must specify the names of the 
+/// intensity, hue, and saturation images (`--intensity`, `--hue`, `--saturation`). These images will generally be created using 
+/// the `RgbToIhs` tool. The user must also specify the names of the output red, green, and blue images (`--red`, `--green`, 
+/// `--blue`). Image enhancements, such as contrast stretching, are often performed on the individual IHS components, which are 
+/// then inverse transformed back in RGB components using this tool. The output RGB components can then be used to create an 
+/// improved color composite image.
+/// 
+/// # References
+/// Haydn, R., Dalke, G.W. and Henkel, J. (1982) Application of the IHS color transform to the processing of multisensor 
+/// data and image enhancement. Proc. of the Inter- national Symposium on Remote Sensing of Arid and Semiarid Lands, 
+/// Cairo, 599-616.
+/// 
+/// Koutsias, N., Karteris, M., and Chuvico, E. (2000). The use of intensity-hue-saturation transformation of Landsat-5 Thematic 
+/// Mapper data for burned land mapping. Photogrammetric Engineering and Remote Sensing, 66(7), 829-840.
+/// 
+/// # See Also
+/// `RgbToIhs`, `BalanceContrastEnhancement`, `DirectDecorrelationStretch`
 pub struct IhsToRgb {
     name: String,
     description: String,
@@ -190,61 +220,44 @@ impl WhiteboxTool for IhsToRgb {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-red" || vec[0].to_lowercase() == "--red" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-r" || flag_val == "-red" {
                 if keyval {
                     red_file = vec[1].to_string();
                 } else {
                     red_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-g"
-                || vec[0].to_lowercase() == "-green"
-                || vec[0].to_lowercase() == "--green"
-            {
+            } else if flag_val == "-g" || flag_val == "-green" {
                 if keyval {
                     green_file = vec[1].to_string();
                 } else {
                     green_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-b"
-                || vec[0].to_lowercase() == "-blue"
-                || vec[0].to_lowercase() == "--blue"
-            {
+            } else if flag_val == "-b" || flag_val == "-blue" {
                 if keyval {
                     blue_file = vec[1].to_string();
                 } else {
                     blue_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "-intensity"
-                || vec[0].to_lowercase() == "--intensity"
-            {
+            } else if flag_val == "-i" || flag_val == "-intensity" {
                 if keyval {
                     intensity_file = vec[1].to_string();
                 } else {
                     intensity_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-h"
-                || vec[0].to_lowercase() == "-hue"
-                || vec[0].to_lowercase() == "--hue"
-            {
+            } else if flag_val == "-h" || flag_val == "-hue" {
                 if keyval {
                     hue_file = vec[1].to_string();
                 } else {
                     hue_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-s"
-                || vec[0].to_lowercase() == "-saturation"
-                || vec[0].to_lowercase() == "--saturation"
-            {
+            } else if flag_val == "-s" || flag_val == "-saturation" {
                 if keyval {
                     saturation_file = vec[1].to_string();
                 } else {
                     saturation_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o"
-                || vec[0].to_lowercase() == "-composite"
-                || vec[0].to_lowercase() == "--composite"
-            {
+            } else if flag_val == "-o" || flag_val == "-composite" || flag_val == "-output" {
                 if keyval {
                     composite_file = vec[1].to_string();
                 } else {
@@ -265,14 +278,20 @@ impl WhiteboxTool for IhsToRgb {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !red_file.contains(&sep) && !red_file.contains("/") {
-            red_file = format!("{}{}", working_directory, red_file);
-        }
-        if !green_file.contains(&sep) && !green_file.contains("/") {
-            green_file = format!("{}{}", working_directory, green_file);
-        }
-        if !blue_file.contains(&sep) && !blue_file.contains("/") {
-            blue_file = format!("{}{}", working_directory, blue_file);
+        if !use_composite {
+            if !red_file.contains(&sep) && !red_file.contains("/") {
+                red_file = format!("{}{}", working_directory, red_file);
+            }
+            if !green_file.contains(&sep) && !green_file.contains("/") {
+                green_file = format!("{}{}", working_directory, green_file);
+            }
+            if !blue_file.contains(&sep) && !blue_file.contains("/") {
+                blue_file = format!("{}{}", working_directory, blue_file);
+            }
+        } else {
+            if !composite_file.contains(&sep) && !composite_file.contains("/") {
+                composite_file = format!("{}{}", working_directory, composite_file);
+            }
         }
         if !intensity_file.contains(&sep) && !intensity_file.contains("/") {
             intensity_file = format!("{}{}", working_directory, intensity_file);
@@ -324,50 +343,37 @@ impl WhiteboxTool for IhsToRgb {
         }
 
         let num_procs = num_cpus::get() as isize;
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input_i = input_i.clone();
-            let input_h = input_h.clone();
-            let input_s = input_s.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let (mut r, mut g, mut b): (f64, f64, f64);
-                let (mut i, mut h, mut s): (f64, f64, f64);
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut red_data = vec![nodata_i; columns as usize];
-                    let mut green_data = vec![nodata_i; columns as usize];
-                    let mut blue_data = vec![nodata_i; columns as usize];
-                    for col in 0..columns {
-                        i = input_i[(row, col)];
-                        h = input_h[(row, col)];
-                        s = input_s[(row, col)];
-                        if i != nodata_i && h != nodata_h && s != nodata_s {
-                            if h <= 1f64 {
-                                r = i * (1f64 + 2f64 * s - 3f64 * s * h) / 3f64;
-                                g = i * (1f64 - s + 3f64 * s * h) / 3f64;
-                                b = i * (1f64 - s) / 3f64;
-                            } else if h <= 2f64 {
-                                r = i * (1f64 - s) / 3f64;
-                                g = i * (1f64 + 2f64 * s - 3f64 * s * (h - 1f64)) / 3f64;
-                                b = i * (1f64 - s + 3f64 * s * (h - 1f64)) / 3f64;
-                            } else {
-                                // h <= 3
-                                r = i * (1f64 - s + 3f64 * s * (h - 2f64)) / 3f64;
-                                g = i * (1f64 - s) / 3f64;
-                                b = i * (1f64 + 2f64 * s - 3f64 * s * (h - 2f64)) / 3f64;
-                            }
-
-                            red_data[col as usize] = r;
-                            green_data[col as usize] = g;
-                            blue_data[col as usize] = b;
-                        }
-                    }
-                    tx.send((row, red_data, green_data, blue_data)).unwrap();
-                }
-            });
-        }
-
         if !use_composite {
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input_i = input_i.clone();
+                let input_h = input_h.clone();
+                let input_s = input_s.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    // let (mut r, mut g, mut b): (f64, f64, f64);
+                    let (mut i, mut h, mut s): (f64, f64, f64);
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut red_data = vec![nodata_i; columns as usize];
+                        let mut green_data = vec![nodata_i; columns as usize];
+                        let mut blue_data = vec![nodata_i; columns as usize];
+                        for col in 0..columns {
+                            i = input_i[(row, col)];
+                            h = input_h[(row, col)];
+                            s = input_s[(row, col)];
+                            if i != nodata_i && h != nodata_h && s != nodata_s {
+                                let (r, g, b) = hsi2rgb(h, s, i);
+
+                                red_data[col as usize] = r as f64;
+                                green_data[col as usize] = g as f64;
+                                blue_data[col as usize] = b as f64;
+                            }
+                        }
+                        tx.send((row, red_data, green_data, blue_data)).unwrap();
+                    }
+                });
+            }
+
             let mut output_r = Raster::initialize_using_file(&red_file, &input_i);
             output_r.configs.photometric_interp = PhotometricInterpretation::Continuous;
             output_r.configs.data_type = DataType::F32;
@@ -466,27 +472,48 @@ impl WhiteboxTool for IhsToRgb {
                 Err(e) => return Err(e),
             };
 
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
-            );
+            if verbose {
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                );
+            }
         } else {
+            if verbose {
+                println!("Creating a colour composite output...");
+            }
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input_i = input_i.clone();
+                let input_h = input_h.clone();
+                let input_s = input_s.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let (mut i, mut h, mut s): (f64, f64, f64);
+                    let mut value: f64;
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![0f64; columns as usize];
+                        for col in 0..columns {
+                            i = input_i[(row, col)];
+                            h = input_h[(row, col)];
+                            s = input_s[(row, col)];
+                            if i != nodata_i && h != nodata_h && s != nodata_s {
+                                value = hsi2value(h, s, i);
+                                data[col as usize] = value;
+                            }
+                        }
+                        tx.send((row, data)).unwrap();
+                    }
+                });
+            }
+
             let mut output = Raster::initialize_using_file(&composite_file, &input_i);
             output.configs.photometric_interp = PhotometricInterpretation::RGB;
-            output.configs.data_type = DataType::RGB24;
-            let out_nodata = 0f64;
-            let (mut r, mut g, mut b): (u32, u32, u32);
-            let alpha_mask = (255 << 24) as u32;
+            output.configs.nodata = 0f64;
+            output.configs.data_type = DataType::RGBA32;
             for row in 0..rows {
                 let data = rx.recv().unwrap();
-                let mut out_data = vec![out_nodata; columns as usize];
-                for col in 0..columns {
-                    r = data.1[col as usize] as u32;
-                    g = data.2[col as usize] as u32;
-                    b = data.3[col as usize] as u32;
-                    out_data[col as usize] = (alpha_mask | (b << 16) | (g << 8) | r) as f64;
-                }
-                output.set_row_data(data.0, out_data);
+                output.set_row_data(data.0, data.1);
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                     if progress != old_progress {
@@ -508,7 +535,7 @@ impl WhiteboxTool for IhsToRgb {
             output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
             if verbose {
-                println!("Saving red data...")
+                println!("Saving data...")
             };
             let _ = match output.write() {
                 Ok(_) => {
@@ -528,4 +555,118 @@ impl WhiteboxTool for IhsToRgb {
 
         Ok(())
     }
+}
+
+// #[inline]
+// fn value2hsi(value: f64) -> (f64, f64, f64) {
+//     let r = (value as u32 & 0xFF) as f64 / 255f64;
+//     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
+//     let b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
+
+//     let i = (r + g + b) / 3f64;
+
+//     let rn = r / (r + g + b);
+//     let gn = g / (r + g + b);
+//     let bn = b / (r + g + b);
+
+//     let mut h = if rn != gn || rn != bn {
+//         ((0.5 * ((rn - gn) + (rn - bn))) / ((rn - gn) * (rn - gn) + (rn - bn) * (gn - bn)).sqrt())
+//             .acos()
+//     } else {
+//         0f64
+//     };
+//     if b > g {
+//         h = 2f64 * PI - h;
+//     }
+
+//     let s = 1f64 - 3f64 * rn.min(gn).min(bn);
+
+//     (h, s, i)
+// }
+
+#[inline]
+fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
+    let mut r: u32;
+    let mut g: u32;
+    let mut b: u32;
+
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
+        g = (z * 255f64).round() as u32;
+        b = (x * 255f64).round() as u32;
+    } else if h < 4f64 * PI / 3f64 {
+        let h = h - 2f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
+        g = (y * 255f64).round() as u32;
+        b = (z * 255f64).round() as u32;
+    } else {
+        let h = h - 4f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
+        g = (x * 255f64).round() as u32;
+        b = (y * 255f64).round() as u32;
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
+
+    ((255 << 24) | (b << 16) | (g << 8) | r) as f64
+}
+
+
+#[inline]
+fn hsi2rgb(h: f64, s: f64, i: f64) -> (u32, u32, u32) {
+    let mut r: u32;
+    let mut g: u32;
+    let mut b: u32;
+
+    let x = i * (1f64 - s);
+
+    if h < 2f64 * PI / 3f64 {
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (y * 255f64).round() as u32;
+        g = (z * 255f64).round() as u32;
+        b = (x * 255f64).round() as u32;
+    } else if h < 4f64 * PI / 3f64 {
+        let h = h - 2f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (x * 255f64).round() as u32;
+        g = (y * 255f64).round() as u32;
+        b = (z * 255f64).round() as u32;
+    } else {
+        let h = h - 4f64 * PI / 3f64;
+        let y = i * (1f64 + (s * h.cos()) / ((PI / 3f64 - h).cos()));
+        let z = 3f64 * i - (x + y);
+        r = (z * 255f64).round() as u32;
+        g = (x * 255f64).round() as u32;
+        b = (y * 255f64).round() as u32;
+    }
+
+    if r > 255u32 {
+        r = 255u32;
+    }
+    if g > 255u32 {
+        g = 255u32;
+    }
+    if b > 255u32 {
+        b = 255u32;
+    }
+
+    (r, g, b)
 }

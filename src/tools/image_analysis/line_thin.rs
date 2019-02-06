@@ -30,7 +30,7 @@ use std::thread;
 /// the output raster must be read and written to during the same loop.
 /// 
 /// # See Also
-/// `RemoveSpurs`
+/// `RemoveSpurs`, `ThickenRasterLine`
 pub struct LineThinning {
     name: String,
     description: String,

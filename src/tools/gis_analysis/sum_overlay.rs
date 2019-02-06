@@ -13,11 +13,11 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool calculates the sum for each grid cell from a group of raster images.
+/// This tool calculates the sum for each grid cell from a group of raster images (`--inputs`). NoData values in any of the input 
+/// images will result in a NoData pixel in the output image (`--output`). 
 ///
 /// # Warning
-/// Each of the input rasters must have the same spatial extent and number of rows
-/// and columns.
+/// Each of the input rasters must have the same spatial extent and number of rows and columns.
 ///
 /// # See Also
 /// `WeightedSum`

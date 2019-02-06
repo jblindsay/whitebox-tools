@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 21, 2017
+Created: 21/06/2017
 Last Modified: 29/08/2018
 License: MIT
 */
@@ -13,6 +13,12 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to merge multiple LiDAR LAS files into a single output LAS file. Due to their large size, 
+/// LiDAR data sets are often tiled into smaller, non-overlapping tiles. Sometimes it is more convenient to combine
+/// multiple tiles together for data processing and `LidarJoin` can be used for this purpose. 
+/// 
+/// # See Also
+/// `LidarTile`
 pub struct LidarJoin {
     name: String,
     description: String,

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 14, 2017
+Created: 14/09/2017
 Last Modified: 13/10/2018
 License: MIT
 */

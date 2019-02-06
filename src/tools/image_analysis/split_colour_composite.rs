@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 15, 2017
-Last Modified: 13/10/2018
+Created: 15/07/2017
+Last Modified: 06/02/2019
 License: MIT
 */
 
@@ -12,11 +12,18 @@ use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
+use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool splits an RGB colour composite image into seperate multispectral images.
+/// This tool can be used to split a red-green-blue (RGB) colour-composite image into three separate bands of 
+/// multi-spectral imagery. The user must specify the input image (`--input`) and output image (`--output`). 
+/// The tool creates three output images, each based on the `--output` parameter and with the `_r`, `_g`, and `_b` 
+/// suffixes appended.
+/// 
+/// # See Also
+/// `CreateColourComposite`
 pub struct SplitColourComposite {
     name: String,
     description: String,
@@ -47,7 +54,7 @@ impl SplitColourComposite {
         parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file (suffixes of '_r', '_g', and '_b' will be appended)."
+            description: "Output raster file (suffixes of _r, _g, and _b will be appended)."
                 .to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
@@ -183,6 +190,7 @@ impl WhiteboxTool for SplitColourComposite {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+        let output_nodata = -32768f64;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -194,9 +202,9 @@ impl WhiteboxTool for SplitColourComposite {
                 let mut val: u32;
                 let (mut red, mut green, mut blue): (u32, u32, u32);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data_r = vec![nodata; columns as usize];
-                    let mut data_g = vec![nodata; columns as usize];
-                    let mut data_b = vec![nodata; columns as usize];
+                    let mut data_r = vec![output_nodata; columns as usize];
+                    let mut data_g = vec![output_nodata; columns as usize];
+                    let mut data_b = vec![output_nodata; columns as usize];
                     for col in 0..columns {
                         in_val = input.get_value(row, col);
                         if in_val != nodata {
@@ -214,20 +222,28 @@ impl WhiteboxTool for SplitColourComposite {
             });
         }
 
+        let extension: String = match Path::new(&output_file).extension().unwrap().to_str() {
+            Some(n) => format!(".{}", n.to_string()),
+            None => "".to_string(),
+        };
+
         let mut output_r =
-            Raster::initialize_using_file(&output_file.replace(".dep", "_red.dep"), &input);
+            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_r{}", extension)), &input);
         output_r.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_r.configs.data_type = DataType::F32;
+        output_r.configs.nodata = output_nodata;
 
         let mut output_g =
-            Raster::initialize_using_file(&output_file.replace(".dep", "_green.dep"), &input);
+            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_g{}", extension)), &input);
         output_g.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_g.configs.data_type = DataType::F32;
+        output_g.configs.nodata = output_nodata;
 
         let mut output_b =
-            Raster::initialize_using_file(&output_file.replace(".dep", "_blue.dep"), &input);
+            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_b{}", extension)), &input);
         output_b.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_b.configs.data_type = DataType::F32;
+        output_b.configs.nodata = output_nodata;
 
         for row in 0..rows {
             let data = rx.recv().unwrap();

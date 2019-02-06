@@ -37,7 +37,13 @@ use std::path;
 /// It is common to apply a simple thresholding operation on the magnitude data to
 /// determine 'actual' change (i.e. change above some assumed level of error). The type
 /// of change (qualitatively) is then defined according to the corresponding sector code.
-/// Jensen (2005) provides a useful description of this approach to change detection.
+/// Jensen (2015) provides a useful description of this approach to change detection.
+/// 
+/// # Reference
+/// Jensen, J. R. (2015). Introductory Digital Image Processing: A Remote Sensing Perspective.
+/// 
+/// # See Also
+/// `WriteFunctionMemoryInsertion`
 pub struct ChangeVectorAnalysis {
     name: String,
     description: String,

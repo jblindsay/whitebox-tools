@@ -21,8 +21,17 @@ use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters
-/// are not specified, the tool works with all LAS files contained within the working directory.
+/// This tool can be used to create a vector polygon of the convex hull of a LiDAR point cloud (i.e. LAS file). 
+/// If the user specified an input file (`--input`) and output file (`--output`), the tool will calculate the convex
+/// hull, containing all of the data points, and output this feature to a vector polygon file. If the `input` and 
+/// `output` parameters are left unspecified, the tool will calculate the hulls of every LAS file contained within the
+/// working directory and output these features to a single vector polygon file. If this is the desired mode of 
+/// operation, it is important to specify the working directory (`--wd`) containing the group of LAS files; do not 
+/// specify the optional `--input` and `--output` parameters in this case. Each polygon in the output vector will contain 
+/// a `LAS_NM` field, specifying the source LAS file name, and a `NUM_PNTS` field, containing the number of points 
+/// within the source file. This output can therefore be useful to create an index map of a large tiled LiDAR dataset. 
+/// 
+///  `LidarTile`, `LayerFootprint`
 pub struct LidarTileFootprint {
     name: String,
     description: String,

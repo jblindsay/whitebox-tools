@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
-Last Modified: 13/10/2018
+Created: 22/06/2017
+Last Modified: 31/01/2019
 License: MIT
 */
 
@@ -14,6 +14,19 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool calculates the percentage of a raster stack (`--inputs`) that have cell values greater than an input *comparison*
+/// raster. The user must specify the name of the value raster (`--comparison`), the names of the raster files contained 
+/// in the stack, and an output raster file name (`--output`). The tool, working on a cell-by-cell basis, will count the 
+/// number of rasters within the stack with larger grid cell values greater than the corresponding grid cell in the *comparison* 
+/// raster. This count is then expressed as a percentage of the number of rasters contained within the stack and output. 
+/// If any of the rasters within the stack contain the NoData value, the corresponding grid cell in the output raster will 
+/// be assigned NoData.
+/// 
+/// # Warning
+/// Each of the input rasters must have the same spatial extent and number of rows and columns.
+/// 
+/// # See Also
+/// `PercentLessThan`, `PercentEqualTo`
 pub struct PercentGreaterThan {
     name: String,
     description: String,
@@ -194,6 +207,7 @@ impl WhiteboxTool for PercentGreaterThan {
         let nodata = comparison.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &comparison);
+        output.configs.data_type = DataType::F32;
         let mut n_images: Array2D<isize> = Array2D::new(rows, columns, 0, -1)?;
 
         let mut in_nodata: f64;

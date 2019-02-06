@@ -24,7 +24,7 @@ use std::path;
 /// 41(5): 658–668. DOI: 10.1002/esp.3888
 /// 
 /// # See Also
-/// `RasterizeStreams`
+/// `RasterStreamsToVector`
 pub struct RasterizeStreams {
     name: String,
     description: String,

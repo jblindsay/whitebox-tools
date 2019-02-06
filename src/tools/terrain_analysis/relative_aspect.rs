@@ -17,6 +17,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which each grid cell is assigned the terrain aspect relative to a user-specified 
+/// direction (`--azimuth`). Relative terrain aspect is the angular distance (measured in degrees) between the land-surface 
+/// aspect and the assumed regional wind azimuth (Bohner and Antonic, 2007). It is bound between 0-degrees (windward direction) 
+/// and 180-degrees (leeward direction). Relative terrain aspect is the simplest of the measures of topographic exposure to 
+/// wind, taking into account terrain orientation only and neglecting the influences of topographic shadowing by distant 
+/// landforms and the deflection of wind by topography.
+/// 
+/// The user must specify the name of a digital elevation model (DEM) (`--dem`) and an azimuth (i.e. a wind direction). The 
+/// Z Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the same in the DEM. 
+/// When this is the case, the algorithm will multiply each elevation in the DEM by the Z Conversion Factor.
+/// 
+/// # Reference
+/// Böhner, J., and Antonić, O. (2009). Land-surface parameters specific to topo-climatology. Developments in Soil 
+/// Science, 33, 195-226.
+/// 
+/// # See Also
+/// `Aspect`
 pub struct RelativeAspect {
     name: String,
     description: String,

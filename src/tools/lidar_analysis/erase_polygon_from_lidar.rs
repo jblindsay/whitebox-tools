@@ -15,6 +15,17 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to remove, or erase, all of the LiDAR points in a LAS file (`--input`) contained within
+/// one or more vector polygon features. The user must specify the name of the input clip file (--polygons), wich 
+/// must be a vector of a Polygon base shape type. The clip file may contain multiple polygon features and polygon hole 
+/// parts will be respected during clipping, i.e. LiDAR points within polygon holes will be remain in the output LAS 
+/// file.
+/// 
+/// Use the `ClipLidarToPolygon` tool to perform the complementary operation of clipping (isolating) points from a LAS file
+/// that are contained within a set of polygons, while removing points that lie outside the input polygons.
+/// 
+/// # See Also
+/// `ClipLidarToPolygon`, `Clip`, `ClipRasterToPolygon`
 pub struct ErasePolygonFromLidar {
     name: String,
     description: String,

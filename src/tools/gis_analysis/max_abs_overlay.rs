@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
+Created: 22/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -13,6 +13,16 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to find the maximum absolute (non-negative) value in each cell of a grid from a set of 
+/// input images (`--inputs`). NoData values in any of the input images will result in a NoData pixel in the output 
+/// image. 
+/// 
+/// # Warning
+/// Each of the input rasters must have the same spatial extent and number of rows
+/// and columns.
+/// 
+/// # See Also
+/// `MaxOverlay`, `MinAbsoluteOverlay`, `MinOverlay`
 pub struct MaxAbsoluteOverlay {
     name: String,
     description: String,

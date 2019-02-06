@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 13, 2017
+Created: 13/07/2017
 Last Modified: 13/10/2018
 License: MIT
 
@@ -83,7 +83,7 @@ impl PercentageContrastStretch {
             description: "Optional amount to clip the distribution tails by, in percent."
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("0.0".to_owned()),
+            default_value: Some("1.0".to_owned()),
             optional: true,
         });
 

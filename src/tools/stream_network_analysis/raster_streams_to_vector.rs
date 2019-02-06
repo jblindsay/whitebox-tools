@@ -25,6 +25,9 @@ use std::path;
 /// link in the stream network. The flow pointer file must be calculated from a DEM with
 /// all topographic depressions and flat areas removed and must be calculated using the
 /// D8 flow pointer algorithm. The output vector will contain PolyLine features.
+/// 
+/// # See Also
+/// `RasterizeStreams`, `RasterToVectorLines`
 pub struct RasterStreamsToVector {
     name: String,
     description: String,

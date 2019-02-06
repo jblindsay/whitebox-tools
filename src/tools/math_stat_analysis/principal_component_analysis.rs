@@ -2,12 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/03/2018
-Last Modified: 13/10/2018
+Last Modified: 05/02/2019
 License: MIT
-
-Note: The current implementation reads every raster into memory at one time. This is
-because of the calculation of the co-variances. As such, if the entire image stack can't
-fit in memory, the tool will not work.
 */
 
 use crate::na::DMatrix;
@@ -24,6 +20,54 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// Principal component analysis (PCA) is a common data reduction technique that is used to reduce the dimensionality of 
+/// multi-dimensional space. In the field of remote sensing, PCA is often used to reduce the number of bands of 
+/// multi-spectral, or hyper-spectral, imagery. Image correlation analysis often reveals a substantial level of correlation 
+/// among bands of multi-spectral imagery. This correlation represents data redundancy, i.e. fewer images than the number 
+/// of bands are required to represent the same information, where the information is related to variation within the imagery. 
+/// PCA transforms the original data set of *n* bands into *n* 'component' images, where each component image is uncorrelated 
+/// with all other components. The technique works by transforming the axes of the multi-spectral space such that it coincides 
+/// with the directions of greatest correlation. Each of these new axes are orthogonal to one another, i.e. they are at right 
+/// angles. PCA is therefore a type of coordinate system transformation. The PCA component images are arranged such that the 
+/// greatest amount of variance (or information) within the original data set, is contained within the first component and the 
+/// amount of variance decreases with each component. It is often the case that the majority of the information contained in a 
+/// multi-spectral data set can be represented by the first three or four PCA components. The higher-order components are often 
+/// associated with noise in the original data set.
+/// 
+/// The user must specify the names of the multiple input images (`--inputs`). Additionally, the user must specify whether to 
+/// perform a standardized PCA (`--standardized`) and the number of output components (`--num_comp`) to generate (all components 
+/// will be output unless otherwise specified). A standardized PCA is performed using the correlation matrix rather than the 
+/// variance-covariance matrix. This is appropriate when the variances in the input images differ substantially, such as would be 
+/// the case if they contained values that were recorded in different units (e.g. feet and meters) or on different scales (e.g. 
+/// 8-bit vs. 16 bit).
+/// 
+/// Several outputs will be generated when the tool has completed. The PCA report will be embeded within an output (`--output`)
+/// HTML file, which should be automatically displayed after the tool has completed. This report contains useful data summarizing
+/// the results of the PCA, including the explained variances of each factor, the Eigenvalues and Eigenvectors associated with
+/// factors, the factor loadings, and a scree plot. The first table that is in the PCA report lists the amount of explained 
+/// variance (in non-cumulative and cumulative form), the Eigenvalue, and the Eigenvector for each component. Each of the PCA 
+/// components refer to the newly created, transformed images that are created by running the tool. The amount of explained 
+/// variance associated with each component can be thought of as a measure of how much information content within the original 
+/// multi-spectral data set that a component has. The higher this value is, the more important the component is. This same 
+/// information is presented in graphical form in the *scree plot*, found at the bottom of the PCA report. The Eigenvalue is 
+/// another measure of the information content of a component and the eigenvector describes the mathematical transformation 
+/// (rotation coordinates) that correspond to a particular component image.
+/// 
+/// Factor loadings are also output in a table within the PCA text report (second table). These loading values describe the 
+/// correlation (i.e. *r* values) between each of the PCA components (columns) and the original images (rows). These values 
+/// show you how the information contained in an image is spread among the components. An analysis of factor loadings can be 
+/// reveal useful information about the data set. For example, it can help to identify groups of similar images.
+/// 
+/// PCA is used to reduce the number of band images necessary for classification (i.e. as a data reduction technique), for 
+/// noise reduction, and for change detection applications. When used as a change detection technique, the major PCA components 
+/// tend to be associated with stable elements of the data set while variance due to land-cover change tend to manifest in the 
+/// high-order, 'change components'. When used as a noise reduction technique, an inverse PCA is generally performed, leaving 
+/// out one or more of the high-order PCA components, which account for noise variance.
+/// 
+/// Note: the current implementation reads every raster into memory at one time. This is because of the calculation of the 
+/// co-variances. As such, if the entire image stack cannot fit in memory, the tool will likely experience an out-ofs-memory error. 
+/// This tool should be run using the `--wd` flag to spectify the working directory into which the component images will be
+/// written.
 pub struct PrincipalComponentAnalysis {
     name: String,
     description: String,
@@ -53,7 +97,7 @@ impl PrincipalComponentAnalysis {
 
         parameters.push(ToolParameter {
             name: "Output HTML Report File".to_owned(),
-            flags: vec!["--out_html".to_owned()],
+            flags: vec!["--out_html".to_owned(), "--output".to_owned()],
             description: "Output HTML report file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
@@ -89,7 +133,7 @@ impl PrincipalComponentAnalysis {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --out_html=report.html --num_comp=3 --standardized", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' --output=report.html --num_comp=3 --standardized", short_exe, name).replace("*", &sep);
 
         PrincipalComponentAnalysis {
             name: name,
@@ -138,6 +182,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         let mut input_files_str = String::new();
         let mut output_html_file = String::new();
         let mut num_comp = 0usize;
+        let mut num_comp_set = false;
         let mut standardized = false;
 
         if args.len() == 0 {
@@ -162,7 +207,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-out_html" {
+            } else if flag_val == "-out_html" || flag_val == "-output" {
                 output_html_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -174,6 +219,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap() as usize
                 };
+                num_comp_set = true;
             } else if flag_val == "-standardized" {
                 standardized = true;
             }
@@ -219,9 +265,10 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         let mut average = vec![0f64; num_files];
         let mut num_cells = vec![0f64; num_files];
         let mut input_raster: Vec<Raster> = Vec::with_capacity(num_files);
-        let mut wd = "".to_string();
         let mut file_names = vec![];
-        println!("Calculating image means...");
+        if verbose {
+            println!("Calculating image means...");
+        }
         for i in 0..num_files {
             if !input_files[i].trim().is_empty() {
                 // quality control on the image file name.
@@ -244,8 +291,6 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 if rows == -1 || columns == -1 {
                     rows = input_raster[i].configs.rows as isize;
                     columns = input_raster[i].configs.columns as isize;
-                    wd = input_file
-                        .replace(&format!("{}.dep", input_raster[i].get_short_filename()), "");
                 } else {
                     if input_raster[i].configs.rows as isize != rows
                         || input_raster[i].configs.columns as isize != columns
@@ -420,9 +465,9 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
         writer.write_all("</table></p>".as_bytes())?;
 
-        /////////////////////////////////////////
+        ////////////////////////////
         // Factor Loadings Report //
-        /////////////////////////////////////////
+        ////////////////////////////
         writer.write_all("<p><table>".as_bytes())?;
         writer.write_all("<caption>Factor Loadings</caption>".as_bytes())?;
         writer.write_all("<tr><th>Image</th>".as_bytes())?;
@@ -432,7 +477,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         writer.write_all("</tr>".as_bytes())?;
         if !standardized {
             for j in 0..num_files {
-                let mut s = format!("<td class=\"numberCell\">{}<td>", (j + 1));
+                let mut s = format!("<td class=\"numberCell\">{}</td>", (j + 1));
                 for k in 0..num_files {
                     pc = component_order[k];
                     let loading = (eigenvectors[pc * num_files + j] * eigenvalues[pc].sqrt())
@@ -507,10 +552,15 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
 
         // Output the component images
+        if num_comp == 0 && !num_comp_set {
+            // if it's not set, then output all the components.
+            num_comp = num_files;
+        }
         for a in 0..num_comp {
             pc = component_order[a];
-            let out_file = format!("{}PCA_component{}.dep", wd, (a + 1));
+            let out_file = format!("{}PCA_component{}.tif", working_directory, (a + 1));
             let mut output = Raster::initialize_using_file(&out_file, &input_raster[0]);
+            output.configs.data_type = DataType::F32;
             for row in 0..rows {
                 for col in 0..columns {
                     z1 = input_raster[0].get_value(row, col);
