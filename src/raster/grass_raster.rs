@@ -25,8 +25,14 @@ pub fn read_grass_raster(
         let vec = line_split.collect::<Vec<&str>>();
         if vec[0].to_lowercase().contains("rows") {
             configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
+            if configs.columns > 0 {
+                data.reserve(configs.rows * configs.columns);
+            }
         } else if vec[0].to_lowercase().contains("cols") {
             configs.columns = vec[1].trim().parse::<f32>().unwrap() as usize;
+            if configs.rows > 0 {
+                data.reserve(configs.rows * configs.columns);
+            }
         } else if vec[0].to_lowercase().contains("north") {
             configs.north = vec[1].trim().to_string().parse::<f64>().unwrap();
         } else if vec[0].to_lowercase().contains("south") {

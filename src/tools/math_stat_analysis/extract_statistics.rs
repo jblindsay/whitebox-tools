@@ -32,6 +32,9 @@ use std::thread;
 /// for each of a group of watersheds (feature definitions). Although the data raster can contain any
 /// type of data, the feature definition raster must be categorical, i.e. it must define area entities
 /// using integer values.
+/// 
+/// The `--stat` parameter can take the values, 'average', 'minimum', 'maximum', 'range', 
+/// 'standard deviation', or 'total'.
 ///
 /// If an output image name is specified, the tool will assign the descriptive statistic value to
 /// each of the spatial entities defined in the feature definition raster. If text output is selected,
@@ -89,7 +92,7 @@ impl ExtractRasterStatistics {
         parameters.push(ToolParameter {
             name: "Statistic Type".to_owned(),
             flags: vec!["--stat".to_owned()],
-            description: "Statistic to extract.".to_owned(),
+            description: "Statistic to extract, including 'average', 'minimum', 'maximum', 'range', 'standard deviation', and 'total'.".to_owned(),
             parameter_type: ParameterType::OptionList(vec![
                 "average".to_owned(),
                 "minimum".to_owned(),
@@ -200,36 +203,36 @@ impl WhiteboxTool for ExtractRasterStatistics {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-features" {
-                if keyval {
-                    features_file = vec[1].to_string();
+                features_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    features_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-out_table" {
                 // out_table = true;
-                if keyval {
-                    output_html_file = vec[1].to_string();
+                output_html_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_html_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-stat" {
-                if keyval {
-                    stat_type = vec[1].to_string().to_lowercase();
+                stat_type = if keyval {
+                    vec[1].to_string().to_lowercase()
                 } else {
-                    stat_type = args[i + 1].to_string().to_lowercase();
-                }
+                    args[i + 1].to_string().to_lowercase()
+                };
             }
         }
 
@@ -415,6 +418,7 @@ impl WhiteboxTool for ExtractRasterStatistics {
         if !output_file.is_empty() {
             let mut output = Raster::initialize_using_file(&output_file, &input);
             output.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
             let out_stat = if stat_type.contains("av") {
                 features_average.clone()
             } else if stat_type.contains("min") {

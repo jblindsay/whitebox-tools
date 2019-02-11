@@ -122,6 +122,8 @@ pub fn read_idrisi(
     configs.resolution_x = (configs.east - configs.west) / configs.columns as f64;
     configs.resolution_y = (configs.north - configs.south) / configs.rows as f64;
 
+    data.reserve(configs.rows * configs.columns);
+
     // read the data file
     let data_file = file_name.replace(".rdc", ".rst");
     let mut f = File::open(data_file.clone())?;

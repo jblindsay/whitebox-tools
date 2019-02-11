@@ -166,17 +166,17 @@ impl WhiteboxTool for Clump {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-diag" {
                 diag = true;
             } else if flag_val == "-zero_back" {
@@ -215,8 +215,12 @@ impl WhiteboxTool for Clump {
         let columns = input.configs.columns as isize;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        let out_nodata = -999f64;
+        output.reinitialize_values(out_nodata);
+        output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.configs.data_type = DataType::I32;
+        // output.configs.data_type = DataType::F32;
 
         let mut dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let mut dy = [-1, 0, 1, 1, 1, 0, -1, -1];
@@ -241,7 +245,7 @@ impl WhiteboxTool for Clump {
             for col in 0..columns {
                 zin = input[(row, col)];
                 zout = output[(row, col)];
-                if zin != nodata && zin != back_val && zout == nodata {
+                if zin != nodata && zin != back_val && zout == out_nodata {
                     fid += 1f64;
                     output[(row, col)] = fid;
                     num_solved_cells += 1;
@@ -267,7 +271,7 @@ impl WhiteboxTool for Clump {
                         for i in 0..num_neighbours {
                             zn = input[(r + dy[i], c + dx[i])];
                             zout = output[(r + dy[i], c + dx[i])];
-                            if zn == zin && zout == nodata {
+                            if zn == zin && zout == out_nodata {
                                 output[(r + dy[i], c + dx[i])] = fid;
                                 num_solved_cells += 1;
                                 stack.push((r + dy[i], c + dx[i]));

@@ -18,6 +18,11 @@ use std::path;
 /// vector's attribute table (AREA field). The area calculation will account
 /// for any holes contained within polygons. The vector should be in a
 /// projected coordinate system.
+/// 
+/// To calculate the area of raster polygons, use the `RasterArea` tool instead.
+/// 
+/// # See Also
+/// `RasterArea`
 pub struct PolygonArea {
     name: String,
     description: String,

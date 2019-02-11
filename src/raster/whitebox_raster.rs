@@ -133,13 +133,24 @@ pub fn read_whitebox(
         1
     };
 
+    data.reserve(configs.rows * configs.columns);
+
     let num_cells = configs.rows * configs.columns;
-    let buf_size = 1_000_000usize;
-    let mut j = 0;
-    while j < num_cells {
-        let mut buffer = vec![0; buf_size * data_size];
+    let buf_size = if num_cells > 10_000_000usize {
+        10_000_000usize
+    } else {
+        num_cells
+    };
+    while data.len() < num_cells {
+        let mut buffer = vec![0u8; buf_size * data_size];
 
         f.read(&mut buffer)?;
+
+        let num_values = if data.len() + buf_size <= num_cells {
+            buf_size
+        } else {
+            num_cells - data.len() + 1
+        };
 
         // read the file's bytes into a buffer
         let mut bor = ByteOrderReader::new(buffer, configs.endian);
@@ -147,87 +158,57 @@ pub fn read_whitebox(
         match configs.data_type {
             DataType::F64 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_f64() as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
+                }
+                if data.len() == num_cells {
+                    break;
                 }
             }
             DataType::F32 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_f32() as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
+                }
+                if data.len() == num_cells {
+                    break;
                 }
             }
             DataType::I32 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_i32() as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
+                }
+                if data.len() == num_cells {
+                    break;
                 }
             }
             DataType::I16 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_i16() as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
+                }
+                if data.len() == num_cells {
+                    break;
                 }
             }
             DataType::U8 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_u8() as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
+                }
+                if data.len() == num_cells {
+                    break;
                 }
             }
             DataType::RGBA32 => {
                 bor.pos = 0;
-                for _ in 0..buf_size {
+                for _ in 0..num_values {
                     data.push(bor.read_f32() as i32 as u32 as f64);
-                    j += 1;
-                    if j == num_cells {
-                        break;
-                    }
                 }
-                // let mut bor = ByteOrderReader::new(buffer, configs.endian);
-                // bor.pos = 0;
-                // let mut val: u32;
-                // let mut r: u32;
-                // let mut g: u32;
-                // let mut b: u32;
-                // let mut a: u32;
-                // for _ in 0..buf_size {
-                //     val = bor.read_f32() as u32;
-                //     r = (value as u32 & 0xFF) as f64 / 255f64;
-                //     g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
-                //     b = ((value as u32 >> 16) & 0xFF) as f64 / 255f64;
-
-                //     val = in_val as u32;
-                //     red = val & 0xFF;
-                //     green = (val >> 8) & 0xFF;
-                //     blue = (val >> 16) & 0xFF;
-
-                //     data.push(bor.read_f32() as f64);
-                //     j += 1;
-                //     if j == num_cells {
-                //         break;
-                //     }
-                // }
+                if data.len() == num_cells {
+                    break;
+                }
             }
             _ => {
                 return Err(Error::new(
@@ -311,7 +292,8 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
         }
         DataType::I32 => {
-            writer.write_all("Data Type:\tI32\n".as_bytes())?;
+            // writer.write_all("Data Type:\tI32\n".as_bytes())?;
+            writer.write_all("Data Type:\tFLOAT\n".as_bytes())?;
         }
         DataType::I16 => {
             writer.write_all("Data Type:\tINTEGER\n".as_bytes())?;
@@ -399,7 +381,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 
-    let mut u16_bytes: [u8; 2];
+    // let mut u16_bytes: [u8; 2];
     let mut u32_bytes: [u8; 4];
     let mut u64_bytes: [u8; 8];
 
@@ -424,13 +406,19 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I32 => {
+            // if verbose {
+            //     println!("Warning: the I32 data type may not be supported on all versions of Whitebox GAT.");
+            // }
+            // for i in 0..num_cells {
+            //     writer.write_i32::<LittleEndian>(r.data[i] as i32)?;
+            // }
             for i in 0..num_cells {
-                writer.write_f64::<LittleEndian>(r.data[i])?;
+                writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
             }
         }
         DataType::U16 => {
             for i in 0..num_cells {
-                writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
+                writer.write_u16::<LittleEndian>(r.data[i] as u16)?;
             }
         }
         DataType::RGBA32 => {
@@ -452,8 +440,9 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::I16 => {
             for i in 0..num_cells {
-                u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
-                writer.write(&u16_bytes)?;
+                // u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
+                // writer.write(&u16_bytes)?;
+                writer.write_i16::<LittleEndian>(r.data[i] as i16)?;
             }
         }
         DataType::U8 | DataType::I8 => {

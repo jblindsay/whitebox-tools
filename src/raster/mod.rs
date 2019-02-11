@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 2, 2017
-Last Modified: 07/12/2018
+Created: 02/06/2017
+Last Modified: 09/02/2019
 License: MIT
 */
 
@@ -250,16 +250,25 @@ impl Raster {
         {
             output.configs.nodata = 1.71041e38;
         }
+        output.data.reserve(output.configs.rows * output.configs.columns);
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
         output
     }
 
-    /// Returns the file name of the `Raster`, without the directory.
+    /// Returns the file name of the `Raster`, without the directory and file extension.
     pub fn get_short_filename(&self) -> String {
         let path = Path::new(&self.file_name);
         let file_name = path.file_stem().unwrap();
         let f = file_name.to_str().unwrap();
         f.to_string()
+    }
+
+    /// Returns the file extension.
+    pub fn get_file_extension(&self) -> String {
+        let path = Path::new(&self.file_name);
+        let extension = path.extension().unwrap();
+        let e = extension.to_str().unwrap();
+        e.to_string()
     }
 
     /// Returns the value contained within a grid cell specified

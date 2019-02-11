@@ -265,8 +265,6 @@ impl WhiteboxTool for RasterHistogram {
 
         let _ = writer.flush();
 
-        // println!("freq. data: {:?}", freq_data);
-
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
                 let output = Command::new("open")

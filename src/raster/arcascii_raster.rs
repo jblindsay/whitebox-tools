@@ -30,8 +30,14 @@ pub fn read_arcascii(
         }
         if vec[0].to_lowercase().contains("nrows") {
             configs.rows = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
+            if configs.columns > 0 {
+                data.reserve(configs.rows * configs.columns);
+            }
         } else if vec[0].to_lowercase().contains("ncols") {
             configs.columns = vec[vec.len() - 1].trim().parse::<f32>().unwrap() as usize;
+            if configs.rows > 0 {
+                data.reserve(configs.rows * configs.columns);
+            }
         } else if vec[0].to_lowercase().contains("xllcorner") {
             xllcenter = vec[vec.len() - 1]
                 .trim()

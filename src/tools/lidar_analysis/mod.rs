@@ -1,4 +1,5 @@
 // private sub-module defined in other files
+// mod ascii_to_las;
 mod block_maximum;
 mod block_minimum;
 mod classify_overlap_points;
@@ -39,6 +40,7 @@ mod remove_duplicates;
 mod select_tiles_by_polygon;
 
 // exports identifiers from private sub-modules in the current module namespace
+// pub use self::ascii_to_las::AsciiToLas;
 pub use self::block_maximum::LidarBlockMaximum;
 pub use self::block_minimum::LidarBlockMinimum;
 pub use self::classify_overlap_points::ClassifyOverlapPoints;

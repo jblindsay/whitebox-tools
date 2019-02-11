@@ -48,6 +48,7 @@ pub fn read_surfer_ascii_raster(
             }
             configs.columns = vec[0].trim().parse::<f32>().unwrap() as usize;
             configs.rows = vec[1].trim().parse::<f32>().unwrap() as usize;
+            data.reserve(configs.rows * configs.columns);
             row = configs.rows - 1; // files are stored row major, bottom-to-top
             num_cells = configs.rows * configs.columns;
             data.clear();

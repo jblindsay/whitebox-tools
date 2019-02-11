@@ -114,6 +114,7 @@ impl ToolManager {
         tool_names.push("PolygonShortAxis".to_string());
         tool_names.push("Polygonize".to_string());
         tool_names.push("RadiusOfGyration".to_string());
+        tool_names.push("RasterArea".to_string());
         tool_names.push("RasterCellAssignment".to_string());
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
@@ -248,6 +249,7 @@ impl ToolManager {
         tool_names.push("WriteFunctionMemoryInsertion".to_string());
 
         // lidar_analysis
+        // tool_names.push("AsciiToLas".to_string());
         tool_names.push("LidarBlockMaximum".to_string());
         tool_names.push("LidarBlockMinimum".to_string());
         tool_names.push("ClassifyOverlapPoints".to_string());
@@ -564,6 +566,7 @@ impl ToolManager {
             "polygonshortaxis" => Some(Box::new(gis_analysis::PolygonShortAxis::new())),
             "polygonize" => Some(Box::new(gis_analysis::Polygonize::new())),
             "radiusofgyration" => Some(Box::new(gis_analysis::RadiusOfGyration::new())),
+            "rasterarea" => Some(Box::new(gis_analysis::RasterArea::new())),
             "rastercellassignment" => Some(Box::new(gis_analysis::RasterCellAssignment::new())),
             "reclass" => Some(Box::new(gis_analysis::Reclass::new())),
             "reclassequalinterval" => Some(Box::new(gis_analysis::ReclassEqualInterval::new())),
@@ -754,6 +757,7 @@ impl ToolManager {
             }
 
             // lidar_analysis
+            // "asciitolas" => Some(Box::new(lidar_analysis::AsciiToLas::new())),
             "lidarblockmaximum" => Some(Box::new(lidar_analysis::LidarBlockMaximum::new())),
             "lidarblockminimum" => Some(Box::new(lidar_analysis::LidarBlockMinimum::new())),
             "classifyoverlappoints" => Some(Box::new(lidar_analysis::ClassifyOverlapPoints::new())),

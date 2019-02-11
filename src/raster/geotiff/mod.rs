@@ -296,6 +296,7 @@ pub fn read_geotiff<'a>(
 
     //data = vec![0.0f64; configs.rows * configs.columns];
     data.clear();
+    data.reserve(configs.rows * configs.columns);
     for _ in 0..configs.rows * configs.columns {
         data.push(0.0f64);
     }

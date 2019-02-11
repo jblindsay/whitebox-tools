@@ -195,6 +195,8 @@ impl WhiteboxTool for SurfaceAreaRatio {
         output.configs.data_type = DataType::F32;
         let rows = input.configs.rows as isize;
 
+        let is_geographic = input.is_in_geographic_coordinates();
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -252,7 +254,7 @@ impl WhiteboxTool for SurfaceAreaRatio {
                 // let mut num_valid_facets: f64;
                 let mut mid_lat: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    if input.is_in_geographic_coordinates() {
+                    if is_geographic {
                         mid_lat = input.get_y_from_row(row).to_radians();
                         resx = resx * 111_111.0 * mid_lat.cos();
                         resy = resy * 111_111.0;

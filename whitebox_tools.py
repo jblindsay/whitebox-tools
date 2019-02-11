@@ -368,6 +368,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1197,6 +1198,26 @@ class WhiteboxTools(object):
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('polygon_short_axis', args, callback) # returns 1 if error
+
+    def raster_area(self, i, output=None, out_text=False, units="grid cells", zero_back=False, callback=None):
+        """Calculates the area of polygons or classes within a raster image.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        out_text -- Would you like to output polygon areas to text?. 
+        units -- ; options are 'grid cells', 'map units'. 
+        zero_back -- Flag indicating whether zero values should be treated as a background. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        if out_text: args.append("--out_text")
+        args.append("--units={}".format(units))
+        if zero_back: args.append("--zero_back")
+        return self.run_tool('raster_area', args, callback) # returns 1 if error
 
     def raster_cell_assignment(self, i, output, assign="column", callback=None):
         """Assign row or column number to cells.
@@ -4034,7 +4055,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         i -- Input colour composite image file. 
-        output -- Output raster file (suffixes of '_r', '_g', and '_b' will be appended). 
+        output -- Output raster file (suffixes of _r, _g, and _b will be appended). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -6030,7 +6051,7 @@ class WhiteboxTools(object):
         i -- Input data raster file. 
         features -- Input feature definition raster file. 
         output -- Output raster file. 
-        stat -- Statistic to extract. 
+        stat -- Statistic to extract, including 'average', 'minimum', 'maximum', 'range', 'standard deviation', and 'total'. 
         out_table -- Output HTML Table file. 
         callback -- Custom function for handling tool text outputs.
         """

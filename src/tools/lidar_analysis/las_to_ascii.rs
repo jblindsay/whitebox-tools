@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 16, 2017
-Last Modified: 12/10/2018
+Created: 16/07/2017
+Last Modified: 10/02/2019
 License: MIT
 */
 
@@ -16,6 +16,20 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to convert one or more LAS file, containing LiDAR data, into ASCII files. The user must 
+/// specify the name(s) of the input LAS file(s) (`--inputs`). Each input file will have a coorespondingly named
+/// output file with a `.csv` file extension. CSV files are comma separated value files and contain tabular data
+/// with each column cooresponding to a field in the table and each row a point value. Fields are separated by 
+/// commas in the ASCII formated file. The output point data, each on a seperate line, will take the format:
+/// 
+/// ```
+/// x,y,z,intensity,class,return,num_returns,scan_angle"
+/// ```
+/// 
+/// Use the `AsciiToLas` tool to convert a text file containing LiDAR point data into a LAS file.
+/// 
+/// # See Also
+/// `AsciiToLas`
 pub struct LasToAscii {
     name: String,
     description: String,
@@ -171,34 +185,26 @@ impl WhiteboxTool for LasToAscii {
                     }
                 };
 
-                let output_file = if input_file.to_lowercase().ends_with(".las") {
-                    input_file.replace(".las", ".txt")
-                } else if input_file.to_lowercase().ends_with(".zip") {
-                    input_file.replace(".zip", ".txt")
-                } else {
-                    return Err(Error::new(
-                        ErrorKind::NotFound,
-                        format!("No such file or directory ({})", input_file),
-                    ));
-                };
-
+                let file_extension = get_file_extension(&input_file);
+                let output_file = input_file.replace(&format!(".{}", file_extension), ".csv");
                 let f = File::create(output_file)?;
                 let mut writer = BufWriter::new(f);
 
                 let n_points = input.header.number_of_points as usize;
 
-                writer.write_all("X Y Z Intensity Class Return Num_returns\n".as_bytes())?;
+                writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle\n".as_bytes())?;
                 for k in 0..n_points {
                     let pd = input[k];
                     let s = format!(
-                        "{} {} {} {} {} {} {}\n",
+                        "{},{},{},{},{},{},{},{}\n",
                         pd.x,
                         pd.y,
                         pd.z,
                         pd.intensity,
                         pd.classification(),
                         pd.return_number(),
-                        pd.number_of_returns()
+                        pd.number_of_returns(),
+                        pd.scan_angle
                     );
                     writer.write_all(s.as_bytes())?;
 
@@ -226,4 +232,12 @@ impl WhiteboxTool for LasToAscii {
 
         Ok(())
     }
+}
+
+/// Returns the file extension.
+pub fn get_file_extension(file_name: &str) -> String {
+    let file_path = std::path::Path::new(file_name);
+    let extension = file_path.extension().unwrap();
+    let e = extension.to_str().unwrap();
+    e.to_string()
 }

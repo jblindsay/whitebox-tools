@@ -120,6 +120,8 @@ pub fn read_surfer7(
     } as usize;
     offset += 4;
 
+    data.reserve(configs.rows * configs.columns);
+
     configs.west = unsafe {
         mem::transmute::<[u8; 8], f64>([
             buffer[offset],

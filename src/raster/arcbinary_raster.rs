@@ -101,6 +101,8 @@ pub fn read_arcbinary(
             yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
+    data.reserve(configs.rows * configs.columns);
+
     // read the data file
     let data_file = file_name.replace(".hdr", ".flt");
     let mut f = File::open(data_file.clone())?;

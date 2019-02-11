@@ -44,7 +44,7 @@ pub struct LasFile {
     colour_data: Vec<ColourData>,
     waveform_data: Vec<WaveformPacket>,
     pub geokeys: GeoKeys,
-    wkt: String,
+    pub wkt: String,
     // starting_point: usize,
     header_is_set: bool,
     pub use_point_intensity: bool,
@@ -100,6 +100,7 @@ impl LasFile {
         output.file_mode = "w".to_string();
         output.use_point_intensity = true;
         output.use_point_userdata = true;
+        output.wkt = input.wkt.clone();
 
         output.add_header(input.header.clone());
 
@@ -134,9 +135,9 @@ impl LasFile {
         self.header.generating_software = "WhiteboxTools                   ".to_string();
         self.header.number_of_points_by_return_old = [0, 0, 0, 0, 0];
 
-        self.header.x_scale_factor = 0.0001;
-        self.header.y_scale_factor = 0.0001;
-        self.header.z_scale_factor = 0.0001;
+        self.header.x_scale_factor = 0.001;
+        self.header.y_scale_factor = 0.001;
+        self.header.z_scale_factor = 0.001;
 
         self.header_is_set = true;
     }
@@ -1067,7 +1068,7 @@ impl LasFile {
         let mut mantissa: usize = (format!("{}", (self.header.max_x - self.header.min_x).floor()))
             .to_string()
             .len();
-        let mut dec: f64 = 1.0 / 10_f64.powi(8 - mantissa as i32);
+        let mut dec: f64 = 1.0 / 10_f64.powi(7 - mantissa as i32);
         if self.header.x_scale_factor == 0_f64 {
             self.header.x_scale_factor = dec;
         }
@@ -1184,7 +1185,8 @@ impl LasFile {
         for i in 0..(self.header.number_of_vlrs as usize) {
             total_vlr_size += self.vlr_data[i].record_length_after_header as u32;
         }
-        self.header.offset_to_points = 235 + total_vlr_size; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
+        // let alignment_bytes = self.header.header_size as u32 + total_vlr_size % 4u32;
+        self.header.offset_to_points = self.header.header_size as u32 + total_vlr_size; // + alignment_bytes; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
         u32_bytes = unsafe { mem::transmute(self.header.offset_to_points) };
         writer.write_all(&u32_bytes)?;
 
@@ -1340,6 +1342,18 @@ impl LasFile {
             writer.write_all(&vlr.binary_data)?;
         }
 
+        // ////////////////////
+        // // Alignment bytes /
+        // ////////////////////
+        // if alignment_bytes > 0 {
+        //     println!("alignment bytes: {}", alignment_bytes);
+        //     for a in 0..alignment_bytes {
+        //         writer.write_all(&[0u8]);
+        //     }
+        // }
+
+        // println!("header: {:?}", self.header);
+
         ////////////////////////////////
         // Write the point to the file /
         ////////////////////////////////
@@ -1351,6 +1365,18 @@ impl LasFile {
                         / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
                     writer.write_all(&u32_bytes)?;
+
+                    // if i == 0 {
+                    //     println!("first point: {:?}", self.point_data[i]);
+                    // }
+
+                    // if i == 1 {
+                    //     println!("second point: {:?}", self.point_data[i]);
+                    // }
+
+                    // if i == 349527 {
+                    //     println!("last point: {:?}", self.point_data[i]);
+                    // }
 
                     val = ((self.point_data[i].y - self.header.y_offset)
                         / self.header.y_scale_factor) as i32;
@@ -1369,13 +1395,13 @@ impl LasFile {
 
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
                     writer.write_all(&u8_bytes)?;
-
+                    
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
                     writer.write_all(&u8_bytes)?;
-
+                    
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].scan_angle as i8) };
                     writer.write_all(&u8_bytes)?;
-
+                    
                     if self.use_point_userdata {
                         u8_bytes = unsafe { mem::transmute(self.point_data[i].user_data) };
                         writer.write_all(&u8_bytes)?;

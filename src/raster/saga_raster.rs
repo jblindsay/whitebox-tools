@@ -156,6 +156,8 @@ pub fn read_saga(
         row_start = configs.rows - 1;
     }
 
+    data.reserve(configs.rows * configs.columns);
+    
     // read the data file
     let data_file = file_name.replace(".sgrd", ".sdat");
     let mut f = File::open(data_file.clone())?;
