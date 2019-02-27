@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ''' this module is used to build whitebox-tools.
 '''
 import os

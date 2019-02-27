@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ''' This script is intended to experiment with the use of a whitebox_tools shared library (DLL).
 It is experimental and is not intended for widespread use.
 '''

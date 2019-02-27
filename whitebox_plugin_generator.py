@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This script is just used to automatically generate the convenience methods for each
 of the plugin tools in the whitebox_tools.py script. It should be run each time new
