@@ -549,7 +549,7 @@ impl LasFile {
                 || self.header.version_minor > 5
             {
                 // There's something very wrong. Throw an error.
-                return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name)));
+                return Err(Error::new(ErrorKind::Other, format!("Error reading: {}\nIncorrect file version {}.{}\nEither the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name, self.header.version_major, self.header.version_minor)));
             }
             self.header.project_id_used = false;
         }
@@ -559,7 +559,7 @@ impl LasFile {
         bor.pos = 0;
         self.header.file_signature = bor.read_utf8(4);
         if self.header.file_signature != "LASF" {
-            return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name)));
+            return Err(Error::new(ErrorKind::Other, format!("Error reading: {}\nIncorrect LAS file signature: {}.\nEither the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name, self.header.file_signature)));
         }
         self.header.file_source_id = bor.read_u16();
         let ge_val = bor.read_u16();
@@ -1393,11 +1393,22 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
-                    writer.write_all(&u8_bytes)?;
-                    
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                    if !self.point_data[i].is_64bit {
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    } else {
+                        // there is a 64-bit point in the data that we are trying to save as 32-bit.
+                        let (point_bit_field, class_bit_field) = self.point_data[i].get_32bit_from_64bit();
+
+                        u8_bytes = unsafe { mem::transmute(point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+
+                        u8_bytes = unsafe { mem::transmute(class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    }
                     
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].scan_angle as i8) };
                     writer.write_all(&u8_bytes)?;
@@ -1413,31 +1424,42 @@ impl LasFile {
             }
             1 => {
                 for i in 0..self.header.number_of_points as usize {
+                    // x
                     val = ((self.point_data[i].x - self.header.x_offset)
                         / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
                     writer.write_all(&u32_bytes)?;
-
+                    // y
                     val = ((self.point_data[i].y - self.header.y_offset)
                         / self.header.y_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
                     writer.write_all(&u32_bytes)?;
-
+                    // z
                     val = ((self.point_data[i].z - self.header.z_offset)
                         / self.header.z_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
                     writer.write_all(&u32_bytes)?;
-
+                    // intensity
                     if self.use_point_intensity {
                         u16_bytes = unsafe { mem::transmute(self.point_data[i].intensity) };
                         writer.write_all(&u16_bytes)?;
                     }
+                    if !self.point_data[i].is_64bit {
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    } else {
+                        // there is a 64-bit point in the data that we are trying to save as 32-bit.
+                        let (point_bit_field, class_bit_field) = self.point_data[i].get_32bit_from_64bit();
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                        u8_bytes = unsafe { mem::transmute(point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+
+                        u8_bytes = unsafe { mem::transmute(class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    }
 
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].scan_angle as i8) };
                     writer.write_all(&u8_bytes)?;
@@ -1476,11 +1498,22 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                    if !self.point_data[i].is_64bit {
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    } else {
+                        // there is a 64-bit point in the data that we are trying to save as 32-bit.
+                        let (point_bit_field, class_bit_field) = self.point_data[i].get_32bit_from_64bit();
+
+                        u8_bytes = unsafe { mem::transmute(point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+
+                        u8_bytes = unsafe { mem::transmute(class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    }
 
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].scan_angle as i8) };
                     writer.write_all(&u8_bytes)?;
@@ -1525,11 +1558,22 @@ impl LasFile {
                         writer.write_all(&u16_bytes)?;
                     }
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                    if !self.point_data[i].is_64bit {
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
 
-                    u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
-                    writer.write_all(&u8_bytes)?;
+                        u8_bytes = unsafe { mem::transmute(self.point_data[i].class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    } else {
+                        // there is a 64-bit point in the data that we are trying to save as 32-bit.
+                        let (point_bit_field, class_bit_field) = self.point_data[i].get_32bit_from_64bit();
+
+                        u8_bytes = unsafe { mem::transmute(point_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+
+                        u8_bytes = unsafe { mem::transmute(class_bit_field) };
+                        writer.write_all(&u8_bytes)?;
+                    }
 
                     u8_bytes = unsafe { mem::transmute(self.point_data[i].scan_angle as i8) };
                     writer.write_all(&u8_bytes)?;

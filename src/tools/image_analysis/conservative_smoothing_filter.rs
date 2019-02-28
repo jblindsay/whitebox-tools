@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
+Created: 26/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -19,6 +19,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a conservative smoothing filter on a raster image. A conservative smoothing filter can be used 
+/// to remove short-range variability in an image, effectively acting to smooth the image. It is particularly useful 
+/// for eliminating local spikes and reducing the noise in an image. The algorithm operates by calculating the 
+/// minimum and maximum neighbouring values surrounding a grid cell. If the cell at the centre of the kernel is 
+/// greater than the calculated maximum value, it is replaced with the maximum value in the output image. Similarly, 
+/// if the cell value at the kernel centre is less than the neighbouring minimum value, the corresponding grid cell 
+/// in the output image is replaced with the minimum value. This filter tends to alter an image very little compared 
+/// with other smoothing filters such as the `MeanFilter`, `EdgePreservingMeanFilter`, `BilateralFilter`, `MedianFilter`, 
+/// `GaussianFilter`, or `OlympicFilter`.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # See Also
+/// `MeanFilter`, `EdgePreservingMeanFilter`, `BilateralFilter`, `MedianFilter`, `GaussianFilter`, `OlympicFilter`
 pub struct ConservativeSmoothingFilter {
     name: String,
     description: String,

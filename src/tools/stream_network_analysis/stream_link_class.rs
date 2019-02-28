@@ -401,6 +401,7 @@ impl WhiteboxTool for StreamLinkClass {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.data_type = DataType::I16;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.configs.data_type = DataType::I16;

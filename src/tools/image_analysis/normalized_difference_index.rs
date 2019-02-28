@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
-Last Modified: January 21, 2018
+Created: 26/06/2017
+Last Modified: 24/02/2019
 License: MIT
 */
 
@@ -17,7 +17,48 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-pub struct NormalizedDifferenceVegetationIndex {
+/// This tool can be used to calculate a normalized difference index (NDI) from two bands of multispectral image data.
+/// A NDI of two band images (`image1` and `image2`) takes the general form:
+/// 
+/// > NDI = (image1 - image2) / (image1 + image2 + *c*)
+/// 
+/// Where *c* is a correction factor sometimes used to avoid division by zero. It is, however, often set to 0.0. In fact,
+/// the `NormalizedDifferenceIndex` tool will set all pixels where `image1 + image2 = 0` to 0.0 in the output image. While 
+/// this is not strictly mathematically correct (0 / 0 = infinity), it is often the intended output in these cases. 
+/// 
+/// NDIs generally takes the value range -1.0 to 1.0, although in practice the range of values for a particular image scene 
+/// may be more restricted than this. 
+/// 
+/// NDIs have two important properties that make them particularly useful for remote sensing applications. First, they 
+/// emphasize certain aspects of the shape of the spectral signatures of different land covers. Secondly, they can be 
+/// used to de-emphasize the effects of variable illumination within a scene. NDIs are therefore frequently used in the 
+/// field of remote sensing to create vegetation indices and other indices for emphasizing various land-covers and as inputs
+/// to analytical operations like image classification. For example, the normalized difference vegetation index (NDVI), 
+/// one of the most common image-derived products in remote sensing, is calculated as:
+/// 
+/// > NDVI = (NIR - RED) / (NIR + RED)
+/// 
+/// The optimal soil adjusted vegetation index (OSAVI) is:
+/// 
+/// > OSAVI = (NIR - RED) / (NIR + RED + 0.16)
+/// 
+/// The normalized difference water index (NDWI), or normalized difference moisture index (NDMI), is:
+/// 
+/// > NDWI = (NIR - SWIR) / (NIR + SWIR)
+/// 
+/// The normalized burn ratio 1 (NBR1) and normalized burn ration 2 (NBR2) are:
+/// 
+/// > NBR1 = (NIR - SWIR2) / (NIR + SWIR2)
+/// >
+/// > NBR2 = (SWIR1 - SWIR2) / (SWIR1 + SWIR2)
+/// 
+/// In addition to NDIs, *Simple Ratios* of image bands, are also commonly used as inputs to other remote sensing 
+/// applications like image classification. Simple ratios can be calculated using the `Divide` tool. Division by zero, 
+/// in this case, will result in an output NoData value.
+/// 
+/// # See Also
+/// `Divide`
+pub struct NormalizedDifferenceIndex {
     name: String,
     description: String,
     toolbox: String,
@@ -25,27 +66,27 @@ pub struct NormalizedDifferenceVegetationIndex {
     example_usage: String,
 }
 
-impl NormalizedDifferenceVegetationIndex {
-    pub fn new() -> NormalizedDifferenceVegetationIndex {
+impl NormalizedDifferenceIndex {
+    pub fn new() -> NormalizedDifferenceIndex {
         // public constructor
-        let name = "NormalizedDifferenceVegetationIndex".to_string();
+        let name = "NormalizedDifferenceIndex".to_string();
         let toolbox = "Image Processing Tools".to_string();
-        let description = "Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.".to_string();
+        let description = "Calculate a normalized-difference index (NDI) from two bands of multispectral image data.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input Near-Infrared File".to_owned(),
-            flags: vec!["--nir".to_owned()],
-            description: "Input near-infrared band image.".to_owned(),
+            name: "Input 1 File".to_owned(),
+            flags: vec!["--input1".to_owned()],
+            description: "Input image 1 (e.g. near-infrared band).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
         });
 
         parameters.push(ToolParameter {
-            name: "Input Red File".to_owned(),
-            flags: vec!["--red".to_owned()],
-            description: "Input red band image.".to_owned(),
+            name: "Input 2 File".to_owned(),
+            flags: vec!["--input2".to_owned()],
+            description: "Input image 2 (e.g. red band).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -70,14 +111,24 @@ impl NormalizedDifferenceVegetationIndex {
             optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "Use the optimized soil-adjusted veg index (OSAVI)?".to_owned(), 
-            flags: vec!["--osavi".to_owned()], 
-            description: "Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.".to_owned(),
-            parameter_type: ParameterType::Boolean,
-            default_value: None,
-            optional: true
+        parameters.push(ToolParameter {
+            name: "Correction value".to_owned(),
+            flags: vec!["--correction".to_owned()],
+            description: "Optional adjustment value (e.g. 1, or 0.16 for the optimal soil adjusted vegetation index, OSAVI)."
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("0.0".to_owned()),
+            optional: true,
         });
+
+        // parameters.push(ToolParameter{
+        //     name: "Use the optimized soil-adjusted veg index (OSAVI)?".to_owned(), 
+        //     flags: vec!["--osavi".to_owned()], 
+        //     description: "Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.".to_owned(),
+        //     parameter_type: ParameterType::Boolean,
+        //     default_value: None,
+        //     optional: true
+        // });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
@@ -90,10 +141,10 @@ impl NormalizedDifferenceVegetationIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --nir=band4.tif --red=band3.tif -o=output.tif --clip=1.0 --osavi", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1=band4.tif --input2=band3.tif -o=output.tif
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1=band4.tif --input2=band3.tif -o=output.tif --clip=1.0 --adjustment=0.16", short_exe, name).replace("*", &sep);
 
-        NormalizedDifferenceVegetationIndex {
+        NormalizedDifferenceIndex {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -103,7 +154,7 @@ impl NormalizedDifferenceVegetationIndex {
     }
 }
 
-impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
+impl WhiteboxTool for NormalizedDifferenceIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -144,11 +195,11 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         working_directory: &'a str,
         verbose: bool,
     ) -> Result<(), Error> {
-        let mut nir_file = String::new();
-        let mut red_file = String::new();
+        let mut input1_file = String::new();
+        let mut input2_file = String::new();
         let mut output_file = String::new();
         let mut clip_amount = 0.0;
-        let mut osavi_mode = false;
+        // let mut osavi_mode = false;
         let mut correction_factor = 0.0;
         if args.len() == 0 {
             return Err(Error::new(
@@ -165,37 +216,48 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-nir" || vec[0].to_lowercase() == "--nir" {
-                if keyval {
-                    nir_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-input1" {
+                input1_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    nir_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-red" || vec[0].to_lowercase() == "--red" {
-                if keyval {
-                    red_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-input2" {
+                input2_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    red_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                if keyval {
-                    clip_amount = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-clip" {
+                clip_amount = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
                 if clip_amount < 0.0 {
                     clip_amount = 0.0;
+                } else if clip_amount > 30.0 {
+                    clip_amount = 30.0;
                 }
-            } else if vec[0].to_lowercase() == "-osavi" || vec[0].to_lowercase() == "--osavi" {
-                osavi_mode = true;
-                correction_factor = 0.16;
+            } else if flag_val == "-correction" {
+                correction_factor = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
+            // } else if flag_val == "-osavi" {
+            //     osavi_mode = true;
+            //     correction_factor = 0.16;
+            // }
+            
         }
 
         if verbose {
@@ -209,11 +271,11 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !nir_file.contains(&sep) && !nir_file.contains("/") {
-            nir_file = format!("{}{}", working_directory, nir_file);
+        if !input1_file.contains(&sep) && !input1_file.contains("/") {
+            input1_file = format!("{}{}", working_directory, input1_file);
         }
-        if !red_file.contains(&sep) && !red_file.contains("/") {
-            red_file = format!("{}{}", working_directory, red_file);
+        if !input2_file.contains(&sep) && !input2_file.contains("/") {
+            input2_file = format!("{}{}", working_directory, input2_file);
         }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
@@ -223,12 +285,12 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
             println!("Reading data...")
         };
 
-        let nir = Arc::new(Raster::new(&nir_file, "r")?);
+        let nir = Arc::new(Raster::new(&input1_file, "r")?);
         let rows = nir.configs.rows as isize;
         let columns = nir.configs.columns as isize;
         let nir_nodata = nir.configs.nodata;
 
-        let red = Arc::new(Raster::new(&red_file, "r")?);
+        let red = Arc::new(Raster::new(&input2_file, "r")?);
         let red_nodata = red.configs.nodata;
 
         // make sure the input files have the same size
@@ -257,11 +319,11 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
                         z_nir = nir[(row, col)];
                         z_red = red[(row, col)];
                         if z_nir != nir_nodata && z_red != red_nodata {
-                            if z_nir + z_red != 0.0 {
+                            if z_nir + z_red != 0.0 || correction_factor > 0f64 {
                                 data[col as usize] =
                                     (z_nir - z_red) / (z_nir + z_red + correction_factor);
                             } else {
-                                data[col as usize] = nir_nodata;
+                                data[col as usize] = 0f64;
                             }
                         }
                     }
@@ -288,16 +350,16 @@ impl WhiteboxTool for NormalizedDifferenceVegetationIndex {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.data_type = DataType::F32;
+        // output.configs.display_max = 1f64;
+        // output.configs.display_min = -1f64;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("NIR file: {}", nir_file));
-        output.add_metadata_entry(format!("Red file: {}", red_file));
-        output.add_metadata_entry(format!(
-            "Optimised Soil-Adjusted Vegetation Index (OSAVI) mode: {}",
-            osavi_mode
-        ));
+        output.add_metadata_entry(format!("NIR file: {}", input1_file));
+        output.add_metadata_entry(format!("Red file: {}", input2_file));
+        output.add_metadata_entry(format!("Adjustment value: {}", correction_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {

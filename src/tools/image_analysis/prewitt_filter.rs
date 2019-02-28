@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
+Created: 27/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,34 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a 3 &times; 3 Prewitt edge-detection filter on a raster image. The Prewitt filter 
+/// is similar to the `SobelFilter`, in that it identifies areas of high slope in the input image through 
+/// the calculation of slopes in the x and y directions. The Prewitt edge-detection filter, however, gives less 
+/// weight to nearer cell values within the moving window, or kernel. For example, a Prewitt filter uses 
+/// the following schemes to calculate x and y slopes:
+/// 
+/// X-direction slope
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | -1 |  0  | 1  |
+/// | -1 |  0  | 1  |
+/// | -1 |  0  | 1  |
+/// 
+/// Y-direction slope
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// |  1 |  1  |  1 |
+/// |  0 |  0  |  0 |
+/// | -1 | -1  | -1 |
+/// 
+/// Each grid cell in the output image is assigned the square-root of the squared sum of the x and y slopes.
+/// 
+/// The user may optionally clip the output image distribution tails by a specified amount (e.g. 1%).
+/// 
+/// # See Also
+/// `SobelFilter`
 pub struct PrewittFilter {
     name: String,
     description: String,

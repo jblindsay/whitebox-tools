@@ -56,6 +56,24 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 0.15.0 (XX-XX-2019)
+- The following tools were added to the project:
+  BoundaryShapeComplexity
+  NarrownessIndex
+  ShapeComplexityIndexRaster
+
+- Fixed a bug with the PanchromaticSharpening tool.
+- Previously, if a LAS v1.4 file were input to a tool, the output LAS file, which is currently
+  always in LAS v1.3 format, would not correctly translate the 64-bit information (point 
+  return, number of returns, classification) into 32-bit format. I have added the 
+  get_32bit_from_64bit function to handle this translation more gracefully; albeit it is
+  still a lossy translation where returns greater than 5 are ignored and classification 
+  values greater than 31 are lost. 
+- Added a maximum triangle edge length parameter to the LidarTinGridding tool to allow 
+  for the exclusion of large-area triangles (i.e. low point density) from the gridding.
+- The NormalizedDifferenceVegetationIndex tool has been renamed to NormalizedDifferenceIndex 
+  to indicate the more general nature of this tool (i.e. NDVI, NDWI, OSAVI, etc.).
+
 Version 0.14.1 (10-02-2019)
 - This release largely focuses on bug-fixes rather than feature additions. However, the
   following tools were added to the library:

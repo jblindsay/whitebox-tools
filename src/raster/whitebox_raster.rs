@@ -400,7 +400,7 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 }
             }
         }
-        DataType::F32 => {
+        DataType::F32 | DataType::U16 => {
             for i in 0..num_cells {
                 writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
             }
@@ -414,11 +414,6 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             // }
             for i in 0..num_cells {
                 writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
-            }
-        }
-        DataType::U16 => {
-            for i in 0..num_cells {
-                writer.write_u16::<LittleEndian>(r.data[i] as u16)?;
             }
         }
         DataType::RGBA32 => {

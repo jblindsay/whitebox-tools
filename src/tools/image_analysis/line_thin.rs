@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: 13/10/2018
+Created: 05/07/2017
+Last Modified: 16/02/2019
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read
@@ -144,21 +144,19 @@ impl WhiteboxTool for LineThinning {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -181,8 +179,8 @@ impl WhiteboxTool for LineThinning {
         }
 
         if verbose {
-            println!("Reading data...")
-        };
+            println!("Reading data...");
+        }
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
         let rows = input.configs.rows as isize;
@@ -190,13 +188,6 @@ impl WhiteboxTool for LineThinning {
         let nodata = input.configs.nodata;
 
         let start = Instant::now();
-
-        // let mut output = Raster::initialize_using_file(&output_file, &input);
-        // println!("Initializing the output raster...");
-        // match output.set_data_from_raster(&input) {
-        //     Ok(_) => (), // do nothings
-        //     Err(err) => return Err(err),
-        // }
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -236,27 +227,23 @@ impl WhiteboxTool for LineThinning {
         let mut loop_num = 0;
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        let elements = vec![
-            vec![6, 7, 0, 4, 3, 2],
-            vec![7, 0, 1, 3, 5],
-            vec![0, 1, 2, 4, 5, 6],
-            vec![1, 2, 3, 5, 7],
-            vec![2, 3, 4, 6, 7, 0],
-            vec![3, 4, 5, 7, 1],
-            vec![4, 5, 6, 0, 1, 2],
-            vec![5, 6, 7, 1, 3],
+
+        let elements1 = [
+            [6, 7, 0, 4, 3, 2],
+            [0, 1, 2, 4, 5, 6],
+            [2, 3, 4, 6, 7, 0],
+            [4, 5, 6, 0, 1, 2],
         ];
 
-        let vals = vec![
-            vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64, 1f64],
-            vec![0f64, 0f64, 0f64, 1f64, 1f64],
+        let elements2 = [
+            [7, 0, 1, 3, 5],
+            [1, 2, 3, 5, 7],
+            [3, 4, 5, 7, 1],
+            [5, 6, 7, 1, 3],
         ];
+
+        let vals1 = [0f64, 0f64, 0f64, 1f64, 1f64, 1f64];
+        let vals2 = [0f64, 0f64, 0f64, 1f64, 1f64];
 
         let mut neighbours = [0.0; 8];
         let mut pattern_match: bool;
@@ -264,7 +251,7 @@ impl WhiteboxTool for LineThinning {
         while did_something {
             loop_num += 1;
             did_something = false;
-            for a in 0..8 {
+            for a in 0..4 {
                 for row in 0..rows {
                     for col in 0..columns {
                         z = output[(row, col)];
@@ -276,20 +263,33 @@ impl WhiteboxTool for LineThinning {
 
                             // scan through element
                             pattern_match = true;
-                            for i in 0..elements[a].len() {
-                                if neighbours[elements[a][i]] != vals[a][i] {
+                            for i in 0..6 {
+                                if neighbours[elements1[a][i]] != vals1[i] {
                                     pattern_match = false;
                                 }
                             }
+
                             if pattern_match {
                                 output[(row, col)] = 0.0;
                                 did_something = true;
+                            } else {
+                                pattern_match = true;
+                                for i in 0..5 {
+                                    if neighbours[elements2[a][i]] != vals2[i] {
+                                        pattern_match = false;
+                                    }
+                                }
+
+                                if pattern_match {
+                                    output[(row, col)] = 0.0;
+                                    did_something = true;
+                                }
                             }
                         }
                     }
                 }
                 if verbose {
-                    progress = (100.0_f64 * a as f64 / 7.0) as usize;
+                    progress = (100.0_f64 * (a + 1) as f64 / 4.0) as usize;
                     if progress != old_progress {
                         println!("Loop Number {}: {}%", loop_num, progress);
                         old_progress = progress;

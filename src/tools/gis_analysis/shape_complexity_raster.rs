@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 14/07/2017
-Last Modified: 13/10/2018
+Created: 16/02/2019
+Last Modified: 16/02/2019
 License: MIT
 */
 
@@ -17,15 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will identify all grid cells situated along the edges of patches or class features within an 
-/// input raster (`--input`). Edge cells in the output raster (`--output`) will have the patch identifier value
-/// assigned in the correponding grid cell. All non-edge cells will be assigned zero in the output raster. 
-/// Patches (or classes) are designated by positive, non-zero values in the input image. Zero-valued 
-/// and NoData-valued grid cells are interpreted as background cells by the tool. 
+/// This tools calculates a type of shape complexity index for raster objects. The index is equal to the average 
+/// number of intersections of the group of vertical and horizontal transects passing through an object. Simple
+/// objects will have a shape complexity index of 1.0 and more complex shapes, including those containing numberous
+/// holes or are winding in shape, will have higher index values. Objects in the input raster (`--input`) are 
+/// designated by their unique identifers. Identifer values should be positive, non-zero whole numbers.
 /// 
 /// # See Also
-/// `EdgeProportion`
-pub struct FindPatchOrClassEdgeCells {
+/// `ShapeComplexityIndex`, `BoundaryShapeComplexity`
+pub struct ShapeComplexityIndexRaster {
     name: String,
     description: String,
     toolbox: String,
@@ -33,13 +33,14 @@ pub struct FindPatchOrClassEdgeCells {
     example_usage: String,
 }
 
-impl FindPatchOrClassEdgeCells {
-    pub fn new() -> FindPatchOrClassEdgeCells {
+impl ShapeComplexityIndexRaster {
+    pub fn new() -> ShapeComplexityIndexRaster {
         // public constructor
-        let name = "FindPatchOrClassEdgeCells".to_string();
+        let name = "ShapeComplexityIndexRaster".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
         let description =
-            "Finds all cells located on the edge of patch or class features.".to_string();
+            "Calculates the complexity of raster polygons or classes."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -72,12 +73,12 @@ impl FindPatchOrClassEdgeCells {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif --zero_back",
             short_exe, name
         )
         .replace("*", &sep);
 
-        FindPatchOrClassEdgeCells {
+        ShapeComplexityIndexRaster {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -87,7 +88,7 @@ impl FindPatchOrClassEdgeCells {
     }
 }
 
-impl WhiteboxTool for FindPatchOrClassEdgeCells {
+impl WhiteboxTool for ShapeComplexityIndexRaster {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -123,7 +124,7 @@ impl WhiteboxTool for FindPatchOrClassEdgeCells {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-
+        
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -169,59 +170,132 @@ impl WhiteboxTool for FindPatchOrClassEdgeCells {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
+
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
         if verbose {
-            println!("Reading input data...")
-        };
+            println!("Reading data...");
+        }
+
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
 
         let start = Instant::now();
 
+        // let nodata = input.configs.nodata;
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let min_val = input.configs.minimum;
+        let max_val = input.configs.maximum;
+        let range = max_val - min_val + 0.00001f64; // otherwise the max value is outside the range
+        let num_bins = range.ceil() as usize;
+        
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let mut z: f64;
-                let mut zn: f64;
-                let mut zout: f64;
+                let mut freq_data = vec![0usize; num_bins];
+                let mut min_row = vec![isize::max_value(); num_bins];
+                let mut max_row = vec![isize::min_value(); num_bins];
+                let mut min_col = vec![isize::max_value(); num_bins];
+                let mut max_col = vec![isize::min_value(); num_bins];
+                let mut val: f64;
+                let mut n1: f64;
+                let mut bin: usize;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input.get_value(row, col);
-                        if z > 0f64 && z != nodata {
-                            zout = 0f64;
-                            for n in 0..8 {
-                                zn = input.get_value(row + dy[n], col + dx[n]);
-                                if zn != z {
-                                    zout = z;
-                                    break;
-                                }
+                        val = input.get_value(row, col);
+                        if val > 0f64 && val >= min_val && val <= max_val {
+                            n1 = input.get_value(row, col - 1);
+                            // n2 = input.get_value(row, col + 1);
+
+                            bin = (val - min_val).floor() as usize;
+                            
+                            if val != n1 {
+                                freq_data[bin] += 1;
                             }
-                            data[col as usize] = zout;
+
+                            if row < min_row[bin] { min_row[bin] = row; }
+                            if row > max_row[bin] { max_row[bin] = row; }
+                            if col < min_col[bin] { min_col[bin] = col; }
+                            if col > max_col[bin] { max_col[bin] = col; }
                         }
                     }
-                    tx.send((row, data)).unwrap();
                 }
+
+                for col in (0..columns).filter(|c| c % num_procs == tid) {
+                    for row in 0..rows {
+                        val = input.get_value(row, col);
+                        if val > 0f64 && val >= min_val && val <= max_val {
+                            n1 = input.get_value(row - 1, col);
+
+                            if val != n1 {
+                                bin = (val - min_val).floor() as usize;
+                                freq_data[bin] += 1;
+                            }
+                        }
+                    }
+                }
+
+                tx.send((freq_data, min_row, max_row, min_col, max_col)).unwrap();
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let mut freq_data = vec![0usize; num_bins];
+        let mut min_row = vec![isize::max_value(); num_bins];
+        let mut max_row = vec![isize::min_value(); num_bins];
+        let mut min_col = vec![isize::max_value(); num_bins];
+        let mut max_col = vec![isize::min_value(); num_bins];
+        for tid in 0..num_procs {
+            let (data1, data2, data3, data4, data5) = rx.recv().unwrap();
+            for bin in 0..num_bins {
+                freq_data[bin] += data1[bin];
+                if data2[bin] < min_row[bin] { min_row[bin] = data2[bin]; }
+                if data3[bin] > max_row[bin] { max_row[bin] = data3[bin]; }
+                if data4[bin] < min_col[bin] { min_col[bin] = data4[bin]; }
+                if data5[bin] > max_col[bin] { max_col[bin] = data5[bin]; }
+            }
 
-        for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
-            output.set_row_data(row, data);
             if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * (tid + 1) as f64 / num_procs as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        let mut bin: usize;  
+        let mut index_values = vec![0f64; num_bins];
+        for bin in 1..num_bins {
+            if freq_data[bin] > 0 {
+                index_values[bin] = freq_data[bin] as f64 / ((max_row[bin] - min_row[bin] + 1) + (max_col[bin] - min_col[bin] + 1)) as f64;
+            }
+        }
+
+        let mut val: f64;
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let out_nodata = -999f64;
+        output.reinitialize_values(out_nodata);
+        output.configs.nodata = out_nodata;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        output.configs.data_type = DataType::F32;
+        output.configs.palette = String::from("spectrum_black_background.pal");
+        for row in 0..rows {
+            for col in 0..columns {
+                val = input.get_value(row, col);
+                if val > 0f64 && val >= min_val && val <= max_val {
+                    bin = (val - min_val).floor() as usize;
+                    output.set_value(row, col, index_values[bin]);
+                } else if val == 0f64 {
+                    output.set_value(row, col, 0f64);
+                }
+            }
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;

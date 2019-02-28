@@ -20,7 +20,7 @@ use std::path;
 ///
 /// The elongation ratio (`E`) is:
 ///
-/// `E = 1 - S / L`
+/// > E = 1 - S / L
 ///
 /// Where `S` is the short-axis length, and `L` is the long-axis length. Axes
 /// lengths are determined by estimating the minimum bounding box.

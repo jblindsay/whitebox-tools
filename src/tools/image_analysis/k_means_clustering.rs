@@ -1,13 +1,14 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Dec. 27, 2017
-Last Modified: 13/10/2018
+Created: 27/12/2017
+Last Modified: 24/02/2019
 License: MIT
 */
 
 use crate::raster::*;
 use crate::rendering::html::*;
+use crate::rendering::LineGraph;
 use crate::tools::*;
 use num_cpus;
 use rand::prelude::*;
@@ -393,9 +394,10 @@ impl WhiteboxTool for KMeansClustering {
         let mut n_counted = false;
         let mut n = 0f64;
         let nodata = Arc::new(nodata);
-        // while percent_changed > percent_changed_threshold && loop_num < max_iterations {
+        let mut xdata = vec![vec![0f64; max_iterations]; 1];
+        let mut ydata = vec![vec![0f64; max_iterations]; 1];
         for loop_num in 0..max_iterations {
-            // loop_num += 1;
+            xdata[0][loop_num] = (loop_num + 1) as f64;
 
             // assign each pixel to a class
             let mut class_centre_data = vec![vec![0f64; num_files]; num_classes];
@@ -599,6 +601,7 @@ impl WhiteboxTool for KMeansClustering {
             println!("Cluster sizes: {:?}", class_n);
 
             percent_changed = 100f64 * cells_changed / n;
+            ydata[0][loop_num] = percent_changed;
             println!(
                 "Cells changed {} ({:.4} percent)",
                 cells_changed, percent_changed
@@ -609,6 +612,7 @@ impl WhiteboxTool for KMeansClustering {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.data_type = DataType::I16;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!(
@@ -785,6 +789,35 @@ impl WhiteboxTool for KMeansClustering {
                 writer.write_all(s.as_bytes())?;
             }
             writer.write_all("</table></p>".as_bytes())?;
+
+            //////////////////////
+            // convergence plot //
+            //////////////////////
+            for loop_num in (0..max_iterations).rev() {
+                if xdata[0][loop_num] == 0f64 {
+                    xdata[0].remove(loop_num);
+                    ydata[0].remove(loop_num);
+                }
+            }
+            writer.write_all("<br><br><h2>Convergence Plot</h2>".as_bytes())?;
+            let graph = LineGraph {
+                parent_id: "graph".to_string(),
+                width: 500f64,
+                height: 450f64,
+                data_x: xdata.clone(),
+                data_y: ydata.clone(),
+                series_labels: vec!["Line 1".to_string()].clone(),
+                x_axis_label: "Iteration".to_string(),
+                y_axis_label: "Cells with class values changed (%)".to_string(),
+                draw_points: true,
+                draw_gridlines: true,
+                draw_legend: false,
+                draw_grey_background: false,
+            };
+
+            writer.write_all(
+                &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+            )?;
 
             writer.write_all("</body>".as_bytes())?;
             writer.write_all("</html>".as_bytes())?;

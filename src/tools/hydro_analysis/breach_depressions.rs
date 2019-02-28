@@ -2,12 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 12/10/2018
+Last Modified: 20/02/2019
 License: MIT
-
-Notes: Algorithm based on Lindsay JB. 2016. Efficient hybrid breaching-filling sink removal
-methods for flow path enforcement in digital elevation models. Hydrological Processes,
-30(6): 846–857. DOI: 10.1002/hyp.10648
 */
 
 use crate::raster::*;
@@ -29,8 +25,22 @@ use std::path;
 /// approach to resolving continous flowpaths through depressions.
 /// 
 /// Notice that when the input DEM (`--dem`) contains deep, single-cell pits, it can be useful
-/// to apply the `FillSingleCellPits` before `BreachDepressions`, to avoid the creation of
-/// deep breach trenches.
+/// to raise the pits elevation to that of the lowest neighbour (`--fill_pits`), to avoid the 
+/// creation of deep breach trenches. Deep pits can be common in DEMs containing speckle-type noise.
+/// This option, however, does add slightly to the computation time of the tool.
+/// 
+/// The user may optionally (`--flat_increment`) override the default value applied to increment elevations on
+/// flat areas (often formed by the subsequent depression filling operation). The default value is
+/// dependent upon the elevation range in the input DEM and is generally a very small elevation value (e.g.
+/// 0.001). It may be necessary to override the default elevation increment value in landscapes where there 
+/// are extensive flat areas resulting from depression filling (and along breach channels). Values in the range 
+/// 0.00001 to 0.01 are generally appropriate. increment values that are too large can result in obvious artifacts 
+/// along flattened sites, which may extend beyond the flats, and values that are too small (i.e. smaller than the 
+/// numerical precision) may result in the presence of grid cells with no downslope neighbour in the
+/// output DEM. The output DEM will always use 64-bit floating point values for storing elevations because of
+/// the need to precisely represent small elevation differences along flats. Therefore, if the input DEM is stored
+/// at a lower level of precision (e.g. 32-bit floating point elevations), this may result in a doubling of
+/// the size of the DEM.
 ///
 /// # Reference
 /// Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
@@ -89,6 +99,26 @@ impl BreachDepressions {
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Flat increment value (z units)".to_owned(),
+            flags: vec!["--flat_increment".to_owned()],
+            description: "Optional elevation increment applied to flat areas.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Fill single-cell pits?".to_owned(),
+            flags: vec!["--fill_pits".to_owned()],
+            description:
+                "Optional flag indicating whether to fill single-cell pits."
+                    .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
             optional: true,
         });
 
@@ -158,6 +188,8 @@ impl WhiteboxTool for BreachDepressions {
         let mut max_depth = f64::INFINITY;
         let mut max_length = f64::INFINITY;
         let mut constrained_mode = false;
+        let mut flat_increment = f64::NAN;
+        let mut fill_pits = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -174,39 +206,41 @@ impl WhiteboxTool for BreachDepressions {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-max_depth"
-                || vec[0].to_lowercase() == "--max_depth"
-            {
-                if keyval {
-                    max_depth = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-max_depth" {
+                max_depth = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    max_depth = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
                 constrained_mode = true;
-            } else if vec[0].to_lowercase() == "-max_length"
-                || vec[0].to_lowercase() == "--max_length"
-            {
-                if keyval {
-                    max_length = vec[1].to_string().parse::<f64>().unwrap();
+            } else if flag_val == "-max_length" {
+                max_length = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    max_length = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
                 constrained_mode = true;
+            } else if flag_val == "-flat_increment" {
+                flat_increment = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-fill_pits" {
+                fill_pits = true;
             }
         }
 
@@ -236,7 +270,7 @@ impl WhiteboxTool for BreachDepressions {
             println!("Breaching in constrained mode...");
         }
 
-        let input = Raster::new(&input_file, "r")?;
+        let mut input = Raster::new(&input_file, "r")?;
 
         let start = Instant::now();
         let rows = input.configs.rows as isize;
@@ -244,10 +278,54 @@ impl WhiteboxTool for BreachDepressions {
         let num_cells = rows * columns;
         let nodata = input.configs.nodata;
 
-        let min_val = input.configs.minimum;
-        let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-        let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
-        let small_num = 1.0 / elev_multiplier as f64;
+        let small_num = if flat_increment != f64::NAN {
+            flat_increment
+        } else {
+            let min_val = input.configs.minimum;
+            let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
+            let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
+            1.0 / elev_multiplier as f64 
+        };
+
+        let mut z: f64;
+        let mut z_n: f64;        
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+        if fill_pits {
+            // Fill the single-cell pits before breaching. This can prevent the creation of 
+            // very deep breach trenches.
+            let mut min_zn: f64;
+            let mut flag: bool;
+            for row in 1..rows-1 {
+                for col in 1..columns-1 {
+                    z = input.get_value(row, col);
+                    if z != nodata {
+                        flag = true;
+                        min_zn = f64::INFINITY;
+                        for n in 0..8 {
+                            z_n = input.get_value(row + dy[n], col + dx[n]);
+                            if z_n < min_zn && z_n != nodata {
+                                min_zn = z_n;
+                            }
+                            if z_n < z && z_n != nodata {
+                                flag = false;
+                                break;
+                            }
+                        }
+                        if flag {
+                            input.set_value(row, col, min_zn + small_num);
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Filling pits: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let background_val = (i32::min_value() + 1) as f64;
@@ -292,8 +370,6 @@ impl WhiteboxTool for BreachDepressions {
         let mut zin_n: f64; // value of neighbour of row, col in input raster
         let mut zout: f64; // value of row, col in output raster
         let mut zout_n: f64; // value of neighbour of row, col in output raster
-        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         while !queue.is_empty() {
@@ -303,14 +379,14 @@ impl WhiteboxTool for BreachDepressions {
             for n in 0..8 {
                 row_n = row + dy[n];
                 col_n = col + dx[n];
-                zin_n = input[(row_n, col_n)];
-                zout_n = output[(row_n, col_n)];
+                zin_n = input.get_value(row_n, col_n);
+                zout_n = output.get_value(row_n, col_n);
                 if zout_n == background_val {
                     if zin_n == nodata {
-                        output[(row_n, col_n)] = nodata;
+                        output.set_value(row_n, col_n, nodata);
                         queue.push_back((row_n, col_n));
                     } else {
-                        output[(row_n, col_n)] = zin_n;
+                        output.set_value(row_n, col_n, zin_n);
                         // Push it onto the priority queue for the priority flood operation
                         minheap.push(GridCell {
                             row: row_n,
@@ -325,7 +401,7 @@ impl WhiteboxTool for BreachDepressions {
             if verbose {
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("progress: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -333,12 +409,9 @@ impl WhiteboxTool for BreachDepressions {
 
         // Perform the priority flood operation.
         let back_link = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
-        // let (mut row_n2, mut col_n2): (isize, isize);
         let (mut x, mut y): (isize, isize);
-        // let mut zin_n2: f64;
         let mut z_target: f64;
         let mut dir: i8;
-        // let mut is_pit: bool;
         let mut flag: bool;
 
         if !constrained_mode {
@@ -346,38 +419,26 @@ impl WhiteboxTool for BreachDepressions {
                 let cell = minheap.pop().unwrap();
                 row = cell.row;
                 col = cell.column;
-                zout = output[(row, col)];
+                zout = output.get_value(row, col);
                 for n in 0..8 {
                     row_n = row + dy[n];
                     col_n = col + dx[n];
-                    zout_n = output[(row_n, col_n)];
+                    zout_n = output.get_value(row_n, col_n);
                     if zout_n == background_val {
-                        zin_n = input[(row_n, col_n)];
+                        zin_n = input.get_value(row_n, col_n);
                         if zin_n != nodata {
-                            flow_dir[(row_n, col_n)] = back_link[n];
-                            output[(row_n, col_n)] = zin_n;
+                            flow_dir.set_value(row_n, col_n, back_link[n]);
+                            output.set_value(row_n, col_n, zin_n);
                             minheap.push(GridCell {
                                 row: row_n,
                                 column: col_n,
                                 priority: zin_n,
                             });
                             if zin_n < (zout + small_num) {
-                                // Is it a pit cell?
-                                // is_pit = true;
-                                // for n2 in 0..8 {
-                                //     row_n2 = row + dy[n2];
-                                //     col_n2 = col + dx[n2];
-                                //     zin_n2 = input[(row_n2, col_n2)];
-                                //     if zin_n2 != nodata && zin_n2 < zin_n {
-                                //         is_pit = false;
-                                //         break;
-                                //     }
-                                // }
-                                // if is_pit {
                                 // Trace the flowpath back to a lower cell, if it exists.
                                 x = col_n;
                                 y = row_n;
-                                z_target = output[(row_n, col_n)];
+                                z_target = output.get_value(row_n, col_n);
                                 flag = true;
                                 while flag {
                                     dir = flow_dir[(y, x)];
@@ -385,8 +446,8 @@ impl WhiteboxTool for BreachDepressions {
                                         y += dy[dir as usize];
                                         x += dx[dir as usize];
                                         z_target -= small_num;
-                                        if output[(y, x)] > z_target {
-                                            output[(y, x)] = z_target;
+                                        if output.get_value(y, x) > z_target {
+                                            output.set_value(y, x, z_target);
                                         } else {
                                             flag = false;
                                         }
@@ -394,12 +455,27 @@ impl WhiteboxTool for BreachDepressions {
                                         flag = false;
                                     }
                                 }
-                                // }
                             }
                         } else {
                             // Interior nodata cells are still treated as nodata and are not filled.
-                            output[(row_n, col_n)] = nodata;
+                            output.set_value(row_n, col_n, nodata);
                             num_solved_cells += 1;
+                            // region growing operation to find all attached nodata cells
+                            queue.push_back((row_n, col_n));
+                            while !queue.is_empty() {
+                                let cell = queue.pop_front().unwrap();
+                                for n2 in 0..8 {
+                                    let row2 = cell.0 + dy[n2];
+                                    let col2 = cell.1 + dx[n2];
+                                    if input.get_value(row2, col2) == nodata && output.get_value(row2, col2) == background_val {
+                                        if row2 >= 0 && row2 < rows && col2 >= 0 && col2 < columns {
+                                            output.set_value(row2, col2, nodata);
+                                            num_solved_cells += 1;
+                                            queue.push_back((row2, col2));
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -419,21 +495,25 @@ impl WhiteboxTool for BreachDepressions {
             let mut channel_depth: f64;
             let mut channel_length: f64;
             let mut carved_depth: f64;
+            let mut floodorder = Vec::with_capacity((rows * columns) as usize);
             let mut unresolved_pits = false;
+            // let mut flood_order_tail = 0usize;
             while !minheap.is_empty() {
                 let cell = minheap.pop().unwrap();
                 row = cell.row;
                 col = cell.column;
-                zout = output[(row, col)];
+                floodorder.push(row * columns + col);
+                // flood_order_tail += 1;
+                zout = output.get_value(row, col);
                 for n in 0..8 {
                     row_n = row + dy[n];
                     col_n = col + dx[n];
-                    zout_n = output[(row_n, col_n)];
+                    zout_n = output.get_value(row_n, col_n);
                     if zout_n == background_val {
-                        zin_n = input[(row_n, col_n)];
+                        zin_n = input.get_value(row_n, col_n);
                         if zin_n != nodata {
-                            flow_dir[(row_n, col_n)] = back_link[n];
-                            output[(row_n, col_n)] = zin_n;
+                            flow_dir.set_value(row_n, col_n, back_link[n]);
+                            output.set_value(row_n, col_n, zin_n);
                             minheap.push(GridCell {
                                 row: row_n,
                                 column: col_n,
@@ -443,19 +523,19 @@ impl WhiteboxTool for BreachDepressions {
                                 // Trace the flowpath back to a lower cell, if it exists.
                                 x = col_n;
                                 y = row_n;
-                                z_target = output[(row_n, col_n)];
+                                z_target = output.get_value(row_n, col_n);
                                 channel_depth = 0.0;
                                 channel_length = 0.0;
                                 flag = true;
                                 while flag {
-                                    dir = flow_dir[(y, x)];
+                                    dir = flow_dir.get_value(y, x);
                                     if dir >= 0 {
                                         y += dy[dir as usize];
                                         x += dx[dir as usize];
                                         z_target -= small_num;
                                         channel_length += 1.0;
-                                        if output[(y, x)] > z_target {
-                                            carved_depth = input[(y, x)] - z_target;
+                                        if output.get_value(y, x) > z_target {
+                                            carved_depth = input.get_value(y, x) - z_target;
                                             if carved_depth > channel_depth {
                                                 channel_depth = carved_depth;
                                             }
@@ -470,16 +550,16 @@ impl WhiteboxTool for BreachDepressions {
                                     // It's okay to breach it.
                                     x = col_n;
                                     y = row_n;
-                                    z_target = output[(row_n, col_n)];
+                                    z_target = output.get_value(row_n, col_n);
                                     flag = true;
                                     while flag {
-                                        dir = flow_dir[(y, x)];
+                                        dir = flow_dir.get_value(y, x);
                                         if dir >= 0 {
                                             y += dy[dir as usize];
                                             x += dx[dir as usize];
                                             z_target -= small_num;
-                                            if output[(y, x)] > z_target {
-                                                output[(y, x)] = z_target;
+                                            if output.get_value(y, x) > z_target {
+                                                output.set_value(y, x, z_target);
                                             } else {
                                                 flag = false;
                                             }
@@ -488,13 +568,121 @@ impl WhiteboxTool for BreachDepressions {
                                         }
                                     }
                                 } else {
-                                    unresolved_pits = true;
+                                    // let optimal_search = max_length.round() as isize;
+                                    // let optimal_filter_size = 2 * optimal_search + 1;
+                                    // let (mut j, mut k): (isize, isize);
+                                    // let large_value = f64::MAX;
+                                    // let mut zn: f64;
+                                    // let (mut cost1, mut cost2, mut new_cost): (f64, f64, f64);
+                                    // let mut accum_val: f64;
+                                    // let mut cost: Array2D<f64> = Array2D::new(optimal_filter_size, optimal_filter_size, f64::MAX, nodata)?;
+                                    // let mut accumulatedcost: Array2D<f64> = Array2D::new(optimal_filter_size, optimal_filter_size, f64::MAX, nodata)?;
+                                    // let mut backlink: Array2D<i8> = Array2D::new(optimal_filter_size, optimal_filter_size, -1, -1)?;
+                                    // let mut solved: Array2D<i8> = Array2D::new(optimal_filter_size, optimal_filter_size, 0, -1)?;
+                                    // let mut costheap = BinaryHeap::with_capacity((optimal_filter_size * optimal_filter_size) as usize);
+                                    // let cell_size_x = input.configs.resolution_x;
+                                    // let cell_size_y = input.configs.resolution_y;
+                                    // let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
+                                    // let dist = [
+                                    //     diag_cell_size,
+                                    //     cell_size_x,
+                                    //     diag_cell_size,
+                                    //     cell_size_y,
+                                    //     diag_cell_size,
+                                    //     cell_size_x,
+                                    //     diag_cell_size,
+                                    //     cell_size_y,
+                                    // ];
+                                    // for row_offset in -optimal_search..=optimal_search {
+                                    //     for col_offset in -optimal_search..=optimal_search {
+                                    //         zn = output.get_value(row_n + row_offset, col_n + col_offset);
+                                    //         j = row_offset + optimal_search;
+                                    //         k = col_offset + optimal_search;
+                                    //         if zn < zout && zn != nodata && zn != background_val {
+                                    //             cost.set_value(j, k, 0f64);
+                                    //             accumulatedcost.set_value(j, k, 0f64);
+                                    //             costheap.push(GridCell {
+                                    //                 row: j,
+                                    //                 column: k,
+                                    //                 priority: 0f64,
+                                    //             });
+                                    //             // backlink.set_value(j, k, 0);
+                                    //         } else if zn >= zout {
+                                    //             cost1 = zn - zout;
+                                    //             if cost1 < max_depth { 
+                                    //                 cost.set_value(j, k, zn - zout);
+                                    //             } else {
+                                    //                 cost.set_value(j, k, large_value);
+                                    //             }
+                                    //             accumulatedcost.set_value(j, k, large_value);
+                                    //         } else { // nodata, background cell, or lower but not yet flooded.
+                                    //             cost.set_value(j, k, nodata);
+                                    //             accumulatedcost.set_value(j, k, nodata);
+                                    //             solved.set_value(j, k, 1);
+                                    //         }
+                                    //     }
+                                    // }
+                                    // if !costheap.is_empty() {
+                                    //     // println!("I'm here");
+                                    //     while !costheap.is_empty() {
+                                    //         let cell = costheap.pop().unwrap();
+                                    //         if solved.get_value(cell.row, cell.column) == 0 {
+                                    //             solved.set_value(cell.row, cell.column, 1);
+                                    //             accum_val = accumulatedcost.get_value(cell.row, cell.column);
+                                    //             cost1 = cost.get_value(cell.row, cell.column);
+                                    //             for n in 0..8 {
+                                    //                 j = cell.row + dy[n];
+                                    //                 k = cell.column + dx[n];
+                                    //                 if accumulatedcost.get_value(j, k) != nodata {
+                                    //                     cost2 = cost.get_value(j, k);
+                                    //                     new_cost = accum_val + (cost1 + cost2) / 2.0 * dist[n];
+                                    //                     if new_cost < accumulatedcost.get_value(j, k) {
+                                    //                         if solved.get_value(j, k) == 0 {
+                                    //                             accumulatedcost.set_value(j, k, new_cost);
+                                    //                             backlink.set_value(j, k, back_link[n]);
+                                    //                             costheap.push(GridCell {
+                                    //                                 row: j,
+                                    //                                 column: k,
+                                    //                                 priority: new_cost,
+                                    //                             });
+                                    //                         }
+                                    //                     }
+                                    //                 }
+                                    //             }
+                                    //         }
+                                    //     }
+                                    //     // now trace the path from row, col to the nearest source, carving the breach path.
+                                    //     j = row;
+                                    //     k = col;
+                                    //     let mut flag = true;
+                                    //     while flag {
+
+                                    //     }
+                                    // } else {
+                                        unresolved_pits = true;
+                                    // }
                                 }
                             }
                         } else {
                             // Interior nodata cells are still treated as nodata and are not filled.
-                            output[(row_n, col_n)] = nodata;
+                            output.set_value(row_n, col_n, nodata);
                             num_solved_cells += 1;
+                            // region growing operation to find all attached nodata cells
+                            queue.push_back((row_n, col_n));
+                            while !queue.is_empty() {
+                                let cell = queue.pop_front().unwrap();
+                                for n2 in 0..8 {
+                                    let row2 = cell.0 + dy[n2];
+                                    let col2 = cell.1 + dx[n2];
+                                    if input.get_value(row2, col2) == nodata && output.get_value(row2, col2) == background_val {
+                                        if row2 >= 0 && row2 < rows && col2 >= 0 && col2 < columns {
+                                            output.set_value(row2, col2, nodata);
+                                            num_solved_cells += 1;
+                                            queue.push_back((row2, col2));
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -510,9 +698,42 @@ impl WhiteboxTool for BreachDepressions {
                 }
             }
 
-            if unresolved_pits && verbose {
-                println!("There were unbreached depressions. The result should be filled to remove additional depressions.");
+            // if unresolved_pits && verbose {
+            //     println!("There were unbreached depressions. The result should be filled to remove additional depressions.");
+            // }
+            if unresolved_pits {
+                // Fill the DEM.
+                num_solved_cells = 0;
+                let num_valid_cells = floodorder.len();
+                for c in 0..num_valid_cells {
+                    row = floodorder[c] / columns;
+                    col = floodorder[c] % columns;
+                    if row >= 0 && col >= 0 {
+                        z = output.get_value(row, col);
+                        dir = flow_dir.get_value(row, col);
+                        if dir >= 0 {
+                            row_n = row + dy[dir as usize];
+                            col_n = col + dx[dir as usize];
+                            z_n = output.get_value(row_n, col_n);
+                            if z_n != nodata {
+                                if z <= z_n + small_num {
+                                    output.set_value(row, col, z_n + small_num);
+                                }
+                            }
+                        }
+                    }
+                    if verbose {
+                        num_solved_cells += 1;
+                        progress =
+                            (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
+                        if progress != old_progress {
+                            println!("Filling DEM: {}%", progress);
+                            old_progress = progress;
+                        }
+                    }
+                }
             }
+
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
@@ -523,6 +744,12 @@ impl WhiteboxTool for BreachDepressions {
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Fill pits: {}", fill_pits));
+        if constrained_mode {
+            output.add_metadata_entry(format!("Maximum breach depth: {}", max_depth));
+            output.add_metadata_entry(format!("Maximum breach channel length: {}", max_length));
+        }
+        output.add_metadata_entry(format!("Flat elevation increment: {}", small_num));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {

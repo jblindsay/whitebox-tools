@@ -2,10 +2,8 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Simon Gudim
 Created: 04/05/2017
-Last Modified: 13/10/2018
+Last Modified: 25/02/2019
 License: MIT
-
-NOTES: http://homepages.inf.ed.ac.uk/rbf/HIPR2/hitmiss.htm
 */
 
 use crate::raster::*;
@@ -19,7 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Identifies corner patterns in boolean images using hit-and-miss pattern mattching.
+/// This tool identifies corner patterns in boolean images using hit-and-miss pattern matching. Foreground pixels 
+/// in the input image (`--input`) are designated by any positive, non-zero values. Zero-valued and NoData-valued
+/// grid cells are interpreted by the algorithm as background values.
+/// 
+/// # Reference
+/// Fisher, R, Brown, N, Cammas, N, Fitzgibbon, A, Horne, S, Koryllos, K, Murdoch, A, Robertson, J, Sharman, T, Strachan, C, 
+/// 2004. Hypertext Image Processing Resource. online: http://homepages.inf.ed.ac.uk/rbf/HIPR2/hitmiss.htm
 pub struct CornerDetection {
     name: String,
     description: String,
@@ -34,7 +38,7 @@ impl CornerDetection {
         let name = "CornerDetection".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description =
-            "Identifies corner patterns in boolean images using hit-and-miss pattern mattching."
+            "Identifies corner patterns in boolean images using hit-and-miss pattern matching."
                 .to_string();
 
         let mut parameters = vec![];
@@ -136,18 +140,19 @@ impl WhiteboxTool for CornerDetection {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 

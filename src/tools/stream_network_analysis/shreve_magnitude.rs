@@ -32,7 +32,7 @@ use std::path;
 /// Shreve, R. L. (1966). Statistical law of stream numbers. The Journal of Geology, 74(1), 17-37.
 /// 
 /// # See Also
-/// `HortonStreamOrder`, `HackStreamOrder`, `StrahlerStreamMagnitude`, `TopologicalStreamOrder`
+/// `HortonStreamOrder`, `HackStreamOrder`, `StrahlerStreamOrder`, `TopologicalStreamOrder`
 pub struct ShreveStreamMagnitude {
     name: String,
     description: String,

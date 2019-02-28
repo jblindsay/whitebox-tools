@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
+Created: 27/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,69 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to perform a Laplacian filter on a raster image. A Laplacian filter can be used 
+/// to emphasize the edges in an image. As such, this filter type is commonly used in edge-detection 
+/// applications. The algorithm operates by convolving a kernel of weights with each grid cell and its 
+/// neighbours in an image. Four 3x3 sized filters and one 5x5 filter are available for selection. The 
+/// weights of the kernels are as follows:
+///
+/// 3x3(1)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | 0  | -1  | 0  |
+/// | -1 |  4  | -1 |
+/// | 0  | -1  | 0  |
+/// 
+/// 3x3(2)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | 0  | -1  | 0  |
+/// | -1 |  5  | -1 |
+/// | 0  | -1  | 0  |
+/// 
+/// 3x3(3)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | -1 | -1  | -1 |
+/// | -1 |  8  | -1 |
+/// | -1 | -1  | -1 |
+/// 
+/// 3x3(4)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// |  1 | -2  |  1 |
+/// | -2 |  4  | -2 |
+/// |  1 | -2  |  1 |
+/// 
+/// 5x5(1)
+/// 
+/// | .  |  . |  . | .  |  . |
+/// |:--:|:--:|:--:|:--:|:--:|
+/// |  0 |  0 | -1 |  0 |  0 |
+/// |  0 | -1 | -2 | -1 |  0 |
+/// | -1 | -2 | 17 | -2 | -1 |
+/// |  0 | -1 | -2 | -1 |  0 |
+/// |  0 |  0 | -1 |  0 |  0 |
+/// 
+/// 5x5(2)
+/// 
+/// | .  |  . |  . | .  |  . |
+/// |:--:|:--:|:--:|:--:|:--:|
+/// |  0 |  0 | -1 |  0 |  0 |
+/// |  0 | -1 | -2 | -1 |  0 |
+/// | -1 | -2 | 16 | -2 | -1 |
+/// |  0 | -1 | -2 | -1 |  0 |
+/// |  0 |  0 | -1 |  0 |  0 |
+/// 
+/// The user must specify the `--variant`, including '3x3(1)', '3x3(2)', '3x3(3)', '3x3(4)', '5x5(1)', and '5x5(2)'. 
+/// The user may also optionally clip the output image distribution tails by a specified amount (e.g. 1%).
+/// 
+/// # See Also
+/// `PrewittFilter`, `SobelFilter`
 pub struct LaplacianFilter {
     name: String,
     description: String,

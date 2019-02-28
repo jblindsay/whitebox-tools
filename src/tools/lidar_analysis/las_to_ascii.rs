@@ -23,7 +23,7 @@ use std::path;
 /// commas in the ASCII formated file. The output point data, each on a seperate line, will take the format:
 /// 
 /// ```
-/// x,y,z,intensity,class,return,num_returns,scan_angle"
+/// x,y,z,intensity,class,return,num_returns,scan_angle
 /// ```
 /// 
 /// Use the `AsciiToLas` tool to convert a text file containing LiDAR point data into a LAS file.

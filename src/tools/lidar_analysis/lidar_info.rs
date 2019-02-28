@@ -271,15 +271,7 @@ impl WhiteboxTool for LidarInfo {
         ";
         writer.write_all(s.as_bytes())?;
 
-        let input = match LasFile::new(&input_file, "r") {
-            Ok(lf) => lf,
-            Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::NotFound,
-                    format!("No such file or directory ({})", input_file),
-                ))
-            }
-        };
+        let input = LasFile::new(&input_file, "r")?;
 
         let s1 = &format!("<h2>File Summary</h2><p>{}", input);
         writer.write_all(s1.replace("\n", "<br>").as_bytes())?;

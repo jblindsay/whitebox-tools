@@ -54,6 +54,7 @@ impl ToolManager {
         tool_names.push("AverageOverlay".to_string());
         tool_names.push("BlockMaximumGridding".to_string());
         tool_names.push("BlockMinimumGridding".to_string());
+        tool_names.push("BoundaryShapeComplexity".to_string());
         tool_names.push("BufferRaster".to_string());
         // tool_names.push("BufferVector".to_string());
         tool_names.push("Centroid".to_string());
@@ -100,6 +101,7 @@ impl ToolManager {
         tool_names.push("MinimumBoundingCircle".to_string());
         tool_names.push("MinimumBoundingEnvelope".to_string());
         tool_names.push("MinimumConvexHull".to_string());
+        tool_names.push("NarrownessIndex".to_string());
         tool_names.push("NearestNeighbourGridding".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PatchOrientation".to_string());
@@ -121,6 +123,7 @@ impl ToolManager {
         tool_names.push("ReclassFromFile".to_string());
         tool_names.push("RelatedCircumscribingCircle".to_string());
         tool_names.push("ShapeComplexityIndex".to_string());
+        tool_names.push("ShapeComplexityIndexRaster".to_string());
         // tool_names.push("SibsonInterpolation".to_string());
         tool_names.push("SmoothVectors".to_string());
         tool_names.push("SplitWithLines".to_string());
@@ -223,7 +226,7 @@ impl ToolManager {
         tool_names.push("ModifiedKMeansClustering".to_string());
         tool_names.push("Mosaic".to_string());
         tool_names.push("MosaicWithFeathering".to_string());
-        tool_names.push("NormalizedDifferenceVegetationIndex".to_string());
+        tool_names.push("NormalizedDifferenceIndex".to_string());
         tool_names.push("OlympicFilter".to_string());
         tool_names.push("Opening".to_string());
         tool_names.push("PanchromaticSharpening".to_string());
@@ -490,6 +493,7 @@ impl ToolManager {
             "averageoverlay" => Some(Box::new(gis_analysis::AverageOverlay::new())),
             "blockmaximumgridding" => Some(Box::new(gis_analysis::BlockMaximumGridding::new())),
             "blockminimumgridding" => Some(Box::new(gis_analysis::BlockMinimumGridding::new())),
+            "boundaryshapecomplexity" => Some(Box::new(gis_analysis::BoundaryShapeComplexity::new())),
             "bufferraster" => Some(Box::new(gis_analysis::BufferRaster::new())),
             // "buffervector" => Some(Box::new(gis_analysis::BufferVector::new())),
             "centroid" => Some(Box::new(gis_analysis::Centroid::new())),
@@ -550,10 +554,11 @@ impl ToolManager {
                 Some(Box::new(gis_analysis::MinimumBoundingEnvelope::new()))
             }
             "minimumconvexhull" => Some(Box::new(gis_analysis::MinimumConvexHull::new())),
+            "minoverlay" => Some(Box::new(gis_analysis::MinOverlay::new())),
             "nearestneighbourgridding" => {
                 Some(Box::new(gis_analysis::NearestNeighbourGridding::new()))
             }
-            "minoverlay" => Some(Box::new(gis_analysis::MinOverlay::new())),
+            "narrownessindex" => Some(Box::new(gis_analysis::NarrownessIndex::new())),
             "patchorientation" => Some(Box::new(gis_analysis::PatchOrientation::new())),
             "percentequalto" => Some(Box::new(gis_analysis::PercentEqualTo::new())),
             "percentgreaterthan" => Some(Box::new(gis_analysis::PercentGreaterThan::new())),
@@ -575,6 +580,7 @@ impl ToolManager {
                 Some(Box::new(gis_analysis::RelatedCircumscribingCircle::new()))
             }
             "shapecomplexityindex" => Some(Box::new(gis_analysis::ShapeComplexityIndex::new())),
+            "shapecomplexityindexraster" => Some(Box::new(gis_analysis::ShapeComplexityIndexRaster::new())),
             // "sibsoninterpolation" => {
             //     Some(Box::new(gis_analysis::SibsonInterpolation::new()))
             // }
@@ -715,8 +721,8 @@ impl ToolManager {
             }
             "mosaic" => Some(Box::new(image_analysis::Mosaic::new())),
             "mosaicwithfeathering" => Some(Box::new(image_analysis::MosaicWithFeathering::new())),
-            "normalizeddifferencevegetationindex" => Some(Box::new(
-                image_analysis::NormalizedDifferenceVegetationIndex::new(),
+            "normalizeddifferenceindex" => Some(Box::new(
+                image_analysis::NormalizedDifferenceIndex::new(),
             )),
             "olympicfilter" => Some(Box::new(image_analysis::OlympicFilter::new())),
             "opening" => Some(Box::new(image_analysis::Opening::new())),

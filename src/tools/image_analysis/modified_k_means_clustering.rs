@@ -2,12 +2,13 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/12/2017
-Last Modified: 30/12/2017
+Last Modified: 24/02/2019
 License: MIT
 */
 
 use crate::raster::*;
 use crate::rendering::html::*;
+use crate::rendering::LineGraph;
 use crate::tools::*;
 use num_cpus;
 use rand::prelude::*;
@@ -23,13 +24,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This modified k-means algorithm is similar to that described by Mather (2004).
+/// This modified k-means algorithm is similar to that described by Mather and Koch (2011).
 /// The main difference between the traditional k-means and this technique is that the user
 /// does not need to specify the desired number of classes/clusters prior to running the
 /// tool. Instead, the algorithm initializes with a very liberal overestimate of the number
 /// of classes and then merges classes that have cluster centres that are separated by less
 /// than a user-defined threshold. The main difference between this algorithm and the ISODATA
 /// technique is that clusters can not be broken apart into two smaller clusters.
+/// 
+/// # See Also
+/// `KMeansClustering`
 pub struct ModifiedKMeansClustering {
     name: String,
     description: String,
@@ -420,7 +424,11 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         let mut n_counted = false;
         let mut n = 0f64;
         let nodata = Arc::new(nodata);
+        let mut xdata = vec![vec![0f64; max_iterations]; 1];
+        let mut ydata = vec![vec![0f64; max_iterations]; 1];
         for loop_num in 0..max_iterations {
+            xdata[0][loop_num] = (loop_num + 1) as f64;
+
             // assign each pixel to a class
             let mut class_centre_data = vec![vec![0f64; num_files]; num_classes];
             class_n = vec![0usize; num_classes];
@@ -574,6 +582,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             println!("Number of clusters: {}", num_classes);
 
             percent_changed = 100f64 * cells_changed / n;
+            ydata[0][loop_num] = percent_changed;
             println!(
                 "Cells changed {} ({:.4} percent)",
                 cells_changed, percent_changed
@@ -584,6 +593,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.data_type = DataType::I16;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!(
@@ -595,12 +605,6 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         output.add_metadata_entry(format!("max_iterations: {}", max_iterations));
         output.add_metadata_entry(format!("class_change: {}", percent_changed_threshold));
         output.add_metadata_entry(format!("merger_dist: {}", merger_dist.sqrt()));
-        //output.add_metadata_entry(format!("min_class_size: {}", min_class_size));
-        // if initialization_mode == 0 {
-        //     output.add_metadata_entry("initialize: random".to_string());
-        // } else {
-        //     output.add_metadata_entry("initialize: diagonal".to_string());
-        // }
         output.add_metadata_entry(format!("Elapsed Time (including I/O): {}", elapsed_time));
 
         if verbose {
@@ -629,7 +633,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             <html>
                 <head>
                     <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-                    <title>k-Means Clustering</title>"#.as_bytes())?;
+                    <title>Modified k-Means Clustering</title>"#.as_bytes())?;
 
             // get the style sheet
             writer.write_all(&get_css().as_bytes())?;
@@ -757,6 +761,36 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 writer.write_all(s.as_bytes())?;
             }
             writer.write_all("</table></p>".as_bytes())?;
+
+
+            //////////////////////
+            // convergence plot //
+            //////////////////////
+            for loop_num in (0..max_iterations).rev() {
+                if xdata[0][loop_num] == 0f64 {
+                    xdata[0].remove(loop_num);
+                    ydata[0].remove(loop_num);
+                }
+            }
+            writer.write_all("<br><br><h2>Convergence Plot</h2>".as_bytes())?;
+            let graph = LineGraph {
+                parent_id: "graph".to_string(),
+                width: 500f64,
+                height: 450f64,
+                data_x: xdata.clone(),
+                data_y: ydata.clone(),
+                series_labels: vec!["Line 1".to_string()].clone(),
+                x_axis_label: "Iteration".to_string(),
+                y_axis_label: "Cells with class values changed (%)".to_string(),
+                draw_points: true,
+                draw_gridlines: true,
+                draw_legend: false,
+                draw_grey_background: false,
+            };
+
+            writer.write_all(
+                &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+            )?;
 
             writer.write_all("</body>".as_bytes())?;
             writer.write_all("</html>".as_bytes())?;

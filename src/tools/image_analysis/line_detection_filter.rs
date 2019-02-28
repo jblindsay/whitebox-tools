@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,50 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to perform one of four 3x3 line-detection filters on a raster image. These 
+/// filters can be used to find one-cell-thick vertical, horizontal, or angled (135-degrees or
+/// 45-degrees) lines in an image. Notice that line-finding is a similar application to edge-detection. 
+/// Common edge-detection filters include the Sobel and Prewitt filters. The kernel weights for each of 
+/// the four line-detection filters are as follows:
+///
+/// 'v' (Vertical)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | -1 |  2  | -1 |
+/// | -1 |  2  | -1 |
+/// | -1 |  2  | -1 |
+/// 
+/// 'h' (Horizontal)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | -1 | -1  | -1 |
+/// |  2 |  2  | 2  |
+/// | -1 | -1  | -1 |
+/// 
+/// '45' (Northeast-Southwest)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | -1 | -1  | 2  |
+/// | -1 |  2  | -1 |
+/// | 2  | -1  | -1 |
+/// 
+/// '135' (Northwest-Southeast)
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// |  2 | -1  | -1 |
+/// | -1 |  2  | -1 |
+/// | -1 | -1  |  2 |
+/// 
+/// The user must specify the `--variant`, including 'v', 'h', '45', and '135', for vertical, horizontal, 
+/// northeast-southwest, and northwest-southeast directions respectively. The user may also optionally clip 
+/// the output image distribution tails by a specified amount (e.g. 1%).
+/// 
+/// # See Also
+/// `PrewittFilter`, `SobelFilter`
 pub struct LineDetectionFilter {
     name: String,
     description: String,

@@ -22,7 +22,7 @@ use std::path;
 ///
 /// Related circumscribing circle (RCC) is defined as:  
 ///
-/// `RCC = 1 - A / Ac`
+/// > RCC = 1 - A / Ac
 ///  
 /// Where `A` is the polygon's area and `Ac` the area of the smallest circumscribing circle.
 ///

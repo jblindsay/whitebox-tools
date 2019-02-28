@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 27, 2017
-Last Modified: 13/10/2018
+Created: 27/06/2017
+Last Modified: 24/02/2019
 License: MIT
 */
 
@@ -19,6 +19,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a k-nearest mean filter on a raster image. A mean filter can be used to emphasize the 
+/// longer-range variability in an image, effectively acting to smooth or blur the image. This can be useful 
+/// for reducing the noise in an image. The algorithm operates by calculating the average of a specified 
+/// number (*k*) values in a moving window centred on each grid cell. The *k* values used in the average are 
+/// those cells in the window with the nearest intensity values to that of the centre cell. As such, this is 
+/// a type of edge-preserving smoothing filter. The `BilateralFilter` and `EdgePreservingMeanFilter` are 
+/// examples of more sophisticated edge-preserving smoothing filters.
+///
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// NoData values in the input image are ignored during filtering.
+///
+/// # See Also
+/// `MeanFilter`, `BilateralFilter`, `EdgePreservingMeanFilter`
 pub struct KNearestMeanFilter {
     name: String,
     description: String,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/07/2017
-Last Modified: 13/10/2018
+Last Modified: 16/02/2019
 License: MIT
 
 NOTE: This algorithm can't easily be parallelized because the output raster must be read
@@ -21,7 +21,7 @@ use std::sync::Arc;
 use std::thread;
 
 /// This image processing tool removes small irregularities (i.e. spurs) on the boundaries of objects in a 
-/// Boolean input raster image (`--input`). This operation is sometimes called pruning. Remove Spurs is a useful tool 
+/// Boolean input raster image (`--input`). This operation is sometimes called *pruning*. Remove Spurs is a useful tool 
 /// for cleaning an image before performing a line thinning operation. In fact, the input image need not be truly 
 /// Boolean (i.e. contain only 1's and 0's). All non-zero, positive values are considered to be foreground pixels 
 /// while all zero valued cells are considered background pixels.
@@ -161,29 +161,25 @@ impl WhiteboxTool for RemoveSpurs {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-iterations"
-                || vec[0].to_lowercase() == "--iterations"
-            {
-                if keyval {
-                    max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-iterations" {
+                max_iterations = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    max_iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             }
         }
 

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
+Created: 25/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -18,6 +18,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a total filter on an input image. A total filter assigns to each cell in the output grid 
+/// the total (sum) of all values in a moving window centred on each grid cell.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # See Also
+/// `RangeFilter`
 pub struct TotalFilter {
     name: String,
     description: String,

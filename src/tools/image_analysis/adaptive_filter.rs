@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
+Created: 26/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -20,6 +20,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a type of adaptive filter on a raster image. An adaptive filter can be used to reduce 
+/// the level of random noise (shot noise) in an image. The algorithm operates by calculating the average 
+/// value in a moving window centred on each grid cell. If the absolute difference between the window mean 
+/// value and the centre grid cell value is beyond a user-defined threshold (`--threshold`), the grid cell in the 
+/// output image is assigned the mean value, otherwise it is equivalent to the original value. Therefore, the 
+/// algorithm only modifies the image where grid cell values are substantially different than their neighbouring 
+/// values.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # See Also
+/// `MeanFilter`
 pub struct AdaptiveFilter {
     name: String,
     description: String,

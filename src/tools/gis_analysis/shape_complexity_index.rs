@@ -25,7 +25,7 @@ use std::path;
 /// SCI relates a polygon's shape to that of an encompassing convex hull. It is
 /// defined as:  
 ///
-/// `SCI = 1 - A / Ah`
+/// > SCI = 1 - A / A
 ///
 /// Where `A` is the polygon's area and `Ah` is the area of the convex hull containing
 /// the polygon. Convex polygons, i.e. those that do not contain concavities or holes,
@@ -36,6 +36,9 @@ use std::path;
 ///
 /// The SCI values calculated for each vector polygon feature will be placed in the
 /// accompanying database file (.dbf) as a complexity field (COMPLEXITY).
+/// 
+/// # See Also
+/// `ShapeComplexityIndexRaster`
 pub struct ShapeComplexityIndex {
     name: String,
     description: String,

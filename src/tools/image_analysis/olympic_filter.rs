@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
+Created: 26/06/2017
 Last Modified: 05/05/2018
 License: MIT
 */
@@ -19,6 +19,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This filter is a modification of the `MeanFilter`, whereby the highest and lowest values in the kernel are 
+/// dropped, and the remaining values are averaged to replace the central pixel. The result is a low-pass smoothing
+/// filter that is more robust than the `MeanFilter`, which is more strongly impacted by the presence of outlier 
+/// values. It is named after a system of scoring Olympic events. 
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # See Also
+/// `MeanFilter`
 pub struct OlympicFilter {
     name: String,
     description: String,
