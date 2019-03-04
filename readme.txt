@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.15.0 (XX-XX-2019)
+Version 0.15.0 (03-03-2019)
 - The following tools were added to the project:
   BoundaryShapeComplexity
   NarrownessIndex

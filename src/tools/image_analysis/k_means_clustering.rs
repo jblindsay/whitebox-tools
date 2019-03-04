@@ -314,7 +314,9 @@ impl WhiteboxTool for KMeansClustering {
         let mut input_raster: Vec<Raster> = Vec::with_capacity(num_files);
 
         for i in 0..num_files {
-            println!("Reading file {} of {}", i + 1, num_files);
+            if verbose {
+                println!("Reading file {} of {}", i + 1, num_files);
+            }
             if !input_files[i].trim().is_empty() {
                 let mut input_file = input_files[i].trim().to_owned();
                 if !input_file.contains(&sep) && !input_file.contains("/") {
@@ -597,15 +599,19 @@ impl WhiteboxTool for KMeansClustering {
                     }
                 }
             }
-
-            println!("Cluster sizes: {:?}", class_n);
+            
+            if verbose {
+                println!("Cluster sizes: {:?}", class_n);
+            }
 
             percent_changed = 100f64 * cells_changed / n;
             ydata[0][loop_num] = percent_changed;
-            println!(
-                "Cells changed {} ({:.4} percent)",
-                cells_changed, percent_changed
-            );
+            if verbose {
+                println!(
+                    "Cells changed {} ({:.4} percent)",
+                    cells_changed, percent_changed
+                );
+            }
             if percent_changed < percent_changed_threshold {
                 break;
             }

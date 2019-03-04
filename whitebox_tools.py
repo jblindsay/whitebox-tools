@@ -370,6 +370,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1880,6 +1881,20 @@ class WhiteboxTools(object):
     # GIS Analysis/Patch Shape Tools #
     ##################################
 
+    def boundary_shape_complexity(self, i, output, callback=None):
+        """Calculates the complexity of the boundaries of raster polygons.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('boundary_shape_complexity', args, callback) # returns 1 if error
+
     def compactness_ratio(self, i, callback=None):
         """Calculates the compactness ratio (A/P), a measure of shape complexity, for vector polygons.
 
@@ -1959,7 +1974,7 @@ class WhiteboxTools(object):
         return self.run_tool('linearity_index', args, callback) # returns 1 if error
 
     def narrowness_index(self, i, output, callback=None):
-        """Calculates the area of polygons or classes within a raster image.
+        """Calculates the narrowness of raster polygons.
 
         Keyword arguments:
 
@@ -2037,7 +2052,7 @@ class WhiteboxTools(object):
         return self.run_tool('shape_complexity_index', args, callback) # returns 1 if error
 
     def shape_complexity_index_raster(self, i, output, callback=None):
-        """Calculates the area of polygons or classes within a raster image.
+        """Calculates the complexity of raster polygons or classes.
 
         Keyword arguments:
 
@@ -3040,7 +3055,7 @@ class WhiteboxTools(object):
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('basins', args, callback) # returns 1 if error
 
-    def breach_depressions(self, dem, output, max_depth=None, max_length=None, callback=None):
+    def breach_depressions(self, dem, output, max_depth=None, max_length=None, flat_increment=None, fill_pits=False, callback=None):
         """Breaches all of the depressions in a DEM using Lindsay's (2016) algorithm. This should be preferred over depression filling in most cases.
 
         Keyword arguments:
@@ -3049,6 +3064,8 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         max_depth -- Optional maximum breach depth (default is Inf). 
         max_length -- Optional maximum breach channel length (in grid cells; default is Inf). 
+        flat_increment -- Optional elevation increment applied to flat areas. 
+        fill_pits -- Optional flag indicating whether to fill single-cell pits. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -3056,6 +3073,8 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if max_depth is not None: args.append("--max_depth='{}'".format(max_depth))
         if max_length is not None: args.append("--max_length='{}'".format(max_length))
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
+        if fill_pits: args.append("--fill_pits")
         return self.run_tool('breach_depressions', args, callback) # returns 1 if error
 
     def breach_single_cell_pits(self, dem, output, callback=None):
@@ -3984,25 +4003,25 @@ class WhiteboxTools(object):
         args.append("--weight={}".format(weight))
         return self.run_tool('mosaic_with_feathering', args, callback) # returns 1 if error
 
-    def normalized_difference_vegetation_index(self, nir, red, output, clip=0.0, osavi=False, callback=None):
-        """Calculates the normalized difference vegetation index (NDVI) from near-infrared and red imagery.
+    def normalized_difference_index(self, input1, input2, output, clip=0.0, correction=0.0, callback=None):
+        """Calculate a normalized-difference index (NDI) from two bands of multispectral image data.
 
         Keyword arguments:
 
-        nir -- Input near-infrared band image. 
-        red -- Input red band image. 
+        input1 -- Input image 1 (e.g. near-infrared band). 
+        input2 -- Input image 2 (e.g. red band). 
         output -- Output raster file. 
         clip -- Optional amount to clip the distribution tails by, in percent. 
-        osavi -- Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used. 
+        correction -- Optional adjustment value (e.g. 1, or 0.16 for the optimal soil adjusted vegetation index, OSAVI). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
-        args.append("--nir='{}'".format(nir))
-        args.append("--red='{}'".format(red))
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
         args.append("--output='{}'".format(output))
         args.append("--clip={}".format(clip))
-        if osavi: args.append("--osavi")
-        return self.run_tool('normalized_difference_vegetation_index', args, callback) # returns 1 if error
+        args.append("--correction={}".format(correction))
+        return self.run_tool('normalized_difference_index', args, callback) # returns 1 if error
 
     def opening(self, i, output, filterx=11, filtery=11, callback=None):
         """An opening is a mathematical morphology operation involving a dilation (max filter) of an erosion (min filter) set.
@@ -4205,7 +4224,7 @@ class WhiteboxTools(object):
         return self.run_tool('conservative_smoothing_filter', args, callback) # returns 1 if error
 
     def corner_detection(self, i, output, callback=None):
-        """Identifies corner patterns in boolean images using hit-and-miss pattern mattching.
+        """Identifies corner patterns in boolean images using hit-and-miss pattern matching.
 
         Keyword arguments:
 

@@ -345,7 +345,9 @@ impl WhiteboxTool for NormalizedDifferenceIndex {
         }
 
         if clip_amount > 0.0 {
-            println!("Clipping output...");
+            if verbose {
+                println!("Clipping output...");
+            }
             output.clip_min_and_max_by_percent(clip_amount);
         }
 
