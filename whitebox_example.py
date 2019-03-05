@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ''' This module provides examples of how to call the whitebox_tool script and the
 whitebox-tools geospatial analysis library using Python code.
 '''

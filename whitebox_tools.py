@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ''' This file is intended to be a helper for running whitebox-tools plugins from a Python script.
 See whitebox_example.py for an example of how to use it.
 '''

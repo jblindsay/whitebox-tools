@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # This script is part of the WhiteboxTools geospatial analysis library.
 # Authors: Dr. John Lindsay
