@@ -236,14 +236,6 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !output_html_file.contains(&sep) && !output_html_file.contains("/") {
-            output_html_file = format!("{}{}", working_directory, output_html_file);
-        }
-
-        if !output_html_file.ends_with(".html") {
-            output_html_file.push_str(".html");
-        }
-
         let mut cmd = input_files_str.split(";");
         let mut input_files = cmd.collect::<Vec<&str>>();
         if input_files.len() == 1 {
@@ -254,6 +246,23 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         if num_files < 3 {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "There is something incorrect about the input files. At least three inputs are required to operate this tool."));
+        }
+
+        let wd = if working_directory.is_empty() {
+            // set thw working directory to that of the first input file.
+            let p = path::Path::new(input_files[0].trim());
+            // let wd = p.parent().unwrap().to_str().unwrap().to_owned();
+            format!("{}{}", p.parent().unwrap().to_str().unwrap().to_owned(), sep)
+        } else {
+            working_directory.clone().to_owned()
+        };
+
+        if !output_html_file.contains(&sep) && !output_html_file.contains("/") {
+            output_html_file = format!("{}{}", wd, output_html_file);
+        }
+
+        if !output_html_file.ends_with(".html") {
+            output_html_file.push_str(".html");
         }
 
         let start = Instant::now();
@@ -558,7 +567,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
         for a in 0..num_comp {
             pc = component_order[a];
-            let out_file = format!("{}PCA_component{}.tif", working_directory, (a + 1));
+            let out_file = format!("{}PCA_component{}.tif", wd, (a + 1));
             let mut output = Raster::initialize_using_file(&out_file, &input_raster[0]);
             output.configs.data_type = DataType::F32;
             for row in 0..rows {

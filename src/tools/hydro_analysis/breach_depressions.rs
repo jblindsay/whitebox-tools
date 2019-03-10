@@ -278,13 +278,13 @@ impl WhiteboxTool for BreachDepressions {
         let num_cells = rows * columns;
         let nodata = input.configs.nodata;
 
-        let small_num = if flat_increment != f64::NAN {
+        let small_num = if !flat_increment.is_nan() {
             flat_increment
         } else {
             let min_val = input.configs.minimum;
             let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
-            1.0 / elev_multiplier as f64 
+            1.0_f64 / elev_multiplier as f64
         };
 
         let mut z: f64;

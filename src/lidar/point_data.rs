@@ -176,7 +176,6 @@ pub fn convert_class_val_to_class_string(value: u8) -> String {
         18 => return String::from("High Noise"),
         19...63 => return String::from("Reserved"),
         64...255 => return String::from("User defined"),
-        _ => return String::from("Unknown class"),
     }
 }
 
@@ -449,7 +448,6 @@ impl PointData {
             18 => return String::from("High Noise"),
             19...63 => return String::from("Reserved"),
             64...255 => return String::from("User defined"),
-            _ => return String::from("Unknown class"),
         }
     }
 

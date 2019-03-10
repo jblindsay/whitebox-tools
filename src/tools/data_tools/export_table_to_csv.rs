@@ -201,7 +201,7 @@ impl WhiteboxTool for ExportTableToCsv {
             for field in &vector_data.attributes.fields {
                 s.push_str(&format!(",{}", field.name));
             }
-            s = s.trim_left_matches(',').to_string();
+            s = s.trim_start_matches(',').to_string();
             s.push_str("\n");
             writer.write_all(s.as_bytes())?;
         }
@@ -238,7 +238,7 @@ impl WhiteboxTool for ExportTableToCsv {
                 }
             }
 
-            s = s.trim_left_matches(',').to_string();
+            s = s.trim_start_matches(',').to_string();
             s.push_str("\n");
             writer.write_all(s.as_bytes())?;
 

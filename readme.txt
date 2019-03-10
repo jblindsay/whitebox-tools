@@ -73,6 +73,14 @@ Version 0.15.0 (03-03-2019)
   for the exclusion of large-area triangles (i.e. low point density) from the gridding.
 - The NormalizedDifferenceVegetationIndex tool has been renamed to NormalizedDifferenceIndex 
   to indicate the more general nature of this tool (i.e. NDVI, NDWI, OSAVI, etc.).
+- Significant changes have been made to the BreachDepressions tool to make it more in-line
+  with the behaviour of the GoSpatial algorithm described in the original Lindsay (2016)
+  paper. These changes include: 1) the inclusion of an optional parameter to fill single-cell
+  pits prior to breaching, 2) the addition of a --flat_increment parameter, which overrides
+  the automatically derived value assigned to flat areas along breach channels (or filled 
+  depressions), and 3) the tool now performs a fast post-breach filling operation, when
+  run in constrained-breaching mode (i.e. when the user specifies values for either 
+  --max_depth or --max_length, placing constraints on the allowable breach channel size).
 
 Version 0.14.1 (10-02-2019)
 - This release largely focuses on bug-fixes rather than feature additions. However, the

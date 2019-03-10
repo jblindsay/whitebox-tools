@@ -490,7 +490,7 @@ impl WhiteboxTool for TrendSurfaceVectorPoints {
                 b_val += 1;
             }
         }
-        s = s.trim().trim_right_matches(" +").to_string();
+        s = s.trim().trim_end_matches(" +").to_string();
         writer.write_all(&format!("<p>{}</p>", s).as_bytes())?;
 
         ///////////////////////
