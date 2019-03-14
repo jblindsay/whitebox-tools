@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: Dec. 18, 2017
+Created: 18/12/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,19 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool can be used to perform a cross-tabulation on two input raster images (`--i1` and `--i2`) containing 
+/// categorical data, i.e. classes. It will output a [contingency table](https://en.wikipedia.org/wiki/Contingency_table) 
+/// in HTML format (`--output`). A contingency table, also known as a cross tabulation or crosstab, is a type of table 
+/// that displays the multivariate frequency distribution of the variables. These tables provide a basic picture of the 
+/// interrelation between two categorical variables and can help find interactions between them. `CrossTabulation` 
+/// can provide useful information about the nature of land-use/land-cover (LULC) changes between two dates of classified
+/// multi-spectral satellite imagery. For example, the extent of urban expansion could be described using the information 
+/// about the extent of pixels in an 'urban' class in Date 2 that were previously assigned to other classes (e.g. 
+/// agricultural LULC categories) in the Date 1 imagery.
+/// 
+/// Both input images must share the same grid, as the analysis requires a comparison of a pair of images on a cell-by-cell 
+/// basis. If a grid cell contains a **NoData** value in either of the input images, the cell will be excluded from the 
+/// analysis.
 pub struct CrossTabulation {
     name: String,
     description: String,

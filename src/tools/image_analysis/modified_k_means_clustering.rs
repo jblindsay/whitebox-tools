@@ -32,6 +32,10 @@ use std::thread;
 /// than a user-defined threshold. The main difference between this algorithm and the ISODATA
 /// technique is that clusters can not be broken apart into two smaller clusters.
 /// 
+/// # Reference
+/// Mather, P. M., & Koch, M. (2011). Computer processing of remotely-sensed images: an 
+/// introduction. John Wiley & Sons.
+/// 
 /// # See Also
 /// `KMeansClustering`
 pub struct ModifiedKMeansClustering {
@@ -90,7 +94,7 @@ impl ModifiedKMeansClustering {
 
         parameters.push(ToolParameter {
             name: "Cluster Merger Distance".to_owned(),
-            flags: vec!["--merger_dist".to_owned()],
+            flags: vec!["--merge_dist".to_owned()],
             description: "Cluster merger distance".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
@@ -145,7 +149,7 @@ impl ModifiedKMeansClustering {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html --start_clusters=100 --merger_dist=30.0 --max_iterations=25 --class_change=1.5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.tif;image2.tif;image3.tif' -o=output.tif --out_html=report.html --start_clusters=100 --merge_dist=30.0 --max_iterations=25 --class_change=1.5", short_exe, name).replace("*", &sep);
 
         ModifiedKMeansClustering {
             name: name,
@@ -241,7 +245,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 } else {
                     num_classes = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
-            } else if flag_val == "-merger_dist" {
+            } else if flag_val == "-merge_dist" || flag_val == "-merger_dist" {
                 if keyval {
                     merger_dist = vec[1].to_string().parse::<f64>().unwrap();
                 } else {

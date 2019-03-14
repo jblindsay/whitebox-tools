@@ -283,7 +283,7 @@ impl WhiteboxTool for BreachDepressions {
         } else {
             let min_val = input.configs.minimum;
             let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-            let elev_multiplier = 10.0_f64.powi((5 - elev_digits) as i32);
+            let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64
         };
 

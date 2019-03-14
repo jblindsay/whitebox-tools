@@ -2335,7 +2335,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         //////////////////////
         // Write the header //
         //////////////////////
-        writer.write_all("II".as_bytes())?;
+        writer.write_all("MM".as_bytes())?;
         // magic number
         writer.write_u16::<BigEndian>(42u16)?;
         // offset to first IFD

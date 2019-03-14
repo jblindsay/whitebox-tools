@@ -18,7 +18,10 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool creates a new raster in which each grid cell is equal to the subtraction (difference) of the corresponding grid 
-/// cells in two input rasters or one input raster and a constant value.
+/// cells in two input rasters or one input raster and a constant value. If two images are input, both
+/// images must possess the same number of rows and columns and spatial extent, as the analysis will be 
+/// carried out on a cell-by-cell basis. If a grid cell contains a **NoData** value in either of the input 
+/// images, the cell will be excluded from the analysis.
 /// 
 /// # See Also
 ///`Add`,  `Divide`, `Multiply`, `InPlaceSubtract`

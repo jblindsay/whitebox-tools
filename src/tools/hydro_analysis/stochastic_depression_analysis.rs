@@ -23,8 +23,9 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// Preforms a stochastic analysis of depressions within a DEM, calculating the
-/// probability of each cell belonging to a depression.
+/// This tool performs a stochastic analysis of depressions within a DEM, calculating the
+/// probability of each cell belonging to a depression. This land-surface prameter 
+/// (p<sub>dep</sub>) has been widely applied in wetland and bottom-land mapping applications.
 ///
 /// This tool differs from the original Whitebox GAT tool in a few significant ways:
 ///
@@ -54,7 +55,7 @@ use std::thread;
 /// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.
 /// 
 /// # See Also
-/// `ImpoundmentSizeIndex`
+/// `ImpoundmentSizeIndex`, `FastAlmostGaussianFilter`
 pub struct StochasticDepressionAnalysis {
     name: String,
     description: String,

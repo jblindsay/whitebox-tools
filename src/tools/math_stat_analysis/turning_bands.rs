@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 14, 2017
+Created: 14/07/2017
 Last Modified: 07/12/2018
 License: MIT
 */
@@ -19,6 +19,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to create a random field using the turning bands algorithm. The user must specify 
+/// the name of a base raster image (`--base`) from which the output raster will derive its geographical 
+/// information, dimensions (rows and columns), and other information. In addition, the range (`--range`), in 
+/// x-y units, must be specified. The range determines the correlation length of the resulting field. For a 
+/// good description of how the algorithm works, see Carr (2002). The turning bands method creates a number 
+/// of 1-D simulations (called bands) and fuses these together to create a 2-D error field. There is no 
+/// natural stopping condition in this process, so the user must specify the number of bands to create 
+/// (`--iterations`). The default value of 1000 iterations is reasonable. The fewer iterations used, the 
+/// more prevalent the 1-D simulations will be in the output error image, effectively creating artifacts. 
+/// Run time increases with the number of iterations.
+/// 
+/// Turning bands simulation is a commonly applied technique in Monte Carlo style simulations of uncertainty. 
+/// As such, it is frequently run many times during a simulation (often 1000s of times). When this is the 
+/// case, algorithm performance and efficiency are key considerations. One alternative method to efficiently
+/// generate spatially autcorrelated random fields is to apply the `FastAlmostGaussianFilter` tool to the 
+/// output of the `RandomField` tool. This can be used to generate a random field with the desired spatial
+/// characteristics and frequency distribution. This is the alternative approach used by the 
+/// `StochasticDepressionAnalysis` tool.
+///
+/// # Reference
+/// Carr, J. R. (2002). Data visualization in the geosciences. Upper Saddle River, NJ: Prentice Hall. pp. 267.
+/// 
+/// # See Also
+/// `RandomField`, `FastAlmostGaussianFilter`, `StochasticDepressionAnalysis`
 pub struct TurningBandsSimulation {
     name: String,
     description: String,

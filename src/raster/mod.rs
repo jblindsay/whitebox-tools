@@ -999,6 +999,12 @@ impl Raster {
     }
 
     pub fn is_in_geographic_coordinates(&self) -> bool {
+        if self.configs.west < -180f64
+            || self.configs.east > 180f64
+            || self.configs.north > 90f64
+            || self.configs.south < -90f64 {
+            return false;
+        }
         if self.configs.epsg_code == 4322
             || self.configs.epsg_code == 4326
             || self.configs.epsg_code == 4629

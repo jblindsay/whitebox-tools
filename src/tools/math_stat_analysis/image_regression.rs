@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 27, 2017
+Created: 27/09/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -24,6 +24,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a bivariate linear regression analysis on two input raster images. The first image 
+/// (`--i1`) is considered to be the independent variable while the second image (`--i2`) is considered to 
+/// be the dependent variable in the analysis. Both input images must share the same grid, as the coefficient 
+/// requires a comparison of a pair of images on a grid-cell-by-grid-cell basis. The tool will output an HTML 
+/// report (`--output`) summarizing the regression model, an Analysis of Variance (ANOVA), and the 
+/// significance of the regression coefficients. The regression residuals can optionally be output as a new 
+/// raster image (`--out_residuals`) and the user can also optionally specify to standardize the residuals 
+/// (`--standardize`).
+///
+/// Note that the analysis performs a linear regression; two variables may be strongly related by a non-linear 
+/// association (e.g. a power function curve) which will lead to an apparently weak fitting regression model. 
+/// In fact, non-linear relations are very common among spatial variables, e.g. terrain indices such as slope 
+/// and contributing area. In such cases, it is advisable that the input images are transformed prior to the 
+/// analysis.
+/// 
+/// **NoData** values in either of the two input images are ignored during the calculation of the correlation 
+/// between images.
+/// 
+/// # See Also
+/// `ImageCorrelation`
 pub struct ImageRegression {
     name: String,
     description: String,
