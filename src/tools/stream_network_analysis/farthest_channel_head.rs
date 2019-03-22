@@ -27,7 +27,7 @@ use std::path;
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
 /// 
 /// # See Also
-/// `FindMainStem`
+/// `LengthOfUpstreamChannels`, `FindMainStem`
 pub struct FarthestChannelHead {
     name: String,
     description: String,

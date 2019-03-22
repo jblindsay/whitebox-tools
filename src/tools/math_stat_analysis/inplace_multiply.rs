@@ -13,6 +13,18 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool performs an in-place multiplication operation (i.e. `input1 *= input2`). The 
+/// user must specify the names of two input images (`--input1` and `--input2`) and the tool will
+/// multiply the `input1` raster by the `input2` values on a pixel-by-pixel basis. Therefore, the
+/// `input1` raster is modified by this tool. Note that `input2` may either be an existing raster
+/// file or a constant value. If `input2` is a raster, it must have the same dimensions (rows and
+/// columns) as `input1`. 
+/// 
+/// The difference between this tool and the `Multiply` tool is that `Multiply` does not modify either of its
+/// two operands, and instead creates a new output raster to save the resultant value into.
+/// 
+/// # See Also
+/// `Multiply`, `InPlaceAdd`, `InPlaceDivide`, `InPlaceSubtract`
 pub struct InPlaceMultiply {
     name: String,
     description: String,

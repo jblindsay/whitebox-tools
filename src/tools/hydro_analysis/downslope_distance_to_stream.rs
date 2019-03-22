@@ -27,7 +27,7 @@ use std::thread;
 /// flood plain mapping when combined with high-accuracy DEM data. 
 /// 
 /// # See Also
-/// `ElevationAboveStream`
+/// `ElevationAboveStream`, `DistanceToOutlet`
 pub struct DownslopeDistanceToStream {
     name: String,
     description: String,

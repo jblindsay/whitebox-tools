@@ -18,7 +18,58 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Identifies potential valley bottom grid cells based on local topolography alone.
+/// This tool can be used to extract channel networks from an input digital elevation models (`--dem`) using 
+/// one of three techniques that are based on local topography alone. 
+/// 
+/// The Lindsay (2006) 'lower-quartile' method (`--variant='LQ'`) algorithm is a type of 'valley recognition' 
+/// method. Other channel mapping methods, such as the Johnston and Rosenfeld (1975) algorithm, experience 
+/// problems because channel profiles are not always 'v'-shaped, nor are they always apparent in small 
+/// 3 x 3 windows. The lower-quartile method was developed as an alternative and more flexible valley 
+/// recognition channel mapping technique. The lower-quartile method operates by running a filter over the 
+/// DEM that calculates the percentile value of the centre cell with respect to the distribution of 
+/// elevations within the filter window. The roving window is circular, the diameter of which should reflect 
+/// the topographic variation of the area (e.g. the channel width or average hillslope length). If this variant 
+/// is selected, the user must specify the filter size (`--filter`), in pixels, and this value should be an odd 
+/// number (e.g. 3, 5, 7, etc.). The appropriateness of the selected window diameter will depend on the grid 
+/// resolution relative to the scale of topographic features. Cells that are within the lower quartile of the 
+/// distribution of elevations of their neighbourhood are flagged. Thus, the algorithm identifies grid cells 
+/// that are in relatively low topographic positions at a local scale. This approach to channel mapping is only 
+/// appropriate in fluvial landscapes. In regions containing numerous lakes and wetlands, the algorithm will 
+/// pick out the edges of features.
+/// 
+/// The Johnston and Rosenfeld (1975) algorithm (`--variant='JandR'`) is a type of 'valley recognition' method 
+/// and operates as follows: channel cells are flagged in a 3 x 3 window if the north and south neighbours are 
+/// higher than the centre grid cell or if the east and west neighbours meet this same criterion. The group of 
+/// cells that are flagged after one pass of the roving window constituted the drainage network. This method is 
+/// best applied to DEMs that are relatively smooth and do not exhibit high levels of short-range roughness. As 
+/// such, it may be desirable to use a smoothing filter before applying this tool. The `FeaturePreservingDenoise`
+/// is a good option for removing DEM roughness while preserving the topographic information contain in 
+/// breaks-in-slope (i.e. edges).
+/// 
+/// The Peucker and Douglas (1975) algorithm (`--variant='PandD'`) is one of the simplest and earliest algorithms 
+/// for topography-based network extraction. Their 'valley recognition' method operates by passing a 2 x 2 roving 
+/// window over a DEM and flagging the highest grid cell in each group of four. Once the window has passed over 
+/// the entire DEM, channel grid cells are left unflagged. This method is also best applied to DEMs that are relatively 
+/// smooth and do not exhibit high levels of short-range roughness. Pre-processing the DEM with the `FeaturePreservingDenoise`
+/// tool may also be useful when applying this method.
+/// 
+/// Each of these methods of extracting valley networks result in line networks that can be wider than a single 
+/// grid cell. As such, it is often desirable to thin the resulting network using a line-thinning algorithm. 
+/// The option to perform line-thinning is provided by the tool as a post-processing step (`--line_thin`).
+/// 
+/// # References
+/// 
+/// Johnston, E. G., & Rosenfeld, A. (1975). Digital detection of pits, peaks, ridges, and ravines. IEEE 
+/// Transactions on Systems, Man, and Cybernetics, (4), 472-480.
+/// 
+/// Lindsay, J. B. (2006). Sensitivity of channel mapping techniques to uncertainty in digital elevation data. 
+/// International Journal of Geographical Information Science, 20(6), 669-692.
+/// 
+/// Peucker, T. K., & Douglas, D. H. (1975). Detection of surface-specific points by local parallel 
+/// processing of discrete terrain elevation data. Computer Graphics and image processing, 4(4), 375-387.
+/// 
+/// # See Also
+/// `FeaturePreservingDenoise`
 pub struct ExtractValleys {
     name: String,
     description: String,
@@ -58,8 +109,8 @@ impl ExtractValleys {
         parameters.push(ToolParameter{
             name: "Variant".to_owned(), 
             flags: vec!["--variant".to_owned()], 
-            description: "Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["Lower Quartile".to_owned(), "Johnston and Rosenfeld".to_owned(), "Peucker and Douglas".to_owned()]),
+            description: "Options include 'LQ' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'LQ'.".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["LQ".to_owned(), "JandR".to_owned(), "PandD".to_owned()]),
             default_value: Some("Lower Quartile".to_owned()),
             optional: false
         });
@@ -261,19 +312,17 @@ impl WhiteboxTool for ExtractValleys {
                         let mut n: f64;
                         let mut lower_quartile: usize;
 
-                        // let mut filter_shape = vec![1f64; num_cells_in_filter];
-                        // //see which pixels in the filter lie within the largest ellipse
-                        // //that fits in the filter box
-                        // let mut asqr = midpoint * midpoint;
+                        let mut filter_shape = vec![true; num_cells_in_filter];
+                        let asqr = midpoint * midpoint;
                         let mut i = 0;
                         for row in 0..filter_size as isize {
                             for col in 0..filter_size as isize {
                                 dx[i] = col - midpoint;
                                 dy[i] = row - midpoint;
-                                // z = (dx[i] * dx[i]) / asqr + (dy[i] * dy[i]) / asqr;
-                                // if z > 1f64 {
-                                //     filter_shape[i] = 0f64;
-                                // }
+                                z = (dx[i] * dx[i]) as f64 / asqr as f64 + (dy[i] * dy[i]) as f64 / asqr as f64;
+                                if z > 1f64 {
+                                    filter_shape[i] = false;
+                                }
                                 i += 1;
                             }
                         }
@@ -286,12 +335,14 @@ impl WhiteboxTool for ExtractValleys {
                                     let mut cell_data = vec![1f64; num_cells_in_filter];
                                     n = 0f64;
                                     for i in 0..num_cells_in_filter {
-                                        zn = input[(row + dy[i], col + dx[i])];
-                                        if zn != nodata {
-                                            cell_data[i] = zn;
-                                            n += 1f64;
-                                        } else {
-                                            cell_data[i] = large_value;
+                                        if filter_shape[i] {
+                                            zn = input[(row + dy[i], col + dx[i])];
+                                            if zn != nodata {
+                                                cell_data[i] = zn;
+                                                n += 1f64;
+                                            } else {
+                                                cell_data[i] = large_value;
+                                            }
                                         }
                                     }
                                     if n > 0f64 {

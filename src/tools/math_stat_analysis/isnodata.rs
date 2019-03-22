@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
+Created: 05/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to identify areas of NoData values within an input image.The user must specify the name 
+/// of the input and output (`--input` and `--output`) raster images. Grid cells containing the NoData value in 
+/// the input image will be assigned a value of 1.0 in the output image. All non-NoData valued grid cells will 
+/// be assigned 0.0 in the output image.
+/// 
+/// # See Also
+/// `SetNodataValue`, `ConvertNodataToZero`
 pub struct IsNoData {
     name: String,
     description: String,

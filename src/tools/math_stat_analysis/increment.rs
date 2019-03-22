@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to increase the values of each grid cell in an input raster (`--input`) 
+/// by 1.0. Note that this tool will modify the input raster. If you would rather create a new
+/// raster file, leaving the input unmodified, use the `Add` tool instead.
+/// 
+/// # See Also 
+/// `InPlaceAdd`, `Add`
 pub struct Increment {
     name: String,
     description: String,

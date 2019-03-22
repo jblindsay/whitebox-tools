@@ -15,6 +15,30 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to convert a vector lines or polygon file into a raster grid of lines. If a vector of one 
+/// of the polygon shapetypes is selected, the resulting raster will outline the polygons without filling these 
+/// features. Use the `VectorPolygonToRaster` tool if you need to fill the polygon features.
+/// 
+/// The user must specify the name of the input vector (`--input`) and the output raster file (`--output`). The Field 
+/// Name (`--field`) is 
+/// the field from the attributes table, from which the tool will retrieve the information to assign to 
+/// grid cells in the output raster. Note that if this field contains numerical data with no decimals, the output raster 
+/// data type will be INTEGER; if it contains decimals it will be of a FLOAT data type. The field must contain numerical 
+/// data. If the user does not supply a Field Name parameter, each feature in the raster will be assigned the record 
+/// number of the feature. The assignment operation determines how the situation of multiple points contained within the 
+/// same grid cell is handled. The background value is the value that is assigned to grid cells in the output raster that 
+/// do not correspond to the location of any points in the input vector. This value can be any numerical value (e.g. 0) 
+/// or the string 'NoData', which is the default.
+/// 
+/// If the user optionally specifies the `--cell_size` parameter then the coordinates will be determined by the input 
+/// vector (i.e. the bounding box) and the specified Cell Size. This will also determine the number of rows and columns 
+/// in the output raster. If the user instead specifies the optional base raster file parameter (`--base`), the output raster's 
+/// coordinates (i.e. north, south, east, west) and row and column count will be the same as the base file. If the user 
+/// does not specify either of these two optional parameters, the tool will determine the cell size automatically as the 
+/// maximum of the north-south extent (determined from the shapefile's bounding box) or the east-west extent divided by 500.
+/// 
+/// # See Also
+/// `VectorPointsToRaster`, `VectorPolygonsToRaster`
 pub struct VectorLinesToRaster {
     name: String,
     description: String,

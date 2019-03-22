@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
+Created: 01/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,17 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool will transform the values in an input raster image (`--input`) into 
+/// [z-scores](https://en.wikipedia.org/wiki/Standard_score). Z-scores are also called standard scores, 
+/// normal scores, or z-values. A z-score is a dimensionless quantity that is calculated by subtracting 
+/// the mean from an individual raw value and then dividing the difference by the standard deviation. 
+/// This conversion process is called *standardizing* or *normalizing* and the result is sometimes referred 
+/// to as a standardized variable. The mean and standard deviation are estimated using all values in the 
+/// input image except for NoData values. The input image should not have a Boolean or categorical data 
+/// scale, i.e. it should be on a continuous scale. 
+/// 
+/// # See Also
+/// `CumulativeDistribution`
 pub struct ZScores {
     name: String,
     description: String,

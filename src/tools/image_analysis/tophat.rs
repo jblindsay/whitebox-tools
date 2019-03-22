@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
+Created: 28/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -19,6 +19,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs either a white or black [top-hat transform](https://en.wikipedia.org/wiki/Top-hat_transform) 
+/// on an input image. A top-hat transform is a common digital image processing operation used for various tasks, such 
+/// as feature extraction, background equalization, and image enhancement. The size of the rectangular *structuring element* 
+/// used in the filtering can be specified using the `--filterx` and `--filtery` flags.
+/// 
+/// There are two distinct types of top-hat transform including *white* and *black* top-hat transforms. The white top-hat
+/// transform is defined as the difference between the input image and its [opening](https://en.wikipedia.org/wiki/Opening_(morphology))
+/// by some structuring element. An opening operation is the [dilation](https://en.wikipedia.org/wiki/Dilation_(morphology)) 
+/// (maximum filter) of an [erosion](https://en.wikipedia.org/wiki/Erosion_(morphology)) (minimum filter) image. 
+/// The black top-hat transform, by comparison, is defined as the difference between the 
+/// [closing](https://en.wikipedia.org/wiki/Closing_(morphology)) and the input image. The user specifies which of the two
+/// flavours of top-hat transform the tool should perform by specifying either 'white' or 'black' with the `--variant` flag.
+/// 
+/// # See Also:
+/// `Closing`, `Opening`, `MaximumFilter`, `MinimumFilter`
 pub struct TophatTransform {
     name: String,
     description: String,

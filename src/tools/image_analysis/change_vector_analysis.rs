@@ -275,6 +275,7 @@ impl WhiteboxTool for ChangeVectorAnalysis {
         // Create the output files
         let mut out_magnitude = Raster::initialize_using_file(&magnitude_file, &input1);
         let mut out_direction = Raster::initialize_using_file(&direction_file, &input1);
+        out_direction.reinitialize_values(0f64);
 
         let mut nodata_detected: Array2D<i8> = Array2D::new(rows, columns, -1i8, -1i8)?;
         // let num_procs = num_cpus::get() as isize;
@@ -379,6 +380,8 @@ impl WhiteboxTool for ChangeVectorAnalysis {
             Err(e) => return Err(e),
         };
 
+        out_direction.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        out_direction.configs.palette = String::from("qual.plt");
         out_direction.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()

@@ -459,7 +459,7 @@ impl Raster {
         }
         data
     }
-
+    
     pub fn reinitialize_values(&mut self, value: f64) {
         self.data = vec![value; self.configs.rows * self.configs.columns];
     }

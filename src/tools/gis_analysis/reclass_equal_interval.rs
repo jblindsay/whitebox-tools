@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool reclassifies the values in an input raster (`--input`) file based on an equal-interval scheme, where the 
+/// user must specify the reclass interval value (`--interval`), the starting value (`--start_val`), and optionally, 
+/// the ending value (`--end_val`). Grid cells containing values that fall outside of the range defined by the starting 
+/// and ending values, will be assigned their original values in the output grid. If the user does not specify an ending 
+/// value, the tool will assign a very large positive value.
+/// 
+/// # See Also
+/// `Reclass`, `ReclassFromFile`
 pub struct ReclassEqualInterval {
     name: String,
     description: String,

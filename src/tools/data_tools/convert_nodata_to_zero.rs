@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
+Created: 11/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to change the value within the grid cells of a raster file (`--input`) that contain 
+/// NoData to zero. The most common reason for using this tool is to change the background region of a raster 
+/// image such that it can be included in analysis since NoData values are usually ignored by by most tools. 
+/// This change, however, will result in the background no longer displaying transparently in most GIS. This 
+/// change can be reversed using the `SetNoDataValue` tool.
+/// 
+/// # See Also
+/// `SetNoDataValue`, `IsNodata`
 pub struct ConvertNodataToZero {
     name: String,
     description: String,

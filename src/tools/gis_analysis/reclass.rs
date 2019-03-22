@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: September 9, 2017
+Created: 09/09/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -18,6 +18,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which the value of each grid cell is determined by an input raster (`--input`) and a 
+/// collection of user-defined classes. The user must specify the *New* value, the *From* value, and the *To Just Less Than* 
+/// value of each class triplet of the reclass string. Classes must be mutually exclusive, i.e. non-overlapping. For example:
+/// 
+/// > --reclass_vals='0.0;0.0;1.0;1.0;1.0;2.0'
+/// 
+/// The above reclass string assigns 0.0 to all grid cells in the input image with values from 0.0-1.0 and an output 
+/// value of 1.0 from to inputs from 1.0-2.0. Alternatively, if the `--assign_mode` flag is specified, `Reclass` will 
+/// operate in assign mode, using a reclass string composed of paired values:
+/// 
+/// > --reclass_vals='0.0;1.0;1.0;2.0'
+/// 
+/// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0.
+/// 
+/// Any values in the input raster that do not fall within one of the classes will be assigned its original value in the 
+/// output raster. NoData values in the input raster will be assigned NoData values in the output raster, unless NoData is 
+/// used in one of the user-defined reclass ranges (notice that it is valid to enter 'NoData' in these ranges). 
+/// 
+/// # See Also
+/// `ReclassEqualInterval`, `ReclassFromFile`
 pub struct Reclass {
     name: String,
     description: String,

@@ -330,7 +330,7 @@ impl WhiteboxTool for WriteFunctionMemoryInsertion {
 
         let mut output = Raster::initialize_using_file(&output_file, &input_r);
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
-        output.configs.data_type = DataType::RGB24;
+        output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             output.set_row_data(data.0, data.1);

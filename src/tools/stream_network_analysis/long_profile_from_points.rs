@@ -21,7 +21,21 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
-/// Plots the longitudinal profiles from flow-paths initiating from a set of vector points.
+/// This tool can be used to create a [longitudinal profile](http://www.fao.org/docrep/003/X6841E/X6841E02.HTM) plot
+/// for a set of vector points (`--points`).  A longitudinal stream profile is a plot of elevation against downstream 
+/// distance. Most long profiles use distance from channel head as the distance measure. This tool, however, uses the 
+/// distance to the outlet cell, or mouth, as the distance measure.
+/// 
+/// The tool outputs an interactive SVG line graph embedded in an HTML document (`--output`). The user must specify the 
+/// names of a D8 pointer (`--d8_pntr`) image (flow direction), a vector points file (`--points`), and a digital 
+/// elevation model (`--dem`). The pointer image is used to traverse the flow path issuing from each initiation point 
+/// in the vector file; this pointer file should only be created using the D8 algorithm (`D8Pointer`). 
+/// 
+/// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// # See Also
+/// `LongProfile`, `Profile`, `D8Pointer`
 pub struct LongProfileFromPoints {
     name: String,
     description: String,

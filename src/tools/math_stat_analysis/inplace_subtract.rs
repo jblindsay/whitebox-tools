@@ -13,6 +13,20 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool performs an in-place subtraction, or decrement operation (i.e. `input1 -= input2`). The 
+/// user must specify the names of two input images (`--input1` and `--input2`) and the tool will
+/// subtact the values of `input2` from the `input1` raster on a pixel-by-pixel basis. Therefore, the
+/// `input1` raster is modified by this tool. Note that `input2` may either be an existing raster
+/// file or a constant value. If `input2` is a raster, it must have the same dimensions (rows and
+/// columns) as `input1`. 
+/// 
+/// The difference between this tool and the `Subtract` tool is that `Subtract` does not modify either of its
+/// two operands, and instead creates a new output raster to save the resultant value into.
+/// 
+/// If `input2 = 1`, use the `Decrement` tool instead.
+/// 
+/// # See Also
+/// `Subtract`, `InPlaceAdd`, `InPlaceDivide`, `InPlaceMultiply`, `Decrement`
 pub struct InPlaceSubtract {
     name: String,
     description: String,

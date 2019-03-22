@@ -132,6 +132,10 @@ where
         Ok(())
     }
 
+    pub fn reinitialize_values(&mut self, value: T) {
+        self.data = vec![value; self.configs.rows * self.configs.columns];
+    }
+
     pub fn columns(&self) -> isize {
         self.columns
     }

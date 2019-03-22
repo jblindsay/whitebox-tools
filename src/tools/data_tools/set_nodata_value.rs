@@ -27,6 +27,9 @@ use std::thread;
 /// are also often displayed transparently by GIS software. The user must specify the names of the input and
 /// output rasters and the background value. The default background value is zero, although any numeric 
 /// value is possible.
+/// 
+/// # See Also
+/// `ConvertNodataToZero`, `IsNodata`
 pub struct SetNodataValue {
     name: String,
     description: String,

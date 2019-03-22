@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 22 2017
+Created: 22/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -13,6 +13,15 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool converts the values in an input image (`--input`) into 
+/// [cumulative probabilities][cumulative distribution function](https://en.wikipedia.org/wiki/Cumulative_distribution_function). 
+/// Therefore, the output raster (`--output`) will contain the cumulative probability value (0-1) of 
+/// of values equal to or less than the value in the corresponding grid cell in the input image. NoData 
+/// values in the input image are not considered during the transformation and remain NoData values in 
+/// the output image.
+/// 
+/// # See Also
+/// `ZScores`
 pub struct CumulativeDistribution {
     name: String,
     description: String,
