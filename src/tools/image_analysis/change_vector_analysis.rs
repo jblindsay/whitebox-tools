@@ -274,6 +274,7 @@ impl WhiteboxTool for ChangeVectorAnalysis {
 
         // Create the output files
         let mut out_magnitude = Raster::initialize_using_file(&magnitude_file, &input1);
+        out_magnitude.configs.data_type = DataType::F32;
         let mut out_direction = Raster::initialize_using_file(&direction_file, &input1);
         out_direction.reinitialize_values(0f64);
 
