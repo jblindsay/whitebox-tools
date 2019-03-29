@@ -491,6 +491,8 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             });
         }
 
+        drop(nv);
+
         let mut nv_smooth: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
             let data = rx.recv().unwrap();

@@ -133,7 +133,7 @@ where
     }
 
     pub fn reinitialize_values(&mut self, value: T) {
-        self.data = vec![value; self.configs.rows * self.configs.columns];
+        self.data = vec![value; (self.rows * self.columns) as usize];
     }
 
     pub fn columns(&self) -> isize {

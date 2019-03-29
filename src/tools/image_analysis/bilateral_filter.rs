@@ -259,7 +259,7 @@ impl WhiteboxTool for BilateralFilter {
         let mut weights_d = vec![0.0; num_pixels_in_filter];
 
         // fill the filter d_x and d_y values and the distance-weights
-        let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize + 1;
+        let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize; // + 1;
         let mut a = 0;
         let (mut x, mut y): (isize, isize);
         for row in 0..filter_size {
