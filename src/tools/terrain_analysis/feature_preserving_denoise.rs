@@ -200,7 +200,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut filter_size = 11usize;
         let mut max_norm_diff = 8f64;
         let mut num_iter = 3;
-        let mut z_factor = 1f64;
+        let mut z_factor = 1f32;
         let mut max_z_diff = f64::INFINITY;
 
         if args.len() == 0 {
@@ -251,9 +251,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 };
             } else if flag_val == "-zfactor" {
                 z_factor = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f32>().unwrap()
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f32>().unwrap()
                 };
             } else if flag_val == "-max_diff" {
                 max_z_diff = if keyval {
@@ -297,23 +297,42 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             println!("Reading data...")
         }
 
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+        // let input = Arc::new(Raster::new(&input_file, "r")?);
+        let input2 = Raster::new(&input_file, "r")?;
 
         let start = Instant::now();
 
-        if input.is_in_geographic_coordinates() {
+        if input2.is_in_geographic_coordinates() {
             // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            let mut mid_lat = (input2.configs.north - input2.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = (1.0 / (113200.0 * mid_lat.cos())) as f32;
                 println!("It appears that the DEM is in geographic coordinates. The z-factor has been updated: {}.", z_factor);
             }
         }
 
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
+        // let rows = input.configs.rows as isize;
+        // let columns = input.configs.columns as isize;
+        // let nodata = input.configs.nodata;
+        let eight_grid_res = ((input2.configs.resolution_x + input2.configs.resolution_y) / 2f64) as f32 * 8f32;
+        let res_x = input2.configs.resolution_x;
+        let res_y = input2.configs.resolution_y;
+        let mut configs = input2.configs.clone();
+
+        let input = Arc::new(input2.get_data_as_f32_array2d());
+        let rows = input.rows as isize;
+        let columns = input.columns as isize;
+        let nodata = input.nodata;
+        drop(input2);
+
+        /*
+            Note: the normal should have a,b,c components to it since it is 3D. However, every pixel will
+            have a c-value of eight_grid_res and as such, there is no point in including it in the 
+            storage of the normals and in the average analysis. It's effectively constant. This is one way
+            to both significantly reduce the memory footprint of the tool and reduce the number of calculations
+            required for the averaging.
+        */
 
         ///////////////////////////////
         // Create the normal vectors //
@@ -326,16 +345,14 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let eight_grid_res = input.configs.resolution_x as f32 * 8f32;
-                let mut z: f64;
-                let mut zn: f64;
+                let mut z: f32;
+                let mut zn: f32;
                 let (mut a, mut b): (f32, f32);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![
                         Normal {
                             a: 0f32,
                             b: 0f32,
-                            c: 0f32
                         };
                         columns as usize
                     ];
@@ -360,9 +377,8 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                 + values[0]
                                 - values[2]);
                             data[col as usize] = Normal {
-                                a: a,
-                                b: b,
-                                c: eight_grid_res,
+                                a: a / eight_grid_res,
+                                b: b / eight_grid_res,
                             };
                         }
                     }
@@ -374,7 +390,6 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let zero_vector = Normal {
             a: 0f32,
             b: 0f32,
-            c: 0f32,
         };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
@@ -425,9 +440,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                         a += 1;
                     }
                 }
-                let mut z: f64;
+                let mut z: f32;
                 let (mut xn, mut yn): (isize, isize);
-                let (mut a, mut b, mut c): (f32, f32, f32);
+                let (mut a, mut b): (f32, f32);
                 let mut diff: f32;
                 let mut w: f32;
                 let mut sum_w: f32;
@@ -437,7 +452,6 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                         Normal {
                             a: 0f32,
                             b: 0f32,
-                            c: 0f32
                         };
                         columns as usize
                     ];
@@ -447,7 +461,6 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                             sum_w = 0f32;
                             a = 0f32;
                             b = 0f32;
-                            c = 0f32;
                             for n in 0..num_pixels_in_filter {
                                 xn = col + dx[n];
                                 yn = row + dy[n];
@@ -459,39 +472,20 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                         sum_w += w;
                                         a += nv.get_value(yn, xn).a * w;
                                         b += nv.get_value(yn, xn).b * w;
-                                        c += nv.get_value(yn, xn).c * w;
                                     }
                                 }
                             }
 
-                            // for n in 0..num_pixels_in_filter {
-                            //     xn = col + dx[n];
-                            //     yn = row + dy[n];
-                            //     if input.get_value(yn, xn) != nodata {
-                            //         diff =
-                            //             nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
-                            //         if diff > threshold {
-                            //             sum_w += 1.0;
-                            //             a += nv.get_value(yn, xn).a;
-                            //             b += nv.get_value(yn, xn).b;
-                            //             c += nv.get_value(yn, xn).c;
-                            //         }
-                            //     }
-                            // }
-
                             a /= sum_w;
                             b /= sum_w;
-                            c /= sum_w;
 
-                            data[col as usize] = Normal { a: a, b: b, c: c };
+                            data[col as usize] = Normal { a: a, b: b };
                         }
                     }
                     tx.send((row, data)).unwrap();
                 }
             });
         }
-
-        drop(nv);
 
         let mut nv_smooth: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
@@ -516,14 +510,16 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 )
             );
         }
+        
+        drop(nv);
 
         ///////////////////////////////////////////////////////////////////////////
         // Update the elevations of the DEM based on the smoothed normal vectors //
         ///////////////////////////////////////////////////////////////////////////
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        let res_x = input.configs.resolution_x;
-        let res_y = input.configs.resolution_y;
+        // let res_x = input.configs.resolution_x;
+        // let res_y = input.configs.resolution_y;
         let x = [-res_x, -res_x, -res_x, 0f64, res_x, res_x, res_x, 0f64];
         let y = [-res_y, 0f64, res_y, res_y, res_y, 0f64, -res_y, -res_y];
         let mut w: f64;
@@ -532,8 +528,16 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut z: f64;
         let (mut xn, mut yn): (isize, isize);
         let mut zn: f64;
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.set_data_from_raster(&input)?;
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
+        // output.set_data_from_raster(&input)?;
+        configs.nodata = nodata as f64;
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        for row in 0..rows {
+            for col in 0..columns {
+                output.set_value(row, col, input.get_value(row, col) as f64);
+            }
+        }
+        output.configs.data_type = DataType::F32; // if the input file is integer elevations, the output must be floating-point
         if verbose {
             println!("Updating elevations...");
         }
@@ -544,15 +548,18 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 
             for row in 0..rows {
                 for col in 0..columns {
-                    z = output.get_value(row, col);
-                    if z != nodata {
+                    // z = output.get_value(row, col);
+                    // if z != nodata {
+                    if input.get_value(row, col) != nodata {
                         sum_w = 0f64;
                         z = 0f64;
                         for n in 0..8 {
                             xn = col + dx[n];
                             yn = row + dy[n];
+                            // zn = output.get_value(yn, xn);
+                            // if zn != nodata as f64 {
                             zn = output.get_value(yn, xn);
-                            if zn != nodata {
+                            if zn != nodata as f64 {
                                 diff = nv_smooth
                                     .get_value(row, col)
                                     .angle_between(nv_smooth.get_value(yn, xn))
@@ -560,10 +567,14 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                 if diff > threshold {
                                     w = (diff - threshold) * (diff - threshold);
                                     sum_w += w;
+                                    // z += -(nv_smooth.get_value(yn, xn).a as f64 * x[n]
+                                    //     + nv_smooth.get_value(yn, xn).b as f64 * y[n]
+                                    //     - eight_grid_res as f64 * zn)
+                                    //     / eight_grid_res as f64
+                                    //     * w;
                                     z += -(nv_smooth.get_value(yn, xn).a as f64 * x[n]
                                         + nv_smooth.get_value(yn, xn).b as f64 * y[n]
-                                        - nv_smooth.get_value(yn, xn).c as f64 * zn)
-                                        / nv_smooth.get_value(yn, xn).c as f64
+                                        - 1f64 * zn)
                                         * w;
                                 }
                             }
@@ -571,13 +582,13 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                         if sum_w > 0f64 {
                             // this is a division-by-zero safeguard and must be in place.
                             zn = z / sum_w;
-                            if (zn - input.get_value(row, col)).abs() <= max_z_diff {
+                            if (zn - input.get_value(row, col) as f64).abs() <= max_z_diff {
                                 output.set_value(row, col, zn);
                             } else {
-                                output.set_value(row, col, input.get_value(row, col));
+                                output.set_value(row, col, input.get_value(row, col) as f64);
                             }
                         } else {
-                            output.set_value(row, col, input.get_value(row, col));
+                            output.set_value(row, col, input.get_value(row, col) as f64);
                         }
                     }
                 }
@@ -597,9 +608,12 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.display_min = input.configs.display_min;
-        output.configs.display_max = input.configs.display_max;
-        output.configs.palette = input.configs.palette.clone();
+        // output.configs.display_min = input.configs.display_min;
+        // output.configs.display_max = input.configs.display_max;
+        // output.configs.palette = input.configs.palette.clone();
+         output.configs.display_min = configs.display_min;
+        output.configs.display_max = configs.display_max;
+        output.configs.palette = configs.palette.clone();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
@@ -638,7 +652,6 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 struct Normal {
     a: f32,
     b: f32,
-    c: f32,
 }
 
 impl Normal {
@@ -651,10 +664,15 @@ impl Normal {
          about checking for division by zero here because 'c' will always be
          non-zero and therefore the vector magnitude cannot be zero.
         */
-        let denom = ((self.a * self.a + self.b * self.b + self.c * self.c)
-            * (other.a * other.a + other.b * other.b + other.c * other.c))
+        // let denom = ((self.a * self.a + self.b * self.b + c * c)
+        //     * (other.a * other.a + other.b * other.b + c * c))
+        //     .sqrt();
+        // (self.a * other.a + self.b * other.b + c * c) / denom
+
+        let denom = ((self.a * self.a + self.b * self.b + 1f32)
+            * (other.a * other.a + other.b * other.b + 1f32))
             .sqrt();
-        (self.a * other.a + self.b * other.b + self.c * other.c) / denom
+        (self.a * other.a + self.b * other.b + 1f32) / denom
     }
 }
 
@@ -663,7 +681,6 @@ impl AddAssign for Normal {
         *self = Normal {
             a: self.a + other.a,
             b: self.b + other.b,
-            c: self.c + other.c,
         };
     }
 }
@@ -673,7 +690,6 @@ impl SubAssign for Normal {
         *self = Normal {
             a: self.a - other.a,
             b: self.b - other.b,
-            c: self.c - other.c,
         };
     }
 }

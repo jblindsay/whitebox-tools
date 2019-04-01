@@ -192,11 +192,44 @@ impl Raster {
         };
         let mut output = Raster {
             file_name: new_file_name.clone(),
-            configs: configs.clone(),
+            // configs: configs.clone(),
             ..Default::default()
         };
         output.file_mode = "w".to_string();
         output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
+        
+        output.configs.rows = configs.rows;
+        output.configs.columns = configs.columns;
+        output.configs.north = configs.north;
+        output.configs.south = configs.south;
+        output.configs.east = configs.east;
+        output.configs.west = configs.west;
+        output.configs.resolution_x = configs.resolution_x;
+        output.configs.resolution_y = configs.resolution_y;
+        output.configs.nodata = configs.nodata;
+        output.configs.data_type = configs.data_type;
+        output.configs.photometric_interp = configs.photometric_interp;
+        output.configs.palette = configs.palette.clone();
+        output.configs.projection = configs.projection.clone();
+        output.configs.xy_units = configs.xy_units.clone();
+        output.configs.z_units = configs.z_units.clone();
+        output.configs.endian = configs.endian.clone();
+        output.configs.pixel_is_area = configs.pixel_is_area;
+        output.configs.epsg_code = configs.epsg_code;
+        output.configs.coordinate_ref_system_wkt = configs.coordinate_ref_system_wkt.clone();
+        output.configs.model_tiepoint = configs.model_tiepoint.clone();
+        output.configs.model_pixel_scale = configs.model_pixel_scale.clone();
+        output.configs.model_transformation = configs.model_transformation.clone();
+        output.configs.geo_key_directory = configs.geo_key_directory.clone();
+        output.configs.geo_double_params = configs.geo_double_params.clone();
+        output.configs.geo_ascii_params = configs.geo_ascii_params.clone();
+        
+        if output.raster_type == RasterType::SurferAscii
+            || output.raster_type == RasterType::Surfer7Binary
+        {
+            output.configs.nodata = 1.71041e38;
+        }
+        output.data.reserve(output.configs.rows * output.configs.columns);
 
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
 
@@ -452,10 +485,29 @@ impl Raster {
             self.configs.columns as isize,
             self.configs.nodata,
             self.configs.nodata,
-        )
-        .unwrap();
+        ).unwrap();
         for row in 0..self.configs.rows as isize {
             data.set_row_data(row, self.get_row_data(row));
+        }
+        data
+    }
+
+    pub fn get_data_as_f32_array2d(&self) -> Array2D<f32> {
+        let out_nodata = -32768f32;
+        let mut data: Array2D<f32> = Array2D::new(
+            self.configs.rows as isize,
+            self.configs.columns as isize,
+            out_nodata,
+            out_nodata,
+        ).unwrap();
+        let mut z: f64;
+        for row in 0..self.configs.rows as isize {
+            for col in 0..self.configs.columns as isize {
+                z = self.get_value(row, col);
+                if z != self.configs.nodata {
+                    data.set_value(row, col, z as f32);
+                }
+            }
         }
         data
     }
@@ -502,6 +554,12 @@ impl Raster {
                 self.data[idx] += ((a << 24) | (b << 16) | (g << 8) | r) as f64;
             }
         }
+    }
+
+    /// Returns the size of the pixel data in bytes.
+    pub fn get_data_size_in_bytes(&self) -> usize {
+        use std::mem;
+        mem::size_of_val(&*self.data)
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {

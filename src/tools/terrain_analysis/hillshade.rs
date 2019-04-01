@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 12/10/2018
+Last Modified: 31/03/2019
 License: MIT
 */
 
@@ -272,8 +272,13 @@ impl WhiteboxTool for Hillshade {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.data_type = DataType::I16;
+        let mut configs = input.configs.clone();
+        configs.data_type = DataType::I16;
+        configs.nodata = -32768f64;
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        let out_nodata = output.configs.nodata;
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
+        // output.configs.data_type = DataType::I16;
         let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;
@@ -294,13 +299,13 @@ impl WhiteboxTool for Hillshade {
                 let mut aspect: f64;
                 let half_pi = PI / 2f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             z = z * z_factor;
                             for c in 0..8 {
-                                n[c] = input[(row + d_y[c], col + d_x[c])];
+                                n[c] = input.get_value(row + d_y[c], col + d_x[c]);
                                 if n[c] != nodata {
                                     n[c] = n[c] * z_factor;
                                 } else {
@@ -312,8 +317,6 @@ impl WhiteboxTool for Hillshade {
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
-                                // aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                                //     + 90f64 * (fx / (fx).abs())).to_radians();
                                 aspect = PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs());
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;
@@ -335,13 +338,12 @@ impl WhiteboxTool for Hillshade {
         }
 
         let mut histo: [f64; 32768] = [0.0; 32768];
-        let nodata = input.configs.nodata;
         let mut num_cells = 0.0;
         for row in 0..rows {
             let data = rx.recv().unwrap();
             let mut bin: usize;
             for col in 0..data.1.len() {
-                if data.1[col] != nodata {
+                if data.1[col] != configs.nodata {
                     bin = data.1[col] as usize;
                     histo[bin] += 1.0;
                     num_cells += 1.0;
