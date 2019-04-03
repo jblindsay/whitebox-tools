@@ -216,15 +216,19 @@ impl WhiteboxTool for DiffOfGaussianFilter {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if sigma1 < 0.5 {
-            sigma1 = 0.5;
+        if sigma1 < 0.25 {
+            println!("sigma1 cannot be less than 0.25. The value has been modified.");
+            sigma1 = 0.25;
         } else if sigma1 > 20.0 {
+            println!("sigma1 cannot be greater than 20.0. The value has been modified.");
             sigma1 = 20.0;
         }
 
         if sigma2 < 0.5 {
+            println!("sigma2 cannot be less than 0.5. The value has been modified.");
             sigma2 = 0.5;
         } else if sigma2 > 20.0 {
+            println!("sigma2 cannot be greater than 20. The value has been modified.");
             sigma2 = 20.0;
         }
 

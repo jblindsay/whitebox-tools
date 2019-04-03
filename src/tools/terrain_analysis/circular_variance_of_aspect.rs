@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/01/2019
-Last Modified: 27/01/2019
+Last Modified: 02/04/2019
 License: MIT
 */
 
@@ -20,8 +20,8 @@ use std::thread;
 
 /// This tool can be used to calculate the circular variance (i.e. one minus the mean resultant length) of aspect
 /// for an input digital elevation model (DEM). This is a measure of how variable slope aspect is within a local
-/// neighbourhood of a specified size (`--filter`). `CircularVarianceOfAspect` is therefore a measure of surface
-/// shape complexity, or texture. It will take a value near 0.0 for smooth sites and 1.0 in areas of high surface 
+/// neighbourhood of a specified size (`--filter`). `CircularVarianceOfAspect` is therefore a measure of **surface
+/// shape complexity**, or texture. It will take a value of 0.0 for smooth sites and near 1.0 in areas of high surface 
 /// roughness or complex topography. 
 /// 
 /// # See Also
@@ -53,9 +53,9 @@ impl CircularVarianceOfAspect {
         });
 
         parameters.push(ToolParameter {
-            name: "Output Roughness Scale File".to_owned(),
+            name: "Output Raster File".to_owned(),
             flags: vec!["--output".to_owned()],
-            description: "Output raster roughness scale file.".to_owned(),
+            description: "Output raster file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -217,14 +217,11 @@ impl WhiteboxTool for CircularVarianceOfAspect {
 
         let start = Instant::now();
 
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
-
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
-            output.configs.data_type = DataType::F32;
-        }
+        let configs = input.configs.clone();
+        let rows = configs.rows as isize;
+        let columns = configs.columns as isize;
+        let nodata = configs.nodata;
+        let is_geographic_coords = input.is_in_geographic_coordinates();
 
         // Smooth the DEM
         let mut smoothed_dem = input.get_data_as_array2d();
@@ -338,13 +335,6 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64)
                     / (-4 * wl - 4) as f64)
                     .round() as isize;
-
-            // let sigma_actual =
-            //     (((m * wl * wl) as f64 + ((n - m) as f64) * (wu * wu) as f64 - n as f64) / 12f64)
-            //         .sqrt();
-            // if verbose {
-            //     println!("Actual sigma: {:.3}", sigma_actual);
-            // }
             
             let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
             let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
@@ -454,12 +444,14 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             }
         }
 
+        drop(input);
+
         // Calculate the aspect
-        let eight_grid_res = input.configs.resolution_x * 8.0;
+        let eight_grid_res = configs.resolution_x * 8.0;
         let mut z_factor = 1f64;
-        if input.is_in_geographic_coordinates() {
+        if is_geographic_coords {
             // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+            let mut mid_lat = (configs.north - configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
@@ -471,7 +463,6 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         let smoothed_dem = Arc::new(smoothed_dem);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            // let input = input.clone();
             let smoothed_dem = smoothed_dem.clone();
             let tx = tx.clone();
             thread::spawn(move || {
@@ -494,10 +485,9 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                                     n[c] = z * z_factor;
                                 }
                             }
-                            // calculate slope
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
+                                fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                                 z = (fx * fx + fy * fy).sqrt();
                                 xdata[col as usize] = fx / z;
                                 ydata[col as usize] = fy / z;
@@ -651,10 +641,10 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             });
         }
 
-        // let mut output = Raster::initialize_using_file(&output_file, &input);
-        // if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
-        //     output.configs.data_type = DataType::F32;
-        // }
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         for row in 0..rows {
             match rx2.recv() {
                 Ok(data) => {

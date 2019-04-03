@@ -40,11 +40,13 @@ use std::thread;
 /// 
 /// where,
 /// 
-/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>)
+/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
 /// 
 ///  and,
 /// 
-/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>)
+/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / * &Delta;y
+/// 
+/// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
 /// 
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 

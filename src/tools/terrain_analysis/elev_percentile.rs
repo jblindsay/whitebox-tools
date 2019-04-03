@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
-Last Modified: 12/10/2018
+Created: 22/06/2017
+Last Modified: 02/04/2019
 License: MIT
 */
 
@@ -207,48 +207,44 @@ impl WhiteboxTool for ElevPercentile {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-filter" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
                 filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+            } else if flag_val == "-filterx" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
-                if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
+            } else if flag_val == "-filtery" {
+                filter_size_y = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-            } else if vec[0].to_lowercase() == "-sig_digits"
-                || vec[0].to_lowercase() == "--sig_digits"
-            {
-                if keyval {
-                    num_sig_digits = vec[1].to_string().parse::<i32>().unwrap();
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
+            } else if flag_val == "-sig_digits" {
+                num_sig_digits = if keyval {
+                    vec[1].to_string().parse::<i32>().unwrap()
                 } else {
-                    num_sig_digits = args[i + 1].to_string().parse::<i32>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<i32>().unwrap()
+                };
             }
         }
 
@@ -297,11 +293,13 @@ impl WhiteboxTool for ElevPercentile {
         let start = Instant::now();
 
         // first bin the data
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
+        let configs = input.configs.clone();
+        let rows = configs.rows as isize;
+        let columns = configs.columns as isize;
+        let nodata = configs.nodata;
         let multiplier = 10f64.powi(num_sig_digits);
-        let min_val = input.configs.minimum;
-        let max_val = input.configs.maximum;
+        let min_val = configs.minimum;
+        let max_val = configs.maximum;
         let min_bin = (min_val * multiplier).floor() as i64;
         let num_bins = (max_val * multiplier).floor() as i64 - min_bin + 1;
         let bin_nodata = i64::MIN;
@@ -313,8 +311,6 @@ impl WhiteboxTool for ElevPercentile {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
                 let mut z: f64;
                 let mut val: i64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
@@ -343,16 +339,15 @@ impl WhiteboxTool for ElevPercentile {
             }
         }
 
+        drop(input);
+
         let bd = Arc::new(binned_data); // wrap binned_data in an Arc
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            let input = input.clone();
             let binned_data = bd.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
                 let (mut bin_val, mut bin_val_n, mut old_bin_val): (i64, i64, i64);
                 let (mut start_col, mut end_col, mut start_row, mut end_row): (
                     isize,

@@ -236,6 +236,7 @@ impl WhiteboxTool for CostPathway {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &destination);
+        output.configs.data_type = DataType::F32;
         output.reinitialize_values(background_val);
 
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];

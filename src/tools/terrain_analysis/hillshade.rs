@@ -277,8 +277,6 @@ impl WhiteboxTool for Hillshade {
         configs.nodata = -32768f64;
         let mut output = Raster::initialize_using_config(&output_file, &configs);
         let out_nodata = output.configs.nodata;
-        // let mut output = Raster::initialize_using_file(&output_file, &input);
-        // output.configs.data_type = DataType::I16;
         let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;
@@ -343,7 +341,7 @@ impl WhiteboxTool for Hillshade {
             let data = rx.recv().unwrap();
             let mut bin: usize;
             for col in 0..data.1.len() {
-                if data.1[col] != configs.nodata {
+                if data.1[col] != out_nodata {
                     bin = data.1[col] as usize;
                     histo[bin] += 1.0;
                     num_cells += 1.0;

@@ -40,11 +40,13 @@ use std::thread;
 /// 
 /// where,
 /// 
-/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>)
+/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
 /// 
 ///  and,
 /// 
-/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>)
+/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / 8 * &Delta;y
+/// 
+/// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
 /// 
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
@@ -270,10 +272,9 @@ impl WhiteboxTool for Aspect {
                                     n[c] = z * z_factor;
                                 }
                             }
-                            // calculate slope
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            if fx != 0f64 {
+                            if fx > 0f64 {
+                                fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                                 data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees()
                                     + 90f64 * (fx / (fx).abs());
                             } else {

@@ -258,6 +258,7 @@ impl WhiteboxTool for CostDistance {
         let nodata = cost.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&accum_file, &cost);
+        output.configs.data_type = DataType::F32;
         let background_val = (i32::max_value() - 1) as f64;
         output.reinitialize_values(background_val);
 
