@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/07/2017
-Last Modified: 06/02/2019
+Last Modified: 12/04/2019
 License: MIT
 */
 
@@ -12,15 +12,13 @@ use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to split a red-green-blue (RGB) colour-composite image into three separate bands of 
-/// multi-spectral imagery. The user must specify the input image (`--input`) and output image (`--output`). 
-/// The tool creates three output images, each based on the `--output` parameter and with the `_r`, `_g`, and `_b` 
-/// suffixes appended.
+/// multi-spectral imagery. The user must specify the input image (`--input`) and output red, green, blue images 
+/// (`--red`, `--green`, `--blue`).
 /// 
 /// # See Also
 /// `CreateColourComposite`
@@ -52,13 +50,36 @@ impl SplitColourComposite {
         });
 
         parameters.push(ToolParameter {
-            name: "Output File".to_owned(),
-            flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file (suffixes of _r, _g, and _b will be appended)."
+            name: "Output Red Band File"
                 .to_owned(),
+            flags: vec!["--red".to_owned()],
+            description:
+                "Output red band file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Green Band File"
+                .to_owned(),
+            flags: vec!["--green".to_owned()],
+            description:
+                "Output green band file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Blue Band File"
+                .to_owned(),
+            flags: vec!["--blue".to_owned()],
+            description:
+                "Output blue band file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -73,7 +94,7 @@ impl SplitColourComposite {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.tif",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=input.tif --red=red.tif --green=green.tif --blue=blue.tif",
             short_exe, name
         )
         .replace("*", &sep);
@@ -130,7 +151,9 @@ impl WhiteboxTool for SplitColourComposite {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut output_file = String::new();
+        let mut red_file = String::new();
+        let mut green_file = String::new();
+        let mut blue_file = String::new();
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -146,18 +169,31 @@ impl WhiteboxTool for SplitColourComposite {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "--input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-red" {
+                red_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-green" {
+                green_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-blue" {
+                blue_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -175,8 +211,14 @@ impl WhiteboxTool for SplitColourComposite {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(&sep) && !output_file.contains("/") {
-            output_file = format!("{}{}", working_directory, output_file);
+        if !red_file.contains(&sep) && !red_file.contains("/") {
+            red_file = format!("{}{}", working_directory, red_file);
+        }
+        if !green_file.contains(&sep) && !green_file.contains("/") {
+            green_file = format!("{}{}", working_directory, green_file);
+        }
+        if !blue_file.contains(&sep) && !blue_file.contains("/") {
+            blue_file = format!("{}{}", working_directory, blue_file);
         }
 
         if verbose {
@@ -222,25 +264,17 @@ impl WhiteboxTool for SplitColourComposite {
             });
         }
 
-        let extension: String = match Path::new(&output_file).extension().unwrap().to_str() {
-            Some(n) => format!(".{}", n.to_string()),
-            None => "".to_string(),
-        };
-
-        let mut output_r =
-            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_r{}", extension)), &input);
+        let mut output_r = Raster::initialize_using_file(&red_file, &input);
         output_r.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_r.configs.data_type = DataType::F32;
         output_r.configs.nodata = output_nodata;
 
-        let mut output_g =
-            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_g{}", extension)), &input);
+        let mut output_g = Raster::initialize_using_file(&green_file, &input);
         output_g.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_g.configs.data_type = DataType::F32;
         output_g.configs.nodata = output_nodata;
 
-        let mut output_b =
-            Raster::initialize_using_file(&output_file.replace(&extension, &format!("_b{}", extension)), &input);
+        let mut output_b = Raster::initialize_using_file(&blue_file, &input);
         output_b.configs.photometric_interp = PhotometricInterpretation::Continuous;
         output_b.configs.data_type = DataType::F32;
         output_b.configs.nodata = output_nodata;
