@@ -480,7 +480,8 @@ impl ShapeType {
             23 => return ShapeType::PolyLineM,
             25 => return ShapeType::PolygonM,
             28 => return ShapeType::MultiPointM,
-            _ => panic!("Unrecognized ShapeType"),
+            31 => panic!("The 'MultiPatch' ShapeType is currently unsupported."),
+            _ => panic!(format!("Unrecognized ShapeType: {}", value)),
         }
     }
 
