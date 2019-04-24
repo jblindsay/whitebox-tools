@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/08/2018
-Last Modified: 12/10/2018
+Last Modified: 24/04/2019
 License: MIT
 */
 
@@ -21,17 +21,23 @@ use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// This tool can be used to create a vector polygon of the convex hull of a LiDAR point cloud (i.e. LAS file). 
-/// If the user specified an input file (`--input`) and output file (`--output`), the tool will calculate the convex
-/// hull, containing all of the data points, and output this feature to a vector polygon file. If the `input` and 
-/// `output` parameters are left unspecified, the tool will calculate the hulls of every LAS file contained within the
+/// This tool can be used to create a vector polygon of the bounding box or convex hull of a LiDAR point cloud (i.e. LAS file). 
+/// If the user specified an input file (`--input`) and output file (`--output`), the tool will calculate the footprint, 
+/// containing all of the data points, and output this feature to a vector polygon file. If the `input` and 
+/// `output` parameters are left unspecified, the tool will calculate the footprint of every LAS file contained within the
 /// working directory and output these features to a single vector polygon file. If this is the desired mode of 
 /// operation, it is important to specify the working directory (`--wd`) containing the group of LAS files; do not 
 /// specify the optional `--input` and `--output` parameters in this case. Each polygon in the output vector will contain 
-/// a `LAS_NM` field, specifying the source LAS file name, and a `NUM_PNTS` field, containing the number of points 
-/// within the source file. This output can therefore be useful to create an index map of a large tiled LiDAR dataset. 
+/// a `LAS_NM` field, specifying the source LAS file name, a `NUM_PNTS` field, containing the number of points 
+/// within the source file, and Z_MIN and Z_MAX fields, containing the minimum and maximum elevations. This output can 
+/// therefore be useful to create an index map of a large tiled LiDAR dataset. 
 /// 
-///  `LidarTile`, `LayerFootprint`
+/// By default, this tool identifies the axis-aligned minimum rectangular hull, or bounding box, containing the points
+/// in each of the input tiles. If the user specifies the `--hull` flag, the tool will identify the 
+/// [minimum convex hull](https://en.wikipedia.org/wiki/Convex_hull) instead of the bounding box. This option is considerably
+/// more computationally intensive and will be a far longer running operation if many tiles are specified as inputs. 
+/// 
+///  `LidarTile`, `LayerFootprint`, `MinimumBoundingBox`, `MinimumConvexHull`
 pub struct LidarTileFootprint {
     name: String,
     description: String,
@@ -66,6 +72,15 @@ impl LidarTileFootprint {
             )),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Create Convex Hull Around Points".to_owned(),
+            flags: vec!["--hull".to_owned()],
+            description: "Identify the convex hull around points.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -138,6 +153,7 @@ impl WhiteboxTool for LidarTileFootprint {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
+        let mut is_convex_hull = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -168,6 +184,8 @@ impl WhiteboxTool for LidarTileFootprint {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-hull" || flag_val == "-convex_hull" {
+                is_convex_hull = true;
             }
         }
 
@@ -242,41 +260,76 @@ impl WhiteboxTool for LidarTileFootprint {
                     } else if verbose {
                         println!("Performing analysis...");
                     }
-                    match LasFile::new(&input_file, "r") {
-                        Ok(mut input) => {
-                            let n_points = input.header.number_of_points as usize;
+                    if is_convex_hull {
+                        match LasFile::new(&input_file, "r") {
+                            Ok(mut input) => {
+                                let n_points = input.header.number_of_points as usize;
 
-                            // read the points into a Vec<Point2D>
-                            let mut points: Vec<Point2D> = Vec::with_capacity(n_points);
-                            for i in 0..n_points {
-                                let p: PointData = input.get_point_info(i);
-                                points.push(Point2D::new(p.x, p.y));
+                                // read the points into a Vec<Point2D>
+                                let mut points: Vec<Point2D> = Vec::with_capacity(n_points);
+                                for i in 0..n_points {
+                                    let p: PointData = input.get_point_info(i);
+                                    points.push(Point2D::new(p.x, p.y));
+                                }
+
+                                let mut hull_points = convex_hull(&mut points);
+
+                                // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
+                                hull_points.reverse();
+                                // now add a last point same as the first.
+                                let p = hull_points[0];
+                                hull_points.push(p);
+
+                                if tile == 0 {
+                                    let mut data = wkt.lock().unwrap();
+                                    *data = input.get_wkt();
+                                }
+                                // send the data to the main thread to be output
+                                tx.send((
+                                    hull_points, 
+                                    short_filename, 
+                                    n_points,
+                                    input.header.min_z,
+                                    input.header.max_z
+                                )).unwrap();
                             }
-
-                            let mut hull_points = convex_hull(&mut points);
-
-                            // convex_hull returns points in a counter-clockwise order but we need it to be clockwise for a shapefile poly.
-                            hull_points.reverse();
-                            // now add a last point same as the first.
-                            let p = hull_points[0];
-                            hull_points.push(p);
-
-                            if tile == 0 {
-                                let mut data = wkt.lock().unwrap();
-                                *data = input.get_wkt();
+                            Err(err) => {
+                                tx.send((
+                                    vec![],
+                                    format!("Error reading file {}:\n{}", input_file, err),
+                                    0, 0f64, 0f64
+                                ))
+                                .unwrap();
                             }
-                            // send the data to the main thread to be output
-                            tx.send((hull_points, short_filename, n_points)).unwrap();
+                        };
+                    } else {
+                        match LasHeader::read_las_header(&input_file) {
+                            Ok(header) => {
+                                let mut bounding_points: Vec<Point2D> = Vec::with_capacity(5);
+                                bounding_points.push(Point2D::new(header.min_x, header.max_y));
+                                bounding_points.push(Point2D::new(header.max_x, header.max_y));
+                                bounding_points.push(Point2D::new(header.max_x, header.min_y));
+                                bounding_points.push(Point2D::new(header.min_x, header.min_y));
+                                bounding_points.push(Point2D::new(header.min_x, header.max_y));
+                                
+                                tx.send((
+                                    bounding_points, 
+                                    short_filename, 
+                                    header.number_of_points as usize,
+                                    header.min_z,
+                                    header.max_z
+                                )).unwrap();
+                            }
+                            Err(err) => {
+                                tx.send((
+                                    vec![],
+                                    format!("Error reading file {}:\n{}", input_file, err),
+                                    0, 0f64, 0f64
+                                ))
+                                .unwrap();
+                            }
                         }
-                        Err(err) => {
-                            tx.send((
-                                vec![],
-                                format!("Error reading file {}:\n{}", input_file, err),
-                                0,
-                            ))
-                            .unwrap();
-                        }
-                    };
+                    }
                 }
             });
         }
@@ -285,12 +338,11 @@ impl WhiteboxTool for LidarTileFootprint {
         let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
 
         // add the attributes
-        let fid = AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8);
-        let las_nm = AttributeField::new("LAS_NM", FieldDataType::Text, 25u8, 4u8);
-        let num_pnts = AttributeField::new("NUM_PNTS", FieldDataType::Int, 9u8, 0u8);
-        output.attributes.add_field(&fid);
-        output.attributes.add_field(&las_nm);
-        output.attributes.add_field(&num_pnts);
+        output.attributes.add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
+        output.attributes.add_field(&AttributeField::new("LAS_NM", FieldDataType::Text, 25u8, 4u8));
+        output.attributes.add_field(&AttributeField::new("NUM_PNTS", FieldDataType::Int, 9u8, 0u8));
+        output.attributes.add_field(&AttributeField::new("Z_MIN", FieldDataType::Real, 11u8, 5u8));
+        output.attributes.add_field(&AttributeField::new("Z_MAX", FieldDataType::Real, 11u8, 5u8));
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
@@ -306,6 +358,8 @@ impl WhiteboxTool for LidarTileFootprint {
                                 FieldData::Int(tile as i32 + 1i32),
                                 FieldData::Text(data.1),
                                 FieldData::Int(data.2 as i32),
+                                FieldData::Real(data.3 as f64),
+                                FieldData::Real(data.4 as f64),
                             ],
                             false,
                         );
