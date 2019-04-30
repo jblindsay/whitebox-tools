@@ -145,7 +145,7 @@ pub fn poly_is_convex(poly: &[Point2D]) -> bool {
     return true;
 }
 
-/// Returns a point that is garaunteed to be within the poly.
+/// Returns a point that is guaranteed to be within the poly.
 pub fn interior_point(poly: &[Point2D]) -> Point2D {
     if !poly[0].nearly_equals(&poly[poly.len() - 1]) {
         panic!(

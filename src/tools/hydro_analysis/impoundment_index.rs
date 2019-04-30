@@ -642,7 +642,10 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 if z != nodata {
                     output_hgt.set_value(row, col, crest_elev.get_value(row, col) - z);
                 } else {
-
+                    // this handles the nodata values in the input that should also be
+                    // nodata in the output ISI image. The dam height raster will already
+                    // have nodata in each of these cells.
+                    output.set_value(row, col, nodata);
                 }
             }
             if verbose {

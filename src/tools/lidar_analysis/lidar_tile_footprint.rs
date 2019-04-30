@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/08/2018
-Last Modified: 24/04/2019
+Last Modified: 30/04/2019
 License: MIT
 */
 
@@ -36,6 +36,10 @@ use std::thread;
 /// in each of the input tiles. If the user specifies the `--hull` flag, the tool will identify the 
 /// [minimum convex hull](https://en.wikipedia.org/wiki/Convex_hull) instead of the bounding box. This option is considerably
 /// more computationally intensive and will be a far longer running operation if many tiles are specified as inputs. 
+/// 
+/// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
+/// LiDAR format `LAZ`, it is able to read `LAZ` file headers. This tool, when run in in the bounding box mode (rather than
+/// the convex hull mode), is able to take `LAZ` input files. 
 /// 
 ///  `LidarTile`, `LayerFootprint`, `MinimumBoundingBox`, `MinimumConvexHull`
 pub struct LidarTileFootprint {
@@ -197,6 +201,7 @@ impl WhiteboxTool for LidarTileFootprint {
             output_file = format!("{}{}", working_directory, output_file);
         }
         let mut inputs = vec![];
+        let mut contains_laz = false;
         if input_file.is_empty() {
             if working_directory.is_empty() {
                 return Err(Error::new(ErrorKind::InvalidInput,
@@ -209,6 +214,9 @@ impl WhiteboxTool for LidarTileFootprint {
                         let s = format!("{:?}", path.unwrap().path());
                         if s.replace("\"", "").to_lowercase().ends_with(".las") {
                             inputs.push(format!("{:?}", s.replace("\"", "")));
+                        } else if s.replace("\"", "").to_lowercase().ends_with(".laz") {
+                            inputs.push(format!("{:?}", s.replace("\"", "")));
+                            contains_laz = true;
                         }
                     }
                 }
@@ -224,6 +232,14 @@ impl WhiteboxTool for LidarTileFootprint {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
             println!("* Welcome to {} *", self.get_tool_name());
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
+        }
+
+        if contains_laz && is_convex_hull {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Error: This tool only works with the compressed `LAZ` file format when
+                the footprint is a bounding box and not a convex hull (`--hull`).",
+            ));
         }
 
         let num_tiles = inputs.len();
@@ -255,15 +271,19 @@ impl WhiteboxTool for LidarTileFootprint {
                     let path = path::Path::new(&input_file);
                     let filenm = path.file_stem().unwrap();
                     let short_filename = filenm.to_str().unwrap().to_string();
-                    if verbose && num_tiles > 1 {
+                    if verbose && num_tiles > 1 && num_tiles < 500 {
                         println!("Processing {}", short_filename);
-                    } else if verbose {
+                    } else if verbose && num_tiles == 1 && num_tiles < 500 {
                         println!("Performing analysis...");
                     }
                     if is_convex_hull {
                         match LasFile::new(&input_file, "r") {
                             Ok(mut input) => {
-                                let n_points = input.header.number_of_points as usize;
+                                let n_points = input.header.get_number_of_points() as usize;
+
+                                if n_points == 0usize {
+                                    println!("Warning {} does not contain any points.", short_filename);
+                                }
 
                                 // read the points into a Vec<Point2D>
                                 let mut points: Vec<Point2D> = Vec::with_capacity(n_points);
@@ -311,11 +331,15 @@ impl WhiteboxTool for LidarTileFootprint {
                                 bounding_points.push(Point2D::new(header.max_x, header.min_y));
                                 bounding_points.push(Point2D::new(header.min_x, header.min_y));
                                 bounding_points.push(Point2D::new(header.min_x, header.max_y));
+
+                                if header.get_number_of_points() == 0u64 {
+                                    println!("Warning {} does not contain any points.", short_filename);
+                                }
                                 
                                 tx.send((
                                     bounding_points, 
                                     short_filename, 
-                                    header.number_of_points as usize,
+                                    header.get_number_of_points() as usize,
                                     header.min_z,
                                     header.max_z
                                 )).unwrap();

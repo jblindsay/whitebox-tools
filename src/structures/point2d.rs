@@ -10,6 +10,8 @@ use std::{f64, fmt};
 
 const EPSILON: f64 = std::f64::EPSILON; //f64::EPSILON * 2.0;
 
+const EPSILON_SQRD: f64 = EPSILON * EPSILON;
+
 /// A 2-D point, with x and y fields.
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct Point2D {
@@ -62,9 +64,9 @@ impl Point2D {
     }
 
     /// Calculate squared Euclidean distance between the point and another.
-    pub fn distance_squared(&self, p: &Self) -> f64 {
-        let dx = self.x - p.x;
-        let dy = self.y - p.y;
+    pub fn distance_squared(&self, other: &Self) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
         dx * dx + dy * dy
     }
 
@@ -186,8 +188,9 @@ impl Point2D {
         dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0.0
     }
 
-    pub fn nearly_equals(&self, p: &Self) -> bool {
-        (self.x - p.x).abs() <= EPSILON && (self.y - p.y).abs() <= EPSILON
+    pub fn nearly_equals(&self, other: &Self) -> bool {
+        // (self.x - other.x).abs() <= EPSILON && (self.y - other.y).abs() <= EPSILON
+        ((self.x - other.x)*(self.x - other.x) + (self.y - other.y)*(self.y - other.y)) <= EPSILON_SQRD
     }
 
     /// Tests if a point is Left|On|Right of an infinite line,

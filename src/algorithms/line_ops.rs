@@ -8,6 +8,38 @@ License: MIT
 
 use crate::structures::{BoundingBox, LineSegment, Point2D, Polyline};
 
+// pub fn lines_are_equal(line1: &[Point2D], line2: &[Point2D]) -> bool {
+//     if line1.len() == line2.len() {
+//         let (reverse, early_return) = if line1[0].x == line2[0].x && line1[0].y == line2[0].y {
+//             (false, false)
+//         } else if line1[0].x == line2[line2.len() - 1].x && line1[0].y == line2[line2.len() - 1].y {
+//             (true, false)
+//         } else {
+//             (false, true)
+//         };
+//         if early_return {
+//             return false;
+//         }
+//         // if !reverse {
+//         //     for p in 0..line1.len() {
+//         //         if !(line1[p].nearly_equals(&line2[p])) {
+//         //             return false;
+//         //         }
+//         //     }
+//         //     return true;
+//         // } else {
+//         //     for p in 0..line1.len() {
+//         //         if !(line1[p].nearly_equals(&line2[line2.len() - 1 - p])) {
+//         //             return false;
+//         //         }
+//         //     }
+//         //     return true;
+//         // }
+//         return false;
+//     }
+//     false
+// }
+
 pub fn find_line_intersections(line1: &[Point2D], line2: &[Point2D]) -> Vec<LineSegment> {
     let mut ret: Vec<LineSegment> = vec![];
     let box1 = BoundingBox::from_points(&line1);

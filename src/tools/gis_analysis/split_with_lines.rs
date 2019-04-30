@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/10/2018
-Last Modified: 21/10/2018
+Last Modified: 08/04/2019
 License: MIT
 */
 extern crate kdtree;
@@ -216,6 +216,7 @@ impl WhiteboxTool for SplitWithLines {
         }
 
         let input1 = Shapefile::read(&input1_file)?;
+        let projection = input1.projection.clone();
 
         // make sure the input vector file is of polyline type
         if input1.header.shape_type.base_shape_type() != ShapeType::PolyLine
@@ -312,6 +313,7 @@ impl WhiteboxTool for SplitWithLines {
                 ShapeType::PolyLine,
                 false,
             )?;
+            output.projection = projection;
 
             // add the attributes
             output
@@ -325,9 +327,185 @@ impl WhiteboxTool for SplitWithLines {
                 0u8,
             ));
 
-            for a in 0..input1_attributes.len() {
-                output.attributes.add_field(&input1_attributes[a].clone());
-            }
+            // for a in 0..input1_attributes.len() {
+            //     output.attributes.add_field(&input1_attributes[a].clone());
+            // }
+
+            // let mut first_point_in_part: usize;
+            // let mut last_point_in_part: usize;
+            // let mut polylines: Vec<Polyline> = vec![];
+            // for record_num in 0..input1.num_records {
+            //     let record = input1.get_record(record_num);
+            //     for part in 0..record.num_parts as usize {
+            //         first_point_in_part = record.parts[part] as usize;
+            //         last_point_in_part = if part < record.num_parts as usize - 1 {
+            //             record.parts[part + 1] as usize - 1
+            //         } else {
+            //             record.num_points as usize - 1
+            //         };
+
+            //         // Create a polyline from the part
+            //         let mut pl = Polyline::new(
+            //             &(record.points[first_point_in_part..=last_point_in_part]),
+            //             record_num,
+            //         );
+            //         pl.source_file = 1;
+            //         polylines.push(pl);
+            //     }
+            // }
+
+            // for record_num in 0..input2.num_records {
+            //     let record = input2.get_record(record_num);
+            //     for part in 0..record.num_parts as usize {
+            //         first_point_in_part = record.parts[part] as usize;
+            //         last_point_in_part = if part < record.num_parts as usize - 1 {
+            //             record.parts[part + 1] as usize - 1
+            //         } else {
+            //             record.num_points as usize - 1
+            //         };
+
+            //         // Create a polyline from the part
+            //         let mut pl = Polyline::new(
+            //             &(record.points[first_point_in_part..=last_point_in_part]),
+            //             record_num,
+            //         );
+            //         pl.source_file = 2;
+            //         polylines.push(pl);
+            //     }
+            // }
+
+            // // Break the polylines up into shorter lines at junction points.
+            // let dimensions = 2;
+            // let capacity_per_node = 64;
+            // let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+            // let mut p: Point2D;
+            // for i in 0..polylines.len() {
+            //     for j in 0..polylines[i].len() {
+            //         p = polylines[i][j];
+            //         tree.add([p.x, p.y], (i, j)).unwrap();
+            //     }
+            // }
+
+            // let mut num_neighbours: Vec<Vec<u8>> = Vec::with_capacity(polylines.len());
+            // let precision = std::f64::EPSILON;
+            // for i in 0..polylines.len() {
+            //     let mut line_num_neighbours = Vec::with_capacity(polylines[i].len());
+            //     for j in 0..polylines[i].len() {
+            //         p = polylines[i][j];
+            //         let ret = tree
+            //             .within(&[p.x, p.y], precision, &squared_euclidean)
+            //             .unwrap();
+
+            //         let mut n = 0u8;
+            //         for a in 0..ret.len() {
+            //             let k = ret[a].1;
+            //             if k.0 != i {
+            //                 n += 1u8;
+            //             }
+            //         }
+            //         line_num_neighbours.push(n);
+            //     }
+
+            //     num_neighbours.push(line_num_neighbours);
+
+            //     if verbose {
+            //         progress = (100.0_f64 * (i + 1) as f64 / polylines.len() as f64) as usize;
+            //         if progress != old_progress {
+            //             println!("Progress: {}%", progress);
+            //             old_progress = progress;
+            //         }
+            //     }
+            // }
+
+            // let mut features_polylines: Vec<Polyline> = vec![];
+            // let mut id: usize;
+            // for i in 0..polylines.len() {
+            //     id = polylines[i].id;
+            //     let mut pl = Polyline::new_empty(id);
+            //     pl.vertices.push(polylines[i][0]);
+            //     pl.source_file = polylines[i].source_file;
+            //     for j in 1..polylines[i].len() {
+            //         // if num_neighbours[i][j] > 1
+            //         //     || num_neighbours[i][j] == 1 && num_neighbours[i][j - 1] == 0
+            //         //     || num_neighbours[i][j] == 0 && num_neighbours[i][j - 1] == 1
+            //         // {
+            //         if num_neighbours[i][j] > 1
+            //             || num_neighbours[i][j] == 1 && num_neighbours[i][j - 1] == 0
+            //             || num_neighbours[i][j] == 0 && num_neighbours[i][j - 1] == 1
+            //         {
+            //             // it's a junction, split the poly
+            //             pl.vertices.push(polylines[i][j]);
+            //             features_polylines.push(pl.clone());
+            //             pl = Polyline::new_empty(id);
+            //             pl.vertices.push(polylines[i][j]);
+            //             pl.source_file = polylines[i].source_file;
+            //         } else {
+            //             pl.vertices.push(polylines[i][j]);
+            //         }
+            //     }
+            //     features_polylines.push(pl.clone());
+
+            //     if verbose {
+            //         progress = (100.0_f64 * (i + 1) as f64 / polylines.len() as f64) as usize;
+            //         if progress != old_progress {
+            //             println!("Progress: {}%", progress);
+            //             old_progress = progress;
+            //         }
+            //     }
+            // }
+
+            // // Remove any zero-length line segments
+            // for i in 0..features_polylines.len() {
+            //     for j in (1..features_polylines[i].len()).rev() {
+            //         if features_polylines[i][j].nearly_equals(&features_polylines[i][j - 1]) {
+            //             features_polylines[i].remove(j);
+            //         }
+            //     }
+            // }
+            
+            // // Remove any single-point lines result from above.
+            // let mut features_polylines2: Vec<Polyline> = vec![];
+            // for i in (0..features_polylines.len()).rev() {
+            //     if features_polylines[i].len() > 1 {
+            //         features_polylines2.push(features_polylines[i].clone());
+            //     }
+            // }
+            // features_polylines = features_polylines2.clone();
+            // drop(features_polylines2);
+
+            // // output the polylines
+            // let mut fid = 1i32;
+            // for i in 0..features_polylines.len() {
+            //     if features_polylines[i].source_file == 1 {
+            //         let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+            //         sfg.add_part(&(features_polylines[i].vertices));
+            //         output.add_record(sfg);
+
+            //         let mut atts: Vec<FieldData> = Vec::with_capacity(input1_att_nums.len() + 2);
+            //         atts.push(FieldData::Int(fid));
+            //         fid += 1;
+            //         atts.push(FieldData::Int(features_polylines[i].id as i32));
+            //         let in_atts = input1.attributes.get_record(features_polylines[i].id);
+            //         for a in 0..input1_att_nums.len() {
+            //             atts.push(in_atts[input1_att_nums[a]].clone());
+            //         }
+            //         output.attributes.add_record(atts, false);
+            //     }
+
+            //     if verbose {
+            //         progress =
+            //             (100.0_f64 * (i + 1) as f64 / features_polylines.len() as f64) as usize;
+            //         if progress != old_progress {
+            //             println!("Progress: {}%", progress);
+            //             old_progress = progress;
+            //         }
+            //     }
+            // }
+
+
+
+            
+
 
             // hunt for intersections in the overlapping bounding boxes
             let mut fid = 1i32;
@@ -382,9 +560,64 @@ impl WhiteboxTool for SplitWithLines {
                 Err(e) => return Err(e),
             };
         } else {
+            // // Get the polylines and bounding boxes of each of the features in input1 and input 2
+            // let mut num_polys = 0;
+            // let mut first_point_in_part: usize;
+            // let mut last_point_in_part: usize;
+            // let mut polylines1: Vec<Polyline> = Vec::with_capacity(input1.get_total_num_parts());
+            // let mut bb1: Vec<BoundingBox> = Vec::with_capacity(input1.get_total_num_parts());
+            // for record_num in 0..input1.num_records {
+            //     let record = input1.get_record(record_num);
+            //     for part in 0..record.num_parts as usize {
+            //         num_polys += 1;
+            //         first_point_in_part = record.parts[part] as usize;
+            //         last_point_in_part = if part < record.num_parts as usize - 1 {
+            //             record.parts[part + 1] as usize - 1
+            //         } else {
+            //             record.num_points as usize - 1
+            //         };
+
+            //         // Create a polyline from the part
+            //         let pl = Polyline::new(
+            //             &(record.points[first_point_in_part..=last_point_in_part]),
+            //             record_num,
+            //         );
+
+            //         // Find the bounding box for the part?
+            //         bb1.push(pl.get_bounding_box());
+
+            //         polylines1.push(pl);
+            //     }
+            // }
+
+            // let mut polylines2: Vec<Polyline> = Vec::with_capacity(input2.get_total_num_parts());
+            // let mut bb2: Vec<BoundingBox> = Vec::with_capacity(input2.get_total_num_parts());
+            // for record_num in 0..input2.num_records {
+            //     let record = input2.get_record(record_num);
+            //     for part in 0..record.num_parts as usize {
+            //         first_point_in_part = record.parts[part] as usize;
+            //         last_point_in_part = if part < record.num_parts as usize - 1 {
+            //             record.parts[part + 1] as usize - 1
+            //         } else {
+            //             record.num_points as usize - 1
+            //         };
+
+            //         // Create a polyline from the part
+            //         let pl = Polyline::new(
+            //             &(record.points[first_point_in_part..=last_point_in_part]),
+            //             record_num + num_polys,
+            //         );
+
+            //         // Find the bounding box for the part?
+            //         bb2.push(pl.get_bounding_box());
+
+            //         polylines2.push(pl);
+            //     }
+            // }
+
             // create output file
-            let mut output =
-                Shapefile::initialize_using_file(&output_file, &input1, ShapeType::Polygon, false)?;
+            let mut output = Shapefile::initialize_using_file(&output_file, &input1, ShapeType::Polygon, false)?;
+            output.projection = projection;
 
             // add the attributes
             output

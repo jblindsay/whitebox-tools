@@ -226,4 +226,11 @@ impl LasHeader {
 
         Ok(header)
     }
+
+    pub fn get_number_of_points(&self) -> u64 {
+        if self.number_of_points_old as u64 > self.number_of_points {
+            return self.number_of_points_old as u64;
+        }
+        self.number_of_points
+    }
 }

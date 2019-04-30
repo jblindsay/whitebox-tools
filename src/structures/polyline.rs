@@ -64,30 +64,41 @@ impl PartialEq for Polyline {
         // This is because equality is often used to identify duplicate polylines.
         if self.len() == other.len() {
             // polylines are considered equal even if they are reversed in order
-            let (starting_point_same, reversed) = if self[0].nearly_equals(&other[0]) {
-                (true, false)
-            } else if self[0].nearly_equals(&other[other.len() - 1]) {
-                (true, true)
-            } else {
-                (false, false)
-            };
-            if starting_point_same {
-                if !reversed {
-                    for p in 1..self.len() {
-                        if !(self[p].nearly_equals(&other[p])) {
-                            return false;
-                        }
-                    }
-                    return true;
-                } else {
-                    for p in 1..self.len() {
-                        if !(self[p].nearly_equals(&other[other.len() - 1 - p])) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
+            // let (starting_point_same, reversed) = if self[0].nearly_equals(&other[0]) {
+            //     (true, false)
+            // } else if self[0].nearly_equals(&other[other.len() - 1]) {
+            //     (true, true)
+            // } else {
+            //     (false, false)
+            // };
+
+            // if starting_point_same {
+            //     if !reversed {
+            //         for p in 1..self.len() {
+            //             if !(self[p].nearly_equals(&other[p])) {
+            //                 return false;
+            //             }
+            //         }
+            //         return true;
+            //     } else {
+            //         for p in 1..self.len() {
+            //             if !(self[p].nearly_equals(&other[other.len() - 1 - p])) {
+            //                 return false;
+            //             }
+            //         }
+            //         return true;
+            //     }
+            // }
+
+            // if self.first_vertex() == other.first_vertex() {
+            //     for p in 1..self.len() {
+            //         if self.get(p) != other.get(p) {
+            //             return false;
+            //         }
+            //     }
+            //     return true;
+            // }
+            return false;
         }
         false
     }
@@ -137,7 +148,7 @@ impl Polyline {
         self.split_points.clear();
     }
 
-    // returns the number of verticies
+    /// returns the number of verticies
     pub fn len(&self) -> usize {
         self.vertices.len()
     }
@@ -150,6 +161,7 @@ impl Polyline {
         self.vertices.len() == 0
     }
 
+    /// Returns the feature geometric length.
     pub fn length(&self) -> f64 {
         let mut ret = 0f64;
         for a in 0..self.len() - 1 {

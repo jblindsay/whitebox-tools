@@ -246,13 +246,34 @@ impl ShapefileGeometry {
             }
 
             ShapeType::PointZ => 32i32,
-            ShapeType::MultiPointZ => 68i32 + self.num_points * 32i32,
+            ShapeType::MultiPointZ => {
+                if self.has_m_data() {
+                    40 + 16 * self.num_points + 16 + 8 * self.num_points + 16 + 8*self.num_points
+                } else {
+                    40 + 16 * self.num_points + 16 + 8 * self.num_points
+                }
+                // 68i32 + self.num_points * 32i32
+            },
             ShapeType::PolyLineZ | ShapeType::PolygonZ => {
-                72i32 + self.num_parts * 4i32 + self.num_points * 32i32
+                // 44 + 4*NumParts + 16*NumPoints + 16 + 8*NumPoints
+                if self.has_m_data() {
+                    44i32 + 4*self.num_parts + 16*self.num_points + 16 + 8*self.num_points + 16 + 8*self.num_points
+                } else {
+                    44i32 + 4*self.num_parts + 16*self.num_points + 16 + 8*self.num_points
+                }
+                // 72i32 + self.num_parts * 4i32 + self.num_points * 32i32
             }
         };
 
         ret
+    }
+
+    pub fn has_m_data(&self) -> bool {
+        self.m_array.len() > 0
+    }
+
+    pub fn has_z_data(&self) -> bool {
+        self.z_array.len() > 0
     }
 
     /// Checks whether a point is within the hull of the geometry. If

@@ -21,7 +21,14 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// Copies LiDAR tiles overlapping with a polygon into an output directory.
+/// This tool copies LiDAR tiles overlapping with a polygon into an output directory.
+/// 
+/// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
+/// LiDAR format `LAZ`, it is able to read `LAZ` file headers. Because this tool only requires information contained 
+/// in the input file's header (i.e. the bounding box of the data), it is able to take `LAZ` input files. 
+/// 
+/// # See Also
+/// `LidarTileFootprint`
 pub struct SelectTilesByPolygon {
     name: String,
     description: String,

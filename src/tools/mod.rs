@@ -96,6 +96,7 @@ impl ToolManager {
         tool_names.push("MaxAbsoluteOverlay".to_string());
         tool_names.push("MaxOverlay".to_string());
         tool_names.push("Medoid".to_string());
+        tool_names.push("MergeLineSegments".to_string());
         tool_names.push("MinAbsoluteOverlay".to_string());
         tool_names.push("MinimumBoundingBox".to_string());
         tool_names.push("MinimumBoundingCircle".to_string());
@@ -396,6 +397,7 @@ impl ToolManager {
 
         // terrain_analysis
         tool_names.push("Aspect".to_string());
+        tool_names.push("AverageNormalVectorAngularDeviation".to_string());
         tool_names.push("CircularVarianceOfAspect".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
@@ -547,6 +549,7 @@ impl ToolManager {
             "maxabsoluteoverlay" => Some(Box::new(gis_analysis::MaxAbsoluteOverlay::new())),
             "maxoverlay" => Some(Box::new(gis_analysis::MaxOverlay::new())),
             "medoid" => Some(Box::new(gis_analysis::Medoid::new())),
+            "mergelinesegments" => Some(Box::new(gis_analysis::MergeLineSegments::new())),
             "minabsoluteoverlay" => Some(Box::new(gis_analysis::MinAbsoluteOverlay::new())),
             "minimumboundingbox" => Some(Box::new(gis_analysis::MinimumBoundingBox::new())),
             "minimumboundingcircle" => Some(Box::new(gis_analysis::MinimumBoundingCircle::new())),
@@ -959,6 +962,7 @@ impl ToolManager {
 
             // terrain_analysis
             "aspect" => Some(Box::new(terrain_analysis::Aspect::new())),
+            "averagenormalvectorangulardeviation" => Some(Box::new(terrain_analysis::AverageNormalVectorAngularDeviation::new())),
             "circularvarianceofaspect" => Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new())),
             "devfrommeanelev" => Some(Box::new(terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),

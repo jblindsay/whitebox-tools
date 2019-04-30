@@ -895,10 +895,12 @@ impl Shapefile {
                     }
 
                     // measure data
-                    writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                    for m in &self.records[i].m_array {
-                        writer.write_f64::<LittleEndian>(*m)?;
+                    if self.records[i].has_m_data() {
+                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                        for m in &self.records[i].m_array {
+                            writer.write_f64::<LittleEndian>(*m)?;
+                        }
                     }
                 }
             }
@@ -931,10 +933,12 @@ impl Shapefile {
                     }
 
                     // measure data
-                    writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                    for m in &self.records[i].m_array {
-                        writer.write_f64::<LittleEndian>(*m)?;
+                    if self.records[i].has_m_data() {
+                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                        for m in &self.records[i].m_array {
+                            writer.write_f64::<LittleEndian>(*m)?;
+                        }
                     }
                 }
             }

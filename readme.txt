@@ -57,10 +57,17 @@ for more details.
 ******************
 
 Version 0.1X.X (XX-XX-2019)
+- Added the MergeLineSegments tool.
 - Fixed a bug with writing Big-Ending GeoTIFF files. The 'MM' file header was not correct previously.
 - Significantly reduced the memory requirements of the StochasticDepressionAnalysis tool. The tool 
   may be somewhat slower as a result, but it should be applicable to larger DEMs than was previously
   possible.
+- Fixed bugs with the Union and SplitWithLines tools. 
+- WhiteboxTools can now read and write Shapefiles of MultiPointZ, PolyLineZ, and PolygonZ ShapeTypes 
+  missing the optional 'M' values (i.e. measures).
+- SelectTilesByPolygon and LidarTileFootprint are now compatible with LAZ file inputs. Both of these 
+  tools only rely on information in the input LiDAR file's header, which is the same for a LAZ file 
+  as a LAS file.
 
 Version 0.15.0 (03-03-2019)
 - The following tools were added to the project:

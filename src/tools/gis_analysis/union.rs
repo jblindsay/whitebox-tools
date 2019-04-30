@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 5/11/2018
-Last Modified: 18/11/2018
+Created: 05/11/2018
+Last Modified: 08/04/2019
 License: MIT
 */
 extern crate kdtree;
@@ -597,14 +597,6 @@ impl WhiteboxTool for Union {
                     }
                 }
 
-                // let mut p: Point2D;
-                // for i in 0..polylines.len() {
-                //     for j in 0..polylines[i].len() {
-                //         p = polylines[i][j];
-                //         polylines[i].vertices[j] = p.fix_precision(num_decimals);
-                //     }
-                // }
-
                 // Break the polylines up into shorter lines at junction points.
                 let dimensions = 2;
                 let capacity_per_node = 64;
@@ -680,25 +672,114 @@ impl WhiteboxTool for Union {
                     }
                 }
 
+                // Remove any zero-length line segments
+                for i in 0..features_polylines.len() {
+                    for j in (1..features_polylines[i].len()).rev() {
+                        if features_polylines[i][j].nearly_equals(&features_polylines[i][j - 1]) {
+                            features_polylines[i].remove(j);
+                        }
+                    }
+                }
+                
+                // Remove any single-point lines result from above.
+                let mut features_polylines2: Vec<Polyline> = vec![];
+                for i in (0..features_polylines.len()).rev() {
+                    if features_polylines[i].len() > 1 {
+                        features_polylines2.push(features_polylines[i].clone());
+                    }
+                }
+                features_polylines = features_polylines2.clone();
+                drop(features_polylines2);
+
                 // Find duplicate polylines and remove them
                 let mut duplicate = vec![false; features_polylines.len()];
                 let mut duplicate_partner = vec![0; features_polylines.len()];
+                let mut num_duplicates = 0;
+                // let mut source_file: usize;
+                // let mut first_vertex1: Point2D;
+                // let mut first_vertex2: Point2D;
+                // for i in 0..features_polylines.len() {
+                //     if !duplicate[i] {
+                //         source_file = features_polylines[i].source_file;
+                //         // first_vertex1 = features_polylines[i].first_vertex();
+                //         for j in (i + 1)..features_polylines.len() {
+                //             if source_file != features_polylines[j].source_file {
+                //                 if lines_are_equal(&features_polylines[i].vertices, &features_polylines[j].vertices) {
+                //                     num_duplicates += 1;
+                //                 }
+                //                 // first_vertex2 = features_polylines[j].first_vertex();
+                //                 // if first_vertex1.x == first_vertex2.x && first_vertex1.y == first_vertex2.y {
+                //                 //     num_duplicates += 1;
+                //                 // }
+                //                 // if features_polylines[i] == features_polylines[j] {
+                //                 // // if features_polylines[i].equals(&features_polylines[j]) {
+                //                 //     duplicate[i] = true;
+                //                 //     duplicate[j] = true;
+                //                 //     duplicate_partner[i] = j;
+                //                 //     duplicate_partner[j] = i;
+                //                 //     num_duplicates += 1;
+                //                 // }
+                //             }
+                //         }
+                //     }
+
+                //     if verbose {
+                //         progress = (100.0_f64 * (i + 1) as f64 / features_polylines.len() as f64) as usize;
+                //         if progress != old_progress {
+                //             println!("Finding duplicate polylines ({}): {}%", num_duplicates, progress);
+                //             old_progress = progress;
+                //         }
+                //     }
+                // }
+
+                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut p1: Point2D;
+                let mut p2: Point2D;
+                for i in 0..features_polylines.len() {
+                    p1 = features_polylines[i].first_vertex();
+                    tree.add([p1.x, p1.y], first_node_id(i)).unwrap();
+
+                    p2 = features_polylines[i].last_vertex();
+                    tree.add([p2.x, p2.y], last_node_id(i)).unwrap();
+                }
+
+                let mut j: usize;
+                let mut index: usize;
                 for i in 0..features_polylines.len() {
                     if !duplicate[i] {
-                        for j in (i + 1)..features_polylines.len() {
-                            if features_polylines[i] == features_polylines[j] {
-                                if features_polylines[i].source_file
-                                    != features_polylines[j].source_file
-                                {
-                                    duplicate[i] = true;
-                                    duplicate[j] = true;
-                                    duplicate_partner[i] = j;
-                                    duplicate_partner[j] = i;
+                        p = features_polylines[i].first_vertex();
+
+                        let ret = tree
+                            .within(&[p.x, p.y], precision, &squared_euclidean)
+                            .unwrap();
+                        if ret.len() > 1 {
+                            for a in 0..ret.len() {
+                                index = *ret[a].1;
+                                j = index / 2;
+                                if j != i && features_polylines[j].source_file != features_polylines[i].source_file {
+                                    if features_polylines[i].nearly_equals(&features_polylines[j], precision) {
+                                        duplicate[i] = true;
+                                        duplicate[j] = true;
+                                        duplicate_partner[i] = j;
+                                        duplicate_partner[j] = i;
+                                        num_duplicates += 1;
+                                    }
                                 }
                             }
                         }
                     }
+                    if verbose {
+                        progress = (100.0_f64 * (i + 1) as f64 / features_polylines.len() as f64) as usize;
+                        if progress != old_progress {
+                            println!("Finding duplicate polylines ({}): {}%", num_duplicates, progress);
+                            old_progress = progress;
+                        }
+                    }
                 }
+
+
+
+
 
                 let mut fid = 1i32;
                 for i in 0..features_polylines.len() {
@@ -977,6 +1058,7 @@ impl WhiteboxTool for Union {
                                 }
                             }
                         }
+
                         // Remove any single-point lines result from above.
                         for i in (0..features_polylines.len()).rev() {
                             if features_polylines[i].len() < 2 {

@@ -1,5 +1,6 @@
 // private sub-module defined in other files
 mod aspect;
+mod average_normal_vector_angular_deviation;
 mod circular_variance_of_aspect;
 mod dev_from_mean_elev;
 mod diff_from_mean_elev;
@@ -55,6 +56,7 @@ mod wetness_index;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::aspect::Aspect;
+pub use self::average_normal_vector_angular_deviation::AverageNormalVectorAngularDeviation;
 pub use self::circular_variance_of_aspect::CircularVarianceOfAspect;
 pub use self::dev_from_mean_elev::DevFromMeanElev;
 pub use self::diff_from_mean_elev::DiffFromMeanElev;

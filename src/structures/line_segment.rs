@@ -108,7 +108,8 @@ impl LineSegment {
                 } else if i == 3 {
                     other.p2
                 } else {
-                    panic!("Error encountered in finding endpoints of overlapping segments.")
+                    // panic!("Error encountered in finding endpoints of overlapping segments.")
+                    return None;
                 };
 
                 let p2 = if j == 0 {
@@ -120,7 +121,8 @@ impl LineSegment {
                 } else if j == 3 {
                     other.p2
                 } else {
-                    panic!("Error encountered in finding endpoints of overlapping segments.")
+                    // panic!("Error encountered in finding endpoints of overlapping segments.")
+                    return None;
                 };
 
                 return Some(LineSegment::new(p1, p2));
