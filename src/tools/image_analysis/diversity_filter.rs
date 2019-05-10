@@ -1,11 +1,9 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: 13/10/2018
+Created: 05/07/2017
+Last Modified: 03/05/2019
 License: MIT
-
-NOTES: The input image should contain integer values but floating point data will be handled using a multiplier.
 */
 
 use crate::raster::*;
@@ -19,7 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Assigns each cell in the output grid the number of different values in a moving window centred on each grid cell in the input raster.
+/// This tool assigns each cell in the output grid the number of different values in a moving window centred on 
+/// each grid cell in the input raster. The input image should contain integer values but floating point data 
+/// are allowable and will be handled by multiplying pixel values by 1000 and rounding. Neighbourhood size, or 
+/// filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` flags. These 
+/// dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9... If the kernel filter size is the same 
+/// in the x and y dimensions, the silent `--filter` flag may be used instead (command-line interface only).
+/// 
+/// # See Also
+/// `MajorityFilter`
 pub struct DiversityFilter {
     name: String,
     description: String,
@@ -152,37 +158,38 @@ impl WhiteboxTool for DiversityFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-filter" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
                 filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
-                if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+            } else if flag_val == "-filterx" {
+                filter_size_x = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
-                if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
+            } else if flag_val == "-filtery" {
+                filter_size_y = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                };
             }
         }
 

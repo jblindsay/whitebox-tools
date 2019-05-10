@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/08/2018
-Last Modified: 12/10/2018
+Last Modified: 10/05/2019
 License: MIT
 */
 
@@ -200,18 +200,23 @@ impl WhiteboxTool for SelectTilesByPolygon {
 
         let mut inputs = vec![];
 
-        match fs::read_dir(input_directory.clone()) {
-            Err(why) => println!("{:?}", why.kind()),
-            Ok(paths) => {
-                for path in paths {
-                    let s = format!("{:?}", path.unwrap().path());
-                    if s.replace("\"", "").to_lowercase().ends_with(".las")
-                        || s.replace("\"", "").to_lowercase().ends_with(".laz")
-                    {
-                        inputs.push(format!("{:?}", s.replace("\"", "")));
-                    }
+        if std::path::Path::new(&input_directory).is_dir() {
+            for entry in fs::read_dir(input_directory.clone())? {
+                let s = entry?
+                .path()
+                .into_os_string()
+                .to_str()
+                .expect("Error reading path string")
+                .to_string();
+                if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".laz") {
+                    inputs.push(s);
                 }
             }
+        } else {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                format!("The input directory ({}) is incorrect.", input_directory),
+            ));
         }
 
         let polygons = Arc::new(Shapefile::read(&polygons_file)?);
@@ -237,6 +242,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
             ));
         }
 
+        let report_copy = Arc::new(Mutex::new(true));
         let inputs = Arc::new(inputs);
         let bb = Arc::new(bb);
         let num_procs = num_cpus::get() as isize;
@@ -249,6 +255,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
             let bb = bb.clone();
             let tile_list = tile_list.clone();
             let tx = tx.clone();
+            let report_copy = report_copy.clone();
             // copy over the string parameters
             let input_directory = input_directory.clone();
             let output_directory = output_directory.clone();
@@ -347,11 +354,19 @@ impl WhiteboxTool for SelectTilesByPolygon {
                             .clone();
 
                         match fs::copy(input_file.clone(), output_file.clone()) {
-                            Ok(_) => println!(
-                                "Copied \"{}\" to \"{}\"",
-                                input_file.replace(&input_directory, "").clone(),
-                                output_directory.clone()
-                            ),
+                            Ok(_) => {
+                                if verbose {
+                                    // what's the report_copy status?
+                                    let report_copy = report_copy.lock().expect("Error unlocking mutex");
+                                    if *report_copy {
+                                        println!(
+                                        "Copied \"{}\" to \"{}\"",
+                                        input_file.replace(&input_directory, "").clone(),
+                                        output_directory.clone()
+                                        )
+                                    }
+                                }
+                            }
                             Err(e) => panic!("Error copying file {} \n{}", input_file, e),
                         }
                     }
@@ -368,6 +383,13 @@ impl WhiteboxTool for SelectTilesByPolygon {
             let in_poly = rx.recv().unwrap();
             if in_poly {
                 num_files_copied += 1;
+                if num_files_copied == 50 {
+                    if verbose {
+                        println!("...");
+                    }
+                    let mut report_copy = report_copy.lock().expect("Error unlocking mutex");
+                    *report_copy = false;
+                }
             }
             if verbose {
                 progress = (100.0_f64 * tile as f64 / (num_tiles - 1) as f64) as i32;

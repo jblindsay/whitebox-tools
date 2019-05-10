@@ -18,7 +18,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool 
+/// This tool characterizes the spatial distribution of the average normal vector angular deviation, a measure of
+/// surface roughness. Working in the field of 3D printing, Ko et al. (2016) defined a measure of surface roughness 
+/// based on quantifying the angular deviations in the direction of the normal vector of a real surface from its ideal 
+/// (i.e. smoothed) form. This measure of surface complexity is therefore in units of degrees. Specifically, roughness 
+/// is defined in this study as the neighborhood-averaged difference in the normal vectors of the original DEM and a 
+/// smoothed DEM surface. Smoothed surfaces are derived by applying a Gaussian filter of the same size as the 
+/// neighborhood (`--filter`).
+/// 
+/// The `MultiscaleRoughness` tool calculates the same measure of surface roughness, except that it is designed to
+/// work with multiple spatial scales.
+/// 
+/// # Reference
+/// Ko, M., Kang, H., ulrim Kim, J., Lee, Y., & Hwang, J. E. (2016, July). How to measure quality of affordable 3D 
+/// printing: Cultivating quantitative index in the user community. In International Conference on Human-Computer 
+/// Interaction (pp. 116-121). Springer, Cham.
+/// 
+/// Lindsay, J. B., & Newman, D. R. (2018). Hyper-scale analysis of surface roughness. PeerJ Preprints, 6, e27110v1.
 /// 
 /// # See Also
 /// `MultiscaleRoughness`, `CircularVarianceOfAspect`

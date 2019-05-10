@@ -34,8 +34,11 @@ use std::path;
 /// outlets on the main-trunk stream, which will result in watershed delineation of incorrect sub-basins.
 /// 
 /// # Reference
-/// Lindsay JB, Rothwell JJ, and Davies H. 2008. Mapping outlet points used for watershed delineation onto DEM-derived stream 
-/// networks, Water Resources Research, 44, W08442, doi:10.1029/2007WR006507.
+/// Jenson, S. K. (1991), Applications of hydrological information automati-cally extracted from digital elevation 
+/// models, Hydrological Processes, 5, 31–44, doi:10.1002/hyp.3360050104. 
+/// 
+/// Lindsay JB, Rothwell JJ, and Davies H. 2008. Mapping outlet points used for watershed delineation onto DEM-derived 
+/// stream networks, Water Resources Research, 44, W08442, doi:10.1029/2007WR006507.
 /// 
 /// # See Also:
 /// `Watershed`, `SnapPourPoints`, `D8FlowAccumulation`

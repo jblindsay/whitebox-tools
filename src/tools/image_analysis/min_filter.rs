@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
+Created: 26/06/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -19,6 +19,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool assigns each cell in the output grid (`--output`) the minimum value in a moving window centred on each grid 
+/// cell in the input raster (`--input`). A maximum filter is the equivalent of the mathematical morphological 
+/// [erosion](https://en.wikipedia.org/wiki/Mathematical_morphology#Erosion) operator.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` flags. 
+/// These dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9... If the kernel filter size is the same in 
+/// the x and y dimensions, the silent `--filter` flag may be used instead (command-line interface only).
+/// 
+/// This tool takes advantage of the redundancy between overlapping, neighbouring filters to enhance computationally 
+/// efficiency. Like most of WhiteboxTools' filters, it is also parallelized for further efficiency.
+/// 
+/// # See Also
+/// `MaximumFilter`
 pub struct MinimumFilter {
     name: String,
     description: String,

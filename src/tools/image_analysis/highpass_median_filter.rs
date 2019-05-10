@@ -30,7 +30,7 @@ use std::thread;
 /// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
 /// 
 /// # See Also
-/// `HighPassMedianFilter`, `MedianFilter`
+/// `HighPassFilter`, `MedianFilter`
 pub struct HighPassMedianFilter {
     name: String,
     description: String,

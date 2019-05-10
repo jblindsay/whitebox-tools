@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
-Last Modified: 13/10/2018
+Created: 22/06/2017
+Last Modified: 03/05/2019
 License: MIT
 */
 
@@ -19,7 +19,28 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Performs a percentile filter on an input image.
+/// This tool calculates the percentile of the center cell in a moving filter window applied to an input image (`--input). 
+/// This indicates the value below which a given percentage of the neighbouring values in within the filter fall. For example, 
+/// the 35th percentile is the value below which 35% of the neighbouring values in the filter window may be found. As such,
+/// the percentile of a pixel value is indicative of the relative location of the site within the statistical distribution 
+/// of values contained within a filter window. When applied to input digital elevation models, percentile is a measure of
+/// local topographic position, or elevation residual.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` flags. 
+/// These dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9... If the kernel filter size is the same in 
+/// the x and y dimensions, the silent `--filter` flag may be used instead (command-line interface only).
+/// 
+/// This tool takes advantage of the redundancy between overlapping, neighbouring filters to enhance computationally 
+/// efficiency, using a method similar to Huang et al. (1979). This efficient method of calculating percentiles requires
+/// rounding of floating-point inputs, and therefore the user must specify the number of significant digits (`--sig_digits`) 
+/// to be used during the processing. Like most of WhiteboxTools' filters, this tool is also parallelized for further efficiency.
+/// 
+/// # Reference
+/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE 
+/// Transactions on Acoustics, Speech, and Signal Processing, 27(1), pp.13-18.
+/// 
+/// # See Also
+/// `MedianFilter`
 pub struct PercentileFilter {
     name: String,
     description: String,
@@ -169,40 +190,39 @@ impl WhiteboxTool for PercentileFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if flag_val == "-filter" {
                 if keyval {
                     filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
                     filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
                 filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
+            } else if flag_val == "-filterx" {
                 if keyval {
                     filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
                     filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
+            } else if flag_val == "-filtery" {
                 if keyval {
                     filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
                 } else {
                     filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
                 }
-            } else if vec[0].to_lowercase() == "-sig_digits"
-                || vec[0].to_lowercase() == "--sig_digits"
-            {
+            } else if flag_val == "-sig_digits" {
                 if keyval {
                     num_sig_digits = vec[1].to_string().parse::<i32>().unwrap();
                 } else {
@@ -252,7 +272,6 @@ impl WhiteboxTool for PercentileFilter {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        // let input = Raster::new(&input_file, "r")?;
 
         let start = Instant::now();
 

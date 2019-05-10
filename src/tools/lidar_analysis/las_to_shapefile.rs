@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/10/2018
-Last Modified: 12/10/2018
+Last Modified: 10/05/2019
 License: MIT
 */
 
@@ -175,16 +175,36 @@ impl WhiteboxTool for LasToShapefile {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            match fs::read_dir(working_directory) {
-                Err(why) => println!("! {:?}", why.kind()),
-                Ok(paths) => {
-                    for path in paths {
-                        let s = format!("{:?}", path.unwrap().path());
-                        if s.replace("\"", "").to_lowercase().ends_with(".las") {
-                            inputs.push(format!("{:?}", s.replace("\"", "")));
-                        }
+            // match fs::read_dir(working_directory) {
+            //     Err(why) => println!("! {:?}", why.kind()),
+            //     Ok(paths) => {
+            //         for path in paths {
+            //             let s = format!("{:?}", path.unwrap().path());
+            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
+            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
+            //             }
+            //         }
+            //     }
+            // }
+            if std::path::Path::new(&working_directory).is_dir() {
+                for entry in fs::read_dir(working_directory.clone())? {
+                    let s = entry?
+                    .path()
+                    .into_os_string()
+                    .to_str()
+                    .expect("Error reading path string")
+                    .to_string();
+                    if s.to_lowercase().ends_with(".las") {
+                        inputs.push(s);
+                    } else if s.to_lowercase().ends_with(".zip") {
+                        inputs.push(s);
                     }
                 }
+            } else {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!("The input directory ({}) is incorrect.", working_directory),
+                ));
             }
         } else {
             if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
