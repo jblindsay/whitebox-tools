@@ -622,6 +622,13 @@ impl WhiteboxTool for LidarTINGridding {
                         }
                     }
 
+                    if points.len() == 0 {
+                        if verbose {
+                            println!("No points found in {}", inputs[tile].clone());
+                        }
+                        tx2.send(tile).unwrap();
+                    }
+
                     let west: f64 = bounding_boxes[tile].min_x;
                     let north: f64 = bounding_boxes[tile].max_y;
                     let rows: isize =

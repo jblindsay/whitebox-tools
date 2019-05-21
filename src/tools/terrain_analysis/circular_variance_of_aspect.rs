@@ -229,7 +229,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             println!("Smoothing the input DEM...");
         }
         let sigma = (midpoint as f64 - 0.5) / 3f64;
-        if sigma < 1.8 && filter_size > 3 {
+        if sigma < 1.8 && filter_size >= 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 
@@ -324,7 +324,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             }
         } else {
             // use a fast almost Gaussian filter for larger smoothing operations.
-            let n = 5;
+            let n = 4;
             let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
             let mut wl = w_ideal.floor() as isize;
             if wl % 2 == 0 {
@@ -448,6 +448,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
 
         // Calculate the aspect
         let eight_grid_res = configs.resolution_x * 8.0;
+        // let eight_grid_res_sqrd = eight_grid_res * eight_grid_res;
         let mut z_factor = 1f64;
         if is_geographic_coords {
             // calculate a new z-conversion factor

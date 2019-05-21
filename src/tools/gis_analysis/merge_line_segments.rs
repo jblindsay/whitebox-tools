@@ -19,26 +19,14 @@ use std::path;
 
 const EPSILON: f64 = std::f64::EPSILON;
 
-/// This tool splits vector layers at their overlaps, creating a layer containing all the portions from both
-/// input and overlay layers. The *Union* is related to the Boolean
-/// **OR** operation in  set theory and is one of the common vector overlay
-/// operations in GIS. The user must specify  the names of the input and overlay vector files
-/// as well as the output vector file name. The tool operates on vector points,
-/// lines, or polygon, but both the input and overlay files must contain the same ShapeType.
-///
-/// The attributes of the two input vectors will be merged in the output attribute table.
-/// Fields that are duplicated between the inputs will share a single attribute in the
-/// output. Fields that only exist in one of the two inputs will be populated by `null`
-/// in the output table. Multipoint ShapeTypes however will simply contain a single
-/// ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
-/// ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
-/// be transfered to the output geometries. If the input attribute table contains fields
-/// that measure the geometric properties of their associated features (e.g. length or area),
-/// these fields will not be updated to reflect changes in geometry shape and size
-/// resulting from the overlay operation.
+/// Vector lines can sometimes contain two features that are connected by a shared end vertex. This tool 
+/// identifies connected line features in an input vector file (`--input`) and merges them in the output
+/// file (`--output`). Two line features are merged if their ends are coincident, and are not coincident 
+/// with any other feature (i.e. a bifurcation junction). End vertices are considered to be coincident if 
+/// they are within the specified snap distance (`--snap`). 
 ///
 /// # See Also
-/// `Intersect`, `Difference`, `SymmetricalDifference`, `Clip`, `Erase`
+/// `SplitWithLines`
 pub struct MergeLineSegments {
     name: String,
     description: String,
@@ -52,7 +40,7 @@ impl MergeLineSegments {
         // public constructor
         let name = "MergeLineSegments".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
-        let description = "Splits vector layers at their overlaps, creating a layer containing all the portions from both input and overlay layers.".to_string();
+        let description = "Merges vector line segments into larger features.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

@@ -58,6 +58,11 @@ for more details.
 
 Version 0.1X.X (XX-XX-2019)
 - Added the MergeLineSegments tool.
+- Fixed a bug with reading LAS files with point records with extra bytes. Previously, the LAS decoder
+  assumed the Point Record Length matched that of the LAS specifications (with the variable of the 
+  optional intensity and user data). Some LAS files in the wild (particularly those created using 
+  LASTools and of LAS version 1.2) have larger Point Record Lengths, which presumably carry extra 
+  bytes of information. These extra byes are ignored, but they no longer throw off the decoding.
 - Fixed a bug with writing Big-Ending GeoTIFF files. The 'MM' file header was not correct previously.
 - Significantly reduced the memory requirements of the StochasticDepressionAnalysis tool. The tool 
   may be somewhat slower as a result, but it should be applicable to larger DEMs than was previously

@@ -31,6 +31,9 @@ use std::path;
 ///
 /// Each split geometry's attribute record will contain `FID` and `PARENT_FID` values
 /// and all of the attributes (excluding `FID`'s) of the input layer.
+/// 
+/// # See Also
+/// 'MergeLineSegments'
 pub struct SplitWithLines {
     name: String,
     description: String,

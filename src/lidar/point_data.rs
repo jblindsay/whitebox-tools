@@ -326,7 +326,7 @@ impl PointData {
 
     /// Returns 'true' if the the point is either a first return or the only return.
     pub fn is_early_return(&self) -> bool {
-        (self.return_number() == 1) | self.is_only_return()
+        self.return_number() == 1
     }
 
     /// Returns 'true' if the the point is either a last return or the only return.

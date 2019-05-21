@@ -240,8 +240,11 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         if verbose {
             println!("Smoothing the input DEM...");
         }
-        let sigma = (midpoint as f64 - 0.5) / 3f64;
-        if sigma < 1.8 && filter_size > 3 {
+        let mut sigma = (midpoint as f64 - 0.5) / 3f64;
+        if sigma < 1.0 {
+            sigma = 1.0;
+        }
+        if sigma < 1.8 && filter_size >= 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 
@@ -336,7 +339,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
         } else {
             // use a fast almost Gaussian filter for larger smoothing operations.
-            let n = 5;
+            let n = 4;
             let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
             let mut wl = w_ideal.floor() as isize;
             if wl % 2 == 0 {
@@ -525,10 +528,13 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             });
         }
 
-        let mut angular_diff: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
+        // let mut angular_diff: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        output.configs.data_type = DataType::F32;
         for row in 0..rows {
             let data = rx.recv().unwrap();
-            angular_diff.set_row_data(data.0, data.1);
+            // angular_diff.set_row_data(data.0, data.1);
+            output.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -538,138 +544,139 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
         }
 
-        // convert to integral images
-        let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 1, 0)?;
-        let mut sum: f64;
-        let mut sumn: u32;
-        for row in 0..rows {
-            if row > 0 {
-                sum = 0f64;
-                sumn = 0u32;
-                for col in 0..columns {
-                    sum += angular_diff.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata {
-                        // it's either nodata or a flag cell in the DEM.
-                        i_n.decrement(row, col, 1);
-                    }
-                    sumn += i_n.get_value(row, col);
-                    angular_diff.set_value(row, col, sum + angular_diff.get_value(row-1, col));
-                    i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
-                }
-            } else {
-                if smoothed_dem.get_value(0, 0) == nodata {
-                    i_n.set_value(0, 0, 0);
-                }
-                for col in 1..columns {
-                    angular_diff.increment(row, col, angular_diff.get_value(row, col-1));
-                    i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata {
-                        // it's either nodata or a flag cell in the DEM.
-                        i_n.decrement(row, col, 1);
-                    }
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Creating integral images: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
+        // // convert to integral images
+        // let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 1, 0)?;
+        // let mut sum: f64;
+        // let mut sumn: u32;
+        // for row in 0..rows {
+        //     if row > 0 {
+        //         sum = 0f64;
+        //         sumn = 0u32;
+        //         for col in 0..columns {
+        //             sum += angular_diff.get_value(row, col);
+        //             if smoothed_dem.get_value(row, col) == nodata {
+        //                 // it's either nodata or a flag cell in the DEM.
+        //                 i_n.decrement(row, col, 1);
+        //             }
+        //             sumn += i_n.get_value(row, col);
+        //             angular_diff.set_value(row, col, sum + angular_diff.get_value(row-1, col));
+        //             i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
+        //         }
+        //     } else {
+        //         if smoothed_dem.get_value(0, 0) == nodata {
+        //             i_n.set_value(0, 0, 0);
+        //         }
+        //         for col in 1..columns {
+        //             angular_diff.increment(row, col, angular_diff.get_value(row, col-1));
+        //             i_n.increment(row, col, i_n.get_value(row, col-1));
+        //             if smoothed_dem.get_value(row, col) == nodata {
+        //                 // it's either nodata or a flag cell in the DEM.
+        //                 i_n.decrement(row, col, 1);
+        //             }
+        //         }
+        //     }
+        //     if verbose {
+        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Creating integral images: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
-        let angular_diff = Arc::new(angular_diff);
-        let i_n = Arc::new(i_n);
-        let (tx2, rx2) = mpsc::channel();
-        for tid in 0..num_procs {
-            let angular_diff = angular_diff.clone();
-            let smoothed_dem = smoothed_dem.clone();
-            let i_n = i_n.clone();
-            let tx2 = tx2.clone();
-            thread::spawn(move || {
-                let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
-                let mut n: f64;
-                let mut sum: f64;
-                let mut z: f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    y1 = row - midpoint - 1;
-                    if y1 < 0 {
-                        y1 = 0;
-                    }
-                    if y1 >= rows {
-                        y1 = rows - 1;
-                    }
+        // let angular_diff = Arc::new(angular_diff);
+        // let i_n = Arc::new(i_n);
+        // let (tx2, rx2) = mpsc::channel();
+        // for tid in 0..num_procs {
+        //     let angular_diff = angular_diff.clone();
+        //     let smoothed_dem = smoothed_dem.clone();
+        //     let i_n = i_n.clone();
+        //     let tx2 = tx2.clone();
+        //     thread::spawn(move || {
+        //         let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+        //         let mut n: f64;
+        //         let mut sum: f64;
+        //         let mut z: f64;
+        //         for row in (0..rows).filter(|r| r % num_procs == tid) {
+        //             y1 = row - midpoint - 1;
+        //             if y1 < 0 {
+        //                 y1 = 0;
+        //             }
+        //             if y1 >= rows {
+        //                 y1 = rows - 1;
+        //             }
 
-                    y2 = row + midpoint;
-                    if y2 < 0 {
-                        y2 = 0;
-                    }
-                    if y2 >= rows {
-                        y2 = rows - 1;
-                    }
-                    let mut data = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = smoothed_dem.get_value(row, col);
-                        if z != nodata {
-                            x1 = col - midpoint - 1;
-                            if x1 < 0 {
-                                x1 = 0;
-                            }
-                            if x1 >= columns {
-                                x1 = columns - 1;
-                            }
+        //             y2 = row + midpoint;
+        //             if y2 < 0 {
+        //                 y2 = 0;
+        //             }
+        //             if y2 >= rows {
+        //                 y2 = rows - 1;
+        //             }
+        //             let mut data = vec![nodata; columns as usize];
+        //             for col in 0..columns {
+        //                 z = smoothed_dem.get_value(row, col);
+        //                 if z != nodata {
+        //                     x1 = col - midpoint - 1;
+        //                     if x1 < 0 {
+        //                         x1 = 0;
+        //                     }
+        //                     if x1 >= columns {
+        //                         x1 = columns - 1;
+        //                     }
 
-                            x2 = col + midpoint;
-                            if x2 < 0 {
-                                x2 = 0;
-                            }
-                            if x2 >= columns {
-                                x2 = columns - 1;
-                            }
-                            n = (i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
-                                - i_n.get_value(y1, x2)
-                                - i_n.get_value(y2, x1)) as f64;
-                            if n > 0f64 {
-                                sum = angular_diff.get_value(y2, x2) + angular_diff.get_value(y1, x1)
-                                    - angular_diff.get_value(y1, x2)
-                                    - angular_diff.get_value(y2, x1);
-                                data[col as usize] = sum / n;
-                            }
-                            // data[col as usize] = angular_diff.get_value(row, col).to_degrees();
-                        }
-                    }
+        //                     x2 = col + midpoint;
+        //                     if x2 < 0 {
+        //                         x2 = 0;
+        //                     }
+        //                     if x2 >= columns {
+        //                         x2 = columns - 1;
+        //                     }
+        //                     n = (i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
+        //                         - i_n.get_value(y1, x2)
+        //                         - i_n.get_value(y2, x1)) as f64;
+        //                     if n > 0f64 {
+        //                         sum = angular_diff.get_value(y2, x2) + angular_diff.get_value(y1, x1)
+        //                             - angular_diff.get_value(y1, x2)
+        //                             - angular_diff.get_value(y2, x1);
+        //                         data[col as usize] = sum / n;
+        //                     }
+        //                     // data[col as usize] = angular_diff.get_value(row, col).to_degrees();
+        //                 }
+        //             }
 
-                    match tx2.send((row, data)) {
-                        Ok(_) => {},
-                        Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
-                    }
-                }
-            });
-        }
+        //             match tx2.send((row, data)) {
+        //                 Ok(_) => {},
+        //                 Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+        //             }
+        //         }
+        //     });
+        // }
 
-        let mut output = Raster::initialize_using_config(&output_file, &configs);
-        output.configs.data_type = DataType::F32;
-        for row in 0..rows {
-            match rx2.recv() {
-                Ok(data) => {
-                    output.set_row_data(data.0, data.1);
-                },
-                Err(_) => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidInput,
-                        "Error in receiving data from thread.",
-                    ));
-                }
-            }
+        // let mut output = Raster::initialize_using_config(&output_file, &configs);
+        // output.configs.data_type = DataType::F32;
+
+        // for row in 0..rows {
+        //     match rx2.recv() {
+        //         Ok(data) => {
+        //             output.set_row_data(data.0, data.1);
+        //         },
+        //         Err(_) => {
+        //             return Err(Error::new(
+        //                 ErrorKind::InvalidInput,
+        //                 "Error in receiving data from thread.",
+        //             ));
+        //         }
+        //     }
             
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
+        //     if verbose {
+        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Performing analysis: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "muted_spectrum.plt".to_string();

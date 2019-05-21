@@ -106,7 +106,12 @@ impl LasFile {
 
         // Copy the VLRs
         for i in 0..(input.header.number_of_vlrs as usize) {
+            // if !input.vlr_data[i].description.contains("by LAStools of rapidlasso") {
             output.add_vlr(input.vlr_data[i].clone());
+            // } else {
+            //     // don't output LAStools VLRs.
+            //     output.header.number_of_vlrs -= 1;
+            // }
         }
 
         output
@@ -668,7 +673,7 @@ impl LasFile {
             /////////////////////////
             // Read the point data //
             /////////////////////////
-
+            
             // Intensity and userdata are both optional. Figure out if they need to be read.
             // The only way to do this is to compare the point record length by point format
             let rec_lengths = [
@@ -684,6 +689,8 @@ impl LasFile {
                 [59_u16, 57_u16, 58_u16, 56_u16],
                 [67_u16, 65_u16, 66_u16, 64_u16],
             ];
+
+            let mut skip_bytes = 0usize;
 
             if self.header.point_record_length == rec_lengths[self.header.point_format as usize][0]
             {
@@ -704,6 +711,13 @@ impl LasFile {
             {
                 self.use_point_intensity = false;
                 self.use_point_userdata = false;
+            } else if self.header.point_record_length > rec_lengths[self.header.point_format as usize][0] {
+                // There must be some extra data in each point record. I've seen
+                // this before with the output of LASTools. Assume the point intensity 
+                // and user data are both present.
+                self.use_point_intensity = true;
+                self.use_point_userdata = true;
+                skip_bytes = (self.header.point_record_length - rec_lengths[self.header.point_format as usize][0]) as usize;
             }
 
             self.point_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -730,6 +744,9 @@ impl LasFile {
                     }
                     p.point_source_id = bor.read_u16();
                     self.point_data.push(p);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 1 {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -750,6 +767,9 @@ impl LasFile {
                     self.point_data.push(p);
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 2 {
                 self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -774,6 +794,9 @@ impl LasFile {
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 3 {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -802,6 +825,9 @@ impl LasFile {
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 4 {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -834,6 +860,9 @@ impl LasFile {
                     wfp.yt = bor.read_f32();
                     wfp.zt = bor.read_f32();
                     self.waveform_data.push(wfp);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 5 {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
@@ -873,6 +902,9 @@ impl LasFile {
                     wfp.yt = bor.read_f32();
                     wfp.zt = bor.read_f32();
                     self.waveform_data.push(wfp);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 6 {
                 // 64-bit
@@ -896,6 +928,9 @@ impl LasFile {
                     self.point_data.push(p);
                     // read the GPS data
                     self.gps_data.push(bor.read_f64());
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 7 {
                 // 64-bit
@@ -926,6 +961,9 @@ impl LasFile {
                     rgb.green = bor.read_u16();
                     rgb.blue = bor.read_u16();
                     self.colour_data.push(rgb);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 8 {
                 // 64-bit
@@ -958,6 +996,9 @@ impl LasFile {
                     rgb.blue = bor.read_u16();
                     rgb.nir = bor.read_u16();
                     self.colour_data.push(rgb);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 9 {
                 // 64-bit
@@ -994,6 +1035,9 @@ impl LasFile {
                     wfp.yt = bor.read_f32();
                     wfp.zt = bor.read_f32();
                     self.waveform_data.push(wfp);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             } else if self.header.point_format == 10 {
                 // 64-bit
@@ -1038,6 +1082,9 @@ impl LasFile {
                     wfp.yt = bor.read_f32();
                     wfp.zt = bor.read_f32();
                     self.waveform_data.push(wfp);
+                    if skip_bytes > 0 { 
+                        bor.inc_pos(skip_bytes); 
+                    }
                 }
             }
         }

@@ -14,7 +14,7 @@ impl ByteOrderReader {
             buffer: buffer,
             byte_order: byte_order,
             is_le: is_le,
-            pos: 0usize,
+            pos: 0usize
         }
     }
 

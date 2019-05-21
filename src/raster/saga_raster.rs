@@ -482,7 +482,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     writer.write_all(format!("NODATA_VALUE\t= {}\n", r.configs.nodata).as_bytes())?;
 
-    writer.write_all("TOPTOBOTTOM\t= FALSE\n".as_bytes())?;
+    writer.write_all("TOPTOBOTTOM\t= TRUE\n".as_bytes())?;
 
     let _ = writer.flush();
 
