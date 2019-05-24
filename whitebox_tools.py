@@ -371,6 +371,9 @@ class WhiteboxTools(object):
     
     
     
+    
+    
+    
     ##############
     # Data Tools #
     ##############
@@ -1667,6 +1670,22 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('max_overlay', args, callback) # returns 1 if error
 
+    def merge_line_segments(self, i, output, snap=0.0, callback=None):
+        """Merges vector line segments into larger features.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        output -- Output vector file. 
+        snap -- Snap tolerance. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--snap={}".format(snap))
+        return self.run_tool('merge_line_segments', args, callback) # returns 1 if error
+
     def min_absolute_overlay(self, inputs, output, callback=None):
         """Evaluates the minimum absolute value for each grid cell from a stack of input rasters.
 
@@ -2085,13 +2104,29 @@ class WhiteboxTools(object):
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('aspect', args, callback) # returns 1 if error
 
+    def average_normal_vector_angular_deviation(self, dem, output, filter=11, callback=None):
+        """Calculates the circular variance of aspect at a scale for a DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        filter -- Size of the filter kernel. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        return self.run_tool('average_normal_vector_angular_deviation', args, callback) # returns 1 if error
+
     def circular_variance_of_aspect(self, dem, output, filter=11, callback=None):
         """Calculates the circular variance of aspect at a scale for a DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
-        output -- Output raster roughness scale file. 
+        output -- Output raster file. 
         filter -- Size of the filter kernel. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -2889,6 +2924,22 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('slope_vs_elevation_plot', args, callback) # returns 1 if error
 
+    def spherical_std_dev_of_normals(self, dem, output, filter=11, callback=None):
+        """Calculates the spherical standard deviation of surface normals for a DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        filter -- Size of the filter kernel. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        return self.run_tool('spherical_std_dev_of_normals', args, callback) # returns 1 if error
+
     def standard_deviation_of_slope(self, i, output, zfactor=1.0, filterx=11, filtery=11, callback=None):
         """Calculates the standard deviation of slope from an input DEM.
 
@@ -3657,7 +3708,7 @@ class WhiteboxTools(object):
         args.append("--snap_dist='{}'".format(snap_dist))
         return self.run_tool('snap_pour_points', args, callback) # returns 1 if error
 
-    def stochastic_depression_analysis(self, dem, output, rmse, range, iterations=1000, callback=None):
+    def stochastic_depression_analysis(self, dem, output, rmse, range, iterations=100, callback=None):
         """Preforms a stochastic analysis of depressions within a DEM.
 
         Keyword arguments:
@@ -3943,7 +3994,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('line_thinning', args, callback) # returns 1 if error
 
-    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merger_dist=None, max_iterations=10, class_change=2.0, callback=None):
+    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
         """Performs a modified k-means clustering operation on a multi-spectral dataset.
 
         Keyword arguments:
@@ -3952,7 +4003,7 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         out_html -- Output HTML report file. 
         start_clusters -- Initial number of clusters. 
-        merger_dist -- Cluster merger distance. 
+        merge_dist -- Cluster merger distance. 
         max_iterations -- Maximum number of iterations. 
         class_change -- Minimum percent of cells changed between iterations before completion. 
         callback -- Custom function for handling tool text outputs.
@@ -3962,7 +4013,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if out_html is not None: args.append("--out_html='{}'".format(out_html))
         args.append("--start_clusters={}".format(start_clusters))
-        if merger_dist is not None: args.append("--merger_dist='{}'".format(merger_dist))
+        if merge_dist is not None: args.append("--merge_dist='{}'".format(merge_dist))
         args.append("--max_iterations={}".format(max_iterations))
         args.append("--class_change={}".format(class_change))
         return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
@@ -4097,18 +4148,22 @@ class WhiteboxTools(object):
         args.append("--saturation='{}'".format(saturation))
         return self.run_tool('rgb_to_ihs', args, callback) # returns 1 if error
 
-    def split_colour_composite(self, i, output, callback=None):
+    def split_colour_composite(self, i, red=None, green=None, blue=None, callback=None):
         """This tool splits an RGB colour composite image into seperate multispectral images.
 
         Keyword arguments:
 
         i -- Input colour composite image file. 
-        output -- Output raster file (suffixes of _r, _g, and _b will be appended). 
+        red -- Output red band file. 
+        green -- Output green band file. 
+        blue -- Output blue band file. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
+        if red is not None: args.append("--red='{}'".format(red))
+        if green is not None: args.append("--green='{}'".format(green))
+        if blue is not None: args.append("--blue='{}'".format(blue))
         return self.run_tool('split_colour_composite', args, callback) # returns 1 if error
 
     def thicken_raster_line(self, i, output, callback=None):
@@ -5637,18 +5692,20 @@ class WhiteboxTools(object):
         args.append("--min_points={}".format(min_points))
         return self.run_tool('lidar_tile', args, callback) # returns 1 if error
 
-    def lidar_tile_footprint(self, output, i=None, callback=None):
+    def lidar_tile_footprint(self, output, i=None, hull=False, callback=None):
         """Creates a vector polygon of the convex hull of a LiDAR point cloud. When the input/output parameters are not specified, the tool works with all LAS files contained within the working directory.
 
         Keyword arguments:
 
         i -- Input LiDAR file. 
         output -- Output vector polygon file. 
+        hull -- Identify the convex hull around points. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         if i is not None: args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
+        if hull: args.append("--hull")
         return self.run_tool('lidar_tile_footprint', args, callback) # returns 1 if error
 
     def lidar_tin_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
@@ -6944,7 +7001,7 @@ class WhiteboxTools(object):
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        variant -- Options include 'lq' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'lq'. 
+        variant -- Options include 'LQ' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'LQ'. 
         line_thin -- Optional flag indicating whether post-processing line-thinning should be performed. 
         filter -- Optional argument (only used when variant='lq') providing the filter size, in grid cells, used for lq-filtering (default is 5). 
         callback -- Custom function for handling tool text outputs.

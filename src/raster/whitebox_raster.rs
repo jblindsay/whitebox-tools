@@ -8,6 +8,7 @@ use std::io::Error;
 use std::io::ErrorKind;
 use std::io::{BufReader, BufWriter};
 use std::mem;
+use std::path::Path;
 
 pub fn read_whitebox(
     file_name: &String,
@@ -242,6 +243,17 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     if r.configs.display_max == f64::NEG_INFINITY {
         r.configs.display_max = r.configs.maximum;
     }
+
+    // Delete the wstat file if it exists
+    let wstat_string = r.file_name.replace(".tas", ".wstat").replace(".dep", ".wstat");
+    let wstat_path = Path::new(&wstat_string);
+    if wstat_path.exists() {
+        match std::fs::remove_file(&wstat_path) {
+            Ok(_) => {}, // do nothing
+            Err(_) => {}, // do nothing
+        }
+    }
+    
 
     // Save the header file
     let header_file = r.file_name.replace(".tas", ".dep");

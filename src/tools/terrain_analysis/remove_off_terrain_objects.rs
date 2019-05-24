@@ -217,9 +217,10 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
 
         let start = Instant::now();
 
-        let nodata = input.configs.nodata;
-        let cell_size_x = input.configs.resolution_x;
-        let cell_size_y = input.configs.resolution_y;
+        let configs = input.configs.clone();
+        let nodata = configs.nodata;
+        let cell_size_x = configs.resolution_x;
+        let cell_size_y = configs.resolution_y;
         let cell_size_diag = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         let slope = slope_threshold.to_radians().tan();
         let height_diff_threshold = [
@@ -232,8 +233,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             slope * cell_size_diag,
             slope * cell_size_y,
         ];
-        let columns = input.configs.columns as isize;
-        let rows = input.configs.rows as isize;
+        let columns = configs.columns as isize;
+        let rows = configs.rows as isize;
         let mut opening: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut tophat: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
@@ -283,14 +284,14 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                             }
                         }
                         if min_val < f64::INFINITY {
-                            erosion[(row, col)] = min_val;
+                            erosion.set_value(row, col, min_val);
                         } else {
-                            erosion[(row, col)] = min_val;
+                            erosion.set_value(row, col, min_val);
                         }
                     } else {
-                        erosion[(row, col)] = nodata;
-                        opening[(row, col)] = nodata;
-                        tophat[(row, col)] = nodata;
+                        erosion.set_value(row, col, nodata);
+                        opening.set_value(row, col, nodata);
+                        tophat.set_value(row, col, nodata);
                     }
                 }
                 if verbose {
@@ -311,7 +312,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                         filter_vals.pop_front();
                         let mut max_val = f64::NEG_INFINITY;
                         for row2 in start_row..end_row + 1 {
-                            z_n = erosion[(row2, col + midpoint)];
+                            z_n = erosion.get_value(row2, col + midpoint);
                             if z_n > max_val && z_n != nodata {
                                 max_val = z_n;
                             }
@@ -324,7 +325,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                         for col2 in start_col..end_col + 1 {
                             let mut max_val = f64::NEG_INFINITY;
                             for row2 in start_row..end_row + 1 {
-                                z_n = erosion[(row2, col2)];
+                                z_n = erosion.get_value(row2, col2);
                                 if z_n > max_val && z_n != nodata {
                                     max_val = z_n;
                                 }
@@ -341,8 +342,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                             }
                         }
                         if max_val > f64::NEG_INFINITY {
-                            tophat[(row, col)] = z - max_val;
-                            opening[(row, col)] = max_val;
+                            tophat.set_value(row, col, z - max_val);
+                            opening.set_value(row, col, max_val);
                         }
                     }
                 }
@@ -356,6 +357,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             }
         }
 
+        drop(input);
+
         // Back-fill the shallow hills using region growing
         if verbose {
             println!("Backfilling hills...")
@@ -367,18 +370,18 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
         for row in 0..rows {
             for col in 0..columns {
-                out[(row, col)] = initial_value;
-                if tophat[(row, col)] != nodata {
-                    if tophat[(row, col)] <= height_diff_threshold[1] {
+                out.set_value(row, col, initial_value);
+                if tophat.get_value(row, col) != nodata {
+                    if tophat.get_value(row, col) <= height_diff_threshold[1] {
                         // == 0f64 {
                         stack.push(GridCell {
                             row: row,
                             column: col,
                         });
-                        out[(row, col)] = tophat[(row, col)];
+                        out.set_value(row, col, tophat.get_value(row, col));
                     }
                 } else {
-                    out[(row, col)] = nodata;
+                    out.set_value(row, col, nodata);
                 }
             }
             if verbose {
@@ -394,11 +397,11 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             let gc = stack.pop().unwrap();
             row = gc.row;
             col = gc.column;
-            z = tophat[(row, col)];
+            z = tophat.get_value(row, col);
             for i in 0..8 {
                 row_n = row + d_y[i];
                 col_n = col + d_x[i];
-                z_n = tophat[(row_n, col_n)];
+                z_n = tophat.get_value(row_n, col_n);
                 if z_n != nodata && out[(row_n, col_n)] == initial_value {
                     if z_n - z < height_diff_threshold[i] {
                         out[(row_n, col_n)] = z_n;
@@ -421,12 +424,12 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         );
         for row in 0..rows {
             for col in 0..columns {
-                if tophat[(row, col)] != nodata && out[(row, col)] != initial_value {
+                if tophat.get_value(row, col) != nodata && out.get_value(row, col) != initial_value {
                     for i in 0..8 {
                         row_n = row + d_y[i];
                         col_n = col + d_x[i];
-                        if tophat[(row_n, col_n)] != nodata && out[(row_n, col_n)] == initial_value
-                        {
+                        if tophat.get_value(row_n, col_n) != nodata 
+                            && out.get_value(row_n, col_n) == initial_value {
                             frs.insert(
                                 col as f64,
                                 row as f64,
@@ -467,12 +470,12 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                         }
                     }
                     if ret.len() > 0 {
-                        out[(row, col)] = z;
+                        out.set_value(row, col, z);
                     } else {
-                        out[(row, col)] = nodata;
+                        out.set_value(row, col, nodata);
                     }
                 } else {
-                    out[(row, col)] = opening[(row, col)] + tophat[(row, col)];
+                    out.set_value(row, col, opening.get_value(row, col) + tophat.get_value(row, col));
                 }
             }
             if verbose {
@@ -487,10 +490,10 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         let elapsed_time = get_formatted_elapsed_time(start);
 
         // Finally, output the new raster
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let mut output = Raster::initialize_using_config(&output_file, &configs); // Raster::initialize_using_file(&output_file, &input);
         for row in 0..rows {
             for col in 0..columns {
-                if out[(row, col)] != initial_value && input.get_value(row, col) != nodata {
+                if out.get_value(row, col) != initial_value && tophat.get_value(row, col) != nodata {
                     output.set_value(row, col, out[(row, col)]);
                 } else {
                     output.set_value(row, col, nodata);

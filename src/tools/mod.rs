@@ -443,6 +443,7 @@ impl ToolManager {
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
+        tool_names.push("SphericalStdDevOfNormals".to_string());
         tool_names.push("StandardDeviationOfSlope".to_string());
         tool_names.push("SurfaceAreaRatio".to_string());
         tool_names.push("TangentialCurvature".to_string());
@@ -1038,6 +1039,7 @@ impl ToolManager {
             }
             "slope" => Some(Box::new(terrain_analysis::Slope::new())),
             "slopevselevationplot" => Some(Box::new(terrain_analysis::SlopeVsElevationPlot::new())),
+            "sphericalstddevofnormals" => Some(Box::new(terrain_analysis::SphericalStdDevOfNormals::new())),
             "standarddeviationofslope" => {
                 Some(Box::new(terrain_analysis::StandardDeviationOfSlope::new()))
             }

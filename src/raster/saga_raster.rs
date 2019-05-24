@@ -482,7 +482,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     writer.write_all(format!("NODATA_VALUE\t= {}\n", r.configs.nodata).as_bytes())?;
 
-    writer.write_all("TOPTOBOTTOM\t= TRUE\n".as_bytes())?;
+    writer.write_all("TOPTOBOTTOM\t= FALSE\n".as_bytes())?;
 
     let _ = writer.flush();
 
@@ -497,7 +497,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let mut i: usize;
     match r.configs.data_type {
         DataType::F64 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -507,7 +507,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::F32 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -517,7 +517,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I32 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -527,7 +527,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U32 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -537,7 +537,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I16 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -547,7 +547,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U16 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
@@ -557,7 +557,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::U8 | DataType::I8 => {
-            for row in 0..r.configs.rows {
+            for row in (0..r.configs.rows).rev() {
                 //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;

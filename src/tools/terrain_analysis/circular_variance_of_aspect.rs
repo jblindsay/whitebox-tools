@@ -24,8 +24,27 @@ use std::thread;
 /// shape complexity**, or texture. It will take a value of 0.0 for smooth sites and near 1.0 in areas of high surface 
 /// roughness or complex topography. 
 /// 
+/// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
+/// vector dispersion, a related measure of angular variance, increases monotonically with scale. This is the result
+/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the 
+/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity 
+/// associated with specific scale ranges. That is, at large spatial scales, the metric should reflect 
+/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including 
+/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than 
+/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior 
+/// to calculating `CircularVarianceOfAspect`. In this way, the resulting distribution is able to isolate and highlight 
+/// the surface shape complexity associated with landscape features of a similar scale to that of the filter size.
+/// 
+/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a> 
+/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require 
+/// substantial memory resources when applied to larger DEMs.
+/// 
+/// # References
+/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the 
+/// Midland Valley, Scotland. *IEEE Transactions on Geoscience and Remote Sensing*, 49(4), 1200-1213.
+/// 
 /// # See Also
-/// `Aspect`, `MultiscaleRoughness`, `EdgeDensity`, `SurfaceAreaRatio`, `RuggednessIndex`
+/// `Aspect`, `SphericalStdDevOfNormals`, `MultiscaleRoughness`, `EdgeDensity`, `SurfaceAreaRatio`, `RuggednessIndex`
 pub struct CircularVarianceOfAspect {
     name: String,
     description: String,

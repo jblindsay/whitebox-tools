@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 26/01/2019
-Last Modified: 02/04/2019
+Created: 22/05/2019
+Last Modified: 24/05/2019
 License: MIT
 */
 
@@ -18,27 +18,43 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool characterizes the spatial distribution of the average normal vector angular deviation, a measure of
-/// surface roughness. Working in the field of 3D printing, Ko et al. (2016) defined a measure of surface roughness 
-/// based on quantifying the angular deviations in the direction of the normal vector of a real surface from its ideal 
-/// (i.e. smoothed) form. This measure of surface complexity is therefore in units of degrees. Specifically, roughness 
-/// is defined in this study as the neighborhood-averaged difference in the normal vectors of the original DEM and a 
-/// smoothed DEM surface. Smoothed surfaces are derived by applying a Gaussian blur of the same size as the 
-/// neighborhood (`--filter`).
+/// This tool can be used to calculate the spherical standard deviation of the distribution of surface normals 
+/// for an input digital elevation model (DEM; `--dem`). This is a measure of the angular dispersion of the surface
+/// normal vectors within a local neighbourhood of a specified size (`--filter`). `SphericalStdDevOfNormals` 
+/// is therefore a measure of surface shape complexity, texture, and roughness. The <a href="https://en.wikipedia.org/wiki/Directional_statistics#Measures_of_location_and_spread">
+/// spherical standard deviation</a> (<em>s<sub>h</sub></em>) is defined as:
 /// 
-/// The `MultiscaleRoughness` tool calculates the same measure of surface roughness, except that it is designed to
-/// work with multiple spatial scales.
+/// > <em>s<sub>h</sub></em> = &radic;[-2ln(<em>R<sub>h</sub></em> / <em>N</em>)] &times; 180 / &pi;
 /// 
-/// # Reference
-/// Ko, M., Kang, H., ulrim Kim, J., Lee, Y., & Hwang, J. E. (2016, July). How to measure quality of affordable 3D 
-/// printing: Cultivating quantitative index in the user community. In International Conference on Human-Computer 
-/// Interaction (pp. 116-121). Springer, Cham.
+/// where <em>R<sub>h</sub></em> is the resultant vector length and <em>N</em> is the number of unit normal vectors 
+/// within the local neighbourhood. <em>s<sub>h</sub></em> is measured in degrees and is zero for simple planes and increases
+/// infinitely with increasing surface complexity or roughness.
 /// 
-/// Lindsay, J. B., & Newman, D. R. (2018). Hyper-scale analysis of surface roughness. PeerJ Preprints, 6, e27110v1.
+/// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
+/// vector dispersion, a related measure of angular dispersion, increases monotonically with scale. This is the result
+/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the 
+/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity 
+/// associated with specific scale ranges. That is, at large spatial scales, <em>s<sub>h</sub></em> should reflect 
+/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including 
+/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than 
+/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior 
+/// to calculating <em>R<sub>h</sub></em>. In this way, the resulting distribution is able to isolate and highlight 
+/// the surface shape complexity associated with landscape features of a similar scale to that of the filter size.
+/// 
+/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a> 
+/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require 
+/// substantial memory resources when applied to larger DEMs.
+/// 
+/// # References
+/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the 
+/// Midland Valley, Scotland. *IEEE Transactions on Geoscience and Remote Sensing*, 49(4), 1200-1213.
+/// 
+/// Hodgson, M. E., and Gaile, G. L. (1999). A cartographic modeling approach for surface orientation-related applications. 
+/// *Photogrammetric Engineering and Remote Sensing*, 65(1), 85-95.
 /// 
 /// # See Also
-/// `MultiscaleRoughness`, `SphericalStdDevOfNormals`, `CircularVarianceOfAspect`
-pub struct AverageNormalVectorAngularDeviation {
+/// `CircularVarianceOfAspect`, `MultiscaleRoughness`, `EdgeDensity`, `SurfaceAreaRatio`, `RuggednessIndex`
+pub struct SphericalStdDevOfNormals {
     name: String,
     description: String,
     toolbox: String,
@@ -46,13 +62,13 @@ pub struct AverageNormalVectorAngularDeviation {
     example_usage: String,
 }
 
-impl AverageNormalVectorAngularDeviation {
-    pub fn new() -> AverageNormalVectorAngularDeviation {
+impl SphericalStdDevOfNormals {
+    pub fn new() -> SphericalStdDevOfNormals {
         // public constructor
-        let name = "AverageNormalVectorAngularDeviation".to_string();
+        let name = "SphericalStdDevOfNormals".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
-            "Calculates the circular variance of aspect at a scale for a DEM.".to_string();
+            "Calculates the spherical standard deviation of surface normals for a DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -95,7 +111,7 @@ impl AverageNormalVectorAngularDeviation {
         }
         let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --out_mag=roughness_mag.tif --out_scale=roughness_scale.tif --min_scale=1 --max_scale=1000 --step=5", short_exe, name).replace("*", &sep);
 
-        AverageNormalVectorAngularDeviation {
+        SphericalStdDevOfNormals {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -105,7 +121,7 @@ impl AverageNormalVectorAngularDeviation {
     }
 }
 
-impl WhiteboxTool for AverageNormalVectorAngularDeviation {
+impl WhiteboxTool for SphericalStdDevOfNormals {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -240,11 +256,8 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         if verbose {
             println!("Smoothing the input DEM...");
         }
-        let mut sigma = (midpoint as f64 - 0.5) / 3f64;
-        if sigma < 1.0 {
-            sigma = 1.0;
-        }
-        if sigma < 1.8 && filter_size >= 3 {
+        let sigma = (midpoint as f64 - 0.5) / 3f64;
+        if sigma < 1.8 && filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 
@@ -337,7 +350,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                 let data = rx.recv().unwrap();
                 smoothed_dem.set_row_data(data.0, data.1);
             }
-        } else {
+        } else if filter_size > 3 {
             // use a fast almost Gaussian filter for larger smoothing operations.
             let n = 4;
             let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
@@ -459,10 +472,9 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
         }
 
-        // drop(input);
+        drop(input);
 
-        // Calculate the difference in local normal vectors from the original and smoothed DEM.
-        let eight_grid_res = configs.resolution_x * 8.0;
+        // Calculate the normal
         let mut z_factor = 1f64;
         if is_geographic_coords {
             // calculate a new z-conversion factor
@@ -473,72 +485,71 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
         }
         
-        
+        let resx = configs.resolution_x;
+        let resy = configs.resolution_y;
         let num_procs = num_cpus::get() as isize;
         let smoothed_dem = Arc::new(smoothed_dem);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            let input = input.clone();
             let smoothed_dem = smoothed_dem.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let mut n1: [f64; 8] = [0.0; 8];
-                let mut n2: [f64; 8] = [0.0; 8];
+                let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
-                let mut dot_product: f64;
-                let (mut a1, mut b1): (f64, f64);
-                let (mut a2, mut b2): (f64, f64);
+                let (mut fx, mut fy): (f64, f64);
+                let fz = 1f64;
+                let fz_sqrd = fz * fz;
+                let mut magnitude: f64;
+                let resx8 = resx * 8f64;
+                let resy8 = resy * 8f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![0f64; columns as usize];
+                    let mut xdata = vec![0f64; columns as usize];
+                    let mut ydata = vec![0f64; columns as usize];
+                    let mut zdata = vec![0f64; columns as usize];
                     for col in 0..columns {
                         z = smoothed_dem.get_value(row, col);
                         if z != nodata {
                             for c in 0..8 {
-                                n1[c] = input.get_value(row + dy[c], col + dx[c]);
-                                if n1[c] != nodata {
-                                    n1[c] = n1[c] * z_factor;
+                                n[c] = smoothed_dem[(row + dy[c], col + dx[c])];
+                                if n[c] != nodata {
+                                    n[c] = n[c] * z_factor;
                                 } else {
-                                    n1[c] = input.get_value(row, col) * z_factor;
-                                }
-                                n2[c] = smoothed_dem.get_value(row + dy[c], col + dx[c]);
-                                if n2[c] != nodata {
-                                    n2[c] = n2[c] * z_factor;
-                                } else {
-                                    n2[c] = z * z_factor;
+                                    n[c] = z * z_factor;
                                 }
                             }
-                            a1 = -(n1[2] - n1[4] + 2f64 * (n1[1] - n1[5]) + n1[0] - n1[6]) / eight_grid_res;
-                            b1 = -(n1[6] - n1[4] + 2f64 * (n1[7] - n1[3]) + n1[0] - n1[2]) / eight_grid_res;
-                            
-                            a2 = -(n2[2] - n2[4] + 2f64 * (n2[1] - n2[5]) + n2[0] - n2[6]) / eight_grid_res;
-                            b2 = -(n2[6] - n2[4] + 2f64 * (n2[7] - n2[3]) + n2[0] - n2[2]) / eight_grid_res;
-
-                            dot_product = a1 * a2 + b1 * b2 + 1.0;
-
-                            data[col as usize] = (dot_product / ((a1 * a1 + b1 * b1 + 1.0) * (a2 * a2 + b2 * b2 + 1.0))
-                                                 .sqrt())
-                                                 .acos()
-                                                 .to_degrees();
+                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / resx8;
+                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / resy8;
+                            magnitude = (fx * fx + fy * fy + fz_sqrd).sqrt();
+                            if magnitude > 0f64 {
+                                xdata[col as usize] = fx / magnitude;
+                                ydata[col as usize] = fy / magnitude;
+                                zdata[col as usize] = fz / magnitude;
+                            } else {
+                                xdata[col as usize] = 0f64;
+                                ydata[col as usize] = 0f64;
+                                zdata[col as usize] = 1f64;
+                            }
                         }
                     }
-                    tx.send((row, data)).unwrap();
+                    tx.send((row, xdata, ydata, zdata)).unwrap();
                 }
             });
         }
 
-        let mut angular_diff: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
-        // let mut output = Raster::initialize_using_config(&output_file, &configs);
-        // output.configs.data_type = DataType::F32;
+        let mut xc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
+        let mut yc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
+        let mut zc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
         for row in 0..rows {
             let data = rx.recv().unwrap();
-            angular_diff.set_row_data(data.0, data.1);
-            // output.set_row_data(data.0, data.1);
+            xc.set_row_data(data.0, data.1);
+            yc.set_row_data(data.0, data.2);
+            zc.set_row_data(data.0, data.3);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Calculating angular deviation data: {}%", progress);
+                    println!("Calculating normals: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -546,20 +557,27 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
 
         // convert to integral images
         let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 1, 0)?;
-        let mut sum: f64;
+        let (mut sumx, mut sumy, mut sumz): (f64, f64, f64);
         let mut sumn: u32;
         for row in 0..rows {
             if row > 0 {
-                sum = 0f64;
+                sumx = 0f64;
+                sumy = 0f64;
+                sumz = 0f64;
                 sumn = 0u32;
                 for col in 0..columns {
-                    sum += angular_diff.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata {
+                    sumx += xc.get_value(row, col);
+                    sumy += yc.get_value(row, col);
+                    sumz += zc.get_value(row, col);
+                    if smoothed_dem.get_value(row, col) == nodata || 
+                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
-                    angular_diff.set_value(row, col, sum + angular_diff.get_value(row-1, col));
+                    xc.set_value(row, col, sumx + xc.get_value(row-1, col));
+                    yc.set_value(row, col, sumy + yc.get_value(row-1, col));
+                    zc.set_value(row, col, sumz + zc.get_value(row-1, col));
                     i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
                 }
             } else {
@@ -567,9 +585,12 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
-                    angular_diff.increment(row, col, angular_diff.get_value(row, col-1));
+                    xc.increment(row, col, xc.get_value(row, col-1));
+                    yc.increment(row, col, yc.get_value(row, col-1));
+                    zc.increment(row, col, zc.get_value(row, col-1));
                     i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata {
+                    if smoothed_dem.get_value(row, col) == nodata || 
+                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
@@ -584,18 +605,23 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
         }
 
-        let angular_diff = Arc::new(angular_diff);
+        let xc = Arc::new(xc);
+        let yc = Arc::new(yc);
+        let zc = Arc::new(zc);
         let i_n = Arc::new(i_n);
         let (tx2, rx2) = mpsc::channel();
         for tid in 0..num_procs {
-            let angular_diff = angular_diff.clone();
+            let xc = xc.clone();
+            let yc = yc.clone();
+            let zc = zc.clone();
             let smoothed_dem = smoothed_dem.clone();
             let i_n = i_n.clone();
             let tx2 = tx2.clone();
             thread::spawn(move || {
                 let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
                 let mut n: f64;
-                let mut sum: f64;
+                let (mut sumx, mut sumy, mut sumz): (f64, f64, f64);
+                let mut mean: f64;
                 let mut z: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     y1 = row - midpoint - 1;
@@ -636,12 +662,22 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                                 - i_n.get_value(y1, x2)
                                 - i_n.get_value(y2, x1)) as f64;
                             if n > 0f64 {
-                                sum = angular_diff.get_value(y2, x2) + angular_diff.get_value(y1, x1)
-                                    - angular_diff.get_value(y1, x2)
-                                    - angular_diff.get_value(y2, x1);
-                                data[col as usize] = sum / n;
+                                sumx = xc.get_value(y2, x2) + xc.get_value(y1, x1)
+                                    - xc.get_value(y1, x2)
+                                    - xc.get_value(y2, x1);
+                                sumy = yc.get_value(y2, x2) + yc.get_value(y1, x1)
+                                    - yc.get_value(y1, x2)
+                                    - yc.get_value(y2, x1);
+                                sumz = zc.get_value(y2, x2) + zc.get_value(y1, x1)
+                                    - zc.get_value(y1, x2)
+                                    - zc.get_value(y2, x1);
+                                mean = (sumx * sumx + sumy * sumy + sumz * sumz).sqrt() / n;
+                                if mean > 1f64 { 
+                                    mean = 1f64; 
+                                }
+                                // data[col as usize] = (2f64 * (1f64 - mean)).sqrt().to_degrees();
+                                data[col as usize] = (-2f64 * mean.ln()).sqrt().to_degrees();
                             }
-                            // data[col as usize] = angular_diff.get_value(row, col).to_degrees();
                         }
                     }
 
@@ -654,8 +690,9 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         }
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
-        output.configs.data_type = DataType::F32;
-
+        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+            output.configs.data_type = DataType::F32;
+        }
         for row in 0..rows {
             match rx2.recv() {
                 Ok(data) => {
@@ -710,3 +747,69 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         Ok(())
     }
 }
+
+// // Constructs a plane from a collection of points
+// // so that the summed squared distance to all points is minimzized
+// #[inline]
+// fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
+//     let n = points.len();
+//     // assert!(n >= 3, "At least three points required");
+//     if n < 3 {
+//         return Vector3::new(0f64, 0f64, 0f64);
+//     }
+
+//     let mut sum = Vector3::new(0.0, 0.0, 0.0);
+//     for p in points {
+//         sum = sum + *p;
+//     }
+//     let centroid = sum * (1.0 / (n as f64));
+
+//     // Calc full 3x3 covariance matrix, excluding symmetries:
+//     let mut xx = 0.0;
+//     let mut xy = 0.0;
+//     let mut xz = 0.0;
+//     let mut yy = 0.0;
+//     let mut yz = 0.0;
+//     let mut zz = 0.0;
+
+//     for p in points {
+//         let r = p - &centroid;
+//         xx += r.x * r.x;
+//         xy += r.x * r.y;
+//         xz += r.x * r.z;
+//         yy += r.y * r.y;
+//         yz += r.y * r.z;
+//         zz += r.z * r.z;
+//     }
+
+//     let det_x = yy * zz - yz * yz;
+//     let det_y = xx * zz - xz * xz;
+//     let det_z = xx * yy - xy * xy;
+
+//     let det_max = det_x.max(det_y).max(det_z); //max3(det_x, det_y, det_z);
+//                                                // assert!(det_max > 0.0, "The points don't span a plane");
+
+//     // Pick path with best conditioning:
+//     let dir = if det_max == det_x {
+//         let a = (xz * yz - xy * zz) / det_x;
+//         let b = (xy * yz - xz * yy) / det_x;
+//         Vector3::new(1.0, a, b)
+//     } else if det_max == det_y {
+//         let a = (yz * xz - xy * zz) / det_y;
+//         let b = (xy * xz - yz * xx) / det_y;
+//         Vector3::new(a, 1.0, b)
+//     } else {
+//         let a = (yz * xy - xz * yy) / det_z;
+//         let b = (xz * xy - yz * xx) / det_z;
+//         Vector3::new(a, b, 1.0)
+//     };
+
+//     //plane_from_point_and_normal(centroid, normalize(dir))
+//     normalize(dir)
+// }
+
+// #[inline]
+// fn normalize(v: Vector3<f64>) -> Vector3<f64> {
+//     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
+//     Vector3::new(v.x / norm, v.y / norm, v.z / norm)
+// }

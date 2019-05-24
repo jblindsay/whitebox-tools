@@ -56,8 +56,8 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.1X.X (XX-XX-2019)
-- Added the MergeLineSegments tool.
+Version 0.16.0 (24-05-2019)
+- Added the MergeLineSegments and SphericalStdDevOfNormals tools.
 - Fixed a bug with reading LAS files with point records with extra bytes. Previously, the LAS decoder
   assumed the Point Record Length matched that of the LAS specifications (with the variable of the 
   optional intensity and user data). Some LAS files in the wild (particularly those created using 
@@ -73,6 +73,7 @@ Version 0.1X.X (XX-XX-2019)
 - SelectTilesByPolygon and LidarTileFootprint are now compatible with LAZ file inputs. Both of these 
   tools only rely on information in the input LiDAR file's header, which is the same for a LAZ file 
   as a LAS file.
+- Fixed a bug with writing Saga GIS files (*.sdat) that inverted rasters.
 
 Version 0.15.0 (03-03-2019)
 - The following tools were added to the project:
