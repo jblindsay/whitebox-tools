@@ -6994,7 +6994,7 @@ class WhiteboxTools(object):
         if zero_background: args.append("--zero_background")
         return self.run_tool('extract_streams', args, callback) # returns 1 if error
 
-    def extract_valleys(self, dem, output, variant="Lower Quartile", line_thin=True, filter=5, callback=None):
+    def extract_valleys(self, dem, output, variant="LQ", line_thin=True, filter=5, callback=None):
         """Identifies potential valley bottom grid cells based on local topolography alone.
 
         Keyword arguments:

@@ -111,7 +111,7 @@ impl ExtractValleys {
             flags: vec!["--variant".to_owned()], 
             description: "Options include 'LQ' (lower quartile), 'JandR' (Johnston and Rosenfeld), and 'PandD' (Peucker and Douglas); default is 'LQ'.".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["LQ".to_owned(), "JandR".to_owned(), "PandD".to_owned()]),
-            default_value: Some("Lower Quartile".to_owned()),
+            default_value: Some("LQ".to_owned()),
             optional: false
         });
 
