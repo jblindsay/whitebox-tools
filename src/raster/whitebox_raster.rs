@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Error;
 use std::io::ErrorKind;
-use std::io::{BufReader, BufWriter};
+use std::io::{BufReader, BufWriter, Cursor};
 use std::mem;
 use std::path::Path;
 
@@ -143,7 +143,10 @@ pub fn read_whitebox(
         num_cells
     };
     while data.len() < num_cells {
-        let mut buffer = vec![0u8; buf_size * data_size];
+        // let mut buffer = vec![0u8; buf_size * data_size];
+        let mut buffer = vec![];
+        buffer.reserve_exact(buf_size * data_size);
+        unsafe { buffer.set_len(buf_size * data_size); }
 
         f.read(&mut buffer)?;
 
@@ -154,58 +157,58 @@ pub fn read_whitebox(
         };
 
         // read the file's bytes into a buffer
-        let mut bor = ByteOrderReader::new(buffer, configs.endian);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), configs.endian);
 
         match configs.data_type {
             DataType::F64 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_f64() as f64);
+                    data.push(bor.read_f64()? as f64);
                 }
                 if data.len() == num_cells {
                     break;
                 }
             }
             DataType::F32 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_f32() as f64);
+                    data.push(bor.read_f32()? as f64);
                 }
                 if data.len() == num_cells {
                     break;
                 }
             }
             DataType::I32 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_i32() as f64);
+                    data.push(bor.read_i32()? as f64);
                 }
                 if data.len() == num_cells {
                     break;
                 }
             }
             DataType::I16 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_i16() as f64);
+                    data.push(bor.read_i16()? as f64);
                 }
                 if data.len() == num_cells {
                     break;
                 }
             }
             DataType::U8 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_u8() as f64);
+                    data.push(bor.read_u8()? as f64);
                 }
                 if data.len() == num_cells {
                     break;
                 }
             }
             DataType::RGBA32 => {
-                bor.pos = 0;
+                bor.seek(0);
                 for _ in 0..num_values {
-                    data.push(bor.read_f32() as i32 as u32 as f64);
+                    data.push(bor.read_f32()? as i32 as u32 as f64);
                 }
                 if data.len() == num_cells {
                     break;

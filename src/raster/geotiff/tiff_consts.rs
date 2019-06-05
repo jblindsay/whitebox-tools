@@ -189,6 +189,9 @@ pub const DT_SLONG: u16 = 9;
 pub const DT_SRATIONAL: u16 = 10;
 pub const DT_FLOAT: u16 = 11;
 pub const DT_DOUBLE: u16 = 12;
+pub const DT_TIFF_LONG8: u16 = 16; // bigTiff
+pub const DT_TIFF_SLONG8: u16 = 17; // bigTiff
+pub const DT_TIFF_IFD8: u16 = 18; // bigTiff
 
 pub const PI_WHITEISZERO: u16 = 0;
 pub const PI_BLACKISZERO: u16 = 1;

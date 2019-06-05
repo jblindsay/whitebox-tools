@@ -1,6 +1,7 @@
 #![allow(unused_assignments, dead_code)]
 pub mod geokeys;
 pub mod tiff_consts;
+pub mod ifd;
 
 // use flate2::read::GzDecoder;
 use crate::structures::{Point2D, PolynomialRegression2D};
@@ -8,76 +9,115 @@ use crate::raster::geotiff::geokeys::*;
 use crate::raster::geotiff::tiff_consts::*;
 use crate::raster::*;
 use crate::spatial_ref_system::esri_wkt_from_epsg;
-use crate::utils::{ByteOrderReader, Endianness};
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use crate::utils::{ByteOrderReader, ByteOrderWriter, Endianness};
 use libflate::zlib::Decoder;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::default::Default;
 use std::f64;
-use std::fmt;
-use std::fs;
+// use std::fs;
 use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufWriter;
-use std::io::Error;
-use std::io::ErrorKind;
-use std::io::Read;
+use std::io::{BufReader, BufWriter, Cursor, Error, ErrorKind, Read};
+use ifd::{Entry, Ifd};
+use std::mem;
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
-    let mut f = File::open(file_name.clone())?;
-    let metadata = fs::metadata(file_name.clone())?;
-    let file_size: usize = metadata.len() as usize;
-    let mut buffer = vec![0; file_size];
+    let f = File::open(file_name.clone())?;
 
-    // read the file's bytes into a buffer
-    f.read(&mut buffer)?;
+    //////////////////////////
+    // Read the TIFF header //
+    //////////////////////////
+    
+    let br = BufReader::new(f);
+    let mut th = ByteOrderReader::<BufReader<File>>::new(br, Endianness::LittleEndian);
 
-    //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
-    let endian = match &buffer[0..2] {
-        b"II" => Endianness::LittleEndian,
-        b"MM" => Endianness::BigEndian,
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
+    let bo_indicator1 = th.read_u8()?;
+    let bo_indicator2 = th.read_u8()?;
+    let mut endian = Endianness::LittleEndian;
+    if bo_indicator1 == 73 && bo_indicator2 == 73 {
+        println!("Little-endian byte order used");
+    } else if bo_indicator1 == 77 && bo_indicator2 == 77 {
+        endian = Endianness::BigEndian;
+        println!("Big-endian byte order used");
+    } else {
+        return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized byte-order indicator."));
     };
 
-    let mut th = ByteOrderReader::new(buffer, endian);
-    th.seek(2);
-
-    match th.read_u16() {
-        42 => (), // do nothing
-        43 => {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                "The BigTiff format is not currently supported.",
-            ))
-        }
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
+    if th.get_byte_order() != endian {
+        th.set_byte_order(endian);
     }
 
-    let mut ifd_offset = th.read_u32() as usize;
+    let is_big_tiff = match th.read_u16()? {
+        42 => false,
+        43 => true,
+        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized magic number.")),
+    };
 
-    let mut ifd_map = HashMap::new();
+    if is_big_tiff {
+        println!("BigTIFF format");
+    } else {
+        println!("Classic TIFF format");
+    }
 
-    let mut geokeys: GeoKeys = Default::default();
-    let mut cur_pos: usize;
+    if is_big_tiff && mem::size_of::<usize>() != 8 {
+        return Err(Error::new(ErrorKind::InvalidData, "The BigTIFF raster format cannot be read on a 32-bit system."))
+    }
+
+    let mut ifd_offset = if !is_big_tiff {
+        th.read_u32()? as usize
+    } else {
+        // Bytesize of offsets
+        if th.read_u16()? != 8 {
+            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header. Unsupported bytesize of offsets."));
+        }
+        // the next two bytes must be set to zero
+        if th.read_u16()? != 0 {
+            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header."));
+        }
+        th.read_u64()? as usize
+    };
+
+    //////////////////
+    // Read the IFD //
+    //////////////////
 
     println!("TIFF Tags:");
 
+    let mut ifd_map = HashMap::new();
+    let mut geokeys: GeoKeys = Default::default();
+    let mut cur_pos: usize;
     while ifd_offset > 0 {
         th.seek(ifd_offset);
-        let num_directories = th.read_u16();
+        let num_directories = if !is_big_tiff {
+            th.read_u16()? as u64
+        } else {
+            th.read_u64()?
+        };
+
+        println!("Number of tags: {}", num_directories);
 
         for _ in 0..num_directories {
-            let tag_id = th.read_u16();
-            let field_type = th.read_u16();
+            let tag_id = th.read_u16()?;
+            let field_type = th.read_u16()?;
 
-            let num_values = th.read_u32();
-            let value_offset = th.read_u32();
+            let num_values = if !is_big_tiff {
+                th.read_u32()? as u64
+            } else {
+                th.read_u64()?
+            };
+            
+            let value_offset = if !is_big_tiff {
+                th.read_u32()? as u64 
+            } else {
+                th.read_u64()?
+            };
+
             let data_size = match field_type {
-                1u16 | 2u16 | 6u16 | 7u16 => 1,
-                3u16 | 8u16 => 2,
-                4u16 | 9u16 | 11u16 => 4,
-                5u16 | 10u16 | 12u16 => 8,
+                1u16 | 2u16 | 6u16 | 7u16 => 1u64,
+                3u16 | 8u16 => 2u64,
+                4u16 | 9u16 | 11u16 => 4u64,
+                5u16 | 10u16 | 12u16 => 8u64,
+                16u16 | 17u16 | 18u16 => 8u64,
                 _ => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -88,29 +128,62 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
 
             // read the tag data
             let mut data: Vec<u8> = vec![];
-            if (data_size * num_values) > 4 {
-                // the values are stored at the offset location
-                cur_pos = th.pos;
-                th.seek(value_offset as usize);
-                for _ in 0..num_values * data_size {
-                    data.push(th.read_u8());
+            if !is_big_tiff {
+                if (data_size * num_values) > 4 {
+                    // the values are stored at the offset location
+                    cur_pos = th.pos();
+                    th.seek(value_offset as usize);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
+                } else {
+                    // the value(s) are contained in the offset
+                    cur_pos = th.pos();
+                    th.seek(cur_pos - 4);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
                 }
-                th.seek(cur_pos);
             } else {
-                // the value(s) are contained in the offset
-                cur_pos = th.pos;
-                th.seek(cur_pos - 4);
-                for _ in 0..num_values * data_size {
-                    data.push(th.read_u8());
+                if (data_size * num_values) > 8 {
+                    // the values are stored at the offset location
+                    cur_pos = th.pos();
+                    th.seek(value_offset as usize);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
+                } else {
+                    // the value(s) are contained in the offset
+                    cur_pos = th.pos();
+                    th.seek(cur_pos - 8);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
                 }
-                th.seek(cur_pos);
             }
-            let ifd = IfdDirectory::new(tag_id, field_type, num_values, value_offset, data, endian);
+
+            let ifd = Ifd::new(
+                tag_id,
+                field_type,
+                num_values,
+                value_offset,
+                data,
+                endian,
+            );
+            
             ifd_map.insert(tag_id, ifd.clone());
 
             println!("{}", ifd);
         }
-        ifd_offset = th.read_u32() as usize;
+        if !is_big_tiff {
+            ifd_offset = th.read_u32()? as usize;
+        } else {
+            ifd_offset = th.read_u64()? as usize;
+        }
     }
 
     match ifd_map.get(&34735) {
@@ -133,19 +206,6 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
         _ => {}
     };
 
-    // let geokeys_map = geokeys.get_ifd_map(endian);
-
-    // let model_tiepoints = match ifd_map.get(&33922) {
-    //     Some(ifd) => ifd.interpret_as_f64(),
-    //     _ => vec![0.0],
-    // };
-
-    // let model_pixel_scale = match ifd_map.get(&33550) {
-    //     Some(ifd) => ifd.interpret_as_f64(),
-    //     _ => vec![0.0],
-    // };
-
-    // println!("\nGeoKeys:\n");
     println!("{}", geokeys.interpret_geokeys());
 
     Ok(())
@@ -156,69 +216,91 @@ pub fn read_geotiff<'a>(
     configs: &'a mut RasterConfigs,
     data: &'a mut Vec<f64>,
 ) -> Result<(), Error> {
-    let mut f = File::open(file_name.clone())?;
+    let f = File::open(file_name.clone())?;
 
-    let metadata = fs::metadata(file_name.clone())?;
-    let file_size: usize = metadata.len() as usize;
-    let mut buffer = vec![0; file_size];
+    //////////////////////////
+    // Read the TIFF header //
+    //////////////////////////
+    
+    let br = BufReader::new(f);
+    let mut th = ByteOrderReader::<BufReader<File>>::new(br, configs.endian);
 
-    // read the file's bytes into a buffer
-    // f.read(&mut buffer)?;
-    if file_size < 1024 * 1024 * 100 {
-        // 2147483646 is the actual maximum file read on Mac
-        f.read(&mut buffer)?;
+    let bo_indicator1 = th.read_u8()?;
+    let bo_indicator2 = th.read_u8()?;
+    if bo_indicator1 == 73 && bo_indicator2 == 73 {
+        configs.endian = Endianness::LittleEndian;
+    } else if bo_indicator1 == 77 && bo_indicator2 == 77 {
+        configs.endian = Endianness::BigEndian;
     } else {
-        let br = BufReader::new(f);
-        let mut i = 0;
-        for byte in br.bytes() {
-            buffer[i] = byte.unwrap();
-            i += 1;
+        return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized byte-order indicator."));
+    }
+
+    if th.get_byte_order() != configs.endian {
+        th.set_byte_order(configs.endian);
+    }
+
+    let is_big_tiff = match th.read_u16()? {
+        42 => false,
+        43 => true,
+        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized magic number.")),
+    };
+
+    if is_big_tiff && mem::size_of::<usize>() != 8 {
+        return Err(Error::new(ErrorKind::InvalidData, "The BigTIFF raster format cannot be read on a 32-bit system."))
+    }
+
+    let mut ifd_offset = if !is_big_tiff {
+        th.read_u32()? as usize
+    } else {
+        // Bytesize of offsets
+        if th.read_u16()? != 8 {
+            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header. Unsupported bytesize of offsets."));
         }
-    }
-
-    //let byte_order = LittleEndian::read_u16(&buffer[0..2]);
-    match &buffer[0..2] {
-        //byte_order { //LittleEndian::read_u16(&buffer[0..2]) {
-        b"II" => configs.endian = Endianness::LittleEndian,
-        b"MM" => configs.endian = Endianness::BigEndian,
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
-    }
-
-    let mut th = ByteOrderReader::new(buffer, configs.endian);
-    th.seek(2);
-
-    match th.read_u16() {
-        42 => (), // do nothing
-        43 => {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                "The BigTiff format is not currently supported.",
-            ))
+        // the next two bytes must be set to zero
+        if th.read_u16()? != 0 {
+            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header."));
         }
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header.")),
-    }
+        th.read_u64()? as usize
+    };
 
-    let mut ifd_offset = th.read_u32() as usize;
+
+    //////////////////
+    // Read the IFD //
+    //////////////////
 
     let mut ifd_map = HashMap::new();
-
     let mut geokeys: GeoKeys = Default::default();
     let mut cur_pos: usize;
     while ifd_offset > 0 {
         th.seek(ifd_offset);
-        let num_directories = th.read_u16();
+        let num_directories = if !is_big_tiff {
+            th.read_u16()? as u64
+        } else {
+            th.read_u64()?
+        };
 
         for _ in 0..num_directories {
-            let tag_id = th.read_u16();
-            let field_type = th.read_u16();
+            let tag_id = th.read_u16()?;
+            let field_type = th.read_u16()?;
 
-            let num_values = th.read_u32();
-            let value_offset = th.read_u32();
+            let num_values = if !is_big_tiff {
+                th.read_u32()? as u64
+            } else {
+                th.read_u64()?
+            };
+            
+            let value_offset = if !is_big_tiff {
+                th.read_u32()? as u64 
+            } else {
+                th.read_u64()?
+            };
+
             let data_size = match field_type {
-                1u16 | 2u16 | 6u16 | 7u16 => 1,
-                3u16 | 8u16 => 2,
-                4u16 | 9u16 | 11u16 => 4,
-                5u16 | 10u16 | 12u16 => 8,
+                1u16 | 2u16 | 6u16 | 7u16 => 1u64,
+                3u16 | 8u16 => 2u64,
+                4u16 | 9u16 | 11u16 => 4u64,
+                5u16 | 10u16 | 12u16 => 8u64,
+                16u16 | 17u16 | 18u16 => 8u64,
                 _ => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -229,25 +311,45 @@ pub fn read_geotiff<'a>(
 
             // read the tag data
             let mut data: Vec<u8> = vec![];
-            if (data_size * num_values) > 4 {
-                // the values are stored at the offset location
-                cur_pos = th.pos;
-                th.seek(value_offset as usize);
-                for _ in 0..num_values * data_size {
-                    data.push(th.read_u8());
+            if !is_big_tiff {
+                if (data_size * num_values) > 4 {
+                    // the values are stored at the offset location
+                    cur_pos = th.pos();
+                    th.seek(value_offset as usize);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
+                } else {
+                    // the value(s) are contained in the offset
+                    cur_pos = th.pos();
+                    th.seek(cur_pos - 4);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
                 }
-                th.seek(cur_pos);
             } else {
-                // the value(s) are contained in the offset
-                cur_pos = th.pos;
-                th.seek(cur_pos - 4);
-                for _ in 0..num_values * data_size {
-                    data.push(th.read_u8());
+                if (data_size * num_values) > 8 {
+                    // the values are stored at the offset location
+                    cur_pos = th.pos();
+                    th.seek(value_offset as usize);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
+                } else {
+                    // the value(s) are contained in the offset
+                    cur_pos = th.pos();
+                    th.seek(cur_pos - 8);
+                    for _ in 0..num_values * data_size {
+                        data.push(th.read_u8()?);
+                    }
+                    th.seek(cur_pos);
                 }
-                th.seek(cur_pos);
             }
 
-            let ifd = IfdDirectory::new(
+            let ifd = Ifd::new(
                 tag_id,
                 field_type,
                 num_values,
@@ -255,9 +357,14 @@ pub fn read_geotiff<'a>(
                 data,
                 configs.endian,
             );
+            
             ifd_map.insert(tag_id, ifd.clone());
         }
-        ifd_offset = th.read_u32() as usize;
+        if !is_big_tiff {
+            ifd_offset = th.read_u32()? as usize;
+        } else {
+            ifd_offset = th.read_u64()? as usize;
+        }
     }
 
     configs.columns = match ifd_map.get(&256) {
@@ -293,13 +400,6 @@ pub fn read_geotiff<'a>(
             ))
         }
     };
-
-    //data = vec![0.0f64; configs.rows * configs.columns];
-    data.clear();
-    data.reserve(configs.rows * configs.columns);
-    for _ in 0..configs.rows * configs.columns {
-        data.push(0.0f64);
-    }
 
     let bits_per_sample = match ifd_map.get(&258) {
         Some(ifd) => ifd.interpret_as_u16(),
@@ -373,7 +473,7 @@ pub fn read_geotiff<'a>(
     };
 
     configs.nodata = match ifd_map.get(&TAG_GDAL_NODATA) {
-        Some(ifd) => ifd.interpret_as_ascii().parse::<f64>().unwrap(),
+        Some(ifd) => ifd.interpret_as_ascii().parse::<f64>().unwrap_or(-32768f64),
         _ => -32768f64,
     };
 
@@ -702,8 +802,8 @@ pub fn read_geotiff<'a>(
     let mut blocks_across = 1;
     let blocks_down; // = 1;
 
-    let block_offsets: Vec<u32>; //  = vec![];
-    let block_counts: Vec<u32>; // = vec![];
+    let block_offsets: Vec<u64>; //  = vec![];
+    let block_counts: Vec<u64>; // = vec![];
 
     if ifd_map.contains_key(&322) {
         // it's a tile oriented file.
@@ -747,11 +847,34 @@ pub fn read_geotiff<'a>(
         blocks_down = (height + block_height - 1) / block_height;
 
         block_offsets = match ifd_map.get(&324) {
-            Some(ifd) => ifd.interpret_as_u32(),
+            Some(ifd) => {
+                if ifd.ifd_type == 3 {
+                    let ifd_data = ifd.interpret_as_u16();
+                    let mut ret: Vec<u64> = vec![];
+                    for val in ifd_data.iter() {
+                        ret.push(*val as u64);
+                    }
+                    ret
+                } else if ifd.ifd_type == 4 {
+                    let ifd_data = ifd.interpret_as_u32();
+                    let mut ret: Vec<u64> = vec![];
+                    for val in ifd_data.iter() {
+                        ret.push(*val as u64);
+                    }
+                    ret
+                } else if ifd.ifd_type == 16 {
+                    ifd.interpret_as_u64()
+                } else {
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster TileOffsets values were not read correctly",
+                    ))
+                }
+            },
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The raster BitsPerSample value was not read correctly",
+                    "The raster TileOffsets value was not read correctly",
                 ))
             }
         };
@@ -761,19 +884,31 @@ pub fn read_geotiff<'a>(
                 // The 325 tag can be either u16 or u32 type
                 if ifd.ifd_type == 3 {
                     let ifd_data = ifd.interpret_as_u16();
-                    let mut ret: Vec<u32> = vec![];
+                    let mut ret: Vec<u64> = vec![];
                     for val in ifd_data.iter() {
-                        ret.push(*val as u32);
+                        ret.push(*val as u64);
                     }
                     ret
+                } else if ifd.ifd_type == 4 {
+                    let ifd_data = ifd.interpret_as_u32();
+                    let mut ret: Vec<u64> = vec![];
+                    for val in ifd_data.iter() {
+                        ret.push(*val as u64);
+                    }
+                    ret
+                } else if ifd.ifd_type == 16 {
+                    ifd.interpret_as_u64()
                 } else {
-                    ifd.interpret_as_u32()
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster TileLength values were not read correctly",
+                    ))
                 }
             }
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The TileLength value was not read correctly",
+                    "The TileLength values were not read correctly",
                 ))
             }
         };
@@ -799,38 +934,62 @@ pub fn read_geotiff<'a>(
 
         block_offsets = match ifd_map.get(&273) {
             Some(ifd) => {
-                // The 273 tag can be either u16 or u32 type
+                // The 273 tag can be either u16, u32, or u64 (BigTIFF) type
                 if ifd.ifd_type == 3 {
                     let ifd_data = ifd.interpret_as_u16();
-                    let mut ret: Vec<u32> = vec![];
+                    let mut ret: Vec<u64> = vec![];
                     for val in ifd_data.iter() {
-                        ret.push(*val as u32);
+                        ret.push(*val as u64);
                     }
                     ret
+                } else if ifd.ifd_type == 4 {
+                    let ifd_data = ifd.interpret_as_u32();
+                    let mut ret: Vec<u64> = vec![];
+                    for val in ifd_data.iter() {
+                        ret.push(*val as u64);
+                    }
+                    ret
+                } else if ifd.ifd_type == 16 {
+                    ifd.interpret_as_u64()
                 } else {
-                    ifd.interpret_as_u32()
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster StripOffsets values were not read correctly",
+                    ))
                 }
             }
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The raster StripOffsets value was not read correctly",
+                    "The raster StripOffsets values were not read correctly",
                 ))
             }
         };
 
         block_counts = match ifd_map.get(&279) {
             Some(ifd) => {
-                // The 279 tag can be either u16 or u32 type
+                // The 279 tag can be either u16, u32, or u64 (BigTIFF) type
                 if ifd.ifd_type == 3 {
                     let ifd_data = ifd.interpret_as_u16();
-                    let mut ret: Vec<u32> = vec![];
+                    let mut ret: Vec<u64> = vec![];
                     for val in ifd_data.iter() {
-                        ret.push(*val as u32);
+                        ret.push(*val as u64);
                     }
                     ret
+                } else if ifd.ifd_type == 4 {
+                    let ifd_data = ifd.interpret_as_u32();
+                    let mut ret: Vec<u64> = vec![];
+                    for val in ifd_data.iter() {
+                        ret.push(*val as u64);
+                    }
+                    ret
+                } else if ifd.ifd_type == 16 {
+                    ifd.interpret_as_u64()
                 } else {
-                    ifd.interpret_as_u32()
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "The raster StripByteCounts value was not read correctly",
+                    ))
                 }
             }
             _ => {
@@ -840,6 +999,20 @@ pub fn read_geotiff<'a>(
                 ))
             }
         };
+    }
+
+
+    ////////////////////
+    // Read the data! //
+    ////////////////////
+    if data.len() > 0 {
+        data.clear();
+    }
+    data.reserve_exact(configs.rows * configs.columns);
+    unsafe { 
+        // The memory will be initialized when we read 
+        // the pixel values.
+        data.set_len(configs.rows * configs.columns); 
     }
 
     for i in 0..blocks_across {
@@ -860,14 +1033,26 @@ pub fn read_geotiff<'a>(
                 match compression {
                     COMPRESS_NONE => {
                         // no compression
-                        buf = th.buffer[offset..(offset + n)].to_vec();
+                        // buf = vec![0u8; n];
+                        buf.reserve_exact(n);
+                        unsafe { buf.set_len(n); }
+                        th.seek(offset);
+                        th.read_exact(&mut buf)?;
                     }
                     COMPRESS_PACKBITS => {
-                        buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
+                        // buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
+                        let mut b = vec![0u8; n];
+                        th.seek(offset);
+                        th.read_exact(&mut b)?;
+                        buf = packbits_decoder(b);
                     }
                     COMPRESS_LZW => {
                         let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
-                        let mut compressed = &th.buffer[offset..(offset + n)];
+                        th.seek(offset);
+                        let mut b = vec![0u8; n];
+                        th.read_exact(&mut b)?;
+                        let mut compressed = &b[0..];
+                        // let mut compressed = &th.buffer[offset..(offset + n)];
                         while compressed.len() > 0 {
                             let (start, bytes) = dec.decode_bytes(&compressed).unwrap();
                             compressed = &compressed[start..];
@@ -876,9 +1061,13 @@ pub fn read_geotiff<'a>(
                     }
                     COMPRESS_DEFLATE => {
                         // let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
-                        let compressed = &th.buffer[offset..(offset + n)];
-                        let mut decoder = Decoder::new(&compressed[..]).unwrap();
-                        // let mut decoded_data = Vec::new();
+                        // let compressed = &th.buffer[offset..(offset + n)];
+                        // let mut decoder = Decoder::new(&compressed[..]).unwrap();
+                        // decoder.read_to_end(&mut buf).unwrap();
+                        th.seek(offset);
+                        let mut compressed = vec![0u8; n];
+                        th.read_exact(&mut compressed)?;
+                        let mut decoder = Decoder::new(&compressed[..])?;
                         decoder.read_to_end(&mut buf).unwrap();
                     }
                     _ => {
@@ -889,7 +1078,8 @@ pub fn read_geotiff<'a>(
                     }
                 }
             }
-            let mut bor = ByteOrderReader::new(buf, configs.endian);
+
+            let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buf), configs.endian);
 
             let xmin = i * block_width;
             let ymin = j * block_height;
@@ -906,11 +1096,11 @@ pub fn read_geotiff<'a>(
             };
 
             let mut off = 0;
-
+            let mut i: usize;
+            let (mut red, mut green, mut blue): (u32, u32, u32);
             if n != 0 {
                 match mode {
                     IM_GRAYINVERT | IM_GRAY => {
-                        //ImageMode::GrayInvert | ImageMode::Gray => {
                         match sample_format[0] {
                             1 => {
                                 // unsigned integer
@@ -919,8 +1109,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let i = y * width + x;
-                                                    data[i] = bor.read_u8() as f64; //buf[off] as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_u8()? as f64;
                                                     off += 1;
                                                 }
                                             }
@@ -933,9 +1123,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_u16(); // g.ByteOrder.Uint16(g.buf[g.off : g.off+2])
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_u16()? as f64;
                                                     off += 2;
                                                 }
                                             }
@@ -948,9 +1137,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_u32();
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_u32()? as f64;
                                                     off += 4;
                                                 }
                                             }
@@ -963,9 +1151,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_u64();
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_u64()? as f64;
                                                     off += 8;
                                                 }
                                             }
@@ -989,8 +1176,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let i = y * width + x;
-                                                    data[i] = bor.read_i8() as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_i8()? as f64;
                                                     off += 1;
                                                 }
                                             }
@@ -1003,9 +1190,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_i16();
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_i16()? as f64;
                                                     off += 2;
                                                 }
                                             }
@@ -1018,9 +1204,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_i32();
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_i32()? as f64;
                                                     off += 4;
                                                 }
                                             }
@@ -1033,9 +1218,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_i64();
-                                                    let i = y * width + x;
-                                                    data[i] = value as f64;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_i64()? as f64;
                                                     off += 8;
                                                 }
                                             }
@@ -1058,9 +1242,8 @@ pub fn read_geotiff<'a>(
                                     32 => {
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
-                                                let value = bor.read_f32();
-                                                let i = y * width + x;
-                                                data[i] = value as f64;
+                                                i = y * width + x;
+                                                data[i] = bor.read_f32()? as f64;
                                                 off += 4;
                                             }
                                             if skip_bytes > 0 {
@@ -1072,9 +1255,8 @@ pub fn read_geotiff<'a>(
                                         for y in ymin..ymax {
                                             for x in xmin..xmax {
                                                 if off <= bor.len() {
-                                                    let value = bor.read_f64();
-                                                    let i = y * width + x;
-                                                    data[i] = value;
+                                                    i = y * width + x;
+                                                    data[i] = bor.read_f64()?;
                                                     off += 8;
                                                 }
                                             }
@@ -1100,26 +1282,27 @@ pub fn read_geotiff<'a>(
                         }
                     }
                     IM_PALETTED => {
-                        //ImageMode::Paletted => {
+                        let mut value: usize;
                         for y in ymin..ymax {
                             for x in xmin..xmax {
-                                let i = y * width + x;
-                                let value = bor.read_u8() as usize;
+                                i = y * width + x;
+                                value = bor.read_u8()? as usize;
                                 data[i] = palette[value] as f64;
                             }
                         }
                     }
                     IM_RGB => {
-                        //ImageMode::RGB => {
+                        let mut value: u32;
+                        let mut a: u32;
                         if bits_per_sample[0] == 8 {
                             for y in ymin..ymax {
                                 for x in xmin..xmax {
-                                    let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
-                                    let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
-                                    let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
-                                    let a = 255u32;
-                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                    let i = y * width + x;
+                                    red = bor.read_u8()? as u32; //uint32(g.buf[g.off]);
+                                    green = bor.read_u8()? as u32; //uint32(g.buf[g.off+1]);
+                                    blue = bor.read_u8()? as u32; //uint32(g.buf[g.off+2]);
+                                    a = 255u32;
+                                    value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    i = y * width + x;
                                     data[i] = value as f64;
                                 }
                             }
@@ -1128,14 +1311,16 @@ pub fn read_geotiff<'a>(
                             // I'm not sure why I bother with this. They specifically
                             // say that RGB images are 8-bits per channel. Anyhow,
                             // I rescale the 16-bits to an 8-bit channel for simplicity.
+                            let mut value: u32;
+                            let mut a: u32;
                             for y in ymin..ymax {
                                 for x in xmin..xmax {
-                                    let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let a = 255u32;
-                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                    let i = y * width + x;
+                                    red = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    green = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    blue = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    a = 255u32;
+                                    value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    i = y * width + x;
                                     data[i] = value as f64;
                                 }
                             }
@@ -1147,16 +1332,17 @@ pub fn read_geotiff<'a>(
                         }
                     }
                     IM_NRGBA | IM_RGBA => {
-                        //ImageMode::NRGBA | ImageMode::RGBA => {
+                        let mut value: u32;
+                        let mut a: u32;
                         if bits_per_sample[0] == 8 {
                             for y in ymin..ymax {
                                 for x in xmin..xmax {
-                                    let red = bor.read_u8() as u32; //uint32(g.buf[g.off]);
-                                    let green = bor.read_u8() as u32; //uint32(g.buf[g.off+1]);
-                                    let blue = bor.read_u8() as u32; //uint32(g.buf[g.off+2]);
-                                    let a = bor.read_u8() as u32;
-                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                    let i = y * width + x;
+                                    red = bor.read_u8()? as u32; //uint32(g.buf[g.off]);
+                                    green = bor.read_u8()? as u32; //uint32(g.buf[g.off+1]);
+                                    blue = bor.read_u8()? as u32; //uint32(g.buf[g.off+2]);
+                                    a = bor.read_u8()? as u32;
+                                    value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    i = y * width + x;
                                     data[i] = value as f64;
                                 }
                             }
@@ -1165,14 +1351,16 @@ pub fn read_geotiff<'a>(
                             // I'm not sure why I bother with this. They specifically
                             // say that RGB images are 8-bits per channel. Anyhow,
                             // I rescale the 16-bits to an 8-bit channel for simplicity.
+                            let mut value: u32;
+                            let mut a: u32;
                             for y in ymin..ymax {
                                 for x in xmin..xmax {
-                                    let red = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let green = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let blue = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let a = (bor.read_u16() as f64 / 65535f64 * 255f64) as u32;
-                                    let value = (a << 24) | (blue << 16) | (green << 8) | red;
-                                    let i = y * width + x;
+                                    red = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    green = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    blue = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    a = (bor.read_u16()? as f64 / 65535f64 * 255f64) as u32;
+                                    value = (a << 24) | (blue << 16) | (green << 8) | red;
+                                    i = y * width + x;
                                     data[i] = value as f64;
                                 }
                             }
@@ -1196,7 +1384,7 @@ pub fn read_geotiff<'a>(
                 // nodata, if the value is defined, or zeros otherwise.
                 for y in ymin..ymax {
                     for x in xmin..xmax {
-                        let i = y * width + x;
+                        i = y * width + x;
                         data[i] = configs.nodata;
                     }
                 }
@@ -1357,167 +1545,226 @@ pub fn read_geotiff<'a>(
     let mut map_sorter = vec![];
     for (key, _) in ifd_map.iter() {
         map_sorter.push(key);
-        //println!("{}", ifd);
     }
     map_sorter.sort();
-    // for key in map_sorter.iter() {
-    //     println!("{}", ifd_map.get(&key).unwrap());
-    // }
 
     map_sorter.clear();
     for (key, _) in geokeys_map.iter() {
         map_sorter.push(key);
-        //println!("{}", ifd);
     }
-    // for key in map_sorter.iter() {
-    //     println!("{}", geokeys_map.get(&key).unwrap());
-    // }
-
-    // println!("\nGeoKeys:\n");
-    // println!("{}", geokeys.interpret_geokeys());
 
     Ok(())
 }
 
 pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
+    // get the ByteOrderWriter
     let f = File::create(r.file_name.clone())?;
-    let mut writer = BufWriter::new(f);
+    let writer = BufWriter::new(f);
+    let mut bow = ByteOrderWriter::<BufWriter<File>>::new(writer, r.configs.endian);
+    
+    // get the bytes per pixel
+    let total_bytes_per_pixel = r.configs.data_type.get_data_size();
+    if total_bytes_per_pixel == 0 {
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            format!(
+                "Unknown data type: {:?}. Photomet interp: {:?}",
+                r.configs.data_type, r.configs.photometric_interp
+            ),
+        ));
+    }
 
-    // get the endianness of the raster
-    let little_endian = match r.configs.endian {
-        Endianness::LittleEndian => true,
-        Endianness::BigEndian => false,
+    // is it a BigTiff?
+    let is_big_tiff = if 8usize + (r.configs.rows * r.configs.columns) as usize * 
+        total_bytes_per_pixel >= 4_000_000_000 {
+        true
+    } else {
+        false
     };
 
-    if little_endian {
-        //////////////////////
-        // Write the header //
-        //////////////////////
-        writer.write_all("II".as_bytes())?;
+    // get the offset to the first ifd
+    let mut ifd_start = if !is_big_tiff {
+        (8usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64 // plus the 8-byte header
+    } else {
+        (16usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64 // plus the 8-byte header
+    };
+    let mut ifd_start_needs_extra_byte = false;
+    if ifd_start % 2 == 1 {
+        ifd_start += 1;
+        ifd_start_needs_extra_byte = true;
+    }
+
+
+    //////////////////////
+    // Write the header //
+    //////////////////////
+
+    if r.configs.endian == Endianness::LittleEndian {
+        bow.write_bytes("II".as_bytes())?;
+    } else {
+        bow.write_bytes("MM".as_bytes())?;
+    }
+
+    if !is_big_tiff {
         // magic number
-        writer.write_u16::<LittleEndian>(42u16)?;
+        bow.write_u16(42u16)?;
         // offset to first IFD
-        let total_bytes_per_pixel = r.configs.data_type.get_data_size();
-        if total_bytes_per_pixel == 0 {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                format!(
-                    "Unknown data type: {:?}. Photomet interp: {:?}",
-                    r.configs.data_type, r.configs.photometric_interp
-                ),
-            ));
-        }
-        let mut ifd_start = (8usize
-            + r.configs.rows as usize * r.configs.columns as usize * total_bytes_per_pixel)
-            as u32; // plus the 8-byte header
-        let mut ifd_start_needs_extra_byte = false;
-        if ifd_start % 2 == 1 {
-            ifd_start += 1;
-            ifd_start_needs_extra_byte = true;
-        }
-        writer.write_u32::<LittleEndian>(ifd_start)?;
+        bow.write_u32(ifd_start as u32)?;
+    } else {
+        // magic number
+        bow.write_u16(43u16)?;
+        // Bytesize of offsets
+        bow.write_u16(8u16)?;
 
-        // At the moment, categorical and paletted output is not supported.
-        if r.configs.photometric_interp == PhotometricInterpretation::Categorical
-            || r.configs.photometric_interp == PhotometricInterpretation::Paletted
-        {
-            r.configs.photometric_interp = PhotometricInterpretation::Continuous;
-        }
+        bow.write_u16(0u16)?; // Always 0
 
-        //////////////////////////
-        // Write the image data //
-        //////////////////////////
-        match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous
-            | PhotometricInterpretation::Categorical
-            | PhotometricInterpretation::Boolean => match r.configs.data_type {
-                DataType::F64 => {
+        // offset to first IFD
+        bow.write_u64(ifd_start)?;
+    }
+
+    // At the moment, categorical and paletted output is not supported.
+    if r.configs.photometric_interp == PhotometricInterpretation::Categorical
+        || r.configs.photometric_interp == PhotometricInterpretation::Paletted
+    {
+        r.configs.photometric_interp = PhotometricInterpretation::Continuous;
+    }
+
+
+    //////////////////////////
+    // Write the image data //
+    //////////////////////////
+    match r.configs.photometric_interp {
+        PhotometricInterpretation::Continuous
+        | PhotometricInterpretation::Categorical
+        | PhotometricInterpretation::Boolean => match r.configs.data_type {
+            DataType::F64 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_f64(r.data[i])?;
+                    }
+                }
+            }
+            DataType::F32 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_f32(r.data[i] as f32)?;
+                    }
+                }
+            }
+            DataType::U64 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_u64(r.data[i] as u64)?;
+                    }
+                }
+            }
+            DataType::U32 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_u32(r.data[i] as u32)?;
+                    }
+                }
+            }
+            DataType::U16 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_u16(r.data[i] as u16)?;
+                    }
+                }
+            }
+            DataType::U8 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_u8(r.data[i] as u8)?;
+                    }
+                }
+            }
+            DataType::I64 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_i64(r.data[i] as i64)?;
+                    }
+                }
+            }
+            DataType::I32 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_i32(r.data[i] as i32)?;
+                    }
+                }
+            }
+            DataType::I16 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_i16(r.data[i] as i16)?;
+                    }
+                }
+            }
+            DataType::I8 => {
+                let mut i: usize;
+                for row in 0..r.configs.rows {
+                    for col in 0..r.configs.columns {
+                        i = row * r.configs.columns + col;
+                        bow.write_i8(r.data[i] as i8)?;
+                    }
+                }
+            }
+            _ => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!(
+                        "Unknown data type: {:?}. Photomet interp: {:?}",
+                        r.configs.data_type, r.configs.photometric_interp
+                    ),
+                ));
+            }
+        },
+        PhotometricInterpretation::RGB => {
+            match r.configs.data_type {
+                DataType::RGB24 => {
+                    let mut bytes: [u8; 3] = [0u8; 3];
                     let mut i: usize;
                     for row in 0..r.configs.rows {
                         for col in 0..r.configs.columns {
                             i = row * r.configs.columns + col;
-                            writer.write_f64::<LittleEndian>(r.data[i])?;
+                            let val = r.data[i] as u32;
+                            bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
+                            bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
+                            bytes[0] = (val & 0xFF) as u8; // red
+                            bow.write_bytes(&bytes)?;
                         }
                     }
                 }
-                DataType::F32 => {
+                DataType::RGBA32 | DataType::U32 => {
                     let mut i: usize;
+                    let mut bytes: [u8; 4] = [0u8; 4];
                     for row in 0..r.configs.rows {
                         for col in 0..r.configs.columns {
                             i = row * r.configs.columns + col;
-                            writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
-                        }
-                    }
-                }
-                DataType::U64 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u64::<LittleEndian>(r.data[i] as u64)?;
-                        }
-                    }
-                }
-                DataType::U32 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u32::<LittleEndian>(r.data[i] as u32)?;
-                        }
-                    }
-                }
-                DataType::U16 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u16::<LittleEndian>(r.data[i] as u16)?;
-                        }
-                    }
-                }
-                DataType::U8 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write(&[r.data[i] as u8])?;
-                        }
-                    }
-                }
-                DataType::I64 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i64::<LittleEndian>(r.data[i] as i64)?;
-                        }
-                    }
-                }
-                DataType::I32 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i32::<LittleEndian>(r.data[i] as i32)?;
-                        }
-                    }
-                }
-                DataType::I16 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i16::<LittleEndian>(r.data[i] as i16)?;
-                        }
-                    }
-                }
-                DataType::I8 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write(&[r.data[i] as u8])?;
+                            let val = r.data[i] as u32;
+                            bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
+                            bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
+                            bytes[0] = (val & 0xFF) as u8; // red
+                            bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
+                            bow.write_bytes(&bytes)?;
                         }
                     }
                 }
@@ -1530,746 +1777,32 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         ),
                     ));
                 }
-            },
-            PhotometricInterpretation::RGB => {
-                match r.configs.data_type {
-                    DataType::RGB24 => {
-                        let mut bytes: [u8; 3] = [0u8; 3];
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                // writer.write_u24::<LittleEndian>(r.data[i] as u32)?;
-                                let val = r.data[i] as u32;
-                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
-                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[0] = (val & 0xFF) as u8; // red
-                                writer.write(&bytes)?;
-                            }
-                        }
-                    }
-                    DataType::RGBA32 | DataType::U32 => {
-                        let mut i: usize;
-                        let mut bytes: [u8; 4] = [0u8; 4];
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                let val = r.data[i] as u32;
-                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
-                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[0] = (val & 0xFF) as u8; // red
-                                bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
-                                writer.write(&bytes)?;
-                                // let val2 = ((val << 24u32) & 0xFF) | ((val << 16u32) & 0xFF) | ((val << 8u32) & 0xFF) | (val & 0xFF);
-                                // writer.write_u32::<LittleEndian>(val2)?;
-                            }
-                        }
-                    }
-                    _ => {
-                        return Err(Error::new(
-                            ErrorKind::InvalidData,
-                            format!(
-                                "Unknown data type: {:?}. Photomet interp: {:?}",
-                                r.configs.data_type, r.configs.photometric_interp
-                            ),
-                        ));
-                    }
-                }
-            }
-            PhotometricInterpretation::Paletted => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Paletted GeoTIFFs are currently unsupported for writing.",
-                ));
-            }
-            PhotometricInterpretation::Unknown => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error while writing GeoTIFF file.",
-                ));
             }
         }
-
-        // This is just because the IFD must start on a word (i.e. an even value). If the data are
-        // single bytes, then this may not be the case.
-        if ifd_start_needs_extra_byte {
-            writer.write_u8(0u8)?;
-        }
-
-        ////////////////////////////
-        // Create the IFD entries //
-        ////////////////////////////
-
-        let mut ifd_entries: Vec<IfdEntry> = vec![];
-        let mut larger_values_data: Vec<u8> = vec![];
-
-        /*
-        IFD entries
-
-        Bytes 0-1 The Tag that identifies the field.
-        Bytes 2-3 The field Type.
-        Bytes 4-7 The number of values, Count of the indicated Type.
-        Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
-        The Value is expected to begin on a word boundary; the corresponding
-        Value Offset will thus be an even number. This file offset may
-        point anywhere in the file, even after the image data.
-
-        To save time and space the Value Offset contains the Value instead of pointing to
-        the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
-        bytes, it is left-justified within the 4-byte Value Offset, i.e., stored in the lowernumbered
-        bytes. Whether the Value fits within 4 bytes is determined by the Type
-        and Count of the field.
-        */
-
-        // ImageWidth tag (256)
-        ifd_entries.push(IfdEntry::new(
-            TAG_IMAGEWIDTH,
-            DT_LONG,
-            1u32,
-            r.configs.columns as u32,
-        ));
-
-        // ImageLength tag (257)
-        ifd_entries.push(IfdEntry::new(
-            TAG_IMAGELENGTH,
-            DT_LONG,
-            1u32,
-            r.configs.rows as u32,
-        ));
-
-        let bits_per_sample = match r.configs.data_type {
-            DataType::I8 | DataType::U8 => 8u16,
-            DataType::I16 | DataType::U16 => 16u16,
-            DataType::I32 | DataType::U32 | DataType::F32 => 32u16,
-            DataType::I64 | DataType::U64 | DataType::F64 => 64u16,
-            DataType::RGB24 => 8u16,
-            DataType::RGBA32 => 8u16,
-            DataType::RGB48 => 16u16,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-
-        let samples_per_pixel = match r.configs.data_type {
-            DataType::I8 | DataType::U8 => 1u16,
-            DataType::I16 | DataType::U16 => 1u16,
-            DataType::I32 | DataType::U32 | DataType::F32 => 1u16,
-            DataType::I64 | DataType::U64 | DataType::F64 => 1u16,
-            DataType::RGB24 => 3u16,
-            DataType::RGBA32 => 4u16,
-            DataType::RGB48 => 3u16,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-
-        // BitsPerSample tag (258)
-        if r.configs.photometric_interp != PhotometricInterpretation::Boolean {
-            if samples_per_pixel == 1 {
-                ifd_entries.push(IfdEntry::new(
-                    TAG_BITSPERSAMPLE,
-                    DT_SHORT,
-                    samples_per_pixel as u32,
-                    bits_per_sample as u32,
-                ));
-            } else {
-                ifd_entries.push(IfdEntry::new(
-                    TAG_BITSPERSAMPLE,
-                    DT_SHORT,
-                    samples_per_pixel as u32,
-                    larger_values_data.len() as u32,
-                ));
-                for _ in 0..samples_per_pixel {
-                    let _ = larger_values_data.write_u16::<LittleEndian>(bits_per_sample);
-                }
-            }
-        }
-
-        // Compression tag (259)
-        ifd_entries.push(IfdEntry::new(
-            TAG_COMPRESSION,
-            DT_SHORT,
-            1u32,
-            COMPRESS_NONE as u32,
-        ));
-
-        // PhotometricInterpretation tag (262)
-        let pi = match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous => PI_BLACKISZERO,
-            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
-                PI_PALETTED
-            }
-            PhotometricInterpretation::Boolean => PI_BLACKISZERO,
-            PhotometricInterpretation::RGB => PI_RGB,
-            PhotometricInterpretation::Unknown => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error while writing GeoTIFF file. Unknown Photometric Interpretation.",
-                ));
-            }
-        };
-        ifd_entries.push(IfdEntry::new(
-            TAG_PHOTOMETRICINTERPRETATION,
-            DT_SHORT,
-            1u32,
-            pi as u32,
-        ));
-
-        // StripOffsets tag (273)
-        ifd_entries.push(IfdEntry::new(
-            TAG_STRIPOFFSETS,
-            DT_LONG,
-            r.configs.rows as u32,
-            larger_values_data.len() as u32,
-        ));
-        let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
-        for i in 0..r.configs.rows as u32 {
-            let _ = larger_values_data.write_u32::<LittleEndian>(8u32 + row_length_in_bytes * i);
-        }
-
-        // SamplesPerPixel tag (277)
-        ifd_entries.push(IfdEntry::new(
-            TAG_SAMPLESPERPIXEL,
-            DT_SHORT,
-            1u32,
-            samples_per_pixel as u32,
-        ));
-
-        // RowsPerStrip tag (278)
-        ifd_entries.push(IfdEntry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u32, 1u32));
-
-        // StripByteCounts tag (279)
-        ifd_entries.push(IfdEntry::new(
-            TAG_STRIPBYTECOUNTS,
-            DT_LONG,
-            r.configs.rows as u32,
-            larger_values_data.len() as u32,
-        ));
-        let total_bytes_per_pixel = match r.configs.data_type {
-            DataType::I8 | DataType::U8 => 1u32,
-            DataType::I16 | DataType::U16 => 2u32,
-            DataType::I32 | DataType::U32 | DataType::F32 => 4u32,
-            DataType::I64 | DataType::U64 | DataType::F64 => 8u32,
-            DataType::RGB24 => 3u32,
-            DataType::RGBA32 => 4u32,
-            DataType::RGB48 => 6u32,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-        let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel;
-        for _ in 0..r.configs.rows as u32 {
-            let _ = larger_values_data.write_u32::<LittleEndian>(row_length_in_bytes);
-        }
-
-        // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
-        // XResolution tag (282)
-        ifd_entries.push(IfdEntry::new(
-            TAG_XRESOLUTION,
-            DT_RATIONAL,
-            1u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_u32::<LittleEndian>(72u32);
-        let _ = larger_values_data.write_u32::<LittleEndian>(1u32);
-
-        // YResolution tag (283)
-        ifd_entries.push(IfdEntry::new(
-            TAG_YRESOLUTION,
-            DT_RATIONAL,
-            1u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_u32::<LittleEndian>(72u32);
-        let _ = larger_values_data.write_u32::<LittleEndian>(1u32);
-
-        // ResolutionUnit tag (296)
-        ifd_entries.push(IfdEntry::new(TAG_RESOLUTIONUNIT, DT_SHORT, 1u32, 2u32));
-
-        // Software tag (305)
-        let software = "WhiteboxTools".to_owned();
-        let mut soft_bytes = software.into_bytes();
-        soft_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(
-            TAG_SOFTWARE,
-            DT_ASCII,
-            soft_bytes.len() as u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_all(&soft_bytes);
-
-        if samples_per_pixel == 4 {
-            // ExtraSamples tag (338)
-            ifd_entries.push(IfdEntry::new(TAG_EXTRASAMPLES, DT_SHORT, 1u32, 2u32));
-        }
-
-        // SampleFormat tag (339)
-        let samples_format = match r.configs.data_type {
-            DataType::U8 | DataType::U16 | DataType::U32 | DataType::U64 => 1u16,
-            DataType::I8 | DataType::I16 | DataType::I32 | DataType::I64 => 2u16,
-            DataType::F32 | DataType::F64 => 3u16,
-            DataType::RGB24 | DataType::RGBA32 | DataType::RGB48 => 1u16,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-        if samples_per_pixel == 1 {
-            ifd_entries.push(IfdEntry::new(
-                TAG_SAMPLEFORMAT,
-                DT_SHORT,
-                samples_per_pixel as u32,
-                samples_format as u32,
+        PhotometricInterpretation::Paletted => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Paletted GeoTIFFs are currently unsupported for writing.",
             ));
-        } else {
-            ifd_entries.push(IfdEntry::new(
-                TAG_SAMPLEFORMAT,
-                DT_SHORT,
-                samples_per_pixel as u32,
-                larger_values_data.len() as u32,
+        }
+        PhotometricInterpretation::Unknown => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Error while writing GeoTIFF file.",
             ));
-            for _ in 0..samples_per_pixel {
-                let _ = larger_values_data.write_u16::<LittleEndian>(samples_format);
-            }
         }
+    }
 
-        // ModelPixelScaleTag tag (33550)
-        if r.configs.model_pixel_scale[0] == 0f64 && r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
-            ifd_entries.push(IfdEntry::new(
-                TAG_MODELPIXELSCALETAG,
-                DT_DOUBLE,
-                3u32,
-                larger_values_data.len() as u32,
-            ));
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_x);
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.resolution_y);
-            let _ = larger_values_data.write_f64::<LittleEndian>(0f64);
-        } else if r.configs.model_pixel_scale[0] != 0f64 {
-            ifd_entries.push(IfdEntry::new(
-                TAG_MODELPIXELSCALETAG,
-                DT_DOUBLE,
-                3u32,
-                larger_values_data.len() as u32,
-            ));
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[0]);
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[1]);
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_pixel_scale[2]);
-        }
+    // This is just because the IFD must start on a word (i.e. an even value). If the data are
+    // single bytes, then this may not be the case.
+    if ifd_start_needs_extra_byte {
+        bow.write_u8(0u8)?;
+    }
 
-        if r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
-            // ModelTiepointTag tag (33922)
-            ifd_entries.push(IfdEntry::new(
-                TAG_MODELTIEPOINTTAG,
-                DT_DOUBLE,
-                6u32,
-                larger_values_data.len() as u32,
-            ));
-            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // I
-            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // J
-            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // K
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.west); // X
-            let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.north); // Y
-            let _ = larger_values_data.write_f64::<LittleEndian>(0f64); // Z
-        } else if !r.configs.model_tiepoint.is_empty() {
-            // ModelTiepointTag tag (33922)
-            ifd_entries.push(IfdEntry::new(
-                TAG_MODELTIEPOINTTAG,
-                DT_DOUBLE,
-                r.configs.model_tiepoint.len() as u32,
-                larger_values_data.len() as u32,
-            ));
-            for i in 0..r.configs.model_tiepoint.len() {
-                let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_tiepoint[i]);
-            }
-        }
 
-        if r.configs.model_transformation[0] != 0f64 {
-            // ModelTransformationTag tag (33920)
-            ifd_entries.push(IfdEntry::new(
-                TAG_MODELTRANSFORMATIONTAG,
-                DT_DOUBLE,
-                16u32,
-                larger_values_data.len() as u32,
-            ));
-            for i in 0..16 {
-                let _ = larger_values_data.write_f64::<LittleEndian>(r.configs.model_transformation[i]);
-            }
-        }
-
-        // TAG_GDAL_NODATA tag (42113)
-        // println!("nodata: {}", r.configs.nodata);
-        let nodata_str = format!("{}", r.configs.nodata);
-        let mut nodata_bytes = nodata_str.into_bytes();
-        // For reasons I don't fully understand, alignment errors occur
-        // if the nodata string is fewer than 4 characters. In this case
-        // we buffer the string with spaces to lengthen it.
-        if nodata_bytes.len() < 4 {
-            for _ in 0..(4 - nodata_bytes.len()) {
-                nodata_bytes.push(32);
-            }
-        }
-        if nodata_bytes.len() % 2 == 0 {
-            nodata_bytes.push(32);
-        }
-        nodata_bytes.push(0);
-        // println!("nodata_bytes: {:?}", nodata_bytes);
-        ifd_entries.push(IfdEntry::new(
-            TAG_GDAL_NODATA,
-            DT_ASCII,
-            nodata_bytes.len() as u32,
-            larger_values_data.len() as u32,
-        ));
-        // if nodata_bytes.len() % 2 == 1 {
-        //     nodata_bytes.push(0);
-        // }
-        let _ = larger_values_data.write_all(&nodata_bytes);
-
-        let kw_map = get_keyword_map();
-        let geographic_type_map = match kw_map.get(&2048u16) {
-            Some(map) => map,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error generating geographic type map.",
-                ))
-            }
-        };
-        let projected_cs_type_map = match kw_map.get(&3072u16) {
-            Some(map) => map,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error generating projected coordinate system type map.",
-                ))
-            }
-        };
-
-        //let key_map = get_keys_map();
-        let mut gk_entries: Vec<GeoKeyEntry> = vec![];
-        let mut ascii_params = String::new(); //: Vec<u8> = vec![];
-        let double_params: Vec<f64> = vec![];
-        if geographic_type_map.contains_key(&r.configs.epsg_code) {
-            // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: 2u16,
-            });
-
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 1u16,
-                });
-            } else {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 2u16,
-                });
-            }
-
-            // tGTCitationGeoKey (1026)
-            let mut v = String::from(
-                geographic_type_map
-                    .get(&r.configs.epsg_code)
-                    .unwrap()
-                    .clone(),
-            );
-            v.push_str("|");
-            v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTCITATIONGEOKEY,
-                location: 34737u16,
-                count: v.len() as u16,
-                value_offset: ascii_params.len() as u16,
-            });
-            ascii_params.push_str(&v);
-
-            // tGeographicTypeGeoKey (2048)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GEOGRAPHICTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: r.configs.epsg_code,
-            });
-
-            if r.configs.z_units.to_lowercase() != "not specified" {
-                // VerticalUnitsGeoKey (4099)
-                let units = r.configs.z_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
-        } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
-            // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: 1u16,
-            });
-
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 1u16,
-                });
-            } else {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 2u16,
-                });
-            }
-
-            // tProjectedCSTypeGeoKey (3072)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_PROJECTEDCSTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: r.configs.epsg_code,
-            });
-
-            // PCSCitationGeoKey (3073)
-            let mut v = String::from(
-                projected_cs_type_map
-                    .get(&r.configs.epsg_code)
-                    .unwrap()
-                    .clone(),
-            );
-            v.push_str("|");
-            v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry {
-                tag: 3073u16,
-                location: 34737u16,
-                count: v.len() as u16,
-                value_offset: ascii_params.len() as u16,
-            });
-            ascii_params.push_str(&v);
-
-            if r.configs.xy_units.to_lowercase() != "not specified" {
-                // ProjLinearUnitsGeoKey (3076)
-                let units = r.configs.xy_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_PROJLINEARUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_PROJLINEARUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
-
-            if r.configs.z_units.to_lowercase() != "not specified" {
-                // VerticalUnitsGeoKey (4099)
-                let units = r.configs.z_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
-        } else {
-            // we don't know much about the coordinate system used.
-
-            // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: 0u16,
-            });
-
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 1u16,
-                });
-            } else {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 2u16,
-                });
-            }
-        }
-
-        if r.configs.geo_key_directory.is_empty() {
-            // create the GeoKeyDirectoryTag tag (34735)
-            ifd_entries.push(IfdEntry::new(
-                TAG_GEOKEYDIRECTORYTAG,
-                DT_SHORT,
-                (4 + gk_entries.len() * 4) as u32,
-                larger_values_data.len() as u32,
-            ));
-            let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyDirectoryVersion
-            let _ = larger_values_data.write_u16::<LittleEndian>(1u16); // KeyRevision
-            let _ = larger_values_data.write_u16::<LittleEndian>(0u16); // MinorRevision
-            let _ = larger_values_data.write_u16::<LittleEndian>(gk_entries.len() as u16); // NumberOfKeys
-
-            for entry in gk_entries {
-                let _ = larger_values_data.write_u16::<LittleEndian>(entry.tag); // KeyID
-                let _ = larger_values_data.write_u16::<LittleEndian>(entry.location); // TIFFTagLocation
-                let _ = larger_values_data.write_u16::<LittleEndian>(entry.count); // Count
-                let _ = larger_values_data.write_u16::<LittleEndian>(entry.value_offset); // Value_Offset
-            }
-
-            if double_params.len() > 0 {
-                // create the GeoDoubleParamsTag tag (34736)
-                ifd_entries.push(IfdEntry::new(
-                    TAG_GEODOUBLEPARAMSTAG,
-                    DT_DOUBLE,
-                    double_params.len() as u32,
-                    larger_values_data.len() as u32,
-                ));
-                for double_val in double_params {
-                    let _ = larger_values_data.write_f64::<LittleEndian>(double_val);
-                }
-            }
-
-            if ascii_params.len() > 0 {
-                // create the GeoAsciiParamsTag tag (34737)
-                let mut ascii_params_bytes = ascii_params.into_bytes();
-                ascii_params_bytes.push(0);
-                ifd_entries.push(IfdEntry::new(
-                    TAG_GEOASCIIPARAMSTAG,
-                    DT_ASCII,
-                    ascii_params_bytes.len() as u32,
-                    larger_values_data.len() as u32,
-                ));
-                if ascii_params_bytes.len() % 2 == 1 {
-                    // it has to end on a word so that the next value starts on a word
-                    ascii_params_bytes.push(0);
-                }
-                let _ = larger_values_data.write_all(&ascii_params_bytes);
-            }
-        } else {
-            // let num_keys = (r.configs.geo_key_directory.len() - 4) / 4;
-            // output the GeoKeyDirectoryTag tag (34735)
-            ifd_entries.push(IfdEntry::new(
-                TAG_GEOKEYDIRECTORYTAG,
-                DT_SHORT,
-                r.configs.geo_key_directory.len() as u32,
-                larger_values_data.len() as u32,
-            ));
-            for val in &r.configs.geo_key_directory {
-                let _ = larger_values_data.write_u16::<LittleEndian>(*val);
-            }
-
-            if r.configs.geo_double_params.len() > 0 {
-                // create the GeoDoubleParamsTag tag (34736)
-                ifd_entries.push(IfdEntry::new(
-                    TAG_GEODOUBLEPARAMSTAG,
-                    DT_DOUBLE,
-                    r.configs.geo_double_params.len() as u32,
-                    larger_values_data.len() as u32,
-                ));
-                for double_val in &r.configs.geo_double_params {
-                    let _ = larger_values_data.write_f64::<LittleEndian>(*double_val);
-                }
-            }
-
-            if !r.configs.geo_ascii_params.is_empty() {
-                // create the GeoAsciiParamsTag tag (34737)
-                let mut ascii_params_bytes = r.configs.geo_ascii_params.clone().into_bytes();
-                ascii_params_bytes.push(0);
-                ifd_entries.push(IfdEntry::new(
-                    TAG_GEOASCIIPARAMSTAG,
-                    DT_ASCII,
-                    ascii_params_bytes.len() as u32,
-                    larger_values_data.len() as u32,
-                ));
-                if ascii_params_bytes.len() % 2 == 1 {
-                    // it has to end on a word so that the next value starts on a word
-                    ascii_params_bytes.push(0);
-                }
-                let _ = larger_values_data.write_all(&ascii_params_bytes);
-            }
-        }
-
-        ///////////////////
-        // Write the IFD //
-        ///////////////////
-
-        // Number of Directory Entries.
-        writer.write_u16::<LittleEndian>(ifd_entries.len() as u16)?;
-
-        // Sort the IFD entries
-        ifd_entries.sort_by(|a, b| a.tag.cmp(&b.tag));
-
-        // Write the entries
-        let ifd_length = 2u32 + ifd_entries.len() as u32 * 12u32 + 4u32;
-
-        for ifde in ifd_entries {
-            writer.write_u16::<LittleEndian>(ifde.tag)?; // Tag
-            writer.write_u16::<LittleEndian>(ifde.ifd_type)?; // Field type
-            writer.write_u32::<LittleEndian>(ifde.num_values)?; // Num of values
-            if ifde.ifd_type == DT_SHORT && ifde.num_values == 1 {
-                // it's a value
-                writer.write_u16::<LittleEndian>(ifde.offset as u16)?; // Value
-                writer.write_u16::<LittleEndian>(0u16)?; // Fill the remaining 2 right bytes of the u32
-            } else if ifde.ifd_type == DT_LONG && ifde.num_values == 1 {
-                // it's a value
-                writer.write_u32::<LittleEndian>(ifde.offset)?;
-            } else if ifde.ifd_type == DT_SHORT && ifde.num_values == 2 {
-                // I'm not really sure about this one. Two shorts will fit in the value_offset, but will they be interpreted correctly?
-                writer.write_u32::<LittleEndian>(ifde.offset)?; // Value
-            } else {
-                // it's an offset
-                writer.write_u32::<LittleEndian>(ifd_start + ifd_length + ifde.offset)?;
-            }
-        }
-
-        // 4-byte offset of the next IFD; Note, only single image TIFFs are currently supported
-        // and therefore, this will always be set to '0'.
-        writer.write_u32::<LittleEndian>(0u32)?;
-
-        //////////////////////////////////
-        // Write the larger_values_data //
-        //////////////////////////////////
-        writer.write_all(&larger_values_data)?;
+    ////////////////////////////
+    // Create the IFD entries //
+    ////////////////////////////
 
     /*
         Required Fields for Bilevel Images
@@ -2331,333 +1864,166 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         - YResolution
         - ResolutionUnit
     */
-    } else {
-        //////////////////////
-        // Write the header //
-        //////////////////////
-        writer.write_all("MM".as_bytes())?;
-        // magic number
-        writer.write_u16::<BigEndian>(42u16)?;
-        // offset to first IFD
-        let total_bytes_per_pixel = r.configs.data_type.get_data_size();
-        if total_bytes_per_pixel == 0 {
+
+    let mut ifd_entries: Vec<Entry> = vec![];
+    // let mut larger_values_data: Vec<u8> = vec![];
+    let mut larger_values_data = ByteOrderWriter::<Vec<u8>>::new(vec![], r.configs.endian);
+
+    /*
+    Classic TIFF IFD entries
+
+    Bytes 0-1 The Tag that identifies the field.
+    Bytes 2-3 The field Type.
+    Bytes 4-7 The number of values, Count of the indicated Type.
+    Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
+    The Value is expected to begin on a word boundary; the corresponding
+    Value Offset will thus be an even number. This file offset may
+    point anywhere in the file, even after the image data.
+
+    To save time and space the Value Offset contains the Value instead of pointing to
+    the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
+    bytes, it is left-justified within the 4-byte Value Offset, i.e., stored in the lowernumbered
+    bytes. Whether the Value fits within 4 bytes is determined by the Type
+    and Count of the field.
+    */
+
+    // ImageWidth tag (256)
+    ifd_entries.push(Entry::new(
+        TAG_IMAGEWIDTH,
+        DT_LONG,
+        1u64,
+        r.configs.columns as u64,
+    ));
+
+    // ImageLength tag (257)
+    ifd_entries.push(Entry::new(
+        TAG_IMAGELENGTH,
+        DT_LONG,
+        1u64,
+        r.configs.rows as u64,
+    ));
+
+    let bits_per_sample = match r.configs.data_type {
+        DataType::I8 | DataType::U8 => 8u16,
+        DataType::I16 | DataType::U16 => 16u16,
+        DataType::I32 | DataType::U32 | DataType::F32 => 32u16,
+        DataType::I64 | DataType::U64 | DataType::F64 => 64u16,
+        DataType::RGB24 => 8u16,
+        DataType::RGBA32 => 8u16,
+        DataType::RGB48 => 16u16,
+        _ => {
             return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
         }
-        let mut ifd_start = (8usize
-            + r.configs.rows as usize * r.configs.columns as usize * total_bytes_per_pixel)
-            as u32; // plus the 8-byte header
-        let mut ifd_start_needs_extra_byte = false;
-        if ifd_start % 2 == 1 {
-            ifd_start += 1;
-            ifd_start_needs_extra_byte = true;
-        }
-        writer.write_u32::<BigEndian>(ifd_start)?;
+    };
 
-        //////////////////////////////
-        // Write the image the data //
-        //////////////////////////////
-        match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous
-            | PhotometricInterpretation::Categorical
-            | PhotometricInterpretation::Boolean => match r.configs.data_type {
-                DataType::F64 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_f64::<BigEndian>(r.data[i])?;
-                        }
-                    }
-                }
-                DataType::F32 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_f32::<BigEndian>(r.data[i] as f32)?;
-                        }
-                    }
-                }
-                DataType::U64 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u64::<BigEndian>(r.data[i] as u64)?;
-                        }
-                    }
-                }
-                DataType::U32 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u32::<BigEndian>(r.data[i] as u32)?;
-                        }
-                    }
-                }
-                DataType::U16 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_u16::<BigEndian>(r.data[i] as u16)?;
-                        }
-                    }
-                }
-                DataType::U8 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write(&[r.data[i] as u8])?;
-                        }
-                    }
-                }
-                DataType::I64 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i64::<BigEndian>(r.data[i] as i64)?;
-                        }
-                    }
-                }
-                DataType::I32 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i32::<BigEndian>(r.data[i] as i32)?;
-                        }
-                    }
-                }
-                DataType::I16 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write_i16::<BigEndian>(r.data[i] as i16)?;
-                        }
-                    }
-                }
-                DataType::I8 => {
-                    let mut i: usize;
-                    for row in 0..r.configs.rows {
-                        for col in 0..r.configs.columns {
-                            i = row * r.configs.columns + col;
-                            writer.write(&[r.data[i] as u8])?;
-                        }
-                    }
-                }
-                _ => {
-                    return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-                }
-            },
-            PhotometricInterpretation::RGB => {
-                match r.configs.data_type {
-                    DataType::RGB24 => {
-                        let mut bytes: [u8; 3] = [0u8; 3];
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                // writer.write_u24::<BigEndian>(r.data[i] as u32)?;
-                                let val = r.data[i] as u32;
-                                bytes[0] = ((val >> 16u32) & 0xFF) as u8; // red
-                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[2] = (val & 0xFF) as u8; // blue
-                                writer.write(&bytes)?;
-                            }
-                        }
-                    }
-                    DataType::RGBA32 => {
-                        let mut i: usize;
-                        for row in 0..r.configs.rows {
-                            for col in 0..r.configs.columns {
-                                i = row * r.configs.columns + col;
-                                let val = r.data[i] as u32;
-                                let val2 = ((val >> 24u32) & 0xFF)
-                                    | ((val >> 16u32) & 0xFF)
-                                    | ((val >> 8u32) & 0xFF)
-                                    | (val & 0xFF);
-                                writer.write_u32::<BigEndian>(val2)?;
-                            }
-                        }
-                    }
-                    _ => {
-                        return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-                    }
-                }
-            }
-            PhotometricInterpretation::Paletted => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Paletted GeoTIFFs are currently unsupported for writing.",
-                ));
-            }
-            PhotometricInterpretation::Unknown => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error while writing GeoTIFF file.",
-                ));
+    let samples_per_pixel = match r.configs.data_type {
+        DataType::I8 | DataType::U8 => 1u16,
+        DataType::I16 | DataType::U16 => 1u16,
+        DataType::I32 | DataType::U32 | DataType::F32 => 1u16,
+        DataType::I64 | DataType::U64 | DataType::F64 => 1u16,
+        DataType::RGB24 => 3u16,
+        DataType::RGBA32 => 4u16,
+        DataType::RGB48 => 3u16,
+        _ => {
+            return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
+        }
+    };
+
+    // BitsPerSample tag (258)
+    if r.configs.photometric_interp != PhotometricInterpretation::Boolean {
+        if samples_per_pixel == 1 {
+            ifd_entries.push(Entry::new(
+                TAG_BITSPERSAMPLE,
+                DT_SHORT,
+                samples_per_pixel as u64,
+                bits_per_sample as u64,
+            ));
+        } else {
+            ifd_entries.push(Entry::new(
+                TAG_BITSPERSAMPLE,
+                DT_SHORT,
+                samples_per_pixel as u64,
+                larger_values_data.len() as u64,
+            ));
+            for _ in 0..samples_per_pixel {
+                larger_values_data.write_u16(bits_per_sample)?;
             }
         }
+    }
 
-        // This is just because the IFD must start on a word (i.e. an even value). If the data are
-        // single bytes, then this may not be the case.
-        if ifd_start_needs_extra_byte {
-            writer.write_u8(0u8)?;
+    // Compression tag (259)
+    ifd_entries.push(Entry::new(
+        TAG_COMPRESSION,
+        DT_SHORT,
+        1u64,
+        COMPRESS_NONE as u64,
+    ));
+
+    // PhotometricInterpretation tag (262)
+    let pi = match r.configs.photometric_interp {
+        PhotometricInterpretation::Continuous => PI_BLACKISZERO,
+        PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
+            PI_PALETTED
         }
-
-        ////////////////////////////
-        // Create the IFD entries //
-        ////////////////////////////
-
-        let mut ifd_entries: Vec<IfdEntry> = vec![];
-        let mut larger_values_data: Vec<u8> = vec![];
-
-        /*
-        IFD entries
-
-        Bytes 0-1 The Tag that identifies the field.
-        Bytes 2-3 The field Type.
-        Bytes 4-7 The number of values, Count of the indicated Type.
-        Bytes 8-11 The Value Offset, the file offset (in bytes) of the Value for the field.
-        The Value is expected to begin on a word boundary; the corresponding
-        Value Offset will thus be an even number. This file offset may
-        point anywhere in the file, even after the image data.
-
-        To save time and space the Value Offset contains the Value instead of pointing to
-        the Value if and only if the Value fits into 4 bytes. If the Value is shorter than 4
-        bytes, it is left-justified within the 4-byte Value Offset, i.e., stored in the lowernumbered
-        bytes. Whether the Value fits within 4 bytes is determined by the Type
-        and Count of the field.
-        */
-
-        // ImageWidth tag (256)
-        ifd_entries.push(IfdEntry::new(
-            TAG_IMAGEWIDTH,
-            DT_LONG,
-            1u32,
-            r.configs.columns as u32,
-        ));
-
-        // ImageLength tag (257)
-        ifd_entries.push(IfdEntry::new(
-            TAG_IMAGELENGTH,
-            DT_LONG,
-            1u32,
-            r.configs.rows as u32,
-        ));
-
-        let bits_per_sample = match r.configs.data_type {
-            DataType::I8 | DataType::U8 => 8u16,
-            DataType::I16 | DataType::U16 => 16u16,
-            DataType::I32 | DataType::U32 | DataType::F32 => 32u16,
-            DataType::I64 | DataType::U64 | DataType::F64 => 64u16,
-            DataType::RGB24 => 8u16,
-            DataType::RGBA32 => 8u16,
-            DataType::RGB48 => 16u16,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-
-        let samples_per_pixel = match r.configs.data_type {
-            DataType::I8 | DataType::U8 => 1u16,
-            DataType::I16 | DataType::U16 => 1u16,
-            DataType::I32 | DataType::U32 | DataType::F32 => 1u16,
-            DataType::I64 | DataType::U64 | DataType::F64 => 1u16,
-            DataType::RGB24 => 3u16,
-            DataType::RGBA32 => 4u16,
-            DataType::RGB48 => 3u16,
-            _ => {
-                return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
-            }
-        };
-
-        // BitsPerSample tag (258)
-        if r.configs.photometric_interp != PhotometricInterpretation::Boolean {
-            if samples_per_pixel == 1 {
-                ifd_entries.push(IfdEntry::new(
-                    TAG_BITSPERSAMPLE,
-                    DT_SHORT,
-                    samples_per_pixel as u32,
-                    bits_per_sample as u32,
-                ));
-            } else {
-                ifd_entries.push(IfdEntry::new(
-                    TAG_BITSPERSAMPLE,
-                    DT_SHORT,
-                    samples_per_pixel as u32,
-                    larger_values_data.len() as u32,
-                ));
-                for _ in 0..samples_per_pixel {
-                    let _ = larger_values_data.write_u16::<BigEndian>(bits_per_sample);
-                }
-            }
+        PhotometricInterpretation::Boolean => PI_BLACKISZERO,
+        PhotometricInterpretation::RGB => PI_RGB,
+        PhotometricInterpretation::Unknown => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Error while writing GeoTIFF file. Unknown Photometric Interpretation.",
+            ));
         }
+    };
+    ifd_entries.push(Entry::new(
+        TAG_PHOTOMETRICINTERPRETATION,
+        DT_SHORT,
+        1u64,
+        pi as u64,
+    ));
 
-        // Compression tag (259)
-        ifd_entries.push(IfdEntry::new(
-            TAG_COMPRESSION,
-            DT_SHORT,
-            1u32,
-            COMPRESS_NONE as u32,
-        ));
-
-        // PhotometricInterpretation tag (262)
-        let pi = match r.configs.photometric_interp {
-            PhotometricInterpretation::Continuous => PI_BLACKISZERO,
-            PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
-                PI_PALETTED
-            }
-            PhotometricInterpretation::Boolean => PI_BLACKISZERO,
-            PhotometricInterpretation::RGB => PI_RGB,
-            PhotometricInterpretation::Unknown => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error while writing GeoTIFF file. Unknown Photometric Interpretation.",
-                ));
-            }
-        };
-        ifd_entries.push(IfdEntry::new(
-            TAG_PHOTOMETRICINTERPRETATION,
-            DT_SHORT,
-            1u32,
-            pi as u32,
-        ));
-
-        // StripOffsets tag (273)
-        ifd_entries.push(IfdEntry::new(
+    // StripOffsets tag (273)
+    if !is_big_tiff {
+        ifd_entries.push(Entry::new(
             TAG_STRIPOFFSETS,
             DT_LONG,
-            r.configs.columns as u32,
-            larger_values_data.len() as u32,
+            r.configs.rows as u64,
+            larger_values_data.len() as u64,
         ));
         let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
         for i in 0..r.configs.rows as u32 {
-            let _ = larger_values_data.write_u32::<BigEndian>(8u32 + row_length_in_bytes * i);
+            larger_values_data.write_u32(8u32 + row_length_in_bytes * i)?;
         }
-
-        // SamplesPerPixel tag (277)
-        ifd_entries.push(IfdEntry::new(
-            TAG_SAMPLESPERPIXEL,
-            DT_SHORT,
-            1u32,
-            samples_per_pixel as u32,
+    } else {
+        ifd_entries.push(Entry::new(
+            TAG_STRIPOFFSETS,
+            DT_TIFF_LONG8,
+            r.configs.rows as u64,
+            larger_values_data.len() as u64,
         ));
+        let row_length_in_bytes: u64 = r.configs.columns as u64 * total_bytes_per_pixel as u64;
+        for i in 0..r.configs.rows as u64 {
+            larger_values_data.write_u64(8u64 + row_length_in_bytes * i)?;
+        }
+    }
 
-        // RowsPerStrip tag (278)
-        ifd_entries.push(IfdEntry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u32, 1u32));
+    // SamplesPerPixel tag (277)
+    ifd_entries.push(Entry::new(
+        TAG_SAMPLESPERPIXEL,
+        DT_SHORT,
+        1u64,
+        samples_per_pixel as u64,
+    ));
 
-        // StripByteCounts tag (279)
-        ifd_entries.push(IfdEntry::new(
+    // RowsPerStrip tag (278)
+    ifd_entries.push(Entry::new(TAG_ROWSPERSTRIP, DT_SHORT, 1u64, 1u64));
+
+    // StripByteCounts tag (279)
+    if !is_big_tiff {
+        ifd_entries.push(Entry::new(
             TAG_STRIPBYTECOUNTS,
             DT_LONG,
-            r.configs.columns as u32,
-            larger_values_data.len() as u32,
+            r.configs.rows as u64,
+            larger_values_data.len() as u64,
         ));
         let total_bytes_per_pixel = match r.configs.data_type {
             DataType::I8 | DataType::U8 => 1u32,
@@ -2673,105 +2039,172 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         };
         let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel;
         for _ in 0..r.configs.rows as u32 {
-            let _ = larger_values_data.write_u32::<BigEndian>(row_length_in_bytes);
+            larger_values_data.write_u32(row_length_in_bytes)?;
         }
-
-        // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
-        // XResolution tag (282)
-        ifd_entries.push(IfdEntry::new(
-            TAG_XRESOLUTION,
-            DT_RATIONAL,
-            1u32,
-            larger_values_data.len() as u32,
+    } else {
+        ifd_entries.push(Entry::new(
+            TAG_STRIPBYTECOUNTS,
+            DT_TIFF_LONG8,
+            r.configs.rows as u64,
+            larger_values_data.len() as u64,
         ));
-        let _ = larger_values_data.write_u32::<BigEndian>(72u32);
-        let _ = larger_values_data.write_u32::<BigEndian>(1u32);
-
-        // YResolution tag (283)
-        ifd_entries.push(IfdEntry::new(
-            TAG_YRESOLUTION,
-            DT_RATIONAL,
-            1u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_u32::<BigEndian>(72u32);
-        let _ = larger_values_data.write_u32::<BigEndian>(1u32);
-
-        // ResolutionUnit tag (296)
-        ifd_entries.push(IfdEntry::new(TAG_RESOLUTIONUNIT, DT_SHORT, 1u32, 2u32));
-
-        // Software tag (305)
-        let software = "WhiteboxTools".to_owned();
-        let mut soft_bytes = software.into_bytes();
-        soft_bytes.push(0);
-        ifd_entries.push(IfdEntry::new(
-            TAG_SOFTWARE,
-            DT_ASCII,
-            soft_bytes.len() as u32,
-            larger_values_data.len() as u32,
-        ));
-        let _ = larger_values_data.write_all(&soft_bytes);
-
-        // SampleFormat tag (339)
-        let samples_format = match r.configs.data_type {
-            DataType::U8 | DataType::U16 | DataType::U32 | DataType::U64 => 1u16,
-            DataType::I8 | DataType::I16 | DataType::I32 | DataType::I64 => 2u16,
-            DataType::F32 | DataType::F64 => 3u16,
-            DataType::RGB24 | DataType::RGBA32 | DataType::RGB48 => 1u16,
+        let total_bytes_per_pixel = match r.configs.data_type {
+            DataType::I8 | DataType::U8 => 1u64,
+            DataType::I16 | DataType::U16 => 2u64,
+            DataType::I32 | DataType::U32 | DataType::F32 => 4u64,
+            DataType::I64 | DataType::U64 | DataType::F64 => 8u64,
+            DataType::RGB24 => 3u64,
+            DataType::RGBA32 => 4u64,
+            DataType::RGB48 => 6u64,
             _ => {
                 return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
             }
         };
-        if samples_per_pixel == 1 {
-            ifd_entries.push(IfdEntry::new(
-                TAG_SAMPLEFORMAT,
-                DT_SHORT,
-                samples_per_pixel as u32,
-                samples_format as u32,
-            ));
-        } else {
-            ifd_entries.push(IfdEntry::new(
-                TAG_SAMPLEFORMAT,
-                DT_SHORT,
-                samples_per_pixel as u32,
-                larger_values_data.len() as u32,
-            ));
-            for _ in 0..samples_per_pixel {
-                let _ = larger_values_data.write_u16::<BigEndian>(samples_format);
-            }
+        let row_length_in_bytes: u64 = r.configs.columns as u64 * total_bytes_per_pixel;
+        for _ in 0..r.configs.rows as u32 {
+            larger_values_data.write_u64(row_length_in_bytes)?;
         }
+    }
 
-        // ModelTiepointTag tag (33550)
-        ifd_entries.push(IfdEntry::new(
+    // There is currently no support for storing the image resolution, so give a bogus value of 72x72 dpi.
+    // XResolution tag (282)
+    ifd_entries.push(Entry::new(
+        TAG_XRESOLUTION,
+        DT_RATIONAL,
+        1u64,
+        larger_values_data.len() as u64,
+    ));
+    larger_values_data.write_u32(72u32)?;
+    larger_values_data.write_u32(1u32)?;
+
+    // YResolution tag (283)
+    ifd_entries.push(Entry::new(
+        TAG_YRESOLUTION,
+        DT_RATIONAL,
+        1u64,
+        larger_values_data.len() as u64,
+    ));
+    larger_values_data.write_u32(72u32)?;
+    larger_values_data.write_u32(1u32)?;
+
+    // ResolutionUnit tag (296)
+    ifd_entries.push(Entry::new(TAG_RESOLUTIONUNIT, DT_SHORT, 1u64, 2u64));
+
+    // Software tag (305)
+    let software = "WhiteboxTools".to_owned();
+    let mut soft_bytes = software.into_bytes();
+    soft_bytes.push(0);
+    ifd_entries.push(Entry::new(
+        TAG_SOFTWARE,
+        DT_ASCII,
+        soft_bytes.len() as u64,
+        larger_values_data.len() as u64,
+    ));
+    larger_values_data.write_bytes(&soft_bytes)?;
+
+    if samples_per_pixel == 4 {
+        // ExtraSamples tag (338)
+        ifd_entries.push(Entry::new(TAG_EXTRASAMPLES, DT_SHORT, 1u64, 2u64));
+    }
+
+    // SampleFormat tag (339)
+    let samples_format = match r.configs.data_type {
+        DataType::U8 | DataType::U16 | DataType::U32 | DataType::U64 => 1u16,
+        DataType::I8 | DataType::I16 | DataType::I32 | DataType::I64 => 2u16,
+        DataType::F32 | DataType::F64 => 3u16,
+        DataType::RGB24 | DataType::RGBA32 | DataType::RGB48 => 1u16,
+        _ => {
+            return Err(Error::new(ErrorKind::InvalidData, "Unknown data type."));
+        }
+    };
+    if samples_per_pixel == 1 {
+        ifd_entries.push(Entry::new(
+            TAG_SAMPLEFORMAT,
+            DT_SHORT,
+            samples_per_pixel as u64,
+            samples_format as u64,
+        ));
+    } else {
+        ifd_entries.push(Entry::new(
+            TAG_SAMPLEFORMAT,
+            DT_SHORT,
+            samples_per_pixel as u64,
+            larger_values_data.len() as u64,
+        ));
+        for _ in 0..samples_per_pixel {
+            larger_values_data.write_u16(samples_format)?;
+        }
+    }
+
+    // ModelPixelScaleTag tag (33550)
+    if r.configs.model_pixel_scale[0] == 0f64 && r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
+        ifd_entries.push(Entry::new(
             TAG_MODELPIXELSCALETAG,
             DT_DOUBLE,
-            3u32,
-            larger_values_data.len() as u32,
+            3u64,
+            larger_values_data.len() as u64,
         ));
-        let _ = larger_values_data.write_f64::<BigEndian>(r.configs.resolution_x);
-        let _ = larger_values_data.write_f64::<BigEndian>(r.configs.resolution_y);
-        let _ = larger_values_data.write_f64::<BigEndian>(0f64);
+        larger_values_data.write_f64(r.configs.resolution_x)?;
+        larger_values_data.write_f64(r.configs.resolution_y)?;
+        larger_values_data.write_f64(0f64)?;
+    } else if r.configs.model_pixel_scale[0] != 0f64 {
+        ifd_entries.push(Entry::new(
+            TAG_MODELPIXELSCALETAG,
+            DT_DOUBLE,
+            3u64,
+            larger_values_data.len() as u64,
+        ));
+        larger_values_data.write_f64(r.configs.model_pixel_scale[0])?;
+        larger_values_data.write_f64(r.configs.model_pixel_scale[1])?;
+        larger_values_data.write_f64(r.configs.model_pixel_scale[2])?;
+    }
 
-        // ModelPixelScaleTag tag (33922)
-        ifd_entries.push(IfdEntry::new(
+    if r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
+        // ModelTiepointTag tag (33922)
+        ifd_entries.push(Entry::new(
             TAG_MODELTIEPOINTTAG,
             DT_DOUBLE,
-            6u32,
-            larger_values_data.len() as u32,
+            6u64,
+            larger_values_data.len() as u64,
         ));
-        let _ = larger_values_data.write_f64::<BigEndian>(0f64); // I
-        let _ = larger_values_data.write_f64::<BigEndian>(0f64); // J
-        let _ = larger_values_data.write_f64::<BigEndian>(0f64); // K
-        let _ = larger_values_data.write_f64::<BigEndian>(r.configs.west); // X
-        let _ = larger_values_data.write_f64::<BigEndian>(r.configs.north); // Y
-        let _ = larger_values_data.write_f64::<BigEndian>(0f64); // Z
+        larger_values_data.write_f64(0f64)?; // I
+        larger_values_data.write_f64(0f64)?; // J
+        larger_values_data.write_f64(0f64)?; // K
+        larger_values_data.write_f64(r.configs.west)?; // X
+        larger_values_data.write_f64(r.configs.north)?; // Y
+        larger_values_data.write_f64(0f64)?; // Z
+    } else if !r.configs.model_tiepoint.is_empty() {
+        // ModelTiepointTag tag (33922)
+        ifd_entries.push(Entry::new(
+            TAG_MODELTIEPOINTTAG,
+            DT_DOUBLE,
+            r.configs.model_tiepoint.len() as u64,
+            larger_values_data.len() as u64,
+        ));
+        for i in 0..r.configs.model_tiepoint.len() {
+            larger_values_data.write_f64(r.configs.model_tiepoint[i])?;
+        }
+    }
 
-        // TAG_GDAL_NODATA tag (42113)
-        let nodata_str = format!("{}", r.configs.nodata);
-        let mut nodata_bytes = nodata_str.into_bytes();
-        // For reasons I don't fully understand, alignment errors occur
-        // if the nodata string is fewer than 4 characters. In this case
-        // we buffer the string with spaces to lengthen it.
+    if r.configs.model_transformation[0] != 0f64 {
+        // ModelTransformationTag tag (33920)
+        ifd_entries.push(Entry::new(
+            TAG_MODELTRANSFORMATIONTAG,
+            DT_DOUBLE,
+            16u64,
+            larger_values_data.len() as u64,
+        ));
+        for i in 0..16 {
+            larger_values_data.write_f64(r.configs.model_transformation[i])?;
+        }
+    }
+
+    // TAG_GDAL_NODATA tag (42113)
+    let nodata_str = format!("{}", r.configs.nodata);
+    let mut nodata_bytes = nodata_str.into_bytes();
+    if !is_big_tiff {
+        // we buffer this string with spaces to ensure that it is
+        // long enough to be printed to larger_values_data.
         if nodata_bytes.len() < 4 {
             for _ in 0..(4 - nodata_bytes.len()) {
                 nodata_bytes.push(32);
@@ -2781,260 +2214,277 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             nodata_bytes.push(32);
         }
         nodata_bytes.push(0);
-        // println!("nodata_bytes: {:?}", nodata_bytes);
-        ifd_entries.push(IfdEntry::new(
+        ifd_entries.push(Entry::new(
             TAG_GDAL_NODATA,
             DT_ASCII,
-            nodata_bytes.len() as u32,
-            larger_values_data.len() as u32,
+            nodata_bytes.len() as u64,
+            larger_values_data.len() as u64,
         ));
-        // if nodata_bytes.len() % 2 == 1 {
-        //     nodata_bytes.push(0);
-        // }
-        let _ = larger_values_data.write_all(&nodata_bytes);
-
-        let kw_map = get_keyword_map();
-        let geographic_type_map = match kw_map.get(&2048u16) {
-            Some(map) => map,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error generating geographic type map.",
-                ))
+        larger_values_data.write_bytes(&nodata_bytes)?;
+    } else {
+        // we buffer this string with spaces to ensure that it is
+        // long enough to be printed to larger_values_data.
+        if nodata_bytes.len() < 8 {
+            for _ in 0..(8 - nodata_bytes.len()) {
+                nodata_bytes.push(32);
             }
-        };
-        let projected_cs_type_map = match kw_map.get(&3072u16) {
-            Some(map) => map,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "Error generating projected coordinate system type map.",
-                ))
-            }
-        };
+        }
+        if nodata_bytes.len() % 2 == 0 {
+            nodata_bytes.push(32);
+        }
+        nodata_bytes.push(0);
+        ifd_entries.push(Entry::new(
+            TAG_GDAL_NODATA,
+            DT_ASCII,
+            nodata_bytes.len() as u64,
+            larger_values_data.len() as u64,
+        ));
+        larger_values_data.write_bytes(&nodata_bytes)?;
+    }
 
-        //let key_map = get_keys_map();
-        let mut gk_entries: Vec<GeoKeyEntry> = vec![];
-        let mut ascii_params = String::new(); //: Vec<u8> = vec![];
-        let double_params: Vec<f64> = vec![];
-        if geographic_type_map.contains_key(&r.configs.epsg_code) {
-            // tGTModelTypeGeoKey (1024)
+    let kw_map = get_keyword_map();
+    let geographic_type_map = match kw_map.get(&2048u16) {
+        Some(map) => map,
+        None => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Error generating geographic type map.",
+            ))
+        }
+    };
+    let projected_cs_type_map = match kw_map.get(&3072u16) {
+        Some(map) => map,
+        None => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Error generating projected coordinate system type map.",
+            ))
+        }
+    };
+
+    //let key_map = get_keys_map();
+    let mut gk_entries: Vec<GeoKeyEntry> = vec![];
+    let mut ascii_params = String::new(); //: Vec<u8> = vec![];
+    let double_params: Vec<f64> = vec![];
+    if geographic_type_map.contains_key(&r.configs.epsg_code) {
+        // tGTModelTypeGeoKey (1024)
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_GTMODELTYPEGEOKEY,
+            location: 0u16,
+            count: 1u16,
+            value_offset: 2u16,
+        });
+
+        // GTRasterTypeGeoKey (1025)
+        if r.configs.pixel_is_area {
             gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: 2u16,
-            });
-
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 1u16,
-                });
-            } else {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 2u16,
-                });
-            }
-
-            // tGTCitationGeoKey (1026)
-            let mut v = String::from(
-                geographic_type_map
-                    .get(&r.configs.epsg_code)
-                    .unwrap()
-                    .clone(),
-            );
-            v.push_str("|");
-            v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTCITATIONGEOKEY,
-                location: 34737u16,
-                count: v.len() as u16,
-                value_offset: ascii_params.len() as u16,
-            });
-            ascii_params.push_str(&v);
-
-            // tGeographicTypeGeoKey (2048)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GEOGRAPHICTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: r.configs.epsg_code,
-            });
-
-            if r.configs.z_units.to_lowercase() != "not specified" {
-                // VerticalUnitsGeoKey (4099)
-                let units = r.configs.z_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
-        } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
-            // tGTModelTypeGeoKey (1024)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
+                tag: TAG_GTRASTERTYPEGEOKEY,
                 location: 0u16,
                 count: 1u16,
                 value_offset: 1u16,
             });
-
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 1u16,
-                });
-            } else {
-                gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
-                    location: 0u16,
-                    count: 1u16,
-                    value_offset: 2u16,
-                });
-            }
-
-            // tProjectedCSTypeGeoKey (3072)
-            gk_entries.push(GeoKeyEntry {
-                tag: TAG_PROJECTEDCSTYPEGEOKEY,
-                location: 0u16,
-                count: 1u16,
-                value_offset: r.configs.epsg_code,
-            });
-
-            // PCSCitationGeoKey (3073)
-            let mut v = String::from(
-                projected_cs_type_map
-                    .get(&r.configs.epsg_code)
-                    .unwrap()
-                    .clone(),
-            );
-            v.push_str("|");
-            v = v.replace("_", " ");
-            gk_entries.push(GeoKeyEntry {
-                tag: 3073u16,
-                location: 34737u16,
-                count: v.len() as u16,
-                value_offset: ascii_params.len() as u16,
-            });
-            ascii_params.push_str(&v);
-
-            if r.configs.xy_units.to_lowercase() != "not specified" {
-                // ProjLinearUnitsGeoKey (3076)
-                let units = r.configs.xy_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_PROJLINEARUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_PROJLINEARUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
-
-            if r.configs.z_units.to_lowercase() != "not specified" {
-                // VerticalUnitsGeoKey (4099)
-                let units = r.configs.z_units.to_lowercase();
-                if units.contains("met") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9001u16,
-                    });
-                } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
-                    gk_entries.push(GeoKeyEntry {
-                        tag: TAG_VERTICALUNITSGEOKEY,
-                        location: 0u16,
-                        count: 1u16,
-                        value_offset: 9002u16,
-                    });
-                }
-            }
         } else {
-            // we don't know much about the coordinate system used.
-
-            // tGTModelTypeGeoKey (1024)
             gk_entries.push(GeoKeyEntry {
-                tag: TAG_GTMODELTYPEGEOKEY,
+                tag: TAG_GTRASTERTYPEGEOKEY,
                 location: 0u16,
                 count: 1u16,
-                value_offset: 0u16,
+                value_offset: 2u16,
             });
+        }
 
-            // GTRasterTypeGeoKey (1025)
-            if r.configs.pixel_is_area {
+        // tGTCitationGeoKey (1026)
+        let mut v = String::from(
+            geographic_type_map
+                .get(&r.configs.epsg_code)
+                .unwrap()
+                .clone(),
+        );
+        v.push_str("|");
+        v = v.replace("_", " ");
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_GTCITATIONGEOKEY,
+            location: 34737u16,
+            count: v.len() as u16,
+            value_offset: ascii_params.len() as u16,
+        });
+        ascii_params.push_str(&v);
+
+        // tGeographicTypeGeoKey (2048)
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_GEOGRAPHICTYPEGEOKEY,
+            location: 0u16,
+            count: 1u16,
+            value_offset: r.configs.epsg_code,
+        });
+
+        if r.configs.z_units.to_lowercase() != "not specified" {
+            // VerticalUnitsGeoKey (4099)
+            let units = r.configs.z_units.to_lowercase();
+            if units.contains("met") {
                 gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    tag: TAG_VERTICALUNITSGEOKEY,
                     location: 0u16,
                     count: 1u16,
-                    value_offset: 1u16,
+                    value_offset: 9001u16,
                 });
-            } else {
+            } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
                 gk_entries.push(GeoKeyEntry {
-                    tag: TAG_GTRASTERTYPEGEOKEY,
+                    tag: TAG_VERTICALUNITSGEOKEY,
                     location: 0u16,
                     count: 1u16,
-                    value_offset: 2u16,
+                    value_offset: 9002u16,
+                });
+            }
+        }
+    } else if projected_cs_type_map.contains_key(&r.configs.epsg_code) {
+        // tGTModelTypeGeoKey (1024)
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_GTMODELTYPEGEOKEY,
+            location: 0u16,
+            count: 1u16,
+            value_offset: 1u16,
+        });
+
+        // GTRasterTypeGeoKey (1025)
+        if r.configs.pixel_is_area {
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTRASTERTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 1u16,
+            });
+        } else {
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTRASTERTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 2u16,
+            });
+        }
+
+        // tProjectedCSTypeGeoKey (3072)
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_PROJECTEDCSTYPEGEOKEY,
+            location: 0u16,
+            count: 1u16,
+            value_offset: r.configs.epsg_code,
+        });
+
+        // PCSCitationGeoKey (3073)
+        let mut v = String::from(
+            projected_cs_type_map
+                .get(&r.configs.epsg_code)
+                .unwrap()
+                .clone(),
+        );
+        v.push_str("|");
+        v = v.replace("_", " ");
+        gk_entries.push(GeoKeyEntry {
+            tag: 3073u16,
+            location: 34737u16,
+            count: v.len() as u16,
+            value_offset: ascii_params.len() as u16,
+        });
+        ascii_params.push_str(&v);
+
+        if r.configs.xy_units.to_lowercase() != "not specified" {
+            // ProjLinearUnitsGeoKey (3076)
+            let units = r.configs.xy_units.to_lowercase();
+            if units.contains("met") {
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_PROJLINEARUNITSGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 9001u16,
+                });
+            } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_PROJLINEARUNITSGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 9002u16,
                 });
             }
         }
 
+        if r.configs.z_units.to_lowercase() != "not specified" {
+            // VerticalUnitsGeoKey (4099)
+            let units = r.configs.z_units.to_lowercase();
+            if units.contains("met") {
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_VERTICALUNITSGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 9001u16,
+                });
+            } else if units.contains("ft") | units.contains("feet") | units.contains("foot") {
+                gk_entries.push(GeoKeyEntry {
+                    tag: TAG_VERTICALUNITSGEOKEY,
+                    location: 0u16,
+                    count: 1u16,
+                    value_offset: 9002u16,
+                });
+            }
+        }
+    } else {
+        // we don't know much about the coordinate system used.
+
+        // tGTModelTypeGeoKey (1024)
+        gk_entries.push(GeoKeyEntry {
+            tag: TAG_GTMODELTYPEGEOKEY,
+            location: 0u16,
+            count: 1u16,
+            value_offset: 0u16,
+        });
+
+        // GTRasterTypeGeoKey (1025)
+        if r.configs.pixel_is_area {
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTRASTERTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 1u16,
+            });
+        } else {
+            gk_entries.push(GeoKeyEntry {
+                tag: TAG_GTRASTERTYPEGEOKEY,
+                location: 0u16,
+                count: 1u16,
+                value_offset: 2u16,
+            });
+        }
+    }
+
+    if r.configs.geo_key_directory.is_empty() {
         // create the GeoKeyDirectoryTag tag (34735)
-        ifd_entries.push(IfdEntry::new(
+        ifd_entries.push(Entry::new(
             TAG_GEOKEYDIRECTORYTAG,
             DT_SHORT,
-            (4 + gk_entries.len() * 4) as u32,
-            larger_values_data.len() as u32,
+            (4 + gk_entries.len() * 4) as u64,
+            larger_values_data.len() as u64,
         ));
-        let _ = larger_values_data.write_u16::<BigEndian>(1u16); // KeyDirectoryVersion
-        let _ = larger_values_data.write_u16::<BigEndian>(1u16); // KeyRevision
-        let _ = larger_values_data.write_u16::<BigEndian>(0u16); // MinorRevision
-        let _ = larger_values_data.write_u16::<BigEndian>(gk_entries.len() as u16); // NumberOfKeys
+        larger_values_data.write_u16(1u16)?; // KeyDirectoryVersion
+        larger_values_data.write_u16(1u16)?; // KeyRevision
+        larger_values_data.write_u16(0u16)?; // MinorRevision
+        larger_values_data.write_u16(gk_entries.len() as u16)?; // NumberOfKeys
 
         for entry in gk_entries {
-            let _ = larger_values_data.write_u16::<BigEndian>(entry.tag); // KeyID
-            let _ = larger_values_data.write_u16::<BigEndian>(entry.location); // TIFFTagLocation
-            let _ = larger_values_data.write_u16::<BigEndian>(entry.count); // Count
-            let _ = larger_values_data.write_u16::<BigEndian>(entry.value_offset); // Value_Offset
+            larger_values_data.write_u16(entry.tag)?; // KeyID
+            larger_values_data.write_u16(entry.location)?; // TIFFTagLocation
+            larger_values_data.write_u16(entry.count)?; // Count
+            larger_values_data.write_u16(entry.value_offset)?; // Value_Offset
         }
 
         if double_params.len() > 0 {
             // create the GeoDoubleParamsTag tag (34736)
-            ifd_entries.push(IfdEntry::new(
+            ifd_entries.push(Entry::new(
                 TAG_GEODOUBLEPARAMSTAG,
                 DT_DOUBLE,
-                double_params.len() as u32,
-                larger_values_data.len() as u32,
+                double_params.len() as u64,
+                larger_values_data.len() as u64,
             ));
             for double_val in double_params {
-                let _ = larger_values_data.write_f64::<BigEndian>(double_val);
+                larger_values_data.write_f64(double_val)?;
             }
         }
 
@@ -3042,315 +2492,146 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             // create the GeoAsciiParamsTag tag (34737)
             let mut ascii_params_bytes = ascii_params.into_bytes();
             ascii_params_bytes.push(0);
-            ifd_entries.push(IfdEntry::new(
+            ifd_entries.push(Entry::new(
                 TAG_GEOASCIIPARAMSTAG,
                 DT_ASCII,
-                ascii_params_bytes.len() as u32,
-                larger_values_data.len() as u32,
+                ascii_params_bytes.len() as u64,
+                larger_values_data.len() as u64,
             ));
             if ascii_params_bytes.len() % 2 == 1 {
                 // it has to end on a word so that the next value starts on a word
                 ascii_params_bytes.push(0);
             }
-            let _ = larger_values_data.write_all(&ascii_params_bytes);
+            larger_values_data.write_bytes(&ascii_params_bytes)?;
+        }
+    } else {
+        // let num_keys = (r.configs.geo_key_directory.len() - 4) / 4;
+        // output the GeoKeyDirectoryTag tag (34735)
+        ifd_entries.push(Entry::new(
+            TAG_GEOKEYDIRECTORYTAG,
+            DT_SHORT,
+            r.configs.geo_key_directory.len() as u64,
+            larger_values_data.len() as u64,
+        ));
+        for val in &r.configs.geo_key_directory {
+            larger_values_data.write_u16(*val)?;
         }
 
-        ///////////////////
-        // Write the IFD //
-        ///////////////////
+        if r.configs.geo_double_params.len() > 0 {
+            // create the GeoDoubleParamsTag tag (34736)
+            ifd_entries.push(Entry::new(
+                TAG_GEODOUBLEPARAMSTAG,
+                DT_DOUBLE,
+                r.configs.geo_double_params.len() as u64,
+                larger_values_data.len() as u64,
+            ));
+            for double_val in &r.configs.geo_double_params {
+                larger_values_data.write_f64(*double_val)?;
+            }
+        }
 
-        // Number of Directory Entries.
-        writer.write_u16::<BigEndian>(ifd_entries.len() as u16)?;
+        if !r.configs.geo_ascii_params.is_empty() {
+            // create the GeoAsciiParamsTag tag (34737)
+            let mut ascii_params_bytes = r.configs.geo_ascii_params.clone().into_bytes();
+            ascii_params_bytes.push(0);
+            ifd_entries.push(Entry::new(
+                TAG_GEOASCIIPARAMSTAG,
+                DT_ASCII,
+                ascii_params_bytes.len() as u64,
+                larger_values_data.len() as u64,
+            ));
+            if ascii_params_bytes.len() % 2 == 1 {
+                // it has to end on a word so that the next value starts on a word
+                ascii_params_bytes.push(0);
+            }
+            larger_values_data.write_bytes(&ascii_params_bytes)?;
+        }
+    }
+
+    ///////////////////
+    // Write the IFD //
+    ///////////////////
+
+    // Number of Directory Entries.
+    if !is_big_tiff {
+        bow.write_u16(ifd_entries.len() as u16)?;
 
         // Sort the IFD entries
         ifd_entries.sort_by(|a, b| a.tag.cmp(&b.tag));
 
         // Write the entries
-        let ifd_length = 2u32 + ifd_entries.len() as u32 * 12u32 + 4u32;
+        let ifd_length = 2u64 + ifd_entries.len() as u64 * 12u64 + 4u64;
 
         for ifde in ifd_entries {
-            writer.write_u16::<BigEndian>(ifde.tag)?; // Tag
-            writer.write_u16::<BigEndian>(ifde.ifd_type)?; // Field type
-            writer.write_u32::<BigEndian>(ifde.num_values)?; // Num of values
+            bow.write_u16(ifde.tag)?; // Tag
+            bow.write_u16(ifde.ifd_type)?; // Field type
+            bow.write_u32(ifde.num_values as u32)?; // Num of values
             if ifde.ifd_type == DT_SHORT && ifde.num_values == 1 {
                 // it's a value
-                writer.write_u16::<BigEndian>(ifde.offset as u16)?; // Value
-                writer.write_u16::<BigEndian>(0u16)?; // Fill the remaining 2 right bytes of the u32
+                bow.write_u16(ifde.offset as u16)?; // Value
+                bow.write_u16(0u16)?; // Fill the remaining 2 right bytes of the u32
             } else if ifde.ifd_type == DT_LONG && ifde.num_values == 1 {
                 // it's a value
-                writer.write_u32::<BigEndian>(ifde.offset)?;
+                bow.write_u32(ifde.offset as u32)?;
             } else if ifde.ifd_type == DT_SHORT && ifde.num_values == 2 {
                 // I'm not really sure about this one. Two shorts will fit in the value_offset, but will they be interpreted correctly?
-                writer.write_u32::<BigEndian>(ifde.offset)?; // Value
+                bow.write_u32(ifde.offset as u32)?; // Value
             } else {
                 // it's an offset
-                writer.write_u32::<BigEndian>(ifd_start + ifd_length + ifde.offset)?;
+                bow.write_u32(ifd_start as u32 + ifd_length as u32 + ifde.offset as u32)?;
             }
         }
 
         // 4-byte offset of the next IFD; Note, only single image TIFFs are currently supported
         // and therefore, this will always be set to '0'.
-        writer.write_u32::<BigEndian>(0u32)?;
+        bow.write_u32(0u32)?;
+    } else {
+        bow.write_u64(ifd_entries.len() as u64)?;
 
-        //////////////////////////////////
-        // Write the larger_values_data //
-        //////////////////////////////////
-        writer.write_all(&larger_values_data)?;
+        // Sort the IFD entries
+        ifd_entries.sort_by(|a, b| a.tag.cmp(&b.tag));
+
+        // Write the entries
+        let ifd_length = 8u64 + ifd_entries.len() as u64 * 20u64 + 8u64;
+
+        for ifde in ifd_entries {
+            bow.write_u16(ifde.tag)?; // Tag
+            bow.write_u16(ifde.ifd_type)?; // Field type
+            bow.write_u64(ifde.num_values)?; // Num of values
+            if ifde.ifd_type == DT_SHORT && ifde.num_values == 1 {
+                // it's a value
+                bow.write_u16(ifde.offset as u16)?; // Value
+                bow.write_u16(0u16)?; // Fill the remaining bytes of the u64
+                bow.write_u32(0u32)?; // Fill the remaining bytes of the u64
+            } else if ifde.ifd_type == DT_SHORT && ifde.num_values == 2 {
+                // I'm not really sure about this one. Two shorts will fit in the value_offset, but will they be interpreted correctly?
+                bow.write_u32(ifde.offset as u32)?; // Value
+                bow.write_u32(0u32)?; // Fill the remaining bytes of the u64
+            } else if ifde.ifd_type == DT_LONG && ifde.num_values == 1 {
+                // it's a value
+                bow.write_u32(ifde.offset as u32)?;
+                bow.write_u32(0u32)?; // Fill the remaining bytes of the u64
+            } else if (ifde.ifd_type == DT_LONG && ifde.num_values == 2) || 
+                (ifde.ifd_type == DT_TIFF_LONG8 && ifde.num_values == 1) {
+                // it's a value
+                bow.write_u64(ifde.offset)?;
+            } else {
+                // it's an offset
+                bow.write_u64(ifd_start + ifd_length + ifde.offset)?;
+            }
+        }
+
+        // 4-byte offset of the next IFD; Note, only single image TIFFs are currently supported
+        // and therefore, this will always be set to '0'.
+        bow.write_u64(0u64)?;
     }
 
-    let _ = writer.flush();
+    //////////////////////////////////
+    // Write the larger_values_data //
+    //////////////////////////////////
+    bow.write_bytes(larger_values_data.get_inner())?;
 
     Ok(())
-}
-
-#[derive(Default, Clone, Debug)] //, PartialEq)]
-struct IfdEntry {
-    tag: u16,
-    ifd_type: u16,
-    num_values: u32,
-    offset: u32,
-}
-
-impl IfdEntry {
-    fn new(tag: u16, ifd_type: u16, num_values: u32, offset: u32) -> IfdEntry {
-        IfdEntry {
-            tag,
-            ifd_type,
-            num_values,
-            offset,
-        }
-    }
-}
-
-impl fmt::Display for IfdEntry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let tag_map = get_keys_map();
-        let ft_map = get_field_type_map();
-
-        let mut s = format!("\nTag {} {}", &self.tag, tag_map[&self.tag]);
-        s = s + &format!("\nIFD_type: {} ({})", ft_map[&self.ifd_type], self.ifd_type);
-        s = s + &format!("\nNum_values: {}", self.num_values);
-        s = s + &format!("\nOffset: {}", self.offset);
-        write!(f, "{}", s)
-    }
-}
-
-// impl Eq for IfdEntry {}
-
-// impl PartialOrd for IfdEntry {
-//     fn partial_cmp(&self, other: &IfdEntry) -> Option<Ordering> {
-//         self.tag.partial_cmp(&other.tag)
-//     }
-// }
-
-// impl Ord for IfdEntry {
-//     fn cmp(&self, other: &IfdEntry) -> Ordering {
-//         let ord = self.partial_cmp(other).unwrap();
-//         match ord {
-//             Ordering::Greater => Ordering::Less,
-//             Ordering::Less => Ordering::Greater,
-//             Ordering::Equal => ord,
-//         }
-//     }
-// }
-
-struct GeoKeyEntry {
-    tag: u16,
-    location: u16,
-    count: u16,
-    value_offset: u16,
-}
-
-#[derive(Default, Clone, Debug)]
-pub struct IfdDirectory {
-    pub tag: u16,
-    pub ifd_type: u16,
-    pub num_values: u32,
-    pub offset: u32,
-    pub data: Vec<u8>,
-    byte_order: Endianness,
-}
-
-impl IfdDirectory {
-    pub fn new(
-        tag: u16,
-        ifd_type: u16,
-        num_values: u32,
-        offset: u32,
-        data: Vec<u8>,
-        byte_order: Endianness,
-    ) -> IfdDirectory {
-        IfdDirectory {
-            tag: tag,
-            ifd_type: ifd_type,
-            num_values: num_values,
-            offset: offset,
-            data: data,
-            byte_order: byte_order,
-        }
-    }
-
-    pub fn interpret_as_u16(&self) -> Vec<u16> {
-        let mut bor = ByteOrderReader::new(self.data.clone(), self.byte_order);
-        let mut vals: Vec<u16> = vec![];
-        for _ in 0..self.num_values {
-            let val = bor.read_u16();
-            vals.push(val);
-        }
-        vals
-    }
-
-    pub fn interpret_as_u32(&self) -> Vec<u32> {
-        let mut bor = ByteOrderReader::new(self.data.clone(), self.byte_order);
-        let mut vals: Vec<u32> = vec![];
-        for _ in 0..self.num_values {
-            let val = bor.read_u32();
-            vals.push(val);
-        }
-        vals
-    }
-
-    pub fn interpret_as_f64(&self) -> Vec<f64> {
-        let mut bor = ByteOrderReader::new(self.data.clone(), self.byte_order);
-        let mut vals: Vec<f64> = vec![];
-        for _ in 0..self.num_values {
-            let val = bor.read_f64();
-            vals.push(val);
-        }
-        vals
-    }
-
-    pub fn interpret_as_ascii(&self) -> String {
-        let mut num_trailing_zeros = 0;
-        for d in self.data.iter().rev() {
-            if *d == 0u8 {
-                num_trailing_zeros += 1;
-            }
-        }
-        let s = &self.data[0..(self.data.len() - num_trailing_zeros)];
-        let ret = match String::from_utf8(s.to_vec()) {
-            Ok(v) => v,
-            Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
-        };
-        return ret.trim().to_owned()
-
-        // if self.data[self.data.len() - 1] == 0 {
-        //     let s = &self.data[0..self.data.len() - 1];
-        //     let ret = match String::from_utf8(s.to_vec()) {
-        //         Ok(v) => v,
-        //         Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
-        //     };
-        //     // String::from_utf8(s.to_vec()).unwrap();
-        //     return ret 
-        // } else {
-        //     let ret = match String::from_utf8(self.data.clone()) {
-        //         Ok(v) => v,
-        //         Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
-        //     };
-        //     // String::from_utf8(self.data.clone()).unwrap();
-        //     return ret 
-        // }
-    }
-
-    pub fn interpret_data(&self) -> String {
-        // sanity check: don't print out thousands of values in a tag.
-        let how_many_vals = if self.num_values < 100 {
-            self.num_values
-        } else {
-            100u32
-        };
-        let mut bor = ByteOrderReader::new(self.data.clone(), self.byte_order);
-        if self.ifd_type == 2 {
-            // ascii
-            return String::from_utf8(self.data.clone()).unwrap();
-        } else if self.ifd_type == 3 {
-            // u16
-            let mut vals: Vec<u16> = vec![];
-            for _ in 0..how_many_vals {
-                let val = bor.read_u16();
-                vals.push(val);
-            }
-            if self.num_values == 1 {
-                let kw_map = get_keyword_map();
-                let map = match kw_map.get(&self.tag) {
-                    Some(map) => map,
-                    None => return format!("{:?}", vals),
-                };
-                match map.get(&vals[0]) {
-                    Some(v) => return format!("{:?} ({})", v, vals[0]),
-                    None => return format!("{:?}", vals),
-                }
-            } else {
-                return format!("{:?}", vals);
-            }
-        } else if self.ifd_type == 4 {
-            // u32
-            let mut vals: Vec<u32> = vec![];
-            for _ in 0..how_many_vals {
-                let val = bor.read_u32();
-                vals.push(val);
-            }
-            return format!("{:?}", vals);
-        } else if self.ifd_type == 12 {
-            // f64
-            let mut vals: Vec<f64> = vec![];
-            for _ in 0..how_many_vals {
-                let val = bor.read_f64();
-                vals.push(val);
-            }
-            return format!("{:?}", vals);
-        } else {
-            return format!("{:?}", self.data);
-        }
-    }
-}
-
-impl fmt::Display for IfdDirectory {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let tag_map = get_keys_map();
-        //let kw_map = get_keyword_map();
-        let ft_map = get_field_type_map();
-
-        if tag_map.get(&self.tag).is_some() {
-            let off = if self.num_values > 1 || self.ifd_type > 3 {
-                format!(" offset={}", self.offset)
-            } else {
-                String::from("")
-            };
-
-            let mut d = if self.ifd_type != 2 {
-                format!("{}", self.interpret_data())
-            } else {
-                format!("{}", self.interpret_data().replace("\0", ""))
-            };
-
-            let c = if self.num_values > 1 {
-                format!(" count={}", self.num_values)
-            } else {
-                d = d.replace("[", "").replace("]", "");
-                String::from("")
-            };
-
-            let s = format!(
-                "{} (code={} type={}{}{}): {}",
-                tag_map[&self.tag].name, tag_map[&self.tag].code, ft_map[&self.ifd_type], c, off, d
-            );
-            return write!(f, "{}", s);
-        }
-
-        let mut s = format!("\nUnrecognized Tag ({})", &self.tag);
-        s = s + &format!("\nIFD_type: {} ({})", ft_map[&self.ifd_type], self.ifd_type);
-        s = s + &format!("\nNum_values: {}", self.num_values);
-        if self.num_values > 1 || self.ifd_type > 3 {
-            s = s + &format!("\nOffset: {}", self.offset);
-        }
-        if self.ifd_type != 2 {
-            s = s + &format!("\nData: {}", self.interpret_data());
-        } else {
-            s = s + &format!("\nData: {}", self.interpret_data().replace("\0", ""));
-        }
-        write!(f, "{}", s)
-    }
 }
 
 // An implimentation of a PackBits reader
@@ -3376,127 +2657,3 @@ pub fn packbits_decoder(input_data: Vec<u8>) -> Vec<u8> {
     }
     output_data
 }
-
-// const COMPRESS_NONE: u16 = 1;
-// const COMPRESS_CCITT: u16 = 2;
-// const COMPRESS_G3: u16 = 3; // Group 3 Fax.
-// const COMPRESS_G4: u16 = 4; // Group 4 Fax.
-// const COMPRESS_LZW: u16 = 5;
-// const COMPRESS_JPEGOLD: u16 = 6; // Superseded by cJPEG.
-// const COMPRESS_JPEG: u16 = 7;
-// const COMPRESS_DEFLATE: u16 = 8; // zlib compression.
-// const COMPRESS_PACKBITS: u16 = 32773;
-// const COMPRESS_DEFLATEOLD: u16 = 32946; // Superseded by cDeflate.
-
-// const DT_BYTE: u16 = 1;
-// const DT_ASCII: u16 = 2;
-// const DT_SHORT: u16 = 3;
-// const DT_LONG: u16 = 4;
-// const DT_RATIONAL: u16 = 5;
-// const DT_SBYTE: u16 = 6;
-// const DT_UNDEFINED: u16 = 7;
-// const DT_SSHORT: u16 = 8;
-// const DT_SLONG: u16 = 9;
-// const DT_SRATIONAL: u16 = 10;
-// const DT_FLOAT: u16 = 11;
-// const DT_DOUBLE: u16 = 12;
-
-// // Tags (see p. 28-41 of the spec).
-// const TAG_NEWSUBFILETYPE: u16 = 254u16;
-// const TAG_IMAGEWIDTH: u16 = 256u16;
-// const TAG_IMAGELENGTH: u16 = 257u16;
-// const TAG_BITSPERSAMPLE: u16 = 258u16;
-// const TAG_COMPRESSION: u16 = 259u16;
-// const TAG_PHOTOMETRICINTERPRETATION: u16 = 262u16;
-// const TAG_FILLORDER: u16 = 266u16;
-// const TAG_DOCUMENTNAME: u16 = 269u16;
-// const TAG_PLANARCONFIGURATION: u16 = 284u16;
-
-// const TAG_STRIPOFFSETS: u16 = 273u16;
-// const TAG_ORIENTATION: u16 = 274u16;
-// const TAG_SAMPLESPERPIXEL: u16 = 277u16;
-// const TAG_ROWSPERSTRIP: u16 = 278u16;
-// const TAG_STRIPBYTECOUNTS: u16 = 279u16;
-
-// const TAG_TILEWIDTH: u16 = 322u16;
-// const TAG_TILELENGTH: u16 = 323u16;
-// const TAG_TILEOFFSETS: u16 = 324u16;
-// const TAG_TILEBYTECOUNTS: u16 = 325u16;
-
-// const TAG_XRESOLUTION: u16 = 282u16;
-// const TAG_YRESOLUTION: u16 = 283u16;
-// const TAG_RESOLUTIONUNIT: u16 = 296u16;
-
-// const TAG_SOFTWARE: u16 = 305u16;
-// const TAG_PREDICTOR: u16 = 317u16;
-// const TAG_COLORMAP: u16 = 320u16;
-// const TAG_EXTRASAMPLES: u16 = 338u16;
-// const TAG_SAMPLEFORMAT: u16 = 339u16;
-
-// const TAG_GDAL_METADATA: u16 = 42112u16;
-// const TAG_GDAL_NODATA: u16 = 42113u16;
-
-// const TAG_MODELPIXELSCALETAG: u16 = 33550u16;
-// const TAG_MODELTRANSFORMATIONTAG: u16 = 34264u16;
-// const TAG_MODELTIEPOINTTAG: u16 = 33922u16;
-// const TAG_GEOKEYDIRECTORYTAG: u16 = 34735u16;
-// const TAG_GEODOUBLEPARAMSTAG: u16 = 34736u16;
-// const TAG_GEOASCIIPARAMSTAG: u16 = 34737u16;
-// const TAG_INTERGRAPHMATRIXTAG: u16 = 33920u16;
-
-// const TAG_GTMODELTYPEGEOKEY: u16 = 1024u16;
-// const TAG_GTRASTERTYPEGEOKEY: u16 = 1025u16;
-// const TAG_GTCITATIONGEOKEY: u16 = 1026u16;
-// const TAG_GEOGRAPHICTYPEGEOKEY: u16 = 2048u16;
-// const TAG_GEOGCITATIONGEOKEY: u16 = 2049u16;
-// const TAG_GEOGGEODETICDATUMGEOKEY: u16 = 2050u16;
-// const TAG_GEOGPRIMEMERIDIANGEOKEY: u16 = 2051u16;
-// const TAG_GEOGLINEARUNITSGEOKEY: u16 = 2052u16;
-// const TAG_GEOGLINEARUNITSIZEGEOKEY: u16 = 2053u16;
-// const TAG_GEOGANGULARUNITSGEOKEY: u16 = 2054u16;
-// const TAG_GEOGANGULARUNITSIZEGEOKEY: u16 = 2055u16;
-// const TAG_GEOGELLIPSOIDGEOKEY: u16 = 2056u16;
-// const TAG_GEOGSEMIMAJORAXISGEOKEY: u16 = 2057u16;
-// const TAG_GEOGSEMIMINORAXISGEOKEY: u16 = 2058u16;
-// const TAG_GEOGINVFLATTENINGGEOKEY: u16 = 2059u16;
-// const TAG_GEOGAZIMUTHUNITSGEOKEY: u16 = 2060u16;
-// const TAG_GEOGPRIMEMERIDIANLONGGEOKEY: u16 = 2061u16;
-// const TAG_PROJECTEDCSTYPEGEOKEY: u16 = 3072u16;
-// const TAG_PCSCITATIONGEOKEY: u16 = 3073u16;
-// const TAG_PROJECTIONGEOKEY: u16 = 3074u16;
-// const TAG_PROJCOORDTRANSGEOKEY: u16 = 3075u16;
-// const TAG_PROJLINEARUNITSGEOKEY: u16 = 3076u16;
-// const TAG_PROJLINEARUNITSIZEGEOKEY: u16 = 3077u16;
-// const TAG_PROJSTDPARALLEL1GEOKEY: u16 = 3078u16;
-// const TAG_PROJSTDPARALLEL2GEOKEY: u16 = 3079u16;
-// const TAG_PROJNATORIGINLONGGEOKEY: u16 = 3080u16;
-// const TAG_PROJNATORIGINLATGEOKEY: u16 = 3081u16;
-// const TAG_PROJFALSEEASTINGGEOKEY: u16 = 3082u16;
-// const TAG_PROJFALSENORTHINGGEOKEY: u16 = 3083u16;
-// const TAG_PROJFALSEORIGINLONGGEOKEY: u16 = 3084u16;
-// const TAG_PROJFALSEORIGINLATGEOKEY: u16 = 3085u16;
-// const TAG_PROJFALSEORIGINEASTINGGEOKEY: u16 = 3086u16;
-// const TAG_PROJFALSEORIGINNORTHINGGEOKEY: u16 = 3087u16;
-// const TAG_PROJCENTERLONGGEOKEY: u16 = 3088u16;
-// const TAG_PROJCENTERLATGEOKEY: u16 = 3089u16;
-// const TAG_PROJCENTEREASTINGGEOKEY: u16 = 3090u16;
-// const TAG_PROJCENTERNORTHINGGEOKEY: u16 = 3091u16;
-// const TAG_PROJSCALEATNATORIGINGEOKEY: u16 = 3092u16;
-// const TAG_PROJSCALEATCENTERGEOKEY: u16 = 3093u16;
-// const TAG_PROJAZIMUTHANGLEGEOKEY: u16 = 3094u16;
-// const TAG_PROJSTRAIGHTVERTPOLELONGGEOKEY: u16 = 3095u16;
-// const TAG_VERTICALCSTYPEGEOKEY: u16 = 4096u16;
-// const TAG_VERTICALCITATIONGEOKEY: u16 = 4097u16;
-// const TAG_VERTICALDATUMGEOKEY: u16 = 4098u16;
-// const TAG_VERTICALUNITSGEOKEY: u16 = 4099u16;
-
-// const TAG_PHOTOSHOP: u16 = 34377u16;
-
-// const PI_WHITEISZERO: u16 = 0;
-// const PI_BLACKISZERO: u16 = 1;
-// const PI_RGB: u16 = 2;
-// const PI_PALETTED: u16 = 3;
-// // const PI_TRANSMASK: u16   = 4; // transparency mask
-// // const PI_CMYK: u16        = 5;
-// // const PI_YCBCR: u16       = 6;
-// // const PI_CIELAB: u16      = 8;

@@ -177,14 +177,7 @@ impl WhiteboxTool for ConvertRasterFormat {
             Ok(_) => (), // do nothings
             Err(err) => return Err(err),
         }
-        // for row in 0..input.configs.rows as isize {
-        //     for col in 0..input.configs.columns as isize {
-        //         output[(row, col)] = input[(row, col)];
-        //         if row % 1000 == 0 && col % 1000 == 0 {
-        //             println!("cell({}, {}) = {}", row, col, input[(row, col)]);
-        //         }
-        //     }
-        // }
+        drop(input);
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(

@@ -20,9 +20,7 @@ use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufWriter;
-use std::io::Seek;
-use std::io::{Error, ErrorKind};
+use std::io::{BufWriter, Cursor, Error, ErrorKind, Seek};
 use std::mem;
 use std::ops::Index;
 use std::path::Path;
@@ -559,61 +557,61 @@ impl LasFile {
             self.header.project_id_used = false;
         }
 
-        let mut bor = ByteOrderReader::new(buffer, Endianness::LittleEndian);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
 
-        bor.pos = 0;
+        bor.seek(0);
         self.header.file_signature = bor.read_utf8(4);
         if self.header.file_signature != "LASF" {
             return Err(Error::new(ErrorKind::Other, format!("Error reading: {}\nIncorrect LAS file signature: {}.\nEither the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name, self.header.file_signature)));
         }
-        self.header.file_source_id = bor.read_u16();
-        let ge_val = bor.read_u16();
+        self.header.file_source_id = bor.read_u16()?;
+        let ge_val = bor.read_u16()?;
         self.header.global_encoding = GlobalEncodingField { value: ge_val };
         if self.header.project_id_used {
-            self.header.project_id1 = bor.read_u32();
-            self.header.project_id2 = bor.read_u16();
-            self.header.project_id3 = bor.read_u16();
+            self.header.project_id1 = bor.read_u32()?;
+            self.header.project_id2 = bor.read_u16()?;
+            self.header.project_id3 = bor.read_u16()?;
             for i in 0..8 {
-                self.header.project_id4[i] = bor.read_u8();
+                self.header.project_id4[i] = bor.read_u8()?;
             }
         }
         // The version major and minor are read earlier.
         // Two bytes that must be added to the offset here.
-        bor.pos += 2;
+        bor.inc_pos(2);
         self.header.system_id = bor.read_utf8(32);
         self.header.generating_software = bor.read_utf8(32);
-        self.header.file_creation_day = bor.read_u16();
-        self.header.file_creation_year = bor.read_u16();
-        self.header.header_size = bor.read_u16();
-        self.header.offset_to_points = bor.read_u32();
-        self.header.number_of_vlrs = bor.read_u32();
-        self.header.point_format = bor.read_u8();
-        self.header.point_record_length = bor.read_u16();
-        self.header.number_of_points_old = bor.read_u32();
+        self.header.file_creation_day = bor.read_u16()?;
+        self.header.file_creation_year = bor.read_u16()?;
+        self.header.header_size = bor.read_u16()?;
+        self.header.offset_to_points = bor.read_u32()?;
+        self.header.number_of_vlrs = bor.read_u32()?;
+        self.header.point_format = bor.read_u8()?;
+        self.header.point_record_length = bor.read_u16()?;
+        self.header.number_of_points_old = bor.read_u32()?;
 
         for i in 0..5 {
-            self.header.number_of_points_by_return_old[i] = bor.read_u32();
+            self.header.number_of_points_by_return_old[i] = bor.read_u32()?;
         }
-        self.header.x_scale_factor = bor.read_f64();
-        self.header.y_scale_factor = bor.read_f64();
-        self.header.z_scale_factor = bor.read_f64();
-        self.header.x_offset = bor.read_f64();
-        self.header.y_offset = bor.read_f64();
-        self.header.z_offset = bor.read_f64();
-        self.header.max_x = bor.read_f64();
-        self.header.min_x = bor.read_f64();
-        self.header.max_y = bor.read_f64();
-        self.header.min_y = bor.read_f64();
-        self.header.max_z = bor.read_f64();
-        self.header.min_z = bor.read_f64();
+        self.header.x_scale_factor = bor.read_f64()?;
+        self.header.y_scale_factor = bor.read_f64()?;
+        self.header.z_scale_factor = bor.read_f64()?;
+        self.header.x_offset = bor.read_f64()?;
+        self.header.y_offset = bor.read_f64()?;
+        self.header.z_offset = bor.read_f64()?;
+        self.header.max_x = bor.read_f64()?;
+        self.header.min_x = bor.read_f64()?;
+        self.header.max_y = bor.read_f64()?;
+        self.header.min_y = bor.read_f64()?;
+        self.header.max_z = bor.read_f64()?;
+        self.header.min_z = bor.read_f64()?;
 
         if self.header.version_major == 1 && self.header.version_minor >= 3 {
-            self.header.waveform_data_start = bor.read_u64();
-            self.header.offset_to_ex_vlrs = bor.read_u64();
-            self.header.number_of_extended_vlrs = bor.read_u32();
-            self.header.number_of_points = bor.read_u64();
+            self.header.waveform_data_start = bor.read_u64()?;
+            self.header.offset_to_ex_vlrs = bor.read_u64()?;
+            self.header.number_of_extended_vlrs = bor.read_u32()?;
+            self.header.number_of_points = bor.read_u64()?;
             for i in 0..15 {
-                self.header.number_of_points_by_return[i] = bor.read_u64();
+                self.header.number_of_points_by_return[i] = bor.read_u64()?;
             }
         }
 
@@ -638,14 +636,14 @@ impl LasFile {
             bor.seek(self.header.header_size as usize);
             for _ in 0..self.header.number_of_vlrs {
                 let mut vlr: Vlr = Default::default();
-                vlr.reserved = bor.read_u16();
+                vlr.reserved = bor.read_u16()?;
                 vlr.user_id = bor.read_utf8(16);
-                vlr.record_id = bor.read_u16();
-                vlr.record_length_after_header = bor.read_u16();
+                vlr.record_id = bor.read_u16()?;
+                vlr.record_length_after_header = bor.read_u16()?;
                 vlr.description = bor.read_utf8(32);
                 // get the byte data
                 for _ in 0..vlr.record_length_after_header {
-                    vlr.binary_data.push(bor.read_u8());
+                    vlr.binary_data.push(bor.read_u8()?);
                 }
 
                 if vlr.record_id == 34_735 {
@@ -730,19 +728,19 @@ impl LasFile {
                     //         + (i as usize) * (self.header.point_record_length as usize),
                     // );
                     // p = Default::default();
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -751,22 +749,22 @@ impl LasFile {
             } else if self.header.point_format == 1 {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
                 for _ in 0..self.header.number_of_points {
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
                     }
@@ -775,24 +773,24 @@ impl LasFile {
                 self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
                 let mut rgb: ColourData = Default::default();
                 for _ in 0..self.header.number_of_points {
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the RGB data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -804,26 +802,26 @@ impl LasFile {
                 let mut rgb: ColourData = Default::default();
                 bor.seek(self.header.offset_to_points as usize);
                 for _ in 0..self.header.number_of_points {
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the RGB data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -834,31 +832,31 @@ impl LasFile {
                 self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
                 let mut wfp: WaveformPacket;
                 for _ in 0..self.header.number_of_points {
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the waveform data
                     wfp = Default::default();
-                    wfp.packet_descriptor_index = bor.read_u8();
-                    wfp.offset_to_waveform_data = bor.read_u64();
-                    wfp.waveform_packet_size = bor.read_u32();
-                    wfp.ret_point_waveform_loc = bor.read_f32();
-                    wfp.xt = bor.read_f32();
-                    wfp.yt = bor.read_f32();
-                    wfp.zt = bor.read_f32();
+                    wfp.packet_descriptor_index = bor.read_u8()?;
+                    wfp.offset_to_waveform_data = bor.read_u64()?;
+                    wfp.waveform_packet_size = bor.read_u32()?;
+                    wfp.ret_point_waveform_loc = bor.read_f32()?;
+                    wfp.xt = bor.read_f32()?;
+                    wfp.yt = bor.read_f32()?;
+                    wfp.zt = bor.read_f32()?;
                     self.waveform_data.push(wfp);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -871,36 +869,36 @@ impl LasFile {
                 let mut rgb: ColourData = Default::default();
                 let mut wfp: WaveformPacket;
                 for _ in 0..self.header.number_of_points {
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.scan_angle = bor.read_i8() as i16;
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.scan_angle = bor.read_i8()? as i16;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.point_source_id = bor.read_u16();
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the RGB data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     // read the waveform data
                     wfp = Default::default();
-                    wfp.packet_descriptor_index = bor.read_u8();
-                    wfp.offset_to_waveform_data = bor.read_u64();
-                    wfp.waveform_packet_size = bor.read_u32();
-                    wfp.ret_point_waveform_loc = bor.read_f32();
-                    wfp.xt = bor.read_f32();
-                    wfp.yt = bor.read_f32();
-                    wfp.zt = bor.read_f32();
+                    wfp.packet_descriptor_index = bor.read_u8()?;
+                    wfp.offset_to_waveform_data = bor.read_u64()?;
+                    wfp.waveform_packet_size = bor.read_u32()?;
+                    wfp.ret_point_waveform_loc = bor.read_f32()?;
+                    wfp.xt = bor.read_f32()?;
+                    wfp.yt = bor.read_f32()?;
+                    wfp.zt = bor.read_f32()?;
                     self.waveform_data.push(wfp);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -911,23 +909,23 @@ impl LasFile {
                 self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
                 for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.classification = bor.read_u8();
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.classification = bor.read_u8()?;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.scan_angle = bor.read_i16();
-                    p.point_source_id = bor.read_u16();
+                    p.scan_angle = bor.read_i16()?;
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
                     }
@@ -939,27 +937,27 @@ impl LasFile {
                 let mut rgb: ColourData = Default::default();
                 for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.classification = bor.read_u8();
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.classification = bor.read_u8()?;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.scan_angle = bor.read_i16();
-                    p.point_source_id = bor.read_u16();
+                    p.scan_angle = bor.read_i16()?;
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the RGB data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -973,28 +971,28 @@ impl LasFile {
                 let mut rgb: ColourData = Default::default();
                 for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.classification = bor.read_u8();
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.classification = bor.read_u8()?;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.scan_angle = bor.read_i16();
-                    p.point_source_id = bor.read_u16();
+                    p.scan_angle = bor.read_i16()?;
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the RGBNIR data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
-                    rgb.nir = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
+                    rgb.nir = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -1008,32 +1006,32 @@ impl LasFile {
                 let mut wfp: WaveformPacket;
                 for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.classification = bor.read_u8();
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.classification = bor.read_u8()?;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.scan_angle = bor.read_i16();
-                    p.point_source_id = bor.read_u16();
+                    p.scan_angle = bor.read_i16()?;
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the waveform data
                     wfp = Default::default();
-                    wfp.packet_descriptor_index = bor.read_u8();
-                    wfp.offset_to_waveform_data = bor.read_u64();
-                    wfp.waveform_packet_size = bor.read_u32();
-                    wfp.ret_point_waveform_loc = bor.read_f32();
-                    wfp.xt = bor.read_f32();
-                    wfp.yt = bor.read_f32();
-                    wfp.zt = bor.read_f32();
+                    wfp.packet_descriptor_index = bor.read_u8()?;
+                    wfp.offset_to_waveform_data = bor.read_u64()?;
+                    wfp.waveform_packet_size = bor.read_u32()?;
+                    wfp.ret_point_waveform_loc = bor.read_f32()?;
+                    wfp.xt = bor.read_f32()?;
+                    wfp.yt = bor.read_f32()?;
+                    wfp.zt = bor.read_f32()?;
                     self.waveform_data.push(wfp);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 
@@ -1049,38 +1047,38 @@ impl LasFile {
                 let mut wfp: WaveformPacket;
                 for _ in 0..self.header.number_of_points {
                     p.is_64bit = true;
-                    p.x = bor.read_i32() as f64 * self.header.x_scale_factor + self.header.x_offset;
-                    p.y = bor.read_i32() as f64 * self.header.y_scale_factor + self.header.y_offset;
-                    p.z = bor.read_i32() as f64 * self.header.z_scale_factor + self.header.z_offset;
+                    p.x = bor.read_i32()? as f64 * self.header.x_scale_factor + self.header.x_offset;
+                    p.y = bor.read_i32()? as f64 * self.header.y_scale_factor + self.header.y_offset;
+                    p.z = bor.read_i32()? as f64 * self.header.z_scale_factor + self.header.z_offset;
                     if self.use_point_intensity {
-                        p.intensity = bor.read_u16();
+                        p.intensity = bor.read_u16()?;
                     }
-                    p.point_bit_field = bor.read_u8();
-                    p.class_bit_field = bor.read_u8();
-                    p.classification = bor.read_u8();
+                    p.point_bit_field = bor.read_u8()?;
+                    p.class_bit_field = bor.read_u8()?;
+                    p.classification = bor.read_u8()?;
                     if self.use_point_userdata {
-                        p.user_data = bor.read_u8();
+                        p.user_data = bor.read_u8()?;
                     }
-                    p.scan_angle = bor.read_i16();
-                    p.point_source_id = bor.read_u16();
+                    p.scan_angle = bor.read_i16()?;
+                    p.point_source_id = bor.read_u16()?;
                     self.point_data.push(p);
                     // read the GPS data
-                    self.gps_data.push(bor.read_f64());
+                    self.gps_data.push(bor.read_f64()?);
                     // read the RGBNIR data
-                    rgb.red = bor.read_u16();
-                    rgb.green = bor.read_u16();
-                    rgb.blue = bor.read_u16();
-                    rgb.nir = bor.read_u16();
+                    rgb.red = bor.read_u16()?;
+                    rgb.green = bor.read_u16()?;
+                    rgb.blue = bor.read_u16()?;
+                    rgb.nir = bor.read_u16()?;
                     self.colour_data.push(rgb);
                     // read the waveform data
                     wfp = Default::default();
-                    wfp.packet_descriptor_index = bor.read_u8();
-                    wfp.offset_to_waveform_data = bor.read_u64();
-                    wfp.waveform_packet_size = bor.read_u32();
-                    wfp.ret_point_waveform_loc = bor.read_f32();
-                    wfp.xt = bor.read_f32();
-                    wfp.yt = bor.read_f32();
-                    wfp.zt = bor.read_f32();
+                    wfp.packet_descriptor_index = bor.read_u8()?;
+                    wfp.offset_to_waveform_data = bor.read_u64()?;
+                    wfp.waveform_packet_size = bor.read_u32()?;
+                    wfp.ret_point_waveform_loc = bor.read_f32()?;
+                    wfp.xt = bor.read_f32()?;
+                    wfp.yt = bor.read_f32()?;
+                    wfp.zt = bor.read_f32()?;
                     self.waveform_data.push(wfp);
                     if skip_bytes > 0 { 
                         bor.inc_pos(skip_bytes); 

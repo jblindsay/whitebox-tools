@@ -1,102 +1,121 @@
-// use std::io::prelude::*;
-// use std::io::Error;
-// use std::io::BufWriter;
-// use std::fs::File;
-// use byteorder::{ByteOrder, LittleEndian, BigEndian, WriteBytesExt};
-// use utils::byte_order_reader::Endianness;
+use std::io::prelude::*;
+use std::io::Error;
+use byteorder::{LittleEndian, BigEndian, WriteBytesExt};
+use super::byte_order_reader::Endianness;
 
-// pub struct ByteOrderWriter {
-//     pub byte_order: Endianness,
-//     pub writer: &mut BufWriter<File>,
-// }
+pub struct ByteOrderWriter<W: Write> {
+    is_le: bool,
+    writer: W,
+    num_bytes_written: usize,
+}
 
-// impl ByteOrderWriter {
-//     pub fn new<'a>(buffer: &'a mut BufWriter<File>, byte_order: Endianness) -> ByteOrderWriter {
-//         ByteOrderWriter {
-//             writer: buffer,
-//             byte_order: byte_order,
-//         }
-//     }
+impl<W: Write> ByteOrderWriter<W> {
+    pub fn new(writer: W, byte_order: Endianness) -> ByteOrderWriter<W> {
+        let is_le = byte_order == Endianness::LittleEndian;
+        ByteOrderWriter::<W> {
+            writer: writer,
+            is_le: is_le,
+            num_bytes_written: 0,
+        }
+    }
 
-//     pub fn write_u8(&mut self, value: u8) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_u8::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_u8::<BigEndian>(value)
-//         }
-//     }
+    pub fn set_byte_order(&mut self, byte_order: Endianness) {
+        self.is_le = byte_order == Endianness::LittleEndian;
+    }
 
-//     pub fn write_u16(&mut self, value: u16) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             // LittleEndian::write_u16(&mut self.writer, value)
-//             self.writer.write_u16::<LittleEndian>(value)
-//         } else {
-//             // BigEndian::write_u16(&mut self.writer, value)
-//             self.writer.write_u16::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_u8(&mut self, value: u8) -> Result<(), Error> {
+        self.num_bytes_written += 1;
+        self.writer.write_u8(value)
+    }
 
-//     pub fn write_u32(&mut self, value: u32) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_u32::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_u32::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_bytes(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        self.num_bytes_written += bytes.len();
+        self.writer.write_all(bytes)
+    }
 
-//     pub fn write_u64(&mut self, value: u64) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_u64::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_u64::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_u16(&mut self, value: u16) -> Result<(), Error> {
+        self.num_bytes_written += 2;
+        if self.is_le {
+            self.writer.write_u16::<LittleEndian>(value)
+        } else {
+            self.writer.write_u16::<BigEndian>(value)
+        }
+    }
 
-//     pub fn write_i8(&mut self, value: i8) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_i8::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_i8::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_u32(&mut self, value: u32) -> Result<(), Error> {
+        self.num_bytes_written += 4;
+        if self.is_le {
+            self.writer.write_u32::<LittleEndian>(value)
+        } else {
+            self.writer.write_u32::<BigEndian>(value)
+        }
+    }
 
-//     pub fn write_i16(&mut self, value: i16) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_i16::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_i16::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_u64(&mut self, value: u64) -> Result<(), Error> {
+        self.num_bytes_written += 8;
+        if self.is_le {
+            self.writer.write_u64::<LittleEndian>(value)
+        } else {
+            self.writer.write_u64::<BigEndian>(value)
+        }
+    }
 
-//     pub fn write_i32(&mut self, value: i32) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_i32::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_i32::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_i8(&mut self, value: i8) -> Result<(), Error> {
+        self.num_bytes_written += 1;
+        self.writer.write_i8(value)
+    }
 
-//     pub fn write_i64(&mut self, value: i64) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_i64::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_i64::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_i16(&mut self, value: i16) -> Result<(), Error> {
+        self.num_bytes_written += 2;
+        if self.is_le {
+            self.writer.write_i16::<LittleEndian>(value)
+        } else {
+            self.writer.write_i16::<BigEndian>(value)
+        }
+    }
 
-//     pub fn write_f32(&mut self, value: f32) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_f32::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_f32::<BigEndian>(value)
-//         }
-//     }
+    pub fn write_i32(&mut self, value: i32) -> Result<(), Error> {
+        self.num_bytes_written += 4;
+        if self.is_le {
+            self.writer.write_i32::<LittleEndian>(value)
+        } else {
+            self.writer.write_i32::<BigEndian>(value)
+        }
+    }
 
-//     pub fn write_f64(&mut self, value: f64) -> Result<(), Error> {
-//         if self.byte_order == Endianness::LittleEndian {
-//             self.writer.write_f64::<LittleEndian>(value)
-//         } else {
-//             self.writer.write_f64::<BigEndian>(value)
-//         }
-//     }
-// }
+    pub fn write_i64(&mut self, value: i64) -> Result<(), Error> {
+        self.num_bytes_written += 8;
+        if self.is_le {
+            self.writer.write_i64::<LittleEndian>(value)
+        } else {
+            self.writer.write_i64::<BigEndian>(value)
+        }
+    }
+
+    pub fn write_f32(&mut self, value: f32) -> Result<(), Error> {
+        self.num_bytes_written += 4;
+        if self.is_le {
+            self.writer.write_f32::<LittleEndian>(value)
+        } else {
+            self.writer.write_f32::<BigEndian>(value)
+        }
+    }
+
+    pub fn write_f64(&mut self, value: f64) -> Result<(), Error> {
+        self.num_bytes_written += 8;
+        if self.is_le {
+            self.writer.write_f64::<LittleEndian>(value)
+        } else {
+            self.writer.write_f64::<BigEndian>(value)
+        }
+    }
+
+    /// Returns the number of bytes written
+    pub fn len(&self) -> usize {
+        self.num_bytes_written
+    }
+
+    pub fn get_inner(&mut self) -> &W {
+        &self.writer
+    }
+}

@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::BufWriter;
+use std::io::Cursor;
 use std::io::Error;
 use std::io::ErrorKind;
 use std::io::SeekFrom;
@@ -195,17 +196,17 @@ pub fn read_saga(
         f.read(&mut buffer)?;
 
         let mut bor = if configs.endian == Endianness::LittleEndian {
-            ByteOrderReader::new(buffer, Endianness::LittleEndian)
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian)
         } else {
-            ByteOrderReader::new(buffer, Endianness::BigEndian)
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::BigEndian)
         };
-        bor.pos = 0;
+        bor.seek(0);
 
         match configs.data_type {
             DataType::F64 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_f64() as f64 * z_factor;
+                    data[k] = bor.read_f64()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -225,7 +226,7 @@ pub fn read_saga(
             DataType::F32 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_f32() as f64 * z_factor;
+                    data[k] = bor.read_f32()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -245,7 +246,7 @@ pub fn read_saga(
             DataType::I32 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_i32() as f64 * z_factor;
+                    data[k] = bor.read_i32()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -265,7 +266,7 @@ pub fn read_saga(
             DataType::U32 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_u32() as f64 * z_factor;
+                    data[k] = bor.read_u32()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -285,7 +286,7 @@ pub fn read_saga(
             DataType::I16 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_i16() as f64 * z_factor;
+                    data[k] = bor.read_i16()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -305,7 +306,7 @@ pub fn read_saga(
             DataType::U16 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_u16() as f64 * z_factor;
+                    data[k] = bor.read_u16()? as f64 * z_factor;
 
                     j += 1;
                     if j == num_cells {
@@ -325,7 +326,7 @@ pub fn read_saga(
             DataType::I8 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_i8() as f64 * z_factor;
+                    data[k] = bor.read_i8()? as f64 * z_factor;
                     j += 1;
                     if j == num_cells {
                         break;
@@ -344,7 +345,7 @@ pub fn read_saga(
             DataType::U8 => {
                 for _ in 0..buf_size {
                     k = row * configs.columns + col;
-                    data[k] = bor.read_u8() as f64 * z_factor;
+                    data[k] = bor.read_u8()? as f64 * z_factor;
                     j += 1;
                     if j == num_cells {
                         break;

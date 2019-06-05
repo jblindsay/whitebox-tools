@@ -1,8 +1,9 @@
-use super::IfdDirectory;
+use super::Ifd;
 use crate::utils::{ByteOrderReader, Endianness};
 use std::collections::HashMap;
 use std::fmt;
 use std::mem::transmute;
+use std::io::Cursor;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -10,6 +11,13 @@ macro_rules! hashmap {
          $( map.insert($key, $val); )*
          map
     }}
+}
+
+pub(super) struct GeoKeyEntry {
+    pub tag: u16,
+    pub location: u16,
+    pub count: u16,
+    pub value_offset: u16,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -23,10 +31,10 @@ pub struct GeoKeys {
 impl GeoKeys {
     pub fn add_key_directory(&mut self, data: &Vec<u8>, byte_order: Endianness) {
         // convert the binary data to an array of u16's
-        let mut bor = ByteOrderReader::new(data.clone(), byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
         let mut i: usize = 0;
         while i < data.len() as usize {
-            let k: u16 = bor.read_u16();
+            let k: u16 = bor.read_u16().unwrap();
             self.geo_key_directory.push(k);
             i += 2;
         }
@@ -34,9 +42,9 @@ impl GeoKeys {
 
     pub fn add_double_params(&mut self, data: &Vec<u8>, byte_order: Endianness) {
         let mut i: usize = 0;
-        let mut bor = ByteOrderReader::new(data.clone(), byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
         while i < data.len() as usize {
-            let k: f64 = bor.read_f64();
+            let k: f64 = bor.read_f64().unwrap();
             i += 8;
             self.geo_double_params.push(k);
         }
@@ -48,13 +56,13 @@ impl GeoKeys {
             .to_owned();
     }
 
-    pub fn get_ifd_map(&self, byte_order: Endianness) -> HashMap<u16, IfdDirectory> {
+    pub fn get_ifd_map(&self, byte_order: Endianness) -> HashMap<u16, Ifd> {
         if self.geo_key_directory.len() == 0 {
             panic!("Error reading geokeys");
         }
         let number_of_keys = self.geo_key_directory[3];
 
-        let mut ifd_map: HashMap<u16, IfdDirectory> = HashMap::new();
+        let mut ifd_map: HashMap<u16, Ifd> = HashMap::new();
         // println!("Num geokeys: {}", number_of_keys);
         for i in 0..number_of_keys as usize {
             //println!("key number {}", i);
@@ -95,11 +103,11 @@ impl GeoKeys {
 
             }
 
-            let ifd = IfdDirectory::new(
+            let ifd = Ifd::new(
                 key_id,
                 field_type,
-                count as u32,
-                value_offset as u32,
+                count as u64,
+                value_offset as u64,
                 data,
                 byte_order,
             );
@@ -2719,7 +2727,10 @@ pub fn get_field_type_map() -> HashMap<u16, &'static str> {
         9u16 => "DT_Slong",
         10u16 => "DT_Srational",
         11u16 => "DT_Float",
-        12u16 => "DT_Double"
+        12u16 => "DT_Double",
+        16u16 => "DT_Long8",
+        17u16 => "DT_Slong8",
+        18u16 => "DT_Ifd8"
     ]
 }
 

@@ -22,23 +22,23 @@ use std::thread;
 /// for an input digital elevation model (DEM; `--dem`). This is a measure of the angular dispersion of the surface
 /// normal vectors within a local neighbourhood of a specified size (`--filter`). `SphericalStdDevOfNormals` 
 /// is therefore a measure of surface shape complexity, texture, and roughness. The <a href="https://en.wikipedia.org/wiki/Directional_statistics#Measures_of_location_and_spread">
-/// spherical standard deviation</a> (<em>s<sub>h</sub></em>) is defined as:
+/// spherical standard deviation</a> (<em>s</em>) is defined as:
 /// 
-/// > <em>s<sub>h</sub></em> = &radic;[-2ln(<em>R<sub>h</sub></em> / <em>N</em>)] &times; 180 / &pi;
+/// > <em>s</em> = &radic;[-2ln(<em>R</em> / <em>N</em>)] &times; 180 / &pi;
 /// 
-/// where <em>R<sub>h</sub></em> is the resultant vector length and <em>N</em> is the number of unit normal vectors 
-/// within the local neighbourhood. <em>s<sub>h</sub></em> is measured in degrees and is zero for simple planes and increases
+/// where <em>R</em> is the resultant vector length and <em>N</em> is the number of unit normal vectors 
+/// within the local neighbourhood. <em>s</em> is measured in degrees and is zero for simple planes and increases
 /// infinitely with increasing surface complexity or roughness.
 /// 
 /// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
 /// vector dispersion, a related measure of angular dispersion, increases monotonically with scale. This is the result
 /// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the 
 /// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity 
-/// associated with specific scale ranges. That is, at large spatial scales, <em>s<sub>h</sub></em> should reflect 
+/// associated with specific scale ranges. That is, at large spatial scales, <em>s</em> should reflect 
 /// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including 
 /// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than 
 /// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior 
-/// to calculating <em>R<sub>h</sub></em>. In this way, the resulting distribution is able to isolate and highlight 
+/// to calculating <em>R</em>. In this way, the resulting distribution is able to isolate and highlight 
 /// the surface shape complexity associated with landscape features of a similar scale to that of the filter size.
 /// 
 /// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a> 

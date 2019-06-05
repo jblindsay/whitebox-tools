@@ -230,7 +230,6 @@ impl Raster {
             output.configs.nodata = 1.71041e38;
         }
         output.data.reserve(output.configs.rows * output.configs.columns);
-
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
 
         output

@@ -236,11 +236,11 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
             for col in 0..columns {
                 z = input[(row, col)];
                 if z != 0.0 {
-                    distance[(row, col)] = 0.0;
-                    allocation[(row, col)] = dem[(row, col)];
+                    distance.set_value(row, col, 0.0);
+                    allocation.set_value(row, col, dem.get_value(row, col));
                 } else {
-                    distance[(row, col)] = inf_val;
-                    allocation[(row, col)] = inf_val;
+                    distance.set_value(row, col, inf_val);
+                    allocation.set_value(row, col, inf_val);
                 }
             }
             if verbose {
@@ -277,12 +277,12 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
                         }
                     }
                     if z_min < z {
-                        distance[(row, col)] = z_min;
+                        distance.set_value(row, col, z_min);
                         x = col + d_x[which_cell];
                         y = row + d_y[which_cell];
-                        r_x[(row, col)] = r_x[(y, x)] + g_x[which_cell];
-                        r_y[(row, col)] = r_y[(y, x)] + g_y[which_cell];
-                        allocation[(row, col)] = allocation[(y, x)];
+                        r_x.set_value(row, col, r_x.get_value(y, x) + g_x[which_cell]);
+                        r_y.set_value(row, col, r_y.get_value(y, x) + g_y[which_cell]);
+                        allocation.set_value(row, col, allocation.get_value(y, x));
                     }
                 }
             }
@@ -320,12 +320,12 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
                         }
                     }
                     if z_min < z {
-                        distance[(row, col)] = z_min;
+                        distance.set_value(row, col, z_min);
                         x = col + d_x[which_cell];
                         y = row + d_y[which_cell];
-                        r_x[(row, col)] = r_x[(y, x)] + g_x[which_cell];
-                        r_y[(row, col)] = r_y[(y, x)] + g_y[which_cell];
-                        allocation[(row, col)] = allocation[(y, x)];
+                        r_x.set_value(row, col, r_x.get_value(y, x) + g_x[which_cell]);
+                        r_y.set_value(row, col, r_y.get_value(y, x) + g_y[which_cell]);
+                        allocation.set_value(row, col, allocation.get_value(y, x));
                     }
                 }
             }
@@ -342,9 +342,9 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
             for col in 0..columns {
                 z = input[(row, col)];
                 if z == nodata {
-                    allocation[(row, col)] = nodata;
+                    allocation.set_value(row, col, nodata);
                 } else {
-                    allocation[(row, col)] = dem[(row, col)] - allocation[(row, col)];
+                    allocation.set_value(row, col, dem.get_value(row, col) - allocation.get_value(row, col));
                 }
             }
             if verbose {

@@ -3,7 +3,7 @@ use crate::utils::{ByteOrderReader, Endianness};
 use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{Error, ErrorKind};
+use std::io::{Cursor, Error, ErrorKind};
 
 #[derive(Default, Clone, Debug)]
 pub struct LasHeader {
@@ -154,61 +154,61 @@ impl LasHeader {
             header.project_id_used = false;
         }
 
-        let mut bor = ByteOrderReader::new(buffer, Endianness::LittleEndian);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
 
-        bor.pos = 0;
+        bor.seek(0);
         header.file_signature = bor.read_utf8(4);
         if header.file_signature != "LASF" {
             return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", file_name)));
         }
-        header.file_source_id = bor.read_u16();
-        let ge_val = bor.read_u16();
+        header.file_source_id = bor.read_u16()?;
+        let ge_val = bor.read_u16()?;
         header.global_encoding = GlobalEncodingField { value: ge_val };
         if header.project_id_used {
-            header.project_id1 = bor.read_u32();
-            header.project_id2 = bor.read_u16();
-            header.project_id3 = bor.read_u16();
+            header.project_id1 = bor.read_u32()?;
+            header.project_id2 = bor.read_u16()?;
+            header.project_id3 = bor.read_u16()?;
             for i in 0..8 {
-                header.project_id4[i] = bor.read_u8();
+                header.project_id4[i] = bor.read_u8()?;
             }
         }
         // The version major and minor are read earlier.
         // Two bytes that must be added to the offset here.
-        bor.pos += 2;
+        bor.inc_pos(2);
         header.system_id = bor.read_utf8(32);
         header.generating_software = bor.read_utf8(32);
-        header.file_creation_day = bor.read_u16();
-        header.file_creation_year = bor.read_u16();
-        header.header_size = bor.read_u16();
-        header.offset_to_points = bor.read_u32();
-        header.number_of_vlrs = bor.read_u32();
-        header.point_format = bor.read_u8();
-        header.point_record_length = bor.read_u16();
-        header.number_of_points_old = bor.read_u32();
+        header.file_creation_day = bor.read_u16()?;
+        header.file_creation_year = bor.read_u16()?;
+        header.header_size = bor.read_u16()?;
+        header.offset_to_points = bor.read_u32()?;
+        header.number_of_vlrs = bor.read_u32()?;
+        header.point_format = bor.read_u8()?;
+        header.point_record_length = bor.read_u16()?;
+        header.number_of_points_old = bor.read_u32()?;
 
         for i in 0..5 {
-            header.number_of_points_by_return_old[i] = bor.read_u32();
+            header.number_of_points_by_return_old[i] = bor.read_u32()?;
         }
-        header.x_scale_factor = bor.read_f64();
-        header.y_scale_factor = bor.read_f64();
-        header.z_scale_factor = bor.read_f64();
-        header.x_offset = bor.read_f64();
-        header.y_offset = bor.read_f64();
-        header.z_offset = bor.read_f64();
-        header.max_x = bor.read_f64();
-        header.min_x = bor.read_f64();
-        header.max_y = bor.read_f64();
-        header.min_y = bor.read_f64();
-        header.max_z = bor.read_f64();
-        header.min_z = bor.read_f64();
+        header.x_scale_factor = bor.read_f64()?;
+        header.y_scale_factor = bor.read_f64()?;
+        header.z_scale_factor = bor.read_f64()?;
+        header.x_offset = bor.read_f64()?;
+        header.y_offset = bor.read_f64()?;
+        header.z_offset = bor.read_f64()?;
+        header.max_x = bor.read_f64()?;
+        header.min_x = bor.read_f64()?;
+        header.max_y = bor.read_f64()?;
+        header.min_y = bor.read_f64()?;
+        header.max_z = bor.read_f64()?;
+        header.min_z = bor.read_f64()?;
 
         if header.version_major == 1 && header.version_minor >= 3 {
-            header.waveform_data_start = bor.read_u64();
-            header.offset_to_ex_vlrs = bor.read_u64();
-            header.number_of_extended_vlrs = bor.read_u32();
-            header.number_of_points = bor.read_u64();
+            header.waveform_data_start = bor.read_u64()?;
+            header.offset_to_ex_vlrs = bor.read_u64()?;
+            header.number_of_extended_vlrs = bor.read_u32()?;
+            header.number_of_points = bor.read_u64()?;
             for i in 0..15 {
-                header.number_of_points_by_return[i] = bor.read_u64();
+                header.number_of_points_by_return[i] = bor.read_u64()?;
             }
         }
 

@@ -56,6 +56,12 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 0.1X.X (XX-XX-2019)
+- Added support for reading and writing the BigTIFF format. This has resulted in numerous changes
+  throughout the codebase as a reuslt of significant modification of ByteOrderReader and addition
+  of ByteOrderWriter. This change has touched almost every one of the raster format 
+  encoders/decoders.
+
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.
 - Fixed a bug with reading LAS files with point records with extra bytes. Previously, the LAS decoder
