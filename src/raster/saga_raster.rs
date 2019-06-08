@@ -3,12 +3,7 @@ use crate::utils::ByteOrderReader;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
-use std::io::BufWriter;
-use std::io::Cursor;
-use std::io::Error;
-use std::io::ErrorKind;
-use std::io::SeekFrom;
+use std::io::{BufReader, BufWriter, Cursor, Error, ErrorKind, SeekFrom};
 use std::mem;
 use std::path::Path;
 
@@ -18,7 +13,8 @@ pub fn read_saga(
     data: &mut Vec<f64>,
 ) -> Result<(), Error> {
     // read the header file
-    let header_file = file_name.replace(".sdat", ".sgrd");
+    // let header_file = file_name.replace(".sdat", ".sgrd");
+    let header_file = Path::new(&file_name).with_extension("sgrd").into_os_string().into_string().unwrap();
     let f = File::open(header_file)?;
     let f = BufReader::new(f);
     let mut data_file_offset = 0u64;
@@ -160,7 +156,8 @@ pub fn read_saga(
     data.reserve(configs.rows * configs.columns);
     
     // read the data file
-    let data_file = file_name.replace(".sgrd", ".sdat");
+    // let data_file = file_name.replace(".sgrd", ".sdat");
+    let data_file = Path::new(&file_name).with_extension("sdat").into_os_string().into_string().unwrap();
     let mut f = File::open(data_file.clone())?;
     f.seek(SeekFrom::Start(data_file_offset))?;
 
@@ -395,7 +392,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     // Save the header file
-    let header_file = r.file_name.replace(".sdat", ".sgrd");
+    // let header_file = r.file_name.replace(".sdat", ".sgrd");
+    let header_file = Path::new(&r.file_name).with_extension("sgrd").into_os_string().into_string().unwrap();
     let f = File::create(header_file.clone())?;
     let mut writer = BufWriter::new(f);
 
@@ -488,7 +486,8 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let _ = writer.flush();
 
     // write the data file
-    let data_file = r.file_name.replace(".sgrd", ".sdat");
+    // let data_file = r.file_name.replace(".sgrd", ".sdat");
+    let data_file = Path::new(&r.file_name).with_extension("sdat").into_os_string().into_string().unwrap();
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 

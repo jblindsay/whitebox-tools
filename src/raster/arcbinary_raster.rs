@@ -14,7 +14,8 @@ pub fn read_arcbinary(
     data: &mut Vec<f64>,
 ) -> Result<(), Error> {
     // read the header file
-    let header_file = file_name.replace(".flt", ".hdr");
+    // let header_file = file_name.replace(".flt", ".hdr");
+    let header_file = Path::new(&file_name).with_extension("hdr").into_os_string().into_string().unwrap();
     let f = File::open(header_file)?;
     let f = BufReader::new(f);
 
@@ -104,7 +105,8 @@ pub fn read_arcbinary(
     data.reserve(configs.rows * configs.columns);
 
     // read the data file
-    let data_file = file_name.replace(".hdr", ".flt");
+    // let data_file = file_name.replace(".hdr", ".flt");
+    let data_file = Path::new(&file_name).with_extension("flt").into_os_string().into_string().unwrap();
     let mut f = File::open(data_file.clone())?;
 
     let data_size = 4;
@@ -139,7 +141,8 @@ pub fn read_arcbinary(
 
 pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // Save the header file
-    let header_file = r.file_name.replace(".flt", ".hdr");
+    // let header_file = r.file_name.replace(".flt", ".hdr");
+    let header_file = Path::new(&r.file_name).with_extension("hdr").into_os_string().into_string().unwrap();
 
     let f = File::create(header_file)?;
     let mut writer = BufWriter::new(f);
@@ -174,7 +177,8 @@ pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let _ = writer.flush();
 
     // read the data file
-    let data_file = r.file_name.replace(".hdr", ".flt");
+    // let data_file = r.file_name.replace(".hdr", ".flt");
+    let data_file = Path::new(&r.file_name).with_extension("flt").into_os_string().into_string().unwrap();
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 

@@ -562,7 +562,8 @@ impl Shapefile {
         //////////////////////////////
         // Read the projection file //
         //////////////////////////////
-        let prj_file = self.file_name.replace(".shp", ".prj");
+        // let prj_file = self.file_name.replace(".shp", ".prj");
+        let prj_file = Path::new(&self.file_name).with_extension("prj").into_os_string().into_string().unwrap();
         match File::open(prj_file) {
             Ok(f) => {
                 let f = BufReader::new(f);
@@ -579,7 +580,8 @@ impl Shapefile {
         ///////////////////////////////
 
         // read the header
-        let dbf_file = self.file_name.replace(".shp", ".dbf");
+        // let dbf_file = self.file_name.replace(".shp", ".dbf");
+        let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
         let mut f = File::open(dbf_file.clone()).unwrap();
         let metadata = fs::metadata(dbf_file.clone()).unwrap();
         let file_size: usize = metadata.len() as usize;
@@ -1029,7 +1031,8 @@ impl Shapefile {
         /////////////////////////////////
 
         // write the header
-        let index_file = self.file_name.replace(".shp", ".shx");
+        // let index_file = self.file_name.replace(".shp", ".shx");
+        let index_file = Path::new(&self.file_name).with_extension("shx").into_os_string().into_string().unwrap();
         let f = File::create(&index_file)?;
         let mut writer = BufWriter::new(f);
 
@@ -1074,7 +1077,8 @@ impl Shapefile {
         ///////////////////////////////
 
         if !self.projection.is_empty() {
-            let prj_file = self.file_name.replace(".shp", ".prj");
+            // let prj_file = self.file_name.replace(".shp", ".prj");
+            let prj_file = Path::new(&self.file_name).with_extension("prj").into_os_string().into_string().unwrap();
             let f = File::create(&prj_file)?;
             let mut writer = BufWriter::new(f);
             writer.write_all(self.projection.as_bytes())?;
@@ -1084,7 +1088,8 @@ impl Shapefile {
         // Write the attributes file //
         ///////////////////////////////
 
-        let dbf_file = self.file_name.replace(".shp", ".dbf");
+        // let dbf_file = self.file_name.replace(".shp", ".dbf");
+        let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
         let f = File::create(&dbf_file)?;
         let mut writer = BufWriter::new(f);
 

@@ -15,7 +15,8 @@ pub fn read_idrisi(
     data: &mut Vec<f64>,
 ) -> Result<(), Error> {
     // read the header file
-    let header_file = file_name.replace(".rst", ".rdc");
+    // let header_file = file_name.replace(".rst", ".rdc");
+    let header_file = Path::new(&file_name).with_extension("rdc").into_os_string().into_string().unwrap();
     let f = File::open(header_file)?;
     let f = BufReader::new(f);
 
@@ -125,7 +126,8 @@ pub fn read_idrisi(
     data.reserve(configs.rows * configs.columns);
 
     // read the data file
-    let data_file = file_name.replace(".rdc", ".rst");
+    // let data_file = file_name.replace(".rdc", ".rst");
+    let data_file = Path::new(&file_name).with_extension("rst").into_os_string().into_string().unwrap();
     let mut f = File::open(data_file.clone())?;
 
     let data_size = if configs.data_type == DataType::F32 {
@@ -244,7 +246,8 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     // Save the header file
-    let header_file = r.file_name.replace(".rst", ".rdc");
+    // let header_file = r.file_name.replace(".rst", ".rdc");
+    let header_file = Path::new(&r.file_name).with_extension("rdc").into_os_string().into_string().unwrap();
     let f = File::create(header_file)?;
     let mut writer = BufWriter::new(f);
 
@@ -342,7 +345,8 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let _ = writer.flush();
 
     // read the data file
-    let data_file = r.file_name.replace(".rdc", ".rst");
+    // let data_file = r.file_name.replace(".rdc", ".rst");
+    let data_file = Path::new(&r.file_name).with_extension("rst").into_os_string().into_string().unwrap();
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 

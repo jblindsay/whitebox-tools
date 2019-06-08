@@ -426,6 +426,7 @@ impl ToolManager {
         tool_names.push("MaxElevationDeviation".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
         tool_names.push("MultiscaleRoughness".to_string());
+        tool_names.push("MultiscaleStdDevNormals".to_string());
         tool_names.push("MultiscaleRoughnessSignature".to_string());
         tool_names.push("MultiscaleTopographicPositionImage".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
@@ -1008,6 +1009,7 @@ impl ToolManager {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
             }
             "multiscaleroughness" => Some(Box::new(terrain_analysis::MultiscaleRoughness::new())),
+            "multiscalestddevnormals" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormals::new())),
             "multiscaleroughnesssignature" => Some(Box::new(
                 terrain_analysis::MultiscaleRoughnessSignature::new(),
             )),

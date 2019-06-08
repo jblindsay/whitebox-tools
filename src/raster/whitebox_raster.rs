@@ -16,7 +16,8 @@ pub fn read_whitebox(
     data: &mut Vec<f64>,
 ) -> Result<(), Error> {
     // read the header file
-    let header_file = file_name.replace(".tas", ".dep");
+    // let header_file = file_name.replace(".tas", ".dep");
+    let header_file = Path::new(&file_name).with_extension("dep").into_os_string().into_string().unwrap();
     let f = File::open(header_file)?;
     let f = BufReader::new(f);
 
@@ -113,7 +114,8 @@ pub fn read_whitebox(
     configs.resolution_y = (configs.north - configs.south) / configs.rows as f64;
 
     // read the data file
-    let data_file = file_name.replace(".dep", ".tas");
+    // let data_file = file_name.replace(".dep", ".tas");
+    let data_file = Path::new(&file_name).with_extension("tas").into_os_string().into_string().unwrap();
     let mut f = File::open(data_file.clone())?;
     //let br = BufReader::new(f);
     // let metadata = try!(fs::metadata(data_file.clone()));
@@ -248,7 +250,8 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     // Delete the wstat file if it exists
-    let wstat_string = r.file_name.replace(".tas", ".wstat").replace(".dep", ".wstat");
+    // let wstat_string = r.file_name.replace(".tas", ".wstat").replace(".dep", ".wstat");
+    let wstat_string = Path::new(&r.file_name).with_extension("wstat").into_os_string().into_string().unwrap();
     let wstat_path = Path::new(&wstat_string);
     if wstat_path.exists() {
         match std::fs::remove_file(&wstat_path) {
@@ -259,7 +262,8 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     
 
     // Save the header file
-    let header_file = r.file_name.replace(".tas", ".dep");
+    // let header_file = r.file_name.replace(".tas", ".dep");
+    let header_file = Path::new(&r.file_name).with_extension("dep").into_os_string().into_string().unwrap();
     let f = File::create(header_file)?;
     let mut writer = BufWriter::new(f);
 
@@ -392,7 +396,8 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let _ = writer.flush();
 
     // write the data file
-    let data_file = r.file_name.replace(".dep", ".tas");
+    // let data_file = r.file_name.replace(".dep", ".tas");
+    let data_file = Path::new(&r.file_name).with_extension("tas").into_os_string().into_string().unwrap();
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 
