@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22, 2017
+Created: 22/06/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,22 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// The terrain ruggedness index (TRI) is a measure of local topographic relief. The TRI calculates 
+/// the root-mean-square-deviation (RMSD) for each grid cell in a digital elevation model (DEM), 
+/// calculating the residuals (i.e. elevation differences) between a grid cell and its eight neighbours.
+/// Notice that, unlike the output of this tool, the original Riley et al. (1999) TRI did not normalize 
+/// for the number of cells in the local window (i.e. it is a root-square-deviation only). However,
+/// using the mean has the advantage of allowing for the varying number of neighbouring cells along
+/// the grid edges and in areas bordering NoData cells. This modification does however imply that the
+/// ouput of this tool cannot be directly compared with the index ranges of level to extremely rugged
+/// terrain provided in Riley et al. (1999)
+///
+/// # Reference
+/// Riley, S. J., DeGloria, S. D., and Elliot, R. (1999). Index that quantifies topographic heterogeneity. 
+/// *Intermountain Journal of Sciences*, 5(1-4), 23-27.
+/// 
+/// # See Also
+/// `RelativeTopographicPosition`, `DevFromMeanElev`
 pub struct RuggednessIndex {
     name: String,
     description: String,
@@ -229,13 +245,13 @@ impl WhiteboxTool for RuggednessIndex {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             z = z * z_factor;
                             n = 0.0;
                             ss = 0.0;
                             for c in 0..8 {
-                                z_n = input[(row + d_y[c], col + d_x[c])];
+                                z_n = input.get_value(row + d_y[c], col + d_x[c]);
                                 if z_n != nodata {
                                     z_n = z_n * z_factor;
                                     ss += (z_n - z) * (z_n - z);

@@ -17,6 +17,32 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the profile curvature, or the rate of change in slope along a flow line, 
+/// from a digital elevation model (DEM). Curvature is the second 
+/// derivative of the topographic surface defined by a DEM. Profile curvature characterizes the 
+/// degree of downslope acceleration or deceleration within the landscape (Gallant and Wilson, 2000). 
+/// The user must specify the name of the input DEM (`--dem`) and the output raster image. 
+/// WhiteboxTools reports curvature in degrees multiplied by 100 for easier interpretation because
+/// curvature values are typically very small. The 
+/// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units 
+/// are not the same in the DEM. When this is the case, the algorithm will multiply each 
+/// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate 
+/// system (latitude and longitude), the following equation is used:
+/// 
+/// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
+/// 
+/// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// 
+/// The algorithm uses the same formula for the calculation of plan curvature as Gallant and 
+/// Wilson (2000). Profile curvature is negative for slope increasing downhill (convex flow profile, 
+/// typical of upper slopes) and positive for slope decreasing downhill (concave, typical of lower slopes).
+/// 
+/// # Reference
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// 
+/// # See Also
+/// `ProfileCurvature`, `TangentialCurvature`, `TotalCurvature`, `Slope`, `Aspect`
 pub struct ProfileCurvature {
     name: String,
     description: String,

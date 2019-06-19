@@ -5,7 +5,22 @@ use std::io::Error;
 use std::io::ErrorKind;
 use std::ops::{AddAssign, Index, IndexMut, SubAssign};
 
-#[derive(Debug)]
+/// A simple in-memory 2-D raster data structure that is not connected to a file.
+/// Pixel values can contain any data type or structure that implements the Copy,
+/// AddAssign, and SubAssign traits.
+/// 
+/// Example:
+/// 
+/// ```
+/// let rows = 100;
+/// let columns = 500;
+/// let initial_value = 0f64;
+/// let nodata_value = -999f64;
+/// let mut x: Array2D<f64> = Array2D::new(rows, columns, initial_value, nodata_value)?;
+/// let cell_val = x.get_value(50, 100);
+/// x.set_value(50, 100, 1f64);
+/// ```
+#[derive(Clone, Debug)]
 pub struct Array2D<T: Copy + AddAssign + SubAssign> {
     pub columns: isize,
     pub rows: isize,
@@ -17,6 +32,17 @@ impl<T> Array2D<T>
 where
     T: Copy + AddAssign + SubAssign,
 {
+    /// The constructor function used to create a new Array2D object.
+    /// 
+    /// Example:
+    /// 
+    /// ```
+    /// let rows = 100;
+    /// let columns = 500;
+    /// let initial_value = 0f64;
+    /// let nodata_value = -999f64;
+    /// let mut x: Array2D<f64> = Array2D::new(rows, columns, initial_value, nodata_value)?;
+    /// ```
     pub fn new(
         rows: isize,
         columns: isize,
@@ -130,6 +156,15 @@ where
         }
         self.data = other.data.clone();
         Ok(())
+    }
+
+    pub fn duplicate(&self) -> Array2D<T> {
+        Array2D {
+            columns: self.columns,
+            rows: self.rows,
+            nodata: self.nodata,
+            data: self.data.clone(),
+        }
     }
 
     pub fn reinitialize_values(&mut self, value: T) {

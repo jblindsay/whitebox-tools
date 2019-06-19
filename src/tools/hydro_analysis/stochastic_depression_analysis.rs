@@ -434,7 +434,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             let mut z: i32;
 
             for iteration_num in 0..n {
-                let midpoint = if iteration_num < m {
+                let midpoint = if iteration_num <= m {
                     (wl as f64 / 2f64).floor() as isize
                 } else {
                     (wu as f64 / 2f64).floor() as isize

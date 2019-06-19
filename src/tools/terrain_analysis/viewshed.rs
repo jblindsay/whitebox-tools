@@ -1,20 +1,9 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: January 10, 2018
+Created: 10/01/2018
 Last Modified: 12/10/2018
 License: MIT
-
-Help: This tool can be used to calculate the viewshed (i.e. the visible area) from a
-location (i.e. viewing station) or group of locations based on the topography defined
-by an input digital elevation model (DEM). The user must specify the name of the input
-DEM, a viewing station input vector file, the output file name, and the viewing height.
-Viewing station locations are specified as points within an input shapefile. The output
-image indicates the number of stations visible from each grid cell. The viewing height
-is in the same units as the elevations of the DEM and represent a height above the ground
-elevation from which the viewshed is calculated. Viewshed analysis is a very
-computationally intensive task. Depending on the size of the input DEM grid and the
-number of viewing stations, this operation may take considerable time to complete.
 */
 
 use crate::raster::*;
@@ -30,6 +19,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the viewshed (i.e. the visible area) from a
+/// location (i.e. viewing station) or group of locations based on the topography defined
+/// by an input digital elevation model (DEM). The user must specify the name of the input
+/// DEM (`--dem`), a viewing station input vector file (`--stations`), the output file name
+/// (`--output`), and the viewing height (`--height`).
+/// Viewing station locations are specified as points within an input shapefile. The output
+/// image indicates the number of stations visible from each grid cell. The viewing height
+/// is in the same units as the elevations of the DEM and represent a height above the ground
+/// elevation from which the viewshed is calculated. 
+/// 
+/// `Viewshed` should be used when there are a relatively small number of target sites
+/// for which visibility needs to be assessed. If you need to assess general landscape
+/// visibility as a land-surface parameter, the `VisibilityIndex` tool should be used
+/// instead.
+/// 
+/// Viewshed analysis is a very
+/// computationally intensive task. Depending on the size of the input DEM grid and the
+/// number of viewing stations, this operation may take considerable time to complete. Also,
+/// this implementation of the viewshed algorithm does not account for the curvature of the 
+/// Earth. This should be accounted for if viewsheds are being calculated over very 
+/// extensive areas.
+/// 
+/// # See Also
+/// `VisibilityIndex`
 pub struct Viewshed {
     name: String,
     description: String,

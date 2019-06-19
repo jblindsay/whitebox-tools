@@ -61,6 +61,7 @@ Version 0.1X.X (XX-XX-2019)
   throughout the codebase as a reuslt of significant modification of ByteOrderReader and addition
   of ByteOrderWriter. This change has touched almost every one of the raster format 
   encoders/decoders.
+- Performance improvements have been made to the FlattenLakes (hydro-flattening) tool.
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

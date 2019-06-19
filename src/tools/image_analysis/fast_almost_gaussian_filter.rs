@@ -246,7 +246,7 @@ impl WhiteboxTool for FastAlmostGaussianFilter {
                 println!("Loop {} of {}", iteration_num + 1, n);
             }
 
-            let midpoint = if iteration_num < m {
+            let midpoint = if iteration_num <= m {
                 (wl as f64 / 2f64).floor() as isize
             } else {
                 (wu as f64 / 2f64).floor() as isize

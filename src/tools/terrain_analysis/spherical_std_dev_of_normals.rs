@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/05/2019
-Last Modified: 24/05/2019
+Last Modified: 13/06/2019
 License: MIT
 */
 
@@ -28,7 +28,8 @@ use std::thread;
 /// 
 /// where <em>R</em> is the resultant vector length and <em>N</em> is the number of unit normal vectors 
 /// within the local neighbourhood. <em>s</em> is measured in degrees and is zero for simple planes and increases
-/// infinitely with increasing surface complexity or roughness.
+/// infinitely with increasing surface complexity or roughness. Note that this formulation of the spherical 
+/// standard deviation assumes an underlying wrapped normal distribution.
 /// 
 /// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
 /// vector dispersion, a related measure of angular dispersion, increases monotonically with scale. This is the result
@@ -256,7 +257,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
         if verbose {
             println!("Smoothing the input DEM...");
         }
-        let sigma = (midpoint as f64 - 0.5) / 3f64;
+        let sigma = (midpoint as f64 + 0.5) / 3f64;
         if sigma < 1.8 && filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
@@ -380,7 +381,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     println!("Loop {} of {}", iteration_num + 1, n);
                 }
 
-                let midpoint = if iteration_num < m {
+                let midpoint = if iteration_num <= m {
                     (wl as f64 / 2f64).floor() as isize
                 } else {
                     (wu as f64 / 2f64).floor() as isize
@@ -521,8 +522,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                             }
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / resx8;
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / resy8;
-                            magnitude = (fx * fx + fy * fy + fz_sqrd).sqrt();
-                            if magnitude > 0f64 {
+                            if fx != 0f64 || fy != 0f64 {
+                                magnitude = (fx * fx + fy * fy + fz_sqrd).sqrt();
                                 xdata[col as usize] = fx / magnitude;
                                 ydata[col as usize] = fy / magnitude;
                                 zdata[col as usize] = fz / magnitude;
@@ -569,8 +570,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     sumx += xc.get_value(row, col);
                     sumy += yc.get_value(row, col);
                     sumz += zc.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata || 
-                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                    if smoothed_dem.get_value(row, col) == nodata { // || 
+                        // (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
@@ -589,8 +590,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     yc.increment(row, col, yc.get_value(row, col-1));
                     zc.increment(row, col, zc.get_value(row, col-1));
                     i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata || 
-                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                    if smoothed_dem.get_value(row, col) == nodata { //|| 
+                        // (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }

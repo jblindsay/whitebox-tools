@@ -18,6 +18,34 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to perform a slope-based classification, or filtering (i.e. removal), of 
+/// non-ground points within a LiDAR point-cloud. The user must specify the name of the input and output
+/// LiDAR files (`--input` and `--output`). Inter-point slopes are compared between pair of points 
+/// contained within local neighbourhoods of size `--radius`. Neighbourhoods with fewer than the
+/// user-specified minimum number of points (`--min_neighbours`) are extended until the minimum point
+/// number is equaled or exceeded. Points that are above neighbouring points by the minimum 
+/// (`--height_threshold`) and have an inter-point slope greater than the user-specifed threshold 
+/// (`--slope_threshold`) are considered non-ground points and are either optionally (`--classify`) 
+/// excluded from the output point-cloud or assigned the *unclassified* (value 1) class value. 
+/// 
+/// Slope-based ground-point classification methods suffer from the challenge of uses a constant
+/// slope threshold under varying terrain slopes. Some researchers have developed schemes for varying
+/// the slope threshold based on underlying terrain slopes. `LidarGroundPointFilter` instead allow the 
+/// user to optionally (`--slope_norm`) normalize the underlying terrain (i.e. flatten the terrain) 
+/// using a white top-hat transform. A constant slope threshold may then be used without contributing
+/// to poorer performance under steep topography. Note, that this option, while useful in rugged
+/// terrain, is computationally intensive. If the point-cloud is of a relatively flat terrain,
+/// this option may be excluded.
+/// 
+/// While this tool is appropriately applied to LiDAR point-clouds, the `RemoveOffTerrainObjects`
+/// tool can be used to remove off-terrain objects from rasterized LiDAR digital elevation models (DEMs).
+/// 
+/// # Reference
+/// Vosselman, G. (2000). Slope based filtering of laser altimetry data. *International Archives of 
+/// Photogrammetry and Remote Sensing*, 33(B3/2; PART 3), 935-942.
+/// 
+/// # See Also
+/// `RemoveOffTerrainObjects`
 pub struct LidarGroundPointFilter {
     name: String,
     description: String,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/06/2017
-Last Modified: 12/10/2018
+Last Modified: 12/06/2019
 License: MIT
 */
 
@@ -268,6 +268,7 @@ impl WhiteboxTool for RelativeTopographicPosition {
         let start = Instant::now();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
         let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/04/2018
-Last Modified: 12/10/2018
+Last Modified: 09/06/2019
 License: MIT
 */
 
@@ -15,6 +15,12 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool is used to increment the elevations in a digital elevation model (DEM) along 
+/// the boundaries of a vector lines or polygon layer. The user must specify the name of the 
+/// raster DEM (`--dem`), the vector file (`--input`), the output file name (`--output`), the 
+/// increment height (`--height`), and an optional breach lines vector layer (`--breach`). 
+/// The breach lines layer can be used to breach a whole in the raised walls at intersections 
+/// with the wall layer.
 pub struct RaiseWalls {
     name: String,
     description: String,
@@ -34,7 +40,7 @@ impl RaiseWalls {
         let mut parameters = vec![];
         parameters.push(ToolParameter {
             name: "Input Vector Line or Polygon File".to_owned(),
-            flags: vec!["-i".to_owned(), "--input".to_owned()],
+            flags: vec!["-i".to_owned(), "walls".to_owned(), "--input".to_owned()],
             description: "Input vector lines or polygons file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
                 VectorGeometryType::Any,
@@ -161,7 +167,7 @@ impl WhiteboxTool for RaiseWalls {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" {
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-walls" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 2, 2017
-Last Modified: 12/10/2018
+Created: 02/07/2017
+Last Modified: 06/08/2019
 License: MIT
 */
 
@@ -17,6 +17,38 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool calculates the sediment transport index, or sometimes, length-slope (*LS*) 
+/// factor, based on input specific contributing area (*A<sub>s</sub>*, i.e. the upslope 
+/// contributing area per unit contour length; `--sca`) and slope gradient 
+/// (&beta;, measured in degrees; `--slope`) rasters. Moore et al. (1991) state that the physical potential for 
+/// sheet and rill erosion in upland catchments can be evaluated by the product *R K LS*, 
+/// a component of the Universal Soil Loss Equation (USLE), where *R* is a rainfall and 
+/// runoff erosivity factor, *K* is a soil erodibility factor, and *LS* is the length-slope 
+/// factor that accounts for the effects of topography on erosion. To predict erosion at a 
+/// point in the landscape the LS factor can be written as:
+/// 
+/// > *LS* = (*n* + 1)(*A<sub>s</sub>* / 22.13)<sup>*n*</sup>(sin(&beta;) / 0.0896)<sup>*m*</sup>
+/// 
+/// where *n* = 0.4 (`--sca_exponent`) and *m* = 1.3 (`--slope_exponent`) in its original formulation.
+/// 
+/// This index is derived from unit stream-power theory and is sometimes used in place of the 
+/// length-slope factor in the revised universal soil loss equation (RUSLE) for slope lengths 
+/// less than 100 m and slope less than 14 degrees. Like many hydrological land-surface 
+/// parameters `SedimentTransportIndex` assumes that contributing area is directly related to 
+/// discharge. Notice that *A<sub>s</sub>* must not be log-transformed prior to being used; 
+/// *A<sub>s</sub>* is commonly log-transformed to enhance visualization of the data. Also,
+/// *A<sub>s</sub>* can be derived using any of the available flow accumulation tools, alghough
+/// better results usually result from application of multiple-flow direction algorithms such
+/// as `DInfFlowAccumulation` and `FD8FlowAccumulation`. The slope raster can be created from the base 
+/// digital elevation model (DEM) using the `Slope` tool. The input images must have the same grid dimensions.
+/// 
+/// # Reference
+/// Moore, I. D., Grayson, R. B., and Ladson, A. R. (1991). Digital terrain modelling: 
+/// a review of hydrological, geomorphological, and biological applications. *Hydrological 
+/// processes*, 5(1), 3-30.
+/// 
+/// # See Also
+/// `RelativeStreamPowerIndex`, `DInfFlowAccumulation`, `FD8FlowAccumulation`
 pub struct SedimentTransportIndex {
     name: String,
     description: String,
@@ -259,7 +291,7 @@ impl WhiteboxTool for SedimentTransportIndex {
                         if sca_val != sca_nodata && slope_val != slope_nodata {
                             data[col as usize] = (sca_exponent + 1f64)
                                 * (sca_val / 22.13).powf(sca_exponent)
-                                * (((slope_val.to_radians()) / 0.0896).sin()).powf(slope_exponent);
+                                * ((slope_val.to_radians().sin()) / 0.0896).powf(slope_exponent);
                         }
                     }
                     tx.send((row, data)).unwrap();

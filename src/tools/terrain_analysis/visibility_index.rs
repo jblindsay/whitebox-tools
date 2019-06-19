@@ -4,25 +4,6 @@ Authors: Dr. John Lindsay
 Created: 07/04/2018
 Last Modified: 12/10/2018
 License: MIT
-
-Help: This tool can be used to calculate a measure of landscape visibility based on the
-topography of an input digital elevation model (DEM). The user must specify the name of
-the input DEM, the output file name, the viewing height, and a resolution factor.
-Viewsheds are calcuated for a subset of grid cells in the DEM based on the resolution
-factor. The visibility index value (0.0-1.0) indicates the proportion of tested stations
-(determined by the resolution factor) that each cell is visible from. The viewing height
-is in the same units as the elevations of the DEM and represent a height above the ground
-elevation. Each tested grid cell's viewshed will be calculated in parallel. However, visibility
-index is one of the most computationally intensive geomorphometric indices to calculate.
-Depending on the size of the input DEM grid and the resolution factor, this operation may take
-considerable time to complete. If the task is too long-running, it is advisable to raise the
-resolution factor. A resolution factor of 2 will skip every second row and every second column
-(effectively evaluating the viewsheds of a quarter of the DEM's grid cells). Increasing this
-value decreases the number of calculated viewshed but will result in a lower accuracy estimate
-of overall visibility. In addition to the high computational costs of this index, the tool
-also requires substantial memory resources to operate. Each of these limitations should be
-considered before running this tool on a particular data set. This tool is best to apply
-on systems with high core-counts and plenty of memory.
 */
 
 use crate::raster::*;
@@ -38,6 +19,28 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+/// This tool can be used to calculate a measure of landscape visibility based on the
+/// topography of an input digital elevation model (DEM). The user must specify the name of
+/// the input DEM (`--dem`), the output file name (`--output`), the viewing height (`--height`), 
+/// and a resolution factor (`--res_factor`).
+/// Viewsheds are calcuated for a subset of grid cells in the DEM based on the resolution
+/// factor. The visibility index value (0.0-1.0) indicates the proportion of tested stations
+/// (determined by the resolution factor) that each cell is visible from. The viewing height
+/// is in the same units as the elevations of the DEM and represent a height above the ground
+/// elevation. Each tested grid cell's viewshed will be calculated in parallel. However, visibility
+/// index is one of the most computationally intensive geomorphometric indices to calculate.
+/// Depending on the size of the input DEM grid and the resolution factor, this operation may take
+/// considerable time to complete. If the task is too long-running, it is advisable to raise the
+/// resolution factor. A resolution factor of 2 will skip every second row and every second column
+/// (effectively evaluating the viewsheds of a quarter of the DEM's grid cells). Increasing this
+/// value decreases the number of calculated viewshed but will result in a lower accuracy estimate
+/// of overall visibility. In addition to the high computational costs of this index, the tool
+/// also requires substantial memory resources to operate. Each of these limitations should be
+/// considered before running this tool on a particular data set. This tool is best to apply
+/// on computer systems with high core-counts and plenty of memory.
+/// 
+/// # See Also
+/// `Viewshed`
 pub struct VisibilityIndex {
     name: String,
     description: String,

@@ -247,7 +247,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         if verbose {
             println!("Smoothing the input DEM...");
         }
-        let sigma = (midpoint as f64 - 0.5) / 3f64;
+        let sigma = (midpoint as f64 + 0.5) / 3f64;
         if sigma < 1.8 && filter_size >= 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
@@ -371,7 +371,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     println!("Loop {} of {}", iteration_num + 1, n);
                 }
 
-                let midpoint = if iteration_num < m {
+                let midpoint = if iteration_num <= m {
                     (wl as f64 / 2f64).floor() as isize
                 } else {
                     (wu as f64 / 2f64).floor() as isize

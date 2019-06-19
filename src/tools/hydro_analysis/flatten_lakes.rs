@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/03/2018
-Last Modified: 12/10/2018
+Last Modified: 12/06/2019
 License: MIT
 
 NOTES: When support is provided for reading vector attributes tables, this tool should be modified so
@@ -270,58 +270,72 @@ impl WhiteboxTool for FlattenLakes {
                     }
                 }
                 top_row = input.get_row_from_y(bb.max_y);
+                if top_row < 0 {
+                    top_row = 0;
+                }
                 bottom_row = input.get_row_from_y(bb.min_y);
+                if bottom_row >= rows {
+                    bottom_row = rows - 1;
+                }
                 left_col = input.get_column_from_x(bb.min_x);
+                if left_col < 0 {
+                    left_col = 0;
+                }
                 right_col = input.get_column_from_x(bb.max_x);
+                if right_col >= columns {
+                    right_col = columns - 1;
+                }
 
-                // find each intersection with a row.
-                for row in top_row..bottom_row + 1 {
-                    row_y_coord = input.get_y_from_row(row);
-                    // find the x-coordinates of each of the line segments
-                    // that intersect this row's y coordinate
-                    for i in start_point_in_part..end_point_in_part {
-                        if is_between(row_y_coord, record.points[i].y, record.points[i + 1].y) {
-                            y1 = record.points[i].y;
-                            y2 = record.points[i + 1].y;
-                            if y2 != y1 {
-                                x1 = record.points[i].x;
-                                x2 = record.points[i + 1].x;
+                if bottom_row > top_row && right_col > left_col { // if it falls off the raster, don't bother.
+                    // find each intersection with a row.
+                    for row in top_row..bottom_row + 1 {
+                        row_y_coord = input.get_y_from_row(row);
+                        // find the x-coordinates of each of the line segments
+                        // that intersect this row's y coordinate
+                        for i in start_point_in_part..end_point_in_part {
+                            if is_between(row_y_coord, record.points[i].y, record.points[i + 1].y) {
+                                y1 = record.points[i].y;
+                                y2 = record.points[i + 1].y;
+                                if y2 != y1 {
+                                    x1 = record.points[i].x;
+                                    x2 = record.points[i + 1].x;
 
-                                // calculate the intersection point
-                                x_prime = x1 + (row_y_coord - y1) / (y2 - y1) * (x2 - x1);
-                                let col = input.get_column_from_x(x_prime);
+                                    // calculate the intersection point
+                                    x_prime = x1 + (row_y_coord - y1) / (y2 - y1) * (x2 - x1);
+                                    let col = input.get_column_from_x(x_prime);
 
-                                z = input.get_value(row, col);
-                                if z != nodata {
-                                    if z < min_elevs[record_num] {
-                                        min_elevs[record_num] = z;
+                                    z = input.get_value(row, col);
+                                    if z != nodata {
+                                        if z < min_elevs[record_num] {
+                                            min_elevs[record_num] = z;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                // find each intersection with a column.
-                for col in left_col..right_col + 1 {
-                    col_x_coord = output.get_x_from_column(col);
-                    for i in start_point_in_part..end_point_in_part {
-                        if is_between(col_x_coord, record.points[i].x, record.points[i + 1].x) {
-                            x1 = record.points[i].x;
-                            x2 = record.points[i + 1].x;
-                            if x1 != x2 {
-                                y1 = record.points[i].y;
-                                y2 = record.points[i + 1].y;
+                    // find each intersection with a column.
+                    for col in left_col..right_col + 1 {
+                        col_x_coord = output.get_x_from_column(col);
+                        for i in start_point_in_part..end_point_in_part {
+                            if is_between(col_x_coord, record.points[i].x, record.points[i + 1].x) {
+                                x1 = record.points[i].x;
+                                x2 = record.points[i + 1].x;
+                                if x1 != x2 {
+                                    y1 = record.points[i].y;
+                                    y2 = record.points[i + 1].y;
 
-                                // calculate the intersection point
-                                y_prime = y1 + (col_x_coord - x1) / (x2 - x1) * (y2 - y1);
+                                    // calculate the intersection point
+                                    y_prime = y1 + (col_x_coord - x1) / (x2 - x1) * (y2 - y1);
 
-                                let row = output.get_row_from_y(y_prime);
+                                    let row = output.get_row_from_y(y_prime);
 
-                                z = input.get_value(row, col);
-                                if z != nodata {
-                                    if z < min_elevs[record_num] {
-                                        min_elevs[record_num] = z;
+                                    z = input.get_value(row, col);
+                                    if z != nodata {
+                                        if z < min_elevs[record_num] {
+                                            min_elevs[record_num] = z;
+                                        }
                                     }
                                 }
                             }
@@ -352,7 +366,7 @@ impl WhiteboxTool for FlattenLakes {
             let record = polygons.get_record(record_num);
 
             for part in 0..record.num_parts as usize {
-                if !record.is_hole(part as i32) {
+                if !record.is_hole(part as i32) && min_elevs[record_num] != f64::INFINITY {
                     // erase cells from this part
 
                     start_point_in_part = record.parts[part] as usize;
@@ -369,7 +383,11 @@ impl WhiteboxTool for FlattenLakes {
                     ending_col = 0;
                     for p in start_point_in_part..end_point_in_part + 1 {
                         row = input.get_row_from_y(record.points[p].y);
+                        if row < 0 { row = 0; }
+                        if row >= rows { row = rows - 1; }
                         col = input.get_column_from_x(record.points[p].x);
+                        if col < 0 { col = 0; }
+                        if col >= columns { col = columns - 1; }
                         if row < starting_row {
                             starting_row = row;
                         }
@@ -395,8 +413,8 @@ impl WhiteboxTool for FlattenLakes {
                                 output.set_value(r, c, min_elevs[record_num]);
                             }
                         }
-                        if verbose {
-                            progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64)
+                        if verbose && num_records < 25 {
+                            progress = (100.0_f64 * (r - starting_row) as f64 / (ending_row - starting_row) as f64)
                                 as usize;
                             if progress != old_progress {
                                 println!(
@@ -413,7 +431,7 @@ impl WhiteboxTool for FlattenLakes {
             }
 
             for part in 0..record.num_parts as usize {
-                if record.is_hole(part as i32) {
+                if record.is_hole(part as i32) && min_elevs[record_num] != f64::INFINITY {
                     // add cells from this part back in
 
                     start_point_in_part = record.parts[part] as usize;
@@ -430,7 +448,11 @@ impl WhiteboxTool for FlattenLakes {
                     ending_col = 0;
                     for p in start_point_in_part..end_point_in_part + 1 {
                         row = input.get_row_from_y(record.points[p].y);
+                        if row < 0 { row = 0; }
+                        if row >= rows { row = rows - 1; }
                         col = input.get_column_from_x(record.points[p].x);
+                        if col < 0 { col = 0; }
+                        if col >= columns { col = columns - 1; }
                         if row < starting_row {
                             starting_row = row;
                         }
@@ -456,8 +478,8 @@ impl WhiteboxTool for FlattenLakes {
                                 output.set_value(r, c, input.get_value(r, c));
                             }
                         }
-                        if verbose {
-                            progress = (100.0_f64 * r as f64 / (ending_row - starting_row) as f64)
+                        if verbose && num_records < 25 {
+                            progress = (100.0_f64 * (r - starting_row) as f64 / (ending_row - starting_row) as f64)
                                 as usize;
                             if progress != old_progress {
                                 println!(
@@ -470,6 +492,14 @@ impl WhiteboxTool for FlattenLakes {
                             }
                         }
                     }
+                }
+            }
+             
+            if verbose && num_records > 25 {
+                progress = (100.0_f64 * (record_num as f64) / (num_records - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
                 }
             }
         }

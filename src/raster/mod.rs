@@ -35,7 +35,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::Error;
 use std::io::ErrorKind;
-use std::ops::{Index, IndexMut};
+use std::ops::{AddAssign, Index, IndexMut, SubAssign};
 use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -287,6 +287,62 @@ impl Raster {
         output
     }
 
+    pub fn initialize_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(file_name: &'a str, configs: &'a RasterConfigs, array: &'a Array2D<T>) -> Raster {
+        let new_file_name = if file_name.contains(".") {
+            file_name.to_string()
+        } else {
+            // likely no extension provided; default to .tif
+            format!("{}.tif", file_name)
+        };
+        let mut output = Raster {
+            file_name: new_file_name.clone(),
+            ..Default::default()
+        };
+        if array.rows as usize != configs.rows || array.columns as usize != configs.columns {
+            eprintln!("Warning: the Array2D and configs don't share the same dimensions. This may cause problems.");
+        }
+        output.file_mode = "w".to_string();
+        output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
+        output.configs.rows = array.rows as usize;
+        output.configs.columns = array.columns as usize;
+        output.configs.north = configs.north;
+        output.configs.south = configs.south;
+        output.configs.east = configs.east;
+        output.configs.west = configs.west;
+        output.configs.resolution_x = configs.resolution_x;
+        output.configs.resolution_y = configs.resolution_y;
+        output.configs.nodata = array.nodata().into();
+        output.configs.data_type = configs.data_type;
+        output.configs.photometric_interp = configs.photometric_interp;
+        output.configs.palette = configs.palette.clone();
+        output.configs.projection = configs.projection.clone();
+        output.configs.xy_units = configs.xy_units.clone();
+        output.configs.z_units = configs.z_units.clone();
+        output.configs.endian = configs.endian.clone();
+        output.configs.pixel_is_area = configs.pixel_is_area;
+        output.configs.epsg_code = configs.epsg_code;
+        output.configs.coordinate_ref_system_wkt = configs.coordinate_ref_system_wkt.clone();
+        output.configs.model_tiepoint = configs.model_tiepoint.clone();
+        output.configs.model_pixel_scale = configs.model_pixel_scale.clone();
+        output.configs.model_transformation = configs.model_transformation.clone();
+        output.configs.geo_key_directory = configs.geo_key_directory.clone();
+        output.configs.geo_double_params = configs.geo_double_params.clone();
+        output.configs.geo_ascii_params = configs.geo_ascii_params.clone();
+        
+        if output.raster_type == RasterType::SurferAscii
+            || output.raster_type == RasterType::Surfer7Binary
+        {
+            output.configs.nodata = 1.71041e38;
+        }
+        output.data.reserve_exact(output.configs.rows * output.configs.columns);
+        for row in 0..array.rows {
+            for col in 0..array.columns {
+                output.data.push(array.get_value(row, col).into());
+            }
+        }
+        output
+    }
+
     /// Returns the file name of the `Raster`, without the directory and file extension.
     pub fn get_short_filename(&self) -> String {
         let path = Path::new(&self.file_name);
@@ -509,6 +565,25 @@ impl Raster {
             }
         }
         data
+    }
+
+    pub fn set_data_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(&mut self, array: &'a Array2D<T>) -> Result<(), Error> {
+        // quality control
+        if array.rows * array.columns != self.data.len() as isize {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "Rasters must have the same dimensions and extent.",
+            ));
+        }
+        let mut i: usize;
+        for row in 0..array.rows {
+            for col in 0..array.columns {
+                i = row as usize * self.configs.columns + col as usize;
+                self.data[i] = array.get_value(row, col).into();
+            }
+        }
+        self.configs.nodata = array.nodata().into();
+        Ok(())
     }
     
     pub fn reinitialize_values(&mut self, value: f64) {

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 6, 2017
+Created: 06/06/2017
 Last Modified: 12/10/2018
 License: MIT
 
@@ -17,6 +17,25 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to create a bare-earth DEM from a fine-resolution digital surface model. The 
+/// tool is typically applied to LiDAR DEMs which frequently contain numerous off-terrain objects (OTOs) such 
+/// as buildings, trees and other vegetation, cars, fences and other anthropogenic objects. The algorithm 
+/// works by finding and removing steep-sided peaks within the DEM. All peaks within a sub-grid, with a 
+/// dimension of the user-specified maximum OTO size (`--filter`), in pixels, are identified and removed. 
+/// Each of the edge cells of the peaks are then examined to see if they have a slope that is less than the 
+/// user-specified minimum OTO edge slope (`--slope`) and a back-filling procedure is used. This ensures that 
+/// OTOs are distinguished from natural topographic features such as hills. The DEM is preprocessed using a 
+/// white top-hat transform, such that elevations are normalized for the underlying ground surface.
+/// 
+/// Note that this tool is appropriate to apply to rasterized LiDAR DEMs. Use the `LidarGroundPointFilter`
+/// tool to remove or classify OTOs within a LiDAR point-cloud.
+/// 
+/// # Reference
+/// J.B. Lindsay (2018) A new method for the removal of off-terrain objects from LiDAR-derived raster surface 
+/// models. Available online, DOI: [10.13140/RG.2.2.21226.62401](https://www.researchgate.net/publication/323003064_A_new_method_for_the_removal_of_off-terrain_objects_from_LiDAR-derived_raster_surface_models)
+/// 
+/// # See Also
+/// `TophatTransform`, `LidarGroundPointFilter`
 pub struct RemoveOffTerrainObjects {
     name: String,
     description: String,
