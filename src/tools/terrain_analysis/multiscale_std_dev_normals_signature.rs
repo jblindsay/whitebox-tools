@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 05/06/2019
-Last Modified: 13/06/2019
+Created: 20/06/2019
+Last Modified: 20/06/2019
 License: MIT
 */
 
@@ -11,20 +11,21 @@ use crate::rendering::html::*;
 use crate::rendering::LineGraph;
 use crate::structures::Array2D;
 use crate::tools::*;
+use crate::vector::{ShapeType, Shapefile};
 use num_cpus;
 use std::env;
 use std::f64;
-use std::io::prelude::*;
-use std::io::{BufWriter, Error, ErrorKind};
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufWriter;
+use std::io::{Error, ErrorKind};
 use std::path;
-use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-pub struct MultiscaleStdDevNormals {
+pub struct MultiscaleStdDevNormalsSignature {
     name: String,
     description: String,
     toolbox: String,
@@ -32,13 +33,14 @@ pub struct MultiscaleStdDevNormals {
     example_usage: String,
 }
 
-impl MultiscaleStdDevNormals {
-    pub fn new() -> MultiscaleStdDevNormals {
+impl MultiscaleStdDevNormalsSignature {
+    pub fn new() -> MultiscaleStdDevNormalsSignature {
         // public constructor
-        let name = "MultiscaleStdDevNormals".to_string();
+        let name = "MultiscaleStdDevNormalsSignature".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
-            "Calculates surface roughness over a range of spatial scales.".to_string();
+            "Calculates the surface roughness for points over a range of spatial scales."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -51,19 +53,21 @@ impl MultiscaleStdDevNormals {
         });
 
         parameters.push(ToolParameter {
-            name: "Output Roughness Magnitude File".to_owned(),
-            flags: vec!["--out_mag".to_owned()],
-            description: "Output raster roughness magnitude file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            name: "Input Vector Points File".to_owned(),
+            flags: vec!["--points".to_owned()],
+            description: "Input vector points file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
+                VectorGeometryType::Point,
+            )),
             default_value: None,
             optional: false,
         });
 
         parameters.push(ToolParameter {
-            name: "Output Roughness Scale File".to_owned(),
-            flags: vec!["--out_scale".to_owned()],
-            description: "Output raster roughness scale file.".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            name: "Output HTML File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description: "Output HTML file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
             optional: false,
         });
@@ -115,9 +119,9 @@ impl MultiscaleStdDevNormals {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --out_mag=roughness_mag.tif --out_scale=roughness_scale.tif --min_scale=1 --step=5 --num_steps=100 --step_nonlinearity=1.5", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif --points=sites.shp --output=roughness.html --min_scale=1 --step=5 --num_steps=100 --step_nonlinearity=1.5", short_exe, name).replace("*", &sep);
 
-        MultiscaleStdDevNormals {
+        MultiscaleStdDevNormalsSignature {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -127,7 +131,7 @@ impl MultiscaleStdDevNormals {
     }
 }
 
-impl WhiteboxTool for MultiscaleStdDevNormals {
+impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -169,8 +173,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut output_mag_file = String::new();
-        let mut output_scale_file = String::new();
+        let mut points_file = String::new();
+        let mut output_file = String::new();
         let mut min_scale = 1isize;
         let mut step = 1isize;
         let mut num_steps = 10isize;
@@ -197,14 +201,14 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-out_mag" {
-                output_mag_file = if keyval {
+            } else if flag_val == "-points" {
+                points_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-out_scale" {
-                output_scale_file = if keyval {
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
@@ -238,16 +242,6 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 };
             }
         }
-
-        // if max_scale < min_scale {
-        //     let ms = min_scale;
-        //     min_scale = max_scale;
-        //     max_scale = ms;
-        // }
-
-        // if max_scale == min_scale {
-        //     max_scale += 1;
-        // }
 
         if step < 1 {
             eprintln!("Warning: Step value must be at least 1.0. Value set to 1.0.");
@@ -283,15 +277,15 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_mag_file.contains(&sep) && !output_mag_file.contains("/") {
-            output_mag_file = format!("{}{}", working_directory, output_mag_file);
+        if !points_file.contains(&sep) && !points_file.contains("/") {
+            points_file = format!("{}{}", working_directory, points_file);
         }
-        if !output_scale_file.contains(&sep) && !output_scale_file.contains("/") {
-            output_scale_file = format!("{}{}", working_directory, output_scale_file);
+        if !output_file.contains(&sep) && !output_file.contains("/") {
+            output_file = format!("{}{}", working_directory, output_file);
         }
 
         if verbose {
-            println!("Reading data...")
+            println!("Reading DEM data...")
         };
         let input_raster = Raster::new(&input_file, "r")?; // Memory requirements: 2.0X, assuming data is stored as f32s
         let start = Instant::now();
@@ -316,26 +310,58 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             }
         }
 
-        let num_procs = num_cpus::get() as isize;
+        if verbose {
+            println!("Reading points data...")
+        };
+        let points = Shapefile::read(&points_file)?;
+
+        // make sure the input vector file is of points type
+        if points.header.shape_type.base_shape_type() != ShapeType::Point {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input vector data must be of point base shape type.",
+            ));
+        }
+
+        // read the points' corresponding row and columns into a list
+        let mut signature_sites = vec![];
+        let mut xdata = vec![];
+        let mut ydata = vec![];
+        let mut series_names = vec![];
+        for record_num in 0..points.num_records {
+            let record = points.get_record(record_num);
+            let row = ((configs.north - record.points[0].y) / configs.resolution_y).floor() as isize; //input.get_row_from_y(record.points[0].y);
+            let col = ((record.points[0].x - configs.west) / configs.resolution_x).floor() as isize; // input.get_column_from_x(record.points[0].x);
+            if row >= 0 && col >= 0 && row < rows && col < columns {
+                signature_sites.push((row, col));
+                xdata.push(vec![]);
+                ydata.push(vec![]);
+                series_names.push(format!("Site {}", record_num + 1));
+            }
+
+            if verbose {
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Finding site row/column values: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
 
         if verbose {
             println!("Initializing grids...");
         }
-        let mut output_mag = Array2D::<f32>::new(rows, columns, -1f32, nodata)?; // Memory requirements: 2.0X
-        let mut output_scale = Array2D::<i16>::new(rows, columns, -32768i16, -32768i16)?; // Memory requirements: 2.5X
 
         // calculate the 'n' itegral image
-        let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?; // Memory requirements: 3.5X
+        let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?; 
         let mut sum: u32;
         let mut val: u32;
-        let mut num_valid_cells = 0u64;
         for row in 0..rows {
             if row > 0 {
                 sum = 0u32;
                 for col in 0..columns {
                     sum += if input.get_value(row, col) != nodata {
                         input.set_value(row, col, input.get_value(row, col) - min_val);
-                        num_valid_cells += 1;
                         1
                     } else {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
@@ -346,14 +372,12 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             } else {
                 if input.get_value(0, 0) != nodata {
                     i_n.set_value(0, 0, 1);
-                    num_valid_cells += 1;
                 } else {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
                     val = if input.get_value(row, col) != nodata {
                         input.set_value(row, col, input.get_value(row, col) - min_val);
-                        num_valid_cells += 1;
                         1
                     } else {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
@@ -370,19 +394,9 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         ///////////////////////////////
         // Perform the main analysis //
         ///////////////////////////////
-
-        // let count = num_steps; //(min_scale..=max_scale).step_by(step as usize).count();
-        // let mut loop_num = 1;
-
-        let mut xdata = vec![];
-        xdata.push(Vec::with_capacity(num_steps as usize));
-        let mut ydata = vec![];
-        ydata.push(Vec::with_capacity(num_steps as usize));
-        let series_names = vec![String::from("DEM Average SStdDevN")];
-
-        // for midpoint in (min_scale..=max_scale).step_by(step as usize) {
+        let num_procs = num_cpus::get() as isize;
         for s in 1..=num_steps {
-            let midpoint = min_scale + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
+            let midpoint = min_scale + ((((s - min_scale) * step) as f32).powf(step_nonlinearity)).floor() as isize;
             println!("Loop {} / {}", s, num_steps);
 
             let filter_size = midpoint * 2 + 1;
@@ -698,116 +712,57 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             ////////////////////////////////////////////////////////////////
             // Calculate the spherical standard deviations of the normals //
             ////////////////////////////////////////////////////////////////
-            let xc = Arc::new(xc);
-            let yc = Arc::new(yc);
-            let zc = Arc::new(zc);
-            let (tx2, rx2) = mpsc::channel();
-            for tid in 0..num_procs {
-                let xc = xc.clone();
-                let yc = yc.clone();
-                let zc = zc.clone();
-                let input = input.clone();
-                let i_n = i_n.clone();
-                let tx2 = tx2.clone();
-                thread::spawn(move || {
-                    let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
-                    let mut n: f32;
-                    let (mut sumx, mut sumy, mut sumz): (f64, f64, f64);
-                    let mut mean: f32;
-                    let mut z: f32;
-                    for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        y1 = row - midpoint - 1;
-                        if y1 < 0 {
-                            y1 = 0;
-                        }
-                        if y1 >= rows {
-                            y1 = rows - 1;
-                        }
-
-                        y2 = row + midpoint;
-                        if y2 < 0 {
-                            y2 = 0;
-                        }
-                        if y2 >= rows {
-                            y2 = rows - 1;
-                        }
-                        let mut data = vec![nodata; columns as usize];
-                        for col in 0..columns {
-                            z = input.get_value(row, col);
-                            if z != nodata {
-                                x1 = col - midpoint - 1;
-                                if x1 < 0 {
-                                    x1 = 0;
-                                }
-                                if x1 >= columns {
-                                    x1 = columns - 1;
-                                }
-
-                                x2 = col + midpoint;
-                                if x2 < 0 {
-                                    x2 = 0;
-                                }
-                                if x2 >= columns {
-                                    x2 = columns - 1;
-                                }
-                                n = (i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
-                                    - i_n.get_value(y1, x2)
-                                    - i_n.get_value(y2, x1)) as f32;
-                                if n > 0f32 {
-                                    sumx = xc.get_value(y2, x2) + xc.get_value(y1, x1)
-                                        - xc.get_value(y1, x2)
-                                        - xc.get_value(y2, x1);
-                                    sumy = yc.get_value(y2, x2) + yc.get_value(y1, x1)
-                                        - yc.get_value(y1, x2)
-                                        - yc.get_value(y2, x1);
-                                    sumz = zc.get_value(y2, x2) + zc.get_value(y1, x1)
-                                        - zc.get_value(y1, x2)
-                                        - zc.get_value(y2, x1);
-                                    mean = ((sumx * sumx + sumy * sumy + sumz * sumz) as f32).sqrt() / n;
-                                    if mean > 1f32 { 
-                                        mean = 1f32; 
-                                    }
-                                    data[col as usize] = (-2f32 * mean.ln()).sqrt().to_degrees();
-                                }
-                            }
-                        }
-
-                        match tx2.send((row, data)) {
-                            Ok(_) => {},
-                            Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
-                        }
+            let (mut sumx, mut sumy, mut sumz): (f64, f64, f64);
+            let mut mean: f32;
+            let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
+            let mut n: f32;
+            let mut z: f32;
+            for site in 0..signature_sites.len() {
+                let (row, col) = signature_sites[site];
+                z = input.get_value(row, col);
+                if z != nodata {
+                    y1 = row - midpoint - 1;
+                    if y1 < 0 {
+                        y1 = 0;
                     }
-                });
-            }
 
-            let mut total_mssd = 0f64;
-            for _ in 0..rows {
-                match rx2.recv() {
-                    Ok((row, data)) => {
-                        for col in 0..columns {
-                            if data[col as usize] != nodata {
-                                total_mssd += data[col as usize] as f64;
-                                if data[col as usize] > output_mag.get_value(row, col) {
-                                    output_mag.set_value(row, col, data[col as usize]);
-                                    output_scale.set_value(row, col, midpoint as i16);
-                                }
-                            } else {
-                                output_mag.set_value(row, col, nodata);
-                                output_scale.set_value(row, col, -32768);
-                            }
+                    y2 = row + midpoint;
+                    if y2 >= rows {
+                        y2 = rows - 1;
+                    }
+
+                    x1 = col - midpoint - 1;
+                    if x1 < 0 {
+                        x1 = 0;
+                    }
+
+                    x2 = col + midpoint;
+                    if x2 >= columns {
+                        x2 = columns - 1;
+                    }
+
+                    n = (i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
+                        - i_n.get_value(y1, x2)
+                        - i_n.get_value(y2, x1)) as f32;
+                    if n > 0f32 {
+                        sumx = xc.get_value(y2, x2) + xc.get_value(y1, x1)
+                            - xc.get_value(y1, x2)
+                            - xc.get_value(y2, x1);
+                        sumy = yc.get_value(y2, x2) + yc.get_value(y1, x1)
+                            - yc.get_value(y1, x2)
+                            - yc.get_value(y2, x1);
+                        sumz = zc.get_value(y2, x2) + zc.get_value(y1, x1)
+                            - zc.get_value(y1, x2)
+                            - zc.get_value(y2, x1);
+                        mean = ((sumx * sumx + sumy * sumy + sumz * sumz) as f32).sqrt() / n;
+                        if mean > 1f32 { 
+                            mean = 1f32; 
                         }
-                    },
-                    Err(_) => {
-                        return Err(Error::new(
-                            ErrorKind::InvalidInput,
-                            "Error in receiving data from thread.",
-                        ));
+                        xdata[site].push((midpoint) as f64);
+                        ydata[site].push((-2f32 * mean.ln()).sqrt().to_degrees() as f64);
                     }
                 }
             }
-
-            xdata[0].push(midpoint as f64 * configs.resolution_x);
-            ydata[0].push(total_mssd / num_valid_cells as f64);
 
             // drop(xc); // Memory requirements: 7.5X (automatically freed at end of scope)
             // drop(yc); // Memory requirements: 5.5X
@@ -822,87 +777,17 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                     old_progress = progress;
                 }
             }
-
-            // loop_num += 1;
         }
 
-        drop(input); // Memory requirements: 2.5X
-        drop(i_n); // Memory requirements: 1.5X
-
-        let mut output_mag_raster = Raster::initialize_from_array2d(&output_mag_file, &configs, &output_mag); // Memory requirements: 3.5X
-        output_mag_raster.configs.data_type = DataType::F32;
-        drop(output_mag); // Memory requirements: 2.5X
-
         let elapsed_time = get_formatted_elapsed_time(start);
-        output_mag_raster.configs.palette = "light_quant.plt".to_string();
-        output_mag_raster.add_metadata_entry(format!(
-            "Created by whitebox_tools\' {} tool",
-            self.get_tool_name()
-        ));
-        output_mag_raster.add_metadata_entry(format!("Input file: {}", input_file));
-        output_mag_raster.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
-        // output_mag_raster.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
-        output_mag_raster.add_metadata_entry(format!("Step size: {}", step));
-        output_mag_raster.add_metadata_entry(format!("Number of steps: {}", num_steps));
-        output_mag_raster.add_metadata_entry(format!("Step nonlinearity: {}", step_nonlinearity));
-        output_mag_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
-        if verbose {
-            println!("Saving magnitude data...")
-        };
-        let _ = match output_mag_raster.write() {
-            Ok(_) => {
-                if verbose {
-                    println!("Output file written")
-                }
-            }
-            Err(e) => return Err(e),
-        };
-
-        drop(output_mag_raster); // Memory requirements: 0.5X
-
-        let mut output_scale_raster = Raster::initialize_from_array2d(&output_scale_file, &configs, &output_scale); // Memory requirements: 2.5X
-        output_scale_raster.configs.data_type = DataType::I16;
-        drop(output_scale); // Memory requirements: 2.0X
-
-        output_scale_raster.configs.palette = "spectrum.plt".to_string();
-        output_scale_raster.add_metadata_entry(format!(
-            "Created by whitebox_tools\' {} tool",
-            self.get_tool_name()
-        ));
-        output_scale_raster.add_metadata_entry(format!("Input file: {}", input_file));
-        output_scale_raster.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
-        // output_scale_raster.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
-        output_scale_raster.add_metadata_entry(format!("Step size: {}", step));
-        output_scale_raster.add_metadata_entry(format!("Number of steps: {}", num_steps));
-        output_scale_raster.add_metadata_entry(format!("Step nonlinearity: {}", step_nonlinearity));
-        output_scale_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
-        if verbose {
-            println!("Saving scale data...")
-        };
-        let _ = match output_scale_raster.write() {
-            Ok(_) => {
-                if verbose {
-                    println!("Output file written")
-                }
-            }
-            Err(e) => return Err(e),
-        };
-
         if verbose {
             println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time).replace("PT", "")
+                "\n{}",
+                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
 
-        // Memory requirements: 0.0X (wehn output_scale_raster is freed automatically at end of scope)
-
-
-        // Output the scale signature of average spherical standard deviation of normals
-        let signature_file = Path::new(&output_mag_file).with_extension("html").into_os_string().into_string().unwrap();
-        let f = File::create(signature_file.clone())?;
+        let f = File::create(output_file.clone())?;
         let mut writer = BufWriter::new(f);
 
         writer.write_all(&r#"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
@@ -922,11 +807,13 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
 
         writer.write_all(
             (format!(
-                "<p><strong>Input DEM</strong>: {}<br></p>",
+                "<p><strong>Input DEM</strong>: {}<br>",
                 input_file
             ))
             .as_bytes(),
         )?;
+
+        writer.write_all(("</p>").as_bytes())?;
 
         let multiples = xdata.len() > 2 && xdata.len() < 12;
 
@@ -937,8 +824,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: series_names.clone(),
-            x_axis_label: "Roughness Scale (m)".to_string(),
-            y_axis_label: "Avg. Spherical Std. Dev. of Normals (degrees)".to_string(),
+            x_axis_label: "Filter Radius (cells)".to_string(),
+            y_axis_label: "Roughness (degrees)".to_string(),
             draw_points: false,
             draw_gridlines: true,
             draw_legend: multiples,
@@ -956,28 +843,28 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
                 let output = Command::new("open")
-                    .arg(signature_file.clone())
+                    .arg(output_file.clone())
                     .output()
                     .expect("failed to execute process");
 
                 let _ = output.stdout;
             } else if cfg!(target_os = "windows") {
                 let output = Command::new("explorer.exe")
-                    .arg(signature_file.clone())
+                    .arg(output_file.clone())
                     .output()
                     .expect("failed to execute process");
 
                 let _ = output.stdout;
             } else if cfg!(target_os = "linux") {
                 let output = Command::new("xdg-open")
-                    .arg(signature_file.clone())
+                    .arg(output_file.clone())
                     .output()
                     .expect("failed to execute process");
 
                 let _ = output.stdout;
             }
 
-            println!("Complete! Please see {} for signature output.", signature_file);
+            println!("Complete! Please see {} for output.", output_file);
         }
 
         Ok(())

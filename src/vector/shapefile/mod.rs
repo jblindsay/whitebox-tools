@@ -32,7 +32,7 @@ use std::path::Path;
 use std::str;
 
 /// `ShapefileHeader` stores the header variables of a ShapeFile header.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ShapefileHeader {
     file_code: i32,            // BigEndian; value is 9994
     unused1: i32,              // BigEndian
@@ -239,7 +239,7 @@ impl Shapefile {
         ///////////////////////////////
         // First read the geometries //
         ///////////////////////////////
-
+        
         // read the header
         let mut f = File::open(self.file_name.clone()).unwrap(); //?;
         let metadata = fs::metadata(self.file_name.clone()).unwrap(); //?;
@@ -279,10 +279,24 @@ impl Shapefile {
         let mut content_length: i32;
         let mut length_without_m: i32;
         let mut contains_m: bool;
-        match self.header.shape_type {
-            ShapeType::Point => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12); // Don't need to read the header and shapeType. It's not going to change.
+        let mut shape_type: ShapeType;
+        while bor.pos() < file_size {
+            bor.set_byte_order(Endianness::BigEndian);
+            bor.inc_pos(4); // We don't really need the record number
+            content_length = bor.read_i32()? * 2; // in bytes
+            bor.set_byte_order(Endianness::LittleEndian);
+            shape_type = ShapeType::from_int(bor.read_i32()?);
+
+            match shape_type {
+                ShapeType::Null => {
+                    let sfg = ShapefileGeometry {
+                        shape_type: ShapeType::Null,
+                        ..Default::default()
+                    };
+                    self.records.push(sfg);
+                }
+
+                ShapeType::Point => {
                     let sfg = ShapefileGeometry {
                         shape_type: ShapeType::Point,
                         num_points: 1i32,
@@ -294,13 +308,10 @@ impl Shapefile {
                     };
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::PolyLine | ShapeType::Polygon => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12);
+                ShapeType::PolyLine | ShapeType::Polygon => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: self.header.shape_type, // ShapeType::from_int(bor.read_i32()),
+                        shape_type: shape_type,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -323,13 +334,10 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::MultiPoint => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12);
+                ShapeType::MultiPoint => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: self.header.shape_type, // ShapeType::from_int(bor.read_i32()),
+                        shape_type: ShapeType::MultiPoint,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -347,34 +355,40 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::PointZ => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12); // Don't need to read the header and shapeType. It's not going to change.
-                    let sfg = ShapefileGeometry {
-                        shape_type: ShapeType::PointZ,
-                        num_points: 1i32,
-                        points: vec![Point2D {
-                            x: bor.read_f64()?,
-                            y: bor.read_f64()?,
-                        }],
-                        z_array: vec![bor.read_f64()?],
-                        m_array: vec![bor.read_f64()?],
-                        ..Default::default()
+                ShapeType::PointZ => {
+                    let sfg = if content_length != 36 {
+                        // both z and m are included
+                        ShapefileGeometry {
+                            shape_type: ShapeType::PointZ,
+                            num_points: 1i32,
+                            points: vec![Point2D {
+                                x: bor.read_f64()?,
+                                y: bor.read_f64()?,
+                            }],
+                            z_array: vec![bor.read_f64()?],
+                            m_array: vec![bor.read_f64()?],
+                            ..Default::default()
+                        }
+                    } else {
+                        // only z is included
+                        ShapefileGeometry {
+                            shape_type: ShapeType::PointZ,
+                            num_points: 1i32,
+                            points: vec![Point2D {
+                                x: bor.read_f64()?,
+                                y: bor.read_f64()?,
+                            }],
+                            z_array: vec![bor.read_f64()?],
+                            ..Default::default()
+                        }
                     };
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::PolyLineZ | ShapeType::PolygonZ => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(4); // Record number
-                    bor.set_byte_order(Endianness::BigEndian);
-                    content_length = bor.read_i32()? * 2; // in bytes
-                    bor.set_byte_order(Endianness::LittleEndian);
+                ShapeType::PolyLineZ | ShapeType::PolygonZ => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: ShapeType::from_int(bor.read_i32()?),
+                        shape_type: shape_type,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -417,16 +431,10 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::MultiPointZ => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(4); // Record number
-                    bor.set_byte_order(Endianness::BigEndian);
-                    content_length = bor.read_i32()? * 2; // in bytes
-                    bor.set_byte_order(Endianness::LittleEndian);
+                ShapeType::MultiPointZ => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: ShapeType::from_int(bor.read_i32()?),
+                        shape_type: ShapeType::MultiPointZ,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -464,11 +472,8 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::PointM => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12); // Don't need to read the header and shapeType. It's not going to change.
+                ShapeType::PointM => {
                     let sfg = ShapefileGeometry {
                         shape_type: ShapeType::PointM,
                         num_points: 1i32,
@@ -481,13 +486,10 @@ impl Shapefile {
                     };
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::PolyLineM | ShapeType::PolygonM => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(8);
+                ShapeType::PolyLineM | ShapeType::PolygonM => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: ShapeType::from_int(bor.read_i32()?),
+                        shape_type: shape_type,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -516,14 +518,10 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
 
-            ShapeType::MultiPointM => {
-                while bor.pos() < file_size {
-                    bor.inc_pos(12);
-
+                ShapeType::MultiPointM => {
                     let mut sfg = ShapefileGeometry {
-                        shape_type: self.header.shape_type, // ShapeType::from_int(bor.read_i32()),
+                        shape_type: ShapeType::MultiPointM,
                         x_min: bor.read_f64()?,
                         y_min: bor.read_f64()?,
                         x_max: bor.read_f64()?,
@@ -547,13 +545,6 @@ impl Shapefile {
 
                     self.records.push(sfg);
                 }
-            }
-
-            _ => {
-                return Err(Error::new(
-                    ErrorKind::InvalidInput,
-                    "Unrecognized ShapeType.",
-                ));
             }
         }
 
@@ -782,42 +773,41 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(1i32)?; // Shape type
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    
+                    if self.records[i].shape_type != ShapeType::Null {
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
+                    }
                 }
             }
 
             ShapeType::PolyLine | ShapeType::Polygon => {
-                let st = if self.header.shape_type == ShapeType::PolyLine {
-                    3i32
-                } else {
-                    5i32
-                };
-
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(st)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    // parts
-                    for part in &self.records[i].parts {
-                        writer.write_i32::<LittleEndian>(*part)?;
-                    }
+                        // parts
+                        for part in &self.records[i].parts {
+                            writer.write_i32::<LittleEndian>(*part)?;
+                        }
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
                     }
                 }
             }
@@ -826,20 +816,22 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(8i32)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
                     }
                 }
             }
@@ -848,59 +840,58 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(11i32)?; // Shape type
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].z_array[0])?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_array[0])?;
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    
+                    if self.records[i].shape_type != ShapeType::Null {
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].z_array[0])?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_array[0])?;
+                    }
                 }
             }
 
             ShapeType::PolyLineZ | ShapeType::PolygonZ => {
-                let st = if self.header.shape_type == ShapeType::PolyLine {
-                    13i32
-                } else {
-                    15i32
-                };
-
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(st)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    // parts
-                    for part in &self.records[i].parts {
-                        writer.write_i32::<LittleEndian>(*part)?;
-                    }
+                        // parts
+                        for part in &self.records[i].parts {
+                            writer.write_i32::<LittleEndian>(*part)?;
+                        }
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
-                    }
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
 
-                    // z data
-                    writer.write_f64::<LittleEndian>(self.records[i].z_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].z_max)?;
-                    for z in &self.records[i].z_array {
-                        writer.write_f64::<LittleEndian>(*z)?;
-                    }
+                        // z data
+                        writer.write_f64::<LittleEndian>(self.records[i].z_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].z_max)?;
+                        for z in &self.records[i].z_array {
+                            writer.write_f64::<LittleEndian>(*z)?;
+                        }
 
-                    // measure data
-                    if self.records[i].has_m_data() {
-                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                        for m in &self.records[i].m_array {
-                            writer.write_f64::<LittleEndian>(*m)?;
+                        // measure data
+                        if self.records[i].has_m_data() {
+                            writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                            writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                            for m in &self.records[i].m_array {
+                                writer.write_f64::<LittleEndian>(*m)?;
+                            }
                         }
                     }
                 }
@@ -910,35 +901,37 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(18i32)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
-                    }
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
 
-                    // z data
-                    writer.write_f64::<LittleEndian>(self.records[i].z_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].z_max)?;
-                    for z in &self.records[i].z_array {
-                        writer.write_f64::<LittleEndian>(*z)?;
-                    }
+                        // z data
+                        writer.write_f64::<LittleEndian>(self.records[i].z_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].z_max)?;
+                        for z in &self.records[i].z_array {
+                            writer.write_f64::<LittleEndian>(*z)?;
+                        }
 
-                    // measure data
-                    if self.records[i].has_m_data() {
-                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                        for m in &self.records[i].m_array {
-                            writer.write_f64::<LittleEndian>(*m)?;
+                        // measure data
+                        if self.records[i].has_m_data() {
+                            writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                            writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                            for m in &self.records[i].m_array {
+                                writer.write_f64::<LittleEndian>(*m)?;
+                            }
                         }
                     }
                 }
@@ -948,50 +941,49 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(21i32)?; // Shape type
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_array[0])?;
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    
+                    if self.records[i].shape_type != ShapeType::Null {
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_array[0])?;
+                    }
                 }
             }
 
             ShapeType::PolyLineM | ShapeType::PolygonM => {
-                let st = if self.header.shape_type == ShapeType::PolyLine {
-                    23i32
-                } else {
-                    25i32
-                };
-
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(st)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        writer.write_i32::<LittleEndian>(self.records[i].num_parts)?; // Num parts
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    // parts
-                    for part in &self.records[i].parts {
-                        writer.write_i32::<LittleEndian>(*part)?;
-                    }
+                        // parts
+                        for part in &self.records[i].parts {
+                            writer.write_i32::<LittleEndian>(*part)?;
+                        }
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
-                    }
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
 
-                    // measure data
-                    writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                    for m in &self.records[i].m_array {
-                        writer.write_f64::<LittleEndian>(*m)?;
+                        // measure data
+                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                        for m in &self.records[i].m_array {
+                            writer.write_f64::<LittleEndian>(*m)?;
+                        }
                     }
                 }
             }
@@ -1000,27 +992,28 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(28i32)?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    if self.records[i].shape_type != ShapeType::Null {
+                        // extent
+                        writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
 
-                    // extent
-                    writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].x_max)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].y_max)?;
+                        writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
 
-                    writer.write_i32::<LittleEndian>(self.records[i].num_points)?; // Num points
+                        // points
+                        for pt in &self.records[i].points {
+                            writer.write_f64::<LittleEndian>(pt.x)?;
+                            writer.write_f64::<LittleEndian>(pt.y)?;
+                        }
 
-                    // points
-                    for pt in &self.records[i].points {
-                        writer.write_f64::<LittleEndian>(pt.x)?;
-                        writer.write_f64::<LittleEndian>(pt.y)?;
-                    }
-
-                    // measure data
-                    writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
-                    writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
-                    for m in &self.records[i].m_array {
-                        writer.write_f64::<LittleEndian>(*m)?;
+                        // measure data
+                        writer.write_f64::<LittleEndian>(self.records[i].m_min)?;
+                        writer.write_f64::<LittleEndian>(self.records[i].m_max)?;
+                        for m in &self.records[i].m_array {
+                            writer.write_f64::<LittleEndian>(*m)?;
+                        }
                     }
                 }
             }

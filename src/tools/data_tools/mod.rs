@@ -1,5 +1,6 @@
 // private sub-module defined in other files
 mod add_point_coordinates_to_table;
+mod clean_vector;
 mod convert_nodata_to_zero;
 mod convert_raster_format;
 mod export_table_to_csv;
@@ -23,6 +24,7 @@ mod vector_polygons_to_raster;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::add_point_coordinates_to_table::AddPointCoordinatesToTable;
+pub use self::clean_vector::CleanVector;
 pub use self::convert_nodata_to_zero::ConvertNodataToZero;
 pub use self::convert_raster_format::ConvertRasterFormat;
 pub use self::export_table_to_csv::ExportTableToCsv;

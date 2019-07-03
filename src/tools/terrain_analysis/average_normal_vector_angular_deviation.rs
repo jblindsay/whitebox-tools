@@ -244,7 +244,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         if sigma < 1.0 {
             sigma = 1.0;
         }
-        if sigma < 1.8 && filter_size >= 3 {
+        if sigma < 1.8 && filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 

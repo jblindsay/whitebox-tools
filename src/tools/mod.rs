@@ -28,6 +28,7 @@ impl ToolManager {
         let mut tool_names = vec![];
         // data_tools
         tool_names.push("AddPointCoordinatesToTable".to_string());
+        tool_names.push("CleanVector".to_string());
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
         tool_names.push("ExportTableToCsv".to_string());
@@ -427,6 +428,7 @@ impl ToolManager {
         tool_names.push("MinDownslopeElevChange".to_string());
         tool_names.push("MultiscaleRoughness".to_string());
         tool_names.push("MultiscaleStdDevNormals".to_string());
+        tool_names.push("MultiscaleStdDevNormalsSignature".to_string());
         tool_names.push("MultiscaleRoughnessSignature".to_string());
         tool_names.push("MultiscaleTopographicPositionImage".to_string());
         tool_names.push("NumDownslopeNeighbours".to_string());
@@ -469,6 +471,7 @@ impl ToolManager {
             "addpointcoordinatestotable" => {
                 Some(Box::new(data_tools::AddPointCoordinatesToTable::new()))
             }
+            "cleanvector" => Some(Box::new(data_tools::CleanVector::new())),
             "convertnodatatozero" => Some(Box::new(data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(data_tools::ConvertRasterFormat::new())),
             "exporttabletocsv" => Some(Box::new(data_tools::ExportTableToCsv::new())),
@@ -1010,6 +1013,7 @@ impl ToolManager {
             }
             "multiscaleroughness" => Some(Box::new(terrain_analysis::MultiscaleRoughness::new())),
             "multiscalestddevnormals" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormals::new())),
+            "multiscalestddevnormalssignature" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormalsSignature::new())),
             "multiscaleroughnesssignature" => Some(Box::new(
                 terrain_analysis::MultiscaleRoughnessSignature::new(),
             )),

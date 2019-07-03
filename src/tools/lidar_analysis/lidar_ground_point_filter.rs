@@ -300,6 +300,11 @@ impl WhiteboxTool for LidarGroundPointFilter {
             println!("Performing analysis...");
         }
 
+        if slope_threshold > 88f64 {
+            eprintln!("Warning: the slope threshold cannot be greater than 88 degrees.");
+            slope_threshold = 88f64;
+        }
+
         slope_threshold = slope_threshold.to_radians().tan();
 
         let n_points = input.header.number_of_points as usize;

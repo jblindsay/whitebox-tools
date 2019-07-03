@@ -86,7 +86,7 @@ impl MergeLineSegments {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -input=layer1.shp -o=out_file.shp --snap=0.0000001",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=layer1.shp -o=out_file.shp --snap=0.0000001",
             short_exe, name
         ).replace("*", &sep);
 

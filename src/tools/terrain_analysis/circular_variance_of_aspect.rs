@@ -233,7 +233,6 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-
         let start = Instant::now();
 
         let configs = input.configs.clone();
@@ -248,7 +247,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             println!("Smoothing the input DEM...");
         }
         let sigma = (midpoint as f64 + 0.5) / 3f64;
-        if sigma < 1.8 && filter_size >= 3 {
+        if sigma < 1.8 && filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 
@@ -341,7 +340,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 let data = rx.recv().unwrap();
                 smoothed_dem.set_row_data(data.0, data.1);
             }
-        } else {
+        } else if filter_size > 3 {
             // use a fast almost Gaussian filter for larger smoothing operations.
             let n = 4;
             let w_ideal = (12f64 * sigma * sigma / n as f64 + 1f64).sqrt();
@@ -498,7 +497,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                         z = smoothed_dem.get_value(row, col);
                         if z != nodata {
                             for c in 0..8 {
-                                n[c] = smoothed_dem[(row + dy[c], col + dx[c])];
+                                n[c] = smoothed_dem.get_value(row + dy[c], col + dx[c]);
                                 if n[c] != nodata {
                                     n[c] = n[c] * z_factor;
                                 } else {
