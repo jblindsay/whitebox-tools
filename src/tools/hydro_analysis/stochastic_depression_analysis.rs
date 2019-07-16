@@ -9,8 +9,9 @@ License: MIT
 use crate::raster::*;
 use crate::structures::Array2D;
 use crate::tools::*;
-use rand::distributions::StandardNormal;
 use rand::prelude::*;
+use rand_distr::StandardNormal;
+use rand::rngs::SmallRng;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 use std::env;
@@ -389,10 +390,12 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 let tx = tx.clone();
                 thread::spawn(move || {
                     let mut rng = SmallRng::from_entropy();
+                    let mut sn_val: f64;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![0i32; columns as usize];
                         for col in 0..columns {
-                            data[col as usize] = (rng.sample(StandardNormal) * multiplier * range_in_cells * 2f64) as i32;
+                            sn_val = rng.sample(StandardNormal);
+                            data[col as usize] = (sn_val * multiplier * range_in_cells * 2f64) as i32;
                         }
 
                         tx.send((row, data)).unwrap();

@@ -283,7 +283,7 @@ impl WhiteboxTool for TrendSurface {
             ));
         }
 
-        let b = DVector::from_row_slice(n, &z);
+        let b = DVector::from_row_slice(&z);
         let regress_coefficents = (r.try_inverse().unwrap() * q.transpose() * b)
             .as_slice()
             .to_vec(); //inv(R).dot(Q.T).dot(y)

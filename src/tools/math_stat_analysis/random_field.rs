@@ -9,8 +9,9 @@ License: MIT
 use crate::raster::*;
 use crate::tools::*;
 use num_cpus;
-use rand::distributions::StandardNormal;
 use rand::prelude::*;
+use rand_distr::StandardNormal;
+use rand::rngs::SmallRng;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};

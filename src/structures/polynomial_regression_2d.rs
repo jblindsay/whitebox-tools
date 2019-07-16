@@ -45,8 +45,8 @@ impl PolynomialRegression2D {
 
         let a = DMatrix::from_row_slice(n, num_coefficients, &vals);
         let a_svd = a.svd(true, true);
-        let x_eq = a_svd.solve(&DVector::from_row_slice(n, x_prime), EPSILON);
-        let y_eq = a_svd.solve(&DVector::from_row_slice(n, y_prime), EPSILON);
+        let x_eq = a_svd.solve(&DVector::from_row_slice(x_prime), EPSILON).unwrap();
+        let y_eq = a_svd.solve(&DVector::from_row_slice(y_prime), EPSILON).unwrap();
 
         let mut coefficients = Vec::with_capacity(num_coefficients);
         for i in 0..num_coefficients {

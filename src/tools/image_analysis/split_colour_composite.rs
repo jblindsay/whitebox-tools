@@ -170,7 +170,7 @@ impl WhiteboxTool for SplitColourComposite {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "--input" {
+            if flag_val == "-i" || flag_val == "-input" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -226,7 +226,7 @@ impl WhiteboxTool for SplitColourComposite {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-
+        
         let start = Instant::now();
 
         let rows = input.configs.rows as isize;
