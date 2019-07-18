@@ -99,7 +99,7 @@ pub use self::divide::Divide;
 pub use self::equal_to::EqualTo;
 pub use self::exp::Exp;
 pub use self::exp2::Exp2;
-pub use self::extract_statistics::ExtractRasterStatistics;
+pub use self::extract_statistics::ZonalStatistics;
 pub use self::floor::Floor;
 pub use self::greater_than::GreaterThan;
 pub use self::image_autocorrelation::ImageAutocorrelation;

@@ -569,7 +569,6 @@ impl Shapefile {
         ///////////////////////////////
         // Read the attributes table //
         ///////////////////////////////
-
         // read the header
         // let dbf_file = self.file_name.replace(".shp", ".dbf");
         let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
@@ -671,17 +670,21 @@ impl Shapefile {
                     match self.attributes.fields[j as usize].field_type {
                         'N' | 'F' | 'I' | 'O' => {
                             if self.attributes.fields[j as usize].decimal_count == 0 {
-                                r.push(FieldData::Int(str_rep.parse::<i32>().unwrap()));
+                                r.push(FieldData::Int(str_rep.parse::<i32>().unwrap_or(0)));
                             } else {
-                                r.push(FieldData::Real(str_rep.parse::<f64>().unwrap()));
+                                r.push(FieldData::Real(str_rep.parse::<f64>().unwrap_or(0f64)));
                             }
                         }
                         'D' => {
-                            r.push(FieldData::Date(DateData {
-                                year: str_rep[0..4].parse::<u16>().unwrap(),
-                                month: str_rep[4..6].parse::<u8>().unwrap(),
-                                day: str_rep[6..8].parse::<u8>().unwrap(),
-                            }));
+                            if str_rep.len() == 8 {
+                                r.push(FieldData::Date(DateData {
+                                    year: str_rep[0..4].parse::<u16>().unwrap_or(0),
+                                    month: str_rep[4..6].parse::<u8>().unwrap_or(0),
+                                    day: str_rep[6..8].parse::<u8>().unwrap_or(0),
+                                }));
+                            } else {
+                                r.push(FieldData::Null);
+                            }
                         }
                         'L' => {
                             if str_rep.to_lowercase().contains("t") {

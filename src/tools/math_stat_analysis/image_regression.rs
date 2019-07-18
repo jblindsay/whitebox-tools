@@ -2,14 +2,16 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/09/2017
-Last Modified: 12/10/2018
+Last Modified: 17/07/2019
 License: MIT
 */
 
 use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 use crate::raster::*;
 use crate::tools::*;
+use crate::rendering::Scattergram;
 use num_cpus;
+use rand::prelude::*;
 use statrs;
 use std::env;
 use std::f64;
@@ -105,6 +107,25 @@ impl ImageRegression {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Output scattergram?".to_owned(),
+            flags: vec!["--scattergram".to_owned()],
+            description: "Optional flag indicating whether to output a scattergram."
+                .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Num. Samples For Scattergram".to_owned(),
+            flags: vec!["--num_samples".to_owned()],
+            description: "Number of samples used to create scattergram".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("1000".to_string()),
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -176,6 +197,8 @@ impl WhiteboxTool for ImageRegression {
         let mut residuals_file = String::new();
         let mut standardize_residuals = false;
         let mut output_residuals = false;
+        let mut output_scattergram = false;
+        let mut num_samples = 1000usize;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -192,43 +215,42 @@ impl WhiteboxTool for ImageRegression {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i1"
-                || vec[0].to_lowercase() == "--i1"
-                || vec[0].to_lowercase() == "--input1"
-            {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i1" || flag_val == "-input1" {
                 if keyval {
                     input_file1 = vec[1].to_string();
                 } else {
                     input_file1 = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-i2"
-                || vec[0].to_lowercase() == "--i2"
-                || vec[0].to_lowercase() == "--input2"
-            {
+            } else if flag_val == "-i2" || flag_val == "-input2" {
                 if keyval {
                     input_file2 = vec[1].to_string();
                 } else {
                     input_file2 = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_residuals"
-                || vec[0].to_lowercase() == "--out_residuals"
-            {
+            } else if flag_val == "-out_residuals" {
                 if keyval {
                     residuals_file = vec[1].to_string();
                 } else {
                     residuals_file = args[i + 1].to_string();
                 }
                 output_residuals = true;
-            } else if vec[0].to_lowercase() == "-standardize"
-                || vec[0].to_lowercase() == "--standardize"
-            {
+            } else if flag_val == "-standardize" {
                 standardize_residuals = true;
+            } else if flag_val == "-scattergram" {
+                output_scattergram = true;
+            } else if flag_val == "-num_samples" {
+                num_samples = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                };
             }
         }
 
@@ -300,8 +322,8 @@ impl WhiteboxTool for ImageRegression {
                 let mut y: f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     for col in 0..columns {
-                        x = input1[(row, col)];
-                        y = input2[(row, col)];
+                        x = input1.get_value(row, col);
+                        y = input2.get_value(row, col);
                         if x != nodata1 && y != nodata2 {
                             sum_x += x;
                             sum_y += y;
@@ -448,6 +470,11 @@ impl WhiteboxTool for ImageRegression {
                     }
                 }
             }
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", get_formatted_elapsed_time(start)));
 
             if verbose {
                 println!("Saving data...")
@@ -460,12 +487,6 @@ impl WhiteboxTool for ImageRegression {
                 }
                 Err(e) => return Err(e),
             };
-        }
-
-        let elapsed_time = get_formatted_elapsed_time(start);
-
-        if verbose {
-            println!("\n{}", &format!("Elapsed Time: {}", elapsed_time));
         }
 
         let f = File::create(output_file.clone())?;
@@ -690,22 +711,73 @@ impl WhiteboxTool for ImageRegression {
         let sign = if intercept < 0f64 { "-" } else { "+" };
         let s2 = &format!(
             "<p><strong>Regression equation:</strong> {} = {} &#215; {} {} {}</p>",
-            y_filename.clone(),
+            input2.get_short_filename(),
             slope,
-            x_filename.clone(),
+            input1.get_short_filename(),
             sign.clone(),
             intercept.abs()
         );
         writer.write_all(s2.as_bytes())?;
 
         s = "<p>Caveat: Given a sufficiently large sample, extremely weak and non-notable relations can be found to be statistically significant
-            and statistical significance says nothing about the practical significance of a difference.</p>";
+            and statistical significance says nothing about the practical significance of a relation.</p>";
         writer.write_all(s.as_bytes())?;
+
+        if output_scattergram {
+            let mut xdata = vec![];
+            let mut ydata = vec![];
+            let mut series_xdata = vec![];
+            let mut series_ydata = vec![];
+            let mut series_names = vec![];
+            let mut rng = thread_rng();
+            let mut sample_num = 0usize;
+            let (mut x, mut y): (f64, f64);
+            while sample_num < num_samples {
+                let row = rng.gen_range(0, rows as isize); 
+                let col = rng.gen_range(0, columns as isize); 
+                x = input1.get_value(row, col);
+                y = input2.get_value(row, col);
+                if x != nodata1 && y != nodata2 {
+                    sample_num += 1;
+                    series_xdata.push(x);
+                    series_ydata.push(y);
+                }
+            }
+
+            xdata.push(series_xdata.clone());
+            ydata.push(series_ydata.clone());
+            series_names.push(String::from("Series 1"));
+
+            let graph = Scattergram {
+                parent_id: "scattergram".to_string(),
+                data_x: xdata.clone(),
+                data_y: ydata.clone(),
+                series_labels: series_names.clone(),
+                x_axis_label: input1.get_short_filename(),
+                y_axis_label: input2.get_short_filename(),
+                width: 700f64,
+                height: 500f64,
+                draw_trendline: true,
+                draw_gridlines: true,
+                draw_legend: false,
+                draw_grey_background: false,
+            };
+
+            writer.write_all(
+                &format!("<div id='scattergram' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+            )?;
+        }
 
         s = "</body>";
         writer.write_all(s.as_bytes())?;
 
         let _ = writer.flush();
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+
+        if verbose {
+            println!("\n{}", &format!("Elapsed Time: {}", elapsed_time));
+        }
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {

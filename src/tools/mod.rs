@@ -317,7 +317,7 @@ impl ToolManager {
         tool_names.push("EqualTo".to_string());
         tool_names.push("Exp".to_string());
         tool_names.push("Exp2".to_string());
-        tool_names.push("ExtractRasterStatistics".to_string());
+        tool_names.push("ZonalStatistics".to_string());
         tool_names.push("Floor".to_string());
         tool_names.push("GreaterThan".to_string());
         tool_names.push("ImageAutocorrelation".to_string());
@@ -852,8 +852,8 @@ impl ToolManager {
             "equalto" => Some(Box::new(math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(math_stat_analysis::Exp::new())),
             "exp2" => Some(Box::new(math_stat_analysis::Exp2::new())),
-            "extractrasterstatistics" => {
-                Some(Box::new(math_stat_analysis::ExtractRasterStatistics::new()))
+            "zonalstatistics" => {
+                Some(Box::new(math_stat_analysis::ZonalStatistics::new()))
             }
             "floor" => Some(Box::new(math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(math_stat_analysis::GreaterThan::new())),

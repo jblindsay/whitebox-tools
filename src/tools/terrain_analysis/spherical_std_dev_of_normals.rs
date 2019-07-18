@@ -524,8 +524,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / resy8;
                             if fx != 0f64 || fy != 0f64 {
                                 magnitude = (fx * fx + fy * fy + fz_sqrd).sqrt();
-                                xdata[col as usize] = fx / magnitude;
-                                ydata[col as usize] = fy / magnitude;
+                                xdata[col as usize] = -fx / magnitude;
+                                ydata[col as usize] = -fy / magnitude;
                                 zdata[col as usize] = fz / magnitude;
                             } else {
                                 xdata[col as usize] = 0f64;

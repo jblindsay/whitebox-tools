@@ -63,6 +63,17 @@ Version 0.1X.X (XX-XX-2019)
   encoders/decoders.
 - Performance improvements have been made to the FlattenLakes (hydro-flattening) tool.
 - Fixed a bug preventing the SplitColourComposite tool from reading the '--input' flag correctly.
+- The ClipLidarToPolygon now issues a warning if the output LAS file does not contain any points
+  within the clipped region and does not output a file. Also, the LAS reader no longer panics 
+  when it encounters a file with no points. Now it reads the header file, issues a warning, and 
+  carries on, allowing the tools to handle the case of no points.
+- ImageRegression can now optionally output a scattergram. The scattergram is based on a random 
+  sample of a user-defined size.
+- Added the CleanVector tool.
+- ExtractRasterStatistics has been renamed ZonalStatistics to be more inline with other GIS, 
+  including ArcGIS and QGIS.
+- Added the median as a statistic that ZonalStatistics provides.
+- Fixed a bug in the VectorPolygonsToRaster tool that sometimes mishandled polygon holes.
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

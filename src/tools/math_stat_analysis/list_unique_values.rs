@@ -214,26 +214,24 @@ impl WhiteboxTool for ListUniqueValues {
         if verbose {
             println!("Reading vector data...")
         };
+        
         let vector_data = Shapefile::read(&input_file)?;
-
+        
         let mut freq_data = HashMap::new();
         let mut key: String;
         for record_num in 0..vector_data.num_records {
             key = match vector_data.attributes.get_value(record_num, &field_name) {
                 FieldData::Int(val) => val.to_string(),
-                // FieldData::Int64(val) => {
-                //     val.to_string()
-                // },
                 FieldData::Real(val) => val.to_string(),
                 FieldData::Text(val) => val.to_string(),
                 FieldData::Date(val) => val.to_string(),
                 FieldData::Bool(val) => val.to_string(),
                 FieldData::Null => "null".to_string(),
             };
-            if key != "null" {
+            // if key != "null" {
                 let count = freq_data.entry(key).or_insert(0);
                 *count += 1;
-            }
+            // }
 
             if verbose {
                 progress =
@@ -294,15 +292,33 @@ impl WhiteboxTool for ListUniqueValues {
         </tr>";
         writer.write_all(s.as_bytes())?;
 
+        if freq_data.contains_key("null") {
+            match freq_data.get("null") {
+                Some(count) => { 
+                    let s1 = &format!(
+                        "<tr>
+                        <td>null</td>
+                    <td class=\"numberCell\">{}</td>
+                        </tr>\n",
+                         count
+                    );
+                    writer.write_all(s1.as_bytes())?;
+                },
+                None => {}
+            }
+        }
+
         for (category, count) in &freq_data {
-            let s1 = &format!(
-                "<tr>
-                <td>{}</td>
-                <td class=\"numberCell\">{}</td>
-            </tr>\n",
-                category, count
-            );
-            writer.write_all(s1.as_bytes())?;
+            if category != "null" {
+                let s1 = &format!(
+                    "<tr>
+                    <td>{}</td>
+                    <td class=\"numberCell\">{}</td>
+                </tr>\n",
+                    category, count
+                );
+                writer.write_all(s1.as_bytes())?;
+            }
         }
 
         s = "</table></p>";

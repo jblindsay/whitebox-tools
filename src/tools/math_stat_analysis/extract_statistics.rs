@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: Dec. 15, 2017
-Last Modified: 25/11/2018
+Last Modified: 17/07/2019
 License: MIT
 
 Notes: Compared with the original Whitebox GAT tool, this will output a table
@@ -13,6 +13,7 @@ only represent one statistic, given by the --stat flag.
 use crate::raster::*;
 use crate::tools::*;
 use num_cpus;
+use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -27,13 +28,13 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to extract common descriptive statistics associated with the distribution
-/// of some underlying data raster based on feature units defined by a feature definition raster.
+/// of some underlying data raster based on feature units defined by a feature definition raster. 
 /// For example, this tool can be used to measure the maximum or average slope gradient (data image)
 /// for each of a group of watersheds (feature definitions). Although the data raster can contain any
 /// type of data, the feature definition raster must be categorical, i.e. it must define area entities
 /// using integer values.
 /// 
-/// The `--stat` parameter can take the values, 'average', 'minimum', 'maximum', 'range', 
+/// The `--stat` parameter can take the values, 'mean', 'median', 'minimum', 'maximum', 'range', 
 /// 'standard deviation', or 'total'.
 ///
 /// If an output image name is specified, the tool will assign the descriptive statistic value to
@@ -45,7 +46,7 @@ use std::thread;
 ///
 /// NoData values in either of the two input images are ignored during the calculation of the
 /// descriptive statistic.
-pub struct ExtractRasterStatistics {
+pub struct ZonalStatistics {
     name: String,
     description: String,
     toolbox: String,
@@ -53,10 +54,10 @@ pub struct ExtractRasterStatistics {
     example_usage: String,
 }
 
-impl ExtractRasterStatistics {
+impl ZonalStatistics {
     /// public constructor
-    pub fn new() -> ExtractRasterStatistics {
-        let name = "ExtractRasterStatistics".to_string();
+    pub fn new() -> ZonalStatistics {
+        let name = "ZonalStatistics".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
             "Extracts descriptive statistics for a group of patches in a raster.".to_string();
@@ -92,16 +93,17 @@ impl ExtractRasterStatistics {
         parameters.push(ToolParameter {
             name: "Statistic Type".to_owned(),
             flags: vec!["--stat".to_owned()],
-            description: "Statistic to extract, including 'average', 'minimum', 'maximum', 'range', 'standard deviation', and 'total'.".to_owned(),
+            description: "Statistic to extract, including 'mean', 'median', 'minimum', 'maximum', 'range', 'standard deviation', and 'total'.".to_owned(),
             parameter_type: ParameterType::OptionList(vec![
-                "average".to_owned(),
+                "mean".to_owned(),
+                "median".to_owned(),
                 "minimum".to_owned(),
                 "maximum".to_owned(),
                 "range".to_owned(),
                 "standard deviation".to_owned(),
                 "total".to_owned(),
             ]),
-            default_value: Some("average".to_owned()),
+            default_value: Some("mean".to_owned()),
             optional: true,
         });
 
@@ -128,7 +130,7 @@ impl ExtractRasterStatistics {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' --features='groups.tif' -o='output.tif' --stat='minimum'
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' --features='groups.tif' --out_table='output.html'", short_exe, name).replace("*", &sep);
 
-        ExtractRasterStatistics {
+        ZonalStatistics {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -138,7 +140,7 @@ impl ExtractRasterStatistics {
     }
 }
 
-impl WhiteboxTool for ExtractRasterStatistics {
+impl WhiteboxTool for ZonalStatistics {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -184,7 +186,7 @@ impl WhiteboxTool for ExtractRasterStatistics {
         let mut output_file = String::new();
         // let mut out_table = false;
         let mut output_html_file = String::new();
-        let mut stat_type = String::from("average");
+        let mut stat_type = String::from("mean");
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -351,6 +353,8 @@ impl WhiteboxTool for ExtractRasterStatistics {
         let mut features_max = vec![f64::NEG_INFINITY; num_features];
         let mut features_range = vec![0f64; num_features];
         let mut features_present = vec![false; num_features];
+        let mut features_data = vec![vec![]; num_features];
+        let mut features_median = vec![0f64; num_features];
 
         let mut val: f64;
         let mut features_val: f64;
@@ -361,6 +365,7 @@ impl WhiteboxTool for ExtractRasterStatistics {
                 features_val = features.get_value(row, col);
                 if val != nodata && features_val != features_nodata {
                     id = (features_val.round() as isize - min_id) as usize;
+                    features_data[id].push(val);
                     features_present[id] = true;
                     features_total[id] += val;
                     features_n[id] += 1f64;
@@ -407,10 +412,23 @@ impl WhiteboxTool for ExtractRasterStatistics {
             }
         }
 
+        if verbose {
+            println!("Calculating medians...");
+        }
         for id in 0..num_features {
             if features_n[id] > 1f64 {
                 features_std_deviation[id] =
                     (features_total_deviation[id] / (features_n[id] - 1f64)).sqrt();
+                
+                features_data[id].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+                let num_cells_in_class = features_data[id].len();
+                if num_cells_in_class % 2 != 0 {
+                    // odd num cells
+                    features_median[id] = features_data[id][num_cells_in_class / 2 + 1];
+                } else {
+                    // even num cells
+                    features_median[id] = (features_data[id][num_cells_in_class / 2] + features_data[id][num_cells_in_class / 2 + 1]) / 2f64;
+                }
             }
         }
 
@@ -419,9 +437,11 @@ impl WhiteboxTool for ExtractRasterStatistics {
             let mut output = Raster::initialize_using_file(&output_file, &input);
             output.configs.data_type = DataType::F32;
             output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            let out_stat = if stat_type.contains("av") {
+            let out_stat = if stat_type.contains("av") || stat_type.contains("mean") {
                 features_average.clone()
-            } else if stat_type.contains("min") {
+            } else if stat_type.contains("median") {
+                features_median.clone()
+            }  else if stat_type.contains("min") {
                 features_min.clone()
             } else if stat_type.contains("max") {
                 features_max.clone()
@@ -558,7 +578,8 @@ impl WhiteboxTool for ExtractRasterStatistics {
             writer.write_all(
                 "<tr>
                 <th>Feature ID</th>
-                <th>Average</th>
+                <th>Mean</th>
+                <th>Median</th>
                 <th>Minimum</th>
                 <th>Maximum</th>
                 <th>Range</th>
@@ -581,9 +602,11 @@ impl WhiteboxTool for ExtractRasterStatistics {
                         <td class=\"numberCell\">{}</td>
                         <td class=\"numberCell\">{}</td>
                         <td class=\"numberCell\">{}</td>
+                        <td class=\"numberCell\">{}</td>
                     </tr>",
                             id,
                             format!("{:.*}", 4, features_average[id]),
+                            format!("{:.*}", 4, features_median[id]),
                             format!("{:.*}", 4, features_min[id]),
                             format!("{:.*}", 4, features_max[id]),
                             format!("{:.*}", 4, features_range[id]),

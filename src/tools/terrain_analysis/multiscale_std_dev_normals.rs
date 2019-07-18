@@ -638,8 +638,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                 fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / resy8;
                                 if fx != 0f32 || fy != 0f32 {
                                     magnitude = (fx * fx + fy * fy + fz_sqrd).sqrt();
-                                    xdata[col as usize] = (fx / magnitude) as f64;
-                                    ydata[col as usize] = (fy / magnitude) as f64;
+                                    xdata[col as usize] = (-fx / magnitude) as f64;
+                                    ydata[col as usize] = (-fy / magnitude) as f64;
                                     zdata[col as usize] = (fz / magnitude) as f64;
                                 } else {
                                     xdata[col as usize] = 0f64;

@@ -11,7 +11,7 @@ use crate::structures::Array2D;
 use crate::tools::*;
 use num_cpus;
 use std::env;
-use std::f64;
+use std::{f32, f64};
 use std::io::{Error, ErrorKind};
 use std::ops::AddAssign;
 use std::ops::SubAssign;
@@ -198,10 +198,10 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 11usize;
-        let mut max_norm_diff = 8f64;
+        let mut max_norm_diff = 8f32;
         let mut num_iter = 3;
         let mut z_factor = 1f32;
-        let mut max_z_diff = f64::INFINITY;
+        let mut max_z_diff = f32::INFINITY;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -239,9 +239,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 };
             } else if flag_val == "-norm_diff" {
                 max_norm_diff = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f32>().unwrap()
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f32>().unwrap()
                 };
             } else if flag_val == "-num_iter" {
                 num_iter = if keyval {
@@ -257,9 +257,9 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                 };
             } else if flag_val == "-max_diff" {
                 max_z_diff = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f32>().unwrap()
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f32>().unwrap()
                 };
             }
         }
@@ -276,8 +276,8 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         if num_iter < 1 {
             num_iter = 1;
         }
-        if max_norm_diff > 90f64 {
-            max_norm_diff = 90f64;
+        if max_norm_diff > 90f32 {
+            max_norm_diff = 90f32;
         }
         let threshold = max_norm_diff.to_radians().cos();
 
@@ -297,38 +297,36 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             println!("Reading data...")
         }
 
-        // let input = Arc::new(Raster::new(&input_file, "r")?);
-        let input2 = Raster::new(&input_file, "r")?;
+        let input_dem = Raster::new(&input_file, "r")?;
 
         let start = Instant::now();
 
-        if input2.is_in_geographic_coordinates() {
+        if input_dem.is_in_geographic_coordinates() {
             // calculate a new z-conversion factor
-            let mut mid_lat = (input2.configs.north - input2.configs.south) / 2.0;
+            let mut mid_lat = (input_dem.configs.north - input_dem.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
                 z_factor = (1.0 / (113200.0 * mid_lat.cos())) as f32;
-                println!("It appears that the DEM is in geographic coordinates. The z-factor has been updated: {}.", z_factor);
+                println!("It appears that the DEM is in geographic coordinates. The z-factor has been updated to {}.", z_factor);
             }
         }
 
-        // let rows = input.configs.rows as isize;
-        // let columns = input.configs.columns as isize;
-        // let nodata = input.configs.nodata;
-        let eight_grid_res = ((input2.configs.resolution_x + input2.configs.resolution_y) / 2f64) as f32 * 8f32;
-        let res_x = input2.configs.resolution_x;
-        let res_y = input2.configs.resolution_y;
-        let mut configs = input2.configs.clone();
+        let input = Arc::new(input_dem.get_data_as_f32_array2d());
+        let mut configs = input_dem.configs.clone();
+        drop(input_dem);
 
-        let input = Arc::new(input2.get_data_as_f32_array2d());
         let rows = input.rows as isize;
         let columns = input.columns as isize;
         let nodata = input.nodata;
-        drop(input2);
-
+        let res_x = configs.resolution_x as f32;
+        let res_y = configs.resolution_y as f32;
+        // let eight_grid_res = ((res_x + res_y) / 2f32) * 8f32;
+        let eight_res_x = res_x * 8f32;
+        let eight_res_y = res_y * 8f32;
+        
         /*
             Note: the normal should have a,b,c components to it since it is 3D. However, every pixel will
-            have a c-value of eight_grid_res and as such, there is no point in including it in the 
+            have a c-value of 1.0 and as such, there is no point in including it in the 
             storage of the normals and in the average analysis. It's effectively constant. This is one way
             to both significantly reduce the memory footprint of the tool and reduce the number of calculations
             required for the averaging.
@@ -368,17 +366,15 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                     values[i] = (z * z_factor) as f32;
                                 }
                             }
-                            a = -(values[2] - values[4]
-                                + 2f32 * (values[1] - values[5])
-                                + values[0]
-                                - values[6]);
-                            b = -(values[6] - values[4]
-                                + 2f32 * (values[7] - values[3])
-                                + values[0]
-                                - values[2]);
+                            // from Horn 1981:
+                            // Pw = t(z++ + 2z+o + z+.) - (z-+ + 2z_o + z--)]/8Ax
+                            // Qw = t(z+++2zo++z-+)- (z+-+2zo-+z--)]/8A>
+                            a = -(values[2] - values[4] + 2f32 * (values[1] - values[5]) + values[0] - values[6]) / eight_res_x;
+                            b = -(values[6] - values[4] + 2f32 * (values[7] - values[3]) + values[0] - values[2]) / eight_res_y;
+                            // Notice that these aren't unit vectors. By normalizing by c instead, we remove the need to store the c-value.
                             data[col as usize] = Normal {
-                                a: a / eight_grid_res,
-                                b: b / eight_grid_res,
+                                a: a,
+                                b: b,
                             };
                         }
                     }
@@ -465,8 +461,7 @@ impl WhiteboxTool for FeaturePreservingDenoise {
                                 xn = col + dx[n];
                                 yn = row + dy[n];
                                 if input.get_value(yn, xn) != nodata {
-                                    diff =
-                                        nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
+                                    diff = nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
                                     if diff > threshold32 {
                                         w = (diff - threshold32) * (diff - threshold32);
                                         sum_w += w;
@@ -518,26 +513,25 @@ impl WhiteboxTool for FeaturePreservingDenoise {
         ///////////////////////////////////////////////////////////////////////////
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        // let res_x = input.configs.resolution_x;
-        // let res_y = input.configs.resolution_y;
-        let x = [-res_x, -res_x, -res_x, 0f64, res_x, res_x, res_x, 0f64];
-        let y = [-res_y, 0f64, res_y, res_y, res_y, 0f64, -res_y, -res_y];
-        let mut w: f64;
-        let mut sum_w: f64;
-        let mut diff: f64;
-        let mut z: f64;
+        let x = [-res_x, -res_x, -res_x, 0f32, res_x, res_x, res_x, 0f32];
+        let y = [-res_y, 0f32, res_y, res_y, res_y, 0f32, -res_y, -res_y];
+        let mut w: f32;
+        let mut sum_w: f32;
+        let mut diff: f32;
+        let mut z: f32;
         let (mut xn, mut yn): (isize, isize);
-        let mut zn: f64;
-        // let mut output = Raster::initialize_using_file(&output_file, &input);
-        // output.set_data_from_raster(&input)?;
-        configs.nodata = nodata as f64;
-        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        let mut zn: f32;
+
+        // configs.nodata = nodata as f64;
+        let mut output: Array2D<f32> = Array2D::new(rows, columns, nodata, nodata)?; //Raster::initialize_using_config(&output_file, &configs);
         for row in 0..rows {
             for col in 0..columns {
-                output.set_value(row, col, input.get_value(row, col) as f64);
+                output.set_value(row, col, input.get_value(row, col));
             }
         }
-        output.configs.data_type = DataType::F32; // if the input file is integer elevations, the output must be floating-point
+        // output.configs.data_type = DataType::F32; // if the input file is integer elevations, the output must be floating-point
+        // let mut output = Arc::try_unwrap(input).unwrap_err().clone();
+        
         if verbose {
             println!("Updating elevations...");
         }
@@ -548,47 +542,37 @@ impl WhiteboxTool for FeaturePreservingDenoise {
 
             for row in 0..rows {
                 for col in 0..columns {
-                    // z = output.get_value(row, col);
-                    // if z != nodata {
                     if input.get_value(row, col) != nodata {
-                        sum_w = 0f64;
-                        z = 0f64;
+                        sum_w = 0f32;
+                        z = 0f32;
                         for n in 0..8 {
                             xn = col + dx[n];
                             yn = row + dy[n];
-                            // zn = output.get_value(yn, xn);
-                            // if zn != nodata as f64 {
                             zn = output.get_value(yn, xn);
-                            if zn != nodata as f64 {
+                            if zn != nodata {
                                 diff = nv_smooth
                                     .get_value(row, col)
-                                    .angle_between(nv_smooth.get_value(yn, xn))
-                                    as f64;
+                                    .angle_between(nv_smooth.get_value(yn, xn));
                                 if diff > threshold {
                                     w = (diff - threshold) * (diff - threshold);
                                     sum_w += w;
-                                    // z += -(nv_smooth.get_value(yn, xn).a as f64 * x[n]
-                                    //     + nv_smooth.get_value(yn, xn).b as f64 * y[n]
-                                    //     - eight_grid_res as f64 * zn)
-                                    //     / eight_grid_res as f64
-                                    //     * w;
-                                    z += -(nv_smooth.get_value(yn, xn).a as f64 * x[n]
-                                        + nv_smooth.get_value(yn, xn).b as f64 * y[n]
-                                        - 1f64 * zn)
+                                    z += -(nv_smooth.get_value(yn, xn).a * x[n]
+                                        + nv_smooth.get_value(yn, xn).b * y[n]
+                                        - 1f32 * zn)
                                         * w;
                                 }
                             }
                         }
-                        if sum_w > 0f64 {
+                        if sum_w > 0f32 {
                             // this is a division-by-zero safeguard and must be in place.
                             zn = z / sum_w;
-                            if (zn - input.get_value(row, col) as f64).abs() <= max_z_diff {
+                            if (zn - input.get_value(row, col)).abs() <= max_z_diff {
                                 output.set_value(row, col, zn);
                             } else {
-                                output.set_value(row, col, input.get_value(row, col) as f64);
+                                output.set_value(row, col, input.get_value(row, col));
                             }
                         } else {
-                            output.set_value(row, col, input.get_value(row, col) as f64);
+                            output.set_value(row, col, input.get_value(row, col));
                         }
                     }
                 }
@@ -607,29 +591,33 @@ impl WhiteboxTool for FeaturePreservingDenoise {
             }
         }
 
+        drop(nv_smooth);
+        drop(input);
+
+        configs.nodata = nodata as f64;
+        let mut output_raster = Raster::initialize_from_array2d(&output_file, &configs, &output);
+        output_raster.configs.data_type = DataType::F32;
+
         let elapsed_time = get_formatted_elapsed_time(start);
-        // output.configs.display_min = input.configs.display_min;
-        // output.configs.display_max = input.configs.display_max;
-        // output.configs.palette = input.configs.palette.clone();
-         output.configs.display_min = configs.display_min;
-        output.configs.display_max = configs.display_max;
-        output.configs.palette = configs.palette.clone();
-        output.add_metadata_entry(format!(
+        output_raster.configs.display_min = configs.display_min;
+        output_raster.configs.display_max = configs.display_max;
+        output_raster.configs.palette = configs.palette.clone();
+        output_raster.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Filter size: {}", filter_size));
-        output.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff));
-        output.add_metadata_entry(format!("Iterations: {}", num_iter));
-        output.add_metadata_entry(format!("Max. z difference: {}", max_z_diff));
-        output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        output_raster.add_metadata_entry(format!("Input file: {}", input_file));
+        output_raster.add_metadata_entry(format!("Filter size: {}", filter_size));
+        output_raster.add_metadata_entry(format!("Normal difference threshold: {}", max_norm_diff));
+        output_raster.add_metadata_entry(format!("Iterations: {}", num_iter));
+        output_raster.add_metadata_entry(format!("Max. z difference: {}", max_z_diff));
+        output_raster.add_metadata_entry(format!("Z-factor: {}", z_factor));
+        output_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
         }
-        let _ = match output.write() {
+        let _ = match output_raster.write() {
             Ok(_) => {
                 if verbose {
                     println!("Output file written")

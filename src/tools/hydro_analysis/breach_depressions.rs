@@ -328,6 +328,7 @@ impl WhiteboxTool for BreachDepressions {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F64;
         let background_val = (i32::min_value() + 1) as f64;
         output.reinitialize_values(background_val);
 

@@ -298,10 +298,16 @@ impl WhiteboxTool for ClipLidarToPolygon {
         if verbose {
             println!("Writing output LAS file...");
         }
-        let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
-            Err(e) => println!("error while writing: {:?}", e),
-        };
+        if output.header.number_of_points > 0 {
+            let _ = match output.write() {
+                Ok(_) => if verbose { println!("Complete!") },
+                Err(e) => println!("error while writing: {:?}", e),
+            };
+        } else {
+            if verbose {
+                println!("Warning: the file {} does not appear to contain any points within the clip polygon. No output file has been created.", output.get_short_filename());
+            }
+        }
         if verbose {
             println!(
                 "{}",

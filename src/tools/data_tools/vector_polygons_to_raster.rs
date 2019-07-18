@@ -2,19 +2,20 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/04/2018
-Last Modified: 12/10/2018
+Last Modified: 17/07/2019
 License: MIT
 */
 
 use crate::algorithms::point_in_poly;
 use crate::raster::*;
-use crate::structures::{BoundingBox, Point2D};
+use crate::structures::{Array2D, BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::{FieldData, ShapeType, Shapefile};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
+use std::collections::HashMap;
 
 pub struct VectorPolygonsToRaster {
     name: String,
@@ -257,12 +258,31 @@ impl WhiteboxTool for VectorPolygonsToRaster {
         };
 
         // Is the field numeric?
+        let mut freq_data = HashMap::new();
+        let mut key: String;
         if !vector_data.attributes.is_field_numeric(field_index) {
             // Warn user of non-numeric
-            if verbose {
-                println!("Warning: Non-numeric attributes cannot be rasterized. FID will be used instead.");
+            // if verbose {
+                println!("Warning: Non-numeric attributes cannot be directly assigned to raster data. A key will be established.");
+                println!("\nKey, Value");
+            // }
+            // field_name = "FID".to_string(); // Can't use non-numeric field; use FID instead.
+            let mut id = 1f64;
+            for record_num in 0..vector_data.num_records {
+                key = match vector_data.attributes.get_value(record_num, &field_name) {
+                    FieldData::Int(val) => val.to_string(),
+                    FieldData::Real(val) => val.to_string(),
+                    FieldData::Text(val) => val.to_string(),
+                    FieldData::Date(val) => val.to_string(),
+                    FieldData::Bool(val) => val.to_string(),
+                    FieldData::Null => "null".to_string(),
+                };
+                if !freq_data.contains_key(&key) {
+                    println!("{},{}", key, id);
+                    freq_data.insert(key, id);
+                    id += 1f64;
+                }
             }
-            field_name = "FID".to_string(); // Can't use non-numeric field; use FID instead.
         }
 
         // Create the output raster. The process of doing this will
@@ -322,11 +342,14 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                     FieldData::Int(val) => {
                         attribute_data[record_num] = val as f64;
                     }
-                    // FieldData::Int64(val) => {
-                    //     attribute_data[record_num] = val as f64;
-                    // },
                     FieldData::Real(val) => {
                         attribute_data[record_num] = val;
+                    }
+                    FieldData::Text(key) => {
+                        attribute_data[record_num] = match freq_data.get(&key) {
+                            Some(val) => *val,
+                            None => 0f64
+                        }
                     }
                     _ => {
                         // do nothing; likely due to null value for record.
@@ -364,98 +387,15 @@ impl WhiteboxTool for VectorPolygonsToRaster {
             isize,
             isize,
         );
+        let mut holes: Array2D<i32> = Array2D::new(rows, columns, -1i32, -1i32)?;
+        let mut record_i32: i32;
         let num_records = vector_data.num_records;
         for record_num in 0..vector_data.num_records {
             let record = vector_data.get_record(record_num);
+            record_i32 = (record_num + 1) as i32;
             let rec_bb = BoundingBox::new(record.x_min, record.x_max, record.y_min, record.y_max);
             if rec_bb.overlaps(raster_bb) {
-                for part in 0..record.num_parts as usize {
-                    if !record.is_hole(part as i32) {
-                        start_point_in_part = record.parts[part] as usize;
-                        end_point_in_part = if part < record.num_parts as usize - 1 {
-                            record.parts[part + 1] as usize - 1
-                        } else {
-                            record.num_points as usize - 1
-                        };
-
-                        // First, figure out the minimum and maximum row and column for the polygon part
-                        starting_row = rows;
-                        ending_row = 0;
-                        starting_col = columns;
-                        ending_col = 0;
-                        for p in start_point_in_part..end_point_in_part + 1 {
-                            row = output.get_row_from_y(record.points[p].y);
-                            col = output.get_column_from_x(record.points[p].x);
-                            if row < starting_row {
-                                starting_row = row;
-                            }
-                            if row > ending_row {
-                                ending_row = row;
-                            }
-                            if col < starting_col {
-                                starting_col = col;
-                            }
-                            if col > ending_col {
-                                ending_col = col;
-                            }
-                        }
-
-                        if starting_row < 0 {
-                            starting_row = 0;
-                        }
-                        if ending_row < 0 {
-                            ending_row = 0;
-                        }
-                        if starting_row >= rows {
-                            starting_row = rows - 1;
-                        }
-                        if ending_row >= rows {
-                            ending_row = rows - 1;
-                        }
-
-                        if starting_col < 0 {
-                            starting_col = 0;
-                        }
-                        if ending_col < 0 {
-                            ending_col = 0;
-                        }
-                        if starting_col >= columns {
-                            starting_col = columns - 1;
-                        }
-                        if ending_col >= columns {
-                            ending_col = columns - 1;
-                        }
-
-                        for r in starting_row..ending_row {
-                            y = output.get_y_from_row(r);
-                            for c in starting_col..ending_col {
-                                x = output.get_x_from_column(c);
-                                if point_in_poly(
-                                    &Point2D { x: x, y: y },
-                                    &record.points[start_point_in_part..end_point_in_part + 1],
-                                ) {
-                                    output.set_value(r, c, attribute_data[record_num]);
-                                    output_something = true;
-                                }
-                            }
-                            if verbose {
-                                progress = (100.0_f64 * r as f64
-                                    / (ending_row - starting_row) as f64)
-                                    as usize;
-                                if progress != old_progress {
-                                    println!(
-                                        "Rasterizing {} of {}: {}%",
-                                        record_num + 1,
-                                        num_records,
-                                        progress
-                                    );
-                                    old_progress = progress;
-                                }
-                            }
-                        }
-                    }
-                }
-
+                // first find the holes
                 for part in 0..record.num_parts as usize {
                     if record.is_hole(part as i32) {
                         start_point_in_part = record.parts[part] as usize;
@@ -521,7 +461,97 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                                     &Point2D { x: x, y: y },
                                     &record.points[start_point_in_part..end_point_in_part + 1],
                                 ) {
-                                    output.set_value(r, c, background_val);
+                                    // output.set_value(r, c, background_val);
+                                    holes.set_value(r, c, record_i32);
+                                }
+                            }
+                            if verbose {
+                                progress = (100.0_f64 * r as f64
+                                    / (ending_row - starting_row) as f64)
+                                    as usize;
+                                if progress != old_progress {
+                                    println!(
+                                        "Rasterizing {} of {}: {}%",
+                                        record_num + 1,
+                                        num_records,
+                                        progress
+                                    );
+                                    old_progress = progress;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for part in 0..record.num_parts as usize {
+                    if !record.is_hole(part as i32) {
+                        start_point_in_part = record.parts[part] as usize;
+                        end_point_in_part = if part < record.num_parts as usize - 1 {
+                            record.parts[part + 1] as usize - 1
+                        } else {
+                            record.num_points as usize - 1
+                        };
+
+                        // First, figure out the minimum and maximum row and column for the polygon part
+                        starting_row = rows;
+                        ending_row = 0;
+                        starting_col = columns;
+                        ending_col = 0;
+                        for p in start_point_in_part..end_point_in_part + 1 {
+                            row = output.get_row_from_y(record.points[p].y);
+                            col = output.get_column_from_x(record.points[p].x);
+                            if row < starting_row {
+                                starting_row = row;
+                            }
+                            if row > ending_row {
+                                ending_row = row;
+                            }
+                            if col < starting_col {
+                                starting_col = col;
+                            }
+                            if col > ending_col {
+                                ending_col = col;
+                            }
+                        }
+
+                        if starting_row < 0 {
+                            starting_row = 0;
+                        }
+                        if ending_row < 0 {
+                            ending_row = 0;
+                        }
+                        if starting_row >= rows {
+                            starting_row = rows - 1;
+                        }
+                        if ending_row >= rows {
+                            ending_row = rows - 1;
+                        }
+
+                        if starting_col < 0 {
+                            starting_col = 0;
+                        }
+                        if ending_col < 0 {
+                            ending_col = 0;
+                        }
+                        if starting_col >= columns {
+                            starting_col = columns - 1;
+                        }
+                        if ending_col >= columns {
+                            ending_col = columns - 1;
+                        }
+
+                        for r in starting_row..ending_row {
+                            y = output.get_y_from_row(r);
+                            for c in starting_col..ending_col {
+                                x = output.get_x_from_column(c);
+                                if point_in_poly(
+                                    &Point2D { x: x, y: y },
+                                    &record.points[start_point_in_part..end_point_in_part + 1],
+                                ) {
+                                    if holes.get_value(r, c) != record_i32 {
+                                        output.set_value(r, c, attribute_data[record_num]);
+                                        output_something = true;
+                                    }
                                 }
                             }
                             if verbose {
