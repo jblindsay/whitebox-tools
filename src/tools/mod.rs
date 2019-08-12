@@ -31,6 +31,7 @@ impl ToolManager {
         tool_names.push("CleanVector".to_string());
         tool_names.push("ConvertNodataToZero".to_string());
         tool_names.push("ConvertRasterFormat".to_string());
+        tool_names.push("CsvPointsToVector".to_string());
         tool_names.push("ExportTableToCsv".to_string());
         tool_names.push("JoinTables".to_string());
         tool_names.push("LinesToPolygons".to_string());
@@ -260,6 +261,7 @@ impl ToolManager {
         tool_names.push("ClassifyOverlapPoints".to_string());
         tool_names.push("ClipLidarToPolygon".to_string());
         tool_names.push("ErasePolygonFromLidar".to_string());
+        tool_names.push("FilterLidarClasses".to_string());
         tool_names.push("FilterLidarScanAngles".to_string());
         tool_names.push("FindFlightlineEdgePoints".to_string());
         tool_names.push("FlightlineOverlap".to_string());
@@ -281,6 +283,7 @@ impl ToolManager {
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarPointStats".to_string());
+        tool_names.push("LidarRansacPlanes".to_string());
         tool_names.push("LidarRemoveDuplicates".to_string());
         tool_names.push("LidarRemoveOutliers".to_string());
         tool_names.push("LidarSegmentation".to_string());
@@ -404,13 +407,13 @@ impl ToolManager {
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
         tool_names.push("DownslopeIndex".to_string());
-        tool_names.push("DrainagePreservingSmoothing".to_string());
+        // tool_names.push("DrainagePreservingSmoothing".to_string());
         tool_names.push("EdgeDensity".to_string());
         tool_names.push("ElevAbovePit".to_string());
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("ElevRelativeToMinMax".to_string());
         tool_names.push("ElevRelativeToWatershedMinMax".to_string());
-        tool_names.push("FeaturePreservingDenoise".to_string());
+        tool_names.push("FeaturePreservingSmoothing".to_string());
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
@@ -474,6 +477,7 @@ impl ToolManager {
             "cleanvector" => Some(Box::new(data_tools::CleanVector::new())),
             "convertnodatatozero" => Some(Box::new(data_tools::ConvertNodataToZero::new())),
             "convertrasterformat" => Some(Box::new(data_tools::ConvertRasterFormat::new())),
+            "csvpointstovector" => Some(Box::new(data_tools::CsvPointsToVector::new())),
             "exporttabletocsv" => Some(Box::new(data_tools::ExportTableToCsv::new())),
             "jointables" => Some(Box::new(data_tools::JoinTables::new())),
             "linestopolygons" => Some(Box::new(data_tools::LinesToPolygons::new())),
@@ -777,6 +781,7 @@ impl ToolManager {
             "classifyoverlappoints" => Some(Box::new(lidar_analysis::ClassifyOverlapPoints::new())),
             "cliplidartopolygon" => Some(Box::new(lidar_analysis::ClipLidarToPolygon::new())),
             "erasepolygonfromlidar" => Some(Box::new(lidar_analysis::ErasePolygonFromLidar::new())),
+            "filterlidarclasses" => Some(Box::new(lidar_analysis::FilterLidarClasses::new())),
             "filterlidarscanangles" => Some(Box::new(lidar_analysis::FilterLidarScanAngles::new())),
             "findflightlineedgepoints" => {
                 Some(Box::new(lidar_analysis::FindFlightlineEdgePoints::new()))
@@ -808,6 +813,7 @@ impl ToolManager {
             )),
             "lidarpointdensity" => Some(Box::new(lidar_analysis::LidarPointDensity::new())),
             "lidarpointstats" => Some(Box::new(lidar_analysis::LidarPointStats::new())),
+            "lidarransacplanes" => Some(Box::new(lidar_analysis::LidarRansacPlanes::new())),
             "lidarremoveduplicates" => Some(Box::new(lidar_analysis::LidarRemoveDuplicates::new())),
             "lidarremoveoutliers" => Some(Box::new(lidar_analysis::LidarRemoveOutliers::new())),
             "lidarsegmentation" => Some(Box::new(lidar_analysis::LidarSegmentation::new())),
@@ -973,9 +979,9 @@ impl ToolManager {
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => Some(Box::new(terrain_analysis::DirectionalRelief::new())),
             "downslopeindex" => Some(Box::new(terrain_analysis::DownslopeIndex::new())),
-            "drainagepreservingsmoothing" => Some(Box::new(
-                terrain_analysis::DrainagePreservingSmoothing::new(),
-            )),
+            // "drainagepreservingsmoothing" => Some(Box::new(
+            //     terrain_analysis::DrainagePreservingSmoothing::new(),
+            // )),
             "edgedensity" => Some(Box::new(terrain_analysis::EdgeDensity::new())),
             "elevabovepit" => Some(Box::new(terrain_analysis::ElevAbovePit::new())),
             "elevpercentile" => Some(Box::new(terrain_analysis::ElevPercentile::new())),
@@ -983,8 +989,8 @@ impl ToolManager {
             "elevrelativetowatershedminmax" => Some(Box::new(
                 terrain_analysis::ElevRelativeToWatershedMinMax::new(),
             )),
-            "featurepreservingdenoise" => {
-                Some(Box::new(terrain_analysis::FeaturePreservingDenoise::new()))
+            "featurepreservingsmoothing" => {
+                Some(Box::new(terrain_analysis::FeaturePreservingSmoothing::new()))
             }
             "fetchanalysis" => Some(Box::new(terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(terrain_analysis::FillMissingData::new())),

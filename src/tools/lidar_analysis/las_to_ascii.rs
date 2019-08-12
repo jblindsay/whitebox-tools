@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 16/07/2017
-Last Modified: 10/02/2019
+Last Modified: 01/08/2019
 License: MIT
 */
 
@@ -26,7 +26,9 @@ use std::path;
 /// x,y,z,intensity,class,return,num_returns,scan_angle
 /// ```
 /// 
-/// Use the `AsciiToLas` tool to convert a text file containing LiDAR point data into a LAS file.
+/// If the LAS file has a point format that contains RGB data, the final three columns will contain the red,
+/// green, and blue values respectively. Use the `AsciiToLas` tool to convert a text file containing LiDAR 
+/// point data into a LAS file.
 /// 
 /// # See Also
 /// `AsciiToLas`
@@ -185,6 +187,8 @@ impl WhiteboxTool for LasToAscii {
                     }
                 };
 
+                let has_rgb = input.has_rgb();
+                let mut rgb: ColourData;
                 let file_extension = get_file_extension(&input_file);
                 let output_file = input_file.replace(&format!(".{}", file_extension), ".csv");
                 let f = File::create(output_file)?;
@@ -192,20 +196,50 @@ impl WhiteboxTool for LasToAscii {
 
                 let n_points = input.header.number_of_points as usize;
 
-                writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle\n".as_bytes())?;
+                if !has_rgb {
+                    writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle\n".as_bytes())?;
+                } else {
+                    writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle,Red,Green,Blue\n".as_bytes())?;
+                }
                 for k in 0..n_points {
                     let pd = input[k];
-                    let s = format!(
-                        "{},{},{},{},{},{},{},{}\n",
-                        pd.x,
-                        pd.y,
-                        pd.z,
-                        pd.intensity,
-                        pd.classification(),
-                        pd.return_number(),
-                        pd.number_of_returns(),
-                        pd.scan_angle
-                    );
+                    let s = if !has_rgb {
+                        format!(
+                            "{},{},{},{},{},{},{},{}\n",
+                            pd.x,
+                            pd.y,
+                            pd.z,
+                            pd.intensity,
+                            pd.classification(),
+                            pd.return_number(),
+                            pd.number_of_returns(),
+                            pd.scan_angle
+                        )
+                    } else {
+                        rgb = match input.get_rgb(k) {
+                            Ok(v) => v,
+                            Err(_) => {
+                                return Err(Error::new(
+                                    ErrorKind::NotFound,
+                                    "RGB data not read correctly in LAS file.",
+                                ))
+                            }
+                        };
+                        format!(
+                            "{},{},{},{},{},{},{},{},{},{},{}\n",
+                            pd.x,
+                            pd.y,
+                            pd.z,
+                            pd.intensity,
+                            pd.classification(),
+                            pd.return_number(),
+                            pd.number_of_returns(),
+                            pd.scan_angle,
+                            rgb.red,
+                            rgb.green,
+                            rgb.blue
+                        )
+                    };
                     writer.write_all(s.as_bytes())?;
 
                     if verbose {

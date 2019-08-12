@@ -245,7 +245,13 @@ impl ShapefileGeometry {
                 56i32 + self.num_parts * 4i32 + self.num_points * 24i32
             }
 
-            ShapeType::PointZ => 32i32,
+            ShapeType::PointZ => {
+                if self.has_m_data() {
+                    32i32
+                } else {
+                    24i32
+                }
+            },
             ShapeType::MultiPointZ => {
                 if self.has_m_data() {
                     40 + 16 * self.num_points + 16 + 8 * self.num_points + 16 + 8*self.num_points

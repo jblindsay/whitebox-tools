@@ -42,12 +42,12 @@ use std::thread;
 /// method.
 ///
 /// # Reference
+/// Lindsay, J.B., Francioni, A., & Cockburn, J.M.H. (In press) LiDAR DEM smoothing and the preservation 
+/// of drainage features. Remote Sensing.
+/// 
 /// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving 
 /// mesh denoising. IEEE Transactions on Visualization & Computer Graphics, (5), 925-938.
-///
-/// # See Also
-/// `DrainagePreservingSmoothing`
-pub struct FeaturePreservingDenoise {
+pub struct FeaturePreservingSmoothing {
     name: String,
     description: String,
     toolbox: String,
@@ -55,10 +55,10 @@ pub struct FeaturePreservingDenoise {
     example_usage: String,
 }
 
-impl FeaturePreservingDenoise {
-    pub fn new() -> FeaturePreservingDenoise {
+impl FeaturePreservingSmoothing {
+    pub fn new() -> FeaturePreservingSmoothing {
         // public constructor
-        let name = "FeaturePreservingDenoise".to_string();
+        let name = "FeaturePreservingSmoothing".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.".to_string();
 
@@ -144,7 +144,7 @@ impl FeaturePreservingDenoise {
             short_exe, name
         ).replace("*", &sep);
 
-        FeaturePreservingDenoise {
+        FeaturePreservingSmoothing {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -154,7 +154,7 @@ impl FeaturePreservingDenoise {
     }
 }
 
-impl WhiteboxTool for FeaturePreservingDenoise {
+impl WhiteboxTool for FeaturePreservingSmoothing {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }

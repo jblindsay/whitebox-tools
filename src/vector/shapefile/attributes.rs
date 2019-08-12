@@ -72,7 +72,7 @@ impl fmt::Display for FieldData {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldDataType {
     Int,
     Real,

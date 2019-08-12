@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017
-Last Modified: 12/10/2018
+Last Modified: 29/07/2019
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -12,14 +12,15 @@ Notes: The 3D space-filling nature of point clouds under heavy forest cover do n
 */
 
 use self::na::Vector3;
-use self::rand::Rng;
+// use self::rand::Rng;
 use crate::lidar::*;
 use crate::na;
 use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
 use crate::tools::*;
 use num_cpus;
 use rand;
-use std::cmp;
+use rand::seq::SliceRandom;
+// use std::cmp;
 use std::env;
 use std::f64;
 use std::f64::NEG_INFINITY;
@@ -29,7 +30,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Segments a LiDAR point cloud based on normal vectors.
+/// This tool segments a LiDAR point cloud based on normal vectors. The segment values 
+/// are stored as unique, random red-green-blue (RGB) colour values stored in the output 
+/// (`--output`) LAS file.
+/// 
+/// # See Also
+/// `LidarSegmentationBasedFilter`
 pub struct LidarSegmentation {
     name: String,
     description: String,
@@ -91,6 +97,15 @@ impl LidarSegmentation {
             optional: false
         });
 
+        parameters.push(ToolParameter{
+            name: "Don't Cross Class Boundaries".to_owned(), 
+            flags: vec!["--classes".to_owned()], 
+            description: "Segments don't cross class boundaries.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: false
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -102,7 +117,7 @@ impl LidarSegmentation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classes", short_exe, name).replace("*", &sep);
 
         LidarSegmentation {
             name: name,
@@ -160,6 +175,7 @@ impl WhiteboxTool for LidarSegmentation {
         let mut search_radius = 5f64;
         let mut max_norm_diff = 2f64;
         let mut max_z_diff = 1f64;
+        let mut dont_cross_class_boundaries = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -208,6 +224,8 @@ impl WhiteboxTool for LidarSegmentation {
                 } else {
                     max_z_diff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
+            } else if flag_val == "-classes" {
+                dont_cross_class_boundaries = true;
             }
         }
 
@@ -359,14 +377,16 @@ impl WhiteboxTool for LidarSegmentation {
                         let pn: PointData = input.get_point_info(index_n);
                         // Calculate height difference.
                         height_diff = (pn.z - p.z).abs();
-                        if height_diff < max_z_diff {
-                            // Check the difference in normal vectors.
-                            norm_diff =
-                                normal_vectors[point_id].angle_between(normal_vectors[index_n]);
-                            if norm_diff < max_norm_diff {
-                                // This neighbour is part of the ground.
-                                segment_id[index_n] = current_segment;
-                                stack.push(index_n);
+                        if !dont_cross_class_boundaries || (p.classification() == pn.classification()) {
+                            if height_diff < max_z_diff {
+                                // Check the difference in normal vectors.
+                                norm_diff =
+                                    normal_vectors[point_id].angle_between(normal_vectors[index_n]);
+                                if norm_diff < max_norm_diff {
+                                    // This neighbour is part of the ground.
+                                    segment_id[index_n] = current_segment;
+                                    stack.push(index_n);
+                                }
                             }
                         }
                     }
@@ -380,20 +400,26 @@ impl WhiteboxTool for LidarSegmentation {
 
         let mut clrs: Vec<(u16, u16, u16)> = Vec::new();
         let mut rng = rand::thread_rng();
-        let (mut r, mut g, mut b): (u16, u16, u16) = (0u16, 0u16, 0u16);
-        for _ in 0..current_segment + 1 as usize {
-            let mut flag = false;
-            while !flag {
-                r = rng.gen::<u8>() as u16 * 256u16;
-                g = rng.gen::<u8>() as u16 * 256u16;
-                b = rng.gen::<u8>() as u16 * 256u16;
-                let max_val = cmp::max(cmp::max(r, g), b);
-                //let min_val = cmp::min(cmp::min(r, g), b);
-                if max_val >= u16::max_value() / 2 {
-                    // && min_val >= u16::max_value() / 4 {
-                    flag = true;
-                }
-            }
+        let (mut r, mut g, mut b): (u16, u16, u16); // = (0u16, 0u16, 0u16);
+        let range: Vec<u32> = (0..16777215).collect();
+        let raw_clrs: Vec<u32> = range.choose_multiple(&mut rng, current_segment+1).cloned().collect();
+        for i in 0..current_segment + 1 as usize {
+            // let mut flag = false;
+            // while !flag {
+            //     r = rng.gen::<u8>() as u16 * 256u16;
+            //     g = rng.gen::<u8>() as u16 * 256u16;
+            //     b = rng.gen::<u8>() as u16 * 256u16;
+            //     let max_val = cmp::max(cmp::max(r, g), b);
+            //     //let min_val = cmp::min(cmp::min(r, g), b);
+            //     if max_val >= u16::max_value() / 2 {
+            //         // && min_val >= u16::max_value() / 4 {
+            //         flag = true;
+            //     }
+            // }
+            r = (raw_clrs[i] as u32 & 0xFF) as u16;
+            g = ((raw_clrs[i] as u32 >> 8) & 0xFF) as u16;
+            b = ((raw_clrs[i] as u32 >> 16) & 0xFF) as u16;
+                
             clrs.push((r, g, b));
         }
 

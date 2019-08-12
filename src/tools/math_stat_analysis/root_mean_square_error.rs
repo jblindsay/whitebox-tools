@@ -234,7 +234,7 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut num_cells = 0i32;
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
-            let mut residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
+            let mut abs_residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
                 let (a, b, c, d) = rx.recv().unwrap();
                 num_cells += a;
@@ -242,7 +242,7 @@ impl WhiteboxTool for RootMeanSquareError {
                 sq_sum += c;
 
                 for i in 0..d.len() {
-                    residuals.push(d[i]);
+                    abs_residuals.push(d[i]);
                 }
 
                 if verbose {
@@ -260,8 +260,8 @@ impl WhiteboxTool for RootMeanSquareError {
             if verbose {
                 println!("Sorting the residuals...");
             }
-            residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-            let le90 = residuals[ninety_percent_cell];
+            abs_residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+            let le90 = abs_residuals[ninety_percent_cell];
 
             println!("\nVertical Accuracy Analysis:\n");
             println!("Comparison File: {}", input_file);
@@ -383,7 +383,7 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut num_cells = 0i32;
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
-            let mut residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
+            let mut abs_residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
                 let (a, b, c, d) = rx.recv().unwrap();
                 num_cells += a;
@@ -391,7 +391,7 @@ impl WhiteboxTool for RootMeanSquareError {
                 sq_sum += c;
 
                 for i in 0..d.len() {
-                    residuals.push(d[i]);
+                    abs_residuals.push(d[i]);
                 }
 
                 if verbose {
@@ -409,8 +409,8 @@ impl WhiteboxTool for RootMeanSquareError {
             if verbose {
                 println!("Sorting the residuals...");
             }
-            residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-            let le90 = residuals[ninety_percent_cell];
+            abs_residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+            let le90 = abs_residuals[ninety_percent_cell];
 
             println!("\nVertical Accuracy Analysis:\n");
             println!("Comparison File: {}", input_file);

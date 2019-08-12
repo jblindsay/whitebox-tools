@@ -212,11 +212,12 @@ impl WhiteboxTool for LidarTophatTransform {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<usize> =
-            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
+        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            frs.insert(p.x, p.y, i);
+            if !p.is_classified_noise() { // low points really mess with the tophat-transform so exclude classified noise
+                frs.insert(p.x, p.y, i);
+            }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -249,12 +250,16 @@ impl WhiteboxTool for LidarTophatTransform {
                     let p: PointData = input.get_point_info(i);
                     ret = frs.search(p.x, p.y);
                     min_z = f64::MAX;
-                    for j in 0..ret.len() {
-                        index_n = ret[j].0;
-                        z_n = input.get_point_info(index_n).z;
-                        if z_n < min_z {
-                            min_z = z_n;
+                    if ret.len() > 0 {
+                        for j in 0..ret.len() {
+                            index_n = ret[j].0;
+                            z_n = input.get_point_info(index_n).z;
+                            if z_n < min_z {
+                                min_z = z_n;
+                            }
                         }
+                    } else {
+                        min_z = 0f64;
                     }
                     tx.send((i, min_z)).unwrap();
                 }
@@ -291,12 +296,16 @@ impl WhiteboxTool for LidarTophatTransform {
                     let p: PointData = input.get_point_info(i);
                     ret = frs.search(p.x, p.y);
                     max_z = f64::MIN;
-                    for j in 0..ret.len() {
-                        index_n = ret[j].0;
-                        z_n = neighbourhood_min[index_n];
-                        if z_n > max_z {
-                            max_z = z_n;
+                    if ret.len() > 0 {
+                        for j in 0..ret.len() {
+                            index_n = ret[j].0;
+                            z_n = neighbourhood_min[index_n];
+                            if z_n > max_z {
+                                max_z = z_n;
+                            }
                         }
+                    } else {
+                        max_z = 0f64;
                     }
                     tx.send((i, max_z)).unwrap();
                 }

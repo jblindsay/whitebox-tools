@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/04/2018
-Last Modified: 12/10/2018
+Last Modified: 26/07/2019
 License: MIT
 */
 
@@ -14,6 +14,9 @@ use crate::vector::{ShapeType, Shapefile};
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
+use num_cpus;
+use std::sync::{Arc, mpsc};
+use std::thread;
 
 /// This tool can be used to isolate, or clip, all of the LiDAR points in a LAS file (`--input`) contained within
 /// one or more vector polygon features. The user must specify the name of the input clip file (--polygons), wich 
@@ -198,6 +201,13 @@ impl WhiteboxTool for ClipLidarToPolygon {
             Err(err) => panic!(format!("Error reading file {}: {}", input_file, err)),
         };
 
+        let lidar_bb = BoundingBox::new(
+            input.header.min_x,
+            input.header.max_x,
+            input.header.min_y,
+            input.header.max_y,
+        );
+
         let polygons = Shapefile::read(&polygons_file)?;
         let num_records = polygons.num_records;
 
@@ -213,85 +223,191 @@ impl WhiteboxTool for ClipLidarToPolygon {
 
         // place the bounding boxes of each of the polygons into a vector
         let mut bb: Vec<BoundingBox> = Vec::with_capacity(num_records);
+        let mut feature_bb;
+        let mut record_nums = Vec::with_capacity(num_records);
         for record_num in 0..polygons.num_records {
             let record = polygons.get_record(record_num);
-            bb.push(BoundingBox::new(
+            feature_bb = BoundingBox::new(
                 record.x_min,
                 record.x_max,
                 record.y_min,
                 record.y_max,
-            ));
+            );
+            if feature_bb.overlaps(lidar_bb) {
+                bb.push(feature_bb);
+                record_nums.push(record_num);
+            }
+        }
+
+        if verbose {
+            println!("Performing clip...")
+        };
+
+        let n_points = input.header.number_of_points as usize;
+        let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+        
+        let num_procs = num_cpus::get();
+        let input = Arc::new(input); 
+        let polygons = Arc::new(polygons);
+        let record_nums = Arc::new(record_nums);
+        let bb = Arc::new(bb);
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let polygons = polygons.clone();
+            let record_nums = record_nums.clone();
+            let bb = bb.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut p: PointData;
+                let mut record_num: usize;
+                let mut point_in_poly: bool;
+                let mut start_point_in_part: usize;
+                let mut end_point_in_part: usize;
+                for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
+                    p = input.get_point_info(point_num);
+                    point_in_poly = false;
+                    for r in 0..record_nums.len() {
+                        record_num = record_nums[r];
+                        if bb[r].is_point_in_box(p.x, p.y) {
+                            // it's in the bounding box and worth seeing if it's in the enclosed polygon
+                            let record = polygons.get_record(record_num);
+                            for part in 0..record.num_parts as usize {
+                                if !record.is_hole(part as i32) {
+                                    // not holes
+                                    start_point_in_part = record.parts[part] as usize;
+                                    end_point_in_part = if part < record.num_parts as usize - 1 {
+                                        record.parts[part + 1] as usize - 1
+                                    } else {
+                                        record.num_points as usize - 1
+                                    };
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: p.x, y: p.y },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            for part in 0..record.num_parts as usize {
+                                if record.is_hole(part as i32) {
+                                    // holes
+                                    start_point_in_part = record.parts[part] as usize;
+                                    end_point_in_part = if part < record.num_parts as usize - 1 {
+                                        record.parts[part + 1] as usize - 1
+                                    } else {
+                                        record.num_points as usize - 1
+                                    };
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: p.x, y: p.y },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    match tx.send((point_in_poly, point_num)) {
+                        Ok(_) => {}, // do nothing
+                        Err(_) => panic!("Error performing clipping operation on point num. {}", point_num),
+                    };
+                }
+            });
         }
 
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
-
-        let n_points = input.header.number_of_points as usize;
-        let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
-        let mut point_in_poly: bool;
-        let mut p: PointData;
-        let mut start_point_in_part: usize;
-        let mut end_point_in_part: usize;
-        for point_num in 0..n_points {
-            p = input.get_point_info(point_num);
-            point_in_poly = false;
-            for record_num in 0..polygons.num_records {
-                if bb[record_num].is_point_in_box(p.x, p.y) {
-                    // it's in the bounding box and worth seeing if it's in the enclosed polygon
-                    let record = polygons.get_record(record_num);
-                    for part in 0..record.num_parts as usize {
-                        if !record.is_hole(part as i32) {
-                            // not holes
-                            start_point_in_part = record.parts[part] as usize;
-                            end_point_in_part = if part < record.num_parts as usize - 1 {
-                                record.parts[part + 1] as usize - 1
-                            } else {
-                                record.num_points as usize - 1
-                            };
-
-                            if algorithms::point_in_poly(
-                                &Point2D { x: p.x, y: p.y },
-                                &record.points[start_point_in_part..end_point_in_part + 1],
-                            ) {
-                                point_in_poly = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    for part in 0..record.num_parts as usize {
-                        if record.is_hole(part as i32) {
-                            // holes
-                            start_point_in_part = record.parts[part] as usize;
-                            end_point_in_part = if part < record.num_parts as usize - 1 {
-                                record.parts[part + 1] as usize - 1
-                            } else {
-                                record.num_points as usize - 1
-                            };
-
-                            if algorithms::point_in_poly(
-                                &Point2D { x: p.x, y: p.y },
-                                &record.points[start_point_in_part..end_point_in_part + 1],
-                            ) {
-                                point_in_poly = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if point_in_poly {
-                output.add_point_record(input.get_record(point_num));
+        for i in 0..n_points {
+            let data = rx.recv().unwrap();
+            if data.0 {
+                output.add_point_record(input.get_record(data.1));
             }
             if verbose {
-                progress = (100.0_f64 * point_num as f64 / num_points) as usize;
+                progress = (100.0_f64 * i as f64 / num_points) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
+
+        // let mut output = LasFile::initialize_using_file(&output_file, &input);
+        // output.header.system_id = "EXTRACTION".to_string();
+
+        // let n_points = input.header.number_of_points as usize;
+        // let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+        // let mut point_in_poly: bool;
+        // let mut p: PointData;
+        // let mut start_point_in_part: usize;
+        // let mut end_point_in_part: usize;
+        // let mut record_num: usize;
+        // for point_num in 0..n_points {
+        //     p = input.get_point_info(point_num);
+        //     point_in_poly = false;
+        //     for r in 0..record_nums.len() {
+        //         record_num = record_nums[r];
+        //         if bb[r].is_point_in_box(p.x, p.y) {
+        //             // it's in the bounding box and worth seeing if it's in the enclosed polygon
+        //             let record = polygons.get_record(record_num);
+        //             for part in 0..record.num_parts as usize {
+        //                 if !record.is_hole(part as i32) {
+        //                     // not holes
+        //                     start_point_in_part = record.parts[part] as usize;
+        //                     end_point_in_part = if part < record.num_parts as usize - 1 {
+        //                         record.parts[part + 1] as usize - 1
+        //                     } else {
+        //                         record.num_points as usize - 1
+        //                     };
+
+        //                     if algorithms::point_in_poly(
+        //                         &Point2D { x: p.x, y: p.y },
+        //                         &record.points[start_point_in_part..end_point_in_part + 1],
+        //                     ) {
+        //                         point_in_poly = true;
+        //                         break;
+        //                     }
+        //                 }
+        //             }
+
+        //             for part in 0..record.num_parts as usize {
+        //                 if record.is_hole(part as i32) {
+        //                     // holes
+        //                     start_point_in_part = record.parts[part] as usize;
+        //                     end_point_in_part = if part < record.num_parts as usize - 1 {
+        //                         record.parts[part + 1] as usize - 1
+        //                     } else {
+        //                         record.num_points as usize - 1
+        //                     };
+
+        //                     if algorithms::point_in_poly(
+        //                         &Point2D { x: p.x, y: p.y },
+        //                         &record.points[start_point_in_part..end_point_in_part + 1],
+        //                     ) {
+        //                         point_in_poly = false;
+        //                         break;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+
+        //     if point_in_poly {
+        //         output.add_point_record(input.get_record(point_num));
+        //     }
+        //     if verbose {
+        //         progress = (100.0_f64 * point_num as f64 / num_points) as usize;
+        //         if progress != old_progress {
+        //             println!("Progress: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
         let elapsed_time = get_formatted_elapsed_time(start);
 

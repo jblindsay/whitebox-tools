@@ -498,7 +498,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     match r.configs.data_type {
         DataType::F64 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u64_bytes = unsafe { mem::transmute(r.data[i]) };
@@ -508,7 +507,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::F32 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as f32) };
@@ -518,7 +516,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::I32 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as i32) };
@@ -528,7 +525,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::U32 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u32_bytes = unsafe { mem::transmute(r.data[i] as u32) };
@@ -538,7 +534,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::I16 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as i16) };
@@ -548,7 +543,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::U16 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     u16_bytes = unsafe { mem::transmute(r.data[i] as u16) };
@@ -558,7 +552,6 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         }
         DataType::U8 | DataType::I8 => {
             for row in (0..r.configs.rows).rev() {
-                //(0..r.configs.rows).rev() {
                 for col in 0..r.configs.columns {
                     i = row * r.configs.columns + col;
                     writer.write(&[r.data[i] as u8])?;

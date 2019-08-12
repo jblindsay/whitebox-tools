@@ -164,6 +164,8 @@ impl WhiteboxTool for PrintGeoTiffTags {
         // make sure that it is a tiff file
         if !input_file.to_lowercase().ends_with(".tiff")
             && !input_file.to_lowercase().ends_with(".tif")
+            && !input_file.to_lowercase().ends_with(".gtif")
+            && !input_file.to_lowercase().ends_with(".gtiff")
         {
             return Err(Error::new(
                 ErrorKind::InvalidInput,

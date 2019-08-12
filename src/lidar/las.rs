@@ -15,6 +15,7 @@ use crate::spatial_ref_system::esri_wkt_from_epsg;
 use crate::structures::BoundingBox;
 use crate::utils::{ByteOrderReader, Endianness};
 use chrono::prelude::*;
+use core::slice;
 use std::f64;
 use std::fmt;
 use std::fs;
@@ -49,6 +50,15 @@ pub struct LasFile {
     pub use_point_userdata: bool,
 }
 
+impl<'a> IntoIterator for &'a LasFile {
+    type Item = &'a PointData;
+    type IntoIter = slice::Iter<'a, PointData>;
+
+    fn into_iter(self) -> slice::Iter<'a, PointData> {
+        self.point_data.iter()
+    }
+}
+
 impl Index<usize> for LasFile {
     type Output = PointData;
 
@@ -58,6 +68,7 @@ impl Index<usize> for LasFile {
 }
 
 impl LasFile {
+
     /// Constructs a new `LasFile` based on a file.
     /// The function takes the name of an existing raster file (`file_name`)
     /// and the `file_mode`, wich can be 'r' (read), 'rh' (read header), and
@@ -337,91 +348,94 @@ impl LasFile {
     }
 
     pub fn get_record(&self, index: usize) -> LidarPointRecord {
+        if index > self.point_data.len() { panic!("Index out of bounds."); }
         let lpr: LidarPointRecord;
-        match self.header.point_format {
-            0 => {
-                lpr = LidarPointRecord::PointRecord0 {
-                    point_data: self.point_data[index],
-                };
-            }
-            1 => {
-                lpr = LidarPointRecord::PointRecord1 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                };
-            }
-            2 => {
-                lpr = LidarPointRecord::PointRecord2 {
-                    point_data: self.point_data[index],
-                    colour_data: self.colour_data[index],
-                };
-            }
-            3 => {
-                lpr = LidarPointRecord::PointRecord3 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    colour_data: self.colour_data[index],
-                };
-            }
-            4 => {
-                lpr = LidarPointRecord::PointRecord4 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    wave_packet: self.waveform_data[index],
-                };
-            }
-            5 => {
-                lpr = LidarPointRecord::PointRecord5 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    colour_data: self.colour_data[index],
-                    wave_packet: self.waveform_data[index],
-                };
-            }
-            6 => {
-                lpr = LidarPointRecord::PointRecord6 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                };
-            }
-            7 => {
-                lpr = LidarPointRecord::PointRecord7 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    colour_data: self.colour_data[index],
-                };
-            }
-            8 => {
-                lpr = LidarPointRecord::PointRecord8 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    colour_data: self.colour_data[index],
-                };
-            }
-            9 => {
-                lpr = LidarPointRecord::PointRecord9 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    wave_packet: self.waveform_data[index],
-                };
-            }
-            10 => {
-                lpr = LidarPointRecord::PointRecord10 {
-                    point_data: self.point_data[index],
-                    gps_data: self.gps_data[index],
-                    colour_data: self.colour_data[index],
-                    wave_packet: self.waveform_data[index],
-                };
-            }
-            _ => {
-                panic!("Unsupported point format");
+        unsafe { // there's no need for all of the bounds checks that would come with regular indexing
+            match self.header.point_format {
+                0 => {
+                    lpr = LidarPointRecord::PointRecord0 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                    };
+                }
+                1 => {
+                    lpr = LidarPointRecord::PointRecord1 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                    };
+                }
+                2 => {
+                    lpr = LidarPointRecord::PointRecord2 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                    };
+                }
+                3 => {
+                    lpr = LidarPointRecord::PointRecord3 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                    };
+                }
+                4 => {
+                    lpr = LidarPointRecord::PointRecord4 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        wave_packet: *self.waveform_data.get_unchecked(index), //[index],
+                    };
+                }
+                5 => {
+                    lpr = LidarPointRecord::PointRecord5 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                        wave_packet: *self.waveform_data.get_unchecked(index), //[index],
+                    };
+                }
+                6 => {
+                    lpr = LidarPointRecord::PointRecord6 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                    };
+                }
+                7 => {
+                    lpr = LidarPointRecord::PointRecord7 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                    };
+                }
+                8 => {
+                    lpr = LidarPointRecord::PointRecord8 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                    };
+                }
+                9 => {
+                    lpr = LidarPointRecord::PointRecord9 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        wave_packet: *self.waveform_data.get_unchecked(index), //[index],
+                    };
+                }
+                10 => {
+                    lpr = LidarPointRecord::PointRecord10 {
+                        point_data: *self.point_data.get_unchecked(index), //[index],
+                        gps_data: *self.gps_data.get_unchecked(index), //[index],
+                        colour_data: *self.colour_data.get_unchecked(index), //[index],
+                        wave_packet: *self.waveform_data.get_unchecked(index), //[index],
+                    };
+                }
+                _ => {
+                    panic!("Unsupported point format");
+                }
             }
         }
         lpr
     }
 
     pub fn get_point_info(&self, index: usize) -> PointData {
-        self.point_data[index]
+         self.point_data[index]
     }
 
     pub fn get_rgb(&self, index: usize) -> Result<ColourData, Error> {
@@ -430,6 +444,10 @@ impl LasFile {
         } else {
             return Err(Error::new(ErrorKind::NotFound, "RGB value not found, possibly because the file point format does not include colour data."));
         }
+    }
+
+    pub fn has_rgb(&self) -> bool {
+        self.colour_data.len() > 0
     }
 
     pub fn get_gps_time(&self, index: usize) -> Result<f64, Error> {
@@ -539,6 +557,7 @@ impl LasFile {
         self.header.project_id_used = true;
         self.header.version_major = buffer[24];
         self.header.version_minor = buffer[25];
+
         if self.header.version_major < 1
             || self.header.version_major > 2
             || self.header.version_minor > 5
@@ -625,6 +644,9 @@ impl LasFile {
                         self.header.number_of_points_by_return_old[i] as u64;
                 }
             }
+        } else if self.header.number_of_points_old == 0 && self.header.version_minor <= 3 {
+            println!("Error reading the LAS file: The file does not appear to contain any points");
+            self.header.number_of_points = 0;
         }
 
         if self.file_mode != "rh" {
@@ -671,6 +693,10 @@ impl LasFile {
             /////////////////////////
             // Read the point data //
             /////////////////////////
+            
+            if self.header.number_of_points == 0 {
+                return Ok(());
+            }
             
             // Intensity and userdata are both optional. Figure out if they need to be read.
             // The only way to do this is to compare the point record length by point format

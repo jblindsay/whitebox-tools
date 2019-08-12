@@ -409,25 +409,6 @@ impl Raster {
 
         // it was too off grid to be reflected.
         self.configs.nodata
-
-        // if column < 0 {
-        //     return self.configs.nodata;
-        // }
-        // if row < 0 {
-        //     return self.configs.nodata;
-        // }
-
-        // let c: usize = column as usize;
-        // let r: usize = row as usize;
-
-        // if c >= self.configs.columns {
-        //     return self.configs.nodata;
-        // }
-        // if r >= self.configs.rows {
-        //     return self.configs.nodata;
-        // }
-        // let idx: usize = r * self.configs.columns + c;
-        // self.data[idx]
     }
 
     pub fn set_value(&mut self, row: isize, column: isize, value: f64) {
@@ -1265,7 +1246,7 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
     }
     if extension == "tas" || extension == "dep" {
         return RasterType::Whitebox;
-    } else if extension == "tif" || extension == "tiff" {
+    } else if extension == "tif" || extension == "tiff" || extension == "gtif" || extension == "gtiff" {
         return RasterType::GeoTiff;
     } else if extension == "flt" {
         return RasterType::ArcBinary;

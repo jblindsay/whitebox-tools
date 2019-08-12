@@ -73,19 +73,17 @@ where
     }
 
     pub fn get_value(&self, row: isize, column: isize) -> T {
-        // if column < 0 { return self.nodata; }
-        // if row < 0 { return self.nodata; }
-        // if column >= self.columns { return self.nodata; }
-        // if row >= self.rows { return self.nodata; }
-        // let idx = row * self.columns + column;
-        // self.data[idx as usize]
-        if row < 0 || column < 0 {
-            return self.nodata;
-        }
-        if row >= self.rows || column >= self.columns {
-            return self.nodata;
-        }
-        self.data[(row * self.columns + column) as usize]
+        // if row < 0 || column < 0 {
+        //     return self.nodata;
+        // }
+        // if row >= self.rows || column >= self.columns {
+        //     return self.nodata;
+        // }
+        // self.data[(row * self.columns + column) as usize]
+        match self.data.get((row * self.columns + column) as usize) {
+            Some(v) => return *v,
+            None => return self.nodata(),
+        };
     }
 
     pub fn increment(&mut self, row: isize, column: isize, value: T) {

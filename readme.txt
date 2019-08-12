@@ -67,13 +67,23 @@ Version 0.1X.X (XX-XX-2019)
   within the clipped region and does not output a file. Also, the LAS reader no longer panics 
   when it encounters a file with no points. Now it reads the header file, issues a warning, and 
   carries on, allowing the tools to handle the case of no points.
-- ImageRegression can now optionally output a scattergram. The scattergram is based on a random 
+- ImageRegression can now optionally output a scatterplot. The scatterplot is based on a random 
   sample of a user-defined size.
 - Added the CleanVector tool.
 - ExtractRasterStatistics has been renamed ZonalStatistics to be more inline with other GIS, 
   including ArcGIS and QGIS.
 - Added the median as a statistic that ZonalStatistics provides.
 - Fixed a bug in the VectorPolygonsToRaster tool that sometimes mishandled polygon holes.
+- Added the FilterLidarClasses tool to filter out points of user-specified classes.
+- Added the LidarRansacPlanes tool to identify points belonging to planar surfaces. This tool
+  uses the RANSAC method, which is a robust modelling method that handles the presence of 
+  numerous outlier points.
+- The ClipLidarToPolygon tool has been parallelized.
+- The LasToAscii and AsciiToLas tools have been updated to handle RGB colour data for points.
+- Added the CsvPointsToVector tool to convert a CSV text table into a shapefile of vector points. 
+  The table must contain x and y coordinate fields.
+- The FeaturePreservingDenoise was renamed to FeaturePreservingSmoothing. The DrainagePreservingSmoothing
+  tool was removed. Use FeaturePreservingSmoothing instead.
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

@@ -6,6 +6,11 @@ Last Modified: 31/01/2019
 License: MIT
 */
 
+/*
+Note: this tool was an experiment and has been now removed from the WhiteboxTools library.
+Testing showed that it was not substantially better than the FeaturePreservingSmoothing tool.
+*/
+
 use crate::raster::*;
 use crate::structures::Array2D;
 use crate::tools::*;
@@ -30,7 +35,7 @@ use std::thread;
 /// rills, gullies, etc., which would otherwise be smoothed over.
 ///
 /// # See Also
-/// `FeaturePreservingDenoise`
+/// `FeaturePreservingSmoothing`
 pub struct DrainagePreservingSmoothing {
     name: String,
     description: String,

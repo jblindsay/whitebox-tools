@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/06/2017
-Last Modified: 12/10/2018
+Last Modified: 08/08/2019
 License: MIT
 */
 
@@ -137,6 +137,15 @@ impl LidarGroundPointFilter {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Transform output to height above average ground elevation?".to_owned(),
+            flags: vec!["--height_above_ground".to_owned()],
+            description: "Transform output to height above average ground elevation?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -211,6 +220,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         let otp_class_value = 1u8;
         let mut filter = true;
         let mut slope_norm = false;
+        let mut height_above_ground = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -269,6 +279,9 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 filter = false;
             } else if flag_val == "-slope_norm" {
                 slope_norm = true;
+            } else if flag_val == "-height_above_ground" {
+                height_above_ground = true;
+                filter = false; // this doesn't make sense unless non-ground points are included in the output
             }
         }
 
@@ -436,8 +449,6 @@ impl WhiteboxTool for LidarGroundPointFilter {
                     }
                 }
             }
-        } else {
-
         }
 
         ////////////////////////
@@ -529,140 +540,189 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
         } else {
             // classify
+            let mut height: f64;
+            let mut index_n: usize;
+            let mut ret: Vec<(usize, f64)>;
+            let mut p: PointData;
+            let mut total_ground_elev: f64;
+            let mut num_ground_pnts: f64;
             for point_num in 0..n_points {
                 let class_val = match !is_off_terrain[point_num] {
                     true => ground_class_value,
                     false => otp_class_value,
                 };
-                let pr = input.get_record(point_num);
-                let pr2: LidarPointRecord;
-                match pr {
-                    LidarPointRecord::PointRecord0 { mut point_data } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord0 {
-                            point_data: point_data,
-                        };
+                
+                p = input.get_point_info(point_num);
+                if !p.is_classified_noise() {
+                    if height_above_ground && class_val == otp_class_value {
+                        ret = frs.search(p.x, p.y);
+                        if ret.len() < min_neighbours {
+                            ret = frs.knn_search(p.x, p.y, min_neighbours);
+                        }
+                        total_ground_elev = 0f64;
+                        num_ground_pnts = 0f64;
+                        for j in 0..ret.len() {
+                            index_n = ret[j].0;
+                            if !is_off_terrain[index_n] {
+                                total_ground_elev += p.z - input.get_point_info(index_n).z;
+                                num_ground_pnts += 1f64;
+                            }
+                        }
+                        if num_ground_pnts > 0f64 {
+                            height = total_ground_elev / num_ground_pnts;
+                        } else {
+                            height = 0f64;
+                        }
+                    } else if height_above_ground {
+                        height = 0f64;
+                    } else {
+                        height = p.z;
                     }
-                    LidarPointRecord::PointRecord1 {
-                        mut point_data,
-                        gps_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord1 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                        };
+
+                    let pr = input.get_record(point_num);
+                    let pr2: LidarPointRecord;
+                    match pr {
+                        LidarPointRecord::PointRecord0 { mut point_data } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord0 {
+                                point_data: point_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord1 {
+                            mut point_data,
+                            gps_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord1 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord2 {
+                            mut point_data,
+                            colour_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord2 {
+                                point_data: point_data,
+                                colour_data: colour_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord3 {
+                            mut point_data,
+                            gps_data,
+                            colour_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord3 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                colour_data: colour_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord4 {
+                            mut point_data,
+                            gps_data,
+                            wave_packet,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord4 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                wave_packet: wave_packet,
+                            };
+                        }
+                        LidarPointRecord::PointRecord5 {
+                            mut point_data,
+                            gps_data,
+                            colour_data,
+                            wave_packet,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord5 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                colour_data: colour_data,
+                                wave_packet: wave_packet,
+                            };
+                        }
+                        LidarPointRecord::PointRecord6 {
+                            mut point_data,
+                            gps_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord6 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord7 {
+                            mut point_data,
+                            gps_data,
+                            colour_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord7 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                colour_data: colour_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord8 {
+                            mut point_data,
+                            gps_data,
+                            colour_data,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord8 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                colour_data: colour_data,
+                            };
+                        }
+                        LidarPointRecord::PointRecord9 {
+                            mut point_data,
+                            gps_data,
+                            wave_packet,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord9 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                wave_packet: wave_packet,
+                            };
+                        }
+                        LidarPointRecord::PointRecord10 {
+                            mut point_data,
+                            gps_data,
+                            colour_data,
+                            wave_packet,
+                        } => {
+                            point_data.z = height;
+                            point_data.set_classification(class_val);
+                            pr2 = LidarPointRecord::PointRecord10 {
+                                point_data: point_data,
+                                gps_data: gps_data,
+                                colour_data: colour_data,
+                                wave_packet: wave_packet,
+                            };
+                        }
                     }
-                    LidarPointRecord::PointRecord2 {
-                        mut point_data,
-                        colour_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord2 {
-                            point_data: point_data,
-                            colour_data: colour_data,
-                        };
-                    }
-                    LidarPointRecord::PointRecord3 {
-                        mut point_data,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord3 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            colour_data: colour_data,
-                        };
-                    }
-                    LidarPointRecord::PointRecord4 {
-                        mut point_data,
-                        gps_data,
-                        wave_packet,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord4 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            wave_packet: wave_packet,
-                        };
-                    }
-                    LidarPointRecord::PointRecord5 {
-                        mut point_data,
-                        gps_data,
-                        colour_data,
-                        wave_packet,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord5 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            colour_data: colour_data,
-                            wave_packet: wave_packet,
-                        };
-                    }
-                    LidarPointRecord::PointRecord6 {
-                        mut point_data,
-                        gps_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord6 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                        };
-                    }
-                    LidarPointRecord::PointRecord7 {
-                        mut point_data,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord7 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            colour_data: colour_data,
-                        };
-                    }
-                    LidarPointRecord::PointRecord8 {
-                        mut point_data,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord8 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            colour_data: colour_data,
-                        };
-                    }
-                    LidarPointRecord::PointRecord9 {
-                        mut point_data,
-                        gps_data,
-                        wave_packet,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord9 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            wave_packet: wave_packet,
-                        };
-                    }
-                    LidarPointRecord::PointRecord10 {
-                        mut point_data,
-                        gps_data,
-                        colour_data,
-                        wave_packet,
-                    } => {
-                        point_data.set_classification(class_val);
-                        pr2 = LidarPointRecord::PointRecord10 {
-                            point_data: point_data,
-                            gps_data: gps_data,
-                            colour_data: colour_data,
-                            wave_packet: wave_packet,
-                        };
-                    }
+                    output.add_point_record(pr2);
+                } else {
+                    // Keep the classes of classified noise unaltered
+                    output.add_point_record(input.get_record(point_num));
                 }
-                output.add_point_record(pr2);
                 if verbose {
                     progress = (100.0_f64 * point_num as f64 / num_points) as i32;
                     if progress != old_progress {

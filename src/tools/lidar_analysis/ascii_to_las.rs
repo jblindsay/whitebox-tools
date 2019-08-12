@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/02/2019
-Last Modified: 10/02/2019
+Last Modified: 01/08/2019
 License: MIT
 */
 
@@ -38,6 +38,9 @@ use byteorder::{LittleEndian, WriteBytesExt};
 /// | nr    | number of returns |
 /// | time  | GPS time          |
 /// | sa    | scan angle        |
+/// | r     | red               |
+/// | b     | blue              |
+/// | g     | green             |
 /// 
 /// The `x`, `y`, and `z` patterns must always be specified. If the `rn` pattern is used, the `nr` pattern must
 /// also be specified. Examples of valid pattern string inclue:
@@ -47,6 +50,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 /// 'x,y,z,i,rn,nr'
 /// 'x,y,z,i,c,rn,nr,sa'
 /// 'z,x,y,rn,nr'
+/// 'x,y,z,i,rn,nr,r,g,b'
 /// ```
 /// 
 /// Use the `LasToAscii` tool to convert a LAS file into a text file containing LiDAR point data.
@@ -246,6 +250,9 @@ impl WhiteboxTool for AsciiToLas {
         // convert the string pattern to numeric for easier look-up
         let mut pattern_numeric = vec![0usize; num_fields];
         let mut pattern_has_time = false;
+        let mut pattern_has_r = false;
+        let mut pattern_has_g = false;
+        let mut pattern_has_b = false;
         for a in 0..num_fields {
             match pattern_vec[a] {
                 "x" => pattern_numeric[a] = 0usize,
@@ -260,8 +267,32 @@ impl WhiteboxTool for AsciiToLas {
                     pattern_numeric[a] = 7usize
                 },
                 "sa" => pattern_numeric[a] = 8usize,
+                "r" => {
+                    pattern_has_r = true;
+                    pattern_numeric[a] = 9usize
+                },
+                "g" => {
+                    pattern_has_g = true;
+                    pattern_numeric[a] = 10usize
+                },
+                "b" => {
+                    pattern_has_b = true;
+                    pattern_numeric[a] = 11usize
+                },
                 _ => println!("Unrecognized pattern {}", pattern_vec[a]),
             }
+        }
+
+        // if the pattern contain any of 'r', 'g', or 'b', it must also contain all of 'r', 'g', and 'b'.
+        let mut pattern_has_clr = false;
+        if pattern_has_r && pattern_has_g && pattern_has_b {
+            pattern_has_clr = true;
+        } else if pattern_has_r || pattern_has_g || pattern_has_b {
+            // you can't have one and not all
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "If any of r, g, or b are provided, each of r, g, and b must be provided.",
+            ));
         }
         
         let mut cmd = input_files.split(";");
@@ -303,7 +334,7 @@ impl WhiteboxTool for AsciiToLas {
 
                 let mut point_num = 0;
                 for line in f.lines() {
-                    let line_unwrapped = line.unwrap();
+                    let line_unwrapped = line?;
                     let line_data = line_unwrapped.split(",").collect::<Vec<&str>>();
                     if line_data.len() >= num_fields {
                         // check to see if the first field contains a number; if not, it's likely a header row and should be ignored
@@ -311,18 +342,22 @@ impl WhiteboxTool for AsciiToLas {
                         if is_num {
                             let mut point_data: PointData = Default::default();
                             let mut gps_time = 0f64;
+                            let mut clr_data: ColourData = Default::default();
                             // now convert each of the specified fields based on the input pattern
                             for a in 0..num_fields {
                                 match pattern_numeric[a] {
-                                    0usize => point_data.x = line_data[a].parse::<f64>().unwrap(),
-                                    1usize => point_data.y = line_data[a].parse::<f64>().unwrap(),
-                                    2usize => point_data.z = line_data[a].parse::<f64>().unwrap(),
-                                    3usize => point_data.intensity = line_data[a].parse::<u16>().unwrap(),
-                                    4usize => point_data.set_classification(line_data[a].parse::<u8>().unwrap()),
-                                    5usize => point_data.set_return_number(line_data[a].parse::<u8>().unwrap()),
-                                    6usize => point_data.set_number_of_returns(line_data[a].parse::<u8>().unwrap()),
+                                    0usize => point_data.x = line_data[a].parse::<f64>()?,
+                                    1usize => point_data.y = line_data[a].parse::<f64>()?,
+                                    2usize => point_data.z = line_data[a].parse::<f64>()?,
+                                    3usize => point_data.intensity = line_data[a].parse::<u16>()?,
+                                    4usize => point_data.set_classification(line_data[a].parse::<u8>()?,
+                                    5usize => point_data.set_return_number(line_data[a].parse::<u8>()?,
+                                    6usize => point_data.set_number_of_returns(line_data[a].parse::<u8>()?,
                                     7usize => gps_time = line_data[a].parse::<f64>().unwrap(),
-                                    8usize => point_data.scan_angle = line_data[a].parse::<i16>().unwrap(),
+                                    8usize => point_data.scan_angle = line_data[a].parse::<i16>()?,
+                                    9usize => clr_data.red = line_data[a].parse::<u16>()?,
+                                    10usize => clr_data.green = line_data[a].parse::<u16>()?,
+                                    11usize => clr_data.blue = line_data[a].parse::<u16>()?,
                                     _ => println!("unrecognized pattern"),
                                 }
                             }
@@ -331,14 +366,25 @@ impl WhiteboxTool for AsciiToLas {
                             if point_num == 1 || point_num == 2 || point_num == 349528 {
                                 println!("Point {}: {:?}", point_num, point_data);
                             }
-                            if !pattern_has_time {
+                            if !pattern_has_time && !pattern_has_clr {
                                 output.add_point_record(LidarPointRecord::PointRecord0 {
                                     point_data: point_data,
                                 });
-                            } else {
+                            } else if pattern_has_time && !pattern_has_clr {
                                 output.add_point_record(LidarPointRecord::PointRecord1 {
                                     point_data: point_data,
                                     gps_data: gps_time,
+                                });
+                            } else if !pattern_has_time && pattern_has_clr {
+                                output.add_point_record(LidarPointRecord::PointRecord2 {
+                                    point_data: point_data,
+                                    colour_data: clr_data,
+                                });
+                            } else { // if pattern_has_time && pattern_has_clr {
+                                output.add_point_record(LidarPointRecord::PointRecord3 {
+                                    point_data: point_data,
+                                    gps_data: gps_time,
+                                    colour_data: clr_data,
                                 });
                             }
                         }

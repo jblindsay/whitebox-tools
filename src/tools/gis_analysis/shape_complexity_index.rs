@@ -25,7 +25,7 @@ use std::path;
 /// SCI relates a polygon's shape to that of an encompassing convex hull. It is
 /// defined as:  
 ///
-/// > SCI = 1 - A / A
+/// > SCI = 1 - A / Ah
 ///
 /// Where `A` is the polygon's area and `Ah` is the area of the convex hull containing
 /// the polygon. Convex polygons, i.e. those that do not contain concavities or holes,

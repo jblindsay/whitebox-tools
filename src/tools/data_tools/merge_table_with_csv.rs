@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 11/10/2018
-Last Modified: 22/11/2018
+Last Modified: 07/08/2019
 License: MIT
 */
 
@@ -313,7 +313,7 @@ impl WhiteboxTool for MergeTableWithCsv {
                 if line_vec.len() != csv_num_fields {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
-                        "Not all records in the CSC file are the same length. Cannot read the table.",
+                        "Not all records in the CSV file are the same length. Cannot read the table.",
                     ));
                 }
                 fkey_value = line_vec[fkey_index].to_string();
@@ -455,7 +455,11 @@ impl WhiteboxTool for MergeTableWithCsv {
 
 fn get_type(s: &str) -> FieldDataType {
     if s.trim().parse::<i32>().unwrap_or(i32::MIN) != i32::MIN {
-        return FieldDataType::Int;
+        if s.trim().contains(".0") {
+            return FieldDataType::Real;
+        } else {
+            return FieldDataType::Int;
+        }
     } else if s.trim().parse::<f64>().unwrap_or(f64::INFINITY) != f64::INFINITY {
         return FieldDataType::Real;
     }

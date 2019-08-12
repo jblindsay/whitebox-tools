@@ -424,10 +424,10 @@ impl WhiteboxTool for ZonalStatistics {
                 let num_cells_in_class = features_data[id].len();
                 if num_cells_in_class % 2 != 0 {
                     // odd num cells
-                    features_median[id] = features_data[id][num_cells_in_class / 2 + 1];
+                    features_median[id] = features_data[id][num_cells_in_class / 2];
                 } else {
                     // even num cells
-                    features_median[id] = (features_data[id][num_cells_in_class / 2] + features_data[id][num_cells_in_class / 2 + 1]) / 2f64;
+                    features_median[id] = (features_data[id][num_cells_in_class / 2] + features_data[id][num_cells_in_class / 2 - 1]) / 2f64;
                 }
             }
         }
