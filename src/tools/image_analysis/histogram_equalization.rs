@@ -326,7 +326,7 @@ impl WhiteboxTool for HistogramEqualization {
             let cdf = cdf.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> usize> = if !is_rgb_image {
+                let input_fn: Box<dyn Fn(isize, isize) -> usize> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> usize {
                         let x = input.get_value(row, col);
                         ((x - min_value) / bin_size).floor() as usize
@@ -339,7 +339,7 @@ impl WhiteboxTool for HistogramEqualization {
                     })
                 };
 
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                let output_fn: Box<dyn Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {
                     Box::new(|row: isize, col: isize, value: f64| -> f64 {

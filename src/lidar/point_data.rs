@@ -174,8 +174,8 @@ pub fn convert_class_val_to_class_string(value: u8) -> String {
         16 => return String::from("Wire-structure connector (e.g. insulator)"),
         17 => return String::from("Bridge deck"),
         18 => return String::from("High Noise"),
-        19...63 => return String::from("Reserved"),
-        64...255 => return String::from("User defined"),
+        19..=63 => return String::from("Reserved"),
+        64..=255 => return String::from("User defined"),
     }
 }
 
@@ -446,8 +446,8 @@ impl PointData {
             16 => return String::from("Wire-structure connector (e.g. insulator)"),
             17 => return String::from("Bridge deck"),
             18 => return String::from("High Noise"),
-            19...63 => return String::from("Reserved"),
-            64...255 => return String::from("User defined"),
+            19..=63 => return String::from("Reserved"),
+            64..=255 => return String::from("User defined"),
         }
     }
 

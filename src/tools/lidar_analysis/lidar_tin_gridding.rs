@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 10/05/2019
+Last Modified: 31/08/2019
 License: MIT
 */
 
@@ -57,8 +57,19 @@ impl LidarTINGridding {
         parameters.push(ToolParameter{
             name: "Interpolation Parameter".to_owned(), 
             flags: vec!["--parameter".to_owned()], 
-            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["elevation".to_owned(), "intensity".to_owned(), "class".to_owned(), "scan angle".to_owned(), "user data".to_owned()]),
+            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'.".to_owned(),
+            parameter_type: ParameterType::OptionList(
+                vec![
+                    "elevation".to_owned(), 
+                    "intensity".to_owned(), 
+                    "class".to_owned(), 
+                    "return_number".to_owned(), 
+                    "number_of_returns".to_owned(), 
+                    "scan angle".to_owned(), 
+                    "rgb".to_owned(),
+                    "user data".to_owned()
+                ]
+            ),
             default_value: Some("elevation".to_owned()),
             optional: true
         });
@@ -190,6 +201,7 @@ impl WhiteboxTool for LidarTINGridding {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut interp_parameter = "elevation".to_string();
+        let mut interp_parameter_is_rgb = false;
         let mut return_type = "all".to_string();
         let mut grid_res: f64 = 1.0;
         let mut include_class_vals = vec![true; 256];
@@ -229,10 +241,13 @@ impl WhiteboxTool for LidarTINGridding {
                 };
             } else if flag_val == "-parameter" {
                 interp_parameter = if keyval {
-                    vec[1].to_string()
+                    vec[1].to_string().to_lowercase()
                 } else {
-                    args[i + 1].to_string()
+                    args[i + 1].to_string().to_lowercase()
                 };
+                if interp_parameter == "rgb" {
+                    interp_parameter_is_rgb = true;
+                }
             } else if flag_val == "-returns" {
                 return_type = if keyval {
                     vec[1].to_string()
@@ -319,30 +334,6 @@ impl WhiteboxTool for LidarTINGridding {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            // match fs::read_dir(working_directory) {
-            //     Err(why) => println!("! {:?}", why.kind()),
-            //     Ok(paths) => {
-            //         for path in paths {
-            //             let s = format!("{:?}", path.unwrap().path());
-            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".las", ".tif")
-            //                         .replace(".LAS", ".tif"),
-            //                 )
-            //             } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-            //                 // assumes the zip file contains LAS data.
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".zip", ".tif")
-            //                         .replace(".ZIP", ".tif"),
-            //                 )
-            //             }
-            //         }
-            //     }
-            // }
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
@@ -533,7 +524,7 @@ impl WhiteboxTool for LidarTINGridding {
                                         }
                                     }
                                 }
-                                "scan angle" => {
+                                "scan angle" | "scan_angle" => {
                                     for i in 0..n_points {
                                         let p: PointData = input[i];
                                         if !p.withheld() {
@@ -576,6 +567,91 @@ impl WhiteboxTool for LidarTINGridding {
                                                     {
                                                         points.push(Point2D { x: p.x, y: p.y });
                                                         z_values.push(p.classification() as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "return_number" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        points.push(Point2D { x: p.x, y: p.y });
+                                                        z_values.push(p.return_number() as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "number_of_returns" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        points.push(Point2D { x: p.x, y: p.y });
+                                                        z_values.push(p.number_of_returns() as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "rgb" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        points.push(Point2D { x: p.x, y: p.y });
+                                                        // let val = input.get_rgb(i); // ((a << 24) | (b << 16) | (g << 8) | r) as f64;
+                                                        z_values.push(p.number_of_returns() as f64);
                                                     }
                                                 }
                                             }
@@ -655,6 +731,10 @@ impl WhiteboxTool for LidarTINGridding {
                     configs.photometric_interp = PhotometricInterpretation::Continuous;
 
                     let mut output = Raster::initialize_using_config(&output_file, &configs);
+                    if interp_parameter == "rgb" {
+                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                        output.configs.data_type = DataType::RGBA32;
+                    }
 
                     // do the triangulation
                     if num_tiles == 1 && verbose {
@@ -679,63 +759,148 @@ impl WhiteboxTool for LidarTINGridding {
                     let (mut x, mut y): (f64, f64);
                     let mut zn: f64;
                     let mut i: usize;
-                    // for i in (0..result.triangles.len()).step_by(3) {
-                    for triangle in 0..num_triangles {
-                        i = triangle * 3;
-                        p1 = result.triangles[i];
-                        p2 = result.triangles[i + 1];
-                        p3 = result.triangles[i + 2];
+                    if !interp_parameter_is_rgb {
+                        for triangle in 0..num_triangles {
+                            i = triangle * 3;
+                            p1 = result.triangles[i];
+                            p2 = result.triangles[i + 1];
+                            p3 = result.triangles[i + 2];
 
-                        // if points[p1].distance_squared(&points[p2]) < max_triangle_edge_length && 
-                        //     points[p1].distance_squared(&points[p3]) < max_triangle_edge_length && 
-                        //     points[p2].distance_squared(&points[p3]) < max_triangle_edge_length {
-                        
-                        if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
-                            z_values[p2], z_values[p3]) < max_triangle_edge_length {
+                            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
+                                z_values[p2], z_values[p3]) < max_triangle_edge_length {
 
-                            tri_points[0] = points[p1].clone();
-                            tri_points[1] = points[p2].clone();
-                            tri_points[2] = points[p3].clone();
-                            tri_points[3] = points[p1].clone();
-                            
-                            // get the equation of the plane
-                            a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
-                            b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
-                            c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
-                            norm = (b - a).cross(&(c - a));
-                            k = -(tri_points[0].x * norm.x
-                                + tri_points[0].y * norm.y
-                                + norm.z * z_values[p1]);
+                                tri_points[0] = points[p1].clone();
+                                tri_points[1] = points[p2].clone();
+                                tri_points[2] = points[p3].clone();
+                                tri_points[3] = points[p1].clone();
+                                
+                                // get the equation of the plane
+                                a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
+                                b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
+                                c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
+                                norm = (b - a).cross(&(c - a));
+                                k = -(tri_points[0].x * norm.x
+                                    + tri_points[0].y * norm.y
+                                    + norm.z * z_values[p1]);
 
-                            // find grid intersections with this triangle
-                            bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
-                            top = points[p1].y.max(points[p2].y.max(points[p3].y));
-                            left = points[p1].x.min(points[p2].x.min(points[p3].x));
-                            right = points[p1].x.max(points[p2].x.max(points[p3].x));
+                                // find grid intersections with this triangle
+                                bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+                                top = points[p1].y.max(points[p2].y.max(points[p3].y));
+                                left = points[p1].x.min(points[p2].x.min(points[p3].x));
+                                right = points[p1].x.max(points[p2].x.max(points[p3].x));
 
-                            bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
-                            top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
-                            left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
-                            right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
+                                bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
+                                top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
+                                left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
+                                right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
 
-                            for row in top_row..=bottom_row {
-                                for col in left_col..=right_col {
-                                    x = west + col as f64 * grid_res;
-                                    y = north - row as f64 * grid_res;
-                                    if point_in_poly(&Point2D::new(x, y), &tri_points) {
-                                        // calculate the z values
-                                        zn = -(norm.x * x + norm.y * y + k) / norm.z;
-                                        output.set_value(row, col, zn);
+                                for row in top_row..=bottom_row {
+                                    for col in left_col..=right_col {
+                                        x = west + col as f64 * grid_res;
+                                        y = north - row as f64 * grid_res;
+                                        if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                                            // calculate the z values
+                                            zn = -(norm.x * x + norm.y * y + k) / norm.z;
+                                            output.set_value(row, col, zn);
+                                        }
+                                    }
+                                }
+
+                                if verbose && num_tiles == 1 {
+                                    progress =
+                                        (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
                                     }
                                 }
                             }
+                        }
+                    } else {
+                        let (mut k_r, mut k_g, mut k_b): (f64, f64, f64);
+                        let (mut norm_r, mut norm_g, mut norm_b): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
+                        let (mut red, mut green, mut blue): (f64, f64, f64);
+                        for triangle in 0..num_triangles {
+                            i = triangle * 3;
+                            p1 = result.triangles[i];
+                            p2 = result.triangles[i + 1];
+                            p3 = result.triangles[i + 2];
 
-                            if verbose && num_tiles == 1 {
-                                progress =
-                                    (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
+                            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
+                                z_values[p2], z_values[p3]) < max_triangle_edge_length {
+
+                                tri_points[0] = points[p1].clone();
+                                tri_points[1] = points[p2].clone();
+                                tri_points[2] = points[p3].clone();
+                                tri_points[3] = points[p1].clone();
+                                
+                                // get the equation of the plane
+                                red = (z_values[p1] as u32 & 0xFF) as f64;
+                                a = Vector3::new(tri_points[0].x, tri_points[0].y, red);
+                                red = (z_values[p2] as u32 & 0xFF) as f64;
+                                b = Vector3::new(tri_points[1].x, tri_points[1].y, red);
+                                red = (z_values[p3] as u32 & 0xFF) as f64;
+                                c = Vector3::new(tri_points[2].x, tri_points[2].y, red);
+                                norm_r = (b - a).cross(&(c - a));
+                                k_r = -(tri_points[2].x * norm_r.x
+                                    + tri_points[2].y * norm_r.y
+                                    + norm_r.z * red);
+
+                                green = ((z_values[p1] as u32 >> 8) & 0xFF) as f64;
+                                a = Vector3::new(tri_points[0].x, tri_points[0].y, green);
+                                green = ((z_values[p2] as u32 >> 8) & 0xFF) as f64;
+                                b = Vector3::new(tri_points[1].x, tri_points[1].y, green);
+                                green = ((z_values[p3] as u32 >> 8) & 0xFF) as f64;
+                                c = Vector3::new(tri_points[2].x, tri_points[2].y, green);
+                                norm_g = (b - a).cross(&(c - a));
+                                k_g = -(tri_points[2].x * norm_g.x
+                                    + tri_points[2].y * norm_g.y
+                                    + norm_g.z * green);
+
+                                blue = ((z_values[p1] as u32 >> 16) & 0xFF) as f64;
+                                a = Vector3::new(tri_points[0].x, tri_points[0].y, blue);
+                                blue = ((z_values[p2] as u32 >> 16) & 0xFF) as f64;
+                                b = Vector3::new(tri_points[1].x, tri_points[1].y, blue);
+                                blue = ((z_values[p3] as u32 >> 16) & 0xFF) as f64;
+                                c = Vector3::new(tri_points[2].x, tri_points[2].y, blue);
+                                norm_b = (b - a).cross(&(c - a));
+                                k_b = -(tri_points[2].x * norm_b.x
+                                    + tri_points[2].y * norm_b.y
+                                    + norm_b.z * blue);
+
+                                // find grid intersections with this triangle
+                                bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+                                top = points[p1].y.max(points[p2].y.max(points[p3].y));
+                                left = points[p1].x.min(points[p2].x.min(points[p3].x));
+                                right = points[p1].x.max(points[p2].x.max(points[p3].x));
+
+                                bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
+                                top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
+                                left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
+                                right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
+
+                                for row in top_row..=bottom_row {
+                                    for col in left_col..=right_col {
+                                        x = west + col as f64 * grid_res;
+                                        y = north - row as f64 * grid_res;
+                                        if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                                            // calculate the colour values
+                                            red = -(norm_r.x * x + norm_r.y * y + k_r) / norm_r.z;
+                                            green = -(norm_g.x * x + norm_g.y * y + k_g) / norm_g.z;
+                                            blue = -(norm_b.x * x + norm_b.y * y + k_b) / norm_b.z;
+                                            zn = ((255 << 24) | ((blue.round() as u16) << 16) | ((green.round() as u16) << 8) | (red.round() as u16)) as f64;
+                                            output.set_value(row, col, zn);
+                                        }
+                                    }
+                                }
+
+                                if verbose && num_tiles == 1 {
+                                    progress =
+                                        (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
                                 }
                             }
                         }

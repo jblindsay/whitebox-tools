@@ -264,7 +264,7 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                let input_fn: Box<dyn Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
                     Box::new(|row: isize, col: isize| -> f64 {
@@ -276,7 +276,7 @@ impl WhiteboxTool for ConservativeSmoothingFilter {
                     })
                 };
 
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                let output_fn: Box<dyn Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {

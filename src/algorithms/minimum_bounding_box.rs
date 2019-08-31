@@ -30,7 +30,7 @@ pub fn minimum_bounding_box(
     min_criterion: MinimizationCriterion,
 ) -> Vec<Point2D> {
     // Get the minimization criteria function
-    let min_fn: Box<Fn(f64, f64) -> f64> = match min_criterion {
+    let min_fn: Box<dyn Fn(f64, f64) -> f64> = match min_criterion {
         MinimizationCriterion::Area => Box::new(|axis1: f64, axis2: f64| -> f64 { axis1 * axis2 }),
         MinimizationCriterion::Perimeter => {
             Box::new(|axis1: f64, axis2: f64| -> f64 { 2f64 * axis1 + 2f64 * axis2 })

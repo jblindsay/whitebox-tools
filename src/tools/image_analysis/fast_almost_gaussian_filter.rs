@@ -254,7 +254,7 @@ impl WhiteboxTool for FastAlmostGaussianFilter {
 
             if iteration_num == 0 {
                 // first iteration
-                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                let input_fn: Box<dyn Fn(isize, isize) -> f64> = if !is_rgb_image {
                     // It's a greyscale image; just read the value.
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
@@ -366,7 +366,7 @@ impl WhiteboxTool for FastAlmostGaussianFilter {
             } else {
                 // last iteration
 
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                let output_fn: Box<dyn Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {

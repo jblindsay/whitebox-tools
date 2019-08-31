@@ -84,6 +84,9 @@ Version 0.1X.X (XX-XX-2019)
   The table must contain x and y coordinate fields.
 - The FeaturePreservingDenoise was renamed to FeaturePreservingSmoothing. The DrainagePreservingSmoothing
   tool was removed. Use FeaturePreservingSmoothing instead.
+- Added the ability to output the average number of point returns per pulse in the LidarPointStats tool.
+- LidarTinGridding, LidarIdwIntarpolation, and LidarNearestNeighbourGridding now can interpolate the 
+  return number, number of returns, and RGB colour data associated with points in a LAS file.
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

@@ -277,7 +277,7 @@ impl WhiteboxTool for MeanFilter {
         let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
 
-        let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+        let input_fn: Box<dyn Fn(isize, isize) -> f64> = if !is_rgb_image {
             Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
         } else {
             Box::new(|row: isize, col: isize| -> f64 {
@@ -336,7 +336,7 @@ impl WhiteboxTool for MeanFilter {
             let i_n = i_n.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                let input_fn: Box<dyn Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
                     Box::new(|row: isize, col: isize| -> f64 {
@@ -348,7 +348,7 @@ impl WhiteboxTool for MeanFilter {
                     })
                 };
 
-                let output_fn: Box<Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
+                let output_fn: Box<dyn Fn(isize, isize, f64) -> f64> = if !is_rgb_image {
                     // simply return the value.
                     Box::new(|_: isize, _: isize, value: f64| -> f64 { value })
                 } else {

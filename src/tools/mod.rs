@@ -468,7 +468,7 @@ impl ToolManager {
         Ok(tm)
     }
 
-    fn get_tool(&self, tool_name: &str) -> Option<Box<WhiteboxTool + 'static>> {
+    fn get_tool(&self, tool_name: &str) -> Option<Box<dyn WhiteboxTool + 'static>> {
         match tool_name.to_lowercase().replace("_", "").as_ref() {
             // data_tools
             "addpointcoordinatestotable" => {
@@ -1209,7 +1209,7 @@ pub trait WhiteboxTool {
     ) -> Result<(), Error>;
 }
 
-fn get_help<'a>(wt: Box<WhiteboxTool + 'a>) -> String {
+fn get_help<'a>(wt: Box<dyn WhiteboxTool + 'a>) -> String {
     let tool_name = wt.get_tool_name();
     let description = wt.get_tool_description();
     let parameters = wt.get_tool_parameters();
@@ -1261,7 +1261,7 @@ Example usage:
     s
 }
 
-fn get_name_and_description<'a>(wt: Box<WhiteboxTool + 'a>) -> (String, String) {
+fn get_name_and_description<'a>(wt: Box<dyn WhiteboxTool + 'a>) -> (String, String) {
     (wt.get_tool_name(), wt.get_tool_description())
 }
 

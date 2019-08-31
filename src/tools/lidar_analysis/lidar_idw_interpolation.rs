@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/07/2017
-Last Modified: 10/05/2019
+Last Modified: 30/08/2019
 License: MIT
 
 NOTES:
@@ -63,8 +63,19 @@ impl LidarIdwInterpolation {
         parameters.push(ToolParameter{
             name: "Interpolation Parameter".to_owned(), 
             flags: vec!["--parameter".to_owned()], 
-            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["elevation".to_owned(), "intensity".to_owned(), "class".to_owned(), "scan angle".to_owned(), "user data".to_owned()]),
+            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'.".to_owned(),
+            parameter_type: ParameterType::OptionList(
+                vec![
+                    "elevation".to_owned(), 
+                    "intensity".to_owned(), 
+                    "class".to_owned(), 
+                    "return_number".to_owned(), 
+                    "number_of_returns".to_owned(), 
+                    "scan angle".to_owned(), 
+                    "rgb".to_owned(),
+                    "user data".to_owned()
+                ]
+            ),
             default_value: Some("elevation".to_owned()),
             optional: true
         });
@@ -119,15 +130,6 @@ impl LidarIdwInterpolation {
             default_value: None,
             optional: true
         });
-
-        // parameters.push(ToolParameter{
-        //     name: "Palette Name (Whitebox raster outputs only)".to_owned(),
-        //     flags: vec!["--palette".to_owned()],
-        //     description: "Optional palette name (for use with Whitebox raster files).".to_owned(),
-        //     parameter_type: ParameterType::String,
-        //     default_value: None,
-        //     optional: true
-        // });
 
         parameters.push(ToolParameter {
             name: "Minimum Elevation Value (optional)".to_owned(),
@@ -215,6 +217,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut interp_parameter = "elevation".to_string();
+        let mut interp_parameter_is_rgb = false;
         let mut return_type = "all".to_string();
         let mut grid_res: f64 = 1.0;
         let mut weight = 1.0;
@@ -256,10 +259,13 @@ impl WhiteboxTool for LidarIdwInterpolation {
                 };
             } else if flag_val == "-parameter" {
                 interp_parameter = if keyval {
-                    vec[1].to_string()
+                    vec[1].to_string().to_lowercase()
                 } else {
-                    args[i + 1].to_string()
+                    args[i + 1].to_string().to_lowercase()
                 };
+                if interp_parameter == "rgb" {
+                    interp_parameter_is_rgb = true;
+                }
             } else if flag_val == "-returns" {
                 return_type = if keyval {
                     vec[1].to_string()
@@ -354,29 +360,6 @@ impl WhiteboxTool for LidarIdwInterpolation {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            // match fs::read_dir(working_directory) {
-            //     Err(why) => println!("! {:?}", why.kind()),
-            //     Ok(paths) => {
-            //         for path in paths {
-            //             let s = format!("{:?}", path.unwrap().path());
-            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".las", ".tif")
-            //                         .replace(".LAS", ".tif"),
-            //                 )
-            //             } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".zip", ".tif")
-            //                         .replace(".ZIP", ".tif"),
-            //                 )
-            //             }
-            //         }
-            //     }
-            // }
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
@@ -565,7 +548,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                         }
                                     }
                                 }
-                                "scan angle" => {
+                                "scan angle" | "scan_angle" => {
                                     for i in 0..n_points {
                                         let p: PointData = input[i];
                                         if !p.withheld() {
@@ -618,6 +601,97 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
                                                 println!("Binning points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "return_number" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        frs.insert(p.x, p.y, p.return_number() as f64);
+                                                        
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "number_of_returns" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        frs.insert(p.x, p.y, p.number_of_returns() as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "rgb" => {
+                                    if !input.has_rgb() {
+                                        println!("Error: The input LAS file does not contain RGB colour data. The interpolation will not proceed.");
+                                        break;
+                                    }
+                                    let mut clr: ColourData;
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        clr = match input.get_rgb(i) {
+                                                            Ok(value) => { value },
+                                                            Err(_) => break,
+                                                        };
+                                                        frs.insert(p.x, p.y, ((255 << 24) | (clr.blue << 16) | (clr.green << 8) | clr.red) as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -682,12 +756,18 @@ impl WhiteboxTool for LidarIdwInterpolation {
                     configs.palette = palette.clone();
 
                     let mut output = Raster::initialize_using_config(&output_file, &configs);
+                    if interp_parameter == "rgb" {
+                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                        output.configs.data_type = DataType::RGBA32;
+                    }
 
                     if num_tiles > 1 {
                         let (mut x, mut y): (f64, f64);
                         let mut zn: f64;
                         let mut dist: f64;
                         let mut val: f64;
+                        let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
+                        let (mut red, mut green, mut blue): (f64, f64, f64);
                         let mut sum_weights: f64;
                         for row in 0..rows {
                             for col in 0..columns {
@@ -697,11 +777,23 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                 if ret.len() > 0 {
                                     sum_weights = 0.0;
                                     val = 0.0;
+                                    val_red = 0f64;
+                                    val_green = 0f64;
+                                    val_blue = 0f64;
                                     for j in 0..ret.len() {
                                         zn = ret[j].0;
                                         dist = ret[j].1 as f64;
                                         if dist > 0.0 {
-                                            val += zn / dist.powf(weight);
+                                            if !interp_parameter_is_rgb {
+                                                val += zn / dist.powf(weight);
+                                            } else {
+                                                red = (zn as u32 & 0xFF) as f64;
+                                                green = ((zn as u32 >> 8) & 0xFF) as f64;
+                                                blue = ((zn as u32 >> 16) & 0xFF) as f64;
+                                                val_red += red / dist.powf(weight);
+                                                val_green += green / dist.powf(weight);
+                                                val_blue += blue / dist.powf(weight);
+                                            }
                                             sum_weights += 1.0 / dist.powf(weight);
                                         } else {
                                             output.set_value(row, col, zn);
@@ -710,6 +802,9 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                         }
                                     }
                                     if sum_weights > 0.0 {
+                                        if interp_parameter_is_rgb {
+                                            val = ((255 << 24) | ((val_blue.round() as u16) << 16) | ((val_green.round() as u16) << 8) | (val_red.round() as u16)) as f64;
+                                        }
                                         output.set_value(row, col, val / sum_weights);
                                     }
                                 }
@@ -736,6 +831,8 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                 let mut dist: f64;
                                 let mut val: f64;
                                 let mut sum_weights: f64;
+                                let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
+                                let (mut red, mut green, mut blue): (f64, f64, f64);
                                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                                     let mut data = vec![nodata; columns as usize];
                                     for col in 0..columns {
@@ -745,11 +842,23 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                         if ret.len() > 0 {
                                             sum_weights = 0.0;
                                             val = 0.0;
+                                            val_red = 0f64;
+                                            val_green = 0f64;
+                                            val_blue = 0f64;
                                             for j in 0..ret.len() {
                                                 zn = ret[j].0;
                                                 dist = ret[j].1 as f64;
                                                 if dist > 0.0 {
-                                                    val += zn / dist.powf(weight);
+                                                    if !interp_parameter_is_rgb {
+                                                        val += zn / dist.powf(weight);
+                                                    } else {
+                                                        red = (zn as u32 & 0xFF) as f64;
+                                                        green = ((zn as u32 >> 8) & 0xFF) as f64;
+                                                        blue = ((zn as u32 >> 16) & 0xFF) as f64;
+                                                        val_red += red / dist.powf(weight);
+                                                        val_green += green / dist.powf(weight);
+                                                        val_blue += blue / dist.powf(weight);
+                                                    }
                                                     sum_weights += 1.0 / dist.powf(weight);
                                                 } else {
                                                     data[col as usize] = zn;
@@ -758,6 +867,9 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                 }
                                             }
                                             if sum_weights > 0.0 {
+                                                if interp_parameter_is_rgb {
+                                                    val = ((255 << 24) | ((val_blue.round() as u16) << 16) | ((val_green.round() as u16) << 8) | (val_red.round() as u16)) as f64;
+                                                }
                                                 data[col as usize] = val / sum_weights;
                                             }
                                         }

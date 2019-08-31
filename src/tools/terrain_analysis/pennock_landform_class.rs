@@ -56,12 +56,15 @@ use std::thread;
 /// Landscape classification schemes that are based on terrain attributes are highly sensitive to 
 /// short-range topographic variability (i.e. roughness) and can benefit from pre-processing the DEM 
 /// with a smoothing filter to reduce the effect of surface roughness and emphasize the longer-range 
-/// topographic signal. The `FeaturePreservingDenoise` and `DrainagePreservingSmoothing` tools
-/// offer excellent performance in smoothing DEMs without removing the sharpness of breaks-in-slope.
+/// topographic signal. The `FeaturePreservingSmoothing` tool
+/// offers excellent performance in smoothing DEMs without removing the sharpness of breaks-in-slope.
 /// 
 /// # Reference
 /// Pennock, D.J., Zebarth, B.J., and DeJong, E. (1987) Landform classification and soil distribution 
 /// in hummocky terrain, Saskatchewan, Canada. Geoderma, 40: 297-315.
+/// 
+/// # See Also
+/// `FeaturePreservingSmoothing`
 pub struct PennockLandformClass {
     name: String,
     description: String,

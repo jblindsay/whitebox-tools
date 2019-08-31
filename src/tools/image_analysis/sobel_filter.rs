@@ -270,7 +270,7 @@ impl WhiteboxTool for SobelFilter {
             let variant = variant.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let input_fn: Box<Fn(isize, isize) -> f64> = if !is_rgb_image {
+                let input_fn: Box<dyn Fn(isize, isize) -> f64> = if !is_rgb_image {
                     Box::new(|row: isize, col: isize| -> f64 { input.get_value(row, col) })
                 } else {
                     Box::new(|row: isize, col: isize| -> f64 {

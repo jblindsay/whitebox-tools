@@ -42,11 +42,11 @@ use std::thread;
 /// method.
 ///
 /// # Reference
-/// Lindsay, J.B., Francioni, A., & Cockburn, J.M.H. (In press) LiDAR DEM smoothing and the preservation 
-/// of drainage features. Remote Sensing.
+/// Lindsay JB, Francioni* A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of 
+/// drainage features. *Remote Sensing*, 11(16), 1926; DOI: 10.3390/rs11161926.
 /// 
 /// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving 
-/// mesh denoising. IEEE Transactions on Visualization & Computer Graphics, (5), 925-938.
+/// mesh denoising. *IEEE Transactions on Visualization & Computer Graphics*, (5), 925-938.
 pub struct FeaturePreservingSmoothing {
     name: String,
     description: String,

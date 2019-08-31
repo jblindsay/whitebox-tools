@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/07/2017
-Last Modified: 10/05/2019
+Last Modified: 30/08/2019
 License: MIT
 
 NOTES:
@@ -62,8 +62,19 @@ impl LidarNearestNeighbourGridding {
         parameters.push(ToolParameter{
             name: "Interpolation Parameter".to_owned(), 
             flags: vec!["--parameter".to_owned()], 
-            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["elevation".to_owned(), "intensity".to_owned(), "class".to_owned(), "scan angle".to_owned(), "user data".to_owned()]),
+            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'.".to_owned(),
+            parameter_type: ParameterType::OptionList(
+                vec![
+                    "elevation".to_owned(), 
+                    "intensity".to_owned(), 
+                    "class".to_owned(), 
+                    "return_number".to_owned(), 
+                    "number_of_returns".to_owned(), 
+                    "scan angle".to_owned(), 
+                    "rgb".to_owned(),
+                    "user data".to_owned()
+                ]
+            ),
             default_value: Some("elevation".to_owned()),
             optional: true
         });
@@ -329,30 +340,6 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            // match fs::read_dir(working_directory) {
-            //     Err(why) => println!("! {:?}", why.kind()),
-            //     Ok(paths) => {
-            //         for path in paths {
-            //             let s = format!("{:?}", path.unwrap().path());
-            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".las", ".tif")
-            //                         .replace(".LAS", ".tif"),
-            //                 )
-            //             } else if s.replace("\"", "").to_lowercase().ends_with(".zip") {
-            //                 // assumes the zip file contains LAS data.
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".zip", ".tif")
-            //                         .replace(".ZIP", ".tif"),
-            //                 )
-            //             }
-            //         }
-            //     }
-            // }
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
@@ -415,31 +402,6 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 max_y: header.max_y,
             });
         }
-
-        /* If a vector lakes file has been specified then figure out what the elevation of
-           each lake is.
-        */
-        // if !lakes_file.is_empty() {
-        //     // make sure the lakes file name has a complete path
-        //     if !lakes_file.contains(path::MAIN_SEPARATOR) && !lakes_file.contains("/") {
-        //         lakes_file = format!("{}{}", working_directory, lakes_file);
-        //     }
-
-        //     let lakes = Shapefile::new(&lakes_file, "r")?;
-
-        //     // which las files overlap with the bounding box of the lakes file?
-        //     let mut lakes_bb = vec![];
-        //     for record_num in 0..profile_data.num_records {
-        //         let header = LasHeader::read_las_header(&in_file.replace("\"", ""))?;
-        //         bounding_boxes.push(BoundingBox{
-        //             min_x: header.min_x,
-        //             max_x: header.max_x,
-        //             min_y: header.min_y,
-        //             max_y: header.max_y
-        //         });
-        //     }
-
-        // }
 
         if verbose {
             println!("Performing interpolation...");
@@ -565,7 +527,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                         }
                                     }
                                 }
-                                "scan angle" => {
+                                "scan angle" | "scan_angle" => {
                                     for i in 0..n_points {
                                         let p: PointData = input[i];
                                         if !p.withheld() {
@@ -623,6 +585,97 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                         }
                                     }
                                 }
+                                "return_number" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        frs.insert(p.x, p.y, p.return_number() as f64);
+                                                        
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "number_of_returns" => {
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        frs.insert(p.x, p.y, p.number_of_returns() as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "rgb" => {
+                                    if !input.has_rgb() {
+                                        println!("Error: The input LAS file does not contain RGB colour data. The interpolation will not proceed.");
+                                        break;
+                                    }
+                                    let mut clr: ColourData;
+                                    for i in 0..n_points {
+                                        let p: PointData = input[i];
+                                        if !p.withheld() {
+                                            if all_returns
+                                                || (p.is_late_return() & late_returns)
+                                                || (p.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[p.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        clr = match input.get_rgb(i) {
+                                                            Ok(value) => { value },
+                                                            Err(_) => break,
+                                                        };
+                                                        frs.insert(p.x, p.y, ((255 << 24) | (clr.blue << 16) | (clr.green << 8) | clr.red) as f64);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
                                 _ => {
                                     // user data
                                     for i in 0..n_points {
@@ -655,6 +708,13 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         }
                     }
 
+                    if frs.size() == 0 {
+                        if verbose {
+                            println!("No points found in {}", inputs[tile].clone());
+                        }
+                        tx2.send(tile).unwrap();
+                    }
+
                     let west: f64 = bounding_boxes[tile].min_x;
                     let north: f64 = bounding_boxes[tile].max_y;
                     let rows: isize =
@@ -682,6 +742,10 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                     configs.palette = palette.clone();
 
                     let mut output = Raster::initialize_using_config(&output_file, &configs);
+                    if interp_parameter == "rgb" {
+                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                        output.configs.data_type = DataType::RGBA32;
+                    }
 
                     if num_tiles > 1 {
                         let (mut x, mut y): (f64, f64);

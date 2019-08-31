@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 16/07/2017
-Last Modified: 01/08/2019
+Last Modified: 12/08/2019
 License: MIT
 */
 
@@ -23,11 +23,11 @@ use std::path;
 /// commas in the ASCII formated file. The output point data, each on a seperate line, will take the format:
 /// 
 /// ```
-/// x,y,z,intensity,class,return,num_returns,scan_angle
+/// X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE
 /// ```
 /// 
-/// If the LAS file has a point format that contains RGB data, the final three columns will contain the red,
-/// green, and blue values respectively. Use the `AsciiToLas` tool to convert a text file containing LiDAR 
+/// If the LAS file has a point format that contains RGB data, the final three columns will contain the RED,
+/// GREEN, and BLUE values respectively. Use the `AsciiToLas` tool to convert a text file containing LiDAR 
 /// point data into a LAS file.
 /// 
 /// # See Also
@@ -197,9 +197,9 @@ impl WhiteboxTool for LasToAscii {
                 let n_points = input.header.number_of_points as usize;
 
                 if !has_rgb {
-                    writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle\n".as_bytes())?;
+                    writer.write_all("X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE\n".as_bytes())?;
                 } else {
-                    writer.write_all("X,Y,Z,Intensity,Class,Return,Num_returns,Scan_angle,Red,Green,Blue\n".as_bytes())?;
+                    writer.write_all("X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n".as_bytes())?;
                 }
                 for k in 0..n_points {
                     let pd = input[k];
