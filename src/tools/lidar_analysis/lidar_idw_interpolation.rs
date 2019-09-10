@@ -683,7 +683,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                             Ok(value) => { value },
                                                             Err(_) => break,
                                                         };
-                                                        frs.insert(p.x, p.y, ((255 << 24) | (clr.blue << 16) | (clr.green << 8) | clr.red) as f64);
+                                                        frs.insert(p.x, p.y, ((255u32 << 24) | ((clr.blue as u32) << 16) | ((clr.green as u32) << 8) | (clr.red as u32)) as f64);
                                                     }
                                                 }
                                             }
@@ -803,7 +803,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                     }
                                     if sum_weights > 0.0 {
                                         if interp_parameter_is_rgb {
-                                            val = ((255 << 24) | ((val_blue.round() as u16) << 16) | ((val_green.round() as u16) << 8) | (val_red.round() as u16)) as f64;
+                                            val = ((255u32 << 24) | ((val_blue.round() as u32) << 16) | ((val_green.round() as u32) << 8) | (val_red.round() as u32)) as f64;
                                         }
                                         output.set_value(row, col, val / sum_weights);
                                     }
@@ -868,7 +868,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                             }
                                             if sum_weights > 0.0 {
                                                 if interp_parameter_is_rgb {
-                                                    val = ((255 << 24) | ((val_blue.round() as u16) << 16) | ((val_green.round() as u16) << 8) | (val_red.round() as u16)) as f64;
+                                                    val = ((255u32 << 24) | ((val_blue.round() as u32) << 16) | ((val_green.round() as u32) << 8) | (val_red.round() as u32)) as f64;
                                                 }
                                                 data[col as usize] = val / sum_weights;
                                             }

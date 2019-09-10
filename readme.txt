@@ -87,6 +87,9 @@ Version 0.1X.X (XX-XX-2019)
 - Added the ability to output the average number of point returns per pulse in the LidarPointStats tool.
 - LidarTinGridding, LidarIdwIntarpolation, and LidarNearestNeighbourGridding now can interpolate the 
   return number, number of returns, and RGB colour data associated with points in a LAS file.
+- Added the ModifyNoDataValue tool to change the NoData value in a raster. It updates the value in 
+  the raster header and then modifies each grid cell in the raster containing the old NoData value
+  to the new value. This operation overwrites the existing raster.
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

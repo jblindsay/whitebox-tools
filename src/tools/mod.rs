@@ -37,6 +37,7 @@ impl ToolManager {
         tool_names.push("LinesToPolygons".to_string());
         tool_names.push("MergeTableWithCsv".to_string());
         tool_names.push("MergeVectors".to_string());
+        tool_names.push("ModifyNoDataValue".to_string());
         tool_names.push("MultiPartToSinglePart".to_string());
         tool_names.push("NewRasterFromBase".to_string());
         tool_names.push("PolygonsToLines".to_string());
@@ -483,6 +484,7 @@ impl ToolManager {
             "linestopolygons" => Some(Box::new(data_tools::LinesToPolygons::new())),
             "mergetablewithcsv" => Some(Box::new(data_tools::MergeTableWithCsv::new())),
             "mergevectors" => Some(Box::new(data_tools::MergeVectors::new())),
+            "modifynodatavalue" => Some(Box::new(data_tools::ModifyNoDataValue::new())),
             "multiparttosinglepart" => Some(Box::new(data_tools::MultiPartToSinglePart::new())),
             "newrasterfrombase" => Some(Box::new(data_tools::NewRasterFromBase::new())),
             "polygonstolines" => Some(Box::new(data_tools::PolygonsToLines::new())),

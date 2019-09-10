@@ -888,7 +888,7 @@ impl WhiteboxTool for LidarTINGridding {
                                             red = -(norm_r.x * x + norm_r.y * y + k_r) / norm_r.z;
                                             green = -(norm_g.x * x + norm_g.y * y + k_g) / norm_g.z;
                                             blue = -(norm_b.x * x + norm_b.y * y + k_b) / norm_b.z;
-                                            zn = ((255 << 24) | ((blue.round() as u16) << 16) | ((green.round() as u16) << 8) | (red.round() as u16)) as f64;
+                                            zn = ((255u32 << 24) | ((blue.round() as u32) << 16) | ((green.round() as u32) << 8) | (red.round() as u32)) as f64;
                                             output.set_value(row, col, zn);
                                         }
                                     }

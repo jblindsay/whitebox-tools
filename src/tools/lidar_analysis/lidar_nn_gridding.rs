@@ -662,7 +662,7 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                             Ok(value) => { value },
                                                             Err(_) => break,
                                                         };
-                                                        frs.insert(p.x, p.y, ((255 << 24) | (clr.blue << 16) | (clr.green << 8) | clr.red) as f64);
+                                                        frs.insert(p.x, p.y, ((255u32 << 24) | ((clr.blue as u32) << 16) | ((clr.green as u32) << 8) | (clr.red as u32)) as f64);
                                                     }
                                                 }
                                             }
