@@ -789,8 +789,8 @@ class WbRunner(tk.Frame):
         self.get_tools_list()  
         #Icons to be used in tool treeview
         self.tool_icon = tk.PhotoImage(file = self.script_dir + '//img//tool.png')  
-        self.open_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//opentools.png')
-        self.closed_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//closedToolbox.png')
+        self.open_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//open.png')
+        self.closed_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//closed.png')
     #########################################################
     #                  Toolboxes Frame                      #FIXME: change width or make horizontally scrollable
     #########################################################

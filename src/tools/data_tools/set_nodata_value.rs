@@ -34,7 +34,7 @@ use std::thread;
 /// overwrite the input file, while the `ModifyNoDataValue` tool does.
 /// 
 /// # See Also
-/// `ModifyNoDataValue`, `ConvertNodataToZero`, `IsNodata`
+/// `ModifyNoDataValue`, `ConvertNodataToZero`, `IsNoData`
 pub struct SetNodataValue {
     name: String,
     description: String,

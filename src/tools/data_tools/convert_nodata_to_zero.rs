@@ -24,7 +24,7 @@ use std::thread;
 /// change can be reversed using the `SetNoDataValue` tool.
 /// 
 /// # See Also
-/// `SetNoDataValue`, `IsNodata`
+/// `SetNoDataValue`, `IsNoData`
 pub struct ConvertNodataToZero {
     name: String,
     description: String,

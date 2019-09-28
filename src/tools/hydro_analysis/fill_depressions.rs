@@ -277,11 +277,11 @@ impl WhiteboxTool for FillDepressions {
             for n in 0..8 {
                 row_n = row + dy[n];
                 col_n = col + dx[n];
-                zin_n = input[(row_n, col_n)];
+                zin_n = input.get_value(row_n, col_n);
                 zout_n = output[(row_n, col_n)];
                 if zout_n == background_val {
                     if zin_n == nodata {
-                        output[(row_n, col_n)] = nodata;
+                        output.set_value(row_n, col_n, nodata);
                         queue.push_back((row_n, col_n));
                     } else {
                         output[(row_n, col_n)] = zin_n;

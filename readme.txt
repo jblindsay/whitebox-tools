@@ -58,7 +58,7 @@ for more details.
 
 Version 0.1X.X (XX-XX-2019)
 - Added support for reading and writing the BigTIFF format. This has resulted in numerous changes
-  throughout the codebase as a reuslt of significant modification of ByteOrderReader and addition
+  throughout the codebase as a result of significant modification of ByteOrderReader and addition
   of ByteOrderWriter. This change has touched almost every one of the raster format 
   encoders/decoders.
 - Performance improvements have been made to the FlattenLakes (hydro-flattening) tool.
@@ -90,6 +90,8 @@ Version 0.1X.X (XX-XX-2019)
 - Added the ModifyNoDataValue tool to change the NoData value in a raster. It updates the value in 
   the raster header and then modifies each grid cell in the raster containing the old NoData value
   to the new value. This operation overwrites the existing raster.
+- Fixed an issue with GeoTIFF NoData values that impacted many tools. NoData values were not interpreted
+  correctly when they were very large positive or negative values (near the min/max of an f32).
 
 Version 0.16.0 (24-05-2019)
 - Added the MergeLineSegments and SphericalStdDevOfNormals tools.

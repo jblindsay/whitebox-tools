@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 5/12/2017
-Last Modified: 29/07/2019
+Last Modified: 27/09/2019
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -12,7 +12,6 @@ Notes: The 3D space-filling nature of point clouds under heavy forest cover do n
 */
 
 use self::na::Vector3;
-// use self::rand::Rng;
 use crate::lidar::*;
 use crate::na;
 use crate::structures::{DistanceMetric, FixedRadiusSearch3D};
@@ -20,7 +19,6 @@ use crate::tools::*;
 use num_cpus;
 use rand;
 use rand::seq::SliceRandom;
-// use std::cmp;
 use std::env;
 use std::f64;
 use std::f64::NEG_INFINITY;
@@ -106,6 +104,15 @@ impl LidarSegmentation {
             optional: false
         });
 
+        parameters.push(ToolParameter {
+            name: "Minimum Segement Size".to_owned(),
+            flags: vec!["--min_size".to_owned()],
+            description: "Minimum segment size (number of points).".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("1".to_owned()),
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -117,7 +124,7 @@ impl LidarSegmentation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classes", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --norm_diff=2.5 --maxzdiff=0.75 --classes --min_size=100", short_exe, name).replace("*", &sep);
 
         LidarSegmentation {
             name: name,
@@ -176,6 +183,7 @@ impl WhiteboxTool for LidarSegmentation {
         let mut max_norm_diff = 2f64;
         let mut max_z_diff = 1f64;
         let mut dont_cross_class_boundaries = false;
+        let mut min_segment_size = 1;
 
         // read the arguments
         if args.len() == 0 {
@@ -195,37 +203,43 @@ impl WhiteboxTool for LidarSegmentation {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-dist" || flag_val == "-radius" {
-                if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                search_radius = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-norm_diff" {
-                if keyval {
-                    max_norm_diff = vec[1].to_string().parse::<f64>().unwrap();
+                max_norm_diff = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    max_norm_diff = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-maxzdiff" {
-                if keyval {
-                    max_z_diff = vec[1].to_string().parse::<f64>().unwrap();
+                max_z_diff = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    max_z_diff = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-classes" {
                 dont_cross_class_boundaries = true;
+            } else if flag_val == "-min_size" {
+                min_segment_size = if keyval {
+                    vec[1].to_string().parse::<usize>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<usize>().unwrap()
+                };
             }
         }
 
@@ -404,18 +418,6 @@ impl WhiteboxTool for LidarSegmentation {
         let range: Vec<u32> = (0..16777215).collect();
         let raw_clrs: Vec<u32> = range.choose_multiple(&mut rng, current_segment+1).cloned().collect();
         for i in 0..current_segment + 1 as usize {
-            // let mut flag = false;
-            // while !flag {
-            //     r = rng.gen::<u8>() as u16 * 256u16;
-            //     g = rng.gen::<u8>() as u16 * 256u16;
-            //     b = rng.gen::<u8>() as u16 * 256u16;
-            //     let max_val = cmp::max(cmp::max(r, g), b);
-            //     //let min_val = cmp::min(cmp::min(r, g), b);
-            //     if max_val >= u16::max_value() / 2 {
-            //         // && min_val >= u16::max_value() / 4 {
-            //         flag = true;
-            //     }
-            // }
             r = (raw_clrs[i] as u32 & 0xFF) as u16;
             g = ((raw_clrs[i] as u32 >> 8) & 0xFF) as u16;
             b = ((raw_clrs[i] as u32 >> 16) & 0xFF) as u16;
@@ -423,22 +425,30 @@ impl WhiteboxTool for LidarSegmentation {
             clrs.push((r, g, b));
         }
 
+        let mut segment_size = vec![0usize; current_segment+1];
+        for point_num in 0..n_points {
+            segment_size[segment_id[point_num]] += 1;
+        }
+
+
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.point_format = 2;
         for point_num in 0..n_points {
             let p: PointData = input[point_num];
             let seg_val = segment_id[point_num];
-            let rgb: ColourData = ColourData {
-                red: clrs[seg_val].0,
-                green: clrs[seg_val].1,
-                blue: clrs[seg_val].2,
-                nir: 0u16,
-            };
-            let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 {
-                point_data: p,
-                colour_data: rgb,
-            };
-            output.add_point_record(lpr);
+            if segment_size[seg_val] >= min_segment_size {
+                let rgb: ColourData = ColourData {
+                    red: clrs[seg_val].0,
+                    green: clrs[seg_val].1,
+                    blue: clrs[seg_val].2,
+                    nir: 0u16,
+                };
+                let lpr: LidarPointRecord = LidarPointRecord::PointRecord2 {
+                    point_data: p,
+                    colour_data: rgb,
+                };
+                output.add_point_record(lpr);
+            }
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -447,24 +457,6 @@ impl WhiteboxTool for LidarSegmentation {
                 }
             }
         }
-        // let (mut r, mut g, mut b): (u16, u16, u16);
-        // for i in 0..n_points {
-        //     let p: PointData = input.get_point_info(i);
-        //     r = ((1.0 + normal_values[i].x) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].x) / 2.0 * 65535.0) as u16;
-        //     g = ((1.0 + normal_values[i].y) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].y) / 2.0 * 65535.0) as u16;
-        //     b = ((1.0 + normal_values[i].z) / 2.0 * 255.0) as u16 * 256u16; //((1.0 + normal_values[i].z) / 2.0 * 65535.0) as u16;
-
-        //     let rgb: RgbData = RgbData{ red: r, green: g, blue: b };
-        //     let lpr = LidarPointRecord::PointRecord2 { point_data: p, rgb_data: rgb };
-        //     output.add_point_record(lpr);
-        //     if verbose {
-        //         progress = (100.0_f64 * i as f64 / num_points) as i32;
-        //         if progress != old_progress {
-        //             println!("Saving data: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
 
         let elapsed_time = get_formatted_elapsed_time(start);
 
