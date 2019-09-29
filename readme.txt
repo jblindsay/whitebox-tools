@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 0.1X.X (XX-XX-2019)
+Version 1.0.0 (29-09-2019)
 - Added support for reading and writing the BigTIFF format. This has resulted in numerous changes
   throughout the codebase as a result of significant modification of ByteOrderReader and addition
   of ByteOrderWriter. This change has touched almost every one of the raster format 

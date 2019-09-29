@@ -332,9 +332,9 @@ fn version() {
     println!(
         "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2019
 
-WhiteboxTools an advanced geospatial data analysis platform developed at
+WhiteboxTools is an advanced geospatial data analysis platform developed at
 the University of Guelph's Geomorphometry and Hydrogeomatics Research 
-Group (GHRG). See https://www.uoguelph.ca/~hydrogeo/WhiteboxTools/index.html 
+Group (GHRG). See https://jblindsay.github.io/ghrg/WhiteboxTools/index.html
 for more details.",
         VERSION.unwrap_or("unknown")
     );

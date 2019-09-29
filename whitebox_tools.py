@@ -376,6 +376,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -537,6 +538,20 @@ class WhiteboxTools(object):
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('merge_vectors', args, callback) # returns 1 if error
+
+    def modify_no_data_value(self, i, new_value="-32768.0", callback=None):
+        """Converts nodata values in a raster to zero.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        new_value -- New NoData value. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--new_value={}".format(new_value))
+        return self.run_tool('modify_no_data_value', args, callback) # returns 1 if error
 
     def multi_part_to_single_part(self, i, output, exclude_holes=True, callback=None):
         """Converts a vector file containing multi-part features into a vector containing only single-part features.
@@ -2244,34 +2259,6 @@ class WhiteboxTools(object):
         args.append("--out_type={}".format(out_type))
         return self.run_tool('downslope_index', args, callback) # returns 1 if error
 
-    def drainage_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, reduction=80.0, dfm=0.15, zfactor=1.0, callback=None):
-        """Reduces short-scale variation in an input DEM while preserving breaks-in-slope and small drainage features using a modified Sun et al. (2007) algorithm.
-
-        Keyword arguments:
-
-        dem -- Input raster DEM file. 
-        output -- Output raster file. 
-        filter -- Size of the filter kernel. 
-        norm_diff -- Maximum difference in normal vectors, in degrees. 
-        num_iter -- Number of iterations. 
-        max_diff -- Maximum allowable absolute elevation change (optional). 
-        reduction -- Maximum Amount to reduce the threshold angle by (0 = full smoothing; 100 = no smoothing). 
-        dfm -- Difference from median threshold (in z-units), determines when a location is low-lying. 
-        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--output='{}'".format(output))
-        args.append("--filter={}".format(filter))
-        args.append("--norm_diff={}".format(norm_diff))
-        args.append("--num_iter={}".format(num_iter))
-        args.append("--max_diff={}".format(max_diff))
-        args.append("--reduction={}".format(reduction))
-        args.append("--dfm={}".format(dfm))
-        args.append("--zfactor={}".format(zfactor))
-        return self.run_tool('drainage_preserving_smoothing', args, callback) # returns 1 if error
-
     def edge_density(self, dem, output, filter=11, norm_diff=5.0, zfactor=1.0, callback=None):
         """Calculates the density of edges, or breaks-in-slope within DEMs.
 
@@ -2356,7 +2343,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('elev_relative_to_watershed_min_max', args, callback) # returns 1 if error
 
-    def feature_preserving_denoise(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, zfactor=1.0, callback=None):
+    def feature_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, zfactor=1.0, callback=None):
         """Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
         Keyword arguments:
@@ -2378,7 +2365,7 @@ class WhiteboxTools(object):
         args.append("--num_iter={}".format(num_iter))
         args.append("--max_diff={}".format(max_diff))
         args.append("--zfactor={}".format(zfactor))
-        return self.run_tool('feature_preserving_denoise', args, callback) # returns 1 if error
+        return self.run_tool('feature_preserving_smoothing', args, callback) # returns 1 if error
 
     def fetch_analysis(self, dem, output, azimuth=0.0, hgt_inc=0.05, callback=None):
         """Performs an analysis of fetch or upwind distance to an obstacle.
@@ -5503,7 +5490,7 @@ class WhiteboxTools(object):
 
         i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
-        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
         resolution -- Output raster's grid resolution. 
         weight -- IDW weight value. 
@@ -5585,7 +5572,7 @@ class WhiteboxTools(object):
 
         i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
-        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
         resolution -- Output raster's grid resolution. 
         radius -- Search Radius. 
@@ -5632,15 +5619,16 @@ class WhiteboxTools(object):
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_point_density', args, callback) # returns 1 if error
 
-    def lidar_point_stats(self, i=None, resolution=1.0, num_points=True, num_pulses=False, z_range=False, intensity_range=False, predom_class=False, callback=None):
+    def lidar_point_stats(self, i=None, resolution=1.0, num_points=True, num_pulses=False, avg_points_per_pulse=True, z_range=False, intensity_range=False, predom_class=False, callback=None):
         """Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
 
         Keyword arguments:
 
         i -- Input LiDAR file. 
         resolution -- Output raster's grid resolution. 
-        num_points -- Flag indicating whether or not to output the number of points raster. 
+        num_points -- Flag indicating whether or not to output the number of points (returns) raster. 
         num_pulses -- Flag indicating whether or not to output the number of pulses raster. 
+        avg_points_per_pulse -- Flag indicating whether or not to output the average number of points (returns) per pulse raster. 
         z_range -- Flag indicating whether or not to output the elevation range raster. 
         intensity_range -- Flag indicating whether or not to output the intensity range raster. 
         predom_class -- Flag indicating whether or not to output the predominant classification raster. 
@@ -5651,6 +5639,7 @@ class WhiteboxTools(object):
         args.append("--resolution={}".format(resolution))
         if num_points: args.append("--num_points")
         if num_pulses: args.append("--num_pulses")
+        if avg_points_per_pulse: args.append("--avg_points_per_pulse")
         if z_range: args.append("--z_range")
         if intensity_range: args.append("--intensity_range")
         if predom_class: args.append("--predom_class")
@@ -5720,7 +5709,7 @@ class WhiteboxTools(object):
         if classify: args.append("--classify")
         return self.run_tool('lidar_remove_outliers', args, callback) # returns 1 if error
 
-    def lidar_segmentation(self, i, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, classes=False, callback=None):
+    def lidar_segmentation(self, i, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, classes=False, min_size=1, callback=None):
         """Segments a LiDAR point cloud based on normal vectors.
 
         Keyword arguments:
@@ -5731,6 +5720,7 @@ class WhiteboxTools(object):
         norm_diff -- Maximum difference in normal vectors, in degrees. 
         maxzdiff -- Maximum difference in elevation (z units) between neighbouring points of the same segment. 
         classes -- Segments don't cross class boundaries. 
+        min_size -- Minimum segment size (number of points). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -5740,6 +5730,7 @@ class WhiteboxTools(object):
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--maxzdiff={}".format(maxzdiff))
         if classes: args.append("--classes")
+        args.append("--min_size={}".format(min_size))
         return self.run_tool('lidar_segmentation', args, callback) # returns 1 if error
 
     def lidar_segmentation_based_filter(self, i, output, radius=5.0, norm_diff=2.0, maxzdiff=1.0, classify=False, callback=None):
@@ -5849,7 +5840,7 @@ class WhiteboxTools(object):
 
         i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
-        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'scan angle', 'user data'. 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
         resolution -- Output raster's grid resolution. 
         exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 

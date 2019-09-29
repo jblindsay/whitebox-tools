@@ -807,7 +807,7 @@ class WbRunner(tk.Frame):
         current_tool_frame.columnconfigure(0, weight=1)
         current_tool_frame.columnconfigure(1, weight=1)
 
-        tool_args_frame = ttk.Frame(overall_frame, padding='0.0i')
+        # tool_args_frame = ttk.Frame(overall_frame, padding='0.0i')
         self.tool_args_frame = ttk.Frame(overall_frame, padding='0.0i')
         self.tool_args_frame.grid(row=2, column=0, sticky=tk.NSEW)
         self.tool_args_frame.columnconfigure(0, weight=1)

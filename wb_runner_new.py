@@ -769,18 +769,18 @@ class WbRunner(tk.Frame):
 
     def create_widgets(self):
 
-    #########################################################
-    #              Overall/Top level Frame                  #
-    #########################################################     
+        #########################################################
+        #              Overall/Top level Frame                  #
+        #########################################################     
         #define left-side frame (toplevel_frame) and right-side frame (overall_frame)
         toplevel_frame = ttk.Frame(self, padding='0.1i')
         overall_frame = ttk.Frame(self, padding='0.1i')
         #set-up layout
         overall_frame.grid(row=0, column=1, sticky=tk.NSEW)
         toplevel_frame.grid(row=0, column=0, sticky=tk.NSEW)   
-    #########################################################
-    #                  Calling basics                       #
-    #########################################################
+        #########################################################
+        #                  Calling basics                       #
+        #########################################################
         #Create all needed lists of tools and toolboxes
         self.toolbox_list = self.get_toolboxes()
         self.sort_toolboxes()
@@ -791,9 +791,9 @@ class WbRunner(tk.Frame):
         self.tool_icon = tk.PhotoImage(file = self.script_dir + '//img//tool.png')  
         self.open_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//open.png')
         self.closed_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//closed.png')
-    #########################################################
-    #                  Toolboxes Frame                      #FIXME: change width or make horizontally scrollable
-    #########################################################
+        #########################################################
+        #                  Toolboxes Frame                      #FIXME: change width or make horizontally scrollable
+        #########################################################
         #define tools_frame and tool_tree
         self.tools_frame = ttk.LabelFrame(toplevel_frame, text="{} Available Tools".format(len(self.tools_list)), padding='0.1i')   
         self.tool_tree = ttk.Treeview(self.tools_frame, height = 21)    
@@ -824,9 +824,9 @@ class WbRunner(tk.Frame):
         s = ttk.Scrollbar(self.tools_frame, orient=tk.VERTICAL,command=self.tool_tree.yview)    
         s.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.tool_tree['yscrollcommand'] = s.set
-    #########################################################
-    #                     Search Bar                        #
-    #########################################################
+        #########################################################
+        #                     Search Bar                        #
+        #########################################################
         #create variables for search results and search input
         self.search_list = []    
         self.search_text = tk.StringVar()
@@ -852,9 +852,9 @@ class WbRunner(tk.Frame):
         self.search_frame.columnconfigure(1, weight=1)
         self.search_frame.rowconfigure(0, weight=1)
         self.search_frame.rowconfigure(1, weight = 10)
-    #########################################################
-    #                 Current Tool Frame                    #
-    #########################################################
+        #########################################################
+        #                 Current Tool Frame                    #
+        #########################################################
         #Create the elements of the current tool frame
         self.current_tool_frame = ttk.Frame(overall_frame, padding='0.2i')
         self.current_tool_lbl = ttk.Label(self.current_tool_frame, text="Current Tool: {}".format(self.tool_name), justify=tk.LEFT)  # , font=("Helvetica", 12, "bold") 
@@ -866,27 +866,30 @@ class WbRunner(tk.Frame):
         #Configure rows and columns of the frame
         self.current_tool_frame.columnconfigure(0, weight=1)
         self.current_tool_frame.columnconfigure(1, weight=1)
-    #########################################################
-    #                      Args Frame                       #
-    #########################################################
-        #Create the elements of the tool arguements frame
-        self.arg_scroll = ttk.Scrollbar(overall_frame, orient='vertical')
-        self.arg_canvas = tk.Canvas(overall_frame, bd=0, highlightthickness=0, yscrollcommand=self.arg_scroll.set)
-        self.arg_scroll.config(command=self.arg_canvas.yview)    #self.arg_scroll scrolls over self.arg_canvas
-        self.arg_scroll_frame = ttk.Frame(self.arg_canvas)    # create a frame inside the self.arg_canvas which will be scrolled with it
-        self.arg_scroll_frame_id = self.arg_canvas.create_window(0, 0, window=self.arg_scroll_frame, anchor="nw")
-        #Define layout of the frame
-        self.arg_scroll.grid(row = 1, column = 1, sticky = (tk.NS, tk.E))
-        self.arg_canvas.grid(row = 1, column = 0, sticky = tk.NSEW)
-        # reset the view
-        self.arg_canvas.xview_moveto(0)
-        self.arg_canvas.yview_moveto(0)
-        #Add bindings
-        self.arg_scroll_frame.bind('<Configure>', self.configure_arg_scroll_frame)
-        self.arg_canvas.bind('<Configure>', self.configure_arg_canvas)
-    #########################################################
-    #                   Buttons Frame                       #
-    #########################################################
+        #########################################################
+        #                      Args Frame                       #
+        #########################################################
+        # #Create the elements of the tool arguments frame
+        # self.arg_scroll = ttk.Scrollbar(overall_frame, orient='vertical')
+        # self.arg_canvas = tk.Canvas(overall_frame, bd=0, highlightthickness=0, yscrollcommand=self.arg_scroll.set)
+        # self.arg_scroll.config(command=self.arg_canvas.yview)    #self.arg_scroll scrolls over self.arg_canvas
+        # self.arg_scroll_frame = ttk.Frame(self.arg_canvas)    # create a frame inside the self.arg_canvas which will be scrolled with it
+        # self.arg_scroll_frame_id = self.arg_canvas.create_window(0, 0, window=self.arg_scroll_frame, anchor="nw")
+        # #Define layout of the frame
+        # self.arg_scroll.grid(row = 1, column = 1, sticky = (tk.NS, tk.E))
+        # self.arg_canvas.grid(row = 1, column = 0, sticky = tk.NSEW)
+        # # reset the view
+        # self.arg_canvas.xview_moveto(0)
+        # self.arg_canvas.yview_moveto(0)
+        # #Add bindings
+        # self.arg_scroll_frame.bind('<Configure>', self.configure_arg_scroll_frame)
+        # self.arg_canvas.bind('<Configure>', self.configure_arg_canvas)
+        self.arg_scroll_frame = ttk.Frame(overall_frame, padding='0.0i')
+        self.arg_scroll_frame.grid(row=2, column=0, sticky=tk.NSEW)
+        self.arg_scroll_frame.columnconfigure(0, weight=1)
+        #########################################################
+        #                   Buttons Frame                       #
+        #########################################################
         #Create the elements of the buttons frame
         self.buttons_frame = ttk.Frame(overall_frame, padding='0.2i')
         self.run_button = ttk.Button(self.buttons_frame, text="Run", width=8, command=self.run_tool)
@@ -897,9 +900,9 @@ class WbRunner(tk.Frame):
         self.quit_button.grid(row=0, column=1)
         self.help_button.grid(row = 0, column = 2)
         self.buttons_frame.grid(row=2, column=0, columnspan = 2, sticky=tk.E)
-    #########################################################
-    #                  Output Frame                      #
-    #########################################################                
+        #########################################################
+        #                  Output Frame                      #
+        #########################################################                
         #Create the elements of the output frame
         output_frame = ttk.Frame(overall_frame)
         outlabel = ttk.Label(output_frame, text="Output:", justify=tk.LEFT)
@@ -922,9 +925,9 @@ class WbRunner(tk.Frame):
             self.out_text.bind("<Command-Key-a>", self.select_all)
         else:
             self.out_text.bind("<Control-Key-a>", self.select_all)
-    #########################################################
-    #                  Progress Frame                       #
-    #########################################################        
+        #########################################################
+        #                  Progress Frame                       #
+        #########################################################        
         #Create the elements of the progress frame
         progress_frame = ttk.Frame(overall_frame, padding='0.2i')
         self.progress_label = ttk.Label(progress_frame, text="Progress:", justify=tk.LEFT)
@@ -934,16 +937,16 @@ class WbRunner(tk.Frame):
         self.progress_label.grid(row=0, column=0, sticky=tk.E, padx=5)
         self.progress.grid(row=0, column=1, sticky=tk.E)
         progress_frame.grid(row=4, column=0, columnspan = 2, sticky=tk.SE)
-    #########################################################
-    #                  Tool Selection                       #
-    #########################################################        
+        #########################################################
+        #                  Tool Selection                       #
+        #########################################################        
         # Select the appropriate tool, if specified, otherwise the first tool
         self.tool_tree.focus(self.tool_name)
         self.tool_tree.selection_set(self.tool_name)
         self.tool_tree.event_generate("<<TreeviewSelect>>")
-    #########################################################
-    #                       Menus                           #
-    #########################################################        
+        #########################################################
+        #                       Menus                           #
+        #########################################################        
         menubar = tk.Menu(self)
 
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -965,7 +968,8 @@ class WbRunner(tk.Frame):
         helpmenu.add_command(label="License", command=self.license)
         menubar.add_cascade(label="Help ", menu=helpmenu)
 
-        self.master.config(menu=menubar)        
+        self.master.config(menu=menubar)     
+
     #########################################################
     #        Functions (added/edited by Rachel)             #
     #########################################################

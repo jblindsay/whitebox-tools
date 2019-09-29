@@ -84,6 +84,15 @@ impl FillDepressions {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Flat increment value (z units)".to_owned(),
+            flags: vec!["--flat_increment".to_owned()],
+            description: "Optional elevation increment applied to flat areas.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -148,6 +157,7 @@ impl WhiteboxTool for FillDepressions {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut fix_flats = false;
+        let mut flat_increment = f64::NAN;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -164,25 +174,27 @@ impl WhiteboxTool for FillDepressions {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem"{
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-fix_flats"
-                || vec[0].to_lowercase() == "--fix_flats"
-            {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-fix_flats" {
                 fix_flats = true;
+            } else if flag_val == "-flat_increment" {
+                flat_increment = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             }
         }
 
@@ -216,13 +228,22 @@ impl WhiteboxTool for FillDepressions {
         let num_cells = rows * columns;
         let nodata = input.configs.nodata;
 
-        let min_val = input.configs.minimum;
-        let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-        let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
-        let mut small_num = 0.0;
-        if fix_flats {
-            small_num = 1.0 / elev_multiplier as f64;
-        }
+        // let min_val = input.configs.minimum;
+        // let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
+        // let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
+        // let mut small_num = 0.0;
+        // if fix_flats {
+        //     small_num = 1.0 / elev_multiplier as f64;
+        // }
+
+        let small_num = if !flat_increment.is_nan() {
+            flat_increment
+        } else {
+            let min_val = input.configs.minimum;
+            let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
+            let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
+            1.0_f64 / elev_multiplier as f64
+        };
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F64;
