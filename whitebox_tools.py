@@ -377,6 +377,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3463,7 +3464,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('fill_burn', args, callback) # returns 1 if error
 
-    def fill_depressions(self, dem, output, fix_flats=True, callback=None):
+    def fill_depressions(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
         """Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 
         Keyword arguments:
@@ -3471,12 +3472,14 @@ class WhiteboxTools(object):
         dem -- Input raster DEM file. 
         output -- Output raster file. 
         fix_flats -- Optional flag indicating whether flat areas should have a small gradient applied. 
+        flat_increment -- Optional elevation increment applied to flat areas. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         if fix_flats: args.append("--fix_flats")
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
         return self.run_tool('fill_depressions', args, callback) # returns 1 if error
 
     def fill_single_cell_pits(self, dem, output, callback=None):

@@ -236,13 +236,15 @@ impl WhiteboxTool for FillDepressions {
         //     small_num = 1.0 / elev_multiplier as f64;
         // }
 
-        let small_num = if !flat_increment.is_nan() {
+        let small_num = if fix_flats && !flat_increment.is_nan() {
             flat_increment
-        } else {
+        } else if fix_flats {
             let min_val = input.configs.minimum;
             let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64
+        } else {
+            0f64
         };
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
