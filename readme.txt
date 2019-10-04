@@ -56,6 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.0.1 (XX-XX-2019)
+- Fixed a minor bug with the VectorPolygonToRaster tool.
+
 Version 1.0.0 (29-09-2019)
 - Added support for reading and writing the BigTIFF format. This has resulted in numerous changes
   throughout the codebase as a result of significant modification of ByteOrderReader and addition

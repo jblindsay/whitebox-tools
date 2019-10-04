@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 16, 2017
+Created: 16/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -18,6 +18,33 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool is used to generate a flow pointer grid (i.e. flow direction) using the stochastic 
+/// Rho8 (J. Fairfield and P. Leymarie, 1991) algorithm. Like the D8 flow algorithm (`D8Pointer`), 
+/// Rho8 is a single-flow-direction (SFD) method because the flow entering each grid cell is routed 
+/// to only one downslope neighbour, i.e. flow divergence is not permitted. The user must specify the 
+/// name of a digital elevation model (DEM) file (`--dem`) that has been hydrologically corrected to 
+/// remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`). 
+/// 
+/// By default, the Rho8 flow pointers use the following clockwise, base-2 numeric index convention:
+/// 
+/// | .  |  .  |  . |
+/// |:--:|:---:|:--:|
+/// | 64 | 128 | 1  |
+/// | 32 |  0  | 2  |
+/// | 16 |  8  | 4  |
+/// 
+/// Notice that grid cells that have no lower neighbours are assigned a flow direction of zero. In a DEM that has been 
+/// pre-processed to remove all depressions and flat areas, this condition will only occur along the edges of the grid.
+/// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
+/// 
+/// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output image.
+/// 
+/// # References
+/// Fairfield, J., & Leymarie, P. (1991). Drainage networks from grid digital elevation models. Water 
+/// Resources Research, 27(5), 709-717.
+/// 
+/// # See Also
+/// `D8Pointer`, `FD8Pointer`, `DInfPointer`, `BreachDepressions`, `FillDepressions`
 pub struct Rho8Pointer {
     name: String,
     description: String,

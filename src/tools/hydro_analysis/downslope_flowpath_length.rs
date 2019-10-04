@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 8, 2017
+Created: 08/07/2017
 Last Modified: 29/10/2018
 License: MIT
 */
@@ -14,6 +14,29 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to calculate the downslope flowpath length from each grid cell in a raster to 
+/// an outlet cell either at the edge of the grid or at the outlet point of a watershed. The user must 
+/// specify the name of a flow pointer grid (`--d8_pntr`) derived using the D8 flow algorithm (`D8Pointer`). 
+/// This grid should be derived from a digital elevation model (DEM) that has been pre-processed to remove 
+/// artifact topographic depressions and flat areas (`BreachDepressions`, `FillDepressions`). The user may also 
+/// optionally provide watershed (`--watersheds`) and weights (`--weights`) images. The optional watershed 
+/// image can be used to define one or more irregular-shaped watershed boundaries. Flowpath lengths are 
+/// measured within each watershed in the watershed image (each defined by a unique identifying number) as 
+/// the flowpath length to the watershed's outlet cell.
+/// 
+/// The optional weight image is multiplied by the flow-length through each grid cell. This can be useful 
+/// when there is a need to convert the units of the output image. For example, the default unit of 
+/// flowpath lengths is the same as the input image(s). Thus, if the input image has X-Y coordinates 
+/// measured in metres, the output image will likely contain very large values. A weight image containing 
+/// a value of 0.001 for each grid cell will effectively convert the output flowpath lengths into kilometres. 
+/// The weight image can also be used to convert the flowpath distances into travel times by multiplying the 
+/// flow distance through a grid cell by the average velocity.
+/// 
+/// NoData valued grid cells in any of the input images will be assigned NoData values in the output image. 
+/// The output raster is of the float data type and continuous data scale.
+/// 
+/// # See Also
+/// `D8Pointer`, `ElevationAboveStream`, `BreachDepressions`, `FillDepressions`, `Watershed`
 pub struct DownslopeFlowpathLength {
     name: String,
     description: String,

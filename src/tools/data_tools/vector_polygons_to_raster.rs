@@ -453,9 +453,9 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             ending_col = columns - 1;
                         }
 
-                        for r in starting_row..ending_row {
+                        for r in starting_row..=ending_row {
                             y = output.get_y_from_row(r);
-                            for c in starting_col..ending_col {
+                            for c in starting_col..=ending_col {
                                 x = output.get_x_from_column(c);
                                 if point_in_poly(
                                     &Point2D { x: x, y: y },
@@ -467,7 +467,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             }
                             if verbose {
                                 progress = (100.0_f64 * r as f64
-                                    / (ending_row - starting_row) as f64)
+                                    / (ending_row - starting_row + 1) as f64)
                                     as usize;
                                 if progress != old_progress {
                                     println!(
@@ -540,9 +540,9 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             ending_col = columns - 1;
                         }
 
-                        for r in starting_row..ending_row {
+                        for r in starting_row..=ending_row {
                             y = output.get_y_from_row(r);
-                            for c in starting_col..ending_col {
+                            for c in starting_col..=ending_col {
                                 x = output.get_x_from_column(c);
                                 if point_in_poly(
                                     &Point2D { x: x, y: y },
@@ -556,7 +556,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                             }
                             if verbose {
                                 progress = (100.0_f64 * r as f64
-                                    / (ending_row - starting_row) as f64)
+                                    / (ending_row - starting_row + 1) as f64)
                                     as usize;
                                 if progress != old_progress {
                                     println!(
