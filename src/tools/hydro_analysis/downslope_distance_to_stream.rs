@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 9/07/2017
-Last Modified: 12/10/2018
+Last Modified: 04/10/2019
 License: MIT
 */
 
@@ -222,6 +222,9 @@ impl WhiteboxTool for DownslopeDistanceToStream {
             ));
         }
 
+        /////////////////////////////////////////////
+        // Perform the D8 flow pointer calculation //
+        /////////////////////////////////////////////
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -248,13 +251,13 @@ impl WhiteboxTool for DownslopeDistanceToStream {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![flow_nodata; columns as usize];
                     for col in 0..columns {
-                        z = dem[(row, col)];
+                        z = dem.get_value(row, col);
                         if z != nodata {
                             dir = 0i8;
                             max_slope = f64::MIN;
                             neighbouring_nodata = false;
                             for i in 0..8 {
-                                z_n = dem[(row + dy[i], col + dx[i])];
+                                z_n = dem.get_value(row + dy[i], col + dx[i]);
                                 if z_n != nodata {
                                     slope = (z - z_n) / grid_lengths[i];
                                     if slope > max_slope && slope > 0f64 {
@@ -294,18 +297,19 @@ impl WhiteboxTool for DownslopeDistanceToStream {
                 interior_pit_found = true;
             }
             for col in 0..columns {
-                if streams[(row, col)] > 0f64 && streams[(row, col)] != streams_nodata {
-                    output[(row, col)] = 0f64;
-                    stack.push((row, col, dem[(row, col)]));
+                // stream cells get added to the stack; nodata cells get assigned that in the output
+                if streams.get_value(row, col) > 0f64 && streams.get_value(row, col) != streams_nodata {
+                    output.set_value(row, col, 0f64);
+                    stack.push((row, col, 0f64)); 
                 }
-                if dem[(row, col)] == nodata {
-                    output[(row, col)] = nodata;
+                if dem.get_value(row, col) == nodata {
+                    output.set_value(row, col, nodata);
                     num_solved_cells += 1;
                 }
-                if flow_dir[(row, col)] == -1 {
-                    if output[(row, col)] != 0f64 {
+                if flow_dir.get_value(row, col) == -1 {
+                    if output.get_value(row, col) != 0f64 {
                         stack.push((row, col, nodata));
-                        output[(row, col)] = nodata;
+                        output.set_value(row, col, nodata);
                         num_solved_cells += 1;
                     }
                 }
@@ -318,7 +322,10 @@ impl WhiteboxTool for DownslopeDistanceToStream {
                 }
             }
         }
-
+        
+        ////////////////////////////////////////////////
+        // Calculate the downslope distance to stream //
+        ////////////////////////////////////////////////
         let num_cells = dem.num_cells();
         let mut stream_dist: f64;
         let mut dist: f64;
@@ -342,15 +349,15 @@ impl WhiteboxTool for DownslopeDistanceToStream {
             for n in 0..8 {
                 row_n = row + dy[n];
                 col_n = col + dx[n];
-                if flow_dir[(row_n, col_n)] == inflowing_vals[n]
-                    && output[(row_n, col_n)] == background_value
+                if flow_dir.get_value(row_n, col_n) == inflowing_vals[n]
+                    && output.get_value(row_n, col_n) == background_value
                 {
                     if stream_dist != nodata {
                         dist = stream_dist + grid_lengths[n];
-                        output[(row_n, col_n)] = dist;
+                        output.set_value(row_n, col_n, dist);
                         stack.push((row_n, col_n, dist));
                     } else {
-                        output[(row_n, col_n)] = nodata;
+                        output.set_value(row_n, col_n, nodata);
                         stack.push((row_n, col_n, nodata));
                     }
                 }
