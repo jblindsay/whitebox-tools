@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/04/2018
-Last Modified: 17/07/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -207,7 +207,9 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
-                background_val = nodata;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    background_val = nodata;
+                }
             }
         }
 

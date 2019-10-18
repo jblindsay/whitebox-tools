@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 13/07/2017
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -168,7 +168,9 @@ impl WhiteboxTool for EdgeProportion {
             } else if vec[0].to_lowercase() == "-output_text"
                 || vec[0].to_lowercase() == "--output_text"
             {
-                output_text = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    output_text = true;
+                }
             }
         }
 

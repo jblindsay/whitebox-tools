@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 05/12/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -195,7 +195,9 @@ impl WhiteboxTool for ConstructVectorTIN {
                 };
                 use_field = true;
             } else if flag_val.contains("use_z") {
-                use_z = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    use_z = true;
+                }
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()

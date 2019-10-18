@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: March 11, 2018
-Last Modified: 12/10/2018
+Created: 11/03/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -194,9 +194,13 @@ impl WhiteboxTool for RasterizeStreams {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
-                out_nodata = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    out_nodata = true;
+                }
             } else if flag_val == "-feature_id" {
-                feature_id = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    feature_id = true;
+                }
             }
         }
 

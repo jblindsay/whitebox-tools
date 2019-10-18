@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/06/2017
-Last Modified: 08/08/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -276,12 +276,18 @@ impl WhiteboxTool for LidarGroundPointFilter {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-classify" {
-                filter = false;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    filter = false;
+                }
             } else if flag_val == "-slope_norm" {
-                slope_norm = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    slope_norm = true;
+                }
             } else if flag_val == "-height_above_ground" {
-                height_above_ground = true;
-                filter = false; // this doesn't make sense unless non-ground points are included in the output
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    height_above_ground = true;
+                    filter = false; // this doesn't make sense unless non-ground points are included in the output
+                }
             }
         }
 

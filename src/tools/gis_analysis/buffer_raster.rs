@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -193,7 +193,9 @@ impl WhiteboxTool for BufferRaster {
             } else if vec[0].to_lowercase() == "-gridcells"
                 || vec[0].to_lowercase() == "--gridcells"
             {
-                grid_cell_units = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    grid_cell_units = true;
+                }
             }
         }
 

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 1, 2017
-Last Modified: 12/10/2018
+Created: 01/06/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -178,9 +178,13 @@ impl WhiteboxTool for LidarInfo {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-vlr" {
-                show_vlrs = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    show_vlrs = true;
+                }
             } else if flag_val == "-geokeys" {
-                show_geokeys = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    show_geokeys = true;
+                }
             }
         }
 

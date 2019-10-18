@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -178,9 +178,13 @@ impl WhiteboxTool for Clump {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-diag" {
-                diag = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    diag = true;
+                }
             } else if flag_val == "-zero_back" {
-                zero_back = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    zero_back = true;
+                }
             }
         }
 

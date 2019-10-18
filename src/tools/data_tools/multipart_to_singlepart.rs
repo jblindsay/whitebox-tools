@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/09/2018
-Last Modified: 12/10/2018
+Last Modified: 17/10/2019
 License: MIT
 */
 
@@ -172,7 +172,9 @@ impl WhiteboxTool for MultiPartToSinglePart {
                     args[i + 1].to_string()
                 };
             } else if flag_val.contains("-exc") || flag_val.contains("hole") {
-                exclude_holes = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    exclude_holes = true;
+                }
             }
         }
 

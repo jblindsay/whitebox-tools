@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -188,7 +188,9 @@ impl WhiteboxTool for FillDepressions {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-fix_flats" {
-                fix_flats = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    fix_flats = true;
+                }
             } else if flag_val == "-flat_increment" {
                 flat_increment = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()

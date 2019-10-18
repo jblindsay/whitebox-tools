@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/06/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -210,11 +210,15 @@ impl WhiteboxTool for StrahlerStreamOrder {
                 || vec[0].to_lowercase() == "--esri_pntr"
                 || vec[0].to_lowercase() == "--esri_style"
             {
-                esri_style = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    esri_style = true;
+                }
             } else if vec[0].to_lowercase() == "-zero_background"
                 || vec[0].to_lowercase() == "--zero_background"
             {
-                background_val = 0f64;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    background_val = 0f64;
+                }
             }
         }
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 04/12/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -168,7 +168,9 @@ impl WhiteboxTool for FindRidges {
             } else if vec[0].to_lowercase() == "-line_thin"
                 || vec[0].to_lowercase() == "--line_thin"
             {
-                line_thin = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    line_thin = true;
+                }
             }
         }
 

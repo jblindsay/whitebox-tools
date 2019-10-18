@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 28, 2017
-Last Modified: 12/10/2018
+Created: 28/06/2017
+Last Modified: 18/10/2019
 License: MIT
 
 NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating
@@ -244,14 +244,20 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     out_type = String::from("ca");
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                log_transform = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    log_transform = true;
+                }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                clip_max = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    clip_max = true;
+                }
             } else if vec[0].to_lowercase() == "-esri_style"
                 || vec[0].to_lowercase() == "--esri_style"
                 || vec[0].to_lowercase() == "--esri_pntr"
             {
-                esri_style = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    esri_style = true;
+                }
             }
         }
 

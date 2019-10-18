@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -205,7 +205,9 @@ impl WhiteboxTool for Watershed {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
-                esri_style = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    esri_style = true;
+                }
             }
         }
 

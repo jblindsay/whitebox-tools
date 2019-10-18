@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/05/2018
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 
 NOTES: This tool thins a LiDAR point cloud such that no more than one point exists within each grid cell of a
@@ -197,7 +197,9 @@ impl WhiteboxTool for LidarThin {
                 };
                 method = method.to_lowercase();
             } else if flag_val == "-save_filtered" {
-                save_filtered = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    save_filtered = true;
+                }
             }
         }
 

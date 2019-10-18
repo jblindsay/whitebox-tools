@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/09/2017
-Last Modified: 17/07/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -242,9 +242,13 @@ impl WhiteboxTool for ImageRegression {
                 }
                 output_residuals = true;
             } else if flag_val == "-standardize" {
-                standardize_residuals = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    standardize_residuals = true;
+                }
             } else if flag_val == "-scattergram" {
-                output_scattergram = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    output_scattergram = true;
+                }
             } else if flag_val == "-num_samples" {
                 num_samples = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap() as usize

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/03/2018
-Last Modified: 05/02/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -221,7 +221,9 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 };
                 num_comp_set = true;
             } else if flag_val == "-standardized" {
-                standardized = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    standardized = true;
+                }
             }
         }
 

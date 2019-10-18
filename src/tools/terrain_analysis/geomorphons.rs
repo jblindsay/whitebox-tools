@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Daniel Newman
 Created: 21/09/2018
-Last Modified: 18/01/2019
+Last Modified: 18/10/2019
 Last Modified By: John Lindsay
 License: MIT
 */
@@ -196,7 +196,9 @@ impl WhiteboxTool for Geomorphons {
                     args[i+1].to_string().parse::<usize>().unwrap()
                 };
             } else if flag_val == "-f" || flag_val == "-forms" {
-                forms = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    forms = true;
+                }
             }
         }
 

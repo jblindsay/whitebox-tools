@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/08/2018
-Last Modified: 10/05/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -189,7 +189,9 @@ impl WhiteboxTool for LidarTileFootprint {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-hull" || flag_val == "-convex_hull" {
-                is_convex_hull = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    is_convex_hull = true;
+                }
             }
         }
 

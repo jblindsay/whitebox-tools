@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/02/2019
-Last Modified: 10/02/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -202,9 +202,13 @@ impl WhiteboxTool for RasterArea {
                     args[i + 1].to_string().to_lowercase().contains("cells")
                 };
             } else if flag_val == "-zero_back" {
-                zero_back = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    zero_back = true;
+                }
             } else if flag_val == "-out_text" {
-                output_text = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    output_text = true;
+                }
             }
         }
 

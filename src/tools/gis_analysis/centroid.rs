@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 22 2017
-Last Modified: December 14, 2017
+Created: 22/07/2017
+Last Modified: 18/10/2019
 License: MIT
 
 NOTES: Will need to add support for vector polygons eventually.
@@ -160,7 +160,9 @@ impl WhiteboxTool for Centroid {
             } else if vec[0].to_lowercase() == "-text_output"
                 || vec[0].to_lowercase() == "--text_output"
             {
-                text_output = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    text_output = true;
+                }
             }
         }
 

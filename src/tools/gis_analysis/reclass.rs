@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/09/2017
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -191,7 +191,9 @@ impl WhiteboxTool for Reclass {
             } else if vec[0].to_lowercase() == "-assign_mode"
                 || vec[0].to_lowercase() == "--assign_mode"
             {
-                assign_mode = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    assign_mode = true;
+                }
             }
         }
 

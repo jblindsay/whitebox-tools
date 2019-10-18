@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2018
-Last Modified: 31/08/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -255,17 +255,29 @@ impl WhiteboxTool for LidarPointStats {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-num_points" {
-                num_points = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    num_points = true;
+                }
             } else if flag_val == "-num_pulses" {
-                num_pulses = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    num_pulses = true;
+                }
             } else if flag_val == "-z_range" || flag_val == "elev_range" {
-                z_range = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    z_range = true;
+                }
             } else if flag_val == "-intensity_range" || flag_val == "i_range" {
-                intensity_range = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    intensity_range = true;
+                }
             } else if flag_val == "-predom_class" || flag_val == "-predominant_class" {
-                predominant_class = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    predominant_class = true;
+                }
             } else if flag_val == "-avg_points_per_pulse" {
-                avg_points_per_pulse = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    avg_points_per_pulse = true;
+                }
             }
         }
 

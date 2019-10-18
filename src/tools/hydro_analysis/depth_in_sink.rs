@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/07/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -173,7 +173,9 @@ impl WhiteboxTool for DepthInSink {
                 || vec[0].to_lowercase() == "--zero_background"
                 || vec[0].to_lowercase() == "--esri_style"
             {
-                zero_background = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    zero_background = true;
+                }
             }
         }
 

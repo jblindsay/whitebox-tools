@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/06/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -244,9 +244,13 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     convergence_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                log_transform = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    log_transform = true;
+                }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                clip_max = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    clip_max = true;
+                }
             }
         }
 

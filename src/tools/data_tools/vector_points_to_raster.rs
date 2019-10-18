@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/04/2018
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -234,7 +234,9 @@ impl WhiteboxTool for VectorPointsToRaster {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
-                background_val = nodata;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    background_val = nodata;
+                }
             } else if flag_val == "-assign" {
                 assign_op = if keyval {
                     vec[1].to_lowercase()

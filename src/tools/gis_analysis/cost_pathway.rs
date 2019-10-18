@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 4, 2017
-Last Modified: 13/10/2018
+Created: 04/07/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -182,7 +182,9 @@ impl WhiteboxTool for CostPathway {
                 || vec[0].to_lowercase() == "--zero_background"
                 || vec[0].to_lowercase() == "--esri_style"
             {
-                background_val = 0f64;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    background_val = 0f64;
+                }
             }
         }
 

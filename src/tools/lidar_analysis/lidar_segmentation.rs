@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 5/12/2017
-Last Modified: 27/09/2019
+Created: 05/12/2017
+Last Modified: 18/10/2019
 License: MIT
 
 Notes: The 3D space-filling nature of point clouds under heavy forest cover do not
@@ -233,7 +233,9 @@ impl WhiteboxTool for LidarSegmentation {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-classes" {
-                dont_cross_class_boundaries = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    dont_cross_class_boundaries = true;
+                }
             } else if flag_val == "-min_size" {
                 min_segment_size = if keyval {
                     vec[1].to_string().parse::<usize>().unwrap()

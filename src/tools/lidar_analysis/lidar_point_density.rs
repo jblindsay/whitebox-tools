@@ -87,7 +87,7 @@ impl LidarPointDensity {
         parameters.push(ToolParameter {
             name: "Search Radius".to_owned(),
             flags: vec!["--radius".to_owned()],
-            description: "Search Radius.".to_owned(),
+            description: "Search radius.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.5".to_owned()),
             optional: true,

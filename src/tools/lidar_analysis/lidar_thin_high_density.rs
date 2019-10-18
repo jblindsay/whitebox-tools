@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: February 6, 2018
-Last Modified: 12/10/2018
+Created: 06/02/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -191,7 +191,9 @@ impl WhiteboxTool for LidarThinHighDensity {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-save_filtered" {
-                save_filtered = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    save_filtered = true;
+                }
             }
         }
 

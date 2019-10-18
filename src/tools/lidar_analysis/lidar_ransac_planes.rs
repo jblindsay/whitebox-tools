@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/07/2019
-Last Modified: 23/07/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 // extern crate kdtree;
@@ -257,7 +257,9 @@ impl WhiteboxTool for LidarRansacPlanes {
                     args[i + 1].to_string().parse::<usize>().unwrap()
                 };
             } else if flag_val == "-classify" {
-                filter = false;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    filter = false;
+                }
             }
         }
 

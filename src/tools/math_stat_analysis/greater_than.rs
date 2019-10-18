@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
-Last Modified: 12/10/2018
+Created: 01/07/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -174,7 +174,9 @@ impl WhiteboxTool for GreaterThan {
             } else if vec[0].to_lowercase() == "-incl_equals"
                 || vec[0].to_lowercase() == "--incl_equals"
             {
-                equal_to = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    equal_to = true;
+                }
             }
         }
 

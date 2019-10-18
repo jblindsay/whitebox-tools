@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 5/12/2017, 2017
-Last Modified: 12/10/2018
+Created: 05/12/2017, 2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -212,7 +212,9 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                     max_z_diff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-classify" {
-                filter = false;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    filter = false;
+                }
                 // } else if flag_val == "-groundclass" {
                 //     filter = false;
                 //     if keyval {

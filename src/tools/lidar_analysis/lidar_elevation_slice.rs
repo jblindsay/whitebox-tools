@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/06/2017
-Last Modified: 20/01/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -222,7 +222,9 @@ impl WhiteboxTool for LidarElevationSlice {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-class" {
-                filter = false;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    filter = false;
+                }
             } else if flag_val == "-inclassval" {
                 in_class_value = if keyval {
                     vec[1].to_string().parse::<u8>().unwrap()

@@ -28,7 +28,7 @@ use std::thread;
 /// output image. 
 /// 
 /// This tool is related to the more general `HistogramMatching` tool, which can be used to fit any frequency distribution 
-/// to an input image, and other contrast enchancement tools such as `HistogramEqualization`, `MinMaxContrastStretch`, 
+/// to an input image, and other contrast enhancement tools such as `HistogramEqualization`, `MinMaxContrastStretch`, 
 /// `PercentageContrastStretch`, `SigmoidalContrastStretch`, and `StandardDeviationContrastStretch`.
 /// 
 /// # See Also

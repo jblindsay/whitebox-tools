@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 
 NOTES: This tool should be updated to incorporate the option for an area-slope based threshold.
@@ -199,7 +199,9 @@ impl WhiteboxTool for ExtractStreams {
             } else if vec[0].to_lowercase() == "-zero_background"
                 || vec[0].to_lowercase() == "--zero_background"
             {
-                background_val = 0f64;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    background_val = 0f64;
+                }
             }
         }
 

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: December 31 2017
-Last Modified: December 31, 2017
+Created: 31/12/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -165,7 +165,9 @@ impl WhiteboxTool for RadiusOfGyration {
                     output_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-text_output" {
-                text_output = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    text_output = true;
+                }
             }
         }
 

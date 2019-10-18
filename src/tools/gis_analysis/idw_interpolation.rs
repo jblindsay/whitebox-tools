@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/05/2018
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 
 Most IDW tool have the option to work either based on a fixed number of neighbouring
@@ -231,7 +231,9 @@ impl WhiteboxTool for IdwInterpolation {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-use_z" {
-                use_z = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    use_z = true;
+                }
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
                     vec[1].to_string()

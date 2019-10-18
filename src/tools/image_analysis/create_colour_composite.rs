@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/07/2017
-Last Modified: 06/01/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -26,9 +26,9 @@ use std::thread;
 /// will be opaque. This can be useful for cropping an image to an irregular-shaped boundary. The opacity 
 /// channel can also be used to create transparent gradients in the composite image.
 /// 
-/// A balance contrast enchancment (BCE) can optionally be performed on the bands prior to creation of
+/// A balance contrast enhancement (BCE) can optionally be performed on the bands prior to creation of
 /// the colour composite. While this operation will add to the runtime of `CreateColourComposite`, if
-/// the individual input bands have not already had contrast enchancements, then it is advisable that
+/// the individual input bands have not already had contrast enhancements, then it is advisable that
 /// the BCE option be used to improve the quality of the resulting colour composite image.
 /// 
 /// NoData values in any of the input images are assigned NoData values in the output image and are not
@@ -205,42 +205,47 @@ impl WhiteboxTool for CreateColourComposite {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-red" || vec[0].to_lowercase() == "--red" {
-                if keyval {
-                    input1_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-red" {
+                input1_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input1_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-green" || vec[0].to_lowercase() == "--green" {
-                if keyval {
-                    input2_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-green" {
+                input2_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input2_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-blue" || vec[0].to_lowercase() == "--blue" {
-                if keyval {
-                    input3_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-blue" {
+                input3_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input3_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-opacity" || vec[0].to_lowercase() == "--opacity" {
-                if keyval {
-                    input4_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-opacity" {
+                input4_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input4_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
                 input4_used = true;
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-enhance" {
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    enhance = true;
                 }
-            } else if vec[0].to_lowercase() == "-enchance" || vec[0].to_lowercase() == "--enhance" {
-                enhance = true;
-            } else if vec[0].to_lowercase() == "-zeros" {
-                // treat zero values as nodata.
-                no_zeros = true;
+            } else if flag_val == "-zeros" {
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    // treat zero values as nodata.
+                    no_zeros = true;
+                }
             }
         }
 

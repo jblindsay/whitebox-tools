@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/04/2018
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 
 NOTES: If the --filter flag is specified, points from overlapping flightlines (i.e. later GPS times)
@@ -190,7 +190,9 @@ impl WhiteboxTool for ClassifyOverlapPoints {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-filter" {
-                filter = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    filter = true;
+                }
             }
         }
 

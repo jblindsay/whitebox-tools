@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/03/2018
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -169,7 +169,9 @@ impl WhiteboxTool for LidarRemoveDuplicates {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-include_z" {
-                include_z = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    include_z = true;
+                }
             }
         }
 

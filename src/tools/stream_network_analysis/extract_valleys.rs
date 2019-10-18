@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 12, 2017
-Last Modified: 12/10/2018
+Created: 12/07/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -248,7 +248,9 @@ impl WhiteboxTool for ExtractValleys {
             } else if vec[0].to_lowercase() == "-line_thin"
                 || vec[0].to_lowercase() == "--line_thin"
             {
-                line_thin = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    line_thin = true;
+                }
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
                 if keyval {
                     filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;

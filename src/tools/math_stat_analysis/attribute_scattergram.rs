@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 12/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -211,7 +211,9 @@ impl WhiteboxTool for AttributeScattergram {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-trendline" {
-                trendline = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    trendline = true;
+                }
             }
         }
 

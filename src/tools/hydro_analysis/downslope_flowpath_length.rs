@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 08/07/2017
-Last Modified: 29/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -204,7 +204,9 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
-                esri_style = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    esri_style = true;
+                }
             }
         }
 

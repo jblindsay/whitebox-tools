@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 14/09/2018
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -200,7 +200,9 @@ impl WhiteboxTool for MinimumBoundingBox {
                     MinimizationCriterion::Area
                 };
             } else if flag_val == "-features" || flag_val == "-feature" {
-                individual_feature_hulls = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    individual_feature_hulls = true;
+                }
             }
         }
 

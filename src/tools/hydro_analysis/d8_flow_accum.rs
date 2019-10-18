@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
-Last Modified: 04/01/2019
+Created: 26/016/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -214,9 +214,13 @@ impl WhiteboxTool for D8FlowAccumulation {
                     out_type = String::from("ca");
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                log_transform = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    log_transform = true;
+                }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                clip_max = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    clip_max = true;
+                }
             }
         }
 

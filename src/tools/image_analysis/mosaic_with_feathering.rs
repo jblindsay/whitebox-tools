@@ -227,7 +227,9 @@ impl WhiteboxTool for MosaicWithFeathering {
                     method = "cc".to_string();
                 }
             // } else if flag_val == "-histo_match" {
+                // if !vec[1].to_string().to_lowercase().contains("false") {
             //     histo_match = true;
+            //    }
             } else if flag_val == "-weight" {
                 distance_weight = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/05/2018
-Last Modified: 13/10/2018
+Last Modified: 17/10/2019
 License: MIT
 */
 
@@ -356,7 +356,7 @@ impl WhiteboxTool for UnsharpMasking {
                             }
                             z_final = z_final / sum;
                             diff = z - z_final;
-                            if diff > threshold {
+                            if diff > threshold.abs() {
                                 data[col as usize] = output_fn(row, col, z + diff * amount);
                             } else {
                                 data[col as usize] = output_fn(row, col, z);

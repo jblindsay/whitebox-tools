@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/06/2018
-Last Modified: 30/01/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -169,7 +169,9 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
                     args[i + 1].to_string()
                 };
             } else if flag_val.contains("-out_text") {
-                output_text = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    output_text = true;
+                }
             }
         }
 

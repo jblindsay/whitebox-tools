@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 20/02/2019
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -240,7 +240,9 @@ impl WhiteboxTool for BreachDepressions {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-fill_pits" {
-                fill_pits = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    fill_pits = true;
+                }
             }
         }
 

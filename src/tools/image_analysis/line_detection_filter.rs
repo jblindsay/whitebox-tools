@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/07/2017
-Last Modified: 13/10/2018
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -230,7 +230,9 @@ impl WhiteboxTool for LineDetectionFilter {
                     variant = "135".to_string();
                 }
             } else if vec[0].to_lowercase() == "-absvals" || vec[0].to_lowercase() == "--absvals" {
-                absvals = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    absvals = true;
+                }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
                 if keyval {
                     clip_amount = vec[1].to_string().parse::<f64>().unwrap();

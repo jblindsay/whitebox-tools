@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 9, 2017
-Last Modified: 12/10/2018
+Created: 09/07/2017
+Last Modified: 18/10/2019
 License: MIT
 */
 
@@ -195,7 +195,9 @@ impl WhiteboxTool for MaxBranchLength {
                     output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                log_transform = true;
+                if !vec[1].to_string().to_lowercase().contains("false") {
+                    log_transform = true;
+                }
             }
         }
 

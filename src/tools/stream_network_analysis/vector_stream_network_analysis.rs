@@ -2,8 +2,12 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/09/2018
-Last Modified: 04/01/2019
+Last Modified: 18/10/2019
 License: MIT
+*/
+
+/*
+This tool is a work in progress actively being ported from Whitebox GAT. It is not ready for use.
 */
 
 use crate::raster::*;
@@ -18,7 +22,7 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool ccalculates stream network geometry from vector streams.
+/// This tool calculates stream network geometry from vector streams.
 /// 
 /// # See Also
 /// 
