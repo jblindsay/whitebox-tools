@@ -56,15 +56,15 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.0.1 (XX-XX-2019)
-- Fixed a minor bug with the VectorPolygonToRaster tool.
-- Fixed a bug in the DownstreamDistanceToStream tool.
+Version 1.0.1 (20-10-2019)
 - Boolean type tool parameters previously worked simply by the presence of the parameter flag.
   This was causing problems with some WBT front-ends, particularly QGIS, where the parameters
   were being provided to WBT as --flag=False. In this case, because the flag was present, it 
   was assumed to be True. All tools that have boolean parameters have been updated to handle
   the case of --flag=False. This is a widespread modification that should fix the unexpected
   behaviour of many tools in certain front-ends.
+- Fixed a minor bug with the VectorPolygonToRaster tool.
+- Fixed a bug in the DownstreamDistanceToStream tool.
 
 Version 1.0.0 (29-09-2019)
 - Added support for reading and writing the BigTIFF format. This has resulted in numerous changes
