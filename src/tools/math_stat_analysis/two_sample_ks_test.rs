@@ -467,9 +467,9 @@ impl WhiteboxTool for TwoSampleKSTest {
             )?;
         }
         if p_value < 0.05 {
-            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that the values come from a normal distribution.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that both samples come from a population with the same distribution.<br>".to_string().as_bytes())?;
         } else {
-            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that the values come from a normal distribution.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that both samples come from a population with the same distribution.<br>".to_string().as_bytes())?;
         }
 
         writer.write_all("</p>".as_bytes())?;
