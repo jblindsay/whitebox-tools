@@ -99,7 +99,7 @@ pub use self::plan_curvature::PlanCurvature;
 pub use self::prof_curvature::ProfileCurvature;
 pub use self::profile::Profile;
 pub use self::relative_aspect::RelativeAspect;
-pub use self::relative_stream_power_index::RelativeStreamPowerIndex;
+pub use self::relative_stream_power_index::StreamPowerIndex;
 pub use self::relative_topographic_position::RelativeTopographicPosition;
 pub use self::remove_off_terrain_objects::RemoveOffTerrainObjects;
 pub use self::ruggedness_index::RuggednessIndex;

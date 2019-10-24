@@ -199,7 +199,7 @@ impl WhiteboxTool for TINGridding {
                 };
                 use_field = true;
             } else if flag_val.contains("use_z") {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     use_z = true;
                 }
             } else if flag_val == "-o" || flag_val == "-output" {

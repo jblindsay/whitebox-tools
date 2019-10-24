@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/04/2018
-Last Modified: 09/06/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -624,7 +624,6 @@ impl WhiteboxTool for RaiseWalls {
     }
 }
 
-#[inline]
 fn is_between(val: f64, threshold1: f64, threshold2: f64) -> bool {
     if val == threshold1 || val == threshold2 {
         return true;

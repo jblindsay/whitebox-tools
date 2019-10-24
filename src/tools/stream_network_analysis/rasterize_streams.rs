@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/03/2018
-Last Modified: 18/10/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -194,11 +194,11 @@ impl WhiteboxTool for RasterizeStreams {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     out_nodata = true;
                 }
             } else if flag_val == "-feature_id" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     feature_id = true;
                 }
             }
@@ -493,7 +493,6 @@ impl WhiteboxTool for RasterizeStreams {
     }
 }
 
-#[inline]
 fn is_between(val: f64, threshold1: f64, threshold2: f64) -> bool {
     if val == threshold1 || val == threshold2 {
         return true;

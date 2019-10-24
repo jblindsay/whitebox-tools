@@ -202,11 +202,11 @@ impl WhiteboxTool for RasterArea {
                     args[i + 1].to_string().to_lowercase().contains("cells")
                 };
             } else if flag_val == "-zero_back" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     zero_back = true;
                 }
             } else if flag_val == "-out_text" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     output_text = true;
                 }
             }

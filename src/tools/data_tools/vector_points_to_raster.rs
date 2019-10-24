@@ -234,7 +234,7 @@ impl WhiteboxTool for VectorPointsToRaster {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-nodata" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     background_val = nodata;
                 }
             } else if flag_val == "-assign" {

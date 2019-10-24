@@ -197,7 +197,7 @@ impl WhiteboxTool for LidarThin {
                 };
                 method = method.to_lowercase();
             } else if flag_val == "-save_filtered" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     save_filtered = true;
                 }
             }

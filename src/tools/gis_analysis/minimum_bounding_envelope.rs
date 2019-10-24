@@ -174,7 +174,7 @@ impl WhiteboxTool for MinimumBoundingEnvelope {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-features" || flag_val == "-feature" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     individual_feature_hulls = true;
                 }
             }

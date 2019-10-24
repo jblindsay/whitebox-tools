@@ -48,7 +48,7 @@ use std::thread;
 /// processes*, 5(1), 3-30.
 /// 
 /// # See Also
-/// `RelativeStreamPowerIndex`, `DInfFlowAccumulation`, `FD8FlowAccumulation`
+/// `StreamPowerIndex`, `DInfFlowAccumulation`, `FD8FlowAccumulation`
 pub struct SedimentTransportIndex {
     name: String,
     description: String,

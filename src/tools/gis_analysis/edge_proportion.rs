@@ -168,7 +168,7 @@ impl WhiteboxTool for EdgeProportion {
             } else if vec[0].to_lowercase() == "-output_text"
                 || vec[0].to_lowercase() == "--output_text"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     output_text = true;
                 }
             }

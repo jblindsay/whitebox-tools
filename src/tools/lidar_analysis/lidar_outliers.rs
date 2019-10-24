@@ -207,11 +207,11 @@ impl WhiteboxTool for LidarRemoveOutliers {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-use_median" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     use_median = true;
                 }
             } else if flag_val == "-classify" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     filter = false;
                 }
             }

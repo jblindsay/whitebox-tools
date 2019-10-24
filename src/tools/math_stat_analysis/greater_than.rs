@@ -174,7 +174,7 @@ impl WhiteboxTool for GreaterThan {
             } else if vec[0].to_lowercase() == "-incl_equals"
                 || vec[0].to_lowercase() == "--incl_equals"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     equal_to = true;
                 }
             }

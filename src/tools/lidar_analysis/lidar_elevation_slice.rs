@@ -222,7 +222,7 @@ impl WhiteboxTool for LidarElevationSlice {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-class" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     filter = false;
                 }
             } else if flag_val == "-inclassval" {

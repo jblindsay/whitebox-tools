@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/03/2018
-Last Modified: 12/06/2019
+Last Modified: 22/10/2019
 License: MIT
 
 NOTES: When support is provided for reading vector attributes tables, this tool should be modified so
@@ -535,7 +535,6 @@ impl WhiteboxTool for FlattenLakes {
     }
 }
 
-#[inline]
 fn is_between(val: f64, threshold1: f64, threshold2: f64) -> bool {
     if val == threshold1 || val == threshold2 {
         return true;

@@ -188,7 +188,7 @@ impl WhiteboxTool for FillDepressions {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-fix_flats" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     fix_flats = true;
                 }
             } else if flag_val == "-flat_increment" {

@@ -169,7 +169,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
                     args[i + 1].to_string()
                 };
             } else if flag_val.contains("-out_text") {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     output_text = true;
                 }
             }

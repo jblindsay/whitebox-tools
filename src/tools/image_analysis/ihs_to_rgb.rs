@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/07/2017
-Last Modified: 05/02/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -557,7 +557,6 @@ impl WhiteboxTool for IhsToRgb {
     }
 }
 
-// #[inline]
 // fn value2hsi(value: f64) -> (f64, f64, f64) {
 //     let r = (value as u32 & 0xFF) as f64 / 255f64;
 //     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -584,7 +583,6 @@ impl WhiteboxTool for IhsToRgb {
 //     (h, s, i)
 // }
 
-#[inline]
 fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut r: u32;
     let mut g: u32;
@@ -627,8 +625,6 @@ fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     ((255 << 24) | (b << 16) | (g << 8) | r) as f64
 }
 
-
-#[inline]
 fn hsi2rgb(h: f64, s: f64, i: f64) -> (u32, u32, u32) {
     let mut r: u32;
     let mut g: u32;

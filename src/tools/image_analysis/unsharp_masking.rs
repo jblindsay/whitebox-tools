@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/05/2018
-Last Modified: 17/10/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -18,7 +18,28 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// An image sharpening technique that enhances edges.
+/// Unsharp masking is an image edge-sharpening technique commonly applied in digital image processing. 
+/// Admittedly, the name 'unsharp' seems somewhat counter-intuitive given the purpose of the filter, which
+/// is to enchance the definition of edge features within the input image (`--input`). This name comes 
+/// from the use of a blurred, or unsharpened, intermediate image (mask) in the process. The blurred image 
+/// is combined with the positive (original) image, creating an image that exhibits enhanced feature definition. 
+/// A caution is needed in that the output image, although clearer, may be a less accurate representation 
+/// of the image's subject. The output may also contain more speckle than the input image.
+/// 
+/// In addition to the input (`--input`) and output (`--output`) image files, the user must specify the 
+/// values of three parameters: the standard deviation distance (`--sigma`), which is a measure of the 
+/// filter size in pixels, the amount (`--amount`), a percentage value that controls the magnitude of 
+/// each overshoot at edges, and lastly, the threshold (`--threshold`), which controls the minimal 
+/// brightness change that will be sharpened. Pixels with values differ after the calculation of the filter
+/// by less than the threshold are unmodified in the output image.
+/// 
+/// `UnsharpMasking` works with both greyscale and red-green-blue (RGB) colour images. RGB images are 
+/// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
+/// channel. Importantly, the intensity values range from 0-1, which is important when setting the 
+/// threshold value for colour images. NoData values in the input image are ignored during processing.
+/// 
+/// # See Also
+/// `GaussianFilter`, `HighPassFilter`
 pub struct UnsharpMasking {
     name: String,
     description: String,
@@ -419,7 +440,6 @@ impl WhiteboxTool for UnsharpMasking {
     }
 }
 
-#[inline]
 fn value2i(value: f64) -> f64 {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -428,7 +448,6 @@ fn value2i(value: f64) -> f64 {
     (r + g + b) / 3f64
 }
 
-#[inline]
 fn value2hsi(value: f64) -> (f64, f64, f64) {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -455,7 +474,6 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
     (h, s, i)
 }
 
-#[inline]
 fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut r: u32;
     let mut g: u32;

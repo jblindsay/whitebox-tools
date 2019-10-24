@@ -255,27 +255,27 @@ impl WhiteboxTool for LidarPointStats {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-num_points" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     num_points = true;
                 }
             } else if flag_val == "-num_pulses" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     num_pulses = true;
                 }
             } else if flag_val == "-z_range" || flag_val == "elev_range" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     z_range = true;
                 }
             } else if flag_val == "-intensity_range" || flag_val == "i_range" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     intensity_range = true;
                 }
             } else if flag_val == "-predom_class" || flag_val == "-predominant_class" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     predominant_class = true;
                 }
             } else if flag_val == "-avg_points_per_pulse" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     avg_points_per_pulse = true;
                 }
             }

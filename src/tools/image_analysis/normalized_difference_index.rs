@@ -254,7 +254,7 @@ impl WhiteboxTool for NormalizedDifferenceIndex {
                 };
             }
             // } else if flag_val == "-osavi" {
-                // if !vec[1].to_string().to_lowercase().contains("false") {
+                // if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
             //     osavi_mode = true;
             //     correction_factor = 0.16;
                 // }

@@ -195,7 +195,7 @@ impl WhiteboxTool for MaxBranchLength {
                     output_file = args[i + 1].to_string();
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     log_transform = true;
                 }
             }

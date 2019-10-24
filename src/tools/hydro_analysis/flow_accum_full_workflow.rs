@@ -244,18 +244,18 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     out_type = String::from("ca");
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     log_transform = true;
                 }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     clip_max = true;
                 }
             } else if vec[0].to_lowercase() == "-esri_style"
                 || vec[0].to_lowercase() == "--esri_style"
                 || vec[0].to_lowercase() == "--esri_pntr"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                 }
             }

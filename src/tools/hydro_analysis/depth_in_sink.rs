@@ -173,7 +173,7 @@ impl WhiteboxTool for DepthInSink {
                 || vec[0].to_lowercase() == "--zero_background"
                 || vec[0].to_lowercase() == "--esri_style"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     zero_background = true;
                 }
             }

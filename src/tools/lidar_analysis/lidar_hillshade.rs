@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 14, 2017
-Last Modified: 12/10/2018
+Created: 14/06/2017
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -368,7 +368,6 @@ impl WhiteboxTool for LidarHillshade {
 
 // Constructs a plane from a collection of points
 // so that the summed squared distance to all points is minimzized
-#[inline]
 fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
     let n = points.len();
     // assert!(n >= 3, "At least three points required");
@@ -426,7 +425,6 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Vector3<f64> {
     normalize(dir)
 }
 
-#[inline]
 fn normalize(v: Vector3<f64>) -> Vector3<f64> {
     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
     Vector3::new(v.x / norm, v.y / norm, v.z / norm)

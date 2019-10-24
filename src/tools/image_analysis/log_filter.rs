@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
-Last Modified: 13/10/2018
+Created: 26/06/2017
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -360,7 +360,6 @@ impl WhiteboxTool for LaplacianOfGaussianFilter {
     }
 }
 
-#[inline]
 fn value2i(value: f64) -> f64 {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;

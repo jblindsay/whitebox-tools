@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/12/2017, 2017
-Last Modified: 18/10/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -212,7 +212,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
                     max_z_diff = args[i + 1].to_string().parse::<f64>().unwrap();
                 }
             } else if flag_val == "-classify" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     filter = false;
                 }
                 // } else if flag_val == "-groundclass" {
@@ -720,7 +720,6 @@ impl Normal {
 
 // Constructs a plane from a collection of points
 // so that the summed squared distance to all points is minimzized
-#[inline]
 fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
     let n = points.len();
     // assert!(n >= 3, "At least three points required");
@@ -780,7 +779,6 @@ fn plane_from_points(points: &Vec<Vector3<f64>>) -> Normal {
     normalize(dir)
 }
 
-#[inline]
 fn normalize(v: Vector3<f64>) -> Normal {
     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
     Normal {

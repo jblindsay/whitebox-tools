@@ -373,6 +373,7 @@ impl ToolManager {
         tool_names.push("TrendSurfaceVectorPoints".to_string());
         tool_names.push("Truncate".to_string());
         tool_names.push("TurningBandsSimulation".to_string());
+        tool_names.push("TwoSampleKSTest".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -443,7 +444,7 @@ impl ToolManager {
         tool_names.push("ProfileCurvature".to_string());
         tool_names.push("Profile".to_string());
         tool_names.push("RelativeAspect".to_string());
-        tool_names.push("RelativeStreamPowerIndex".to_string());
+        tool_names.push("StreamPowerIndex".to_string());
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
@@ -922,6 +923,7 @@ impl ToolManager {
             "turningbandssimulation" => {
                 Some(Box::new(math_stat_analysis::TurningBandsSimulation::new()))
             }
+            "twosamplekstest" => Some(Box::new(math_stat_analysis::TwoSampleKSTest::new())),
             "xor" => Some(Box::new(math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(math_stat_analysis::ZScores::new())),
 
@@ -1038,8 +1040,8 @@ impl ToolManager {
             "profilecurvature" => Some(Box::new(terrain_analysis::ProfileCurvature::new())),
             "profile" => Some(Box::new(terrain_analysis::Profile::new())),
             "relativeaspect" => Some(Box::new(terrain_analysis::RelativeAspect::new())),
-            "relativestreampowerindex" => {
-                Some(Box::new(terrain_analysis::RelativeStreamPowerIndex::new()))
+            "streampowerindex" => {
+                Some(Box::new(terrain_analysis::StreamPowerIndex::new()))
             }
             "relativetopographicposition" => Some(Box::new(
                 terrain_analysis::RelativeTopographicPosition::new(),

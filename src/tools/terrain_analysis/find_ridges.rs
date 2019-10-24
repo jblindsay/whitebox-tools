@@ -168,7 +168,7 @@ impl WhiteboxTool for FindRidges {
             } else if vec[0].to_lowercase() == "-line_thin"
                 || vec[0].to_lowercase() == "--line_thin"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     line_thin = true;
                 }
             }

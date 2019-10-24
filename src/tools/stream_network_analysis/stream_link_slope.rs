@@ -217,13 +217,13 @@ impl WhiteboxTool for StreamLinkSlope {
                 || vec[0].to_lowercase() == "--esri_pntr"
                 || vec[0].to_lowercase() == "--esri_style"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                 }
             } else if vec[0].to_lowercase() == "-zero_background"
                 || vec[0].to_lowercase() == "--zero_background"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     background_val = 0f64;
                 }
             }

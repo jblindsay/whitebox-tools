@@ -38,7 +38,7 @@ use std::thread;
 /// 
 /// # See Also
 /// `SedimentTransportIndex`, `Slope`, `D8FlowAccumulation` `DInfFlowAccumulation`, `FD8FlowAccumulation`
-pub struct RelativeStreamPowerIndex {
+pub struct StreamPowerIndex {
     name: String,
     description: String,
     toolbox: String,
@@ -46,10 +46,10 @@ pub struct RelativeStreamPowerIndex {
     example_usage: String,
 }
 
-impl RelativeStreamPowerIndex {
-    pub fn new() -> RelativeStreamPowerIndex {
+impl StreamPowerIndex {
+    pub fn new() -> StreamPowerIndex {
         // public constructor
-        let name = "RelativeStreamPowerIndex".to_string();
+        let name = "StreamPowerIndex".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Calculates the relative stream power index.".to_string();
 
@@ -103,7 +103,7 @@ impl RelativeStreamPowerIndex {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --sca='flow_accum.tif' --slope='slope.tif' -o=output.tif --exponent=1.1", short_exe, name).replace("*", &sep);
 
-        RelativeStreamPowerIndex {
+        StreamPowerIndex {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -113,7 +113,7 @@ impl RelativeStreamPowerIndex {
     }
 }
 
-impl WhiteboxTool for RelativeStreamPowerIndex {
+impl WhiteboxTool for StreamPowerIndex {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }

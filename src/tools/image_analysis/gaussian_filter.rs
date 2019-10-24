@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 26, 2017
-Last Modified: 13/10/2018
+Created: 26/06/2017
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -30,7 +30,7 @@ use std::thread;
 /// the larger the standard deviation the larger the resulting filter kernel. The standard 
 /// deviation can be any number in the range 0.5-20.
 /// 
-/// `GaussianFilter` works with both greyscale and red-green-blue (RGB) images. RGB images are 
+/// `GaussianFilter` works with both greyscale and red-green-blue (RGB) colour images. RGB images are 
 /// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
 /// channel. NoData values in the input image are ignored during processing.
 /// 
@@ -390,7 +390,6 @@ impl WhiteboxTool for GaussianFilter {
     }
 }
 
-#[inline]
 fn value2i(value: f64) -> f64 {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -399,7 +398,6 @@ fn value2i(value: f64) -> f64 {
     (r + g + b) / 3f64
 }
 
-#[inline]
 fn value2hsi(value: f64) -> (f64, f64, f64) {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -426,7 +424,6 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
     (h, s, i)
 }
 
-#[inline]
 fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut r: u32;
     let mut g: u32;

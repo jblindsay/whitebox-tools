@@ -191,7 +191,7 @@ impl WhiteboxTool for Reclass {
             } else if vec[0].to_lowercase() == "-assign_mode"
                 || vec[0].to_lowercase() == "--assign_mode"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     assign_mode = true;
                 }
             }

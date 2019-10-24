@@ -221,7 +221,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 };
                 num_comp_set = true;
             } else if flag_val == "-standardized" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     standardized = true;
                 }
             }

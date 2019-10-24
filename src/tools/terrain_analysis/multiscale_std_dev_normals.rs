@@ -24,6 +24,40 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to map the spatial pattern of maximum spherical standard deviation 
+/// (σ<sub>*s max*</sub>; `--out_mag`), as well as the scale at which maximum spherical standard deviation occurs 
+/// (*r<sub>max</sub>*; `--out_scale`), for each grid cell in an input DEM (`--dem`). This serves as a multi-scale measure
+/// of surface roughness, or topographic complexity. The spherical standard deviation (σ<sub>s</sub>) is 
+/// a measure of the angular spread among *n* unit vectors and is defined as:
+/// 
+/// > σ<sub>s</sub> = &radic;[-2ln(<em>R</em> / <em>N</em>)] &times; 180 / &pi;
+/// 
+/// Where *R* is the resultant vector length and is derived from the sum of the *x*, *y*, and *z* components 
+/// of each of the *n* normals contained within a filter kernel, which designates a tested spatial scale. Each 
+/// unit vector is a 3-dimensional measure of the surface orientation and slope at each grid cell center. The 
+/// maximum spherical standard deviation is:
+/// 
+/// > σ<sub>*s max*</sub>=*max*{σs(*r*):*r*=*r<sub>L</sub>*...*r<sub>U</sub>*}, 
+/// 
+/// Experience with roughness scale signatures has shown that σ<sub>*s max*</sub> is highly variable at 
+/// shorter scales and changes more gradually at broader scales. Therefore, a nonlinear scale sampling 
+/// interval is used by this tool to ensure that the scale sampling density is higher for short scale 
+/// ranges and coarser at longer tested scales, such that:
+/// 
+/// > *r<sub>i</sub>* = *r<sub>L</sub>* + [step &times; (i - *r<sub>L</sub>*)]<sup>*p*</sup>
+/// 
+/// Where *ri* is the filter radius for step *i* and *p* is the nonlinear scaling factor (`--step_nonlinearity`)
+/// and a step size (`--step`) of *step*. 
+/// 
+/// Use the `SphericalStdDevOfNormals` tool if you need to calculate σ<sub>s</sub> for a single scale. 
+///  
+/// # Reference
+/// 
+/// JB Lindsay, DR Newman, and A  Francioni. 2019 Scale-Optimized Surface Roughness for Topographic Analysis. 
+/// *Geosciences*, 9(322) doi: 10.3390/geosciences9070322.
+/// 
+/// # See Also
+/// `SphericalStdDevOfNormals`, `MultiscaleStdDevNormalsSignature`, `MultiscaleRoughness`
 pub struct MultiscaleStdDevNormals {
     name: String,
     description: String,

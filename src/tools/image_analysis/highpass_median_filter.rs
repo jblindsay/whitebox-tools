@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/09/2018
-Last Modified: 13/10/2018
+Last Modified: 22/10/2019
 License: MIT
 
 NOTES: This tool uses the efficient running-median filtering algorithm of Huang, Yang, and Tang (1979).
@@ -528,7 +528,6 @@ impl WhiteboxTool for HighPassMedianFilter {
     }
 }
 
-#[inline]
 fn value2i(value: f64) -> f64 {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -537,7 +536,6 @@ fn value2i(value: f64) -> f64 {
     (r + g + b) / 3f64
 }
 
-#[inline]
 fn value2hsi(value: f64) -> (f64, f64, f64) {
     let r = (value as u32 & 0xFF) as f64 / 255f64;
     let g = ((value as u32 >> 8) & 0xFF) as f64 / 255f64;
@@ -564,7 +562,6 @@ fn value2hsi(value: f64) -> (f64, f64, f64) {
     (h, s, i)
 }
 
-#[inline]
 fn hsi2value(h: f64, s: f64, i: f64) -> f64 {
     let mut r: u32;
     let mut g: u32;

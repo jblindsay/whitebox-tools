@@ -220,7 +220,7 @@ impl WhiteboxTool for LongProfile {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                 }
             }

@@ -165,7 +165,7 @@ impl WhiteboxTool for RadiusOfGyration {
                     output_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-text_output" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     text_output = true;
                 }
             }

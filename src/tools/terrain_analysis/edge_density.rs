@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/01/2019
-Last Modified: 27/01/2019
+Last Modified: 22/10/2019
 License: MIT
 */
 
@@ -575,7 +575,6 @@ struct Normal {
 }
 
 impl Normal {
-    #[inline]
     fn angle_between(self, other: Normal) -> f32 {
         /*
          Note that this is actually not the angle between the vectors but

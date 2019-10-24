@@ -242,11 +242,11 @@ impl WhiteboxTool for ImageRegression {
                 }
                 output_residuals = true;
             } else if flag_val == "-standardize" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     standardize_residuals = true;
                 }
             } else if flag_val == "-scattergram" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     output_scattergram = true;
                 }
             } else if flag_val == "-num_samples" {

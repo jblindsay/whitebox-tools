@@ -2640,7 +2640,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 }
 
 // An implimentation of a PackBits reader
-#[inline]
 pub fn packbits_decoder(input_data: Vec<u8>) -> Vec<u8> {
     let mut output_data = vec![];
     let mut i: usize = 0;

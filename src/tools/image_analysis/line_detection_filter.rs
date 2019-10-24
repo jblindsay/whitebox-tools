@@ -230,7 +230,7 @@ impl WhiteboxTool for LineDetectionFilter {
                     variant = "135".to_string();
                 }
             } else if vec[0].to_lowercase() == "-absvals" || vec[0].to_lowercase() == "--absvals" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     absvals = true;
                 }
             } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {

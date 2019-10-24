@@ -85,7 +85,7 @@ impl ImpoundmentSizeIndex {
         parameters.push(ToolParameter {
             name: "Max dam length (grid cells)".to_owned(),
             flags: vec!["--damlength".to_owned()],
-            description: "Maximum length of thr dam.".to_owned(),
+            description: "Maximum length of the dam.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
             optional: false,

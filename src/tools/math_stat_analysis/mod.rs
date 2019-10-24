@@ -73,6 +73,7 @@ mod trend_surface;
 mod trend_surface_vector_points;
 mod truncate;
 mod turning_bands;
+mod two_sample_ks_test;
 mod xor;
 mod zscores;
 
@@ -151,5 +152,6 @@ pub use self::trend_surface::TrendSurface;
 pub use self::trend_surface_vector_points::TrendSurfaceVectorPoints;
 pub use self::truncate::Truncate;
 pub use self::turning_bands::TurningBandsSimulation;
+pub use self::two_sample_ks_test::TwoSampleKSTest;
 pub use self::xor::Xor;
 pub use self::zscores::ZScores;

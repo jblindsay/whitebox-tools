@@ -202,7 +202,6 @@ pub fn write_grass_raster<'a>(r: &'a mut Raster) -> Result<(), Error> {
     Ok(())
 }
 
-#[inline]
 fn is_number(value: String) -> bool {
     value.parse::<f64>().is_ok()
 }

@@ -189,7 +189,7 @@ impl WhiteboxTool for LidarTileFootprint {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-hull" || flag_val == "-convex_hull" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     is_convex_hull = true;
                 }
             }

@@ -169,7 +169,7 @@ impl WhiteboxTool for LidarRemoveDuplicates {
                     args[i + 1].to_string()
                 };
             } else if flag_val == "-include_z" {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     include_z = true;
                 }
             }

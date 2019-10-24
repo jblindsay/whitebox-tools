@@ -160,7 +160,7 @@ impl WhiteboxTool for Centroid {
             } else if vec[0].to_lowercase() == "-text_output"
                 || vec[0].to_lowercase() == "--text_output"
             {
-                if !vec[1].to_string().to_lowercase().contains("false") {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     text_output = true;
                 }
             }

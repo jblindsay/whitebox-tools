@@ -1,3 +1,10 @@
+/*
+This tool is part of the WhiteboxTools geospatial analysis library.
+Authors: Dr. John Lindsay
+Created: Unkonwn
+Last Modified: 22/10/2019
+License: MIT
+*/
 use std::io::prelude::*;
 use std::io::{Result, SeekFrom};
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
@@ -36,29 +43,24 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         Endianness::BigEndian
     }
 
-    #[inline]
     pub fn seek(&mut self, position: usize) {
         self.pos = position;
         self.reader.seek(SeekFrom::Start(self.pos as u64)).unwrap();
     }
 
-    #[inline]
     pub fn inc_pos(&mut self, skip: usize) {
         self.pos += skip;
         self.reader.seek(SeekFrom::Start(self.pos as u64)).unwrap();
     }
 
-    #[inline]
     pub fn pos(&self) -> usize {
         self.pos
     }
 
-    #[inline]
     pub fn len(&mut self) -> usize {
         self.len
     }
 
-    #[inline]
     pub fn read_utf8(&mut self, length: usize) -> String {
         let mut bytes = vec![0u8; length];
         self.reader.read_exact(&mut bytes).unwrap();
@@ -67,26 +69,22 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         val
     }
 
-    #[inline]
     pub fn read_u8(&mut self) -> Result<u8> {
         self.pos += 1;
         self.reader.read_u8()
     }
 
-    #[inline]
     pub fn peek_u8(&mut self) -> Result<u8> {
         let val = self.reader.read_u8();
         self.seek(self.pos);
         val
     }
 
-    #[inline]
     pub fn read_exact(&mut self, buf: &mut [u8]) -> std::io::Result<()> {
         self.pos += buf.len();
         self.reader.read_exact(buf)
     }
 
-    #[inline]
     pub fn read_u16(&mut self) -> Result<u16> {
         self.pos += 2;
         if self.is_le {
@@ -95,7 +93,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_u16::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_u24(&mut self) -> Result<u32> {
         self.pos += 3;
         if self.is_le {
@@ -104,7 +101,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_u24::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_u32(&mut self) -> Result<u32> {
         self.pos += 4;
         if self.is_le {
@@ -113,7 +109,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_u32::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_u64(&mut self) -> Result<u64> {
         self.pos += 8;
         if self.is_le {
@@ -122,14 +117,12 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_u64::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_i8(&mut self) -> Result<i8> {
         // There's really no need for endian issues when reading single bytes.
         self.pos += 1;
         self.reader.read_i8()
     }
 
-    #[inline]
     pub fn read_i16(&mut self) -> Result<i16> {
         self.pos += 2;
         if self.is_le {
@@ -138,7 +131,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_i16::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_i24(&mut self) -> Result<i32> {
         self.pos += 3;
         if self.is_le {
@@ -147,7 +139,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_i24::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_i32(&mut self) -> Result<i32> {
         self.pos += 4;
         if self.is_le {
@@ -156,7 +147,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_i32::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_i64(&mut self) -> Result<i64> {
         self.pos += 8;
         if self.is_le {
@@ -165,7 +155,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
         self.reader.read_i64::<BigEndian>()
     }
 
-    #[inline]
     pub fn read_f32(&mut self) -> Result<f32> {
         self.pos += 4;
         if self.is_le {
@@ -189,7 +178,6 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     //     ret
     // }
 
-    #[inline]
     pub fn read_f64(&mut self) -> Result<f64> {
         self.pos += 8;
         if self.is_le {
