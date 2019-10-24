@@ -219,7 +219,9 @@ impl WhiteboxTool for TwoSampleKSTest {
         }
 
         let input1 = Raster::new(&input_file1, "r")?;
+        let input1_name = input1.get_short_filename();
         let input2 = Raster::new(&input_file2, "r")?;
+        let input2_name = input2.get_short_filename();
 
         if input1.configs.rows != input2.configs.rows || input1.configs.columns != input2.configs.columns {
             return Err(Error::new(ErrorKind::InvalidInput,
@@ -390,7 +392,7 @@ impl WhiteboxTool for TwoSampleKSTest {
         }
         xdata.push(profile_xdata.clone());
         ydata.push(profile_ydata.clone());
-        series_names.push(String::from("Image 1"));
+        series_names.push(input1_name.clone());
 
         min_val = data2[0];
         max_val = data2[n2-1];
@@ -411,7 +413,7 @@ impl WhiteboxTool for TwoSampleKSTest {
         }
         xdata.push(profile_xdata.clone());
         ydata.push(profile_ydata.clone());
-        series_names.push(String::from("Image 2"));
+        series_names.push(input2_name.clone());
 
         
         ///////////////////////
@@ -438,10 +440,10 @@ impl WhiteboxTool for TwoSampleKSTest {
                 .as_bytes(),
         )?;
 
-        writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input_file1).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 1 (N1)</strong>: {:.0}<br>", n1).as_bytes())?;
-        writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input_file2).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 2 (N2)</strong>: {:.0}<br>", n2).as_bytes())?;
+        writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
+        writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
+        writer.write_all(&format!("<strong>Sample size 1 (n1)</strong>: {:.0}<br>", n1).as_bytes())?;
+        writer.write_all(&format!("<strong>Sample size 2 (n2)</strong>: {:.0}<br>", n2).as_bytes())?;
         writer.write_all(
             &format!(
                 "<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>",
@@ -452,14 +454,14 @@ impl WhiteboxTool for TwoSampleKSTest {
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
-                    "<strong>Significance (p-value)</strong>: {:.4}<br>",
+                    "<strong>Two-tailed Significance (p-value)</strong>: {:.4}<br>",
                     p_value
                 )
                 .as_bytes(),
             )?;
         } else {
             writer.write_all(
-                "<strong>Significance (p-value)</strong>: <0.001<br>"
+                "<strong>Two-tailed Significance (p-value)</strong>: <0.001<br>"
                     .to_string()
                     .as_bytes(),
             )?;
@@ -481,8 +483,8 @@ impl WhiteboxTool for TwoSampleKSTest {
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: series_names.clone(),
-            x_axis_label: "Distance".to_string(),
-            y_axis_label: "Elevation".to_string(),
+            x_axis_label: "X".to_string(),
+            y_axis_label: "Cumulative Probability".to_string(),
             draw_points: false,
             draw_gridlines: true,
             draw_legend: true,
