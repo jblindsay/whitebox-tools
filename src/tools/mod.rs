@@ -349,6 +349,7 @@ impl ToolManager {
         tool_names.push("Not".to_string());
         tool_names.push("NotEqualTo".to_string());
         tool_names.push("Or".to_string());
+        tool_names.push("PairedSampleTTest".to_string());
         tool_names.push("Power".to_string());
         tool_names.push("PrincipalComponentAnalysis".to_string());
         tool_names.push("Quantiles".to_string());
@@ -893,6 +894,7 @@ impl ToolManager {
             "not" => Some(Box::new(math_stat_analysis::Not::new())),
             "notequalto" => Some(Box::new(math_stat_analysis::NotEqualTo::new())),
             "or" => Some(Box::new(math_stat_analysis::Or::new())),
+            "pairedsamplettest" => Some(Box::new(math_stat_analysis::PairedSampleTTest::new())),
             "power" => Some(Box::new(math_stat_analysis::Power::new())),
             "principalcomponentanalysis" => Some(Box::new(
                 math_stat_analysis::PrincipalComponentAnalysis::new(),

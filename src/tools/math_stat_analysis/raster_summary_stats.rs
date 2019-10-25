@@ -170,7 +170,6 @@ impl WhiteboxTool for RasterSummaryStats {
         //if verbose { println!("Calculating image mean and standard deviation...") };
         //let (mean, stdev) = input.calculate_mean_and_stdev();
 
-        // calculate the number of downslope cells
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {

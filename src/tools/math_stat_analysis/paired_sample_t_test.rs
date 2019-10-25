@@ -1,17 +1,17 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 21/10/2019
+Created: 24/10/2019
 Last Modified: 24/10/2019
 License: MIT
 */
 
+use self::statrs::distribution::{Normal, Univariate};
 use crate::raster::*;
 use crate::rendering::html::*;
-use crate::rendering::LineGraph;
 use crate::tools::*;
 use rand::prelude::*;
-use std::cmp::Ordering::Equal;
+use statrs;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -20,9 +20,12 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 
-/// This tool will perform a two-sample Kolmogorov-Smirnov (K-S) test to evaluate whether a significant 
-/// statistical difference exists between the frequency distributions of two rasters. The user must 
+/// This tool will perform a paired-sample t-test to evaluate whether a significant 
+/// statistical difference exists between the two rasters. The user must 
 /// specify the name of the two input raster images (`--input1` and `--input2`) and the output report
 /// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
 /// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance 
@@ -31,8 +34,8 @@ use std::process::Command;
 /// statistical significance says nothing about the practical significance of a difference.
 /// 
 /// # See Also
-/// `KSTestForNormality`
-pub struct TwoSampleKSTest {
+/// `TwoSampleKSTest`
+pub struct PairedSampleTTest {
     name: String,
     description: String,
     toolbox: String,
@@ -40,10 +43,10 @@ pub struct TwoSampleKSTest {
     example_usage: String,
 }
 
-impl TwoSampleKSTest {
-    pub fn new() -> TwoSampleKSTest {
+impl PairedSampleTTest {
+    pub fn new() -> PairedSampleTTest {
         // public constructor
-        let name = "TwoSampleKSTest".to_string();
+        let name = "PairedSampleTTest".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
             "Performs a 2-sample K-S test for significant differences on two input rasters.".to_string();
@@ -98,7 +101,7 @@ impl TwoSampleKSTest {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1=input1.tif -input2=input2.tif -o=output.html --num_samples=1000", short_exe, name).replace("*", &sep);
 
-        TwoSampleKSTest {
+        PairedSampleTTest {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -108,7 +111,7 @@ impl TwoSampleKSTest {
     }
 }
 
-impl WhiteboxTool for TwoSampleKSTest {
+impl WhiteboxTool for PairedSampleTTest {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -218,9 +221,9 @@ impl WhiteboxTool for TwoSampleKSTest {
             output_file = output_file + ".html";
         }
 
-        let input1 = Raster::new(&input_file1, "r")?;
+        let input1 = Arc::new(Raster::new(&input_file1, "r")?);
         let input1_name = input1.get_short_filename();
-        let input2 = Raster::new(&input_file2, "r")?;
+        let input2 = Arc::new(Raster::new(&input_file2, "r")?);
         let input2_name = input2.get_short_filename();
 
         if input1.configs.rows != input2.configs.rows || input1.configs.columns != input2.configs.columns {
@@ -242,47 +245,68 @@ impl WhiteboxTool for TwoSampleKSTest {
         }
 
         // declare some variables
-        let mut z1: f64;
-        let mut z2: f64;
-        // let min_value = input1.configs.minimum;
-        // let max_value = input1.configs.maximum;
-        // let num_bins = 10000usize;
-        // let bin_size = (max_value - min_value) / num_bins as f64;
-        // let mut histogram = vec![0usize; num_bins];
-        // let mut bin_num: usize;
-        // let num_bins_less_one = num_bins - 1usize;
-        // let mut total = 0f64;
-        // let mean: f64;
-        // let mut total_deviation = 0f64;
-
-        let mut data1: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
-        let mut data2: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
+        let mut n = 0;
+        let mean: f64;
+        let variance: f64;
+        let std_dev: f64;
 
         if num_samples == 0 {
+            let num_procs = num_cpus::get() as isize;
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input1 = input1.clone();
+                let input2 = input2.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z1: f64;
+                    let mut z2: f64;
+                    let mut diff: f64;
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut n = 0;
+                        let mut s = 0.0;
+                        let mut sq = 0.0;
+                        for col in 0..columns {
+                            z1 = input1.get_value(row, col);
+                            z2 = input2.get_value(row, col);
+                            if z1 != nodata1 && z2 != nodata2 {
+                                n += 1;
+                                diff = z2 - z1;
+                                s += diff;
+                                sq += diff * diff;
+                            }
+                        }
+                        tx.send((n, s, sq)).unwrap();
+                    }
+                });
+            }
+
+            let mut sum = 0.0;
+            let mut sq_sum = 0.0;
             for row in 0..rows {
-                for col in 0..columns {
-                    z1 = input1.get_value(row, col);
-                    if z1 != nodata1 {
-                        data1.push(z1);
-                    }
-                    z2 = input2.get_value(row, col);
-                    if z2 != nodata2 {
-                        data2.push(z2);
-                    }
-                }
+                let (a, b, c) = rx.recv().unwrap();
+                n += a;
+                sum += b;
+                sq_sum += c;
                 if verbose {
-                    progress = (100.0_f64 * row as f64 / rows as f64) as i32;
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
                     if progress != old_progress {
                         println!("Progress: {}%", progress);
                         old_progress = progress;
                     }
                 }
             }
-        } else {
-            data1 = Vec::with_capacity(num_samples);
-            data2 = Vec::with_capacity(num_samples);
 
+            mean = sum / n as f64;
+            variance = sq_sum / n as f64 - mean * mean;
+            std_dev = variance.sqrt();
+
+        } else {
             // Note that this is sampling with replacement, which is not ideal.
+            let mut z1: f64;
+            let mut z2: f64;
+            let mut diff: f64;
+            let mut sum = 0.0;
+            let mut sq_sum = 0.0;
             let mut rng = thread_rng();
             let (mut row, mut col): (isize, isize);
             let mut sample_num = 0usize;
@@ -290,28 +314,12 @@ impl WhiteboxTool for TwoSampleKSTest {
                 row = rng.gen_range(0, rows as isize);
                 col = rng.gen_range(0, columns as isize);
                 z1 = input1.get_value(row, col);
-                if z1 != nodata1 {
-                    data1.push(z1);
-
-                    sample_num += 1;
-
-                    if verbose {
-                        progress = (100.0_f64 * sample_num as f64 / num_samples as f64) as i32;
-                        if progress != old_progress {
-                            println!("Progress: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-            }
-
-            sample_num = 0usize;
-            while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize);
-                col = rng.gen_range(0, columns as isize);
                 z2 = input2.get_value(row, col);
-                if z2 != nodata2 {
-                    data2.push(z2);
+                if z1 != nodata1 && z2 != nodata2 {
+                    diff = z2 - z1;
+                    n += 1;
+                    sum += diff;
+                    sq_sum += diff * diff;
 
                     sample_num += 1;
 
@@ -324,97 +332,16 @@ impl WhiteboxTool for TwoSampleKSTest {
                     }
                 }
             }
+
+            mean = sum / n as f64;
+            variance = sq_sum / n as f64 - mean * mean;
+            std_dev = variance.sqrt();
         }
 
-        let mut j1 = 0;
-        let mut j2 = 0;
-        let n1 = data1.len();
-        let n2 = data2.len();
-        let (mut d1, mut d2, mut dt): (f64, f64, f64);
-        let mut fn1 = 0.0f64;
-        let mut fn2 = 0.0f64;
-        let mut dmax = -1.0;
-
-        // sort data1 and data2
-        data1.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-        data2.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
-
-        let en1 = n1 as f64;
-        let en2 = n2 as f64;
-
-        while j1 < n1 && j2 < n2 {
-            d1 = data1[j1];
-            d2 = data2[j2];
-            if d1 <= d2 {
-                j1 += 1;
-                fn1 = j1 as f64 / en1;
-            }
-
-            if d2 <= d1 {
-                j2 += 1;
-                fn2 = j2 as f64 / en2;
-            }
-
-            dt = (fn2 - fn1).abs();
-            if dt > dmax {
-                dmax = dt;
-            }
-        }
-
-        let en = (en1 * en2 / (en1 + en2)).sqrt();
-
-        let mut p_value = calculate_p_value(en * dmax);
-        if p_value < 0f64 { p_value = 0f64; }
-        if p_value > 1f64 { p_value = 1f64; }
-
-        // create the cdf's
-        let mut xdata = vec![];
-        let mut ydata = vec![];
-        let mut series_names = vec![];
-        let num_bins = 100usize;
-        let mut min_val = data1[0];
-        let mut max_val = data1[n1-1];
-        let mut bin_size = (max_val - min_val) / num_bins as f64;
-        let mut bin: usize;
-        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
-        let mut profile_ydata = vec![0f64; num_bins];
-        // bin frequency data
-        for val in &data1 {
-            bin = ((val - min_val) / bin_size).floor() as usize;
-            if bin > num_bins -1 { bin = num_bins - 1; }
-            profile_ydata[bin] += 1f64;
-        }
-        for bin in 1..num_bins {
-            profile_ydata[bin] += profile_ydata[bin-1];
-        }
-        for bin in 0..num_bins {
-            profile_ydata[bin] /= en1;
-        }
-        xdata.push(profile_xdata.clone());
-        ydata.push(profile_ydata.clone());
-        series_names.push(input1_name.clone());
-
-        min_val = data2[0];
-        max_val = data2[n2-1];
-        bin_size = (max_val - min_val) / num_bins as f64;
-        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
-        profile_ydata = vec![0f64; num_bins];
-        // bin frequency data
-        for val in &data2 {
-            bin = ((val - min_val) / bin_size).floor() as usize;
-            if bin > num_bins -1 { bin = num_bins - 1; }
-            profile_ydata[bin] += 1f64;
-        }
-        for bin in 1..num_bins {
-            profile_ydata[bin] += profile_ydata[bin-1];
-        }
-        for bin in 0..num_bins {
-            profile_ydata[bin] /= en2;
-        }
-        xdata.push(profile_xdata.clone());
-        ydata.push(profile_ydata.clone());
-        series_names.push(input2_name.clone());
-
+        let std_err = std_dev / (n as f64).sqrt();
+        let t = mean / std_err; 
+        let distribution = Normal::new(0.0, 1.0).unwrap();
+        let p_value = 2f64 * (1f64 - distribution.cdf(t.abs()));
         
         ///////////////////////
         // Output the report //
@@ -426,7 +353,7 @@ impl WhiteboxTool for TwoSampleKSTest {
         <html>
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-                <title>Two-Sample K-S Test</title>"#.as_bytes())?;
+                <title>Paired-Sample t-Test</title>"#.as_bytes())?;
 
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
@@ -435,22 +362,18 @@ impl WhiteboxTool for TwoSampleKSTest {
             &r#"
             </head>
             <body>
-                <h1>Two-Sample Kolmogorov-Smirnov (K-S) Test Report</h1>
+                <h1>Paired-Samples <em>t</em>-Test Report</h1>
                 <p>"#
                 .as_bytes(),
         )?;
 
         writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 1 (n1)</strong>: {:.0}<br>", n1).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 2 (n2)</strong>: {:.0}<br>", n2).as_bytes())?;
-        writer.write_all(
-            &format!(
-                "<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>",
-                dmax
-            )
-            .as_bytes(),
-        )?;
+        writer.write_all(&format!("<strong>Sample mean of the differences</strong>: {:.4}<br>", mean).as_bytes())?;
+        writer.write_all(&format!("<strong>Sample size (n)</strong>: {:.0}<br>", n).as_bytes())?;
+        writer.write_all(&format!("<strong>Sample standard deviation of the differences</strong>: {:.4}<br>", std_dev).as_bytes())?;
+        writer.write_all(&format!("<strong>Estimated standard error of the mean</strong>: {:.4}<br>", std_err).as_bytes())?;
+        writer.write_all(&format!("<strong>Test Statistic (<em>t</em>)</strong>: {:.4}<br>", t).as_bytes())?;
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
@@ -467,33 +390,33 @@ impl WhiteboxTool for TwoSampleKSTest {
             )?;
         }
         if p_value < 0.05 {
-            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that both samples come from a population with the same distribution.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that the difference between the paired population means is equal to 0.<br>".to_string().as_bytes())?;
         } else {
-            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that both samples come from a population with the same distribution.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that the difference between the paired population means is equal to 0.<br>".to_string().as_bytes())?;
         }
 
         writer.write_all("</p>".as_bytes())?;
 
         writer.write_all("<p><strong>Caveat</strong>: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, \nand statistical significance says nothing about the practical significance of a difference.</p>".to_string().as_bytes())?;
 
-        let graph = LineGraph {
-            parent_id: "graph".to_string(),
-            width: 700f64,
-            height: 500f64,
-            data_x: xdata.clone(),
-            data_y: ydata.clone(),
-            series_labels: series_names.clone(),
-            x_axis_label: "X".to_string(),
-            y_axis_label: "Cumulative Probability".to_string(),
-            draw_points: false,
-            draw_gridlines: true,
-            draw_legend: true,
-            draw_grey_background: false,
-        };
+        // let graph = LineGraph {
+        //     parent_id: "graph".to_string(),
+        //     width: 700f64,
+        //     height: 500f64,
+        //     data_x: xdata.clone(),
+        //     data_y: ydata.clone(),
+        //     series_labels: series_names.clone(),
+        //     x_axis_label: "X".to_string(),
+        //     y_axis_label: "Cumulative Probability".to_string(),
+        //     draw_points: false,
+        //     draw_gridlines: true,
+        //     draw_legend: true,
+        //     draw_grey_background: false,
+        // };
 
-        writer.write_all(
-            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
-        )?;
+        // writer.write_all(
+        //     &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        // )?;
 
 
         writer.write_all("</body>".as_bytes())?;
@@ -539,24 +462,4 @@ impl WhiteboxTool for TwoSampleKSTest {
 
         Ok(())
     }
-}
-
-fn calculate_p_value(alam: f64) -> f64 {
-    let mut fac = 2.0f64;
-    let mut sum = 0.0f64;
-    let mut term: f64;
-    let mut termbf = 0.0f64;
-    let eps1 = 0.001f64;
-    let eps2 = 1.0e-8f64;
-    let a2 = -2.0 * alam * alam;
-    for j in 1..= 100 {
-        term = fac * (a2 * (j * j) as f64).exp();
-        sum += term;
-        if term.abs() <= eps1 * termbf || term.abs() <= eps2 * sum {
-            return sum;
-        }
-        fac = -fac;
-        termbf = term.abs();
-    }
-    return 1.0
 }
