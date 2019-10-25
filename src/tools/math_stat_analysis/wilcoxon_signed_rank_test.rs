@@ -1,16 +1,18 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 24/10/2019
+Created: 25/10/2019
 Last Modified: 25/10/2019
 License: MIT
 */
 
+use self::statrs::distribution::{Normal, Univariate};
 use crate::raster::*;
 use crate::rendering::html::*;
 use crate::rendering::LineGraph;
 use crate::tools::*;
 use rand::prelude::*;
+use statrs;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -24,25 +26,24 @@ use std::sync::Arc;
 use std::thread;
 use std::cmp::Ordering::Equal;
 
-/// This tool will perform a paired-sample *t*-test to evaluate whether a significant 
-/// statistical difference exists between the two rasters. The null hypothesis is that 
-/// the difference between the paired population means is equal to zero. The paired-samples *t*-test
-/// makes an assumption that the differences between related samples follows a Gaussian distribution.
-/// The tool will output a cumulative probability distribution, with a fitted Gaussian, to help
-/// users evaluate whether this assumption is violated by the data. If this is the case, the `WilcoxonSignedRankTest`
-/// should be used instead.
+/// This tool will perform a Wilcoxon signed-rank test to evaluate whether a significant 
+/// statistical difference exists between the two rasters. The Wilcoxon signed-rank test is often used as a 
+/// non-parametric equivalent to the paired-samples Student's t-test, and is used when the distribution of
+/// sample difference values between the paired inputs is non-Gaussian. The null hypothesis is that 
+/// difference between the sample pairs follow a symmetric distribution around zero.
 /// 
-/// The user must 
-/// specify the name of the two input raster images (`--input1` and `--input2`) and the output report
+/// The user must specify the name of the two input raster images (`--input1` and `--input2`) and the output report
 /// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
 /// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance 
 /// of the test, it is important to keep in mind that given a sufficiently large sample, extremely small and
 /// non-notable differences can be found to be statistically significant. Furthermore
-/// statistical significance says nothing about the practical significance of a difference.
+/// statistical significance says nothing about the practical significance of a difference. Note that cells
+/// with a difference of zero are excluded from the ranking and tied difference values are assigned their average
+/// rank values.
 /// 
 /// # See Also
-/// `TwoSampleKSTest`, `WilcoxonSignedRankTest`
-pub struct PairedSampleTTest {
+/// `PairedSampleTTest`, `TwoSampleKSTest`
+pub struct WilcoxonSignedRankTest {
     name: String,
     description: String,
     toolbox: String,
@@ -50,10 +51,10 @@ pub struct PairedSampleTTest {
     example_usage: String,
 }
 
-impl PairedSampleTTest {
-    pub fn new() -> PairedSampleTTest {
+impl WilcoxonSignedRankTest {
+    pub fn new() -> WilcoxonSignedRankTest {
         // public constructor
-        let name = "PairedSampleTTest".to_string();
+        let name = "WilcoxonSignedRankTest".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
             "Performs a 2-sample K-S test for significant differences on two input rasters.".to_string();
@@ -108,7 +109,7 @@ impl PairedSampleTTest {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1=input1.tif -input2=input2.tif -o=output.html --num_samples=1000", short_exe, name).replace("*", &sep);
 
-        PairedSampleTTest {
+        WilcoxonSignedRankTest {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -118,7 +119,7 @@ impl PairedSampleTTest {
     }
 }
 
-impl WhiteboxTool for PairedSampleTTest {
+impl WhiteboxTool for WilcoxonSignedRankTest {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -257,8 +258,6 @@ impl WhiteboxTool for PairedSampleTTest {
         let variance: f64;
         let std_dev: f64;
 
-        let mut data1: Vec<f64> = Vec::with_capacity(num_samples);
-        let mut data2: Vec<f64> = Vec::with_capacity(num_samples);
         let mut diffs: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
 
         if num_samples == 0 {
@@ -338,8 +337,6 @@ impl WhiteboxTool for PairedSampleTTest {
                     sum += diff;
                     sq_sum += diff * diff;
                     sample_num += 1;
-                    data1.push(z1);
-                    data2.push(z2);
                     diffs.push(z2 - z1);
 
                     if verbose {
@@ -357,16 +354,64 @@ impl WhiteboxTool for PairedSampleTTest {
             std_dev = variance.sqrt();
         }
 
-        let std_err = std_dev / (n as f64).sqrt();
-        let t = mean / std_err; 
-        let p_value = calc_p_value(t, n-1);
-
-        // let's see the cdf of differences compared with a normal
+        // sort the absolute differences
+        diffs.sort_by(|a, b| a.abs().partial_cmp(&b.abs()).unwrap_or(Equal));
+        // create the ranks, ignoring zero differences and accounting for ties
+        let mut ranks = vec![-1f64; diffs.len()];
+        let mut nr = 0u128; // number of non-zero ranks
+        let mut r = 0f64;
+        for i in 0..diffs.len() {
+            if diffs[i] != 0f64 {
+                nr += 1;
+                if ranks[i] == -1f64 {
+                    r += 1f64;
+                    if i < diffs.len() - 1 {
+                        // are there any ties above this one?
+                        let mut upper_range = i;
+                        for j in i+1..diffs.len() {
+                            if diffs[j].abs() == diffs[i].abs() {
+                                upper_range = j
+                            } else {
+                                break;
+                            }
+                        }
+                        if upper_range != i {
+                            let r2 = r + (upper_range - i) as f64;
+                            r = (r + r2) / 2f64; // average rank
+                            for k in i..=upper_range {
+                                ranks[k] = r * diffs[k].signum();
+                            }
+                            r = r2;
+                        } else {
+                            ranks[i] = r * diffs[i].signum();
+                        }
+                    } else {
+                        ranks[i] = r * diffs[i].signum();
+                    }
+                }
+                // else do nothing, it was sorted in a previous iteration
+            } else {
+                ranks[i] = 0f64;
+            }
+        }
+        let w: f64 = ranks.iter().sum();
+        let w_pos = ranks.iter().fold(0f64, |acc, &x| if x > 0f64 { acc + x } else { acc + 0f64 } );
+        let w_neg = ranks.iter().fold(0f64, |acc, &x| if x < 0f64 { acc + x } else { acc + 0f64 } );
+        let sigma_w = ((nr * (nr + 1) * (2 * nr + 1) / 6) as f64).sqrt(); // be careful of numerical overflow
+        let z_value = w / sigma_w;
+        let distribution = Normal::new(0.0, 1.0).unwrap();
+        let p_value = 2f64 * (1f64 - distribution.cdf(z_value.abs()));
+        
+        // let's see the pdf of differences compared with a normal
         diffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
         let mut xdata = vec![];
         let mut ydata = vec![];
         let mut series_names = vec![];
-        let num_bins = 100usize;
+        let num_bins = if num_samples > 0 && num_samples < 5000 {
+            (num_samples as f64).log2().ceil() as usize + 1
+        } else {
+            100usize
+        };
         let min_val = diffs[0];
         let max_val = diffs[n-1];
         let bin_size = (max_val - min_val) / num_bins as f64;
@@ -379,35 +424,15 @@ impl WhiteboxTool for PairedSampleTTest {
             if bin > num_bins -1 { bin = num_bins - 1; }
             profile_ydata[bin] += 1f64;
         }
-        for bin in 1..num_bins {
-            profile_ydata[bin] += profile_ydata[bin-1];
-        }
+        // for bin in 1..num_bins {
+        //     profile_ydata[bin] += profile_ydata[bin-1];
+        // }
         for bin in 0..num_bins {
             profile_ydata[bin] /= n as f64;
         }
         xdata.push(profile_xdata.clone());
         ydata.push(profile_ydata.clone());
         series_names.push(String::from("Paired Differences"));
-
-        let mut normal_dist = vec![0f64; num_bins];
-        let sd_root2pi = std_dev * (2f64 * f64::consts::PI).sqrt();
-        let two_sd_sqr = 2f64 * std_dev * std_dev;
-        let mut z: f64;
-        for i in 0..num_bins {
-            z = min_val + i as f64 * bin_size;
-            normal_dist[i] = 1f64 / sd_root2pi * ((-(z - mean) * (z - mean)) / two_sd_sqr).exp();
-        }
-        for i in 1..num_bins {
-            normal_dist[i] = normal_dist[i - 1] + normal_dist[i];
-        }
-
-        for i in 1..num_bins {
-            normal_dist[i] = normal_dist[i] / normal_dist[num_bins - 1];
-        }
-
-        xdata.push(profile_xdata.clone());
-        ydata.push(normal_dist.clone());
-        series_names.push(String::from("Normal Dist."));
 
         
         ///////////////////////
@@ -420,7 +445,7 @@ impl WhiteboxTool for PairedSampleTTest {
         <html>
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-                <title>Paired-Samples t-Test</title>"#.as_bytes())?;
+                <title>Wilcoxon Signed-Rank Test</title>"#.as_bytes())?;
 
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
@@ -429,47 +454,20 @@ impl WhiteboxTool for PairedSampleTTest {
             &r#"
             </head>
             <body>
-                <h1>Paired-Samples <em>t</em>-Test Report</h1>
+                <h1>Wilcoxon Signed-Rank Test Report</h1>
                 <p>"#
                 .as_bytes(),
         )?;
 
         writer.write_all(&format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
-
-        if num_samples < 25 && num_samples > 0 {
-            // Point Return Table
-            let s = "<p><table>
-            <caption>Data Table</caption>
-            <tr>
-                <th class=\"headerCell\">Image 1</th>
-                <th class=\"headerCell\">Image 2</th>
-                <th class=\"headerCell\">Diff</th>
-            </tr>";
-            writer.write_all(s.as_bytes())?;
-
-            for i in 0..num_samples {
-                let s1 = &format!(
-                    "<tr>
-                    <td class=\"numberCell\">{}</td>
-                    <td class=\"numberCell\">{}</td>
-                    <td class=\"numberCell\">{}</td>
-                </tr>\n",
-                    format!("{:.4}", data1[i]),
-                    format!("{:.4}", data2[i]),
-                    format!("{:.4}", diffs[i])
-                );
-                writer.write_all(s1.as_bytes())?;
-            }
-
-            writer.write_all("</table>".as_bytes())?;
-        }
-
         writer.write_all(&format!("<strong>Mean of the differences</strong>: {:.4}<br>", mean).as_bytes())?;
         writer.write_all(&format!("<strong>Standard deviation of the differences</strong>: {:.4}<br>", std_dev).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size (n)</strong>: {:.0}<br>", n).as_bytes())?;
-        writer.write_all(&format!("<strong>Estimated standard error of the mean</strong>: {:.4}<br>", std_err).as_bytes())?;
-        writer.write_all(&format!("<strong>Test Statistic (<em>t</em>)</strong>: {:.4}<br>", t).as_bytes())?;
+        writer.write_all(&format!("<strong>Sample size (n)</strong>: {:.0}<br>", nr).as_bytes())?;
+        writer.write_all(&format!("<strong>Sum of positive ranks</strong>: {:.4}<br>", w_pos).as_bytes())?;
+        writer.write_all(&format!("<strong>Sum of negative ranks</strong>: {:.4}<br>", w_neg).as_bytes())?;
+        writer.write_all(&format!("<strong>Sum of ranks</strong>: {:.4}<br>", w).as_bytes())?;
+        writer.write_all(&format!("<strong>Test Statistic (<em>z</em>)</strong>: {:.4}<br>", z_value).as_bytes())?;
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
@@ -486,18 +484,17 @@ impl WhiteboxTool for PairedSampleTTest {
             )?;
         }
         if p_value < 0.05 {
-            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that the difference between the paired population means is equal to zero.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>rejects</strong> the null hypothesis that the difference between the pairs follows a symmetric distribution around zero, i.e. that the median difference between pairs of observations is zero.<br>".to_string().as_bytes())?;
         } else {
-            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that the difference between the paired population means is equal to zero.<br>".to_string().as_bytes())?;
+            writer.write_all("<strong>Result</strong>: The test <strong>fails to reject</strong> the null hypothesis that the difference between the pairs follows a symmetric distribution around zero, i.e. that the median difference between pairs of observations is zero.<br>".to_string().as_bytes())?;
         }
 
         writer.write_all("</p>".as_bytes())?;
 
         writer.write_all("<p><strong>Caveats</strong>: <ol>
         <li>Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, and statistical significance says nothing about the practical significance of a difference.</li> 
-        <li>The presence of spatial autocorrelation implies a lack of independence in the data sample, which violates an assumption of the <em>t</em>-Test, potentially affecting the reliability of the result.</li>
-        <li>Care should be taken to ensure that the distribution of paired-sample differences are normally distributed (see below).</li></ol></p>".to_string().as_bytes())?;
-
+        <li>The presence of spatial autocorrelation implies a lack of independence in the data sample, which violates an assumption of the test, potentially affecting the reliability of the result.</li></ol></p>".to_string().as_bytes())?;
+        
         let graph = LineGraph {
             parent_id: "graph".to_string(),
             width: 700f64,
@@ -506,10 +503,10 @@ impl WhiteboxTool for PairedSampleTTest {
             data_y: ydata.clone(),
             series_labels: series_names.clone(),
             x_axis_label: "Paired Difference".to_string(),
-            y_axis_label: "Cumulative Probability".to_string(),
+            y_axis_label: "Probability Density".to_string(),
             draw_points: false,
             draw_gridlines: true,
-            draw_legend: true,
+            draw_legend: false,
             draw_grey_background: false,
         };
 
@@ -560,53 +557,4 @@ impl WhiteboxTool for PairedSampleTTest {
 
         Ok(())
     }
-}
-
-// The following formulation has been based on a javascript translation from: 
-// https://www.easycalculation.com/statistics/p-value-t-test.php
-fn calc_p_value(t: f64, df: usize) -> f64 {
-    if df == 0 {
-        panic!("Error: degrees of freedom (df) must be non-zero.");
-    }
-    let abst = t.abs();
-    let tsq = t*t;
-    let p = match df {
-        1 => 1f64 - 2f64 * abst.atan() / f64::consts::PI,
-        2 => 1f64 - abst / (tsq + 2f64).sqrt(),
-        3 => 1f64 - 2f64 * ((abst / 3f64.sqrt()).atan() + abst * 3f64.sqrt() / (tsq + 3f64)) / f64::consts::PI,
-        4 => 1f64 - abst * (1f64 + 2f64 / (tsq + 4f64)) / (tsq + 4f64).sqrt(),
-        _ => {
-            let z = t_to_z(abst, df);
-            norm_p(z)
-        }
-    };
-  return p;
-}
-
-fn t_to_z(t: f64, df: usize) -> f64 {
-    let a9 = df as f64 - 0.5;
-    let b9 = 48f64 * a9 * a9;
-    let t9 = t * t / df as f64;
-    let z8 = if t9 >= 0.04f64 {
-        a9 * (1f64 + t9).ln()
-    } else {
-        a9 * (((1f64 - t9 * 0.75f64) * t9 / 3f64 - 0.5f64) * t9 + 1f64) * t9
-    };
-    let p7 = ((0.4f64 * z8 + 3.3f64) * z8 + 24f64) * z8 + 85.5f64;
-    let b7 = 0.8f64 * z8.powf(2f64) + 100f64 + b9;
-    let z = (1f64 + (-p7 / b7 + z8 + 3f64) / b9) * z8.sqrt();
-    return z;
-}
-
-fn norm_p(z: f64) -> f64 {
-    let absz = z.abs();
-    const A1: f64 = 0.0000053830;
-    const A2: f64 = 0.0000488906;
-    const A3: f64 = 0.0000380036;
-    const A4: f64 = 0.0032776263;
-    const A5: f64 = 0.0211410061;
-    const A6: f64 = 0.0498673470;
-    let mut p = (((((A1 * absz + A2) * absz + A3) * absz + A4) * absz + A5) * absz + A6) * absz + 1f64;
-    p = p.powf(-16f64);
-    return p;
 }

@@ -335,7 +335,7 @@ impl ToolManager {
         tool_names.push("IntegerDivision".to_string());
         tool_names.push("IsNoData".to_string());
         tool_names.push("KappaIndex".to_string());
-        tool_names.push("KSTestForNormality".to_string());
+        tool_names.push("KsTestForNormality".to_string());
         tool_names.push("LessThan".to_string());
         tool_names.push("ListUniqueValues".to_string());
         tool_names.push("Log10".to_string());
@@ -374,7 +374,8 @@ impl ToolManager {
         tool_names.push("TrendSurfaceVectorPoints".to_string());
         tool_names.push("Truncate".to_string());
         tool_names.push("TurningBandsSimulation".to_string());
-        tool_names.push("TwoSampleKSTest".to_string());
+        tool_names.push("TwoSampleKsTest".to_string());
+        tool_names.push("WilcoxonSignedRankTest".to_string());
         tool_names.push("Xor".to_string());
         tool_names.push("ZScores".to_string());
 
@@ -880,7 +881,7 @@ impl ToolManager {
             "integerdivision" => Some(Box::new(math_stat_analysis::IntegerDivision::new())),
             "isnodata" => Some(Box::new(math_stat_analysis::IsNoData::new())),
             "kappaindex" => Some(Box::new(math_stat_analysis::KappaIndex::new())),
-            "kstestfornormality" => Some(Box::new(math_stat_analysis::KSTestForNormality::new())),
+            "kstestfornormality" => Some(Box::new(math_stat_analysis::KsTestForNormality::new())),
             "lessthan" => Some(Box::new(math_stat_analysis::LessThan::new())),
             "listuniquevalues" => Some(Box::new(math_stat_analysis::ListUniqueValues::new())),
             "log10" => Some(Box::new(math_stat_analysis::Log10::new())),
@@ -925,7 +926,8 @@ impl ToolManager {
             "turningbandssimulation" => {
                 Some(Box::new(math_stat_analysis::TurningBandsSimulation::new()))
             }
-            "twosamplekstest" => Some(Box::new(math_stat_analysis::TwoSampleKSTest::new())),
+            "twosamplekstest" => Some(Box::new(math_stat_analysis::TwoSampleKsTest::new())),
+            "wilcoxonsignedranktest" => Some(Box::new(math_stat_analysis::WilcoxonSignedRankTest::new())),
             "xor" => Some(Box::new(math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(math_stat_analysis::ZScores::new())),
 

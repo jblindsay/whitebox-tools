@@ -331,6 +331,7 @@ impl Scattergram {
         xAxisNumTicks = Math.ceil((xMax - xMin) / xAxisTickSpacing);
         xRange = xAxisTickSpacing * xAxisNumTicks;
         var xSigDigits = Math.min(decimalPlaces(xMin+xAxisTickSpacing), decimalPlaces(xMin+2*xAxisTickSpacing)); //Math.round(0.1 / xAxisTickSpacing);
+        if (xSigDigits === 0 && (xMax - xMin) < xAxisNumTicks) { xSigDigits += 1; }
         var dominantTick = 0;
         if (decimalPlaces(xMin) > decimalPlaces(xMin+xAxisTickSpacing)) {
           dominantTick = 1;
@@ -395,6 +396,7 @@ impl Scattergram {
         yAxisNumTicks = Math.ceil((yMax - yMin) / yAxisTickSpacing);
         yRange = yAxisTickSpacing * yAxisNumTicks;
         var ySigDigits = Math.min(decimalPlaces(yMin+yAxisTickSpacing), decimalPlaces(yMin+2*yAxisTickSpacing));
+        if (ySigDigits === 0 && (yMax - yMin) < yAxisNumTicks) { ySigDigits += 1; }
         dominantTick = 0;
         if (decimalPlaces(yMin) > decimalPlaces(yMin+yAxisTickSpacing)) {
           dominantTick = 1;

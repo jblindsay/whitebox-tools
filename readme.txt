@@ -60,6 +60,8 @@ Version 1.0.2 (XX-XX-2019)
 - The RelativeStreamPowerIndex tool has been renamed StreamPowerIndex, to be more in-line
   with other software.
 - Added a two-sample K-S test for comparing the distributions of two rasters.
+- Added a Wilcoxon Signed-Rank test for comparing two rasters.
+- Added a paired-samples Student's t-test for comparing two rasters.
 
 Version 1.0.1 (20-10-2019)
 - Boolean type tool parameters previously worked simply by the presence of the parameter flag.

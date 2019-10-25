@@ -22,7 +22,13 @@ use std::path;
 use std::process::Command;
 
 /// This tool will perform a two-sample Kolmogorov-Smirnov (K-S) test to evaluate whether a significant 
-/// statistical difference exists between the frequency distributions of two rasters. The user must 
+/// statistical difference exists between the frequency distributions of two rasters. Tthe null hypothesis 
+/// is that both samples come from a population with the same distribution. Note that this test evaluates
+/// the two input rasters for differences in their overall distribution shape, with no assumption of normality. 
+/// If there is need to compare the per-pixel differences between two input rasters, a paired-samples test
+/// such as the `PairedSampleTTest` or the non-parametric `WilcoxonSignedRankTest` should be used instead.
+/// 
+/// The user must 
 /// specify the name of the two input raster images (`--input1` and `--input2`) and the output report
 /// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
 /// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance 
@@ -31,8 +37,8 @@ use std::process::Command;
 /// statistical significance says nothing about the practical significance of a difference.
 /// 
 /// # See Also
-/// `KSTestForNormality`
-pub struct TwoSampleKSTest {
+/// `KSTestForNormality`, `PairedSampleTTest`, `WilcoxonSignedRankTest`
+pub struct TwoSampleKsTest {
     name: String,
     description: String,
     toolbox: String,
@@ -40,10 +46,10 @@ pub struct TwoSampleKSTest {
     example_usage: String,
 }
 
-impl TwoSampleKSTest {
-    pub fn new() -> TwoSampleKSTest {
+impl TwoSampleKsTest {
+    pub fn new() -> TwoSampleKsTest {
         // public constructor
-        let name = "TwoSampleKSTest".to_string();
+        let name = "TwoSampleKsTest".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
             "Performs a 2-sample K-S test for significant differences on two input rasters.".to_string();
@@ -98,7 +104,7 @@ impl TwoSampleKSTest {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input1=input1.tif -input2=input2.tif -o=output.html --num_samples=1000", short_exe, name).replace("*", &sep);
 
-        TwoSampleKSTest {
+        TwoSampleKsTest {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -108,7 +114,7 @@ impl TwoSampleKSTest {
     }
 }
 
-impl WhiteboxTool for TwoSampleKSTest {
+impl WhiteboxTool for TwoSampleKsTest {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -429,8 +435,8 @@ impl WhiteboxTool for TwoSampleKSTest {
                 .as_bytes(),
         )?;
 
-        writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
+        writer.write_all(&format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
+        writer.write_all(&format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Sample size 1 (n1)</strong>: {:.0}<br>", n1).as_bytes())?;
         writer.write_all(&format!("<strong>Sample size 2 (n2)</strong>: {:.0}<br>", n2).as_bytes())?;
         writer.write_all(
@@ -463,7 +469,9 @@ impl WhiteboxTool for TwoSampleKSTest {
 
         writer.write_all("</p>".as_bytes())?;
 
-        writer.write_all("<p><strong>Caveat</strong>: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, \nand statistical significance says nothing about the practical significance of a difference.</p>".to_string().as_bytes())?;
+        writer.write_all("<p><strong>Caveats</strong>: <ol>
+        <li>Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, and statistical significance says nothing about the practical significance of a difference.</li> 
+        <li>The presence of spatial autocorrelation implies a lack of independence in the data sample, which violates an assumption of the test, potentially affecting the reliability of the result.</li></ol></p>".to_string().as_bytes())?;
 
         let graph = LineGraph {
             parent_id: "graph".to_string(),

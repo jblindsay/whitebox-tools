@@ -30,8 +30,8 @@ use std::process::Command;
 /// statistical significance says nothing about the practical significance of a difference.
 /// 
 /// # See Also
-/// `TwoSampleKSTest`
-pub struct KSTestForNormality {
+/// `TwoSampleKsTest`
+pub struct KsTestForNormality {
     name: String,
     description: String,
     toolbox: String,
@@ -39,10 +39,10 @@ pub struct KSTestForNormality {
     example_usage: String,
 }
 
-impl KSTestForNormality {
-    pub fn new() -> KSTestForNormality {
+impl KsTestForNormality {
+    pub fn new() -> KsTestForNormality {
         // public constructor
-        let name = "KSTestForNormality".to_string();
+        let name = "KsTestForNormality".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
             "Evaluates whether the values in a raster are normally distributed.".to_string();
@@ -89,7 +89,7 @@ impl KSTestForNormality {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.html --num_samples=1000
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=input.tif -o=output.html", short_exe, name).replace("*", &sep);
 
-        KSTestForNormality {
+        KsTestForNormality {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -99,7 +99,7 @@ impl KSTestForNormality {
     }
 }
 
-impl WhiteboxTool for KSTestForNormality {
+impl WhiteboxTool for KsTestForNormality {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
