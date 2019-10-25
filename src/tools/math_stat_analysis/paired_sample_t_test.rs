@@ -6,12 +6,10 @@ Last Modified: 24/10/2019
 License: MIT
 */
 
-use self::statrs::distribution::{Normal, Univariate};
 use crate::raster::*;
 use crate::rendering::html::*;
 use crate::tools::*;
 use rand::prelude::*;
-use statrs;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -250,6 +248,9 @@ impl WhiteboxTool for PairedSampleTTest {
         let variance: f64;
         let std_dev: f64;
 
+        let mut data1: Vec<f64> = Vec::with_capacity(num_samples);
+        let mut data2: Vec<f64> = Vec::with_capacity(num_samples);
+
         if num_samples == 0 {
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
@@ -320,8 +321,9 @@ impl WhiteboxTool for PairedSampleTTest {
                     n += 1;
                     sum += diff;
                     sq_sum += diff * diff;
-
                     sample_num += 1;
+                    data1.push(z1);
+                    data2.push(z2);
 
                     if verbose {
                         progress = (100.0_f64 * sample_num as f64 / num_samples as f64) as i32;
@@ -340,8 +342,9 @@ impl WhiteboxTool for PairedSampleTTest {
 
         let std_err = std_dev / (n as f64).sqrt();
         let t = mean / std_err; 
-        let distribution = Normal::new(0.0, 1.0).unwrap();
-        let p_value = 2f64 * (1f64 - distribution.cdf(t.abs()));
+        // let distribution = StudentsT::new(mean, std_dev, (n-1) as f64).unwrap(); //Normal::new(0.0, 1.0).unwrap();
+        // let p_value = 2f64 * (1f64 - distribution.cdf(t.abs()));
+        let p_value = calc_p_value(t, n-1);
         
         ///////////////////////
         // Output the report //
@@ -369,6 +372,35 @@ impl WhiteboxTool for PairedSampleTTest {
 
         writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
+
+        if num_samples < 51 && num_samples > 0 {
+            // Point Return Table
+            let s = "<p><table>
+            <caption>Data Table</caption>
+            <tr>
+                <th class=\"headerCell\">Image 1</th>
+                <th class=\"headerCell\">Image 2</th>
+                <th class=\"headerCell\">Diff</th>
+            </tr>";
+            writer.write_all(s.as_bytes())?;
+
+            for i in 0..num_samples {
+                let s1 = &format!(
+                    "<tr>
+                    <td class=\"numberCell\">{}</td>
+                    <td class=\"numberCell\">{}</td>
+                    <td class=\"numberCell\">{}</td>
+                </tr>\n",
+                    format!("{:.4}", data1[i]),
+                    format!("{:.4}", data2[i]),
+                    format!("{:.4}", data2[i] - data1[i])
+                );
+                writer.write_all(s1.as_bytes())?;
+            }
+
+            writer.write_all("</table>".as_bytes())?;
+        }
+
         writer.write_all(&format!("<strong>Sample mean of the differences</strong>: {:.4}<br>", mean).as_bytes())?;
         writer.write_all(&format!("<strong>Sample size (n)</strong>: {:.0}<br>", n).as_bytes())?;
         writer.write_all(&format!("<strong>Sample standard deviation of the differences</strong>: {:.4}<br>", std_dev).as_bytes())?;
@@ -398,26 +430,6 @@ impl WhiteboxTool for PairedSampleTTest {
         writer.write_all("</p>".as_bytes())?;
 
         writer.write_all("<p><strong>Caveat</strong>: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, \nand statistical significance says nothing about the practical significance of a difference.</p>".to_string().as_bytes())?;
-
-        // let graph = LineGraph {
-        //     parent_id: "graph".to_string(),
-        //     width: 700f64,
-        //     height: 500f64,
-        //     data_x: xdata.clone(),
-        //     data_y: ydata.clone(),
-        //     series_labels: series_names.clone(),
-        //     x_axis_label: "X".to_string(),
-        //     y_axis_label: "Cumulative Probability".to_string(),
-        //     draw_points: false,
-        //     draw_gridlines: true,
-        //     draw_legend: true,
-        //     draw_grey_background: false,
-        // };
-
-        // writer.write_all(
-        //     &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
-        // )?;
-
 
         writer.write_all("</body>".as_bytes())?;
         writer.write_all("</html>".as_bytes())?;
@@ -462,4 +474,53 @@ impl WhiteboxTool for PairedSampleTTest {
 
         Ok(())
     }
+}
+
+// The following formulation has been based on a javascript translation from: 
+// https://www.easycalculation.com/statistics/p-value-t-test.php
+fn calc_p_value(t: f64, df: usize) -> f64 {
+    if df == 0 {
+        panic!("Error: degrees of freedom (df) must be non-zero.");
+    }
+    let abst = t.abs();
+    let tsq = t*t;
+    let p = match df {
+        1 => 1f64 - 2f64 * abst.atan() / f64::consts::PI,
+        2 => 1f64 - abst / (tsq + 2f64).sqrt(),
+        3 => 1f64 - 2f64 * ((abst / 3f64.sqrt()).atan() + abst * 3f64.sqrt() / (tsq + 3f64)) / f64::consts::PI,
+        4 => 1f64 - abst * (1f64 + 2f64 / (tsq + 4f64)) / (tsq + 4f64).sqrt(),
+        _ => {
+            let z = t_to_z(abst, df);
+            norm_p(z)
+        }
+    };
+  return p;
+}
+
+fn t_to_z(t: f64, df: usize) -> f64 {
+    let a9 = df as f64 - 0.5;
+    let b9 = 48f64 * a9 * a9;
+    let t9 = t * t / df as f64;
+    let z8 = if t9 >= 0.04f64 {
+        a9 * (1f64 + t9).ln()
+    } else {
+        a9 * (((1f64 - t9 * 0.75f64) * t9 / 3f64 - 0.5f64) * t9 + 1f64) * t9
+    };
+    let p7 = ((0.4f64 * z8 + 3.3f64) * z8 + 24f64) * z8 + 85.5f64;
+    let b7 = 0.8f64 * z8.powf(2f64) + 100f64 + b9;
+    let z = (1f64 + (-p7 / b7 + z8 + 3f64) / b9) * z8.sqrt();
+    return z;
+}
+
+fn norm_p(z: f64) -> f64 {
+    let absz = z.abs();
+    const A1: f64 = 0.0000053830;
+    const A2: f64 = 0.0000488906;
+    const A3: f64 = 0.0000380036;
+    const A4: f64 = 0.0032776263;
+    const A5: f64 = 0.0211410061;
+    const A6: f64 = 0.0498673470;
+    let mut p = (((((A1 * absz + A2) * absz + A3) * absz + A4) * absz + A5) * absz + A6) * absz + 1f64;
+    p = p.powf(-16f64);
+    return p;
 }
