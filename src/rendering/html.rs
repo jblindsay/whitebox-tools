@@ -14,7 +14,7 @@ pub fn get_css() -> String {
                 text-align: center;
                 font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
             }
-            p {
+            p, ol, ul {
                 font-size: 12pt;
                 font-family: Helvetica, Verdana, Geneva, Arial, sans-serif;
                 margin-left: 15px;

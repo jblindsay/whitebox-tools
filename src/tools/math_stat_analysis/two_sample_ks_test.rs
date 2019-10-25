@@ -244,17 +244,6 @@ impl WhiteboxTool for TwoSampleKSTest {
         // declare some variables
         let mut z1: f64;
         let mut z2: f64;
-        // let min_value = input1.configs.minimum;
-        // let max_value = input1.configs.maximum;
-        // let num_bins = 10000usize;
-        // let bin_size = (max_value - min_value) / num_bins as f64;
-        // let mut histogram = vec![0usize; num_bins];
-        // let mut bin_num: usize;
-        // let num_bins_less_one = num_bins - 1usize;
-        // let mut total = 0f64;
-        // let mean: f64;
-        // let mut total_deviation = 0f64;
-
         let mut data1: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
         let mut data2: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
 

@@ -8,6 +8,7 @@ License: MIT
 
 use crate::raster::*;
 use crate::rendering::html::*;
+use crate::rendering::LineGraph;
 use crate::tools::*;
 use rand::prelude::*;
 use std::env;
@@ -21,6 +22,7 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use std::cmp::Ordering::Equal;
 
 /// This tool will perform a paired-sample t-test to evaluate whether a significant 
 /// statistical difference exists between the two rasters. The user must 
@@ -250,6 +252,7 @@ impl WhiteboxTool for PairedSampleTTest {
 
         let mut data1: Vec<f64> = Vec::with_capacity(num_samples);
         let mut data2: Vec<f64> = Vec::with_capacity(num_samples);
+        let mut diffs: Vec<f64> = Vec::with_capacity((rows * columns) as usize);
 
         if num_samples == 0 {
             let num_procs = num_cpus::get() as isize;
@@ -266,6 +269,7 @@ impl WhiteboxTool for PairedSampleTTest {
                         let mut n = 0;
                         let mut s = 0.0;
                         let mut sq = 0.0;
+                        let mut diffs: Vec<f64> = Vec::with_capacity(columns as usize);
                         for col in 0..columns {
                             z1 = input1.get_value(row, col);
                             z2 = input2.get_value(row, col);
@@ -274,9 +278,10 @@ impl WhiteboxTool for PairedSampleTTest {
                                 diff = z2 - z1;
                                 s += diff;
                                 sq += diff * diff;
+                                diffs.push(diff);
                             }
                         }
-                        tx.send((n, s, sq)).unwrap();
+                        tx.send((n, s, sq, diffs)).unwrap();
                     }
                 });
             }
@@ -284,10 +289,13 @@ impl WhiteboxTool for PairedSampleTTest {
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
             for row in 0..rows {
-                let (a, b, c) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().unwrap();
                 n += a;
                 sum += b;
                 sq_sum += c;
+                for i in 0..d.len() {
+                    diffs.push(d[i]);
+                }
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
                     if progress != old_progress {
@@ -303,6 +311,7 @@ impl WhiteboxTool for PairedSampleTTest {
 
         } else {
             // Note that this is sampling with replacement, which is not ideal.
+            diffs = Vec::with_capacity(num_samples);
             let mut z1: f64;
             let mut z2: f64;
             let mut diff: f64;
@@ -324,6 +333,7 @@ impl WhiteboxTool for PairedSampleTTest {
                     sample_num += 1;
                     data1.push(z1);
                     data2.push(z2);
+                    diffs.push(z2 - z1);
 
                     if verbose {
                         progress = (100.0_f64 * sample_num as f64 / num_samples as f64) as i32;
@@ -342,9 +352,56 @@ impl WhiteboxTool for PairedSampleTTest {
 
         let std_err = std_dev / (n as f64).sqrt();
         let t = mean / std_err; 
-        // let distribution = StudentsT::new(mean, std_dev, (n-1) as f64).unwrap(); //Normal::new(0.0, 1.0).unwrap();
-        // let p_value = 2f64 * (1f64 - distribution.cdf(t.abs()));
         let p_value = calc_p_value(t, n-1);
+
+        // let's see the cdf of differences compared with a normal
+        diffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+        let mut xdata = vec![];
+        let mut ydata = vec![];
+        let mut series_names = vec![];
+        let num_bins = 100usize;
+        let min_val = diffs[0];
+        let max_val = diffs[n-1];
+        let bin_size = (max_val - min_val) / num_bins as f64;
+        let mut bin: usize;
+        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
+        let mut profile_ydata = vec![0f64; num_bins];
+        // bin frequency data
+        for val in &diffs {
+            bin = ((val - min_val) / bin_size).floor() as usize;
+            if bin > num_bins -1 { bin = num_bins - 1; }
+            profile_ydata[bin] += 1f64;
+        }
+        for bin in 1..num_bins {
+            profile_ydata[bin] += profile_ydata[bin-1];
+        }
+        for bin in 0..num_bins {
+            profile_ydata[bin] /= n as f64;
+        }
+        xdata.push(profile_xdata.clone());
+        ydata.push(profile_ydata.clone());
+        series_names.push(String::from("Paired Differences"));
+
+        let mut normal_dist = vec![0f64; num_bins];
+        let sd_root2pi = std_dev * (2f64 * f64::consts::PI).sqrt();
+        let two_sd_sqr = 2f64 * std_dev * std_dev;
+        let mut z: f64;
+        for i in 0..num_bins {
+            z = min_val + i as f64 * bin_size;
+            normal_dist[i] = 1f64 / sd_root2pi * ((-(z - mean) * (z - mean)) / two_sd_sqr).exp();
+        }
+        for i in 1..num_bins {
+            normal_dist[i] = normal_dist[i - 1] + normal_dist[i];
+        }
+
+        for i in 1..num_bins {
+            normal_dist[i] = normal_dist[i] / normal_dist[num_bins - 1];
+        }
+
+        xdata.push(profile_xdata.clone());
+        ydata.push(normal_dist.clone());
+        series_names.push(String::from("Normal Dist."));
+
         
         ///////////////////////
         // Output the report //
@@ -356,7 +413,7 @@ impl WhiteboxTool for PairedSampleTTest {
         <html>
             <head>
                 <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
-                <title>Paired-Sample t-Test</title>"#.as_bytes())?;
+                <title>Paired-Samples t-Test</title>"#.as_bytes())?;
 
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
@@ -373,7 +430,7 @@ impl WhiteboxTool for PairedSampleTTest {
         writer.write_all(&format!("<strong>Input image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
         writer.write_all(&format!("<strong>Input image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
 
-        if num_samples < 51 && num_samples > 0 {
+        if num_samples < 25 && num_samples > 0 {
             // Point Return Table
             let s = "<p><table>
             <caption>Data Table</caption>
@@ -393,7 +450,7 @@ impl WhiteboxTool for PairedSampleTTest {
                 </tr>\n",
                     format!("{:.4}", data1[i]),
                     format!("{:.4}", data2[i]),
-                    format!("{:.4}", data2[i] - data1[i])
+                    format!("{:.4}", diffs[i])
                 );
                 writer.write_all(s1.as_bytes())?;
             }
@@ -409,14 +466,14 @@ impl WhiteboxTool for PairedSampleTTest {
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
-                    "<strong>Two-tailed Significance (p-value)</strong>: {:.4}<br>",
+                    "<strong>Two-tailed Significance (<em>p</em>-value)</strong>: {:.4}<br>",
                     p_value
                 )
                 .as_bytes(),
             )?;
         } else {
             writer.write_all(
-                "<strong>Two-tailed Significance (p-value)</strong>: <0.001<br>"
+                "<strong>Two-tailed Significance (<em>p</em>-value)</strong>: <0.001<br>"
                     .to_string()
                     .as_bytes(),
             )?;
@@ -429,7 +486,29 @@ impl WhiteboxTool for PairedSampleTTest {
 
         writer.write_all("</p>".as_bytes())?;
 
-        writer.write_all("<p><strong>Caveat</strong>: Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, \nand statistical significance says nothing about the practical significance of a difference.</p>".to_string().as_bytes())?;
+        writer.write_all("<p><strong>Caveats</strong>: <ol>
+        <li>Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, and statistical significance says nothing about the practical significance of a difference.</li> 
+        <li>The presence of spatial autocorrelation implies a lack of independence in the data sample, which violates the assumptions of the <em>t</em>-Test, potentially affecting the reliability of the results.</li>
+        <li>Care should be taken to ensure that the distribution of paired-sample differences are normally distributed (see below).</li></ol></p>".to_string().as_bytes())?;
+
+        let graph = LineGraph {
+            parent_id: "graph".to_string(),
+            width: 700f64,
+            height: 550f64,
+            data_x: xdata.clone(),
+            data_y: ydata.clone(),
+            series_labels: series_names.clone(),
+            x_axis_label: "X".to_string(),
+            y_axis_label: "Cumulative Probability".to_string(),
+            draw_points: false,
+            draw_gridlines: true,
+            draw_legend: true,
+            draw_grey_background: false,
+        };
+
+        writer.write_all(
+            &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+        )?;
 
         writer.write_all("</body>".as_bytes())?;
         writer.write_all("</html>".as_bytes())?;
