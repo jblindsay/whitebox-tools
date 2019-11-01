@@ -379,6 +379,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -4563,7 +4564,7 @@ class WhiteboxTools(object):
         args.append("--sigma={}".format(sigma))
         return self.run_tool('laplacian_of_gaussian_filter', args, callback) # returns 1 if error
 
-    def lee_filter(self, i, output, filterx=11, filtery=11, sigma=10.0, m=5.0, callback=None):
+    def lee_sigma_filter(self, i, output, filterx=11, filtery=11, sigma=10.0, m=5.0, callback=None):
         """Performs a Lee (Sigma) smoothing filter on an image.
 
         Keyword arguments:
@@ -4583,7 +4584,7 @@ class WhiteboxTools(object):
         args.append("--filtery={}".format(filtery))
         args.append("--sigma={}".format(sigma))
         args.append("-m={}".format(m))
-        return self.run_tool('lee_filter', args, callback) # returns 1 if error
+        return self.run_tool('lee_sigma_filter', args, callback) # returns 1 if error
 
     def line_detection_filter(self, i, output, variant="vertical", absvals=False, clip=0.0, callback=None):
         """Performs a line-detection filter on an image.
@@ -6053,6 +6054,48 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('arc_tan', args, callback) # returns 1 if error
 
+    def arcosh(self, i, output, callback=None):
+        """Returns the inverse hyperbolic cosine (arcosh) of each values in a raster.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('arcosh', args, callback) # returns 1 if error
+
+    def arsinh(self, i, output, callback=None):
+        """Returns the inverse hyperbolic sine (arsinh) of each values in a raster.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('arsinh', args, callback) # returns 1 if error
+
+    def artanh(self, i, output, callback=None):
+        """Returns the inverse hyperbolic tangent (arctanh) of each values in a raster.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('artanh', args, callback) # returns 1 if error
+
     def atan2(self, input_y, input_x, output, callback=None):
         """Returns the 2-argument inverse tangent (atan2).
 
@@ -7142,6 +7185,26 @@ class WhiteboxTools(object):
     ###########################
     # Stream Network Analysis #
     ###########################
+
+    def burn_streams_at_roads(self, dem, streams, roads, output, width=None, callback=None):
+        """Rasterizes vector streams based on Lindsay (2016) method.
+
+        Keyword arguments:
+
+        dem -- Input raster digital elevation model (DEM) file. 
+        streams -- Input vector streams file. 
+        roads -- Input vector roads file. 
+        output -- Output raster file. 
+        width -- Maximum road embankment width, in map units. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--streams='{}'".format(streams))
+        args.append("--roads='{}'".format(roads))
+        args.append("--output='{}'".format(output))
+        if width is not None: args.append("--width='{}'".format(width))
+        return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
 
     def distance_to_outlet(self, d8_pntr, streams, output, esri_pntr=False, zero_background=False, callback=None):
         """Calculates the distance of stream grid cells to the channel network outlet cell.
