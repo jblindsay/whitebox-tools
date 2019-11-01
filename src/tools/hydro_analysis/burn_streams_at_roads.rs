@@ -43,7 +43,7 @@ impl BurnStreamsAtRoads {
     pub fn new() -> BurnStreamsAtRoads {
         // public constructor
         let name = "BurnStreamsAtRoads".to_string();
-        let toolbox = "Stream Network Analysis".to_string();
+        let toolbox = "Hydrological Analysis".to_string();
         let description = "Rasterizes vector streams based on Lindsay (2016) method.".to_string();
 
         let mut parameters = vec![];
