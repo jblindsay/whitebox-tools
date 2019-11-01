@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 1, 2017
+Created: 01/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool assigns grid cells for which both (`--input1` and `--input2`) input rasters (or one raster and 
+/// a constant value) have unequal values a new value of 1 (*True*) in the output raster (`--output`). All 
+/// equivalent grid cells are assigned a value of zero (*False*). Grid cells containing **NoData** values 
+/// in either of the inputs will be assigned a **NoData** value in the output raster.
+/// 
+/// # See Also
+/// `EqualTo`, `GreaterThan`, `LessThan`
 pub struct NotEqualTo {
     name: String,
     description: String,

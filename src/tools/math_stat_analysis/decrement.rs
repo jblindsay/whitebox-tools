@@ -22,7 +22,7 @@ use std::thread;
 /// raster file, leaving the input unmodified, use the `Subtract` tool instead.
 /// 
 /// # See Also 
-/// `InPlaceSubtract`, `Subtract`
+/// `InPlaceSubtract`, `Subtract`, `Increment`
 pub struct Decrement {
     name: String,
     description: String,

@@ -18,6 +18,32 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs Robert's Cross edge-detection filter on a raster image. The `RobertsCrossFilter`  
+/// is similar to the `SobelFilter` and `PrewittFilter`, in that it identifies areas of high slope in the input 
+/// image through the calculation of slopes in the x and y directions. A Robert's Cross filter uses 
+/// the following 2 &times; 2 schemes to calculate slope magnitude, |*G*|:
+///  
+/// | .  | .  |
+/// |:--:|:--:|
+/// | P1 | P2 |
+/// | P3 | P4 |
+/// 
+/// |*G*| = |P1 - P4| + |P2- P3|
+/// 
+/// Note, the filter is centered on pixel P1 and P2, P3, and P4 are the neighbouring pixels towards the east, south, 
+/// and south-east respectively.
+/// 
+/// The output image may be overwhelmed by a relatively small number of high-valued pixels, stretching the
+/// palette. The user may therefore optionally clip the output image distribution tails by a specified amount 
+/// (`--clip`) for improved visualization.
+/// 
+/// # Reference
+/// 
+/// Fisher, R. 2004. *Hypertext Image Processing Resources 2 (HIPR2)*. Available online: 
+/// http://homepages.inf.ed.ac.uk/rbf/HIPR2/roberts.htm
+/// 
+/// # See Also
+/// `SobelFilter`, `PrewittFilter`
 pub struct RobertsCrossFilter {
     name: String,
     description: String,
@@ -266,8 +292,7 @@ impl WhiteboxTool for RobertsCrossFilter {
                                 z4 = z1;
                             }
 
-                            data[col as usize] =
-                                output_fn(row, col, (z1 - z4).abs() + (z2 - z3).abs());
+                            data[col as usize] = output_fn(row, col, (z1 - z4).abs() + (z2 - z3).abs());
                         }
                     }
                     tx1.send((row, data)).unwrap();

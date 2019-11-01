@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
-Last Modified: 13/10/2018
+Created: 06/07/2017
+Last Modified: 26/10/2019
 License: MIT
 */
 
@@ -17,6 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool truncates the values in an input raster (`--input`); truncation limits the number of digits right of the decimal point. For 
+/// example, trunc(3.2) = 3 and trunc(5.8) = 5 The output raster (`--output`) will be of an I32 data type. 
+/// 
+/// # See Also
+/// `Round`, `Ceil`, `Floor`
 pub struct Truncate {
     name: String,
     description: String,
@@ -220,6 +225,7 @@ impl WhiteboxTool for Truncate {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I32;
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

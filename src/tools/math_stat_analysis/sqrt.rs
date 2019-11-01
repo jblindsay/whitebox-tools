@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
-Last Modified: 13/10/2018
+Created: 06/07/2017
+Last Modified: 26/10/2019
 License: MIT
 */
 
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
+/// [square root](https://en.wikipedia.org/wiki/Square_root) of the value of the corresponding grid cell in the 
+/// input raster (`--input`). **NoData** values in the input image will be assigned **NoData** values in the 
+/// output image.
+/// 
+/// # See Also
+/// `Square`
 pub struct SquareRoot {
     name: String,
     description: String,
@@ -190,7 +197,7 @@ impl WhiteboxTool for SquareRoot {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             data[col as usize] = z.sqrt();
                         }

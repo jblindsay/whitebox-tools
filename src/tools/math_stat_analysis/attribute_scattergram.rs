@@ -26,7 +26,7 @@ use std::process::Command;
 /// HTML formated report containing a graphical scattergram plot.
 /// 
 /// # See Also
-/// `AttributeHistogram` 
+/// `AttributeHistogram`, `AttributeCorrelation`
 pub struct AttributeScattergram {
     name: String,
     description: String,

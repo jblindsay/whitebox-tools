@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 05/07/2017
-Last Modified: 12/10/2018
+Created: 26/10/2019
+Last Modified: 26/10/2019
 License: MIT
 */
 
@@ -17,16 +17,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is calculated as 
-/// [*e*](https://en.wikipedia.org/wiki/E_(mathematical_constant)) to the power of the value of the 
-/// corresponding grid cell in the input raster (`--input`). Moderate to large values in the input 
-/// raster will result in very large values in the output raster and this may cause errors when you 
-/// try to display the data. Grid cells with **NoData** values in the input raster will be assigned 
-/// **NoData** values in the output raster.
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
+/// [inverse hyperbolic cosine](https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions) (arcosh) of the 
+/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in 
+/// radian, in the range [0, &pi;] or **NoData** if the number is outside the range [-1, 1]. If desired, you can convert 
+/// radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input raster 
+/// will be assigned **NoData** values in the output raster. 
 /// 
 /// # See Also
-/// `Exp2`, `Power`, `Ln`
-pub struct Exp {
+/// `Arsinh`, `Artanh`, `ToDegrees`
+pub struct Arcosh {
     name: String,
     description: String,
     toolbox: String,
@@ -34,12 +34,13 @@ pub struct Exp {
     example_usage: String,
 }
 
-impl Exp {
+impl Arcosh {
     /// public constructor
-    pub fn new() -> Exp {
-        let name = "Exp".to_string();
+    pub fn new() -> Arcosh {
+        let name = "Arcosh".to_string();
         let toolbox = "Math and Stats Tools".to_string();
-        let description = "Returns the exponential (base e) of values in a raster.".to_string();
+        let description =
+            "Returns the inverse hyperbolic cosine (arcosh) of each values in a raster.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -77,7 +78,7 @@ impl Exp {
         )
         .replace("*", &sep);
 
-        Exp {
+        Arcosh {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -87,7 +88,7 @@ impl Exp {
     }
 }
 
-impl WhiteboxTool for Exp {
+impl WhiteboxTool for Arcosh {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -201,7 +202,11 @@ impl WhiteboxTool for Exp {
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
-                            data[col as usize] = z.exp();
+                            if z >= -1.0 && z <= 1.0 {
+                                data[col as usize] = z.acosh();
+                            } else {
+                                data[col as usize] = nodata;
+                            }
                         } else {
                             data[col as usize] = nodata;
                         }

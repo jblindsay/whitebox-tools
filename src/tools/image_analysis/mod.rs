@@ -98,7 +98,7 @@ pub use self::integral_image::IntegralImage;
 pub use self::k_means_clustering::KMeansClustering;
 pub use self::k_nearest_mean_filter::KNearestMeanFilter;
 pub use self::laplacian_filter::LaplacianFilter;
-pub use self::lee_filter::LeeFilter;
+pub use self::lee_filter::LeeSigmaFilter;
 pub use self::line_detection_filter::LineDetectionFilter;
 pub use self::line_thin::LineThinning;
 pub use self::log_filter::LaplacianOfGaussianFilter;

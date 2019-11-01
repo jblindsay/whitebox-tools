@@ -20,6 +20,26 @@ use std::thread;
 /// This tool outputs distribution summary statistics for input raster images (`--input`).
 /// The distribution statistics include the raster minimum, maximum, range, total, mean,
 /// variance, and standard deviation. These summary statistics are output to the system `stdout`.
+/// 
+/// The following is an example of the summary report:
+/// 
+/// > \********************************* <br/>
+/// > \* Welcome to RasterSummaryStats * <br/>
+/// > \********************************* <br/>
+/// > Reading data...
+/// > 
+/// > Number of non-nodata grid cells: 32083559 <br/>
+/// > Number of nodata grid cells: 3916441 <br/>
+/// > Image minimum: 390.266357421875 <br/>
+/// > Image maximum: 426.0322570800781 <br/>
+/// > Image range: 35.765899658203125 <br/>
+/// > Image total: 13030334843.332886 <br/>
+/// > Image average: 406.13745012929786 <br/>
+/// > Image variance: 31.370027239143383 <br/>
+/// > Image standard deviation: 5.600895217654351 <br/>
+/// 
+/// # See Also
+/// `RasterHistogram`, `ZonalStatistics`
 pub struct RasterSummaryStats {
     name: String,
     description: String,

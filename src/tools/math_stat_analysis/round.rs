@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
-Last Modified: 13/10/2018
+Created: 06/07/2017
+Last Modified: 26/10/2019
 License: MIT
 */
 
@@ -17,6 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool rounds the values in an input raster (`--input`) to the nearest integer value. Half-way cases 
+/// are rounded away from zero (e.g. round(0.5) = 1, round(-4.5) = -5). The output raster (`--output`) will be of an I32 data type. 
+/// 
+/// # See Also
+/// `Ceil`, `Floor`, `Truncate`
 pub struct Round {
     name: String,
     description: String,
@@ -202,6 +207,7 @@ impl WhiteboxTool for Round {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I32;
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

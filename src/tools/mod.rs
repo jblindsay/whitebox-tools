@@ -146,6 +146,7 @@ impl ToolManager {
         tool_names.push("Basins".to_string());
         tool_names.push("BreachDepressions".to_string());
         tool_names.push("BreachSingleCellPits".to_string());
+        tool_names.push("BurnStreamsAtRoads".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
         tool_names.push("D8MassFlux".to_string());
         tool_names.push("D8Pointer".to_string());
@@ -218,7 +219,7 @@ impl ToolManager {
         tool_names.push("KNearestMeanFilter".to_string());
         tool_names.push("LaplacianFilter".to_string());
         tool_names.push("LaplacianOfGaussianFilter".to_string());
-        tool_names.push("LeeFilter".to_string());
+        tool_names.push("LeeSigmaFilter".to_string());
         tool_names.push("LineDetectionFilter".to_string());
         tool_names.push("LineThinning".to_string());
         tool_names.push("MajorityFilter".to_string());
@@ -307,6 +308,9 @@ impl ToolManager {
         tool_names.push("ArcSin".to_string());
         tool_names.push("ArcTan".to_string());
         tool_names.push("Atan2".to_string());
+        tool_names.push("Arcosh".to_string());
+        tool_names.push("Arsinh".to_string());
+        tool_names.push("Artanh".to_string());
         tool_names.push("AttributeCorrelation".to_string());
         tool_names.push("AttributeHistogram".to_string());
         tool_names.push("AttributeScattergram".to_string());
@@ -620,6 +624,7 @@ impl ToolManager {
             "basins" => Some(Box::new(hydro_analysis::Basins::new())),
             "breachdepressions" => Some(Box::new(hydro_analysis::BreachDepressions::new())),
             "breachsinglecellpits" => Some(Box::new(hydro_analysis::BreachSingleCellPits::new())),
+            "burnstreamsatroads" => Some(Box::new(hydro_analysis::BurnStreamsAtRoads::new())),
             "d8flowaccumulation" => Some(Box::new(hydro_analysis::D8FlowAccumulation::new())),
             "d8massflux" => Some(Box::new(hydro_analysis::D8MassFlux::new())),
             "d8pointer" => Some(Box::new(hydro_analysis::D8Pointer::new())),
@@ -724,7 +729,7 @@ impl ToolManager {
             "laplacianofgaussianfilter" => {
                 Some(Box::new(image_analysis::LaplacianOfGaussianFilter::new()))
             }
-            "leefilter" => Some(Box::new(image_analysis::LeeFilter::new())),
+            "leesigmafilter" => Some(Box::new(image_analysis::LeeSigmaFilter::new())),
             "linedetectionfilter" => Some(Box::new(image_analysis::LineDetectionFilter::new())),
             "linethinning" => Some(Box::new(image_analysis::LineThinning::new())),
             "majorityfilter" => Some(Box::new(image_analysis::MajorityFilter::new())),
@@ -843,6 +848,9 @@ impl ToolManager {
             "arcsin" => Some(Box::new(math_stat_analysis::ArcSin::new())),
             "arctan" => Some(Box::new(math_stat_analysis::ArcTan::new())),
             "atan2" => Some(Box::new(math_stat_analysis::Atan2::new())),
+            "arcosh" => Some(Box::new(math_stat_analysis::Arcosh::new())),
+            "arsinh" => Some(Box::new(math_stat_analysis::Arsinh::new())),
+            "artanh" => Some(Box::new(math_stat_analysis::Artanh::new())),
             "attributecorrelation" => {
                 Some(Box::new(math_stat_analysis::AttributeCorrelation::new()))
             }

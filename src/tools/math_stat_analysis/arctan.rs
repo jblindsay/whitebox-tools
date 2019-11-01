@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
+Created: 05/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the inverse tangent of the 
+/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in 
+/// radian, in the range [-&pi;/2, &pi;/2]  or **NoData** if the number is outside the range [-1, 1]. If desired, 
+/// you can convert radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input 
+/// raster will be assigned **NoData** values in the output raster. 
+/// 
+/// # See Also
+/// `ArcCos`, `ArcTan`, `Atan2`, `ToDegrees`
 pub struct ArcTan {
     name: String,
     description: String,

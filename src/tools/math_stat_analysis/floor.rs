@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
-Last Modified: 12/10/2018
+Created: 05/07/2017
+Last Modified: 26/10/2019
 License: MIT
 */
 
@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a floor operation on the values in an input raster (`--input`) to the nearest integer value. 
+/// The `floor` function calculates the largest integer less than or equal to the input value (e.g. floor(0.5) = 0, floor(-4.5) = -4). 
+/// The output raster (`--output`) will be of an I32 data type. 
+/// 
+/// # See Also
+/// `Ceil`, `Round`, `Truncate`
 pub struct Floor {
     name: String,
     description: String,
@@ -203,6 +209,7 @@ impl WhiteboxTool for Floor {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I32;
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);

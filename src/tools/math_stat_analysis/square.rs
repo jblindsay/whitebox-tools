@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the square of the 
+/// value of the corresponding grid cell in the input raster (`--input`), i.e. the input raster is raised to 
+/// the power of two. **NoData** values in the input image will be assigned **NoData** values in the output image.
+/// 
+/// # See Also
+/// `SquareRoot`
 pub struct Square {
     name: String,
     description: String,

@@ -22,7 +22,7 @@ use std::path;
 use std::process::Command;
 
 /// This tool will perform a two-sample Kolmogorov-Smirnov (K-S) test to evaluate whether a significant 
-/// statistical difference exists between the frequency distributions of two rasters. Tthe null hypothesis 
+/// statistical difference exists between the frequency distributions of two rasters. The null hypothesis 
 /// is that both samples come from a population with the same distribution. Note that this test evaluates
 /// the two input rasters for differences in their overall distribution shape, with no assumption of normality. 
 /// If there is need to compare the per-pixel differences between two input rasters, a paired-samples test

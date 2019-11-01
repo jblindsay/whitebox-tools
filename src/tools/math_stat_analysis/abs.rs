@@ -17,6 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
+/// [absolute value](https://en.wikipedia.org/wiki/Absolute_value) of the corresponding grid cell in an input 
+/// raster (`--input`). The absolute value is a number that is equal in magnitude but is always positive.
+/// 
+/// # See Also
+/// `Negate`
 pub struct AbsoluteValue {
     name: String,
     description: String,

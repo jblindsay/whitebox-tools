@@ -96,7 +96,7 @@ use std::fmt;
 //             15 => return String::from("Transmission tower"),
 //             16 => return String::from("Wire-structure connector (e.g. insulator)"),
 //             17 => return String::from("Bridge deck"),
-//             18 => return String::from("High Noise"),
+//             18 => return String::from("High noise"),
 //             19...63 => return String::from("Reserved"),
 //             64...255 => return String::from("User defined"),
 //             _ => return String::from("Unknown class"),
@@ -173,7 +173,7 @@ pub fn convert_class_val_to_class_string(value: u8) -> String {
         15 => return String::from("Transmission tower"),
         16 => return String::from("Wire-structure connector (e.g. insulator)"),
         17 => return String::from("Bridge deck"),
-        18 => return String::from("High Noise"),
+        18 => return String::from("High noise"),
         19..=63 => return String::from("Reserved"),
         64..=255 => return String::from("User defined"),
     }
@@ -445,7 +445,7 @@ impl PointData {
             15 => return String::from("Transmission tower"),
             16 => return String::from("Wire-structure connector (e.g. insulator)"),
             17 => return String::from("Bridge deck"),
-            18 => return String::from("High Noise"),
+            18 => return String::from("High noise"),
             19..=63 => return String::from("Reserved"),
             64..=255 => return String::from("User defined"),
         }

@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the remainder of the division 
+/// of the corresponding grid cells in two input rasters or one input raster and a constant value (`--input1` and 
+/// `--input2`), i.e. it performs a [modulo operation](https://en.wikipedia.org/wiki/Modulo_operation) on two numbers. 
+/// For example, the expression 14 **Mod** 4 equals 2. If either of the two input numbers is a floating-point value, 
+/// the floating-point remainder of the division is returned. Because of the imprecision of floating-point storage, 
+/// the Modulo tool can return an unexpected result when at least one of the operands is floating-point. If the 
+/// second raster / constant is zero the corresponding grid cell in the output raster will be assigned the **NoData** 
+/// value. **NoData** values in either of the input images will be assigned a **NoData** value in the output image. 
+/// Notice that the `IntegerDivision` tool returns the integer quotient of a division. For example, the expression 
+/// 14 **intdiv** 4 evaluates to 3.
+/// 
+/// # See Also
+/// `IntegerDivision`
 pub struct Modulo {
     name: String,
     description: String,

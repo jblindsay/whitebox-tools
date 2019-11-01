@@ -46,6 +46,9 @@ use std::thread;
 ///
 /// NoData values in either of the two input images are ignored during the calculation of the
 /// descriptive statistic.
+/// 
+/// # See Also
+/// `RasterSummaryStats`
 pub struct ZonalStatistics {
     name: String,
     description: String,

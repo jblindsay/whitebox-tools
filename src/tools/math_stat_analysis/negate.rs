@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 
@@ -20,6 +20,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster in which each grid cell is equal to negative one times the corresponding 
+/// grid cell in the input raster. This effectively changes the sign of values. This tool also handles Boolean 
+/// data (0, 1) by reversing values (i.e. 0->1 and 1->0).
+/// 
+/// # See Also
+/// `AbsoluteValue`
 pub struct Negate {
     name: String,
     description: String,

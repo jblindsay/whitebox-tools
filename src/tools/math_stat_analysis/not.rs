@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 2, 2017
+Created: 02/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool is a Boolean **NOT** operator, i.e. it works on *True* or *False* (1 and 0) values. Grid cells for which 
+/// the first input raster (`--input1`) has a *True* value and the second raster (`--input2`) has a *False* value are assigned 
+/// 0 in the output raster, otherwise grid cells are assigned a value of 0. All non-zero values in the input 
+/// rasters are considered to be *True*, while all zero-valued grid cells are considered to be *False*. Grid 
+/// cells containing **NoData** values in either of the input rasters will be assigned a **NoData** value in 
+/// the output raster (`--output`). Notice that the **Not** operator is asymmetrical, and the order of inputs matters.
+/// 
+/// # See Also
+/// `And`, `Or`, `Xor`
 pub struct Not {
     name: String,
     description: String,

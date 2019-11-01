@@ -43,7 +43,7 @@ use std::thread;
 /// however, reduce overall image contrast.
 /// 
 /// # See Also
-/// `GaussianFilter`, `FastAlmostGaussianFilter`, `LaplacianFilter`
+/// `GaussianFilter`, `FastAlmostGaussianFilter`, `LaplacianFilter`, LaplacianOfGaussianFilter`
 pub struct DiffOfGaussianFilter {
     name: String,
     description: String,

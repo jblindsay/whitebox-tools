@@ -29,8 +29,9 @@ use std::cmp::Ordering::Equal;
 /// This tool will perform a Wilcoxon signed-rank test to evaluate whether a significant 
 /// statistical difference exists between the two rasters. The Wilcoxon signed-rank test is often used as a 
 /// non-parametric equivalent to the paired-samples Student's t-test, and is used when the distribution of
-/// sample difference values between the paired inputs is non-Gaussian. The null hypothesis is that 
-/// difference between the sample pairs follow a symmetric distribution around zero.
+/// sample difference values between the paired inputs is non-Gaussian. The null hypothesis of this test is that 
+/// difference between the sample pairs follow a symmetric distribution around zero. i.e. that the median difference 
+/// between pairs of observations is zero.
 /// 
 /// The user must specify the name of the two input raster images (`--input1` and `--input2`) and the output report
 /// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
@@ -42,7 +43,7 @@ use std::cmp::Ordering::Equal;
 /// rank values.
 /// 
 /// # See Also
-/// `PairedSampleTTest`, `TwoSampleKSTest`
+/// `PairedSampleTTest`, `TwoSampleKsTest`
 pub struct WilcoxonSignedRankTest {
     name: String,
     description: String,

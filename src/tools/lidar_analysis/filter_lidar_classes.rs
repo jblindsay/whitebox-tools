@@ -38,7 +38,7 @@ use std::path;
 /// | 15                    | Transmission Tower
 /// | 16                    | Wire-structure Connector (e.g. Insulator)
 /// | 17                    | Bridge Deck
-/// | 18                    | High Noise
+/// | 18                    | High noise
 /// 
 /// Thus, to filter out low and high noise points from a point cloud, specify 
 /// `--exclude_cls='7,18'`. Notice that usage of this tool assumes that the 

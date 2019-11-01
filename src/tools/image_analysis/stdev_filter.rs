@@ -19,6 +19,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a standard deviation filter on an input image (`--input`). A standard deviation filter assigns to each cell in the output grid
+/// (`--output`) the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation), a measure of dispersion, of the values contained within a moving window centred on each grid cell.
+/// 
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+/// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
+/// 
+/// # See Also
+/// `RangeFilter`, `TotalFilter`
 pub struct StandardDeviationFilter {
     name: String,
     description: String,

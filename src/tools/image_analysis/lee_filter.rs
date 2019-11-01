@@ -18,7 +18,17 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-pub struct LeeFilter {
+/// The Lee Sigma filter is a low-pass filter used to smooth the input image (`--input`). The user must 
+/// specify the dimensions of the filter (`--filterx` and `--filtery`) as well as the *sigma* (`--sigma`) and 
+/// *M* (`-m`) parameter.
+/// 
+/// # Reference
+/// Lee, J. S. (1983). Digital image smoothing and the sigma filter. Computer vision, graphics, and image 
+/// processing, 24(2), 255-269.
+/// 
+/// # See Also
+/// `MeanFilter`, `GaussianFilter`
+pub struct LeeSigmaFilter {
     name: String,
     description: String,
     toolbox: String,
@@ -26,10 +36,10 @@ pub struct LeeFilter {
     example_usage: String,
 }
 
-impl LeeFilter {
-    pub fn new() -> LeeFilter {
+impl LeeSigmaFilter {
+    pub fn new() -> LeeSigmaFilter {
         // public constructor
-        let name = "LeeFilter".to_string();
+        let name = "LeeSigmaFilter".to_string();
         let toolbox = "Image Processing Tools/Filters".to_string();
         let description = "Performs a Lee (Sigma) smoothing filter on an image.".to_string();
 
@@ -102,7 +112,7 @@ impl LeeFilter {
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filter=9 --sigma=10.0 -m=5
 >>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=image.tif -o=output.tif --filtery=7 --filtery=9 --sigma=10.0  -m=5", short_exe, name).replace("*", &sep);
 
-        LeeFilter {
+        LeeSigmaFilter {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -112,7 +122,7 @@ impl LeeFilter {
     }
 }
 
-impl WhiteboxTool for LeeFilter {
+impl WhiteboxTool for LeeSigmaFilter {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }

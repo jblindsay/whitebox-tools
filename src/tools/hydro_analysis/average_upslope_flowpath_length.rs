@@ -26,7 +26,7 @@ use std::thread;
 /// on available system resources.
 /// 
 /// # See Also
-/// `AverageFlowpathSlope`, `BreachDepressions`
+/// `MaxUpslopeFlowpathLength`, `AverageFlowpathSlope`, `BreachDepressions`
 pub struct AverageUpslopeFlowpathLength {
     name: String,
     description: String,

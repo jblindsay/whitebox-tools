@@ -31,14 +31,14 @@ use std::thread;
 /// The user must input the filename of a digital elevation model (DEM), a basins raster, and the
 /// output vector. The DEM must be depressionless and should have been pre-processed using the
 /// `BreachDepressions` or `FillDepressions` tool. The *basins raster* must contain features
-/// that are delineated by categorical (integer valued) unique indentifier values. All non-NoData,
+/// that are delineated by categorical (integer valued) unique identifier values. All non-NoData,
 /// non-zero valued grid cells in the basins raster are interpreted as belonging to features.
 /// In practice, this tool is usual run using either a single watershed, a group of contiguous
 /// non-overlapping watersheds, or a series of nested subbasins. These are often derived using
 /// the `Watershed` tool, based on a series of input outlets, or the `Subbasins` tool, based on
 /// an input stream network. If subbasins are input to `LongestFlowpath`, each traced flowpath
 /// will include only the non-overlapping portions within nested areas. Therefore, this can be a
-/// convienent method of delineating the longest flowpath to each bifurcation in a stream network.
+/// convenient method of delineating the longest flowpath to each bifurcation in a stream network.
 ///
 /// The output vector file will contain fields in the attribute table that identify the associated
 /// basin unique identifier (*BASIN*), the elevation of the flowpath source point on the divide
@@ -46,7 +46,7 @@ use std::thread;
 /// and finally, the average slope (*AVG_SLOPE*) along the flowpath, measured as a percent grade.
 ///
 /// # See Also
-/// `MaximumUpslopeFlowpath`, `BreachDepressions`, `FillDepressions`, `Watershed`, `Subbasins`
+/// `MaxUpslopeFlowpathLength`, `BreachDepressions`, `FillDepressions`, `Watershed`, `Subbasins`
 pub struct LongestFlowpath {
     name: String,
     description: String,

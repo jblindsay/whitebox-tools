@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,20 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the four quadrant arctangent of 
+/// an *y* (`--input_y`) and *x* (`--input_x`) inputs, measured in radians. Inputs may be either rasters or constant values.
+/// The output raster will contain angular data measured in radian, in the range: 
+/// 
+/// > *x* = 0, *y* = 0: 0 </br>
+/// > *x* >= 0: arctan(*y*/*x*) -> [-&pi;/2, &pi;/2] </br>
+/// > *y* >= 0: arctan(*y*/*x*) + &pi; -> (&pi;/2, &pi;] </br>
+/// > *y* < 0: arctan(*y*/*x*) - &pi; -> (-&pi;, -&pi;/2)
+///
+/// If desired, you can convert radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in 
+/// the input raster will be assigned **NoData** values in the output raster. 
+/// 
+/// # See Also
+/// `ArcCos`, `ArcTan`, `Atan2`, `ToDegrees`
 pub struct Atan2 {
     name: String,
     description: String,

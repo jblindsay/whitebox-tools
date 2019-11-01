@@ -18,6 +18,29 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// The Laplacian-of-Gaussian (LoG) is a spatial filter used for edge enhancement and is closely related to the 
+/// difference-of-Gaussians filter (`DiffOfGaussianFilter`). The formulation of the LoG filter algorithm is based 
+/// on the equation provided in the Hypermedia Image Processing Reference (HIPR) 2. The LoG operator calculates 
+/// the second spatial derivative of an image. In areas where image intensity is constant, the LoG response will 
+/// be zero. Near areas of change in intensity the LoG will be positive on the darker side, and negative on the 
+/// lighter side. This means that at a sharp edge, or boundary, between two regions of uniform but different 
+/// intensities, the LoG response will be:
+/// 
+/// - zero at a long distance from the edge,
+/// - positive just to one side of the edge,
+/// - negative just to the other side of the edge,
+/// - zero at some point in between, on the edge itself.
+/// 
+/// The user may optionally choose to reflecting the data along image edges. **NoData** values in the input image are 
+/// similarly valued in the output. The output raster is of the float data type and continuous data scale.
+/// 
+/// # Reference
+/// 
+/// Fisher, R. 2004. *Hypertext Image Processing Resources 2 (HIPR2)*. Available online: 
+/// http://homepages.inf.ed.ac.uk/rbf/HIPR2/roberts.htm
+/// 
+/// # See Also
+/// `DiffOfGaussianFilter`
 pub struct LaplacianOfGaussianFilter {
     name: String,
     description: String,

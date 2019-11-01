@@ -41,7 +41,7 @@ use std::cmp::Ordering::Equal;
 /// statistical significance says nothing about the practical significance of a difference.
 /// 
 /// # See Also
-/// `TwoSampleKSTest`, `WilcoxonSignedRankTest`
+/// `TwoSampleKsTest`, `WilcoxonSignedRankTest`
 pub struct PairedSampleTTest {
     name: String,
     description: String,

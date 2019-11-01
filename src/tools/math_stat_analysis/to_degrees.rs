@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool converts the [radians](https://en.wikipedia.org/wiki/Radian) values contained within an 
+/// input raster (`--input`) to degrees in the output raster (`--output`). 
+/// One degree is approximately 0.017453293 (&pi; / 180) radians. Conversion between degrees and radians
+/// is common when working with trigonometric functions.
+/// 
+/// # See Also
+/// `ToRadians`
 pub struct ToDegrees {
     name: String,
     description: String,

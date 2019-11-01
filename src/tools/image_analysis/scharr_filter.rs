@@ -17,6 +17,35 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool performs a Scharr edge-detection filter on a raster image. The Scharr filter is similar to the 
+/// `SobelFilter` and `PrewittFilter`, in that it identifies areas of high slope in the input image through 
+/// the calculation of slopes in the x and y directions. A 3 &times; 3 Scharr filter uses 
+/// the following schemes to calculate x and y slopes:
+/// 
+/// X-direction slope
+/// 
+/// |  . | .  |   . |
+/// |:--:|:--:|:---:|
+/// |  3 |  0 |  -3 |
+/// | 10 |  0 | -10 |
+/// |  3 |  0 |  -3 |
+/// 
+/// Y-direction slope
+/// 
+/// | .  |   .  |  . |
+/// |:--:|:----:|:--:|
+/// |  3 |  10  |  3 |
+/// |  0 |   0  |  0 |
+/// | -3 | -10  | -3 |
+/// 
+/// Each grid cell in the output image is assigned the square-root of the squared sum of the x and y slopes.
+/// 
+/// The output image may be overwhelmed by a relatively small number of high-valued pixels, stretching the
+/// palette. The user may therefore optionally clip the output image distribution tails by a specified amount 
+/// (`--clip`) for improved visualization.
+/// 
+/// # See Also
+/// `SobelFilter`, `PrewittFilter`
 pub struct ScharrFilter {
     name: String,
     description: String,
@@ -239,7 +268,7 @@ impl WhiteboxTool for ScharrFilter {
 
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let mask_x = [3.0, 10.0, 3.0, 0.0, -3.0, -10.0, -3.0, 0.0];
+                let mask_x = [-3.0, -10.0, -3.0, 0.0, 3.0, 10.0, 3.0, 0.0];
                 let mask_y = [3.0, 0.0, -3.0, -10.0, -3.0, 0.0, 3.0, 10.0];
                 let num_pixels_in_filter = dx.len();
 

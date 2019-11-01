@@ -254,7 +254,9 @@ impl WhiteboxTool for LidarRemoveOutliers {
         let mut p: PointData;
         for i in 0..n_points {
             p = input.get_point_info(i);
-            frs.insert(p.x, p.y, p.z);
+            if !p.is_classified_noise() && !p.withheld() {
+                frs.insert(p.x, p.y, p.z);
+            }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -263,16 +265,6 @@ impl WhiteboxTool for LidarRemoveOutliers {
                 }
             }
         }
-        // for (i, p) in (&input).into_iter().enumerate() {
-        //     frs.insert(p.x, p.y, p.z);
-        //     if verbose {
-        //         progress = (100.0_f64 * i as f64 / num_points) as i32;
-        //         if progress != old_progress {
-        //             println!("Adding points to search tree: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
 
         let frs = Arc::new(frs); // wrap FRS in an Arc
         let input = Arc::new(input); // wrap input in an Arc
@@ -366,7 +358,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
         let mut num_points_filtered = 0;
         if filter {
             for i in 0..n_points {
-                if residuals[i].abs() < elev_diff {
+                p = input.get_point_info(i);
+                if residuals[i].abs() < elev_diff && !p.is_classified_noise() {
                     output.add_point_record(input.get_record(i));
                 } else {
                     num_points_filtered += 1;

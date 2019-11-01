@@ -23,6 +23,52 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// Spatial autocorrelation describes the extent to which a variable is either dispersed or clustered through space. 
+/// In the case of a raster image, spatial autocorrelation refers to the similarity in the values of nearby grid 
+/// cells. This tool measures the spatial autocorrelation of a raster image using the global Moran's *I* statistic. 
+/// Moran's *I* varies from -1 to 1, where *I* = -1 indicates a dispersed, checkerboard type pattern and *I* = 1 indicates 
+/// a clustered (smooth) surface. *I* = 0 occurs for a random distribution of values. `ImageAutocorrelation` computes 
+/// Moran's *I* for the first lag only, meaning that it only takes into account the variability among the immediate 
+/// neighbors of each grid cell.
+/// 
+/// The user must specify the names of one or more input raster images. In addition, the user must specify the 
+/// contiguity type (`--contiguity`; Rook's, King's, or Bishop's), which describes which neighboring grid cells are examined for 
+/// the analysis. The following figure describes the available cases:
+/// 
+/// Rook's contiguity
+/// 
+/// | . |  .  | . |
+/// |:-:|:---:|:-:|
+/// | 0 |  1  | 0 |
+/// | 1 |  X  | 1 |
+/// | 0 |  1  | 0 |
+/// 
+/// Kings's contiguity
+/// 
+/// | . |  .  | . |
+/// |:-:|:---:|:-:|
+/// | 1 |  1  | 1 |
+/// | 1 |  X  | 1 |
+/// | 1 |  1  | 1 |
+/// 
+/// Bishops's contiguity
+/// 
+/// | . |  .  | . |
+/// |:-:|:---:|:-:|
+/// | 1 |  0  | 1 |
+/// | 0 |  X  | 0 |
+/// | 1 |  0  | 1 |
+/// 
+/// The tool outputs an HTML report (`--ouptut`) which, for each input image (`--input`), reports the Moran's *I* 
+/// value and the variance, z-score, and p-value (significance) under normal and randomization sampling assumptions.
+/// 
+/// Use the `ImageCorrelation` tool instead when there is need to determine the correlation among multiple raster
+/// inputs.
+/// 
+/// **NoData **values in the input image are ignored during the analysis.
+/// 
+/// # See Also
+/// `ImageCorrelation`
 pub struct ImageAutocorrelation {
     name: String,
     description: String,

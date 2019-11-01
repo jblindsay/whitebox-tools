@@ -56,12 +56,16 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.0.2 (XX-XX-2019)
-- The RelativeStreamPowerIndex tool has been renamed StreamPowerIndex, to be more in-line
-  with other software.
-- Added a two-sample K-S test for comparing the distributions of two rasters.
-- Added a Wilcoxon Signed-Rank test for comparing two rasters.
-- Added a paired-samples Student's t-test for comparing two rasters.
+Version 1.0.2 (01-11-2019)
+- Added the BurnStreamsAtRoads tool.
+- Added a two-sample K-S test (TwoSampleKsTest) for comparing the distributions of two rasters.
+- Added a Wilcoxon Signed-Rank test (WilcoxonSignedRankTest) for comparing two rasters.
+- Added a paired-samples Student's t-test (PairedSampleTTest) for comparing two rasters.
+- Added the inverse hyperbolic trig functions, i.e. the Arcosh, Arsinh, and Artanh tools.
+- Renamed the LeeFilter to the LeeSigmaFilter.
+- Renamed the RelativeStreamPowerIndex tool to StreamPowerIndex, to be more in-line with
+  other software.
+- Fixed another bug related to the handling of Boolean tool parameters.
 
 Version 1.0.1 (20-10-2019)
 - Boolean type tool parameters previously worked simply by the presence of the parameter flag.

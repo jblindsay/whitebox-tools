@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is calculated as 
+/// 2 to the power of the value of the corresponding grid cell in the input raster (`--input`). 
+/// Moderate to large values in the input raster will result in very large values in the output 
+/// raster and this may cause errors when you try to display the data. Grid cells with **NoData** 
+/// values in the input raster will be assigned **NoData** values in the output raster.
+/// 
+/// # See Also
+/// `Exp`, `Power`, `Log2`
 pub struct Exp2 {
     name: String,
     description: String,

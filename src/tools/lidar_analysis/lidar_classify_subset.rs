@@ -45,7 +45,7 @@ use std::path;
 /// | 15                    | Transmission Tower
 /// | 16                    | Wire-structure Connector (e.g. Insulator)
 /// | 17                    | Bridge Deck
-/// | 18                    | High Noise
+/// | 18                    | High noise
 ///
 /// The user may optionally specify a class value to be assigned to non-subset (i.e. non-matching)
 /// points (`--nonsubset_class`) in the base file. If this parameter is not specified, output

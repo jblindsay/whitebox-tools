@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 6, 2017
+Created: 06/07/2017
 Last Modified: 13/10/2018
 License: MIT
 */
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is calculated as the base-10 
+/// [logarithm](https://en.wikipedia.org/wiki/Logarithm) of the value of the corresponding grid cell in the input 
+/// raster (`--input`). Negative values in the input raster will be assigned the **NoData** value in the output 
+/// raster. **NoData** values in the input image will be assigned the **NoData** value in the output image.
+/// 
+/// # See Also
+/// `Ln`, `Log2`
 pub struct Log10 {
     name: String,
     description: String,

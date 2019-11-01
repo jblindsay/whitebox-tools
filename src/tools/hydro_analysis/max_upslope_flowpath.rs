@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 25, 2017
-Last Modified: 12/10/2018
+Created: 25/06/2017
+Last Modified: 28/10/2019
 License: MIT
 */
 
@@ -18,7 +18,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Measures the maximum length of all upslope flowpaths draining each grid cell.
+/// This tool calculates the maximum length of the flowpaths that run through each grid cell (in map horizontal 
+/// units) in an input digital elevation model (`--dem`). The tool works by first calculating the D8 flow pointer 
+/// (`D8Pointer`) from the input DEM. The DEM must be depressionless and should have been pre-processed using 
+/// the `BreachDepressions` or `FillDepressions` tool. The user must also specify the name of output raster (`--output`).
+/// 
+/// # See Also
+/// `D8Pointer`, `BreachDepressions`, `FillDepressions`, `AverageUpslopeFlowpathLength`, `DownslopeFlowpathLength`, `DownslopeDistanceToStream`
 pub struct MaxUpslopeFlowpathLength {
     name: String,
     description: String,
@@ -350,17 +356,17 @@ impl WhiteboxTool for MaxUpslopeFlowpathLength {
             num_inflowing.decrement(row, col, 1i8);
             dir = flow_dir[(row, col)];
             if dir >= 0 {
-                length = output[(row, col)] + grid_lengths[dir as usize];
+                length = output.get_value(row, col) + grid_lengths[dir as usize];
 
                 row_n = row + d_y[dir as usize];
                 col_n = col + d_x[dir as usize];
 
-                if output[(row_n, col_n)] < length {
-                    output[(row_n, col_n)] = length;
+                if output.get_value(row_n, col_n) < length {
+                    output.set_value(row_n, col_n, length);
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1i8);
-                if num_inflowing[(row_n, col_n)] == 0i8 {
+                if num_inflowing.get_value(row_n, col_n) == 0i8 {
                     stack.push((row_n, col_n));
                 }
             }

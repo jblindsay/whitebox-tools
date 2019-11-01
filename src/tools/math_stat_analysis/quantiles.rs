@@ -13,6 +13,19 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool transforms values in an input raster (`--input`) into quantiles. In statistics, quantiles are cut 
+/// points dividing the range of a probability distribution into continuous intervals with equal probabilities, or 
+/// dividing the observations in a sample in a same way. There is one fewer quantile than the number of groups 
+/// created. Thus quartiles are the three cut points that will divide a dataset into four equal-sized groups. Common 
+/// quantiles have special names: for instance quartile (4-quantile), quintiles (5-quantiles), decile (10-quantile), 
+/// percentile (100-quantile).  
+/// 
+/// The user must specify the desired number of quantiles, q (`--num_quantiles`), in the output raster (`--output`). 
+/// The output raster will contain q equal-sized groups with values 1 to q, indicating which quantile group each grid cell
+/// belongs to.
+/// 
+/// # See Also
+/// `HistogramEqualization`
 pub struct Quantiles {
     name: String,
     description: String,

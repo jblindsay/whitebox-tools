@@ -17,6 +17,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool assigns grid cells for which the first input raster or constant value (`--input1`) is less than
+/// the second input raster or constant value (`--input2`) a new value of 1 (*True*) in the output raster (`--output`). 
+/// All grid cells with greater values are assigned a value of zero (*False*) in the output. Grid cells containing 
+/// **NoData** values in either of the inputs will be assigned a **NoData** value in the output raster.
+/// 
+/// Use the `--incl_equals` flag to perform a less-than-equal-to (<=) operation instead of the default less-than (<)
+/// operator.
+/// 
+/// # See Also
+/// `LessThan`, `EqualTo`, `NotEqualTo`
 pub struct LessThan {
     name: String,
     description: String,

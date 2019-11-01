@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 5, 2017
+Created: 05/07/2017
 Last Modified: 12/10/2018
 License: MIT
 */
@@ -17,6 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the cosine (cos) of the corresponding 
+/// grid cell in an input raster (`--input`). The input raster image should contain angular data measured in radians. 
+/// You may convert a raster containing degrees to radians using the `ToRadians` tool. Grid cells with **NoData** values 
+/// in the input raster will be assigned **NoData** values in the output raster.
+/// 
+/// # See Also
+/// `Sin`, `Tan`, `ArcCos`, `ToRadians`
 pub struct Cos {
     name: String,
     description: String,
@@ -190,7 +197,7 @@ impl WhiteboxTool for Cos {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             data[col as usize] = z.cos();
                         } else {

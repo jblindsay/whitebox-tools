@@ -19,6 +19,25 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
+/// This tool can be used to estimate the Pearson product-moment correlation coefficient (*r*) for each pair among a 
+/// group of attributes associated with the database file of a shapefile. The *r*-value is a measure of the linear 
+/// association in the variation of the attributes. The coefficient ranges from -1, indicated a perfect negative 
+/// linear association, to 1, indicated a perfect positive linear association. An *r*-value of 0 indicates no correlation 
+/// between the test variables.
+/// 
+/// Notice that this index is a measure of the linear association; two variables may be strongly related by a non-linear 
+/// association (e.g. a power function curve) which will lead to an apparent weak association based on the Pearson 
+/// coefficient. In fact, non-linear associations are very common among spatial variables, e.g. terrain indices such as 
+/// slope and contributing area. In such cases, it is advisable that the input images are transformed prior to the 
+/// estimation of the Pearson coefficient, or that an alternative, non-parametric statistic be used, e.g. the Spearman 
+/// rank correlation coefficient.
+/// 
+/// The user must specify the name of the input vector Shapefile (`--input`). Correlations will be calculated for each 
+/// pair of numerical attributes contained within the input file's attribute table and presented in a correlation matrix 
+/// HMTL output (`--output`).
+/// 
+/// # See Also
+/// `ImageCorrelation`, `AttributeScattergram`, `AttributeHistogram`
 pub struct AttributeCorrelation {
     name: String,
     description: String,

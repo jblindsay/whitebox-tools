@@ -22,7 +22,7 @@ use std::thread;
 /// raster file, leaving the input unmodified, use the `Add` tool instead.
 /// 
 /// # See Also 
-/// `InPlaceAdd`, `Add`
+/// `InPlaceAdd`, `Add`, `Decrement`
 pub struct Increment {
     name: String,
     description: String,

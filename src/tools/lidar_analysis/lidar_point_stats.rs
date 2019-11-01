@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2018
-Last Modified: 18/10/2019
+Last Modified: 31/10/2019
 License: MIT
 */
 
@@ -108,7 +108,7 @@ impl LidarPointStats {
         });
 
         parameters.push(ToolParameter {
-            name: "Output number of points?".to_owned(),
+            name: "Output average number of points per pulse?".to_owned(),
             flags: vec!["--avg_points_per_pulse".to_owned()],
             description: "Flag indicating whether or not to output the average number of points (returns) per pulse raster."
                 .to_owned(),
@@ -443,6 +443,8 @@ impl WhiteboxTool for LidarPointStats {
                                 for col in 0..columns as isize {
                                     if out_num_pulses.get_value(row, col) > 0f64 {
                                         out_avg_points_per_pulse.set_value(row, col, out_num_pnts.get_value(row, col) / out_num_pulses.get_value(row, col));
+                                    } else {
+                                        out_avg_points_per_pulse.set_value(row, col, 0f64);
                                     }
                                 }
                             }
