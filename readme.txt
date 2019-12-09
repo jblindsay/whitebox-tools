@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.0.3 (09-12-2019)
+Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 
   and Dhun (2015) impact minimizing breaching algorithm. This modified algorithm is very 
   efficient and can provide an excellent method for creating depressionless DEMs from large 
@@ -85,6 +85,9 @@ Version 1.0.3 (09-12-2019)
 - Updated the ConstructVectorTIN and TINGridding tools to include a maximum triangle edge 
   length to help avoid the creation of spurious long and narrow triangles in convex regions 
   along the data boundaries.
+- Added the ImageCorrelationNeighbourhoodAnalysis tool for performing correlation analysis
+  between two input rasters within roving search windows. The tool can be used to perform
+  Pearson's r, Spearman's Rho, or Kendall's Tau-b correlations.
 
 Version 1.0.2 (01-11-2019)
 - Added the BurnStreamsAtRoads tool.

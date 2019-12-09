@@ -6,7 +6,7 @@ See whitebox_example.py for an example of how to use it.
 # This script is part of the WhiteboxTools geospatial library.
 # Authors: Dr. John Lindsay
 # Created: 28/11/2017
-# Last Modified: 25/07/2019
+# Last Modified: 09/12/2019
 # License: MIT
 
 from __future__ import print_function
@@ -355,6 +355,7 @@ class WhiteboxTools(object):
     # restrict the ability for text editors and IDEs to use autocomplete.
     ########################################################################
 
+    
     
     
     
@@ -885,7 +886,7 @@ class WhiteboxTools(object):
         if zero_back: args.append("--zero_back")
         return self.run_tool('clump', args, callback) # returns 1 if error
 
-    def construct_vector_tin(self, i, output, field=None, use_z=False, callback=None):
+    def construct_vector_tin(self, i, output, field=None, use_z=False, max_triangle_edge_length=None, callback=None):
         """Creates a vector triangular irregular network (TIN) for a set of vector points.
 
         Keyword arguments:
@@ -894,6 +895,7 @@ class WhiteboxTools(object):
         field -- Input field name in attribute table. 
         use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
         output -- Output vector polygon file. 
+        max_triangle_edge_length -- Optional maximum triangle edge length; triangles larger than this size will not be gridded. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -901,6 +903,7 @@ class WhiteboxTools(object):
         if field is not None: args.append("--field='{}'".format(field))
         if use_z: args.append("--use_z")
         args.append("--output='{}'".format(output))
+        if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))
         return self.run_tool('construct_vector_tin', args, callback) # returns 1 if error
 
     def create_hexagonal_vector_grid(self, i, output, width, orientation="horizontal", callback=None):
@@ -1183,6 +1186,30 @@ class WhiteboxTools(object):
         if features: args.append("--features")
         return self.run_tool('minimum_convex_hull', args, callback) # returns 1 if error
 
+    def natural_neighbour_interpolation(self, i, output, field=None, use_z=False, cell_size=None, base=None, clip=True, callback=None):
+        """Creates a raster grid based on Sibson's natural neighbour method.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
+        output -- Output raster file. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        clip -- Clip the data to the convex hull of the points?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if field is not None: args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        if clip: args.append("--clip")
+        return self.run_tool('natural_neighbour_interpolation', args, callback) # returns 1 if error
+
     def nearest_neighbour_gridding(self, i, field, output, use_z=False, cell_size=None, base=None, max_dist=None, callback=None):
         """Creates a raster grid based on a set of vector points and assigns grid values using the nearest neighbour.
 
@@ -1365,7 +1392,7 @@ class WhiteboxTools(object):
         args.append("--filter={}".format(filter))
         return self.run_tool('smooth_vectors', args, callback) # returns 1 if error
 
-    def tin_gridding(self, i, output, resolution, field=None, use_z=False, callback=None):
+    def tin_gridding(self, i, output, field=None, use_z=False, resolution=None, base=None, max_triangle_edge_length=None, callback=None):
         """Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 
         Keyword arguments:
@@ -1375,6 +1402,8 @@ class WhiteboxTools(object):
         use_z -- Use the 'z' dimension of the Shapefile's geometry instead of an attribute field?. 
         output -- Output raster file. 
         resolution -- Output raster's grid resolution. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        max_triangle_edge_length -- Optional maximum triangle edge length; triangles larger than this size will not be gridded. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -1382,7 +1411,9 @@ class WhiteboxTools(object):
         if field is not None: args.append("--field='{}'".format(field))
         if use_z: args.append("--use_z")
         args.append("--output='{}'".format(output))
-        args.append("--resolution='{}'".format(resolution))
+        if resolution is not None: args.append("--resolution='{}'".format(resolution))
+        if base is not None: args.append("--base='{}'".format(base))
+        if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))
         return self.run_tool('tin_gridding', args, callback) # returns 1 if error
 
     def vector_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
@@ -3203,6 +3234,30 @@ class WhiteboxTools(object):
         if fill_pits: args.append("--fill_pits")
         return self.run_tool('breach_depressions', args, callback) # returns 1 if error
 
+    def breach_depressions_least_cost(self, dem, output, radius, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
+        """Breaches the depressions in a DEM using a least-cost pathway method.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        radius -- . 
+        max_cost -- Optional maximum breach cost (default is Inf). 
+        min_dist -- Optional flag indicating whether to minimize breach distances. 
+        flat_increment -- Optional elevation increment applied to flat areas. 
+        fill -- Optional flag indicating whether to fill any remaining unbreached depressions. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--radius='{}'".format(radius))
+        if max_cost is not None: args.append("--max_cost='{}'".format(max_cost))
+        if min_dist: args.append("--min_dist")
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
+        if fill: args.append("--fill")
+        return self.run_tool('breach_depressions_least_cost', args, callback) # returns 1 if error
+
     def breach_single_cell_pits(self, dem, output, callback=None):
         """Removes single-cell pits from an input DEM by breaching.
 
@@ -3487,7 +3542,27 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('fill_burn', args, callback) # returns 1 if error
 
-    def fill_depressions(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
+    def fill_depressions(self, dem, output, fix_flats=True, flat_increment=None, max_depth=None, callback=None):
+        """Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        fix_flats -- Optional flag indicating whether flat areas should have a small gradient applied. 
+        flat_increment -- Optional elevation increment applied to flat areas. 
+        max_depth -- Optional maximum depression depth to fill. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if fix_flats: args.append("--fix_flats")
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
+        if max_depth is not None: args.append("--max_depth='{}'".format(max_depth))
+        return self.run_tool('fill_depressions', args, callback) # returns 1 if error
+
+    def fill_depressions_wang_and_lui(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
         """Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
 
         Keyword arguments:
@@ -3503,7 +3578,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if fix_flats: args.append("--fix_flats")
         if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
-        return self.run_tool('fill_depressions', args, callback) # returns 1 if error
+        return self.run_tool('fill_depressions_wang_and_lui', args, callback) # returns 1 if error
 
     def fill_single_cell_pits(self, dem, output, callback=None):
         """Raises pit cells to the elevation of their lowest neighbour.
@@ -3691,30 +3766,6 @@ class WhiteboxTools(object):
         args.append("--snap_dist='{}'".format(snap_dist))
         return self.run_tool('jenson_snap_pour_points', args, callback) # returns 1 if error
 
-    def least_cost_breach_depressions(self, dem, output, radius, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
-        """Breaches the depressions in a DEM using a least-cost pathway method.
-
-        Keyword arguments:
-
-        dem -- Input raster DEM file. 
-        output -- Output raster file. 
-        radius -- . 
-        max_cost -- Optional maximum breach cost (default is Inf). 
-        min_dist -- Optional flag indicating whether to minimize breach distances. 
-        flat_increment -- Optional elevation increment applied to flat areas. 
-        fill -- Optional flag indicating whether to fill any remaining unbreached depressions. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--output='{}'".format(output))
-        args.append("--radius='{}'".format(radius))
-        if max_cost is not None: args.append("--max_cost='{}'".format(max_cost))
-        if min_dist: args.append("--min_dist")
-        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
-        if fill: args.append("--fill")
-        return self.run_tool('least_cost_breach_depressions', args, callback) # returns 1 if error
-
     def longest_flowpath(self, dem, basins, output, callback=None):
         """Delineates the longest flowpaths for a group of subbasins or watersheds.
 
@@ -3795,18 +3846,18 @@ class WhiteboxTools(object):
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('rho8_pointer', args, callback) # returns 1 if error
 
-    def sink(self, dem, output, zero_background=False, callback=None):
+    def sink(self, i, output, zero_background=False, callback=None):
         """Identifies the depressions in a DEM, giving each feature a unique identifier.
 
         Keyword arguments:
 
-        dem -- Input raster DEM file. 
+        i -- Input raster DEM file. 
         output -- Output raster file. 
         zero_background -- Flag indicating whether a background value of zero should be used. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
-        args.append("--dem='{}'".format(dem))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         if zero_background: args.append("--zero_background")
         return self.run_tool('sink', args, callback) # returns 1 if error
@@ -6492,6 +6543,28 @@ class WhiteboxTools(object):
         args.append("--inputs='{}'".format(inputs))
         if output is not None: args.append("--output='{}'".format(output))
         return self.run_tool('image_correlation', args, callback) # returns 1 if error
+
+    def image_correlation_neighbourhood_analysis(self, input1, input2, output1, output2, filter=11, stat="pearson", callback=None):
+        """Performs image correlation on two input images neighbourhood search windows.
+
+        Keyword arguments:
+
+        input1 -- Input raster file. 
+        input2 -- Input raster file. 
+        output1 -- Output correlation (r-value or rho) raster file. 
+        output2 -- Output significance (p-value) raster file. 
+        filter -- Size of the filter kernel. 
+        stat -- Correlation type; one of 'pearson' (default) and 'spearman'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--output1='{}'".format(output1))
+        args.append("--output2='{}'".format(output2))
+        args.append("--filter={}".format(filter))
+        args.append("--stat={}".format(stat))
+        return self.run_tool('image_correlation_neighbourhood_analysis', args, callback) # returns 1 if error
 
     def image_regression(self, input1, input2, output, out_residuals=None, standardize=False, scattergram=False, num_samples=1000, callback=None):
         """Performs image regression analysis on two input images.

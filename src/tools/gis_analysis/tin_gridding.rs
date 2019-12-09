@@ -19,10 +19,19 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
-/// and linear interpolation within each triangular-shaped plane.
+/// and linear interpolation within each triangular-shaped plane. The TIN creation algorithm is based on 
+/// [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation).
 ///
+/// The user must specify the attribute field containing point values (`--field`). Alternatively, if the input Shapefile
+/// contains z-values, the interpolation may be based on these values (`--use_z`). Either an output grid resolution 
+/// (`--cell_size`) must be specified or alternatively an existing base file (`--base`) can be used to determine the
+/// output raster's (`--output`) resolution and spatial extent. Natural neighbour interpolation generally produces a 
+/// satisfactorily smooth surface within the region of data points but can produce spurious breaks in the surface 
+/// outside of this region. Thus, it is recommended that the output surface be clipped to the convex hull of the input
+/// points (`--clip`).
+/// 
 /// # See Also
-/// `LidarTINGridding`, `ConstructVectorTIN`
+/// `LidarTINGridding`, `ConstructVectorTIN`, `NaturalNeighbourInterpolation`
 pub struct TINGridding {
     name: String,
     description: String,
@@ -90,7 +99,16 @@ impl TINGridding {
             description: "Output raster's grid resolution.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: false,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter{
+            name: "Base Raster File (optional)".to_owned(), 
+            flags: vec!["--base".to_owned()], 
+            description: "Optionally specified input base raster file. Not used when a cell size is specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
         });
 
         parameters.push(ToolParameter {
@@ -175,7 +193,8 @@ impl WhiteboxTool for TINGridding {
         let mut use_z = false;
         let mut use_field = false;
         let mut output_file: String = "".to_string();
-        let mut grid_res: f64 = 1.0;
+        let mut grid_res: f64 = 0.0;
+        let mut base_file = String::new();
         let mut max_triangle_edge_length = f64::INFINITY;
 
         // read the arguments
@@ -232,6 +251,12 @@ impl WhiteboxTool for TINGridding {
                 };
 
                 max_triangle_edge_length *= max_triangle_edge_length; // actually squared distance
+            } else if flag_val == "-base" {
+                base_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -300,30 +325,81 @@ impl WhiteboxTool for TINGridding {
             }
         }
 
-        let west: f64 = input.header.x_min;
-        let north: f64 = input.header.y_max;
-        let rows: isize = (((north - input.header.y_min) / grid_res).ceil()) as isize;
-        let columns: isize = (((input.header.x_max - west) / grid_res).ceil()) as isize;
-        let south: f64 = north - rows as f64 * grid_res;
-        let east = west + columns as f64 * grid_res;
+        // let west: f64 = input.header.x_min;
+        // let north: f64 = input.header.y_max;
+        // let rows: isize = (((north - input.header.y_min) / grid_res).ceil()) as isize;
+        // let columns: isize = (((input.header.x_max - west) / grid_res).ceil()) as isize;
+        // let south: f64 = north - rows as f64 * grid_res;
+        // let east = west + columns as f64 * grid_res;
+        // let nodata = -32768.0f64;
+
+        // let mut configs = RasterConfigs {
+        //     ..Default::default()
+        // };
+        // configs.rows = rows as usize;
+        // configs.columns = columns as usize;
+        // configs.north = north;
+        // configs.south = south;
+        // configs.east = east;
+        // configs.west = west;
+        // configs.resolution_x = grid_res;
+        // configs.resolution_y = grid_res;
+        // configs.nodata = nodata;
+        // configs.data_type = DataType::F32;
+        // configs.photometric_interp = PhotometricInterpretation::Continuous;
+
+        // let mut output = Raster::initialize_using_config(&output_file, &configs);
+
         let nodata = -32768.0f64;
+        let mut output = if !base_file.trim().is_empty() || grid_res == 0f64 {
+            if !base_file.contains(&sep) && !base_file.contains("/") {
+                base_file = format!("{}{}", working_directory, base_file);
+            }
+            let mut base = Raster::new(&base_file, "r")?;
+            base.configs.nodata = nodata;
+            Raster::initialize_using_file(&output_file, &base)
+        } else {
+            if grid_res == 0f64 {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The specified grid resolution is incorrect. Either a non-zero grid resolution \nor an input existing base file name must be used.",
+                ));
+            }
+            // base the output raster on the grid_res and the
+            // extent of the input vector.
+            let west: f64 = input.header.x_min;
+            let north: f64 = input.header.y_max;
+            let rows: isize = (((north - input.header.y_min) / grid_res).ceil()) as isize;
+            let columns: isize = (((input.header.x_max - west) / grid_res).ceil()) as isize;
+            let south: f64 = north - rows as f64 * grid_res;
+            let east = west + columns as f64 * grid_res;
 
-        let mut configs = RasterConfigs {
-            ..Default::default()
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
+            configs.rows = rows as usize;
+            configs.columns = columns as usize;
+            configs.north = north;
+            configs.south = south;
+            configs.east = east;
+            configs.west = west;
+            configs.resolution_x = grid_res;
+            configs.resolution_y = grid_res;
+            configs.nodata = nodata;
+            configs.data_type = DataType::F32;
+            configs.photometric_interp = PhotometricInterpretation::Continuous;
+
+            Raster::initialize_using_config(&output_file, &configs)
         };
-        configs.rows = rows as usize;
-        configs.columns = columns as usize;
-        configs.north = north;
-        configs.south = south;
-        configs.east = east;
-        configs.west = west;
-        configs.resolution_x = grid_res;
-        configs.resolution_y = grid_res;
-        configs.nodata = nodata;
-        configs.data_type = DataType::F32;
-        configs.photometric_interp = PhotometricInterpretation::Continuous;
 
-        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        let west = output.configs.west;
+        let north = output.configs.north;
+        output.configs.nodata = nodata; // in case a base image is used with a different nodata value.
+        output.configs.palette = "spectrum.pal".to_string();
+        output.configs.data_type = DataType::F32;
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+        let res_x = output.configs.resolution_x;
+        let res_y = output.configs.resolution_y;
 
         let mut points: Vec<Point2D> = vec![];
         let mut z_values: Vec<f64> = vec![];
@@ -414,15 +490,15 @@ impl WhiteboxTool for TINGridding {
                     left = points[p1].x.min(points[p2].x.min(points[p3].x));
                     right = points[p1].x.max(points[p2].x.max(points[p3].x));
 
-                    bottom_row = ((north - bottom) / grid_res).ceil() as isize;
-                    top_row = ((north - top) / grid_res).floor() as isize;
-                    left_col = ((left - west) / grid_res).floor() as isize;
-                    right_col = ((right - west) / grid_res).ceil() as isize;
+                    bottom_row = ((north - bottom) / res_y).ceil() as isize;
+                    top_row = ((north - top) / res_y).floor() as isize;
+                    left_col = ((left - west) / res_x).floor() as isize;
+                    right_col = ((right - west) / res_x).ceil() as isize;
 
                     for row in top_row..=bottom_row {
                         for col in left_col..=right_col {
-                            x = west + (col as f64 + 0.5) * grid_res;
-                            y = north - (row as f64 + 0.5) * grid_res;
+                            x = west + (col as f64 + 0.5) * res_x;
+                            y = north - (row as f64 + 0.5) * res_y;
                             if point_in_poly(&Point2D::new(x, y), &tri_points) {
                                 // calculate the z values
                                 z = -(norm.x * x + norm.y * y + k) / norm.z;
