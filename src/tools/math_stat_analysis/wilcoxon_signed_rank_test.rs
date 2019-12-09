@@ -169,7 +169,7 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -361,6 +361,8 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
         let mut ranks = vec![-1f64; diffs.len()];
         let mut nr = 0u128; // number of non-zero ranks
         let mut r = 0f64;
+        let mut r2: f64;
+        let mut upper_range: usize;
         for i in 0..diffs.len() {
             if diffs[i] != 0f64 {
                 nr += 1;
@@ -368,7 +370,7 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
                     r += 1f64;
                     if i < diffs.len() - 1 {
                         // are there any ties above this one?
-                        let mut upper_range = i;
+                        upper_range = i;
                         for j in i+1..diffs.len() {
                             if diffs[j].abs() == diffs[i].abs() {
                                 upper_range = j
@@ -377,7 +379,7 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
                             }
                         }
                         if upper_range != i {
-                            let r2 = r + (upper_range - i) as f64;
+                            r2 = r + (upper_range - i) as f64;
                             r = (r + r2) / 2f64; // average rank
                             for k in i..=upper_range {
                                 ranks[k] = r * diffs[k].signum();

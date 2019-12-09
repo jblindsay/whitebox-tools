@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/06/2017
-Last Modified: 18/10/2019
+Last Modified: 21/11/2019
 License: MIT
 */
 
@@ -208,7 +208,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -220,55 +220,52 @@ impl WhiteboxTool for FD8FlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type"
-            {
-                if keyval {
-                    out_type = vec[1].to_lowercase();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_type" {
+                out_type = if keyval {
+                    vec[1].to_lowercase()
                 } else {
-                    out_type = args[i + 1].to_lowercase();
-                }
-                if out_type.contains("specific") || out_type.contains("sca") {
-                    out_type = String::from("sca");
+                    args[i + 1].to_lowercase()
+                };
+                out_type = if out_type.contains("specific") || out_type.contains("sca") {
+                    String::from("sca")
                 } else if out_type.contains("cells") {
-                    out_type = String::from("cells");
+                    String::from("cells")
                 } else {
-                    out_type = String::from("ca");
-                }
-            } else if vec[0].to_lowercase() == "-exponent" || vec[0].to_lowercase() == "--exponent"
-            {
-                if keyval {
-                    exponent = vec[1].to_string().parse::<f64>().unwrap();
+                    String::from("ca")
+                };
+            } else if flag_val == "-exponent" {
+                exponent = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    exponent = args[i + 1].to_string().parse::<f64>().unwrap();
-                }
-            } else if vec[0].to_lowercase() == "-threshold"
-                || vec[0].to_lowercase() == "--threshold"
-            {
-                if keyval {
-                    convergence_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+            } else if flag_val == "-threshold" {
+                convergence_threshold = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
                 } else {
-                    convergence_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+                if convergence_threshold == 0f64 {
+                    convergence_threshold = f64::INFINITY;
                 }
-            } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
+            } else if flag_val == "-log" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     log_transform = true;
                 }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
+            } else if flag_val == "-clip" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     clip_max = true;
                 }
@@ -389,7 +386,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         ];
         let (mut max_slope, mut slope): (f64, f64);
         let mut dir: i8;
-
+        let mut total_weights: f64;
         while !stack.is_empty() {
             let cell = stack.pop().unwrap();
             row = cell.0;
@@ -398,7 +395,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
             fa = output[(row, col)];
             num_inflowing[(row, col)] = -1i8;
 
-            let mut total_weights = 0.0;
+            total_weights = 0.0;
             let mut weights: [f64; 8] = [0.0; 8];
             let mut downslope: [bool; 8] = [false; 8];
             if fa < convergence_threshold {

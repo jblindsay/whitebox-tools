@@ -152,7 +152,7 @@ impl WhiteboxTool for Clump {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -224,7 +224,6 @@ impl WhiteboxTool for Clump {
         output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.configs.data_type = DataType::I32;
-        // output.configs.data_type = DataType::F32;
 
         let mut dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let mut dy = [-1, 0, 1, 1, 1, 0, -1, -1];

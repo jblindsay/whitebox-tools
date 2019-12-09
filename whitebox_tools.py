@@ -380,6 +380,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3216,6 +3217,26 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('breach_single_cell_pits', args, callback) # returns 1 if error
 
+    def burn_streams_at_roads(self, dem, streams, roads, output, width=None, callback=None):
+        """Burns-in streams at the sites of road embankments.
+
+        Keyword arguments:
+
+        dem -- Input raster digital elevation model (DEM) file. 
+        streams -- Input vector streams file. 
+        roads -- Input vector roads file. 
+        output -- Output raster file. 
+        width -- Maximum road embankment width, in map units. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--streams='{}'".format(streams))
+        args.append("--roads='{}'".format(roads))
+        args.append("--output='{}'".format(output))
+        if width is not None: args.append("--width='{}'".format(width))
+        return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
+
     def d8_flow_accumulation(self, dem, output, out_type="cells", log=False, clip=False, callback=None):
         """Calculates a D8 flow accumulation raster from an input DEM.
 
@@ -3670,6 +3691,30 @@ class WhiteboxTools(object):
         args.append("--snap_dist='{}'".format(snap_dist))
         return self.run_tool('jenson_snap_pour_points', args, callback) # returns 1 if error
 
+    def least_cost_breach_depressions(self, dem, output, radius, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
+        """Breaches the depressions in a DEM using a least-cost pathway method.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        radius -- . 
+        max_cost -- Optional maximum breach cost (default is Inf). 
+        min_dist -- Optional flag indicating whether to minimize breach distances. 
+        flat_increment -- Optional elevation increment applied to flat areas. 
+        fill -- Optional flag indicating whether to fill any remaining unbreached depressions. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--radius='{}'".format(radius))
+        if max_cost is not None: args.append("--max_cost='{}'".format(max_cost))
+        if min_dist: args.append("--min_dist")
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
+        if fill: args.append("--fill")
+        return self.run_tool('least_cost_breach_depressions', args, callback) # returns 1 if error
+
     def longest_flowpath(self, dem, basins, output, callback=None):
         """Delineates the longest flowpaths for a group of subbasins or watersheds.
 
@@ -3877,6 +3922,20 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('unnest_basins', args, callback) # returns 1 if error
+
+    def upslope_depression_storage(self, dem, output, callback=None):
+        """Estimates the average upslope depression storage depth.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('upslope_depression_storage', args, callback) # returns 1 if error
 
     def watershed(self, d8_pntr, pour_pts, output, esri_pntr=False, callback=None):
         """Identifies the watershed, or drainage basin, draining to a set of target cells.
@@ -5142,6 +5201,22 @@ class WhiteboxTools(object):
     # LiDAR Tools #
     ###############
 
+    def classify_buildings_in_lidar(self, i, buildings, output, callback=None):
+        """Reclassifies a LiDAR points that lie within vector building footprints.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        buildings -- Input vector polygons file. 
+        output -- Output LiDAR file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--buildings='{}'".format(buildings))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('classify_buildings_in_lidar', args, callback) # returns 1 if error
+
     def classify_overlap_points(self, i, output, resolution=2.0, filter=False, callback=None):
         """Classifies or filters LAS points in regions of overlapping flight lines.
 
@@ -5518,7 +5593,7 @@ class WhiteboxTools(object):
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_idw_interpolation', args, callback) # returns 1 if error
 
-    def lidar_info(self, i, output=None, vlr=False, geokeys=False, callback=None):
+    def lidar_info(self, i, output=None, vlr=True, geokeys=True, callback=None):
         """Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
         Keyword arguments:
@@ -5713,6 +5788,40 @@ class WhiteboxTools(object):
         if use_median: args.append("--use_median")
         if classify: args.append("--classify")
         return self.run_tool('lidar_remove_outliers', args, callback) # returns 1 if error
+
+    def lidar_rfb_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, func_type="ThinPlateSpline", poly_order="none", weight=0.1, callback=None):
+        """Interpolates LAS files using a radial basis function (RFB) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
+        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
+        resolution -- Output raster's grid resolution. 
+        radius -- Search Radius. 
+        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        func_type -- Radial basis function type; options are 'ThinPlateSpline' (default), 'PolyHarmonic', 'Gaussian', 'MultiQuadric', 'InverseMultiQuadric'. 
+        poly_order -- Polynomial order; options are 'none' (default), 'constant', 'affine'. 
+        weight -- Weight parameter used in basis function. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--parameter={}".format(parameter))
+        args.append("--returns={}".format(returns))
+        args.append("--resolution={}".format(resolution))
+        args.append("--radius={}".format(radius))
+        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        args.append("--func_type={}".format(func_type))
+        args.append("--poly_order={}".format(poly_order))
+        args.append("--weight={}".format(weight))
+        return self.run_tool('lidar_rfb_interpolation', args, callback) # returns 1 if error
 
     def lidar_segmentation(self, i, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, classes=False, min_size=1, callback=None):
         """Segments a LiDAR point cloud based on normal vectors.
@@ -7185,26 +7294,6 @@ class WhiteboxTools(object):
     ###########################
     # Stream Network Analysis #
     ###########################
-
-    def burn_streams_at_roads(self, dem, streams, roads, output, width=None, callback=None):
-        """Rasterizes vector streams based on Lindsay (2016) method.
-
-        Keyword arguments:
-
-        dem -- Input raster digital elevation model (DEM) file. 
-        streams -- Input vector streams file. 
-        roads -- Input vector roads file. 
-        output -- Output raster file. 
-        width -- Maximum road embankment width, in map units. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--streams='{}'".format(streams))
-        args.append("--roads='{}'".format(roads))
-        args.append("--output='{}'".format(output))
-        if width is not None: args.append("--width='{}'".format(width))
-        return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
 
     def distance_to_outlet(self, d8_pntr, streams, output, esri_pntr=False, zero_background=False, callback=None):
         """Calculates the distance of stream grid cells to the channel network outlet cell.

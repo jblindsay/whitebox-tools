@@ -98,6 +98,8 @@ pub fn read_grass_raster(
         }
     }
 
+    configs.photometric_interp = PhotometricInterpretation::Continuous;
+
     Ok(())
 }
 

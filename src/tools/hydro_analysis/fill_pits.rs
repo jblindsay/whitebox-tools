@@ -128,7 +128,7 @@ impl WhiteboxTool for FillSingleCellPits {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -206,7 +206,7 @@ impl WhiteboxTool for FillSingleCellPits {
                             flag = true;
                             min_zn = f64::INFINITY;
                             for n in 0..8 {
-                                zn = input[(row + dy[n], col + dx[n])];
+                                zn = input.get_value(row + dy[n], col + dx[n]);
                                 if zn < min_zn {
                                     min_zn = zn;
                                 }

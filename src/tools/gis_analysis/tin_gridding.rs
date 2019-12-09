@@ -93,6 +93,15 @@ impl TINGridding {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Maximum Triangle Edge Length (optional)".to_owned(),
+            flags: vec!["--max_triangle_edge_length".to_owned()],
+            description: "Optional maximum triangle edge length; triangles larger than this size will not be gridded.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -167,12 +176,13 @@ impl WhiteboxTool for TINGridding {
         let mut use_field = false;
         let mut output_file: String = "".to_string();
         let mut grid_res: f64 = 1.0;
+        let mut max_triangle_edge_length = f64::INFINITY;
 
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -214,6 +224,14 @@ impl WhiteboxTool for TINGridding {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
+            } else if flag_val == "-max_triangle_edge_length" {
+                max_triangle_edge_length = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+
+                max_triangle_edge_length *= max_triangle_edge_length; // actually squared distance
             }
         }
 
@@ -370,42 +388,46 @@ impl WhiteboxTool for TINGridding {
             p1 = delaunay.triangles[i];
             p2 = delaunay.triangles[i + 1];
             p3 = delaunay.triangles[i + 2];
-            tri_points[0] = points[p1].clone();
-            tri_points[1] = points[p2].clone();
-            tri_points[2] = points[p3].clone();
-            tri_points[3] = points[p1].clone();
-            // if is_clockwise_order(&tri_points) {
-            //     tri_points.reverse();
-            // }
+            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
+                z_values[p2], z_values[p3]) < max_triangle_edge_length {
 
-            // get the equation of the plane
-            a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
-            b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
-            c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
-            norm = (b - a).cross(&(c - a));
+                tri_points[0] = points[p1].clone();
+                tri_points[1] = points[p2].clone();
+                tri_points[2] = points[p3].clone();
+                tri_points[3] = points[p1].clone();
+                // if is_clockwise_order(&tri_points) {
+                //     tri_points.reverse();
+                // }
 
-            if norm.z != 0f64 {
-                k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
+                // get the equation of the plane
+                a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
+                b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
+                c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
+                norm = (b - a).cross(&(c - a));
 
-                // find grid intersections with this triangle
-                bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
-                top = points[p1].y.max(points[p2].y.max(points[p3].y));
-                left = points[p1].x.min(points[p2].x.min(points[p3].x));
-                right = points[p1].x.max(points[p2].x.max(points[p3].x));
+                if norm.z != 0f64 {
+                    k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
 
-                bottom_row = ((north - bottom) / grid_res).ceil() as isize;
-                top_row = ((north - top) / grid_res).floor() as isize;
-                left_col = ((left - west) / grid_res).floor() as isize;
-                right_col = ((right - west) / grid_res).ceil() as isize;
+                    // find grid intersections with this triangle
+                    bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+                    top = points[p1].y.max(points[p2].y.max(points[p3].y));
+                    left = points[p1].x.min(points[p2].x.min(points[p3].x));
+                    right = points[p1].x.max(points[p2].x.max(points[p3].x));
 
-                for row in top_row..=bottom_row {
-                    for col in left_col..=right_col {
-                        x = west + (col as f64 + 0.5) * grid_res;
-                        y = north - (row as f64 + 0.5) * grid_res;
-                        if point_in_poly(&Point2D::new(x, y), &tri_points) {
-                            // calculate the z values
-                            z = -(norm.x * x + norm.y * y + k) / norm.z;
-                            output.set_value(row, col, z);
+                    bottom_row = ((north - bottom) / grid_res).ceil() as isize;
+                    top_row = ((north - top) / grid_res).floor() as isize;
+                    left_col = ((left - west) / grid_res).floor() as isize;
+                    right_col = ((right - west) / grid_res).ceil() as isize;
+
+                    for row in top_row..=bottom_row {
+                        for col in left_col..=right_col {
+                            x = west + (col as f64 + 0.5) * grid_res;
+                            y = north - (row as f64 + 0.5) * grid_res;
+                            if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                                // calculate the z values
+                                z = -(norm.x * x + norm.y * y + k) / norm.z;
+                                output.set_value(row, col, z);
+                            }
                         }
                     }
                 }
@@ -450,4 +472,32 @@ impl WhiteboxTool for TINGridding {
 
         Ok(())
     }
+}
+
+/// Calculate squared Euclidean distance between the point and another.
+pub fn max_distance_squared(p1: Point2D, p2: Point2D, p3: Point2D, z1: f64, z2: f64, z3: f64) -> f64 {
+    let mut dx = p1.x - p2.x;
+    let mut dy = p1.y - p2.y;
+    let mut dz = z1 - z2;
+    let mut max_dist = dx * dx + dy * dy + dz * dz;
+
+    dx = p1.x - p3.x;
+    dy = p1.y - p3.y;
+    dz = z1 - z3;
+    let mut dist = dx * dx + dy * dy + dz * dz;
+
+    if dist > max_dist {
+        max_dist = dist
+    }
+
+    dx = p2.x - p3.x;
+    dy = p2.y - p3.y;
+    dz = z2 - z3;
+    dist = dx * dx + dy * dy + dz * dz;
+
+    if dist > max_dist {
+        max_dist = dist
+    }
+
+    max_dist
 }

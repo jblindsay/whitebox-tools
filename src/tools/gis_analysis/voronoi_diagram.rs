@@ -7,8 +7,7 @@ License: MIT
 */
 
 use crate::algorithms::triangulate;
-use crate::structures::BoundingBox;
-use crate::structures::Point2D;
+use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::*;
 use std::collections::HashMap;
@@ -154,7 +153,7 @@ impl WhiteboxTool for VoronoiDiagram {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -220,9 +219,7 @@ impl WhiteboxTool for VoronoiDiagram {
         // set the projection information
         output.projection = input.projection.clone();
 
-        output
-            .attributes
-            .add_fields(&input.attributes.get_fields().clone());
+        output.attributes.add_fields(&input.attributes.get_fields().clone());
 
         // Read the points in
         let mut points: Vec<Point2D> = vec![];

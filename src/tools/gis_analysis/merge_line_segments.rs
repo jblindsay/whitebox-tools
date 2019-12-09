@@ -149,7 +149,7 @@ impl WhiteboxTool for MergeLineSegments {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -269,7 +269,7 @@ impl WhiteboxTool for MergeLineSegments {
         // Break the polylines up into shorter lines at junction points.
         let dimensions = 2;
         let capacity_per_node = 64;
-        let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+        let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
         let mut p1: Point2D;
         let mut p2: Point2D;
         for i in 0..polylines.len() {

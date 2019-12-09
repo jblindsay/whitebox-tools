@@ -109,6 +109,7 @@ pub fn read_surfer_ascii_raster(
         line_num += 1;
     }
 
+    configs.photometric_interp = PhotometricInterpretation::Continuous;
     configs.resolution_x = (configs.east - configs.west) / configs.columns as f64;
     configs.resolution_y = (configs.north - configs.south) / configs.rows as f64;
 

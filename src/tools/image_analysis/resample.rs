@@ -136,7 +136,7 @@ impl WhiteboxTool for Resample {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -346,7 +346,7 @@ impl WhiteboxTool for Resample {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
                                     col_n = origin_col + shift_x[n];
-                                    neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
+                                    neighbour[n][0] = inputs[i].get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
 
@@ -429,7 +429,7 @@ impl WhiteboxTool for Resample {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
                                     col_n = origin_col + shift_x[n];
-                                    neighbour[n][0] = inputs[i].get_value(row_n, col_n);;
+                                    neighbour[n][0] = inputs[i].get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src;
                                     dx = col_n as f64 - col_src;
 

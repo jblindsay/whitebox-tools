@@ -131,7 +131,7 @@ impl WhiteboxTool for LasToMultipointShapefile {
         if args.len() == 0 && working_directory.is_empty() {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

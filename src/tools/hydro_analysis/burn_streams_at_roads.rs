@@ -44,7 +44,7 @@ impl BurnStreamsAtRoads {
         // public constructor
         let name = "BurnStreamsAtRoads".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Rasterizes vector streams based on Lindsay (2016) method.".to_string();
+        let description = "Burns-in streams at the sites of road embankments.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -169,7 +169,7 @@ impl WhiteboxTool for BurnStreamsAtRoads {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

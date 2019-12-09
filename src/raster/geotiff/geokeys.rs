@@ -1,5 +1,6 @@
 use super::Ifd;
 use crate::utils::{ByteOrderReader, Endianness};
+use crate::spatial_ref_system;
 use std::collections::HashMap;
 use std::fmt;
 use std::mem::transmute;
@@ -205,8 +206,20 @@ impl GeoKeys {
                 if keyword_map.contains_key(&key_code) {
                     match keyword_map.get(&key_code) {
                         Some(hm) => match hm.get(&value_offset) {
-                            Some(v) => value = format!("{} ({})", v.to_string(), value_offset), //v.to_string(),
-                            None => value = format!("Unrecognized value ({})", value_offset),
+                            Some(v) => {
+                                value = if key_code == 3072 || key_code == 2048 {
+                                    format!("{} ({})", v.to_string(), spatial_ref_system::esri_wkt_from_epsg(value_offset))
+                                } else {
+                                    format!("{} ({})", v.to_string(), value_offset)
+                                };
+                            },
+                            None => {
+                                value = if key_code == 3072 || key_code == 2048 {
+                                    spatial_ref_system::esri_wkt_from_epsg(value_offset)
+                                } else {
+                                    format!("Unrecognized value ({})", value_offset)
+                                };
+                            }
                         },
                         None => value = format!("Unrecognized value ({})", key_code),
                     }
@@ -2651,6 +2664,7 @@ pub fn get_keyword_map() -> HashMap<u16, HashMap<u16, &'static str>> {
     kw.insert(3076u16, proj_linear_units_map);
 
     let vertical_cs_type_map = hashmap![
+        1127=>"Canadian Geodetic Vertical Datum of 2013 (CGVD2013)",
         5001=>"VertCS_Airy_1830_ellipsoid",
         5002=>"VertCS_Airy_Modified_1849_ellipsoid",
         5003=>"VertCS_ANS_ellipsoid",

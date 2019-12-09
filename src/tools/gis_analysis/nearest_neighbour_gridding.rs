@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/10/2018
-Last Modified: 18/10/2019
+Last Modified: 09/12/2019
 License: MIT
 */
 
@@ -173,7 +173,7 @@ impl WhiteboxTool for NearestNeighbourGridding {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -373,7 +373,8 @@ impl WhiteboxTool for NearestNeighbourGridding {
             if !base_file.contains(&sep) && !base_file.contains("/") {
                 base_file = format!("{}{}", working_directory, base_file);
             }
-            let base = Raster::new(&base_file, "r")?;
+            let mut base = Raster::new(&base_file, "r")?;
+            base.configs.nodata = nodata;
             Raster::initialize_using_file(&output_file, &base)
         } else {
             // base the output raster on the grid_res and the
@@ -408,6 +409,8 @@ impl WhiteboxTool for NearestNeighbourGridding {
         let west = output.configs.west;
         let north = output.configs.north;
         output.configs.nodata = nodata; // in case a base image is used with a different nodata value.
+        let res_x = output.configs.resolution_x;
+        let res_y = output.configs.resolution_y;
 
         let frs = Arc::new(frs);
         let num_procs = num_cpus::get() as isize;
@@ -420,8 +423,8 @@ impl WhiteboxTool for NearestNeighbourGridding {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        x = west + (col as f64 + 0.5) * grid_res;
-                        y = north - (row as f64 + 0.5) * grid_res;
+                        x = west + (col as f64 + 0.5) * res_x;
+                        y = north - (row as f64 + 0.5) * res_y;
                         let ret = frs.knn_search(x, y, 1);
                         if ret.len() == 1 {
                             if ret[0].1 <= max_dist {

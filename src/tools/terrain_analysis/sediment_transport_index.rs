@@ -183,7 +183,7 @@ impl WhiteboxTool for SedimentTransportIndex {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -313,7 +313,7 @@ impl WhiteboxTool for SedimentTransportIndex {
             }
         }
 
-        let elapsed_time = get_formatted_elapsed_time(start);;
+        let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.data_type = DataType::F32;
         output.configs.palette = "grey.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;

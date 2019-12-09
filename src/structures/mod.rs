@@ -9,6 +9,7 @@ mod n_minimizer;
 mod point2d;
 mod polyline;
 mod polynomial_regression_2d;
+mod radial_basis_function;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::array2d::Array2D;
@@ -23,3 +24,4 @@ pub use self::point2d::Point2D;
 pub use self::polyline::MultiPolyline;
 pub use self::polyline::Polyline;
 pub use self::polynomial_regression_2d::PolynomialRegression2D;
+pub use self::radial_basis_function::{Basis, RadialBasisFunction};

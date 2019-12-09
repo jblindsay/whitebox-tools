@@ -164,7 +164,7 @@ impl WhiteboxTool for Clip {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -637,8 +637,7 @@ impl WhiteboxTool for Clip {
                         // Break the polygons up into lines at junction points.
                         let dimensions = 2;
                         let capacity_per_node = 64;
-                        let mut snap_tree =
-                            KdTree::new_with_capacity(dimensions, capacity_per_node);
+                        let mut snap_tree = KdTree::with_capacity(dimensions, capacity_per_node);
                         let mut p: Point2D;
                         for i in 0..polygons.len() {
                             for j in 0..polygons[i].len() {
@@ -780,7 +779,7 @@ impl WhiteboxTool for Clip {
                         // now add the endpoints of each polyline into a kd tree
                         let dimensions = 2;
                         let capacity_per_node = 64;
-                        let mut kdtree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                        let mut kdtree = KdTree::with_capacity(dimensions, capacity_per_node);
                         let mut p1: Point2D;
                         let mut p2: Point2D;
                         let mut p3: Point2D;

@@ -207,7 +207,7 @@ impl WhiteboxTool for EmbossFilter {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
 

@@ -8,7 +8,7 @@ License: MIT
 NOTES:
 1. This tool is designed to work either by specifying a single input and output file or
    a working directory containing multiple input LAS files.
-2. Need to add the ability to exclude points based on max scan angle divation.
+2. Need to add the ability to exclude points based on max scan angle deviation.
 */
 
 use crate::lidar::*;
@@ -232,7 +232,7 @@ impl WhiteboxTool for LidarIdwInterpolation {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

@@ -118,7 +118,7 @@ pub fn read_whitebox(
     let data_file = Path::new(&file_name).with_extension("tas").into_os_string().into_string().unwrap();
     let mut f = File::open(data_file.clone())?;
     //let br = BufReader::new(f);
-    // let metadata = try!(fs::metadata(data_file.clone()));
+    // let metadata = fs::metadata(data_file.clone())?;
     // let file_size: usize = metadata.len() as usize;
     // let mut buffer = vec![0; file_size];
 
@@ -426,12 +426,6 @@ pub fn write_whitebox<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
         DataType::I32 => {
-            // if verbose {
-            //     println!("Warning: the I32 data type may not be supported on all versions of Whitebox GAT.");
-            // }
-            // for i in 0..num_cells {
-            //     writer.write_i32::<LittleEndian>(r.data[i] as i32)?;
-            // }
             for i in 0..num_cells {
                 writer.write_f32::<LittleEndian>(r.data[i] as f32)?;
             }

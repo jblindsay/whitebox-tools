@@ -25,7 +25,8 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow pointer, and a flow accumulation raster.
+/// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow 
+/// pointer, and a flow accumulation raster.
 pub struct FlowAccumulationFullWorkflow {
     name: String,
     description: String,
@@ -187,7 +188,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -367,9 +368,8 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             }
         }
 
-        let min_val = input.configs.minimum;
-        let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-        let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
+        let elev_digits = (input.configs.maximum as i64).to_string().len();
+        let elev_multiplier = 10.0_f64.powi((12 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
 
         let mut output = Raster::initialize_using_file(&outdem_file, &input);

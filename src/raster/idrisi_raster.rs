@@ -150,9 +150,9 @@ pub fn read_idrisi(
         f.read(&mut buffer)?;
 
         // read the file's bytes into a buffer
-        //try!(f.read_to_end(&mut buffer));
+        //f.read_to_end(&mut buffer)?;
 
-        //try!(br.fill_buf().unwrap()(&mut buffer));
+        //br.fill_buf().unwrap()(&mut buffer)?;
 
         let mut offset: usize;
         match configs.data_type {
@@ -370,7 +370,7 @@ pub fn write_idrisi<'a>(r: &'a mut Raster) -> Result<(), Error> {
             ));
             // for i in 0..num_cells {
             //     u24_bytes = unsafe { mem::transmute(r.data[i] as u32) };
-            //     try!(writer.write(&u16_bytes));
+            //     writer.write(&u16_bytes)?;
             // }
         }
         DataType::I16 => {

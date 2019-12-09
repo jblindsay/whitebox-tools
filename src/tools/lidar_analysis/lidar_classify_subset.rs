@@ -189,7 +189,7 @@ impl WhiteboxTool for LidarClassifySubset {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -283,7 +283,7 @@ impl WhiteboxTool for LidarClassifySubset {
         let mut old_progress = 1usize;
 
         let capacity_per_node = 128;
-        let mut kdtree = KdTree::new_with_capacity(3, capacity_per_node);
+        let mut kdtree = KdTree::with_capacity(3, capacity_per_node);
         println!("Creating tree...");
         for i in 0..subset_lidar.header.number_of_points as usize {
             let p: PointData = subset_lidar.get_point_info(i);

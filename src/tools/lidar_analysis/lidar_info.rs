@@ -62,7 +62,7 @@ impl LidarInfo {
                 "Flag indicating whether or not to print the variable length records (VLRs)."
                     .to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: None,
+            default_value: Some("true".to_string()),
             optional: true,
         });
 
@@ -71,7 +71,7 @@ impl LidarInfo {
             flags: vec!["--geokeys".to_owned()],
             description: "Flag indicating whether or not to print the geokeys.".to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: None,
+            default_value: Some("true".to_string()),
             optional: true,
         });
 
@@ -152,7 +152,7 @@ impl WhiteboxTool for LidarInfo {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

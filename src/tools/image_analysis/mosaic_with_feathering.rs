@@ -177,7 +177,7 @@ impl WhiteboxTool for MosaicWithFeathering {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -543,7 +543,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row1 + shift_y[n];
                                     col_n = origin_col1 + shift_x[n];
-                                    neighbour[n][0] = input1.get_value(row_n, col_n);;
+                                    neighbour[n][0] = input1.get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src1;
                                     dx = col_n as f64 - col_src1;
 
@@ -568,7 +568,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row2 + shift_y[n];
                                     col_n = origin_col2 + shift_x[n];
-                                    neighbour[n][0] = input2.get_value(row_n, col_n);;
+                                    neighbour[n][0] = input2.get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src2;
                                     dx = col_n as f64 - col_src2;
 
@@ -609,7 +609,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row1 + shift_y[n];
                                     col_n = origin_col1 + shift_x[n];
-                                    neighbour[n][0] = input1.get_value(row_n, col_n);;
+                                    neighbour[n][0] = input1.get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src1;
                                     dx = col_n as f64 - col_src1;
 
@@ -642,7 +642,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                 for n in 0..num_neighbours {
                                     row_n = origin_row2 + shift_y[n];
                                     col_n = origin_col2 + shift_x[n];
-                                    neighbour[n][0] = input2.get_value(row_n, col_n);;
+                                    neighbour[n][0] = input2.get_value(row_n, col_n);
                                     dy = row_n as f64 - row_src2;
                                     dx = col_n as f64 - col_src2;
 

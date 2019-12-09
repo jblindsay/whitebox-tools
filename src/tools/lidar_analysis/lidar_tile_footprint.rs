@@ -163,7 +163,7 @@ impl WhiteboxTool for LidarTileFootprint {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -333,14 +333,15 @@ impl WhiteboxTool for LidarTileFootprint {
                                     short_filename, 
                                     n_points,
                                     input.header.min_z,
-                                    input.header.max_z
+                                    input.header.max_z,
+                                    input.get_wkt()
                                 )).unwrap();
                             }
                             Err(err) => {
                                 tx.send((
                                     vec![],
                                     format!("Error reading file {}:\n{}", input_file, err),
-                                    0, 0f64, 0f64
+                                    0, 0f64, 0f64, "".to_string()
                                 ))
                                 .unwrap();
                             }
@@ -364,14 +365,15 @@ impl WhiteboxTool for LidarTileFootprint {
                                     short_filename, 
                                     header.get_number_of_points() as usize,
                                     header.min_z,
-                                    header.max_z
+                                    header.max_z,
+                                    "".to_string()
                                 )).unwrap();
                             }
                             Err(err) => {
                                 tx.send((
                                     vec![],
                                     format!("Error reading file {}:\n{}", input_file, err),
-                                    0, 0f64, 0f64
+                                    0, 0f64, 0f64, "".to_string()
                                 ))
                                 .unwrap();
                             }
@@ -410,6 +412,9 @@ impl WhiteboxTool for LidarTileFootprint {
                             ],
                             false,
                         );
+                        if !data.5.is_empty() && output.projection.is_empty() {
+                            output.projection = data.5.clone();
+                        }
                     } else {
                         // there was an error, likely reading a LAS file.
                         println!("{}", data.1);
@@ -424,6 +429,12 @@ impl WhiteboxTool for LidarTileFootprint {
                     old_progress = progress;
                 }
             }
+        }
+
+        if output.projection.is_empty() {
+            let input_file = inputs[0].replace("\"", "").clone();
+            let mut input = LasFile::new(&input_file, "r")?;
+            output.projection = input.get_wkt().clone();
         }
 
         let data = wkt.lock().unwrap();

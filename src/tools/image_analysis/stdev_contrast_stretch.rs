@@ -163,7 +163,7 @@ impl WhiteboxTool for StandardDeviationContrastStretch {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

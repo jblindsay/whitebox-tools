@@ -45,6 +45,7 @@ println!("{:?}", result.triangles); // [0, 2, 1, 0, 3, 2]
 
 use crate::structures::Point2D;
 use std::f64;
+use std::collections::HashSet;
 
 /// Represents the area outside of the triangulation.
 /// Halfedges on the convex hull (which don't have an adjacent halfedge)
@@ -163,6 +164,60 @@ impl Triangulation {
             }
         }
         result
+    }
+
+    pub fn natural_neighbours_from_incoming_edge(&self, start: usize) -> Vec<usize> {
+        let mut result = vec![];
+        //result.push(self.triangles[self.next_halfedge(start)]);
+        let mut incoming = start;
+        let mut outgoing: usize;
+        loop {
+            result.push(self.triangles[incoming]);
+            outgoing = self.next_halfedge(incoming);
+            incoming = self.halfedges[outgoing];
+            if incoming == EMPTY {
+                break;
+            } else if incoming == start {
+                break;
+            }
+        }
+        result
+    }
+
+    pub fn natural_neighbours_2nd_order(&self, start: usize) -> Vec<usize> {
+        let mut set = HashSet::new();
+        let mut edges = vec![];
+        // result.push(self.triangles[self.next_halfedge(start)]);
+        // set.insert(self.triangles[self.next_halfedge(start)]);
+        let mut incoming = start;
+        let mut outgoing: usize;
+        loop {
+            set.insert(self.triangles[incoming]);
+            outgoing = self.next_halfedge(incoming);
+            incoming = self.halfedges[outgoing];
+            edges.push(outgoing);
+            if incoming == EMPTY {
+                break;
+            } else if incoming == start {
+                break;
+            }
+        }
+
+        for start in edges {
+            incoming = start;
+            loop {
+                set.insert(self.triangles[incoming]);
+                outgoing = self.next_halfedge(incoming);
+                incoming = self.halfedges[outgoing];
+                if incoming == EMPTY {
+                    break;
+                } else if incoming == start {
+                    break;
+                }
+            }
+        }
+        
+        set.into_iter().map(|i| i).collect()
     }
 
     /// Returns the indices of the adjacent triangles to a triangle.

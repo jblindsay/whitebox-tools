@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 18/10/2019
+Last Modified: 24/11/2019
 License: MIT
 */
 
@@ -41,6 +41,13 @@ use std::path;
 /// the need to precisely represent small elevation differences along flats. Therefore, if the input DEM is stored
 /// at a lower level of precision (e.g. 32-bit floating point elevations), this may result in a doubling of
 /// the size of the DEM.
+/// 
+/// In comparison with the `BreachDepressionsLeastCost` tool, this breaching method often provides a less
+/// satisfactory, higher impact, breaching solution and is often less efficient. **It has been provided to users for
+/// legacy reasons and it is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from 
+/// their DEMs first**. The `BreachDepressionsLeastCost` tool is particularly
+/// well suited to breaching through road embankments. Nonetheless, there are applications for which full depression filling
+/// using the  `FillDepressions` tool may be preferred.
 ///
 /// # Reference
 /// Lindsay JB. 2016. *Efficient hybrid breaching-filling sink removal methods for
@@ -48,7 +55,7 @@ use std::path;
 /// 30(6): 846–857. DOI: 10.1002/hyp.10648
 ///
 /// # See Also
-/// `FillDepressions`, `FillSingleCellPits`
+/// `BreachDepressionsLeastCost`, `FillDepressions`, `FillSingleCellPits`
 pub struct BreachDepressions {
     name: String,
     description: String,
@@ -194,7 +201,7 @@ impl WhiteboxTool for BreachDepressions {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -279,14 +286,16 @@ impl WhiteboxTool for BreachDepressions {
         let columns = input.configs.columns as isize;
         let num_cells = rows * columns;
         let nodata = input.configs.nodata;
+        let resx = input.configs.resolution_x;
+        let resy = input.configs.resolution_y;
+        let diagres = (resx * resx + resy * resy).sqrt();
 
-        let small_num = if !flat_increment.is_nan() {
+        let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
             flat_increment
         } else {
-            let min_val = input.configs.minimum;
-            let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
+            let elev_digits = (input.configs.maximum as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
-            1.0_f64 / elev_multiplier as f64
+            1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         };
 
         let mut z: f64;
@@ -315,7 +324,7 @@ impl WhiteboxTool for BreachDepressions {
                             }
                         }
                         if flag {
-                            input.set_value(row, col, min_zn + small_num);
+                            input.set_value(row, col, min_zn - small_num);
                         }
                     }
                 }

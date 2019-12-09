@@ -68,6 +68,7 @@ pub fn read_saga(
                     ))
                 }
             }
+            configs.photometric_interp = PhotometricInterpretation::Continuous;
         } else if vec[0].to_lowercase().contains("byteorder_big") {
             if vec[1].replace("=", "").trim().to_lowercase().contains("f")
                 || vec[1]
@@ -143,8 +144,7 @@ pub fn read_saga(
     configs.north = configs.south + configs.resolution_y * configs.rows as f64;
     configs.east = configs.west + configs.resolution_x * configs.columns as f64;
 
-    if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64)
-    {
+    if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64) {
         configs.data_type = DataType::F32;
     }
 
@@ -367,6 +367,22 @@ pub fn read_saga(
         }
     }
 
+    ///////////////////////////////////////////
+    // Read the projection file if it exists //
+    ///////////////////////////////////////////
+    let prj_file = Path::new(&file_name).with_extension("prj").into_os_string().into_string().unwrap();
+    match File::open(prj_file) {
+        Ok(f) => {
+            configs.projection = String::new();
+            let f = BufReader::new(f);
+            for line in f.lines() {
+                let line_unwrapped = line.unwrap();
+                configs.projection.push_str(&format!("{}\n", line_unwrapped));
+            }
+        }
+        Err(_) => println!("Warning: Projection file not located."),
+    }
+
     Ok(())
 }
 
@@ -567,6 +583,17 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     let _ = writer.flush();
+
+    ///////////////////////////////
+    // Write the projection file //
+    ///////////////////////////////
+
+    if !r.configs.projection.is_empty() {
+        let prj_file = Path::new(&r.file_name).with_extension("prj").into_os_string().into_string().unwrap();
+        let f = File::create(&prj_file)?;
+        let mut writer = BufWriter::new(f);
+        writer.write_all(r.configs.projection.as_bytes())?;
+    }
 
     Ok(())
 }

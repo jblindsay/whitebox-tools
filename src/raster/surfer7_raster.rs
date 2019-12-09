@@ -303,6 +303,8 @@ pub fn read_surfer7(
         }
     }
 
+    configs.photometric_interp = PhotometricInterpretation::Continuous;
+
     Ok(())
 }
 

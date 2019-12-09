@@ -106,6 +106,7 @@ impl ToolManager {
         tool_names.push("MinimumBoundingEnvelope".to_string());
         tool_names.push("MinimumConvexHull".to_string());
         tool_names.push("NarrownessIndex".to_string());
+        tool_names.push("NaturalNeighbourInterpolation".to_string());
         tool_names.push("NearestNeighbourGridding".to_string());
         tool_names.push("MinOverlay".to_string());
         tool_names.push("PatchOrientation".to_string());
@@ -145,6 +146,7 @@ impl ToolManager {
         tool_names.push("AverageUpslopeFlowpathLength".to_string());
         tool_names.push("Basins".to_string());
         tool_names.push("BreachDepressions".to_string());
+        tool_names.push("BreachDepressionsLeastCost".to_string());
         tool_names.push("BreachSingleCellPits".to_string());
         tool_names.push("BurnStreamsAtRoads".to_string());
         tool_names.push("D8FlowAccumulation".to_string());
@@ -162,6 +164,7 @@ impl ToolManager {
         tool_names.push("FD8Pointer".to_string());
         tool_names.push("FillBurn".to_string());
         tool_names.push("FillDepressions".to_string());
+        tool_names.push("FillDepressionsWangAndLui".to_string());
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FindParallelFlow".to_string());
@@ -185,6 +188,7 @@ impl ToolManager {
         tool_names.push("Subbasins".to_string());
         tool_names.push("TraceDownslopeFlowpaths".to_string());
         tool_names.push("UnnestBasins".to_string());
+        tool_names.push("UpslopeDepressionStorage".to_string());
         tool_names.push("Watershed".to_string());
 
         // image_analysis
@@ -260,6 +264,7 @@ impl ToolManager {
         // tool_names.push("AsciiToLas".to_string());
         tool_names.push("LidarBlockMaximum".to_string());
         tool_names.push("LidarBlockMinimum".to_string());
+        tool_names.push("ClassifyBuildingsInLidar".to_string());
         tool_names.push("ClassifyOverlapPoints".to_string());
         tool_names.push("ClipLidarToPolygon".to_string());
         tool_names.push("ErasePolygonFromLidar".to_string());
@@ -285,6 +290,7 @@ impl ToolManager {
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarPointStats".to_string());
+        tool_names.push("LidarRfbInterpolation".to_string());
         tool_names.push("LidarRansacPlanes".to_string());
         tool_names.push("LidarRemoveDuplicates".to_string());
         tool_names.push("LidarRemoveOutliers".to_string());
@@ -330,6 +336,7 @@ impl ToolManager {
         tool_names.push("GreaterThan".to_string());
         tool_names.push("ImageAutocorrelation".to_string());
         tool_names.push("ImageCorrelation".to_string());
+        tool_names.push("ImageCorrelationNeighbourhoodAnalysis".to_string());
         tool_names.push("ImageRegression".to_string());
         tool_names.push("Increment".to_string());
         tool_names.push("InPlaceAdd".to_string());
@@ -576,6 +583,7 @@ impl ToolManager {
             }
             "minimumconvexhull" => Some(Box::new(gis_analysis::MinimumConvexHull::new())),
             "minoverlay" => Some(Box::new(gis_analysis::MinOverlay::new())),
+            "naturalneighbourinterpolation" => Some(Box::new(gis_analysis::NaturalNeighbourInterpolation::new())),
             "nearestneighbourgridding" => {
                 Some(Box::new(gis_analysis::NearestNeighbourGridding::new()))
             }
@@ -623,6 +631,7 @@ impl ToolManager {
             }
             "basins" => Some(Box::new(hydro_analysis::Basins::new())),
             "breachdepressions" => Some(Box::new(hydro_analysis::BreachDepressions::new())),
+            "breachdepressionsleastcost" => Some(Box::new(hydro_analysis::BreachDepressionsLeastCost::new())),
             "breachsinglecellpits" => Some(Box::new(hydro_analysis::BreachSingleCellPits::new())),
             "burnstreamsatroads" => Some(Box::new(hydro_analysis::BurnStreamsAtRoads::new())),
             "d8flowaccumulation" => Some(Box::new(hydro_analysis::D8FlowAccumulation::new())),
@@ -646,6 +655,7 @@ impl ToolManager {
             "fd8pointer" => Some(Box::new(hydro_analysis::FD8Pointer::new())),
             "fillburn" => Some(Box::new(hydro_analysis::FillBurn::new())),
             "filldepressions" => Some(Box::new(hydro_analysis::FillDepressions::new())),
+            "filldepressionswangandlui" => Some(Box::new(hydro_analysis::FillDepressionsWangAndLui::new())),
             "fillsinglecellpits" => Some(Box::new(hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(hydro_analysis::FindParallelFlow::new())),
@@ -679,6 +689,7 @@ impl ToolManager {
                 Some(Box::new(hydro_analysis::TraceDownslopeFlowpaths::new()))
             }
             "unnestbasins" => Some(Box::new(hydro_analysis::UnnestBasins::new())),
+            "upslopedepressionstorage" => Some(Box::new(hydro_analysis::UpslopeDepressionStorage::new())),
             "watershed" => Some(Box::new(hydro_analysis::Watershed::new())),
 
             // image_analysis
@@ -788,6 +799,7 @@ impl ToolManager {
             // "asciitolas" => Some(Box::new(lidar_analysis::AsciiToLas::new())),
             "lidarblockmaximum" => Some(Box::new(lidar_analysis::LidarBlockMaximum::new())),
             "lidarblockminimum" => Some(Box::new(lidar_analysis::LidarBlockMinimum::new())),
+            "classifybuildingsinlidar" => Some(Box::new(lidar_analysis::ClassifyBuildingsInLidar::new())),
             "classifyoverlappoints" => Some(Box::new(lidar_analysis::ClassifyOverlapPoints::new())),
             "cliplidartopolygon" => Some(Box::new(lidar_analysis::ClipLidarToPolygon::new())),
             "erasepolygonfromlidar" => Some(Box::new(lidar_analysis::ErasePolygonFromLidar::new())),
@@ -823,6 +835,7 @@ impl ToolManager {
             )),
             "lidarpointdensity" => Some(Box::new(lidar_analysis::LidarPointDensity::new())),
             "lidarpointstats" => Some(Box::new(lidar_analysis::LidarPointStats::new())),
+            "lidarrfbinterpolation" => Some(Box::new(lidar_analysis::LidarRfbInterpolation::new())),
             "lidarransacplanes" => Some(Box::new(lidar_analysis::LidarRansacPlanes::new())),
             "lidarremoveduplicates" => Some(Box::new(lidar_analysis::LidarRemoveDuplicates::new())),
             "lidarremoveoutliers" => Some(Box::new(lidar_analysis::LidarRemoveOutliers::new())),
@@ -880,6 +893,7 @@ impl ToolManager {
                 Some(Box::new(math_stat_analysis::ImageAutocorrelation::new()))
             }
             "imagecorrelation" => Some(Box::new(math_stat_analysis::ImageCorrelation::new())),
+            "imagecorrelationneighbourhoodanalysis" => Some(Box::new(math_stat_analysis::ImageCorrelationNeighbourhoodAnalysis::new())),
             "imageregression" => Some(Box::new(math_stat_analysis::ImageRegression::new())),
             "increment" => Some(Box::new(math_stat_analysis::Increment::new())),
             "inplaceadd" => Some(Box::new(math_stat_analysis::InPlaceAdd::new())),

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/10/2018
-Last Modified: 18/10/2019
+Last Modified: 09/12/2019
 License: MIT
 */
 
@@ -158,7 +158,7 @@ impl WhiteboxTool for BlockMaximumGridding {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -251,7 +251,8 @@ impl WhiteboxTool for BlockMaximumGridding {
             if !base_file.contains(&sep) && !base_file.contains("/") {
                 base_file = format!("{}{}", working_directory, base_file);
             }
-            let base = Raster::new(&base_file, "r")?;
+            let mut base = Raster::new(&base_file, "r")?;
+            base.configs.nodata = nodata;
             Raster::initialize_using_file(&output_file, &base)
         } else {
             // base the output raster on the grid_res and the

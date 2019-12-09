@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/02/2019
-Last Modified: 18/10/2019
+Last Modified: 04/12/2019
 License: MIT
 */
 
@@ -169,7 +169,7 @@ impl WhiteboxTool for RasterArea {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -354,10 +354,10 @@ impl WhiteboxTool for RasterArea {
                     }
                 }
             }
-        } else {
+        } else { // map units
             let is_geographic = input.is_in_geographic_coordinates();
             if is_geographic && verbose {
-                println!("Warning: the input file does not appear to be in a projected coodinate system. Area values will only be estimates.");
+                println!("Warning: the input file does not appear to be in a projected coordinate system. Area values will only be estimates.");
             }
 
             let num_procs = num_cpus::get() as isize;
@@ -368,6 +368,7 @@ impl WhiteboxTool for RasterArea {
                 thread::spawn(move || {
                     let mut resx = input.configs.resolution_x;
                     let mut resy = input.configs.resolution_y;
+                    let mut cell_area = resx * resy;
                     let mut area_data = vec![0f64; num_bins];
                     let mut val: f64;
                     let mut bin: usize;
@@ -377,12 +378,13 @@ impl WhiteboxTool for RasterArea {
                             mid_lat = input.get_y_from_row(row).to_radians();
                             resx = resx * 111_111.0 * mid_lat.cos();
                             resy = resy * 111_111.0;
+                            cell_area = resx * resy;
                         }
                         for col in 0..columns {
                             val = input.get_value(row, col);
                             if val != nodata && val != back_val && val >= min_val && val <= max_val {
                                 bin = (val - min_val).floor() as usize;
-                                area_data[bin] += resx * resy;
+                                area_data[bin] += cell_area;
                             }
                         }
                     }
@@ -417,7 +419,7 @@ impl WhiteboxTool for RasterArea {
                 output.reinitialize_values(out_nodata);
                 output.configs.nodata = out_nodata;
                 output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-                output.configs.data_type = DataType::I32;
+                output.configs.data_type = DataType::F32;
                 for row in 0..rows {
                     for col in 0..columns {
                         val = input.get_value(row, col);

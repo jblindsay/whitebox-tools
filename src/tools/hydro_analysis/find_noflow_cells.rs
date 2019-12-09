@@ -127,7 +127,7 @@ impl WhiteboxTool for FindNoFlowCells {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -198,11 +198,11 @@ impl WhiteboxTool for FindNoFlowCells {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             has_no_lower_neighbour = 1.0;
                             for n in 0..8 {
-                                zn = input[(row + dy[n], col + dx[n])];
+                                zn = input.get_value(row + dy[n], col + dx[n]);
                                 if zn < z && zn != nodata {
                                     has_no_lower_neighbour = nodata;
                                     break;

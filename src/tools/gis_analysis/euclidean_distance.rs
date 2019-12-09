@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 22 2017
-Last Modified: 25/11/2018
+Created: 22/06/2017
+Last Modified: 05/12/2019
 License: MIT
 */
 
@@ -137,7 +137,7 @@ impl WhiteboxTool for EuclideanDistance {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -149,18 +149,19 @@ impl WhiteboxTool for EuclideanDistance {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -191,31 +192,31 @@ impl WhiteboxTool for EuclideanDistance {
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-        let mut r_x: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
-        let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
-
+        
         let start = Instant::now();
 
+        let mut rx: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
+        let mut ry: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
+        
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
 
         let mut h: f64;
         let mut which_cell: usize;
         let inf_val = f64::INFINITY;
-        let d_x = [-1, -1, 0, 1, 1, 1, 0, -1];
-        let d_y = [0, -1, -1, -1, 0, 1, 1, 1];
-        let g_x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0];
-        let g_y = [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0];
+        let dx = [-1, -1, 0, 1, 1, 1, 0, -1];
+        let dy = [0, -1, -1, -1, 0, 1, 1, 1];
+        let gx = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0];
+        let gy = [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0];
         let (mut x, mut y): (isize, isize);
         let (mut z, mut z2, mut z_min): (f64, f64, f64);
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z != 0.0 {
-                    output[(row, col)] = 0.0;
+                if input.get_value(row, col) != 0.0 {
+                    output.set_value(row, col, 0.0);
                 } else {
-                    output[(row, col)] = inf_val;
+                    output.set_value(row, col, inf_val);
                 }
             }
             if verbose {
@@ -229,20 +230,20 @@ impl WhiteboxTool for EuclideanDistance {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = output[(row, col)];
+                z = output.get_value(row, col);
                 if z != 0.0 {
                     z_min = inf_val;
                     which_cell = 0;
                     for i in 0..4 {
-                        x = col + d_x[i];
-                        y = row + d_y[i];
-                        z2 = output[(y, x)];
+                        x = col + dx[i];
+                        y = row + dy[i];
+                        z2 = output.get_value(y, x);
                         if z2 != nodata {
                             h = match i {
-                                0 => 2.0 * r_x[(y, x)] + 1.0,
-                                1 => 2.0 * (r_x[(y, x)] + r_y[(y, x)] + 1.0),
-                                2 => 2.0 * r_y[(y, x)] + 1.0,
-                                _ => 2.0 * (r_x[(y, x)] + r_y[(y, x)] + 1.0), // 3
+                                0 => 2.0 * rx.get_value(y, x) + 1.0,
+                                1 => 2.0 * (rx.get_value(y, x) + ry.get_value(y, x) + 1.0),
+                                2 => 2.0 * ry.get_value(y, x) + 1.0,
+                                _ => 2.0 * (rx.get_value(y, x) + ry.get_value(y, x) + 1.0), // 3
                             };
                             z2 += h;
                             if z2 < z_min {
@@ -252,11 +253,11 @@ impl WhiteboxTool for EuclideanDistance {
                         }
                     }
                     if z_min < z {
-                        output[(row, col)] = z_min;
-                        x = col + d_x[which_cell];
-                        y = row + d_y[which_cell];
-                        r_x[(row, col)] = r_x[(y, x)] + g_x[which_cell];
-                        r_y[(row, col)] = r_y[(y, x)] + g_y[which_cell];
+                        output.set_value(row, col, z_min);
+                        x = col + dx[which_cell];
+                        y = row + dy[which_cell];
+                        rx.set_value(row, col, rx.get_value(y, x) + gx[which_cell]);
+                        ry.set_value(row, col, ry.get_value(y, x) + gy[which_cell]);
                     }
                 }
             }
@@ -271,20 +272,20 @@ impl WhiteboxTool for EuclideanDistance {
 
         for row in (0..rows).rev() {
             for col in (0..columns).rev() {
-                z = output[(row, col)];
+                z = output.get_value(row, col);
                 if z != 0.0 {
                     z_min = inf_val;
                     which_cell = 0;
                     for i in 4..8 {
-                        x = col + d_x[i];
-                        y = row + d_y[i];
-                        z2 = output[(y, x)];
+                        x = col + dx[i];
+                        y = row + dy[i];
+                        z2 = output.get_value(y, x);
                         if z2 != nodata {
                             h = match i {
-                                5 => 2.0 * (r_x[(y, x)] + r_y[(y, x)] + 1.0),
-                                4 => 2.0 * r_x[(y, x)] + 1.0,
-                                6 => 2.0 * r_y[(y, x)] + 1.0,
-                                _ => 2.0 * (r_x[(y, x)] + r_y[(y, x)] + 1.0), // 7
+                                5 => 2.0 * (rx.get_value(y, x) + ry.get_value(y, x) + 1.0),
+                                4 => 2.0 * rx.get_value(y, x) + 1.0,
+                                6 => 2.0 * ry.get_value(y, x) + 1.0,
+                                _ => 2.0 * (rx.get_value(y, x) + ry.get_value(y, x) + 1.0), // 7
                             };
                             z2 += h;
                             if z2 < z_min {
@@ -295,10 +296,10 @@ impl WhiteboxTool for EuclideanDistance {
                     }
                     if z_min < z {
                         output[(row, col)] = z_min;
-                        x = col + d_x[which_cell];
-                        y = row + d_y[which_cell];
-                        r_x[(row, col)] = r_x[(y, x)] + g_x[which_cell];
-                        r_y[(row, col)] = r_y[(y, x)] + g_y[which_cell];
+                        x = col + dx[which_cell];
+                        y = row + dy[which_cell];
+                        rx.set_value(row, col, rx.get_value(y, x) + gx[which_cell]);
+                        ry.set_value(row, col, ry.get_value(y, x) + gy[which_cell]);
                     }
                 }
             }
@@ -314,11 +315,10 @@ impl WhiteboxTool for EuclideanDistance {
         let cell_size = (input.configs.resolution_x + input.configs.resolution_y) / 2.0;
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z != nodata {
-                    output[(row, col)] = output[(row, col)].sqrt() * cell_size;
+                if input.get_value(row, col) != nodata {
+                    output.set_value(row, col, output.get_value(row, col).sqrt() * cell_size);
                 } else {
-                    output[(row, col)] = nodata;
+                    output.set_value(row, col, nodata);
                 }
             }
             if verbose {

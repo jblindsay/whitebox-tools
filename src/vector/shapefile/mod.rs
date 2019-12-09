@@ -1,7 +1,7 @@
 /*
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: June 21, 2017
+Created: 21/06/2017
 Last Modified: 17/10/2018
 License: MIT
 
@@ -13,15 +13,10 @@ pub mod geometry;
 
 use self::attributes::*;
 use self::geometry::*;
-// use attributes::{
-//     AttributeField, AttributeHeader, DateData, FieldData, FieldDataType, Intersector,
-//     ShapefileAttributes,
-// };
 use crate::structures::Point2D;
 use crate::utils::{ByteOrderReader, Endianness};
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use chrono::prelude::*;
-// use geometry::{ShapeType, ShapeTypeDimension, ShapefileGeometry};
 use std::f64;
 use std::fmt;
 use std::fs;
@@ -31,7 +26,6 @@ use std::io::{BufReader, BufWriter, Cursor, Error, ErrorKind};
 use std::path::Path;
 use std::str;
 
-/// `ShapefileHeader` stores the header variables of a ShapeFile header.
 #[derive(Debug, Default, Clone)]
 pub struct ShapefileHeader {
     file_code: i32,            // BigEndian; value is 9994

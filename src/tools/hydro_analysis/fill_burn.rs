@@ -149,7 +149,7 @@ impl WhiteboxTool for FillBurn {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -534,9 +534,8 @@ impl WhiteboxTool for FillBurn {
 
         // Perform the priority flood operation.
 
-        let min_val = dem.configs.minimum;
-        let elev_digits = ((dem.configs.maximum - min_val) as i64).to_string().len();
-        let elev_multiplier = 10.0_f64.powi((7 - elev_digits) as i32);
+        let elev_digits = (dem.configs.maximum as i64).to_string().len();
+        let elev_multiplier = 10.0_f64.powi((12 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
 
         while !minheap.is_empty() {

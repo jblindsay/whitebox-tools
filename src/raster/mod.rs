@@ -1291,7 +1291,7 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
                     || l.contains("xllcenter")
                     || l.contains("yllcenter")
                 {
-                    return RasterType::ArcAscii;;
+                    return RasterType::ArcAscii;
                 }
                 if line_count > 7 {
                     break;

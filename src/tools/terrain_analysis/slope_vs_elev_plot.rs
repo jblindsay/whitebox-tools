@@ -154,7 +154,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -601,7 +601,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
             }
         }
         writer.write_all(("</p>").as_bytes())?;
-        let elapsed_time = get_formatted_elapsed_time(start);;
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = num_files > 1;
 

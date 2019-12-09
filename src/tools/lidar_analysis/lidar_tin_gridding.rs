@@ -19,7 +19,6 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, f64, fs, path, thread};
 
-/// Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 pub struct LidarTINGridding {
     name: String,
     description: String,
@@ -214,7 +213,7 @@ impl WhiteboxTool for LidarTINGridding {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {

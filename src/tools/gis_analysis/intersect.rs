@@ -183,7 +183,7 @@ impl WhiteboxTool for Intersect {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -308,7 +308,7 @@ impl WhiteboxTool for Intersect {
                 // place the points from both files into a KD-tree
                 let dimensions = 2;
                 let capacity_per_node = 64;
-                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
                 let mut p: Point2D;
                 for record_num in 0..input.num_records {
                     let record = input.get_record(record_num);
@@ -374,7 +374,7 @@ impl WhiteboxTool for Intersect {
                 // place the points from both files into a KD-tree
                 let dimensions = 2;
                 let capacity_per_node = 64;
-                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
                 let mut p: Point2D;
                 let mut total_points = 0;
                 for record_num in 0..input.num_records {
@@ -534,7 +534,7 @@ impl WhiteboxTool for Intersect {
                 // Break the polylines up into shorter lines at junction points.
                 let dimensions = 2;
                 let capacity_per_node = 64;
-                let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
                 let mut p: Point2D;
                 for i in 0..polylines.len() {
                     for j in 0..polylines[i].len() {
@@ -774,7 +774,7 @@ impl WhiteboxTool for Intersect {
                             let mut p: Point2D;
                             let dimensions = 2;
                             let capacity_per_node = 64;
-                            let mut tree = KdTree::new_with_capacity(dimensions, capacity_per_node);
+                            let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
                             for i in 0..polygons.len() {
                                 for j in 0..polygons[i].len() {
                                     p = polygons[i][j];
@@ -979,8 +979,7 @@ impl WhiteboxTool for Intersect {
                             // now add the endpoints of each polyline into a kd tree
                             let dimensions = 2;
                             let capacity_per_node = 64;
-                            let mut kdtree =
-                                KdTree::new_with_capacity(dimensions, capacity_per_node);
+                            let mut kdtree = KdTree::with_capacity(dimensions, capacity_per_node);
                             let mut p1: Point2D;
                             let mut p2: Point2D;
                             let mut p3: Point2D;

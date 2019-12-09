@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/05/2018
-Last Modified: 18/10/2019
+Last Modified: 9/12/2019
 License: MIT
 
 Most IDW tool have the option to work either based on a fixed number of neighbouring
@@ -205,7 +205,7 @@ impl WhiteboxTool for IdwInterpolation {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -240,7 +240,7 @@ impl WhiteboxTool for IdwInterpolation {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-cell_size" {
+            } else if flag_val == "-resolution" || flag_val == "-cell_size" {
                 grid_res = if keyval {
                     vec[1].to_string().parse::<f64>().unwrap()
                 } else {
@@ -518,9 +518,16 @@ impl WhiteboxTool for IdwInterpolation {
             if !base_file.contains(&sep) && !base_file.contains("/") {
                 base_file = format!("{}{}", working_directory, base_file);
             }
-            let base = Raster::new(&base_file, "r")?;
+            let mut base = Raster::new(&base_file, "r")?;
+            base.configs.nodata = nodata;
             Raster::initialize_using_file(&output_file, &base)
         } else {
+            if grid_res == 0f64 {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The specified grid resolution is incorrect. Either a non-zero grid resolution \nor an input existing base file name must be used.",
+                ));
+            }
             // base the output raster on the grid_res and the
             // extent of the input vector.
             let west: f64 = vector_data.header.x_min;
@@ -553,6 +560,8 @@ impl WhiteboxTool for IdwInterpolation {
         let west = output.configs.west;
         let north = output.configs.north;
         output.configs.nodata = nodata; // in case a base image is used with a different nodata value.
+        let res_x = output.configs.resolution_x;
+        let res_y = output.configs.resolution_y;
 
         // let kdtree = Arc::new(kdtree); // wrap FRS in an Arc
         let frs = Arc::new(frs);
@@ -572,8 +581,8 @@ impl WhiteboxTool for IdwInterpolation {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        x = west + (col as f64 + 0.5) * grid_res;
-                        y = north - (row as f64 + 0.5) * grid_res;
+                        x = west + (col as f64 + 0.5) * res_x;
+                        y = north - (row as f64 + 0.5) * res_y;
                         let mut ret = frs.search(x, y);
                         if ret.len() < min_points {
                             ret = frs.knn_search(x, y, min_points);

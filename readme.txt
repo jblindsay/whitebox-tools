@@ -56,6 +56,36 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.0.3 (09-12-2019)
+- Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 
+  and Dhun (2015) impact minimizing breaching algorithm. This modified algorithm is very 
+  efficient and can provide an excellent method for creating depressionless DEMs from large 
+  DEMs, including those derived from LiDAR. It is particularly well suited to breaching 
+  through road embankments, approximately the pathway of culverts.
+- The FillDepressions tool algorithm has been completely re-developed. The new algorithm is
+  significantly faster than the previous method, which was based on the Wang and Lui method.
+  For legacy reasons, the previous tool has been retained and renamed FillDepressonsWangAndLui.
+  Notice that this new method also incorporates significantly improved flat area correction
+  that maintains general flowpaths of filled areas.
+- The Sink and DepthInSink tools have been updated to use the new depression filling algorithm.
+- Added the ClassifyBuildingsInLidar tool to reclassify LiDAR points within a LAS file
+  to the building class value (6) that are located within one or more building footprint
+  contained in an input polygon vector file. 
+- Added the NaturalNeighbourInterpolation tool for performing Sibson's (1981) interpolation
+  method on input point data.
+- Added the UpslopeDepressionStorage tool to estimate the average upslope depression 
+  storage capacity (DSC).
+- Added the LidarRfbInterpolation tool for performing a radial basis function interpolation
+  of LiDAR data sets.
+- The WhiteboxTools Runner user interface has been significantly improved (many thanks to 
+  Rachel Broders for these contributions).
+- Fixed a bug in which the photometric interpretation was not being set by certain raster
+  decoders, including the SAGA encoder. This was causing an error when outputting GeoTIFF 
+  files.
+- Updated the ConstructVectorTIN and TINGridding tools to include a maximum triangle edge 
+  length to help avoid the creation of spurious long and narrow triangles in convex regions 
+  along the data boundaries.
+
 Version 1.0.2 (01-11-2019)
 - Added the BurnStreamsAtRoads tool.
 - Added a two-sample K-S test (TwoSampleKsTest) for comparing the distributions of two rasters.

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 18/10/2019
+Last Modified: 07/12/2019
 License: MIT
 */
 
@@ -23,6 +23,10 @@ use std::path;
 /// TIN vertex heights can be assigned based on either a field in the vector's attribute table (`--field`),
 /// or alternatively, if the vector is of a z-dimension *ShapeTypeDimension*, the point z-values may be
 /// used for vertex heights (`--use_z`). For LiDAR points, use the `LidarConstructVectorTIN` tool instead.
+/// 
+/// Triangulation often creates very long, narrow triangles near the edges of the data coverage, particularly
+/// in convex regions along the data boundary. To avoid these spurious triangles, the user may optionally 
+/// specify the maximum allowable edge length of a triangular facet (`--max_triangle_edge_length`).
 /// 
 /// # See Also
 /// `LidarConstructVectorTIN`
@@ -87,6 +91,15 @@ impl ConstructVectorTIN {
             )),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Maximum Triangle Edge Length (optional)".to_owned(),
+            flags: vec!["--max_triangle_edge_length".to_owned()],
+            description: "Optional maximum triangle edge length; triangles larger than this size will not be gridded.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -163,12 +176,13 @@ impl WhiteboxTool for ConstructVectorTIN {
         let mut use_z = false;
         let mut use_field = false;
         let mut output_file: String = "".to_string();
+        let mut max_triangle_edge_length = f64::INFINITY;
 
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -204,6 +218,14 @@ impl WhiteboxTool for ConstructVectorTIN {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-max_triangle_edge_length" {
+                max_triangle_edge_length = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
+
+                max_triangle_edge_length *= max_triangle_edge_length; // actually squared distance
             }
         }
 
@@ -350,63 +372,67 @@ impl WhiteboxTool for ConstructVectorTIN {
             p2 = result.triangles[i + 1];
             p3 = result.triangles[i];
 
-            let mut tri_points: Vec<Point2D> = Vec::with_capacity(4);
-            tri_points.push(points[p1].clone());
-            tri_points.push(points[p2].clone());
-            tri_points.push(points[p3].clone());
-            tri_points.push(points[p1].clone());
+            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
+                z_values[p2], z_values[p3]) < max_triangle_edge_length {
 
-            let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
-            sfg.add_part(&tri_points);
-            output.add_record(sfg);
+                let mut tri_points: Vec<Point2D> = Vec::with_capacity(4);
+                tri_points.push(points[p1].clone());
+                tri_points.push(points[p2].clone());
+                tri_points.push(points[p3].clone());
+                tri_points.push(points[p1].clone());
 
-            if use_field || use_z {
-                // calculate the hillshade value
-                let a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
-                let b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
-                let c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
-                let norm = (b - a).cross(&(c - a)); //).normalize();
-                let centroid = (a + b + c) / 3f64;
-                // k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
-                // centroid_z = -(norm.x * centroid.x + norm.y * centroid.y + k) / norm.z;
+                let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
+                sfg.add_part(&tri_points);
+                output.add_record(sfg);
 
-                hillshade = 0f64;
-                if norm.z != 0f64 {
-                    fx = -norm.x / norm.z;
-                    fy = -norm.y / norm.z;
-                    if fx != 0f64 {
-                        tan_slope = (fx * fx + fy * fy).sqrt();
-                        aspect = (180f64 - ((fy / fx).atan()).to_degrees()
-                            + 90f64 * (fx / (fx).abs()))
-                        .to_radians();
-                        term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
-                        term2 = sin_theta / tan_slope;
-                        term3 = cos_theta * (azimuth - aspect).sin();
-                        hillshade = term1 * (term2 - term3);
-                    } else {
-                        hillshade = 0.5;
+                if use_field || use_z {
+                    // calculate the hillshade value
+                    let a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
+                    let b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
+                    let c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
+                    let norm = (b - a).cross(&(c - a)); //).normalize();
+                    let centroid = (a + b + c) / 3f64;
+                    // k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
+                    // centroid_z = -(norm.x * centroid.x + norm.y * centroid.y + k) / norm.z;
+
+                    hillshade = 0f64;
+                    if norm.z != 0f64 {
+                        fx = -norm.x / norm.z;
+                        fy = -norm.y / norm.z;
+                        if fx != 0f64 {
+                            tan_slope = (fx * fx + fy * fy).sqrt();
+                            aspect = (180f64 - ((fy / fx).atan()).to_degrees()
+                                + 90f64 * (fx / (fx).abs()))
+                            .to_radians();
+                            term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                            term2 = sin_theta / tan_slope;
+                            term3 = cos_theta * (azimuth - aspect).sin();
+                            hillshade = term1 * (term2 - term3);
+                        } else {
+                            hillshade = 0.5;
+                        }
+                        hillshade = hillshade * 1024f64;
+                        if hillshade < 0f64 {
+                            hillshade = 0f64;
+                        }
                     }
-                    hillshade = hillshade * 1024f64;
-                    if hillshade < 0f64 {
-                        hillshade = 0f64;
-                    }
+
+                    output.attributes.add_record(
+                        vec![
+                            FieldData::Int(rec_num),
+                            FieldData::Real(centroid.z),
+                            FieldData::Int(hillshade as i32),
+                        ],
+                        false,
+                    );
+                } else {
+                    output
+                        .attributes
+                        .add_record(vec![FieldData::Int(rec_num)], false);
                 }
 
-                output.attributes.add_record(
-                    vec![
-                        FieldData::Int(rec_num),
-                        FieldData::Real(centroid.z),
-                        FieldData::Int(hillshade as i32),
-                    ],
-                    false,
-                );
-            } else {
-                output
-                    .attributes
-                    .add_record(vec![FieldData::Int(rec_num)], false);
+                rec_num += 1i32;
             }
-
-            rec_num += 1i32;
 
             if verbose {
                 progress = (100.0_f64 * i as f64 / (result.triangles.len() - 1) as f64) as usize;
@@ -437,4 +463,32 @@ impl WhiteboxTool for ConstructVectorTIN {
 
         Ok(())
     }
+}
+
+/// Calculate squared Euclidean distance between the point and another.
+pub fn max_distance_squared(p1: Point2D, p2: Point2D, p3: Point2D, z1: f64, z2: f64, z3: f64) -> f64 {
+    let mut dx = p1.x - p2.x;
+    let mut dy = p1.y - p2.y;
+    let mut dz = z1 - z2;
+    let mut max_dist = dx * dx + dy * dy + dz * dz;
+
+    dx = p1.x - p3.x;
+    dy = p1.y - p3.y;
+    dz = z1 - z3;
+    let mut dist = dx * dx + dy * dy + dz * dz;
+
+    if dist > max_dist {
+        max_dist = dist
+    }
+
+    dx = p2.x - p3.x;
+    dy = p2.y - p3.y;
+    dz = z2 - z3;
+    dist = dx * dx + dy * dy + dz * dz;
+
+    if dist > max_dist {
+        max_dist = dist
+    }
+
+    max_dist
 }

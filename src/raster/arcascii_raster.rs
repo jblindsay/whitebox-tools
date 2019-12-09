@@ -112,6 +112,8 @@ pub fn read_arcascii(
             yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
+    configs.photometric_interp = PhotometricInterpretation::Continuous;
+
     Ok(())
 }
 

@@ -83,6 +83,8 @@ pub fn read_arcbinary(
         }
     }
 
+    configs.photometric_interp = PhotometricInterpretation::Continuous;
+
     configs.data_type = DataType::F32;
 
     // set the North, East, South, and West coodinates

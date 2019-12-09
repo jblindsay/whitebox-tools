@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 4, 2017
+Created: 04/072017
 Last Modified: 13/10/2018
 License: MIT
 
@@ -137,7 +137,7 @@ impl WhiteboxTool for CostAllocation {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
