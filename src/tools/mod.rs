@@ -120,6 +120,7 @@ impl ToolManager {
         tool_names.push("PolygonPerimeter".to_string());
         tool_names.push("PolygonShortAxis".to_string());
         tool_names.push("Polygonize".to_string());
+        tool_names.push("RadialBasisFunctionInterpolation".to_string());
         tool_names.push("RadiusOfGyration".to_string());
         tool_names.push("RasterArea".to_string());
         tool_names.push("RasterCellAssignment".to_string());
@@ -129,7 +130,6 @@ impl ToolManager {
         tool_names.push("RelatedCircumscribingCircle".to_string());
         tool_names.push("ShapeComplexityIndex".to_string());
         tool_names.push("ShapeComplexityIndexRaster".to_string());
-        // tool_names.push("SibsonInterpolation".to_string());
         tool_names.push("SmoothVectors".to_string());
         tool_names.push("SplitWithLines".to_string());
         tool_names.push("SumOverlay".to_string());
@@ -290,7 +290,7 @@ impl ToolManager {
         tool_names.push("LidarNearestNeighbourGridding".to_string());
         tool_names.push("LidarPointDensity".to_string());
         tool_names.push("LidarPointStats".to_string());
-        tool_names.push("LidarRfbInterpolation".to_string());
+        tool_names.push("LidarRbfInterpolation".to_string());
         tool_names.push("LidarRansacPlanes".to_string());
         tool_names.push("LidarRemoveDuplicates".to_string());
         tool_names.push("LidarRemoveOutliers".to_string());
@@ -599,6 +599,7 @@ impl ToolManager {
             "polygonperimeter" => Some(Box::new(gis_analysis::PolygonPerimeter::new())),
             "polygonshortaxis" => Some(Box::new(gis_analysis::PolygonShortAxis::new())),
             "polygonize" => Some(Box::new(gis_analysis::Polygonize::new())),
+            "radialbasisfunctioninterpolation" => Some(Box::new(gis_analysis::RadialBasisFunctionInterpolation::new())),
             "radiusofgyration" => Some(Box::new(gis_analysis::RadiusOfGyration::new())),
             "rasterarea" => Some(Box::new(gis_analysis::RasterArea::new())),
             "rastercellassignment" => Some(Box::new(gis_analysis::RasterCellAssignment::new())),
@@ -610,9 +611,6 @@ impl ToolManager {
             }
             "shapecomplexityindex" => Some(Box::new(gis_analysis::ShapeComplexityIndex::new())),
             "shapecomplexityindexraster" => Some(Box::new(gis_analysis::ShapeComplexityIndexRaster::new())),
-            // "sibsoninterpolation" => {
-            //     Some(Box::new(gis_analysis::SibsonInterpolation::new()))
-            // }
             "smoothvectors" => Some(Box::new(gis_analysis::SmoothVectors::new())),
             "splitwithlines" => Some(Box::new(gis_analysis::SplitWithLines::new())),
             "sumoverlay" => Some(Box::new(gis_analysis::SumOverlay::new())),
@@ -835,7 +833,7 @@ impl ToolManager {
             )),
             "lidarpointdensity" => Some(Box::new(lidar_analysis::LidarPointDensity::new())),
             "lidarpointstats" => Some(Box::new(lidar_analysis::LidarPointStats::new())),
-            "lidarrfbinterpolation" => Some(Box::new(lidar_analysis::LidarRfbInterpolation::new())),
+            "lidarrbfinterpolation" => Some(Box::new(lidar_analysis::LidarRbfInterpolation::new())),
             "lidarransacplanes" => Some(Box::new(lidar_analysis::LidarRansacPlanes::new())),
             "lidarremoveduplicates" => Some(Box::new(lidar_analysis::LidarRemoveDuplicates::new())),
             "lidarremoveoutliers" => Some(Box::new(lidar_analysis::LidarRemoveOutliers::new())),

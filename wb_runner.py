@@ -788,11 +788,11 @@ class WbRunner(tk.Frame):
         self.sort_tools_by_toolbox()        
         self.get_tools_list()  
         #Icons to be used in tool treeview
-        self.tool_icon = tk.PhotoImage(file = self.script_dir + '//img//tool.png')  
-        self.open_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//open.png')
-        self.closed_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//closed.png')
+        self.tool_icon = tk.PhotoImage(file = self.script_dir + '//img//tool.gif')  
+        self.open_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//open.gif')
+        self.closed_toolbox_icon = tk.PhotoImage(file =  self.script_dir + '//img//closed.gif')
         #########################################################
-        #                  Toolboxes Frame                      #FIXME: change width or make horizontally scrollable
+        #                  Toolboxes Frame                      # FIXME: change width or make horizontally scrollable
         #########################################################
         #define tools_frame and tool_tree
         self.tools_frame = ttk.LabelFrame(toplevel_frame, text="{} Available Tools".format(len(self.tools_list)), padding='0.1i')   
@@ -1120,18 +1120,18 @@ class WbRunner(tk.Frame):
         for t in toolsItems:
             self.descriptionList.append(t[1])    #second entry in tool dictionary is the description
      
-    def configure_arg_scroll_frame(self, event):
-        # update the scrollbars to match the size of the inner frame
-        size = (self.arg_scroll_frame.winfo_reqwidth(), self.arg_scroll_frame.winfo_reqheight())
-        self.arg_canvas.config(scrollregion="0 0 %s %s" % size)
-        if self.arg_scroll_frame.winfo_reqwidth() != self.arg_canvas.winfo_width():
-            # update the canvas's width to fit the inner frame
-            self.arg_canvas.config(width=self.arg_scroll_frame.winfo_reqwidth())
+    # def configure_arg_scroll_frame(self, event):
+    #     # update the scrollbars to match the size of the inner frame
+    #     size = (self.arg_scroll_frame.winfo_reqwidth(), self.arg_scroll_frame.winfo_reqheight())
+    #     self.arg_canvas.config(scrollregion="0 0 %s %s" % size)
+    #     if self.arg_scroll_frame.winfo_reqwidth() != self.arg_canvas.winfo_width():
+    #         # update the canvas's width to fit the inner frame
+    #         self.arg_canvas.config(width=self.arg_scroll_frame.winfo_reqwidth())
 
-    def configure_arg_canvas(self, event):
-        if self.arg_scroll_frame.winfo_reqwidth() != self.arg_canvas.winfo_width():
-            # update the inner frame's width to fill the canvas
-            self.arg_canvas.itemconfigure(self.arg_scroll_frame_id, width=self.arg_canvas.winfo_width())
+    # def configure_arg_canvas(self, event):
+    #     if self.arg_scroll_frame.winfo_reqwidth() != self.arg_canvas.winfo_width():
+    #         # update the inner frame's width to fill the canvas
+    #         self.arg_canvas.itemconfigure(self.arg_scroll_frame_id, width=self.arg_canvas.winfo_width())
     
     def tool_help_button(self):
         index = 0

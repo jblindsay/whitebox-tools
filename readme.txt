@@ -56,6 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.0.1 (XX-XX-20XX)
+- Added the RadialBasisFunctionInterpolation tool, which includes a thin-plate spline mode.
+
 Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 
   and Dhun (2015) impact minimizing breaching algorithm. This modified algorithm is very 
@@ -75,7 +78,7 @@ Version 1.1.0 (09-12-2019)
   method on input point data.
 - Added the UpslopeDepressionStorage tool to estimate the average upslope depression 
   storage capacity (DSC).
-- Added the LidarRfbInterpolation tool for performing a radial basis function interpolation
+- Added the LidarRbfInterpolation tool for performing a radial basis function (RBF) interpolation
   of LiDAR data sets.
 - The WhiteboxTools Runner user interface has been significantly improved (many thanks to 
   Rachel Broders for these contributions).

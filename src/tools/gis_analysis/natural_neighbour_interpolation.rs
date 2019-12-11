@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 08/12/2019
-Last Modified: 08/12/2019
+Last Modified: 10/12/2019
 License: MIT
 */
 
@@ -521,146 +521,152 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                 Ok(ret) => {
                                     point_num = *ret[0].1;
 
-                                    if point_num != previous_nn {
+                                    if ret[0].0 > 0f64{ // point does not coincide with a sample
 
-                                        // get the edge that is incoming to 'point_num'
-                                        edge = match point_edge_map.get(&point_num) {
-                                            Some(e) => *e,
-                                            None => EMPTY,
-                                        };
-                                        if edge != EMPTY {
+                                        if point_num != previous_nn {
 
-                                            // find all the neighbours of point_num and their neighbours too
-                                            natural_neighbours = delaunay.natural_neighbours_2nd_order(edge);
-                                            num_neighbours = natural_neighbours.len();
+                                            // get the edge that is incoming to 'point_num'
+                                            edge = match point_edge_map.get(&point_num) {
+                                                Some(e) => *e,
+                                                None => EMPTY,
+                                            };
+                                            if edge != EMPTY {
+
+                                                // find all the neighbours of point_num and their neighbours too
+                                                natural_neighbours = delaunay.natural_neighbours_2nd_order(edge);
+                                                num_neighbours = natural_neighbours.len();
+                                                    
+                                                nn_points = natural_neighbours
+                                                    .clone()
+                                                    .into_iter()
+                                                    .map(|p| points[p].clone())
+                                                    .collect();
+
+                                                /////////////////////////////////////////////
+                                                // Create the Voronoi diagram of the points
+                                                /////////////////////////////////////////////
                                                 
-                                            nn_points = natural_neighbours
-                                                .clone()
-                                                .into_iter()
-                                                .map(|p| points[p].clone())
-                                                .collect();
+                                                // Add a frame of hidden points surrounding the data, to serve as an artificial hull.
+                                                ghost_box = BoundingBox::from_points(&nn_points);
 
-                                            /////////////////////////////////////////////
-                                            // Create the Voronoi diagram of the points
-                                            /////////////////////////////////////////////
-                                            
-                                            // Add a frame of hidden points surrounding the data, to serve as an artificial hull.
-                                            ghost_box = BoundingBox::from_points(&nn_points);
+                                                // expand the box by a factor of the average point spacing.
+                                                expansion = ((ghost_box.max_x - ghost_box.min_x)
+                                                    * (ghost_box.max_y - ghost_box.min_y)
+                                                    / num_neighbours as f64)
+                                                    .sqrt();
+                                                ghost_box.expand_by(2.0 * expansion);
 
-                                            // expand the box by a factor of the average point spacing.
-                                            expansion = ((ghost_box.max_x - ghost_box.min_x)
-                                                * (ghost_box.max_y - ghost_box.min_y)
-                                                / num_neighbours as f64)
-                                                .sqrt();
-                                            ghost_box.expand_by(2.0 * expansion);
+                                                gap = expansion / 2f64; // One-half the average point spacing
+                                                num_edge_points = ((ghost_box.max_x - ghost_box.min_x) / gap) as usize;
+                                                for x in 0..num_edge_points {
+                                                    nn_points.push(Point2D::new(
+                                                        ghost_box.min_x + x as f64 * gap,
+                                                        ghost_box.min_y,
+                                                    ));
+                                                    nn_points.push(Point2D::new(
+                                                        ghost_box.min_x + x as f64 * gap,
+                                                        ghost_box.max_y,
+                                                    ));
+                                                }
 
-                                            gap = expansion / 2f64; // One-half the average point spacing
-                                            num_edge_points = ((ghost_box.max_x - ghost_box.min_x) / gap) as usize;
-                                            for x in 0..num_edge_points {
-                                                nn_points.push(Point2D::new(
-                                                    ghost_box.min_x + x as f64 * gap,
-                                                    ghost_box.min_y,
-                                                ));
-                                                nn_points.push(Point2D::new(
-                                                    ghost_box.min_x + x as f64 * gap,
-                                                    ghost_box.max_y,
-                                                ));
+                                                num_edge_points = ((ghost_box.max_y - ghost_box.min_y) / gap) as usize;
+                                                for y in 0..num_edge_points {
+                                                    nn_points.push(Point2D::new(
+                                                        ghost_box.min_x,
+                                                        ghost_box.min_y + y as f64 * gap,
+                                                    ));
+                                                    nn_points.push(Point2D::new(
+                                                        ghost_box.max_x,
+                                                        ghost_box.min_y + y as f64 * gap,
+                                                    ));
+                                                }
+
+                                                delaunay2 = triangulate(&nn_points).expect("No triangulation exists.");
+
+
+                                                // measure their areas
+                                                areas1 = vec![0f64; num_neighbours];
+                                                let mut point_edge_map2 = HashMap::new(); // point id to half-edge id
+                                                for edge in 0..delaunay2.triangles.len() {
+                                                    endpoint = delaunay2.triangles[delaunay2.next_halfedge(edge)];
+                                                    if !point_edge_map2.contains_key(&endpoint) || delaunay2.halfedges[edge] == EMPTY {
+                                                        point_edge_map2.insert(endpoint, edge);
+                                                    }
+                                                }
+                                                for a in 0..num_neighbours {
+                                                    edge = match point_edge_map2.get(&a) {
+                                                        Some(e) => *e,
+                                                        None => EMPTY,
+                                                    };
+                                                    if edge != EMPTY {
+                                                        edges = delaunay2.edges_around_point(edge);
+                                                        triangles = edges
+                                                            .into_iter()
+                                                            .map(|e| delaunay2.triangle_of_edge(e))
+                                                            .collect();
+
+                                                        vertices = triangles
+                                                            .into_iter()
+                                                            .map(|t| delaunay2.triangle_center(&nn_points, t))
+                                                            .collect();
+
+                                                        areas1[a] = polygon_area(&vertices);
+                                                    }
+                                                }
+
+                                                previous_nn = point_num;
                                             }
+                                        }
 
-                                            num_edge_points = ((ghost_box.max_y - ghost_box.min_y) / gap) as usize;
-                                            for y in 0..num_edge_points {
-                                                nn_points.push(Point2D::new(
-                                                    ghost_box.min_x,
-                                                    ghost_box.min_y + y as f64 * gap,
-                                                ));
-                                                nn_points.push(Point2D::new(
-                                                    ghost_box.max_x,
-                                                    ghost_box.min_y + y as f64 * gap,
-                                                ));
-                                            }
-
-                                            delaunay2 = triangulate(&nn_points).expect("No triangulation exists.");
-
-
-                                            // measure their areas
-                                            areas1 = vec![0f64; num_neighbours];
+                                        if areas1.len() > 0 {
+                                            // now add the grid cell centre point in and re-triangulate.
+                                            nn_points.pop();
+                                            nn_points.push(Point2D::new(px, py));
+                                            let delaunay3 = triangulate(&nn_points).expect("No triangulation exists.");
                                             let mut point_edge_map2 = HashMap::new(); // point id to half-edge id
-                                            for edge in 0..delaunay2.triangles.len() {
-                                                endpoint = delaunay2.triangles[delaunay2.next_halfedge(edge)];
-                                                if !point_edge_map2.contains_key(&endpoint) || delaunay2.halfedges[edge] == EMPTY {
+                                            for edge in 0..delaunay3.triangles.len() {
+                                                endpoint = delaunay3.triangles[delaunay3.next_halfedge(edge)];
+                                                if !point_edge_map2.contains_key(&endpoint) || delaunay3.halfedges[edge] == EMPTY {
                                                     point_edge_map2.insert(endpoint, edge);
                                                 }
                                             }
+                                            areas2 = vec![0f64; num_neighbours];
                                             for a in 0..num_neighbours {
                                                 edge = match point_edge_map2.get(&a) {
                                                     Some(e) => *e,
                                                     None => EMPTY,
                                                 };
                                                 if edge != EMPTY {
-                                                    edges = delaunay2.edges_around_point(edge);
+                                                    edges = delaunay3.edges_around_point(edge);
                                                     triangles = edges
                                                         .into_iter()
-                                                        .map(|e| delaunay2.triangle_of_edge(e))
+                                                        .map(|e| delaunay3.triangle_of_edge(e))
                                                         .collect();
 
-                                                    vertices = triangles
+                                                    vertices= triangles
                                                         .into_iter()
-                                                        .map(|t| delaunay2.triangle_center(&nn_points, t))
+                                                        .map(|t| delaunay3.triangle_center(&nn_points, t))
                                                         .collect();
 
-                                                    areas1[a] = polygon_area(&vertices);
+                                                    areas2[a] = polygon_area(&vertices);
                                                 }
                                             }
 
-                                            previous_nn = point_num;
-                                        }
-                                    }
-
-                                    if areas1.len() > 0 {
-                                        // now add the grid cell centre point in and re-triangulate.
-                                        nn_points.pop();
-                                        nn_points.push(Point2D::new(px, py));
-                                        let delaunay3 = triangulate(&nn_points).expect("No triangulation exists.");
-                                        let mut point_edge_map2 = HashMap::new(); // point id to half-edge id
-                                        for edge in 0..delaunay3.triangles.len() {
-                                            endpoint = delaunay3.triangles[delaunay3.next_halfedge(edge)];
-                                            if !point_edge_map2.contains_key(&endpoint) || delaunay3.halfedges[edge] == EMPTY {
-                                                point_edge_map2.insert(endpoint, edge);
-                                            }
-                                        }
-                                        areas2 = vec![0f64; num_neighbours];
-                                        for a in 0..num_neighbours {
-                                            edge = match point_edge_map2.get(&a) {
-                                                Some(e) => *e,
-                                                None => EMPTY,
-                                            };
-                                            if edge != EMPTY {
-                                                edges = delaunay3.edges_around_point(edge);
-                                                triangles = edges
-                                                    .into_iter()
-                                                    .map(|e| delaunay3.triangle_of_edge(e))
-                                                    .collect();
-
-                                                vertices= triangles
-                                                    .into_iter()
-                                                    .map(|t| delaunay3.triangle_center(&nn_points, t))
-                                                    .collect();
-
-                                                areas2[a] = polygon_area(&vertices);
-                                            }
-                                        }
-
-                                        sum_diff = 0f64;
-                                        for a in 0..num_neighbours {
-                                            sum_diff += areas1[a] - areas2[a];
-                                        }
-                                        if sum_diff > 0f64 {
-                                            z = 0f64;
+                                            sum_diff = 0f64;
                                             for a in 0..num_neighbours {
-                                                z += (areas1[a] - areas2[a]) / sum_diff * z_values[natural_neighbours[a]];
+                                                sum_diff += areas1[a] - areas2[a];
                                             }
-                                            data[col as usize] = z;
+                                            if sum_diff > 0f64 {
+                                                z = 0f64;
+                                                for a in 0..num_neighbours {
+                                                    z += (areas1[a] - areas2[a]) / sum_diff * z_values[natural_neighbours[a]];
+                                                }
+                                                data[col as usize] = z;
+                                            }
                                         }
+
+                                    } else { // point coincides with a sample
+                                        data[col as usize] = z_values[point_num];
                                     }
 
                                 },

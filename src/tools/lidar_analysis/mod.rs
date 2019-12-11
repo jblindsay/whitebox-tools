@@ -74,7 +74,7 @@ pub use self::lidar_nn_gridding::LidarNearestNeighbourGridding;
 pub use self::lidar_outliers::LidarRemoveOutliers;
 pub use self::lidar_point_density::LidarPointDensity;
 pub use self::lidar_point_stats::LidarPointStats;
-pub use self::lidar_radial_basis_function_interpolation::LidarRfbInterpolation;
+pub use self::lidar_radial_basis_function_interpolation::LidarRbfInterpolation;
 pub use self::lidar_ransac_planes::LidarRansacPlanes;
 pub use self::lidar_segmentation::LidarSegmentation;
 pub use self::lidar_segmentation_based_filter::LidarSegmentationBasedFilter;

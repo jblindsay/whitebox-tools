@@ -26,7 +26,7 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-pub struct LidarRfbInterpolation {
+pub struct LidarRbfInterpolation {
     name: String,
     description: String,
     toolbox: String,
@@ -34,12 +34,12 @@ pub struct LidarRfbInterpolation {
     example_usage: String,
 }
 
-impl LidarRfbInterpolation {
-    pub fn new() -> LidarRfbInterpolation {
+impl LidarRbfInterpolation {
+    pub fn new() -> LidarRbfInterpolation {
         // public constructor
-        let name = "LidarRfbInterpolation".to_string();
+        let name = "LidarRbfInterpolation".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Interpolates LAS files using a radial basis function (RFB) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory."
+        let description = "Interpolates LAS files using a radial basis function (RBF) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory."
             .to_string();
 
         let mut parameters = vec![];
@@ -193,10 +193,9 @@ impl LidarRfbInterpolation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --radius=5.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --radius=5.0", short_exe, name).replace("*", &sep);
 
-        LidarRfbInterpolation {
+        LidarRbfInterpolation {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -206,7 +205,7 @@ impl LidarRfbInterpolation {
     }
 }
 
-impl WhiteboxTool for LidarRfbInterpolation {
+impl WhiteboxTool for LidarRbfInterpolation {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -298,9 +297,6 @@ impl WhiteboxTool for LidarRfbInterpolation {
                 } else {
                     args[i + 1].to_string().to_lowercase()
                 };
-                // if interp_parameter == "rgb" {
-                //     interp_parameter_is_rgb = true;
-                // }
             } else if flag_val == "-returns" {
                 return_type = if keyval {
                     vec[1].to_string()
@@ -880,8 +876,8 @@ impl WhiteboxTool for LidarRfbInterpolation {
                                         centers.push(points[ret[j].0].clone());
                                         vals.push(z_values[ret[j].0].clone());
                                     }
-                                    let rfb = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
-                                    zn = rfb.eval(DVector::from_vec(vec![x, y]))[0];
+                                    let rbf = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
+                                    zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
                                     output.set_value(row, col, zn);
                                 } else {
 
@@ -930,8 +926,8 @@ impl WhiteboxTool for LidarRfbInterpolation {
                                                 centers.push(points[ret[j].0].clone());
                                                 vals.push(z_values[ret[j].0].clone());
                                             }
-                                            let rfb = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
-                                            zn = rfb.eval(DVector::from_vec(vec![x, y]))[0];
+                                            let rbf = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
+                                            zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
                                             data[col as usize] = zn;
                                         }
                                     }
