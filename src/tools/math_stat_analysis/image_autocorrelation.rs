@@ -68,7 +68,7 @@ use std::thread;
 /// **NoData **values in the input image are ignored during the analysis.
 /// 
 /// # See Also
-/// `ImageCorrelation`
+/// `ImageCorrelation`, `ImageCorrelationNeighbourhoodAnalysis`
 pub struct ImageAutocorrelation {
     name: String,
     description: String,

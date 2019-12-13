@@ -34,9 +34,9 @@ use std::thread;
 /// 
 /// The user must specify the name of the input DEM file (`--dem`), the output breached DEM
 /// file (`--output`), the maximum search window radius (`--radius`), the optional maximum breach
-/// cost (`--max_cost`), and an optional flat height increment value (`--flat_increment`). Notice that if the
+/// cost (`--max_cost`), and an optional flat height increment value (`--flat_increment`). Notice that **if the
 /// `--flat_increment` parameter is not specified, the small number used to ensure flow across flats will be 
-/// calculated automatically, which should be preferred in most applications of the tool. 
+/// calculated automatically, which should be preferred in most applications** of the tool. 
 /// The tool operates by performing a least-cost path analysis within a neighbourhood surround
 /// each pit cell, where the neighbourhood size begins small (9 &times; 9; radius = 4) and iteratively increases (by doubling) 
 /// until it reaches the maximum breach length parameter. If a value is specified for the optional

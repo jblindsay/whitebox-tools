@@ -45,7 +45,7 @@ use std::thread;
 /// between images.
 /// 
 /// # See Also
-/// `ImageCorrelation`
+/// `ImageCorrelation`, `ImageCorrelationNeighbourhoodAnalysis`
 pub struct ImageRegression {
     name: String,
     description: String,

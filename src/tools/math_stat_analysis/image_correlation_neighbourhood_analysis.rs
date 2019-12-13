@@ -18,7 +18,21 @@ use std::io::{Error, ErrorKind};
 use crate::tools::*;
 use statrs::distribution::{StudentsT, Univariate};
 
-
+/// This tool can be used to perform nieghbourhood-based (i.e. using roving search windows applied to each 
+/// grid cell) correlation analysis on two input rasters (`--input1` and `--input2`). The tool outputs a 
+/// correlation value raster (`--output1`) and a significance (p-value) raster (`--output2`). Additionally,
+/// the user must specify the size of the search window (`--filter`) and the correlation statistic (`--stat`).
+/// Options for the correlation statistic include [`pearson`](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient), 
+/// [`kendall`](https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient), and 
+/// [`spearman`](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient). Notice that Pearson's *r* is the
+/// most computationally efficient of the three correlation metrics but is unsuitable when the input distributions are
+/// non-linearly associated, in which case, either Spearman's Rho or Kendall's tau-b correlations are more suited. 
+/// Both Spearman and Kendall correlations evaluate monotonic associations without assuming linearity in the relation. 
+/// Kendall's tau-b is by far the most computationally expensive of the three statistics and may not be suitable to 
+/// larger sized search windows.
+/// 
+/// # See Also
+/// `ImageCorrelation`, `ImageRegression`
 pub struct ImageCorrelationNeighbourhoodAnalysis {
     name: String,
     description: String,

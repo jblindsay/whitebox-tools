@@ -1,6 +1,6 @@
-(Updated 07-08-2019)
+(Updated 13-12-2019)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **397 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **44 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **427 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **39 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -24,7 +24,7 @@ The following table summarizes the progress that has been made in porting *White
 | Average Uplslope Flowpath Length                  | AverageUpslopeFlowpathLength        |          |                                                                                                                                                                                     |
 | Balance Contrast Enhancement                      | BalanceContrastEnhancement          |          |                                                                                                                                                                                     |
 | Branch Length                                     | MaxBranchLength                     |          |                                                                                                                                                                                     |
-| Breach Depressions                                |                                     | 1        |                                                                                                                                                                                     |
+| Breach Depressions                                | BreachDepressionsLeastCost          |          |                                                                                                                                                                                     |
 | Breach Depressions (Fast)                         | BreachDepressions                   |          |                                                                                                                                                                                     |
 | Breach Single Cell Pits                           | BreachSingleCellPits                |          |                                                                                                                                                                                     |
 | Buffer (Raster)                                   | BufferRaster                        |          |                                                                                                                                                                                     |
@@ -84,7 +84,7 @@ The following table summarizes the progress that has been made in porting *White
 | Difference-of-Gaussian Filters                    | DiffOfGaussianFilter                |          |                                                                                                                                                                                     |
 | Direct Decorrelation Stretch                      | DirectDecorrelationStretch          |          |                                                                                                                                                                                     |
 | Directional Relief                                | DirectionalRelief                   |          |                                                                                                                                                                                     |
-| Discrete Sibson (Natural Neighbour) Interpolation |                                     | 2        |                                                                                                                                                                                     |
+| Discrete Sibson (Natural Neighbour) Interpolation | NaturalNeighbourInterpolation       |          |                                                                                                                                                                                     |
 | Discrete Sibson Interpolation (LiDAR)             |                                     | 2        |                                                                                                                                                                                     |
 | Dissolve                                          | Dissolve                            |          |                                                                                                                                                                                     |
 | Distance to Outlet                                | DistanceToOutlet                    |          |                                                                                                                                                                                     |
@@ -123,7 +123,7 @@ The following table summarizes the progress that has been made in porting *White
 | Extend Vector Lines                               | ExtendVectorLines                   |          |                                                                                                                                                                                     |
 | Extract Nodes                                     | ExtractNodes                        |          |                                                                                                                                                                                     |
 | Extract Raster Values at Points                   | ExtractRasterValuesAtPoints         |          |                                                                                                                                                                                     |
-| Extract Statistics                                | ExtractRasterStatistics             |          |                                                                                                                                                                                     |
+| Extract Statistics                                | ZonalStatistics                     |          |                                                                                                                                                                                     |
 | Extract Streams                                   | ExtractStreams                      |          |                                                                                                                                                                                     |
 | Extract Valleys (Johnson and Rosenfeld)           | ExtractValleys                      |          | --variant='JandR'                                                                                                                                                                   |
 | Extract Valleys (Lower Quartile)                  | ExtractValleys                      |          | --variant='lq'                                                                                                                                                                      |
@@ -210,7 +210,7 @@ The following table summarizes the progress that has been made in porting *White
 | Laplacian-of-Gaussian Filter                      | LaplacianOfGaussianFilter           |          |                                                                                                                                                                                     |
 | LAS Footprint                                     | LidarTileFootprint                  |          | Now outputs the convex hull of the point cloud. Also works on whole directory of tiles.                                                                                             |
 | Layer Footprint                                   | LayerFootprint                      |          |                                                                                                                                                                                     |
-| Lee (Sigma) Filter                                | LeeFilter                           |          |                                                                                                                                                                                     |
+| Lee (Sigma) Filter                                | LeeSigmaFilter                      |          |                                                                                                                                                                                     |
 | Less Than                                         | LessThan                            |          |                                                                                                                                                                                     |
 | Less Than Equal To                                | LessThan                            |          | With --incl_equals flag                                                                                                                                                             |
 | LiDAR Elevation Slice                             | LidarElevationSlice                 |          |                                                                                                                                                                                     |
@@ -319,7 +319,7 @@ The following table summarizes the progress that has been made in porting *White
 | Reinitialize Attribute Table                      | ReinitializeAttributeTable          |          |                                                                                                                                                                                     |
 | Related Circumscribing Circle                     | RelatedCircumscribingCircle         |          | Currently works for vectors only.                                                                                                                                                   |
 | Relative Aspect                                   | RelativeAspect                      |          |                                                                                                                                                                                     |
-| Relative Stream Power Index                       | RelativeStreamPowerIndex            |          |                                                                                                                                                                                     |
+| Relative Stream Power Index                       | StreamPowerIndex                    |          |                                                                                                                                                                                     |
 | Remove Off-Terrain Objects                        | RemoveOffTerrainObjects             |          |                                                                                                                                                                                     |
 | Remove Polygon Holes                              | RemovePolygonHoles                  |          |                                                                                                                                                                                     |
 | Remove Short Streams                              | RemoveShortStreams                  |          |                                                                                                                                                                                     |
@@ -407,20 +407,28 @@ Tools that are new in *WhiteboxTools*
 | Tool Name                                         | Notes                                                                                                                                                          |
 |---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Anova                                             |                                                                                                                                                                |
+| Arcosh | |
+| Arsinh | | 
+| Artanh | |
 | Basins                                            |                                                                                                                                                                |
 | BlockMaximumGridding                              |                                                                                                                                                                |
+| BoundaryShapeComplexity | |
+| CircularVarianceOfAspect | |
+| ClassifyBuildingsInLidar | |
 | ClassifyOverlapPoints                             |                                                                                                                                                                |
+| CleanVector | |
 | ClipLidarToPolygon                                |                                                                                                                                                                |
 | CornerDetection                                   |                                                                                                                                                                |
 | CountIf                                           |                                                                                                                                                                |
 | ConvertRasterFormat                               | An amalgamation of all previous import/export tools within Whitebox GAT.                                                                                       |
-| DrainagePreservingSmoothing                       |                                                                                                                                                                |
+| CsvPointsToVector | |
+| EdgeDensity | |
 | EdgePreservingMeanFilter                          |                                                                                                                                                                |
 | ElevationAboveStreamEuclidean                     |                                                                                                                                                                |
 | ErasePolygonFromLidar                             |                                                                                                                                                                |
 | Exp2                                              |                                                                                                                                                                |
 | FastAlmostGaussianFilter                          |                                                                                                                                                                |
-| FeaturePreservingDenoise                          |                                                                                                                                                                |
+| FeaturePreservingSmoothing                        |                                                                                                                                                                |
 | FlattenLakes                                      |                                                                                                                                                                |
 | FlightLineOverlap                                 |                                                                                                                                                                |
 | FlowAccumulationFullWorkflow                      |                                                                                                                                                                |
@@ -429,6 +437,7 @@ Tools that are new in *WhiteboxTools*
 | HighPassMedianFilter                              |                                                                                                                                                                |
 | HortonStreamOrder                                 |                                                                                                                                                                |
 | HypsometricAnalysis                               |                                                                                                                                                                |
+| ImageCorrelationNeighbourhoodAnalysis | |
 | InPlaceAdd                                        |                                                                                                                                                                |
 | InPlaceDivide                                     |                                                                                                                                                                |
 | InPlaceMultiply                                   |                                                                                                                                                                |
@@ -439,6 +448,7 @@ Tools that are new in *WhiteboxTools*
 | LidarHillshade                                    |                                                                                                                                                                |
 | LidarKappaIndex                                   |                                                                                                                                                                |
 | LidarPointStats                                   |                                                                                                                                                                |
+| LidarRbfInterpolation                             |  Performs a radial basis function interpolation, including thin-plate splines                                                                                  |
 | LidarRemoveDuplicates                             |                                                                                                                                                                |
 | LidarRemoveOutliers                               |                                                                                                                                                                |
 | LidarSegmentationBasedFilter                      |                                                                                                                                                                |
@@ -451,22 +461,33 @@ Tools that are new in *WhiteboxTools*
 | MaxAnisotropyDev                                  |                                                                                                                                                                |
 | MaxAnisotropyDevSignature                         |                                                                                                                                                                |
 | MaxDifferenceFromMean                             |                                                                                                                                                                |
+| MergeLineSegments | |
 | MinAbsoluteOverlay                                |                                                                                                                                                                |
 | MinimumBoundingCircle                             |                                                                                                                                                                |
 | MinimumBoundingEnvelope                           |                                                                                                                                                                |
+| ModifyNoDataValue | |
 | MultiscaleRoughness                               |                                                                                                                                                                |
 | MultiscaleRoughnessSignature                      |                                                                                                                                                                |
+| NarrownessIndex | |
 | NormalVectors                                     |                                                                                                                                                                |
+| PairedSampleTTest | |
+| RadialBasisFunctionInterpolation                  |                                                                                                                                                                |
 | RelativeTopographicPosition                       |                                                                                                                                                                |
 | RobertsCrossFilter                                |                                                                                                                                                                |
 | ScharrFilter                                      |                                                                                                                                                                |
 | SelectTilesByPolygon                              |                                                                                                                                                                |
+| ShapeComplexityIndexRaster | |
 | SlopeVsElevationPlot                              |                                                                                                                                                                |
+| SurfaceAreaRatio | |
+| SphericalStdDevOfNormals | |
 | SplitWithLines                                    |                                                                                                                                                                |
 | StandardDeviationContrastStretch                  |                                                                                                                                                                |
 | StandardDeviationOfSlope                          |                                                                                                                                                                |
 | SumOverlay                                        |                                                                                                                                                                |
 | ToDegrees                                         |                                                                                                                                                                |
 | ToRadians                                         |                                                                                                                                                                |
+| TwoSampleKsTest | |
 | TributaryIdentifier                               |                                                                                                                                                                |
 | UnsharpMasking                                    |                                                                                                                                                                |
+| UpslopeDepressionStorage                          |                                                                                                                                                                |
+| WilcoxonSignedRankTest | |

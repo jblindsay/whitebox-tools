@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 08/11/2019
-Last Modified: 08/11/2019
+Last Modified: 13/12/2019
 License: MIT
 
 NOTES:
@@ -13,7 +13,7 @@ NOTES:
 
 use crate::lidar::*;
 use crate::raster::*;
-use crate::structures::{Basis, BoundingBox, DistanceMetric, FixedRadiusSearch2D, RadialBasisFunction};
+use crate::structures::{Basis, BoundingBox, RadialBasisFunction};
 use crate::tools::*;
 use num_cpus;
 use nalgebra::DVector;
@@ -25,6 +25,8 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use kdtree::distance::squared_euclidean;
+use kdtree::KdTree;
 
 pub struct LidarRbfInterpolation {
     name: String,
@@ -105,13 +107,22 @@ impl LidarRbfInterpolation {
             optional: true,
         });
 
+        // parameters.push(ToolParameter {
+        //     name: "Search Radius".to_owned(),
+        //     flags: vec!["--radius".to_owned()],
+        //     description: "Search Radius.".to_owned(),
+        //     parameter_type: ParameterType::Float,
+        //     default_value: Some("2.5".to_owned()),
+        //     optional: true,
+        // });
+
         parameters.push(ToolParameter {
-            name: "Search Radius".to_owned(),
-            flags: vec!["--radius".to_owned()],
-            description: "Search Radius.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("2.5".to_owned()),
-            optional: true,
+            name: "Number of Points".to_owned(),
+            flags: vec!["--num_points".to_owned()],
+            description: "Number of points.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("20".to_string()),
+            optional: false,
         });
 
         parameters.push(ToolParameter{
@@ -178,7 +189,7 @@ impl LidarRbfInterpolation {
             flags: vec!["--weight".to_owned()],
             description: "Weight parameter used in basis function.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("0.1".to_owned()),
+            default_value: Some("5".to_owned()),
             optional: false,
         });
 
@@ -261,6 +272,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
         let mut func_type = String::from("ThinPlateSpline");
         let mut poly_order = 0usize;
         let mut weight = 0.1f64;
+        let mut num_points = 15usize;
 
         // read the arguments
         if args.len() == 0 {
@@ -382,6 +394,12 @@ impl WhiteboxTool for LidarRbfInterpolation {
                 } else {
                     args[i + 1].to_string().parse::<f64>().unwrap()
                 };
+            } else if flag_val == "-num_points" {
+                num_points = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                };
             }
         }
 
@@ -495,6 +513,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
             println!("Performing interpolation...");
         }
 
+        let func_type = Arc::new(func_type);
         let num_tiles = inputs.len();
         let tile_list = Arc::new(Mutex::new(0..num_tiles));
         let inputs = Arc::new(inputs);
@@ -503,6 +522,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
         let num_procs2 = num_cpus::get() as isize;
         let (tx2, rx2) = mpsc::channel();
         for _ in 0..num_procs2 {
+            let func_type = func_type.clone();
             let inputs = inputs.clone();
             let outputs = outputs.clone();
             let bounding_boxes = bounding_boxes.clone();
@@ -536,10 +556,19 @@ impl WhiteboxTool for LidarRbfInterpolation {
                         min_y: bounding_boxes[tile].min_y - search_radius,
                         max_y: bounding_boxes[tile].max_y + search_radius,
                     };
-                    let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::Euclidean);
+                    // let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::Euclidean);
+                    
+                    
+                    const DIMENSIONS: usize = 2;
+                    const CAPACITY_PER_NODE: usize = 64;
+                    let mut tree = KdTree::with_capacity(DIMENSIONS, CAPACITY_PER_NODE);
+                    let mut min_value = f64::INFINITY;
+                    let mut max_value = f64::NEG_INFINITY;
+
 
                     let mut points = vec![];
                     let mut z_values = vec![];
+                    let mut z: f64;
 
                     if verbose && inputs.len() == 1 {
                         println!("Reading input LAS file...");
@@ -578,7 +607,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.z;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.z]));
@@ -589,7 +622,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                         if verbose && inputs.len() == 1 {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
-                                                println!("Binning points: {}%", progress);
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -608,7 +641,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.intensity as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.intensity as f64]));
@@ -619,7 +656,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                         if verbose && inputs.len() == 1 {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
-                                                println!("Binning points: {}%", progress);
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -638,7 +675,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.scan_angle as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.scan_angle as f64]));
@@ -649,7 +690,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                         if verbose && inputs.len() == 1 {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
-                                                println!("Binning points: {}%", progress);
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -668,7 +709,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.classification() as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.classification() as f64]));
@@ -679,7 +724,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                         if verbose && inputs.len() == 1 {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
-                                                println!("Binning points: {}%", progress);
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -698,7 +743,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.return_number() as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.return_number() as f64]));
@@ -728,7 +777,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.number_of_returns() as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.number_of_returns() as f64]));
@@ -771,10 +824,14 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         // This needs to be fixed
                                                         // ***************************
                                                         // frs.insert(p.x, p.y, ((255u32 << 24) | ((clr.blue as u32) << 16) | ((clr.green as u32) << 8) | (clr.red as u32)) as f64);
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.z;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
-                                                        z_values.push(DVector::from_vec(vec![p.classification() as f64]));
+                                                        z_values.push(DVector::from_vec(vec![p.z as f64]));
                                                     }
                                                 }
                                             }
@@ -802,7 +859,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, pt);
+                                                        // frs.insert(p.x, p.y, pt);
+                                                        tree.add([p.x, p.y], pt).unwrap();
+                                                        z = p.user_data as f64;
+                                                        if z < min_value { min_value = z; }
+                                                        if z > max_value { max_value = z; }
                                                         pt += 1;
                                                         points.push(DVector::from_vec(vec![p.x, p.y]));
                                                         z_values.push(DVector::from_vec(vec![p.user_data as f64]));
@@ -813,7 +874,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                         if verbose && inputs.len() == 1 {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
-                                                println!("Binning points: {}%", progress);
+                                                println!("Reading points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }
@@ -822,6 +883,10 @@ impl WhiteboxTool for LidarRbfInterpolation {
                             }
                         }
                     }
+
+                    let range = max_value - min_value;
+                    let range_threshold = range * 1f64; // only estimated values that are +/- 0.5 range beyond the min and max values will be output
+                    let mid_point = min_value + range / 2f64;
 
                     let west: f64 = bounding_boxes[tile].min_x;
                     let north: f64 = bounding_boxes[tile].max_y;
@@ -858,27 +923,25 @@ impl WhiteboxTool for LidarRbfInterpolation {
                     if num_tiles > 1 {
                         let (mut x, mut y): (f64, f64);
                         let mut zn: f64;
-                        // let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
-                        // let (mut red, mut green, mut blue): (f64, f64, f64);
+                        let mut point_num: usize;
                         for row in 0..rows {
                             for col in 0..columns {
                                 x = west + (col as f64 + 0.5) * grid_res;
                                 y = north - (row as f64 + 0.5) * grid_res;
-
-                                let mut ret = frs.search(x, y);
-                                if ret.len() < 6 {
-                                    ret = frs.knn_search(x, y, 6);
-                                }
+                                let ret = tree.nearest(&[x, y], num_points, &squared_euclidean).unwrap();
                                 if ret.len() > 0 {
                                     let mut centers: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
                                     let mut vals: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
-                                    for j in 0..ret.len() {
-                                        centers.push(points[ret[j].0].clone());
-                                        vals.push(z_values[ret[j].0].clone());
+                                    for p in ret {
+                                        point_num = *(p.1);
+                                        centers.push(points[point_num].clone());
+                                        vals.push(z_values[point_num].clone());
                                     }
                                     let rbf = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
                                     zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                    output.set_value(row, col, zn);
+                                    if (zn - mid_point).abs() < range_threshold { // if the estimated value is well outside of the range of values in the input points, don't output it.
+                                        output.set_value(row, col, zn);
+                                    }
                                 } else {
 
                                 }
@@ -892,43 +955,40 @@ impl WhiteboxTool for LidarRbfInterpolation {
                             }
                         }
                     } else {
-                        // there's only one tile, so use all cores to interpolate this one tile.
+                        // there's only one file, so use all cores to interpolate this one tile.
                         let points = Arc::new(points);
                         let z_values = Arc::new(z_values);
-                        let frs = Arc::new(frs); // wrap FRS in an Arc
+                        let tree = Arc::new(tree);
                         let num_procs = num_cpus::get() as isize;
                         let (tx, rx) = mpsc::channel();
                         for tid in 0..num_procs {
-                            let frs = frs.clone();
+                            let tree = tree.clone();
                             let tx1 = tx.clone();
                             let points = points.clone();
                             let z_values = z_values.clone();
                             thread::spawn(move || {
                                 let (mut x, mut y): (f64, f64);
                                 let mut zn: f64;
-                                                        
-                                // let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
-                                // let (mut red, mut green, mut blue): (f64, f64, f64);
+                                let mut point_num: usize;       
                                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                                // for row in 0..rows {
                                     let mut data = vec![nodata; columns as usize];
                                     for col in 0..columns {
                                         x = west + (col as f64 + 0.5) * grid_res;
                                         y = north - (row as f64 + 0.5) * grid_res;
-                                        let mut ret = frs.search(x, y);
-                                        if ret.len() < 6 {
-                                            ret = frs.knn_search(x, y, 6);
-                                        }
+                                        let ret = tree.nearest(&[x, y], num_points, &squared_euclidean).unwrap();
                                         if ret.len() > 0 {
                                             let mut centers: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
                                             let mut vals: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
-                                            for j in 0..ret.len() {
-                                                centers.push(points[ret[j].0].clone());
-                                                vals.push(z_values[ret[j].0].clone());
+                                            for p in ret {
+                                                point_num = *(p.1);
+                                                centers.push(points[point_num].clone());
+                                                vals.push(z_values[point_num].clone());
                                             }
                                             let rbf = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
                                             zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                            data[col as usize] = zn;
+                                            if (zn - mid_point).abs() < range_threshold { // if the estimated value is well outside of the range of values in the input points, don't output it.
+                                                data[col as usize] = zn;
+                                            }
                                         }
                                     }
                                     tx1.send((row, data)).unwrap();
@@ -950,14 +1010,17 @@ impl WhiteboxTool for LidarRbfInterpolation {
                     }
 
                     let elapsed_time_run = get_formatted_elapsed_time(start_run);
-
+                    output.configs.display_max = max_value;
+                    output.configs.display_min = min_value;
                     output.add_metadata_entry(format!(
                         "Created by whitebox_tools\' {} tool",
                         tool_name
                     ));
                     output.add_metadata_entry(format!("Input file: {}", input_file));
                     output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                    output.add_metadata_entry(format!("Search radius: {}", search_radius));
+                    output.add_metadata_entry(format!("Num. points: {}", num_points));
+                    output.add_metadata_entry(format!("Radial basis function type: {}", func_type));
+                    output.add_metadata_entry(format!("Polynomial order: {}", poly_order));
                     output.add_metadata_entry(format!("Weight: {}", weight));
                     output.add_metadata_entry(format!(
                         "Interpolation parameter: {}",

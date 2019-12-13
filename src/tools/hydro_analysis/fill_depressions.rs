@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 24/11/2019
+Last Modified: 12/12/2019
 License: MIT
 */
 
@@ -21,36 +21,41 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the f
-/// lat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
-/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressions` algorithm is based on 
-/// the computationally efficient approach of examining each cell based on its spill elevation, starting from the 
-/// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm 
-/// first proposed by Wang and Liu (2006). It is currently the most efficient depression-removal algorithm available 
-/// in WhiteboxTools, although it is not significantly more efficient than the `BreachDepressions` tool, which is
-/// known to provide a solution to depression removal with less impact of the DEM. Furthermore, the `BreachDepressionsLeastCost`,
-/// while less efficient than either other hydrological preprocessing methods, often provides a lower impact solution 
-/// to topographic depression.
+/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the
+/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
+/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressions` algorithm operates
+/// by first identifying single-cell pits, that is, interior grid cells with no lower neighbouring cells. Each pit
+/// cell is then visited from highest to lowest and a priority region-growing operation is initiated. The area of 
+/// monotonically increasing elevation, starting from the pit cell and growing based on flood order, is identified.
+/// Once a cell, that has not been previously visited and possessing a lower elevation than its discovering neighbour
+/// cell, is identified the discovering neighbour is labelled as an outlet (spill point) and the outlet elevation is
+/// noted. The algorithm then back-fills the labelled region, raising the elevation in the output DEM (`--output`) to
+/// that of the outlet. Once this process is completed for each pit cell (noting that nested pit cells are often 
+/// solved by prior pits) the flat regions of filled pits are optionally treated (`--fix_flats`) with an applied
+/// small slope gradient away from outlets (note, more than one outlet cell may exist for each depression). The user 
+/// may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
+/// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
+/// The flat-fixing method applies a small gradient away from outlets using another priority region-growing operation (i.e. 
+/// based on a priority queue operation), where priorities are set by the elevations in the input DEM (`--input`). This 
+/// in effect ensures a gradient away from outlet cells but also following the natural pre-conditioned topography internal
+/// to depression areas. For example, if a large filled area occurs upstream of a damming road-embankment, the filled
+/// DEM will possess flow directions that are similar to the un-flooded valley, with flow following the valley bottom.
+/// In fact, the above case is better handled using the `BreachDepressionsLeastCost` tool, which would simply cut through
+/// the road embankment at the likely site of a culvert. However, the flat-fixing method of `FillDepressions` does mean
+/// that this common occurrence in LiDAR DEMs is less problematic. 
 /// 
-/// If the input DEM has gaps, or missing-data holes, that contain NoData values, it is better to use the 
-/// `FillMissingData` tool to repair these gaps. This tool will interpolate values across the gaps and produce 
-/// a more natural-looking surface than the flat areas that are produced by depression filling. Importantly, the 
-/// `FillDepressions` tool algorithm implementation assumes that there are no 'donut hole' NoData gaps within the area 
-/// of valid data. Any NoData areas along the edge of the grid will simply be ignored and will remain NoData areas in 
-/// the output image.
+/// The `BreachDepressionsLeastCost`, while slightly less efficient than either other hydrological preprocessing methods, 
+/// often provides a lower impact solution to topographic depressions and should be preferred in most applications. In comparison 
+/// with the `BreachDepressionsLeastCost` tool, the depression filling method often provides a less satisfactory, higher impact 
+/// solution. **It is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from their DEMs 
+/// before using `FillDepressions`**. Nonetheless, there are applications for which full depression filling using the  
+/// `FillDepressions` tool may be preferred.
 /// 
-/// In comparison with the `BreachDepressionsLeastCost` tool, the depression filling method often provides a less
-/// satisfactory, higher impact, depression removal solution and is often less efficient. **It is advisable that users 
-/// try the `BreachDepressionsLeastCost` tool to remove depressions from their DEMs first**. The `BreachDepressionsLeastCost` 
-/// tool is particularly well suited to breaching through road embankments in fine-resolution DEMs. Nonetheless, there are 
-/// applications for which full depression filling using the  `FillDepressions` tool may be preferred.
-/// 
-/// # Reference
-/// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation 
-/// models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 20(2): 193-213.
+/// Note that this tool will not fill in NoData regions within the DEM. It is advisable to remove such regions using the 
+/// `FillMissingData` tool prior to application.
 /// 
 /// # See Also
-/// `BreachDepressionsLeastCost`, `BreachDepressions`, `FillMissingData`
+/// `BreachDepressionsLeastCost`, `BreachDepressions`, `Sink`, `DepthInSink`, `FillMissingData`
 pub struct FillDepressions {
     name: String,
     description: String,

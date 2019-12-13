@@ -98,9 +98,9 @@ impl IdwInterpolation {
         });
 
         parameters.push(ToolParameter {
-            name: "Search Radius".to_owned(),
+            name: "Search Radius (map units)".to_owned(),
             flags: vec!["--radius".to_owned()],
-            description: "Search Radius.".to_owned(),
+            description: "Search Radius in map units.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
             optional: true,

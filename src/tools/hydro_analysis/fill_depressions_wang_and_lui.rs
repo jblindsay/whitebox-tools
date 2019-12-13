@@ -22,14 +22,14 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the f
-/// lat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
-/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressions` algorithm is based on 
+/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the 
+/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
+/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressionsWangAndLui` algorithm is based on 
 /// the computationally efficient approach of examining each cell based on its spill elevation, starting from the 
 /// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm 
-/// first proposed by Wang and Liu (2006). It is currently the most efficient depression-removal algorithm available 
-/// in WhiteboxTools, although it is not significantly more efficient than the `BreachDepressions` tool, which is
-/// known to provide a solution to depression removal with less impact of the DEM.
+/// first proposed by Wang and Liu (2006). However, itt is currently not the most efficient depression-removal algorithm 
+/// available in WhiteboxTools; `FillDepressions` and `BreachDepressionsLeastCost` are both more efficient and often
+/// produce better, lower-impact results.
 /// 
 /// If the input DEM has gaps, or missing-data holes, that contain NoData values, it is better to use the 
 /// `FillMissingData` tool to repair these gaps. This tool will interpolate values across the gaps and produce 
@@ -38,12 +38,15 @@ use std::path;
 /// of valid data. Any NoData areas along the edge of the grid will simply be ignored and will remain NoData areas in 
 /// the output image.
 /// 
+/// The user may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
+/// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
+/// 
 /// # Reference
 /// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation 
 /// models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 20(2): 193-213.
 /// 
 /// # See Also
-/// `BreachDepressions`, `FillMissingData`
+/// `FillDepressions`, `BreachDepressionsLeastCost`, `BreachDepressions`, `FillMissingData`
 pub struct FillDepressionsWangAndLui {
     name: String,
     description: String,
