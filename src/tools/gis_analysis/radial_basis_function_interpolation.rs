@@ -7,7 +7,6 @@ License: MIT
 */
 
 use crate::raster::*;
-// use crate::structures::{Basis, DistanceMetric, FixedRadiusSearch2D, RadialBasisFunction};
 use crate::algorithms::{convex_hull, point_in_poly};
 use crate::structures::{Basis, RadialBasisFunction, Point2D};
 use crate::tools::*;
@@ -44,7 +43,7 @@ impl RadialBasisFunctionInterpolation {
         parameters.push(ToolParameter {
             name: "Input Vector Points File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input vector Points file.".to_owned(),
+            description: "Input vector points file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
                 VectorGeometryType::Point,
             )),
@@ -351,10 +350,6 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
         }
 
         radius = radius * radius; // squared distances are used
-
-        // if max_dist != f64::INFINITY {
-        //     max_dist = max_dist * max_dist; // square the max dist
-        // }
 
         if verbose {
             println!("Reading data...")

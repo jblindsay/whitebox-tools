@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 10/02/2019
-Last Modified: 04/12/2019
+Created: 04/12/2019
+Last Modified: 18/12/2019
 License: MIT
 */
 
@@ -17,22 +17,22 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tools estimates the area of each category, polygon, or patch in an input raster. The input raster must be categorical 
-/// in data scale. Rasters with floating-point cell values are not good candidates for an area analysis. The user must specify 
-/// whether the output is given in `grid cells` or `map units` (`--units`). Map Units are physical units, e.g. if the rasters's 
-/// scale is in metres, areas will report in square-metres. Notice that square-metres can be converted into hectares by dividing 
-/// by 10,000 and into square-kilometres by dividing by 1,000,000. If the input raster is in geographic coordinates (i.e. 
-/// latitude and longitude) a warning will be issued and areas will be estimated based on per-row calculated degree lengths.
+/// This tool can be used to measure the length of the perimeter of polygon features in a raster layer. The user must 
+/// specify the name of the input raster file (`--input`) and optionally an output raster (`--output`), which is the 
+/// raster layer containing the input features assigned the perimeter length. The user may also optionally choose to output text 
+/// data (`--out_text`). Raster-based perimeter estimation uses the accurate, anti-aliasing algorithm of 
+/// Prashker (2009).
 /// 
-/// The tool can be run with a raster output (`--output`), a text output (`--out_text`), or both. If niether outputs are specified,
-/// the tool will automatically output a raster named `area.tif`. 
+/// The input file must be of a categorical data type, containing discrete polygon features that have been assigned unique identifiers.
+/// Such rasters are often created by region-grouping (`Clump`) a classified raster.
 /// 
-/// Zero values in the input raster may be excluded from the area analysis if the `--zero_back` flag is used.
+/// # Reference
 /// 
-/// To calculate the area of vector polygons, use the `PolygonArea` tool instead.
+/// Prashker, S. (2009) An anti-aliasing algorithm for calculating the perimeter of raster polygons. Geotec, Ottawa and 
+/// Geomtics Atlantic, Wolfville, NS.
 /// 
 /// # See Also
-/// `RasterArea`
+/// `RasterArea`, `Clump`
 pub struct RasterPerimeter {
     name: String,
     description: String,
@@ -47,8 +47,7 @@ impl RasterPerimeter {
         let name = "RasterPerimeter".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "Calculates the perimeters of polygons or classes within a raster image."
-                .to_string();
+            "Calculates the perimeters of polygons or classes within a raster image.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -288,7 +287,7 @@ impl WhiteboxTool for RasterPerimeter {
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let v = [1usize, 2, 4, 8, 16, 32, 64, 128];
-        let (mut i, mut j): (isize, isize);
+        // let (mut i, mut j): (isize, isize);
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -304,223 +303,130 @@ impl WhiteboxTool for RasterPerimeter {
         } else {
             nodata
         };
-        
-        if is_grid_cell_units {
-            let num_procs = num_cpus::get() as isize;
-            let (tx, rx) = mpsc::channel();
-            for tid in 0..num_procs {
-                let input = input.clone();
-                let tx = tx.clone();
-                thread::spawn(move || {
-                    let mut data = vec![0f64; num_bins];
-                    let mut val: f64;
-                    let mut val2: usize;
-                    let mut bin: usize;
-                    for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        for col in 0..columns {
-                            val = input.get_value(row, col);
-                            if val != nodata && val != back_val && val >= min_val && val <= max_val {
-                                bin = (val - min_val).floor() as usize;
-                                for n in 0..8 {
-                                    i = col + dx[n];
-                                    j = row + dy[n];
-                                    if input.get_value(j, i) == val {
-                                        val2 += v[a];
-                                    }
+
+        let is_geographic = input.is_in_geographic_coordinates();
+        if is_geographic && verbose {
+            println!("Warning: the input file does not appear to be in a projected coordinate system. Perimeter values will only be estimates.");
+        }
+
+        let num_procs = num_cpus::get() as isize;
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let tx = tx.clone();
+            thread::spawn(move || {
+                let mut resx = input.configs.resolution_x;
+                let mut resy = input.configs.resolution_y;
+                let mut data = vec![0f64; num_bins];
+                let mut val: f64;
+                let mut val2: usize;
+                let mut bin: usize;
+                let (mut i, mut j): (isize, isize);
+                let mut mid_lat: f64;
+                let mut res: f64;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    if is_geographic {
+                        mid_lat = input.get_y_from_row(row).to_radians();
+                        resx = resx * 111_111.0 * mid_lat.cos();
+                        resy = resy * 111_111.0;
+                    }
+                    res = (resx + resy) / 2f64;
+                    for col in 0..columns {
+                        val = input.get_value(row, col);
+                        if val != nodata && val != back_val && val >= min_val && val <= max_val {
+                            bin = (val - min_val).floor() as usize;
+                            val2 = 0;
+                            for n in 0..8 {
+                                i = col + dx[n];
+                                j = row + dy[n];
+                                if input.get_value(j, i) == val {
+                                    val2 += v[n];
                                 }
-                                data[bin] += lut[val2];
                             }
-                        }
-                    }
-                    tx.send(data).unwrap();
-                });
-            }
-
-            let mut data = vec![0usize; num_bins];
-            for tid in 0..num_procs {
-                let data_rx = rx.recv().unwrap();
-                for a in 0..num_bins {
-                    data[a] += data_rx[a] * avg_res;
-                }
-
-                if verbose {
-                    progress = (100.0_f64 * (tid + 1) as f64 / num_procs as f64) as usize;
-                    if progress != old_progress {
-                        println!("Progress: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-
-            let mut val: f64;
-            let mut bin: usize;  
-            if output_raster {
-                let mut output = Raster::initialize_using_file(&output_file, &input);
-                let out_nodata = -999f64;
-                output.reinitialize_values(out_nodata);
-                output.configs.nodata = out_nodata;
-                output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-                output.configs.data_type = DataType::I32;
-                for row in 0..rows {
-                    for col in 0..columns {
-                        val = input.get_value(row, col);
-                        if val != nodata && val != back_val && val >= min_val && val <= max_val {
-                            bin = (val - min_val).floor() as usize;
-                            output.set_value(row, col, freq_data[bin] as f64);
-                        }
-                    }
-                    if verbose {
-                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                        if progress != old_progress {
-                            println!("Outputting raster: {}%", progress);
-                            old_progress = progress;
+                            data[bin] += if !is_grid_cell_units { 
+                                lut[val2]
+                            } else {
+                                lut[val2] * res
+                            };
                         }
                     }
                 }
+                tx.send(data).unwrap();
+            });
+        }
 
-                let elapsed_time = get_formatted_elapsed_time(start);
-                output.add_metadata_entry(format!(
-                    "Created by whitebox_tools\' {} tool",
-                    self.get_tool_name()
-                ));
-                output.add_metadata_entry(format!("Input file: {}", input_file));
-                output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
-                if verbose {
-                    println!("Saving data...")
-                };
-                let _ = match output.write() {
-                    Ok(_) => {
-                        if verbose {
-                            println!("Output file written")
-                        }
-                    }
-                    Err(e) => return Err(e),
-                };
-            }
-            if output_text {
-                println!("Class,Cells");
-                for a in 0..num_bins {
-                    if freq_data[a] > 0 {
-                        val = (a as f64 + min_val).floor();
-                        println!("{},{}", val, freq_data[a]);
-                    }
-                }
-            }
-        } else { // map units
-            let is_geographic = input.is_in_geographic_coordinates();
-            if is_geographic && verbose {
-                println!("Warning: the input file does not appear to be in a projected coordinate system. Area values will only be estimates.");
+        let mut data = vec![0f64; num_bins];
+        for tid in 0..num_procs {
+            let data_rx = rx.recv().unwrap();
+            for a in 0..num_bins {
+                data[a] += data_rx[a] * avg_res;
             }
 
-            let num_procs = num_cpus::get() as isize;
-            let (tx, rx) = mpsc::channel();
-            for tid in 0..num_procs {
-                let input = input.clone();
-                let tx = tx.clone();
-                thread::spawn(move || {
-                    let mut resx = input.configs.resolution_x;
-                    let mut resy = input.configs.resolution_y;
-                    let mut cell_area = resx * resy;
-                    let mut area_data = vec![0f64; num_bins];
-                    let mut val: f64;
-                    let mut bin: usize;
-                    let mut mid_lat: f64;
-                    for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        if is_geographic {
-                            mid_lat = input.get_y_from_row(row).to_radians();
-                            resx = resx * 111_111.0 * mid_lat.cos();
-                            resy = resy * 111_111.0;
-                            cell_area = resx * resy;
-                        }
-                        for col in 0..columns {
-                            val = input.get_value(row, col);
-                            if val != nodata && val != back_val && val >= min_val && val <= max_val {
-                                bin = (val - min_val).floor() as usize;
-                                area_data[bin] += cell_area;
-                            }
-                        }
-                    }
-                    tx.send(area_data).unwrap();
-                });
-            }
-
-            // we could just multiply the num cells by the cell area to get the area,
-            // but for the possibility of an input in geographic coordinates where the
-            // cell size is not constant for the data.
-            let mut area_data = vec![0f64; num_bins];
-            for tid in 0..num_procs {
-                let data = rx.recv().unwrap();
-                for a in 0..num_bins {
-                    area_data[a] += data[a];
-                }
-
-                if verbose {
-                    progress = (100.0_f64 * (tid + 1) as f64 / num_procs as f64) as usize;
-                    if progress != old_progress {
-                        println!("Progress: {}%", progress);
-                        old_progress = progress;
-                    }
-                }
-            }
-
-            let mut val: f64;
-            let mut bin: usize;
-            if output_raster {
-                let mut output = Raster::initialize_using_file(&output_file, &input);
-                let out_nodata = -999f64;
-                output.reinitialize_values(out_nodata);
-                output.configs.nodata = out_nodata;
-                output.configs.photometric_interp = PhotometricInterpretation::Continuous;
-                output.configs.data_type = DataType::F32;
-                for row in 0..rows {
-                    for col in 0..columns {
-                        val = input.get_value(row, col);
-                        if val != nodata && val != back_val && val >= min_val && val <= max_val {
-                            bin = (val - min_val).floor() as usize;
-                            output.set_value(row, col, area_data[bin]);
-                        }
-                    }
-                    if verbose {
-                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                        if progress != old_progress {
-                            println!("Outputting raster: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-
-                let elapsed_time = get_formatted_elapsed_time(start);
-                output.add_metadata_entry(format!(
-                    "Created by whitebox_tools\' {} tool",
-                    self.get_tool_name()
-                ));
-                output.add_metadata_entry(format!("Input file: {}", input_file));
-                output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
-                if verbose {
-                    println!("Saving data...")
-                };
-                let _ = match output.write() {
-                    Ok(_) => {
-                        if verbose {
-                            println!("Output file written")
-                        }
-                    }
-                    Err(e) => return Err(e),
-                };
-            }
-            if output_text {
-                println!("Class,Area");
-                for a in 0..num_bins {
-                    if area_data[a] > 0f64 {
-                        val = (a as f64 + min_val).floor();
-                        println!("{},{}", val, area_data[a]);
-                    }
+            if verbose {
+                progress = (100.0_f64 * (tid + 1) as f64 / num_procs as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
                 }
             }
         }
 
+        let mut val: f64;
+        let mut bin: usize;  
+        if output_raster {
+            let mut output = Raster::initialize_using_file(&output_file, &input);
+            let out_nodata = -999f64;
+            output.reinitialize_values(out_nodata);
+            output.configs.nodata = out_nodata;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            output.configs.data_type = DataType::F32;
+            for row in 0..rows {
+                for col in 0..columns {
+                    val = input.get_value(row, col);
+                    if val != nodata && val != back_val && val >= min_val && val <= max_val {
+                        bin = (val - min_val).floor() as usize;
+                        output.set_value(row, col, data[bin] as f64);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Outputting raster: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+
+            let elapsed_time = get_formatted_elapsed_time(start);
+            output.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output.add_metadata_entry(format!("Input file: {}", input_file));
+            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+
+            if verbose {
+                println!("Saving data...")
+            };
+            let _ = match output.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
+                Err(e) => return Err(e),
+            };
+        }
+        if output_text {
+            println!("Class,Perimeter");
+            for a in 0..num_bins {
+                if data[a] > 0f64 {
+                    val = (a as f64 + min_val).floor();
+                    println!("{},{}", val, data[a]);
+                }
+            }
+        }
+        
         Ok(())
     }
 }

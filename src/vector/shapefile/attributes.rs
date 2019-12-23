@@ -179,10 +179,10 @@ impl ShapefileAttributes {
     pub fn add_field<'a>(&mut self, field: &'a AttributeField) {
         self.fields.push(field.clone());
         self.header.num_fields += 1;
-        self.get_field_hashmap();
         for record_index in 0..self.data.len() {
             self.data[record_index].push(FieldData::Null);
         }
+        self.get_field_hashmap();
     }
 
     /// Adds a Vec of fields to the table

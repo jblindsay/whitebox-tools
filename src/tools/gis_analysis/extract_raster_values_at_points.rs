@@ -223,7 +223,7 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         for i in 0..num_files {
             if !v[i].trim().is_empty() {
                 let val =
-                    AttributeField::new(&format!("VALUE{}", i + 1), FieldDataType::Real, 12u8, 4u8);
+                    AttributeField::new(&format!("VALUE{}", i + 1), FieldDataType::Real, 12u8, 6u8);
                 points.attributes.add_field(&val);
             }
         }

@@ -395,9 +395,9 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
         // Perform the main analysis //
         ///////////////////////////////
         let num_procs = num_cpus::get() as isize;
-        for s in 1..=num_steps {
+        for s in min_scale..(min_scale+num_steps) {
             let midpoint = min_scale + ((((s - min_scale) * step) as f32).powf(step_nonlinearity)).floor() as isize;
-            println!("Loop {} / {}", s, num_steps);
+            println!("Loop {} / {}", s-min_scale+1, num_steps);
 
             let filter_size = midpoint * 2 + 1;
 

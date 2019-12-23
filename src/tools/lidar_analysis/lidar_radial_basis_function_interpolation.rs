@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 08/11/2019
-Last Modified: 13/12/2019
+Last Modified: 15/12/2019
 License: MIT
 
 NOTES:
@@ -106,15 +106,6 @@ impl LidarRbfInterpolation {
             default_value: Some("1.0".to_owned()),
             optional: true,
         });
-
-        // parameters.push(ToolParameter {
-        //     name: "Search Radius".to_owned(),
-        //     flags: vec!["--radius".to_owned()],
-        //     description: "Search Radius.".to_owned(),
-        //     parameter_type: ParameterType::Float,
-        //     default_value: Some("2.5".to_owned()),
-        //     optional: true,
-        // });
 
         parameters.push(ToolParameter {
             name: "Number of Points".to_owned(),
@@ -556,8 +547,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                         min_y: bounding_boxes[tile].min_y - search_radius,
                         max_y: bounding_boxes[tile].max_y + search_radius,
                     };
-                    // let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::Euclidean);
-                    
                     
                     const DIMENSIONS: usize = 2;
                     const CAPACITY_PER_NODE: usize = 64;
@@ -607,7 +596,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.z;
                                                         if z < min_value { min_value = z; }
@@ -641,7 +629,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.intensity as f64;
                                                         if z < min_value { min_value = z; }
@@ -675,7 +662,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.scan_angle as f64;
                                                         if z < min_value { min_value = z; }
@@ -709,7 +695,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.classification() as f64;
                                                         if z < min_value { min_value = z; }
@@ -743,7 +728,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.return_number() as f64;
                                                         if z < min_value { min_value = z; }
@@ -777,7 +761,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.number_of_returns() as f64;
                                                         if z < min_value { min_value = z; }
@@ -859,7 +842,6 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        // frs.insert(p.x, p.y, pt);
                                                         tree.add([p.x, p.y], pt).unwrap();
                                                         z = p.user_data as f64;
                                                         if z < min_value { min_value = z; }

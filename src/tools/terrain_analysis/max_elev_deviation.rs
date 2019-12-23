@@ -52,7 +52,7 @@ use std::thread;
 /// topographic position analysis. Geomorphology, 245: 51-61.
 /// 
 /// # See Also
-/// `DevFromMeanElev`, `MaxDifferenceFromMean`
+/// `DevFromMeanElev`, `MaxDifferenceFromMean`, `MultiscaleElevationPercentile`
 pub struct MaxElevationDeviation {
     name: String,
     description: String,

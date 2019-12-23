@@ -124,6 +124,7 @@ impl ToolManager {
         tool_names.push("RadiusOfGyration".to_string());
         tool_names.push("RasterArea".to_string());
         tool_names.push("RasterCellAssignment".to_string());
+        tool_names.push("RasterPerimeter".to_string());
         tool_names.push("Reclass".to_string());
         tool_names.push("ReclassEqualInterval".to_string());
         tool_names.push("ReclassFromFile".to_string());
@@ -318,6 +319,7 @@ impl ToolManager {
         tool_names.push("Arsinh".to_string());
         tool_names.push("Artanh".to_string());
         tool_names.push("AttributeCorrelation".to_string());
+        tool_names.push("AttributeCorrelationNeighbourhoodAnalysis".to_string());
         tool_names.push("AttributeHistogram".to_string());
         tool_names.push("AttributeScattergram".to_string());
         tool_names.push("Ceil".to_string());
@@ -444,6 +446,7 @@ impl ToolManager {
         tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
+        tool_names.push("MultiscaleElevationPercentile".to_string());
         tool_names.push("MultiscaleRoughness".to_string());
         tool_names.push("MultiscaleStdDevNormals".to_string());
         tool_names.push("MultiscaleStdDevNormalsSignature".to_string());
@@ -603,6 +606,7 @@ impl ToolManager {
             "radiusofgyration" => Some(Box::new(gis_analysis::RadiusOfGyration::new())),
             "rasterarea" => Some(Box::new(gis_analysis::RasterArea::new())),
             "rastercellassignment" => Some(Box::new(gis_analysis::RasterCellAssignment::new())),
+            "rasterperimeter" => Some(Box::new(gis_analysis::RasterPerimeter::new())),
             "reclass" => Some(Box::new(gis_analysis::Reclass::new())),
             "reclassequalinterval" => Some(Box::new(gis_analysis::ReclassEqualInterval::new())),
             "reclassfromfile" => Some(Box::new(gis_analysis::ReclassFromFile::new())),
@@ -865,6 +869,7 @@ impl ToolManager {
             "attributecorrelation" => {
                 Some(Box::new(math_stat_analysis::AttributeCorrelation::new()))
             }
+            "attributecorrelationneighbourhoodanalysis" => Some(Box::new(math_stat_analysis::AttributeCorrelationNeighbourhoodAnalysis::new())),
             "attributehistogram" => Some(Box::new(math_stat_analysis::AttributeHistogram::new())),
             "attributescattergram" => {
                 Some(Box::new(math_stat_analysis::AttributeScattergram::new()))
@@ -1045,6 +1050,7 @@ impl ToolManager {
             "mindownslopeelevchange" => {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
             }
+            "multiscaleelevationpercentile" => Some(Box::new(terrain_analysis::MultiscaleElevationPercentile::new())),
             "multiscaleroughness" => Some(Box::new(terrain_analysis::MultiscaleRoughness::new())),
             "multiscalestddevnormals" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormals::new())),
             "multiscalestddevnormalssignature" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormalsSignature::new())),

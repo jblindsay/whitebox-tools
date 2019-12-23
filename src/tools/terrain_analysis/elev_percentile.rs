@@ -429,7 +429,7 @@ impl WhiteboxTool for ElevPercentile {
                             }
                         }
 
-                        if n > 0f64 {
+                        if n > 0f64 && bin_val != bin_nodata {
                             data[col as usize] = n_less_than / n * 100.0;
                         } else {
                             data[col as usize] = nodata;

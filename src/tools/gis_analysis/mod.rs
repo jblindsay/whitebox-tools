@@ -69,6 +69,7 @@ mod radial_basis_function_interpolation;
 mod radius_of_gyration;
 mod raster_area;
 mod raster_cell_assignment;
+mod raster_perimeter;
 mod reclass;
 mod reclass_equal_interval;
 mod reclass_from_file;
@@ -158,6 +159,7 @@ pub use self::radial_basis_function_interpolation::RadialBasisFunctionInterpolat
 pub use self::radius_of_gyration::RadiusOfGyration;
 pub use self::raster_area::RasterArea;
 pub use self::raster_cell_assignment::RasterCellAssignment;
+pub use self::raster_perimeter::RasterPerimeter;
 pub use self::reclass::Reclass;
 pub use self::reclass_equal_interval::ReclassEqualInterval;
 pub use self::reclass_from_file::ReclassFromFile;

@@ -415,9 +415,9 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         let series_names = vec![String::from("DEM Average SStdDevN")];
 
         // for midpoint in (min_scale..=max_scale).step_by(step as usize) {
-        for s in 1..=num_steps {
+        for s in min_scale..(min_scale+num_steps) {
             let midpoint = min_scale + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
-            println!("Loop {} / {}", s, num_steps);
+            println!("Loop {} / {}", s-min_scale+1, num_steps);
 
             let filter_size = midpoint * 2 + 1;
 

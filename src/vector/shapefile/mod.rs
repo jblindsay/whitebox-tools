@@ -1078,7 +1078,6 @@ impl Shapefile {
         // Write the attributes file //
         ///////////////////////////////
 
-        // let dbf_file = self.file_name.replace(".shp", ".dbf");
         let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
         let f = File::create(&dbf_file)?;
         let mut writer = BufWriter::new(f);
@@ -1167,40 +1166,59 @@ impl Shapefile {
                             writer.write_all(&b.as_bytes())?;
                         }
                     }
-                    // FieldData::Int64(v) => {
-                    //     let b = v.to_string();
-                    //     if b.len() < fl {
-                    //         let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
-                    //         spcs.push_str(&b);
-                    //         writer.write_all(&spcs.as_bytes())?;
-                    //     } else if b.len() > fl {
-                    //         writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
-                    //     } else {
-                    //         writer.write_all(&b.as_bytes())?;
-                    //     }
-                    // }
                     FieldData::Real(v) => {
                         let dc = self.attributes.fields[j as usize].decimal_count as usize;
                         let s = v.to_string();
-                        let d = v.trunc().to_string();
-                        let mut c = if s.len() > d.len() {
-                            s[d.len() + 1..s.len()].to_string()
+                        let e: Vec<&str> = s.split(".").collect();
+                        let f = if e.len() == 2 {
+                            e[1].clone()
                         } else {
-                            String::new()
+                            ""
                         };
-                        if c.len() > dc {
-                            c = c[0..dc].to_string();
-                        }
-                        let b = format!("{}.{}", d, c);
-                        if b.len() < fl {
-                            let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
-                            spcs.push_str(&b);
-                            writer.write_all(&spcs.as_bytes())?;
-                        } else if b.len() > fl {
-                            writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                        let mut s: String;
+                        let decimals = if f.len() > dc {
+                            let (e2, _) = f.split_at(dc);
+                            e2
+                        } else if f.len() < dc {
+                            // pad with some trailing zeros
+                            s = f.clone().to_string();
+                            for _ in 0..(dc - f.len()) {
+                                s.push_str("0");
+                            }
+                            &s
                         } else {
-                            writer.write_all(&b.as_bytes())?;
+                            f
+                        };
+                        s = format!("{}.{}", e[0], decimals);
+                        if s.len() < fl {
+                            for _ in 0..(fl - s.len()) {
+                                s.push_str(" ");
+                            }
+                        } else if s.len() > fl {
+                            s.truncate(fl);
                         }
+                        writer.write_all(&s.as_bytes())?;
+                        // let s = v.to_string();
+                        // let d = v.trunc().to_string();
+                        // let mut c = if s.len() > d.len() {
+                        //     s[d.len() + 1..s.len()].to_string()
+                        // } else {
+                        //     String::new()
+                        // };
+                        // if c.len() > dc {
+                        //     c = c[0..dc].to_string();
+                        // }
+                        // let b = format!("{}.{}", d, c);
+                        // println!("{}", b);
+                        // if b.len() < fl {
+                        //     let mut spcs: String = vec![' '; fl - b.len()].into_iter().collect();
+                        //     spcs.push_str(&b);
+                        //     writer.write_all(&spcs.as_bytes())?;
+                        // } else if b.len() > fl {
+                        //     writer.write_all(&b[b.len() - fl..b.len()].as_bytes())?;
+                        // } else {
+                        //     writer.write_all(&b.as_bytes())?;
+                        // }
                     }
                     FieldData::Bool(v) => {
                         if *v {

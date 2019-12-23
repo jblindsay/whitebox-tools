@@ -227,11 +227,11 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                     "spearman".to_string()
                 };
             } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
-                if keyval {
-                    filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                filter_size = if keyval {
+                    vec[1].to_string().parse::<f32>().unwrap() as usize
                 } else {
-                    filter_size = args[i+1].to_string().parse::<f32>().unwrap() as usize;
-                }
+                    args[i+1].to_string().parse::<f32>().unwrap() as usize
+                };
             }
         }
 
@@ -605,6 +605,8 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                     let (mut rank, mut rank2): (f64, f64);
                     let mut upper_range: usize;
                     let mut num_ties = 0;
+                    let mut num_ties_test: isize;
+                    let mut max_num_ties: isize;
                     let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize; // + 1;
                     let mut a = 0;
                     for row in 0..filter_size {
@@ -618,6 +620,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data1 = vec![nodata1; columns as usize];
                         let mut data2 = vec![nodata1; columns as usize];
+                        max_num_ties = -1;
                         for col in 0..columns {
                             z1 = image1.get_value(row, col);
                             z2 = image2.get_value(row, col);
@@ -640,7 +643,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                                 // Sort both lists based on value
                                 v1.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
                                 v2.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
-
+                                num_ties_test = 0;
                                 rank = 0f64;
                                 for i in 0..num_cells {
                                     if v1[i].2 == 0f64 {
@@ -652,6 +655,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                                                 if v1[i].0 == v1[j].0 {
                                                     upper_range = j;
                                                     num_ties += 1;
+                                                    num_ties_test += 1;
                                                 } else {
                                                     break;
                                                 }
@@ -683,6 +687,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                                                 if v2[i].0 == v2[j].0 {
                                                     upper_range = j;
                                                     num_ties += 1;
+                                                    num_ties_test += 1;
                                                 } else {
                                                     break;
                                                 }
@@ -723,20 +728,24 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
                                     data2[col as usize] = pvalue;
                                 } else {
                                     data2[col as usize] = 0f64;
-                                }                                    
+                                }      
+                                
+                                if max_num_ties < num_ties_test { max_num_ties = num_ties_test; }
                             }
                         }
-                        tx.send((row, data1, data2, num_ties)).unwrap();
+                        tx.send((row, data1, data2, num_ties, max_num_ties)).unwrap();
                     }
                 });
             }
 
+            let mut max_ties = -1isize;
             let mut num_ties = 0;
             for r in 0..rows {
-                let (row, data1, data2, ties) = rx.recv().unwrap();
+                let (row, data1, data2, ties, max_row_ties) = rx.recv().unwrap();
                 output_val.set_row_data(row, data1);
                 output_sig.set_row_data(row, data2);
                 num_ties += ties;
+                if max_row_ties > max_ties { max_ties = max_row_ties; }
                 
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
@@ -748,7 +757,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
             }
 
             if num_ties > 0 {
-                println!("Warning: There were ties in the tests and as a result p-values \nmay be misleading. Use Kendall's Tau instead.");
+                println!("Warning: There was a maximum of {} ties in a test and as a result p-values \nmay be misleading. You may want to consider using Kendall's Tau instead.", max_ties);
             }
         }
         
