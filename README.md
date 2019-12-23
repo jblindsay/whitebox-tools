@@ -41,7 +41,13 @@ the *GoSpatial* project, having subsumed all of its functionality.
 
 ## 2 Downloads and Installation
 
-*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. If you intend to use the Python programming interface for *WhiteboxTools* you will need to have Python 3 (or higher) installed. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/WhiteboxTools/index.html) software web site for various supported operating systems. It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures than the distributed binary files. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
+### Pre-compiled binaries
+
+*WhiteboxTools* is a stand-alone executable command-line program with no actual installation. If you intend to use the Python programming interface for *WhiteboxTools* you will need to have Python 3 (or higher) installed. Pre-compiled binaries can be downloaded from the [*Geomorphometry and Hydrogeomatics Research Group*](http://www.uoguelph.ca/~hydrogeo/WhiteboxTools/index.html) software web site for various supported operating systems.
+
+### Building from source code
+
+It is likely that *WhiteboxTools* will work on a wider variety of operating systems and architectures than the distributed binary files. If you do not find your operating system/architecture in the list of available *WhiteboxTool* binaries, then compilation from source code will be necessary. WhiteboxTools can be compiled from the source code with the following steps:
 
 1. Install the Rust compiler; Rustup is recommended for this purpose. Further instruction can be found at this [link](https://www.rust-lang.org/en-US/install.html).
 
@@ -68,6 +74,38 @@ the *GoSpatial* project, having subsumed all of its functionality.
 Depending on your system, the compilation may take several minutes. When completed, the compiled binary executable file will be contained within the *whitebox-tools/target/release/ folder*. Type *./whitebox_tools --help* at the command prompt (after cd'ing to the containing folder) for information on how to run the executable from the terminal.
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
+
+### Using Docker image
+
+For these who don't want to build from sources or can not use pre-build binaries there is also a Docker container that runs Whitebox Tools.
+
+To build the image do:
+
+1. clone Whitebox Tools repository to your local system or download code archive from the GitHub
+
+    ```
+    git clone https://github.com/jblindsay/whitebox-tools.git
+    ```
+
+2. Open a terminal (command prompt) window and change the working directory to the whitebox-tools folder
+
+    ```
+    cd /path/to/folder/whitebox-tools/
+    ```
+
+3. Build container
+
+    ```
+    docker build -t whitebox-tools -f docker/whitebox-tools.dockerfile .
+    ```
+
+4. Depending on your system, the build process may take several minutes. When completed, new image called `whitebox-tool` will be created.
+
+To use container it is necessary to bind mount data directory into container as `/data` and then pass required command-line arguments, like below
+
+```
+docker run --rm -it -v "/path/to/data/directory/":/data whitebox-tools --run=IntegralImage -i=dem.tif -o=out.tif
+```
 
 ## 3 Usage
 
