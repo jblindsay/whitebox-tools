@@ -264,7 +264,7 @@ impl WhiteboxTool for CrossTabulation {
 
         writer.write_all("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
         <head>
-            <meta content=\"text/html; charset=iso-8859-1\" http-equiv=\"content-type\">
+            <meta content=\"text/html; charset=UTF-8\" http-equiv=\"content-type\">
             <title>Cross Tabulation</title>
             <style  type=\"text/css\">
                 h1 {

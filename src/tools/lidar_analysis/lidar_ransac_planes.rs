@@ -191,7 +191,7 @@ impl WhiteboxTool for LidarRansacPlanes {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut search_radius = 2f64;
-        let mut num_iter = 30;
+        let mut num_iter = 50;
         let mut num_samples = 10;
         let mut threshold = 0.15;
         let mut acceptable_model_size = 30;
@@ -285,12 +285,26 @@ impl WhiteboxTool for LidarRansacPlanes {
             Err(err) => panic!("Error reading file {}: {}", input_file, err),
         };
 
-        if acceptable_model_size < num_samples {
-            acceptable_model_size = num_samples;
+        if acceptable_model_size < 5 {
+            acceptable_model_size = 5;
             if verbose {
-                println!("Warning: The --model_size parameter must be equal to or larger than num_samples.");
+                println!("Warning: The --model_size parameter must be at least 5.");
             }
         }
+
+        if num_samples < 5 {
+            num_samples = 5;
+            if verbose {
+                println!("Warning: The --num_samples parameter must be at least 5.");
+            }
+        }
+
+        // if acceptable_model_size < num_samples {
+        //     acceptable_model_size = num_samples;
+        //     if verbose {
+        //         println!("Warning: The --model_size parameter must be equal to or larger than num_samples.");
+        //     }
+        // }
 
         let start = Instant::now();
 
