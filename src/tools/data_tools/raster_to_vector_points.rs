@@ -195,7 +195,7 @@ impl WhiteboxTool for RasterToVectorPoints {
         // add the attributes
         output
             .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 2u8, 0u8));
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 12u8, 0u8));
         output.attributes.add_field(&AttributeField::new(
             "VALUE",
             FieldDataType::Real,

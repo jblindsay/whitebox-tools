@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/10/2019
-Last Modified: 01/11/2019
+Last Modified: 29/12/2019
 License: MIT
 */
 
@@ -107,7 +107,7 @@ impl BurnStreamsAtRoads {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --streams=streams.shp --base=raster.tif -o=output.tif", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=raster.tif --streams=streams.shp --roads=roads.shp -o=output.tif --width=50.0", short_exe, name).replace("*", &sep);
 
         BurnStreamsAtRoads {
             name: name,

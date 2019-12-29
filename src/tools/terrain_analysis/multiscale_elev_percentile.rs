@@ -360,8 +360,8 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
         let max_val = configs.maximum;
         let min_bin = (min_val * multiplier).floor() as i64;
         let num_bins = (max_val * multiplier).floor() as i64 - min_bin + 1;
-        let bin_nodata = std::i16::MIN as i64; // i64::MIN;
-        let mut binned_data: Array2D<i64> = Array2D::new(rows, columns, bin_nodata, bin_nodata)?;
+        let bin_nodata = std::i16::MIN as i64;
+        let mut binned_data: Array2D<i64> = Array2D::new(rows, columns, bin_nodata, bin_nodata)?; // Memory requirements: 4.0X
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -397,23 +397,19 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             }
         }
 
-        drop(input);
+        drop(input); // Memory requirements: 2.0X
 
         if verbose {
             println!("Initializing grids...");
         }
-        let mut output_mag = Raster::initialize_using_config(&output_mag_file, &configs);
-        let mut output_scale = Raster::initialize_using_config(&output_scale_file, &configs);
-        // let mut output_mag = Raster::initialize_from_array2d(&output_mag_file, &configs, &output_mag); // Memory requirements: 3.5X
-        // let mut output_scale = Raster::initialize_from_array2d(&output_scale_file, &configs, &output_scale); // Memory requirements: 2.5X
+        let mut output_mag = Raster::initialize_using_config(&output_mag_file, &configs); // Memory requirements: 4.0X
+        let mut output_scale = Raster::initialize_using_config(&output_scale_file, &configs); // Memory requirements: 6.0X
         output_mag.configs.data_type = DataType::F32;
 
         output_scale.configs.data_type = DataType::I16;
         output_scale.configs.nodata = std::i16::MIN as f64;
         output_scale.reinitialize_values(std::i16::MIN as f64);
-        // let mut output_mag = Array2D::<f32>::new(rows, columns, -1f32, nodata)?; // Memory requirements: 2.0X
-        // let mut output_scale = Array2D::<i16>::new(rows, columns, -32768i16, -32768i16)?; // Memory requirements: 2.5X
-
+        
         let bd = Arc::new(binned_data); // wrap binned_data in an Arc
 
         ///////////////////////////////
@@ -528,10 +524,8 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             let mut z2: f64;
             for r in 0..rows {
                 let (row, data) = rx.recv().unwrap();
-                // output_mag.set_row_data(row, data);
                 for col in 0..columns {
                     if data[col as usize] != nodata {
-                        // output_mag.set_value(row, col, bd.get_value(row, col) as f64);
                         z1 = output_mag.get_value(row, col);
                         if z1 == nodata {
                             output_mag.set_value(row, col, data[col as usize]);
@@ -564,11 +558,7 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             }
         }
 
-        drop(bd); // Memory requirements: 2.5X
-
-        // let mut output_mag_raster = Raster::initialize_from_array2d(&output_mag_file, &configs, &output_mag); // Memory requirements: 3.5X
-        // output_mag_raster.configs.data_type = DataType::F32;
-        // drop(output_mag); // Memory requirements: 2.5X
+        drop(bd);
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output_mag.configs.palette = "blue_white_red.plt".to_string();
@@ -595,11 +585,7 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             Err(e) => return Err(e),
         };
 
-        drop(output_mag); // Memory requirements: 0.5X
-
-        // let mut output_scale_raster = Raster::initialize_from_array2d(&output_scale_file, &configs, &output_scale); // Memory requirements: 2.5X
-        // output_scale_raster.configs.data_type = DataType::I16;
-        // drop(output_scale); // Memory requirements: 2.0X
+        drop(output_mag);
 
         output_scale.configs.palette = "relief.plt".to_string();
         output_scale.add_metadata_entry(format!(
